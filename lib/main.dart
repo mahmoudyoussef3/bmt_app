@@ -1,121 +1,233 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/theme/app_theme.dart';
+import 'package:bmt_app/features/client/presentation/cubits/booking_cubit.dart';
+import 'package:bmt_app/features/client/presentation/cubits/bookings_list_cubit.dart';
+import 'package:bmt_app/features/client/presentation/cubits/tracking_cubit.dart';
+import 'package:bmt_app/features/client/presentation/cubits/subscription_cubit.dart';
+import 'package:bmt_app/features/client/presentation/screens/home_screen.dart';
+import 'package:bmt_app/features/client/presentation/screens/daily_booking_screen.dart';
+import 'package:bmt_app/features/client/presentation/screens/track_vehicle_screen.dart';
+import 'package:bmt_app/features/client/presentation/screens/monthly_subscription_screen.dart';
+import 'package:bmt_app/features/driver/presentation/cubits/driver_trip_cubit.dart';
+import 'package:bmt_app/features/driver/presentation/screens/driver_trip_list_screen.dart';
+import 'package:bmt_app/features/admin/presentation/cubits/admin_dashboard_cubit.dart';
+import 'package:bmt_app/features/admin/presentation/screens/admin_dashboard_screen.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+  const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: .fromSeed(seedColor: Colors.deepPurple),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'Mega Transportation',
+      theme: AppTheme.lightTheme(),
+      home: const RoleSelectorScreen(),
+      routes: {
+        '/role-selector': (_) => const RoleSelectorScreen(),
+        '/client-home': (_) => _buildClientHome(),
+        '/daily-booking': (_) => _buildDailyBooking(),
+        '/track-vehicle': (_) => _buildTrackVehicle(),
+        '/monthly-subscription': (_) => _buildMonthlySubscription(),
+        '/driver': (_) => _buildDriver(),
+        '/admin': (_) => _buildAdmin(),
+      },
+    );
+  }
+
+  Widget _buildClientHome() {
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => BookingsListCubit()),
+        BlocProvider(create: (_) => TrackingCubit()),
+      ],
+      child: const ClientHomeScreen(),
+    );
+  }
+
+  Widget _buildDailyBooking() {
+    return BlocProvider(
+      create: (_) => BookingCubit(),
+      child: const DailyBookingFlow(),
+    );
+  }
+
+  Widget _buildTrackVehicle() {
+    return BlocProvider(
+      create: (_) => TrackingCubit(),
+      child: const TrackVehicleScreen(),
+    );
+  }
+
+  Widget _buildMonthlySubscription() {
+    return BlocProvider(
+      create: (_) => SubscriptionCubit(),
+      child: const MonthlySubscriptionScreen(),
+    );
+  }
+
+  Widget _buildDriver() {
+    return BlocProvider(
+      create: (_) => DriverTripCubit(),
+      child: const DriverTripListScreen(),
+    );
+  }
+
+  Widget _buildAdmin() {
+    return BlocProvider(
+      create: (_) => AdminDashboardCubit(),
+      child: const AdminDashboardScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
+class RoleSelectorScreen extends StatelessWidget {
+  const RoleSelectorScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // App Title
+              Text(
+                '🚌',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 64),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Mega Transportation',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.displayMedium?.copyWith(
+                  color: AppTheme.primaryColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Employee Commute Management System',
+                textAlign: TextAlign.center,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
+              ),
+              const SizedBox(height: 48),
+
+              // Role Selection
+              Text(
+                'Select Your Role',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 24),
+
+              // Client Button
+              _RoleButton(
+                icon: '👤',
+                title: 'Client',
+                subtitle: 'Book daily trips or\nmanage subscription',
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/client-home');
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Driver Button
+              _RoleButton(
+                icon: '🚗',
+                title: 'Driver',
+                subtitle: 'Manage your trips\nand passengers',
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/driver');
+                },
+              ),
+              const SizedBox(height: 16),
+
+              // Admin Button
+              _RoleButton(
+                icon: '📊',
+                title: 'Admin',
+                subtitle: 'View dashboard\nand analytics',
+                onPressed: () {
+                  Navigator.of(context).pushNamed('/admin');
+                },
+              ),
+            ],
+          ),
+        ),
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: .center,
-          children: [
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
+    );
+  }
+}
+
+class _RoleButton extends StatelessWidget {
+  final String icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onPressed;
+
+  const _RoleButton({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[200]!, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 5),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
+        child: Row(
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 48)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios, color: Colors.grey),
+          ],
+        ),
       ),
     );
   }
