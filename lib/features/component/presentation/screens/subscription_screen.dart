@@ -105,7 +105,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
                         height: 48,
                         color: Theme.of(
                           context,
-                        ).colorScheme.primary.withOpacity(0.2),
+                        ).colorScheme.primary.withAlpha(51),
                       ),
                       Container(
                         width: 10,
@@ -326,13 +326,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.08),
+            Theme.of(context).colorScheme.primary.withAlpha(20),
             Colors.transparent,
           ],
         ),
-        border: Border(
-          bottom: BorderSide(color: Colors.black.withOpacity(0.06)),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.black.withAlpha(15))),
       ),
       child: Row(
         children: [

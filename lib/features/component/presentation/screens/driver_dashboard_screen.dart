@@ -91,7 +91,7 @@ class CaptainDashboardScreen extends StatelessWidget {
               child: ListView.separated(
                 padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                 itemCount: passengers.length + 2,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
+                separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return Text(
@@ -176,13 +176,11 @@ class CaptainDashboardScreen extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.08),
+            Theme.of(context).colorScheme.primary.withAlpha(20),
             Colors.transparent,
           ],
         ),
-        border: Border(
-          bottom: BorderSide(color: Colors.black.withOpacity(0.06)),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.black.withAlpha(15))),
       ),
       child: Row(
         children: [
@@ -269,9 +267,9 @@ class _PassengerCard extends StatelessWidget {
     final isBoarded = passenger.status == 'boarded';
     final isArrived = passenger.status == 'arrived';
     final bgColor = isBoarded
-        ? Theme.of(context).colorScheme.secondary.withOpacity(0.06)
+        ? Theme.of(context).colorScheme.secondary.withAlpha(15)
         : isArrived
-        ? Theme.of(context).colorScheme.primary.withOpacity(0.06)
+        ? Theme.of(context).colorScheme.primary.withAlpha(15)
         : Theme.of(context).cardColor;
     final statusColor = isBoarded
         ? Theme.of(context).colorScheme.secondary
@@ -292,7 +290,7 @@ class _PassengerCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 14,
-              backgroundColor: statusColor.withOpacity(0.14),
+              backgroundColor: statusColor.withAlpha(36),
               child: Text(
                 '${passenger.id}',
                 style: TextStyle(

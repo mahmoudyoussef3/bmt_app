@@ -286,7 +286,7 @@ class _RouteTimelineCard extends StatelessWidget {
       child: Container(
         decoration: highlight
             ? BoxDecoration(
-                border: Border.all(color: color.withOpacity(0.35), width: 1.5),
+                border: Border.all(color: color.withAlpha(89), width: 1.5),
                 borderRadius: BorderRadius.circular(12),
               )
             : null,
@@ -306,7 +306,7 @@ class _RouteTimelineCard extends StatelessWidget {
                 Container(
                   width: 2,
                   height: 34,
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withAlpha(26),
                 ),
               ],
             ),

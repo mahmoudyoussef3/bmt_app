@@ -12,8 +12,8 @@ class MapPlaceholder extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.12),
-            Theme.of(context).colorScheme.secondary.withOpacity(0.06),
+            Theme.of(context).colorScheme.primary.withAlpha(31),
+            Theme.of(context).colorScheme.secondary.withAlpha(15),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -23,7 +23,7 @@ class MapPlaceholder extends StatelessWidget {
         child: Icon(
           Icons.map,
           size: 64,
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.onSurface.withAlpha(51),
         ),
       ),
     );

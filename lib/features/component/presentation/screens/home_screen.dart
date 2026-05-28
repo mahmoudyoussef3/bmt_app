@@ -16,7 +16,7 @@ class HomeScreen extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                  Theme.of(context).colorScheme.primary.withAlpha(20),
                   Colors.transparent,
                 ],
                 begin: Alignment.topCenter,
@@ -49,7 +49,7 @@ class HomeScreen extends StatelessWidget {
                       initials: 'AH',
                       backgroundColor: Theme.of(
                         context,
-                      ).colorScheme.primary.withOpacity(0.1),
+                      ).colorScheme.primary.withAlpha(26),
                     ),
                   ],
                 ),
@@ -140,7 +140,7 @@ class HomeScreen extends StatelessWidget {
                       initials: 'AM',
                       backgroundColor: Theme.of(
                         context,
-                      ).colorScheme.secondary.withOpacity(0.12),
+                      ).colorScheme.secondary.withAlpha(31),
                     ),
                     const SizedBox(width: 12),
                     const Expanded(
@@ -229,7 +229,7 @@ class _PointInfo extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withOpacity(0.04)),
+        border: Border.all(color: Colors.black.withAlpha(10)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -280,7 +280,7 @@ class _QuickAction extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withAlpha(26),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: color),

@@ -1,0 +1,438 @@
+{
+  "lightTheme": {
+    "primary": {
+      "name": "Primary",
+      "purpose": "Main brand color, buttons, CTA, active states",
+      "hex": "#2563EB",
+      "rgb": "rgb(37, 99, 235)",
+      "oklch": "oklch(0.35 0.15 260)",
+      "flutterCode": "Color(0xFF2563EB)"
+    },
+    "primaryForeground": {
+      "name": "Primary Foreground",
+      "purpose": "Text/icons on primary background",
+      "hex": "#FFFFFF",
+      "rgb": "rgb(255, 255, 255)",
+      "oklch": "oklch(1 0 0)",
+      "flutterCode": "Color(0xFFFFFFFF)"
+    },
+    "secondary": {
+      "name": "Secondary",
+      "purpose": "Supporting brand color, highlights, secondary actions",
+      "hex": "#06B6D4",
+      "rgb": "rgb(6, 182, 212)",
+      "oklch": "oklch(0.60 0.18 200)",
+      "flutterCode": "Color(0xFF06B6D4)"
+    },
+    "secondaryForeground": {
+      "name": "Secondary Foreground",
+      "purpose": "Text/icons on secondary background",
+      "hex": "#FFFFFF",
+      "rgb": "rgb(255, 255, 255)",
+      "oklch": "oklch(1 0 0)",
+      "flutterCode": "Color(0xFFFFFFFF)"
+    },
+    "accent": {
+      "name": "Accent",
+      "purpose": "Call-to-action, special highlights, emphasis",
+      "hex": "#FB923C",
+      "rgb": "rgb(251, 146, 60)",
+      "oklch": "oklch(0.65 0.22 30)",
+      "flutterCode": "Color(0xFFFB923C)"
+    },
+    "accentForeground": {
+      "name": "Accent Foreground",
+      "purpose": "Text/icons on accent background",
+      "hex": "#FFFFFF",
+      "rgb": "rgb(255, 255, 255)",
+      "oklch": "oklch(1 0 0)",
+      "flutterCode": "Color(0xFFFFFFFF)"
+    },
+    "background": {
+      "name": "Background",
+      "purpose": "Main page background",
+      "hex": "#F8F8F8",
+      "rgb": "rgb(248, 248, 248)",
+      "oklch": "oklch(0.98 0 0)",
+      "flutterCode": "Color(0xFFF8F8F8)"
+    },
+    "card": {
+      "name": "Card",
+      "purpose": "Card backgrounds, panels, elevated surfaces",
+      "hex": "#FFFFFF",
+      "rgb": "rgb(255, 255, 255)",
+      "oklch": "oklch(1 0 0)",
+      "flutterCode": "Color(0xFFFFFFFF)"
+    },
+    "popover": {
+      "name": "Popover",
+      "purpose": "Dropdown, tooltip backgrounds",
+      "hex": "#FFFFFF",
+      "rgb": "rgb(255, 255, 255)",
+      "oklch": "oklch(1 0 0)",
+      "flutterCode": "Color(0xFFFFFFFF)"
+    },
+    "foreground": {
+      "name": "Foreground",
+      "purpose": "Primary text color, headings, body text",
+      "hex": "#262626",
+      "rgb": "rgb(38, 38, 38)",
+      "oklch": "oklch(0.15 0 0)",
+      "flutterCode": "Color(0xFF262626)"
+    },
+    "cardForeground": {
+      "name": "Card Foreground",
+      "purpose": "Text on card backgrounds",
+      "hex": "#262626",
+      "rgb": "rgb(38, 38, 38)",
+      "oklch": "oklch(0.15 0 0)",
+      "flutterCode": "Color(0xFF262626)"
+    },
+    "popoverForeground": {
+      "name": "Popover Foreground",
+      "purpose": "Text on popover backgrounds",
+      "hex": "#262626",
+      "rgb": "rgb(38, 38, 38)",
+      "oklch": "oklch(0.15 0 0)",
+      "flutterCode": "Color(0xFF262626)"
+    },
+    "muted": {
+      "name": "Muted",
+      "purpose": "Disabled states, secondary background",
+      "hex": "#F5F5F5",
+      "rgb": "rgb(245, 245, 245)",
+      "oklch": "oklch(0.92 0.02 0)",
+      "flutterCode": "Color(0xFFF5F5F5)"
+    },
+    "mutedForeground": {
+      "name": "Muted Foreground",
+      "purpose": "Secondary text, labels, hints",
+      "hex": "#8C8C8C",
+      "rgb": "rgb(140, 140, 140)",
+      "oklch": "oklch(0.55 0 0)",
+      "flutterCode": "Color(0xFF8C8C8C)"
+    },
+    "border": {
+      "name": "Border",
+      "purpose": "Dividers, borders, outlines",
+      "hex": "#F5F5F5",
+      "rgb": "rgb(245, 245, 245)",
+      "oklch": "oklch(0.92 0.02 0)",
+      "flutterCode": "Color(0xFFF5F5F5)"
+    },
+    "input": {
+      "name": "Input",
+      "purpose": "Input field backgrounds",
+      "hex": "#F9F9F9",
+      "rgb": "rgb(249, 249, 249)",
+      "oklch": "oklch(0.95 0.01 0)",
+      "flutterCode": "Color(0xFFF9F9F9)"
+    },
+    "destructive": {
+      "name": "Destructive",
+      "purpose": "Delete, error, warning states, alerts",
+      "hex": "#DC2626",
+      "rgb": "rgb(220, 38, 38)",
+      "oklch": "oklch(0.62 0.22 29)",
+      "flutterCode": "Color(0xFFDC2626)"
+    },
+    "destructiveForeground": {
+      "name": "Destructive Foreground",
+      "purpose": "Text on destructive background",
+      "hex": "#FFFFFF",
+      "rgb": "rgb(255, 255, 255)",
+      "oklch": "oklch(1 0 0)",
+      "flutterCode": "Color(0xFFFFFFFF)"
+    },
+    "ring": {
+      "name": "Ring",
+      "purpose": "Focus indicators, focus states",
+      "hex": "#2563EB",
+      "rgb": "rgb(37, 99, 235)",
+      "oklch": "oklch(0.35 0.15 260)",
+      "flutterCode": "Color(0xFF2563EB)"
+    },
+    "chart1": {
+      "name": "Chart 1",
+      "purpose": "First chart series, analytics",
+      "hex": "#06B6D4",
+      "rgb": "rgb(6, 182, 212)",
+      "oklch": "oklch(0.60 0.18 200)",
+      "flutterCode": "Color(0xFF06B6D4)"
+    },
+    "chart2": {
+      "name": "Chart 2",
+      "purpose": "Second chart series, analytics",
+      "hex": "#FB923C",
+      "rgb": "rgb(251, 146, 60)",
+      "oklch": "oklch(0.65 0.22 30)",
+      "flutterCode": "Color(0xFFFB923C)"
+    },
+    "chart3": {
+      "name": "Chart 3",
+      "purpose": "Third chart series, analytics",
+      "hex": "#2563EB",
+      "rgb": "rgb(37, 99, 235)",
+      "oklch": "oklch(0.35 0.15 260)",
+      "flutterCode": "Color(0xFF2563EB)"
+    },
+    "chart4": {
+      "name": "Chart 4",
+      "purpose": "Fourth chart series, analytics",
+      "hex": "#FBBF24",
+      "rgb": "rgb(251, 191, 36)",
+      "oklch": "oklch(0.72 0.15 45)",
+      "flutterCode": "Color(0xFFFBBF24)"
+    },
+    "chart5": {
+      "name": "Chart 5",
+      "purpose": "Fifth chart series, analytics",
+      "hex": "#0891B2",
+      "rgb": "rgb(8, 145, 178)",
+      "oklch": "oklch(0.50 0.12 180)",
+      "flutterCode": "Color(0xFF0891B2)"
+    }
+  },
+  "darkTheme": {
+    "primary": {
+      "name": "Primary Dark",
+      "purpose": "Main brand color (dark mode), buttons, CTA",
+      "hex": "#00D9FF",
+      "rgb": "rgb(0, 217, 255)",
+      "oklch": "oklch(0.68 0.20 200)",
+      "flutterCode": "Color(0xFF00D9FF)"
+    },
+    "primaryForeground": {
+      "name": "Primary Foreground Dark",
+      "purpose": "Text on primary background (dark mode)",
+      "hex": "#1F1F1F",
+      "rgb": "rgb(31, 31, 31)",
+      "oklch": "oklch(0.12 0 0)",
+      "flutterCode": "Color(0xFF1F1F1F)"
+    },
+    "secondary": {
+      "name": "Secondary Dark",
+      "purpose": "Supporting brand color (dark mode)",
+      "hex": "#06B6D4",
+      "rgb": "rgb(6, 182, 212)",
+      "oklch": "oklch(0.60 0.18 200)",
+      "flutterCode": "Color(0xFF06B6D4)"
+    },
+    "secondaryForeground": {
+      "name": "Secondary Foreground Dark",
+      "purpose": "Text on secondary background (dark mode)",
+      "hex": "#F2F2F2",
+      "rgb": "rgb(242, 242, 242)",
+      "oklch": "oklch(0.95 0.01 0)",
+      "flutterCode": "Color(0xFFF2F2F2)"
+    },
+    "accent": {
+      "name": "Accent Dark",
+      "purpose": "CTA, emphasis (dark mode)",
+      "hex": "#FB923C",
+      "rgb": "rgb(251, 146, 60)",
+      "oklch": "oklch(0.65 0.22 30)",
+      "flutterCode": "Color(0xFFFB923C)"
+    },
+    "accentForeground": {
+      "name": "Accent Foreground Dark",
+      "purpose": "Text on accent background (dark mode)",
+      "hex": "#1F1F1F",
+      "rgb": "rgb(31, 31, 31)",
+      "oklch": "oklch(0.12 0 0)",
+      "flutterCode": "Color(0xFF1F1F1F)"
+    },
+    "background": {
+      "name": "Background Dark",
+      "purpose": "Main page background (dark)",
+      "hex": "#1F1F1F",
+      "rgb": "rgb(31, 31, 31)",
+      "oklch": "oklch(0.12 0 0)",
+      "flutterCode": "Color(0xFF1F1F1F)"
+    },
+    "card": {
+      "name": "Card Dark",
+      "purpose": "Card backgrounds (dark), elevated surfaces",
+      "hex": "#2D2D3D",
+      "rgb": "rgb(45, 45, 61)",
+      "oklch": "oklch(0.18 0.02 260)",
+      "flutterCode": "Color(0xFF2D2D3D)"
+    },
+    "popover": {
+      "name": "Popover Dark",
+      "purpose": "Dropdown, tooltip backgrounds (dark)",
+      "hex": "#2D2D3D",
+      "rgb": "rgb(45, 45, 61)",
+      "oklch": "oklch(0.18 0.02 260)",
+      "flutterCode": "Color(0xFF2D2D3D)"
+    },
+    "foreground": {
+      "name": "Foreground Dark",
+      "purpose": "Primary text color (dark mode)",
+      "hex": "#F2F2F2",
+      "rgb": "rgb(242, 242, 242)",
+      "oklch": "oklch(0.95 0.01 0)",
+      "flutterCode": "Color(0xFFF2F2F2)"
+    },
+    "cardForeground": {
+      "name": "Card Foreground Dark",
+      "purpose": "Text on card backgrounds (dark)",
+      "hex": "#F2F2F2",
+      "rgb": "rgb(242, 242, 242)",
+      "oklch": "oklch(0.95 0.01 0)",
+      "flutterCode": "Color(0xFFF2F2F2)"
+    },
+    "popoverForeground": {
+      "name": "Popover Foreground Dark",
+      "purpose": "Text on popover backgrounds (dark)",
+      "hex": "#F2F2F2",
+      "rgb": "rgb(242, 242, 242)",
+      "oklch": "oklch(0.95 0.01 0)",
+      "flutterCode": "Color(0xFFF2F2F2)"
+    },
+    "muted": {
+      "name": "Muted Dark",
+      "purpose": "Disabled states (dark)",
+      "hex": "#4A4A5A",
+      "rgb": "rgb(74, 74, 90)",
+      "oklch": "oklch(0.30 0.02 260)",
+      "flutterCode": "Color(0xFF4A4A5A)"
+    },
+    "mutedForeground": {
+      "name": "Muted Foreground Dark",
+      "purpose": "Secondary text (dark)",
+      "hex": "#A6A6A6",
+      "rgb": "rgb(166, 166, 166)",
+      "oklch": "oklch(0.65 0.05 0)",
+      "flutterCode": "Color(0xFFA6A6A6)"
+    },
+    "border": {
+      "name": "Border Dark",
+      "purpose": "Dividers, borders (dark)",
+      "hex": "#454555",
+      "rgb": "rgb(69, 69, 85)",
+      "oklch": "oklch(0.28 0.03 260)",
+      "flutterCode": "Color(0xFF454555)"
+    },
+    "input": {
+      "name": "Input Dark",
+      "purpose": "Input field backgrounds (dark)",
+      "hex": "#383848",
+      "rgb": "rgb(56, 56, 72)",
+      "oklch": "oklch(0.22 0.02 260)",
+      "flutterCode": "Color(0xFF383848)"
+    },
+    "destructive": {
+      "name": "Destructive Dark",
+      "purpose": "Delete, error states (dark)",
+      "hex": "#DC2626",
+      "rgb": "rgb(220, 38, 38)",
+      "oklch": "oklch(0.62 0.22 29)",
+      "flutterCode": "Color(0xFFDC2626)"
+    },
+    "destructiveForeground": {
+      "name": "Destructive Foreground Dark",
+      "purpose": "Text on destructive background (dark)",
+      "hex": "#F2F2F2",
+      "rgb": "rgb(242, 242, 242)",
+      "oklch": "oklch(0.95 0.01 0)",
+      "flutterCode": "Color(0xFFF2F2F2)"
+    },
+    "ring": {
+      "name": "Ring Dark",
+      "purpose": "Focus indicators (dark)",
+      "hex": "#00D9FF",
+      "rgb": "rgb(0, 217, 255)",
+      "oklch": "oklch(0.68 0.20 200)",
+      "flutterCode": "Color(0xFF00D9FF)"
+    },
+    "chart1": {
+      "name": "Chart 1 Dark",
+      "purpose": "First chart series (dark)",
+      "hex": "#00D9FF",
+      "rgb": "rgb(0, 217, 255)",
+      "oklch": "oklch(0.68 0.20 200)",
+      "flutterCode": "Color(0xFF00D9FF)"
+    },
+    "chart2": {
+      "name": "Chart 2 Dark",
+      "purpose": "Second chart series (dark)",
+      "hex": "#FB923C",
+      "rgb": "rgb(251, 146, 60)",
+      "oklch": "oklch(0.65 0.22 30)",
+      "flutterCode": "Color(0xFFFB923C)"
+    },
+    "chart3": {
+      "name": "Chart 3 Dark",
+      "purpose": "Third chart series (dark)",
+      "hex": "#84CC16",
+      "rgb": "rgb(132, 204, 22)",
+      "oklch": "oklch(0.60 0.15 100)",
+      "flutterCode": "Color(0xFF84CC16)"
+    },
+    "chart4": {
+      "name": "Chart 4 Dark",
+      "purpose": "Fourth chart series (dark)",
+      "hex": "#FBBF24",
+      "rgb": "rgb(251, 191, 36)",
+      "oklch": "oklch(0.72 0.15 45)",
+      "flutterCode": "Color(0xFFFBBF24)"
+    },
+    "chart5": {
+      "name": "Chart 5 Dark",
+      "purpose": "Fifth chart series (dark)",
+      "hex": "#0891B2",
+      "rgb": "rgb(8, 145, 178)",
+      "oklch": "oklch(0.50 0.12 180)",
+      "flutterCode": "Color(0xFF0891B2)"
+    }
+  },
+  "brandColors": {
+    "deepBlue": {
+      "name": "Deep Blue",
+      "purpose": "Primary brand color, main action color, buttons, focus states",
+      "hex": "#2563EB",
+      "rgb": "rgb(37, 99, 235)",
+      "oklch": "oklch(0.35 0.15 260)"
+    },
+    "cyan": {
+      "name": "Cyan",
+      "purpose": "Secondary brand color, complementary highlights, secondary actions",
+      "hex": "#06B6D4",
+      "rgb": "rgb(6, 182, 212)",
+      "oklch": "oklch(0.60 0.18 200)"
+    },
+    "coralOrange": {
+      "name": "Coral/Orange",
+      "purpose": "Accent color, call-to-action, special emphasis",
+      "hex": "#FB923C",
+      "rgb": "rgb(251, 146, 60)",
+      "oklch": "oklch(0.65 0.22 30)"
+    },
+    "brightCyan": {
+      "name": "Bright Cyan",
+      "purpose": "High contrast primary for dark mode backgrounds",
+      "hex": "#00D9FF",
+      "rgb": "rgb(0, 217, 255)",
+      "oklch": "oklch(0.68 0.20 200)"
+    },
+    "red": {
+      "name": "Red",
+      "purpose": "Destructive actions, errors, deletions, warnings",
+      "hex": "#DC2626",
+      "rgb": "rgb(220, 38, 38)",
+      "oklch": "oklch(0.62 0.22 29)"
+    }
+  },
+  "metadata": {
+    "version": "1.0",
+    "projectName": "Mega Transportation",
+    "lastUpdated": "2026-05-28",
+    "colorFormat": "OKLCH with HEX and RGB alternatives",
+    "totalColors": 56,
+    "lightThemeColors": 23,
+    "darkThemeColors": 23,
+    "brandColors": 5,
+    "notes": "All colors include HEX for Flutter Color() constructor, RGB for reference, and OKLch for CSS variables"
+  }
+}

@@ -8,8 +8,7 @@ class AppBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg =
-        color ?? Theme.of(context).colorScheme.tertiary.withOpacity(0.12);
+    final bg = color ?? Theme.of(context).colorScheme.tertiary.withAlpha(31);
     final fg = Theme.of(context).colorScheme.tertiary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),

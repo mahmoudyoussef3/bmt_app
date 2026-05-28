@@ -16,6 +16,20 @@ class MetricTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final rowChildren = <Widget>[];
+    if (icon != null) rowChildren.add(icon!);
+    if (trend != null) {
+      rowChildren.add(
+        Text(
+          trend!,
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.secondary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -27,17 +41,7 @@ class MetricTile extends StatelessWidget {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              if (icon != null) icon!,
-              if (trend != null)
-                Text(
-                  trend!,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.secondary,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-            ],
+            children: rowChildren,
           ),
           const SizedBox(height: 8),
           Text(label, style: Theme.of(context).textTheme.bodySmall),

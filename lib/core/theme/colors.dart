@@ -53,11 +53,10 @@ ColorScheme lightColorSchemeFromPalette() {
     onTertiary: AppColors.onAccent,
     error: AppColors.error,
     onError: Colors.white,
-    background: AppColors.background,
-    onBackground: AppColors.textPrimary,
     surface: AppColors.surface,
     onSurface: AppColors.textPrimary,
-    surfaceVariant: AppColors.muted,
+    surfaceContainerHighest: AppColors.background,
+    surfaceContainerLowest: AppColors.muted,
     outline: AppColors.border,
   );
 }

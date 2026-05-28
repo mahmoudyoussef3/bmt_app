@@ -22,7 +22,7 @@ class ComponentBottomNavigation extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.06))),
+        border: Border(top: BorderSide(color: Colors.black.withAlpha(15))),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
       child: Row(
@@ -37,7 +37,7 @@ class ComponentBottomNavigation extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? Theme.of(context).colorScheme.primary.withOpacity(0.08)
+                      ? Theme.of(context).colorScheme.primary.withAlpha(20)
                       : Colors.transparent,
                   borderRadius: BorderRadius.circular(16),
                 ),

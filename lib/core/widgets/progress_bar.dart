@@ -10,7 +10,7 @@ class AppProgressBar extends StatelessWidget {
       borderRadius: BorderRadius.circular(8),
       child: Container(
         height: 8,
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.06),
+        color: Theme.of(context).colorScheme.onSurface.withAlpha(15),
         child: FractionallySizedBox(
           alignment: Alignment.centerLeft,
           widthFactor: progress.clamp(0.0, 1.0),

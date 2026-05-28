@@ -26,7 +26,7 @@ class BookingsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.primary.withAlpha(26),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
@@ -64,9 +64,7 @@ class BookingsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(14),
                 decoration: BoxDecoration(
-                  color: Theme.of(
-                    context,
-                  ).colorScheme.secondary.withOpacity(0.1),
+                  color: Theme.of(context).colorScheme.secondary.withAlpha(26),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(

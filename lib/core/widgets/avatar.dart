@@ -18,7 +18,7 @@ class AppAvatar extends StatelessWidget {
       radius: radius,
       backgroundColor:
           backgroundColor ??
-          Theme.of(context).colorScheme.secondary.withOpacity(0.18),
+          Theme.of(context).colorScheme.secondary.withAlpha(46),
       child: Text(
         initials ?? '',
         style: TextStyle(

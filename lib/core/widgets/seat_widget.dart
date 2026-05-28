@@ -20,7 +20,7 @@ class SeatWidget extends StatelessWidget {
     Color text;
     switch (status) {
       case SeatStatus.reserved:
-        bg = Theme.of(context).colorScheme.onSurface.withOpacity(0.08);
+        bg = Theme.of(context).colorScheme.onSurface.withAlpha(20);
         text = Theme.of(context).textTheme.bodySmall!.color!;
         break;
       case SeatStatus.selected:
@@ -37,9 +37,7 @@ class SeatWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(
-          color: Theme.of(context).dividerColor.withOpacity(0.2),
-        ),
+        border: Border.all(color: Theme.of(context).dividerColor.withAlpha(51)),
       ),
       alignment: Alignment.center,
       child: Text(

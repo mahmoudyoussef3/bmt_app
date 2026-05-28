@@ -53,7 +53,7 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
                           decoration: BoxDecoration(
                             color: Theme.of(
                               context,
-                            ).colorScheme.primary.withOpacity(0.1),
+                            ).colorScheme.primary.withAlpha(26),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
@@ -174,13 +174,11 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.08),
+            Theme.of(context).colorScheme.primary.withAlpha(20),
             Colors.transparent,
           ],
         ),
-        border: Border(
-          bottom: BorderSide(color: Colors.black.withOpacity(0.06)),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.black.withAlpha(15))),
       ),
       child: Row(
         children: [
@@ -223,7 +221,7 @@ class _Legend extends StatelessWidget {
           height: 30,
           decoration: BoxDecoration(
             color: color,
-            border: Border.all(color: Colors.black.withOpacity(0.1)),
+            border: Border.all(color: Colors.black.withAlpha(26)),
             borderRadius: BorderRadius.circular(8),
           ),
         ),

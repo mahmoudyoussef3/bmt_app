@@ -1,0 +1,700 @@
+{
+  "typography_system": {
+    "font_families": {
+      "primary": {
+        "name": "Geist",
+        "fallback": "Geist Fallback",
+        "usage": "All body text, buttons, labels, headings",
+        "source": "Google Fonts",
+        "url": "https://fonts.google.com/specimen/Geist"
+      },
+      "mono": {
+        "name": "Geist Mono",
+        "fallback": "Geist Mono Fallback",
+        "usage": "Prices, numeric data, IDs, technical text",
+        "source": "Google Fonts",
+        "url": "https://fonts.google.com/specimen/Geist+Mono"
+      }
+    },
+    "default_settings": {
+      "font_weight_regular": 400,
+      "line_height_default": 1.5,
+      "letter_spacing_default": "0px"
+    }
+  },
+  "text_styles": {
+    "heading_h1": {
+      "name": "Heading 1",
+      "size_px": 24,
+      "font_weight": 700,
+      "font_weight_name": "Bold",
+      "line_height": 1.3,
+      "line_height_px": 32,
+      "letter_spacing_px": -0.25,
+      "letter_spacing": "-0.25px",
+      "font_family": "Geist",
+      "usage": "Page titles, main headers, user greeting",
+      "tailwind_class": "text-2xl font-bold",
+      "examples": [
+        "Ahmed Hassan",
+        "Monthly Subscription",
+        "Daily Booking"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 24,\n  fontWeight: FontWeight.w700,\n  height: 1.3,\n  letterSpacing: -0.25,\n  fontFamily: 'Geist',\n)"
+    },
+    "heading_h2": {
+      "name": "Heading 2",
+      "size_px": 20,
+      "font_weight": 600,
+      "font_weight_name": "SemiBold",
+      "line_height": 1.4,
+      "line_height_px": 28,
+      "letter_spacing_px": 0,
+      "letter_spacing": "0px",
+      "font_family": "Geist",
+      "usage": "Section headers, major section titles",
+      "tailwind_class": "text-xl font-semibold",
+      "examples": [
+        "Quick Actions",
+        "Select Plan",
+        "Route Summary",
+        "What's Included"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 20,\n  fontWeight: FontWeight.w600,\n  height: 1.4,\n  letterSpacing: 0,\n  fontFamily: 'Geist',\n)"
+    },
+    "heading_h3": {
+      "name": "Heading 3",
+      "size_px": 18,
+      "font_weight": 600,
+      "font_weight_name": "SemiBold",
+      "line_height": 1.4,
+      "line_height_px": 25,
+      "letter_spacing_px": 0,
+      "letter_spacing": "0px",
+      "font_family": "Geist",
+      "usage": "Card titles, subsection headers",
+      "tailwind_class": "text-lg font-semibold",
+      "examples": [
+        "Today's Booking",
+        "Driver Info",
+        "Pickup Point",
+        "Destination"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 18,\n  fontWeight: FontWeight.w600,\n  height: 1.4,\n  letterSpacing: 0,\n  fontFamily: 'Geist',\n)"
+    },
+    "body_large": {
+      "name": "Body Large",
+      "size_px": 16,
+      "font_weight": 400,
+      "font_weight_name": "Regular",
+      "line_height": 1.5,
+      "line_height_px": 24,
+      "letter_spacing_px": 0,
+      "letter_spacing": "0px",
+      "font_family": "Geist",
+      "usage": "Main body text, primary content, button labels",
+      "tailwind_class": "text-base",
+      "examples": [
+        "Main paragraph content",
+        "Card body text",
+        "Form helper text"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 16,\n  fontWeight: FontWeight.w400,\n  height: 1.5,\n  letterSpacing: 0,\n  fontFamily: 'Geist',\n)"
+    },
+    "body_medium": {
+      "name": "Body Medium",
+      "size_px": 14,
+      "font_weight": 500,
+      "font_weight_name": "Medium",
+      "line_height": 1.5,
+      "line_height_px": 21,
+      "letter_spacing_px": 0.25,
+      "letter_spacing": "0.25px",
+      "font_family": "Geist",
+      "usage": "Important body text, section labels, emphasized content",
+      "tailwind_class": "text-sm font-medium",
+      "examples": [
+        "Ahmed Mohamed (driver name)",
+        "Banha Center (location name)",
+        "Selection button text"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 14,\n  fontWeight: FontWeight.w500,\n  height: 1.5,\n  letterSpacing: 0.25,\n  fontFamily: 'Geist',\n)"
+    },
+    "body_small": {
+      "name": "Body Small",
+      "size_px": 14,
+      "font_weight": 400,
+      "font_weight_name": "Regular",
+      "line_height": 1.5,
+      "line_height_px": 21,
+      "letter_spacing_px": 0.25,
+      "letter_spacing": "0.25px",
+      "font_family": "Geist",
+      "usage": "Secondary body text, descriptions, helper text",
+      "tailwind_class": "text-sm",
+      "examples": [
+        "Setup your permanent route",
+        "Monthly plan details",
+        "Benefit descriptions"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 14,\n  fontWeight: FontWeight.w400,\n  height: 1.5,\n  letterSpacing: 0.25,\n  fontFamily: 'Geist',\n)"
+    },
+    "label_large": {
+      "name": "Label Large",
+      "size_px": 12,
+      "font_weight": 500,
+      "font_weight_name": "Medium",
+      "line_height": 1.6,
+      "line_height_px": 19,
+      "letter_spacing_px": 0.5,
+      "letter_spacing": "0.5px",
+      "font_family": "Geist",
+      "usage": "Form labels, input labels, status badges",
+      "tailwind_class": "text-xs font-medium",
+      "examples": [
+        "Pickup",
+        "Destination",
+        "Preferred Arrival Time",
+        "Preferred Seat"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 12,\n  fontWeight: FontWeight.w500,\n  height: 1.6,\n  letterSpacing: 0.5,\n  fontFamily: 'Geist',\n)"
+    },
+    "label_small": {
+      "name": "Label Small",
+      "size_px": 12,
+      "font_weight": 400,
+      "font_weight_name": "Regular",
+      "line_height": 1.6,
+      "line_height_px": 19,
+      "letter_spacing_px": 0.5,
+      "letter_spacing": "0.5px",
+      "font_family": "Geist",
+      "usage": "Small labels, subtext, helper text",
+      "tailwind_class": "text-xs",
+      "examples": [
+        "Good Morning",
+        "Helper hints",
+        "Supplementary info"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 12,\n  fontWeight: FontWeight.w400,\n  height: 1.6,\n  letterSpacing: 0.5,\n  fontFamily: 'Geist',\n)"
+    },
+    "caption_muted": {
+      "name": "Caption / Muted Text",
+      "size_px": 12,
+      "font_weight": 400,
+      "font_weight_name": "Regular",
+      "line_height": 1.5,
+      "line_height_px": 18,
+      "letter_spacing_px": 0,
+      "letter_spacing": "0px",
+      "font_family": "Geist",
+      "color": "--muted-foreground",
+      "usage": "Muted foreground text, timestamps, secondary info",
+      "tailwind_class": "text-xs text-muted-foreground",
+      "examples": [
+        "Vehicle #MT-2847",
+        "3 min away",
+        "per month",
+        "Monthly plan details"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 12,\n  fontWeight: FontWeight.w400,\n  height: 1.5,\n  letterSpacing: 0,\n  fontFamily: 'Geist',\n  color: AppColors.mutedForeground,\n)"
+    },
+    "button_text": {
+      "name": "Button Text",
+      "size_px": 14,
+      "font_weight": 500,
+      "font_weight_name": "Medium",
+      "line_height": 1.4,
+      "line_height_px": 20,
+      "letter_spacing_px": 0.25,
+      "letter_spacing": "0.25px",
+      "font_family": "Geist",
+      "usage": "All primary and secondary button labels",
+      "tailwind_class": "text-sm font-medium",
+      "examples": [
+        "Subscribe Now",
+        "Review Plans",
+        "Driver Dashboard",
+        "Continue"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 14,\n  fontWeight: FontWeight.w500,\n  height: 1.4,\n  letterSpacing: 0.25,\n  fontFamily: 'Geist',\n)"
+    },
+    "button_large": {
+      "name": "Button Text Large",
+      "size_px": 16,
+      "font_weight": 600,
+      "font_weight_name": "SemiBold",
+      "line_height": 1.4,
+      "line_height_px": 22,
+      "letter_spacing_px": 0,
+      "letter_spacing": "0px",
+      "font_family": "Geist",
+      "usage": "Large primary action buttons, prominent CTAs",
+      "tailwind_class": "text-base font-semibold",
+      "examples": [
+        "Subscribe Now - EGP 1,200/month",
+        "Main action buttons"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 16,\n  fontWeight: FontWeight.w600,\n  height: 1.4,\n  letterSpacing: 0,\n  fontFamily: 'Geist',\n)"
+    },
+    "badge_text": {
+      "name": "Badge Text",
+      "size_px": 11,
+      "font_weight": 500,
+      "font_weight_name": "Medium",
+      "line_height": 1.4,
+      "line_height_px": 16,
+      "letter_spacing_px": 0.4,
+      "letter_spacing": "0.4px",
+      "font_family": "Geist",
+      "usage": "Status badges, tags, pills",
+      "tailwind_class": "text-xs font-medium",
+      "examples": [
+        "Active",
+        "Save 15%",
+        "Save 10%",
+        "Status indicators"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 11,\n  fontWeight: FontWeight.w500,\n  height: 1.4,\n  letterSpacing: 0.4,\n  fontFamily: 'Geist',\n)"
+    },
+    "price_emphasis": {
+      "name": "Price / Numeric Emphasis",
+      "size_px": 18,
+      "font_weight": 700,
+      "font_weight_name": "Bold",
+      "line_height": 1.2,
+      "line_height_px": 22,
+      "letter_spacing_px": 0,
+      "letter_spacing": "0px",
+      "font_family": "Geist Mono",
+      "usage": "Prices, amounts, important numbers, large metrics",
+      "tailwind_class": "text-lg font-bold",
+      "examples": [
+        "EGP 1,200",
+        "EGP 3,300",
+        "EGP 12,000",
+        "Analytics values"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 18,\n  fontWeight: FontWeight.w700,\n  height: 1.2,\n  letterSpacing: 0,\n  fontFamily: 'Geist Mono',\n)"
+    },
+    "small_numeric": {
+      "name": "Small Numeric",
+      "size_px": 14,
+      "font_weight": 600,
+      "font_weight_name": "SemiBold",
+      "line_height": 1.4,
+      "line_height_px": 20,
+      "letter_spacing_px": 0,
+      "letter_spacing": "0px",
+      "font_family": "Geist Mono",
+      "usage": "Seat numbers, vehicle IDs, small amounts",
+      "tailwind_class": "text-sm font-semibold",
+      "examples": [
+        "A1",
+        "B2",
+        "C1",
+        "MT-2847"
+      ],
+      "flutter_code": "TextStyle(\n  fontSize: 14,\n  fontWeight: FontWeight.w600,\n  height: 1.4,\n  letterSpacing: 0,\n  fontFamily: 'Geist Mono',\n)"
+    }
+  },
+  "screen_typography": {
+    "home_screen": {
+      "user_greeting": {
+        "element": "User greeting text",
+        "text_style": "heading_h1",
+        "example": "Ahmed Hassan"
+      },
+      "greeting_prefix": {
+        "element": "Greeting prefix",
+        "text_style": "label_small",
+        "example": "Good Morning"
+      },
+      "card_heading": {
+        "element": "Booking card title",
+        "text_style": "heading_h3",
+        "example": "Today's Booking"
+      },
+      "card_body": {
+        "element": "Card content",
+        "text_style": "body_large",
+        "example": "Route and booking info"
+      },
+      "status_badge": {
+        "element": "Active status badge",
+        "text_style": "badge_text",
+        "example": "Active"
+      },
+      "driver_name": {
+        "element": "Driver name display",
+        "text_style": "body_medium",
+        "example": "Ahmed Mohamed"
+      },
+      "vehicle_id": {
+        "element": "Vehicle identifier",
+        "text_style": "caption_muted",
+        "example": "Vehicle #MT-2847"
+      },
+      "quick_actions_header": {
+        "element": "Section title",
+        "text_style": "heading_h2",
+        "example": "Quick Actions"
+      },
+      "action_button_label": {
+        "element": "Button label",
+        "text_style": "label_large",
+        "example": "Daily Booking"
+      }
+    },
+    "booking_flow": {
+      "page_title": {
+        "element": "Main page header",
+        "text_style": "heading_h1",
+        "example": "Daily Booking"
+      },
+      "step_header": {
+        "element": "Step title",
+        "text_style": "heading_h2",
+        "example": "Step 1: Select Pickup"
+      },
+      "subtitle": {
+        "element": "Descriptive subtitle",
+        "text_style": "body_small",
+        "example": "Select your route"
+      },
+      "form_label": {
+        "element": "Input field label",
+        "text_style": "label_large",
+        "example": "Pickup Point"
+      },
+      "selection_button": {
+        "element": "Selectable option",
+        "text_style": "body_medium",
+        "example": "Banha Center"
+      },
+      "button_text": {
+        "element": "Action button",
+        "text_style": "button_text",
+        "example": "Continue"
+      }
+    },
+    "subscription_screen": {
+      "page_title": {
+        "element": "Page header",
+        "text_style": "heading_h1",
+        "example": "Monthly Subscription"
+      },
+      "subtitle": {
+        "element": "Page description",
+        "text_style": "body_small",
+        "example": "Setup your permanent route"
+      },
+      "plan_name": {
+        "element": "Plan title",
+        "text_style": "body_medium",
+        "example": "Monthly"
+      },
+      "plan_price": {
+        "element": "Price display",
+        "text_style": "price_emphasis",
+        "example": "EGP 1,200"
+      },
+      "savings_badge": {
+        "element": "Discount indicator",
+        "text_style": "badge_text",
+        "example": "Save 15%"
+      },
+      "plan_period": {
+        "element": "Plan frequency",
+        "text_style": "caption_muted",
+        "example": "per month"
+      },
+      "benefits_title": {
+        "element": "Section header",
+        "text_style": "heading_h2",
+        "example": "What's Included"
+      },
+      "benefit_text": {
+        "element": "Benefit item",
+        "text_style": "body_large",
+        "example": "Unlimited daily rides on your route"
+      }
+    },
+    "seat_selection": {
+      "seat_number": {
+        "element": "Seat identifier",
+        "text_style": "small_numeric",
+        "example": "A1"
+      },
+      "seat_status": {
+        "element": "Seat availability",
+        "text_style": "label_large",
+        "example": "Reserved"
+      },
+      "summary_header": {
+        "element": "Summary title",
+        "text_style": "heading_h3",
+        "example": "Booking Summary"
+      },
+      "summary_detail": {
+        "element": "Summary content",
+        "text_style": "body_large",
+        "example": "Route and seat info"
+      }
+    },
+    "tracking_screen": {
+      "eta_timer": {
+        "element": "Large time display",
+        "text_style": "price_emphasis",
+        "example": "8:45 AM"
+      },
+      "status_text": {
+        "element": "Current status",
+        "text_style": "body_medium",
+        "example": "Vehicle arriving"
+      },
+      "driver_name": {
+        "element": "Driver identifier",
+        "text_style": "body_large",
+        "example": "Ahmed Mohamed"
+      },
+      "route_info": {
+        "element": "Route details",
+        "text_style": "caption_muted",
+        "example": "Banha Center → Smart Village"
+      }
+    },
+    "driver_dashboard": {
+      "stats_title": {
+        "element": "Metric label",
+        "text_style": "label_large",
+        "example": "Total Passengers"
+      },
+      "stats_value": {
+        "element": "Metric number",
+        "text_style": "price_emphasis",
+        "example": "24"
+      },
+      "trip_title": {
+        "element": "Trip header",
+        "text_style": "body_medium",
+        "example": "Next Trip"
+      },
+      "trip_detail": {
+        "element": "Trip info",
+        "text_style": "caption_muted",
+        "example": "10:30 AM - Smart Village"
+      },
+      "passenger_name": {
+        "element": "Passenger identifier",
+        "text_style": "body_large",
+        "example": "Sarah Johnson"
+      },
+      "status_badge": {
+        "element": "Status indicator",
+        "text_style": "badge_text",
+        "example": "Booked"
+      }
+    },
+    "admin_dashboard": {
+      "metric_label": {
+        "element": "KPI label",
+        "text_style": "label_large",
+        "example": "Active Trips"
+      },
+      "metric_value": {
+        "element": "KPI number",
+        "text_style": "price_emphasis",
+        "example": "12"
+      },
+      "trip_header": {
+        "element": "Trip list item title",
+        "text_style": "body_medium",
+        "example": "Route 5: Banha → Smart Village"
+      },
+      "fleet_status": {
+        "element": "Fleet info",
+        "text_style": "body_small",
+        "example": "8 active vehicles"
+      },
+      "chart_label": {
+        "element": "Chart axis label",
+        "text_style": "caption_muted",
+        "example": "Monday"
+      }
+    }
+  },
+  "color_combinations": {
+    "light_theme": {
+      "primary_text": {
+        "token": "--foreground",
+        "oklch": "oklch(0.15 0 0)",
+        "usage": "Body text, headings, primary content"
+      },
+      "secondary_text": {
+        "token": "--muted-foreground",
+        "oklch": "oklch(0.55 0 0)",
+        "usage": "Subtitles, hints, secondary info"
+      },
+      "brand_text": {
+        "token": "--primary",
+        "oklch": "oklch(0.35 0.15 260)",
+        "usage": "Primary CTAs, emphasized text"
+      },
+      "accent_text": {
+        "token": "--accent",
+        "oklch": "oklch(0.65 0.22 30)",
+        "usage": "Important highlights, warnings"
+      },
+      "error_text": {
+        "token": "--destructive",
+        "oklch": "oklch(0.62 0.22 29)",
+        "usage": "Error messages, deletions"
+      }
+    },
+    "dark_theme": {
+      "primary_text": {
+        "token": "--foreground",
+        "oklch": "oklch(0.95 0.01 0)",
+        "usage": "Body text, headings, primary content"
+      },
+      "secondary_text": {
+        "token": "--muted-foreground",
+        "oklch": "oklch(0.65 0.05 0)",
+        "usage": "Subtitles, hints, secondary info"
+      },
+      "brand_text": {
+        "token": "--primary",
+        "oklch": "oklch(0.68 0.20 200)",
+        "usage": "Primary CTAs, emphasized text"
+      },
+      "accent_text": {
+        "token": "--accent",
+        "oklch": "oklch(0.65 0.22 30)",
+        "usage": "Important highlights"
+      },
+      "error_text": {
+        "token": "--destructive",
+        "oklch": "oklch(0.62 0.22 29)",
+        "usage": "Error messages"
+      }
+    }
+  },
+  "accessibility": {
+    "wcag_compliance": "AA Standard (4.5:1 contrast ratio for normal text)",
+    "minimum_text_size": "11px",
+    "minimum_line_height": "1.4",
+    "font_rendering": "Geist is optimized for screen display with excellent hinting",
+    "readability_tips": [
+      "Never set text below 11px in production",
+      "Maintain at least 1.4 line height for body text",
+      "Ensure 3:1 contrast ratio minimum for large text",
+      "Use semantic text styles consistently"
+    ]
+  },
+  "responsive_design": {
+    "approach": "Mobile-first",
+    "target_viewport": "360px - 390px",
+    "max_app_width": "500px",
+    "text_scaling": "Absolute pixels (no scaling between devices)",
+    "notes": "All sizes are optimized for mobile screens and remain constant across devices"
+  },
+  "summary_table": [
+    {
+      "component": "H1",
+      "size": "24px",
+      "weight": 700,
+      "line_height": "1.3",
+      "letter_spacing": "-0.25px",
+      "example": "User name"
+    },
+    {
+      "component": "H2",
+      "size": "20px",
+      "weight": 600,
+      "line_height": "1.4",
+      "letter_spacing": "0px",
+      "example": "Section header"
+    },
+    {
+      "component": "H3",
+      "size": "18px",
+      "weight": 600,
+      "line_height": "1.4",
+      "letter_spacing": "0px",
+      "example": "Card title"
+    },
+    {
+      "component": "Body Large",
+      "size": "16px",
+      "weight": 400,
+      "line_height": "1.5",
+      "letter_spacing": "0px",
+      "example": "Main text"
+    },
+    {
+      "component": "Body Medium",
+      "size": "14px",
+      "weight": 500,
+      "line_height": "1.5",
+      "letter_spacing": "0.25px",
+      "example": "Driver name"
+    },
+    {
+      "component": "Body Small",
+      "size": "14px",
+      "weight": 400,
+      "line_height": "1.5",
+      "letter_spacing": "0.25px",
+      "example": "Helper text"
+    },
+    {
+      "component": "Label Large",
+      "size": "12px",
+      "weight": 500,
+      "line_height": "1.6",
+      "letter_spacing": "0.5px",
+      "example": "Form label"
+    },
+    {
+      "component": "Label Small",
+      "size": "12px",
+      "weight": 400,
+      "line_height": "1.6",
+      "letter_spacing": "0.5px",
+      "example": "Subtext"
+    },
+    {
+      "component": "Caption",
+      "size": "12px",
+      "weight": 400,
+      "line_height": "1.5",
+      "letter_spacing": "0px",
+      "example": "Muted text"
+    },
+    {
+      "component": "Button",
+      "size": "14px",
+      "weight": 500,
+      "line_height": "1.4",
+      "letter_spacing": "0.25px",
+      "example": "Button label"
+    },
+    {
+      "component": "Badge",
+      "size": "11px",
+      "weight": 500,
+      "line_height": "1.4",
+      "letter_spacing": "0.4px",
+      "example": "Status"
+    },
+    {
+      "component": "Price",
+      "size": "18px",
+      "weight": 700,
+      "line_height": "1.2",
+      "letter_spacing": "0px",
+      "example": "Amounts"
+    }
+  ]
+}

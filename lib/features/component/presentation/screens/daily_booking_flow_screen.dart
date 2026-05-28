@@ -50,7 +50,7 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
                       decoration: BoxDecoration(
                         color: active
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.black.withOpacity(0.08),
+                            : Colors.black.withAlpha(20),
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),
@@ -271,13 +271,11 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withOpacity(0.08),
+            Theme.of(context).colorScheme.primary.withAlpha(20),
             Colors.transparent,
           ],
         ),
-        border: Border(
-          bottom: BorderSide(color: Colors.black.withOpacity(0.06)),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.black.withAlpha(15))),
       ),
       child: Row(
         children: [
@@ -311,7 +309,7 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
       decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.black.withOpacity(0.06))),
+        border: Border(top: BorderSide(color: Colors.black.withAlpha(15))),
         color: Theme.of(context).scaffoldBackgroundColor,
       ),
       child: AppCard(
