@@ -12,6 +12,7 @@ class ComponentBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final tabs = <({String id, String label, IconData icon})>[
       (id: 'home', label: 'Home', icon: Icons.home_rounded),
       (id: 'bookings', label: 'Bookings', icon: Icons.calendar_month_rounded),
@@ -20,26 +21,35 @@ class ComponentBottomNavigation extends StatelessWidget {
     ];
 
     return Container(
+      margin: const EdgeInsets.fromLTRB(14, 0, 14, 14),
       decoration: BoxDecoration(
-        color: Theme.of(context).scaffoldBackgroundColor,
-        border: Border(top: BorderSide(color: Colors.black.withAlpha(15))),
+        color: scheme.surface.withAlpha(220),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: scheme.outline.withAlpha(120)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(34),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
         children: tabs.map((tab) {
           final isActive = activeTab == tab.id;
           return Expanded(
             child: InkWell(
               onTap: () => onTabChange(tab.id),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(20),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 180),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
                   color: isActive
-                      ? Theme.of(context).colorScheme.primary.withAlpha(20)
+                      ? scheme.primary.withAlpha(40)
                       : Colors.transparent,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(20),
                 ),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -48,18 +58,17 @@ class ComponentBottomNavigation extends StatelessWidget {
                       tab.icon,
                       size: 22,
                       color: isActive
-                          ? Theme.of(context).colorScheme.primary
-                          : Colors.grey,
+                          ? scheme.primary
+                          : scheme.onSurface.withAlpha(155),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       tab.label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         color: isActive
-                            ? Theme.of(context).colorScheme.primary
-                            : Colors.grey,
+                            ? scheme.primary
+                            : scheme.onSurface.withAlpha(155),
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                   ],

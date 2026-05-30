@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/text_themes.dart';
 
 class AppBadge extends StatelessWidget {
   final String text;
@@ -8,17 +9,19 @@ class AppBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bg = color ?? Theme.of(context).colorScheme.tertiary.withAlpha(31);
-    final fg = Theme.of(context).colorScheme.tertiary;
+    final scheme = Theme.of(context).colorScheme;
+    final fg = color ?? scheme.primary;
+    final bg = fg.withAlpha(36);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: fg.withAlpha(70)),
       ),
       child: Text(
         text,
-        style: TextStyle(color: fg, fontWeight: FontWeight.w600, fontSize: 12),
+        style: AppTextThemes.badgeText(scheme).copyWith(color: fg),
       ),
     );
   }

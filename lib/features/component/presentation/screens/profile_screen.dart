@@ -8,50 +8,66 @@ class ProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
         AppCard(
           padding: const EdgeInsets.all(18),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const AppAvatar(initials: 'AH', radius: 24),
-              const SizedBox(width: 14),
-              const Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Ahmed Hassan',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 18,
-                      ),
+              Row(
+                children: [
+                  const AppAvatar(initials: 'AH', radius: 26),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Ahmed Hassan',
+                          style: Theme.of(context).textTheme.displaySmall,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Employee commute account',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: scheme.onSurface.withAlpha(170),
+                              ),
+                        ),
+                      ],
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Employee commute account',
-                      style: TextStyle(color: Colors.grey),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
+              const SizedBox(height: 14),
+              const AppBadge(text: 'Premium access'),
             ],
           ),
         ),
         const SizedBox(height: 16),
-        Text('Access', style: Theme.of(context).textTheme.titleMedium),
+        Text('Access', style: Theme.of(context).textTheme.displaySmall),
         const SizedBox(height: 12),
-        AppButton(
-          label: 'Driver Dashboard',
-          outline: true,
-          onPressed: () => onOpenRoute('/driver'),
-        ),
-        const SizedBox(height: 10),
-        AppButton(
-          label: 'Admin Dashboard',
-          outline: true,
-          onPressed: () => onOpenRoute('/admin'),
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                label: 'Driver Dashboard',
+                outline: true,
+                onPressed: () => onOpenRoute('/driver'),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: AppButton(
+                label: 'Admin Dashboard',
+                outline: true,
+                onPressed: () => onOpenRoute('/admin'),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         AppCard(

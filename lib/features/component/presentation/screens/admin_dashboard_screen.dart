@@ -6,6 +6,7 @@ class DashboardWebScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: SafeArea(
         child: Column(
@@ -13,11 +14,51 @@ class DashboardWebScreen extends StatelessWidget {
             _header(context),
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
                 children: [
+                  AppCard(
+                    padding: const EdgeInsets.all(18),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: scheme.primary.withAlpha(36),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.monitor_rounded,
+                            color: scheme.primary,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Operations Dashboard',
+                                style: Theme.of(context).textTheme.displaySmall,
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'Fleet, revenue, and trip status at a glance',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: scheme.onSurface.withAlpha(170),
+                                    ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const AppBadge(text: 'Live'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     "Today's Metrics",
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
                   const SizedBox(height: 12),
                   GridView.count(
@@ -53,7 +94,7 @@ class DashboardWebScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'Active Trips',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
                   const SizedBox(height: 10),
                   _tripCard(
@@ -88,7 +129,7 @@ class DashboardWebScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'Upcoming Trips',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
                   const SizedBox(height: 10),
                   _smallTrip(
@@ -117,7 +158,7 @@ class DashboardWebScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'Fleet Status',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
                   const SizedBox(height: 10),
                   Row(
@@ -138,7 +179,7 @@ class DashboardWebScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'Booking Trends',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
                   const SizedBox(height: 10),
                   AppCard(
@@ -162,16 +203,19 @@ class DashboardWebScreen extends StatelessWidget {
                   const SizedBox(height: 16),
                   Text(
                     'Alerts',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: Theme.of(context).textTheme.displaySmall,
                   ),
                   const SizedBox(height: 10),
                   AppCard(
                     child: Row(
-                      children: const [
-                        Icon(Icons.warning_rounded, color: Colors.orange),
-                        SizedBox(width: 10),
+                      children: [
+                        Icon(Icons.warning_rounded, color: scheme.error),
+                        const SizedBox(width: 10),
                         Expanded(
-                          child: Text('Vehicle MT-2845 Needs Maintenance'),
+                          child: Text(
+                            'Vehicle MT-2845 Needs Maintenance',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
                         ),
                       ],
                     ),
@@ -179,20 +223,30 @@ class DashboardWebScreen extends StatelessWidget {
                   const SizedBox(height: 10),
                   AppCard(
                     child: Row(
-                      children: const [
-                        Icon(Icons.info_rounded, color: Colors.blue),
-                        SizedBox(width: 10),
-                        Expanded(child: Text('High Traffic on Ring Road')),
+                      children: [
+                        Icon(Icons.info_rounded, color: scheme.primary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'High Traffic on Ring Road',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
                       ],
                     ),
                   ),
                   const SizedBox(height: 10),
                   AppCard(
                     child: Row(
-                      children: const [
-                        Icon(Icons.info_rounded, color: Colors.blue),
-                        SizedBox(width: 10),
-                        Expanded(child: Text('Booking Cancellation Rate: 8%')),
+                      children: [
+                        Icon(Icons.info_rounded, color: scheme.secondary),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            'Booking Cancellation Rate: 8%',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -215,16 +269,28 @@ class DashboardWebScreen extends StatelessWidget {
   }
 
   Widget _header(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
+      margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withAlpha(20),
-            Colors.transparent,
+            scheme.primary.withAlpha(72),
+            scheme.secondary.withAlpha(28),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        border: Border(bottom: BorderSide(color: Colors.black.withAlpha(15))),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: scheme.outline.withAlpha(110)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(32),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -238,11 +304,13 @@ class DashboardWebScreen extends StatelessWidget {
             children: [
               Text(
                 'Operations Dashboard',
-                style: Theme.of(context).textTheme.titleMedium,
+                style: Theme.of(context).textTheme.displaySmall,
               ),
               Text(
                 'Operations Overview',
-                style: Theme.of(context).textTheme.bodySmall,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurface.withAlpha(170),
+                ),
               ),
             ],
           ),
@@ -260,8 +328,9 @@ class DashboardWebScreen extends StatelessWidget {
     double progress,
     bool inTransit,
   ) {
+    final scheme = Theme.of(context).colorScheme;
     return AppCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -277,14 +346,24 @@ class DashboardWebScreen extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  Text(driver, style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    driver,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(170),
+                    ),
+                  ),
                 ],
               ),
               AppBadge(text: inTransit ? 'In Transit' : 'Picking Up'),
             ],
           ),
           const SizedBox(height: 8),
-          Text(route, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            route,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: scheme.onSurface.withAlpha(170),
+            ),
+          ),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -297,7 +376,9 @@ class DashboardWebScreen extends StatelessWidget {
               ),
               Text(
                 '${(progress * 100).round()}% complete',
-                style: Theme.of(context).textTheme.bodySmall,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurface.withAlpha(170),
+                ),
               ),
             ],
           ),
@@ -315,8 +396,9 @@ class DashboardWebScreen extends StatelessWidget {
     String departure,
     String bookings,
   ) {
+    final scheme = Theme.of(context).colorScheme;
     return AppCard(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -330,7 +412,12 @@ class DashboardWebScreen extends StatelessWidget {
                 ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
-              Text(route, style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                route,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurface.withAlpha(170),
+                ),
+              ),
             ],
           ),
           Column(
@@ -343,7 +430,12 @@ class DashboardWebScreen extends StatelessWidget {
                 ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 4),
-              Text(bookings, style: Theme.of(context).textTheme.bodySmall),
+              Text(
+                bookings,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurface.withAlpha(170),
+                ),
+              ),
             ],
           ),
         ],
@@ -352,6 +444,7 @@ class DashboardWebScreen extends StatelessWidget {
   }
 
   Widget _chartBar(BuildContext context, double height, String label) {
+    final scheme = Theme.of(context).colorScheme;
     return Expanded(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -361,10 +454,7 @@ class DashboardWebScreen extends StatelessWidget {
             margin: const EdgeInsets.symmetric(horizontal: 4),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary,
-                  Theme.of(context).colorScheme.secondary,
-                ],
+                colors: [scheme.primary, scheme.secondary],
               ),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(8),
@@ -372,7 +462,12 @@ class DashboardWebScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: scheme.onSurface.withAlpha(170),
+            ),
+          ),
         ],
       ),
     );
@@ -392,6 +487,7 @@ class _MetricCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AppCard(
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -400,28 +496,29 @@ class _MetricCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Icon(
-                Icons.analytics_rounded,
-                color: Theme.of(context).colorScheme.primary,
-                size: 18,
-              ),
+              Icon(Icons.analytics_rounded, color: scheme.primary, size: 18),
               Text(
                 trend,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.secondary,
+                  color: scheme.secondary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
             ],
           ),
           const Spacer(),
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: scheme.onSurface.withAlpha(170),
+            ),
+          ),
           const SizedBox(height: 4),
           Text(
             value,
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
         ],
       ),
@@ -437,6 +534,7 @@ class _FleetTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AppCard(
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -445,12 +543,14 @@ class _FleetTile extends StatelessWidget {
             count,
             style: Theme.of(
               context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 6),
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: scheme.onSurface.withAlpha(170),
+            ),
             textAlign: TextAlign.center,
           ),
         ],

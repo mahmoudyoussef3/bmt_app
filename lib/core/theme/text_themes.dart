@@ -4,104 +4,134 @@ import 'package:flutter/material.dart';
 /// docs/FLUTTER_TEXT_STYLES.dart and DESIGN_SYSTEM_OVERVIEW.md.
 class AppTextThemes {
   AppTextThemes._();
-
   static const String primaryFont = 'Geist';
-  static const String monoFont = 'GeistMono';
+  static const String monoFont = 'Geist Mono';
 
-  static TextTheme lightTextTheme(ColorScheme colorScheme) {
-    final primary = colorScheme.onSurface;
+  // Centralized scale and weights for consistent typography across the app.
+  static const double _scale = 1.0; // keep multiplier for easy tuning
+  static const FontWeight _b = FontWeight.w700;
+  static const FontWeight _sb = FontWeight.w600;
+  static const FontWeight _m = FontWeight.w500;
+  static const FontWeight _r = FontWeight.w400;
+
+  static TextTheme textThemeFor(ColorScheme colorScheme) {
+    final onSurface = colorScheme.onSurface;
 
     return TextTheme(
-      displayLarge: const TextStyle(
+      // Page / Section titles
+      displayLarge: TextStyle(
         fontFamily: primaryFont,
-        fontSize: 24,
-        fontWeight: FontWeight.w700,
-        height: 1.4,
+        fontSize: 28 * _scale,
+        fontWeight: _b,
+        height: 1.2,
+        letterSpacing: -0.4,
       ), // H1
-      displayMedium: const TextStyle(
+      displayMedium: TextStyle(
         fontFamily: primaryFont,
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        height: 1.4,
+        fontSize: 22 * _scale,
+        fontWeight: _sb,
+        height: 1.25,
       ), // H2
-      displaySmall: const TextStyle(
+      displaySmall: TextStyle(
         fontFamily: primaryFont,
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-        height: 1.4,
-      ), // H3
-
-      headlineLarge: const TextStyle(
-        fontFamily: primaryFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        height: 1.45,
-      ),
-      headlineMedium: const TextStyle(
-        fontFamily: primaryFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        height: 1.45,
-      ),
-
-      titleLarge: const TextStyle(
-        fontFamily: primaryFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        height: 1.4,
-      ),
-      titleMedium: const TextStyle(
-        fontFamily: primaryFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
+        fontSize: 18 * _scale,
+        fontWeight: _sb,
         height: 1.3,
-      ),
-      titleSmall: const TextStyle(
+      ), // H3 / Card titles
+      // Body
+      bodyLarge: TextStyle(
         fontFamily: primaryFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w500,
-        height: 1.3,
-      ),
-
-      bodyLarge: const TextStyle(
+        fontSize: 16 * _scale,
+        fontWeight: _r,
+        height: 1.6,
+      ), // comfortable reading
+      bodyMedium: TextStyle(
         fontFamily: primaryFont,
-        fontSize: 16,
-        fontWeight: FontWeight.w400,
+        fontSize: 14 * _scale,
+        fontWeight: _m,
         height: 1.5,
+        letterSpacing: 0.2,
       ),
-      bodyMedium: const TextStyle(
+      bodySmall: TextStyle(
         fontFamily: primaryFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
+        fontSize: 13 * _scale,
+        fontWeight: _r,
         height: 1.45,
+        letterSpacing: 0.2,
       ),
-      bodySmall: const TextStyle(
+
+      // Labels / badges
+      labelLarge: TextStyle(
         fontFamily: primaryFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w400,
+        fontSize: 13 * _scale,
+        fontWeight: _m,
+        height: 1.4,
+        letterSpacing: 0.4,
+      ),
+      labelSmall: TextStyle(
+        fontFamily: primaryFont,
+        fontSize: 12 * _scale,
+        fontWeight: _r,
+        height: 1.4,
+        letterSpacing: 0.4,
+      ),
+
+      // Buttons / action labels
+      titleLarge: TextStyle(
+        fontFamily: primaryFont,
+        fontSize: 16 * _scale,
+        fontWeight: _sb,
         height: 1.3,
       ),
 
-      labelLarge: const TextStyle(
+      // Captions / small helper text
+      titleMedium: TextStyle(
         fontFamily: primaryFont,
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
+        fontSize: 12 * _scale,
+        fontWeight: _r,
+        height: 1.4,
       ),
-      labelSmall: const TextStyle(
+      titleSmall: TextStyle(
         fontFamily: primaryFont,
-        fontSize: 12,
-        fontWeight: FontWeight.w600,
+        fontSize: 11 * _scale,
+        fontWeight: _m,
+        height: 1.3,
       ),
-
-      // Buttons / Badge / Numeric
-      // Use `copyWith` at call sites for color changes
-      // Numeric styles use a monospace font family
-      // Price / Numeric Large
-      // Note: not all named fields are used; these are base styles.
     ).apply(
-      bodyColor: primary,
-      displayColor: primary,
-      decorationColor: primary,
+      bodyColor: onSurface,
+      displayColor: onSurface,
+      decorationColor: onSurface,
     );
   }
+
+  // Semantic helpers for common patterns
+  static TextStyle headlineStrong(ColorScheme cs) =>
+      textThemeFor(cs).displayLarge!;
+  static TextStyle subtitle(ColorScheme cs) => textThemeFor(cs).displaySmall!;
+  static TextStyle caption(ColorScheme cs) => textThemeFor(cs).titleMedium!;
+
+  static TextStyle badgeText(ColorScheme cs) => TextStyle(
+    fontFamily: primaryFont,
+    fontSize: 11 * _scale,
+    fontWeight: _m,
+    height: 1.4,
+    letterSpacing: 0.4,
+    color: cs.onSurface,
+  );
+
+  static TextStyle priceEmphasis(ColorScheme cs) => TextStyle(
+    fontFamily: monoFont,
+    fontSize: 18 * _scale,
+    fontWeight: _b,
+    height: 1.2,
+    color: cs.onSurface,
+  );
+
+  static TextStyle smallNumeric(ColorScheme cs) => TextStyle(
+    fontFamily: monoFont,
+    fontSize: 14 * _scale,
+    fontWeight: _m,
+    height: 1.4,
+    color: cs.onSurface,
+  );
 }

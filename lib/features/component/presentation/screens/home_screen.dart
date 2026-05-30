@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/core/theme/text_themes.dart';
 
 class HomeScreen extends StatelessWidget {
   final void Function(String route) onOpenRoute;
@@ -8,57 +9,98 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return CustomScrollView(
       slivers: [
         SliverToBoxAdapter(
-          child: Container(
-            padding: const EdgeInsets.fromLTRB(20, 18, 20, 12),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  Theme.of(context).colorScheme.primary.withAlpha(20),
-                  Colors.transparent,
-                ],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Good Morning',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Ahmed Hassan',
-                          style: Theme.of(
-                            context,
-                          ).textTheme.titleLarge?.copyWith(fontSize: 22),
-                        ),
-                      ],
-                    ),
-                    AppAvatar(
-                      initials: 'AH',
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.primary.withAlpha(26),
-                    ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+            child: Container(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    scheme.primary.withAlpha(82),
+                    scheme.secondary.withAlpha(28),
                   ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Transportation dashboard and commute access',
-                  style: Theme.of(context).textTheme.bodySmall,
-                ),
-              ],
+                borderRadius: BorderRadius.circular(26),
+                border: Border.all(color: scheme.outline.withAlpha(110)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(28),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Good Morning',
+                            style: Theme.of(context).textTheme.labelLarge
+                                ?.copyWith(
+                                  color: scheme.onSurface.withAlpha(200),
+                                ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Ahmed Hassan',
+                            style: AppTextThemes.headlineStrong(
+                              scheme,
+                            ).copyWith(color: scheme.onSurface),
+                          ),
+                        ],
+                      ),
+                      AppAvatar(initials: 'AH', radius: 26),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Transportation dashboard and commute access',
+                    style: AppTextThemes.caption(
+                      scheme,
+                    ).copyWith(color: scheme.onSurface.withAlpha(180)),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: const [
+                      Expanded(
+                        child: _HeroStat(
+                          label: 'Next ride',
+                          value: '8:45 AM',
+                          icon: Icons.schedule_rounded,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: _HeroStat(
+                          label: 'Seat',
+                          value: 'A3',
+                          icon: Icons.event_seat_rounded,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: _HeroStat(
+                          label: 'Status',
+                          value: 'Live',
+                          icon: Icons.bolt_rounded,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -66,7 +108,7 @@ class HomeScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 20),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              AppCard(
+              AppSurface(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,7 +118,7 @@ class HomeScreen extends StatelessWidget {
                       children: [
                         Text(
                           "Today's Booking",
-                          style: Theme.of(context).textTheme.titleMedium,
+                          style: AppTextThemes.subtitle(scheme),
                         ),
                         const AppBadge(text: 'Active'),
                       ],
@@ -132,29 +174,27 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              AppCard(
+              AppSurface(
                 padding: const EdgeInsets.all(14),
                 child: Row(
                   children: [
-                    AppAvatar(
-                      initials: 'AM',
-                      backgroundColor: Theme.of(
-                        context,
-                      ).colorScheme.secondary.withAlpha(31),
-                    ),
+                    AppAvatar(initials: 'AM', radius: 22),
                     const SizedBox(width: 12),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Ahmed Mohamed',
-                            style: TextStyle(fontWeight: FontWeight.w600),
+                            style: Theme.of(context).textTheme.bodyMedium,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
                             'Vehicle #MT-2847',
-                            style: TextStyle(color: Colors.grey),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: scheme.onSurface.withAlpha(160),
+                                ),
                           ),
                         ],
                       ),
@@ -167,10 +207,8 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              Text(
-                'Quick Actions',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              const SizedBox(height: 4),
+              SectionHeader(title: 'Quick Actions'),
               const SizedBox(height: 12),
               Row(
                 children: [
@@ -249,6 +287,51 @@ class _PointInfo extends StatelessWidget {
                   ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                 ),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HeroStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _HeroStat({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.surface.withAlpha(58),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.onSurface.withAlpha(38)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: scheme.onSurface),
+          const SizedBox(height: 10),
+          Text(
+            value,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: scheme.onSurface.withAlpha(170),
             ),
           ),
         ],

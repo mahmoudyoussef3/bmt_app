@@ -14,16 +14,35 @@ class AppAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor:
-          backgroundColor ??
-          Theme.of(context).colorScheme.secondary.withAlpha(46),
+    final scheme = Theme.of(context).colorScheme;
+    final baseColor = backgroundColor ?? scheme.primary.withAlpha(48);
+
+    return Container(
+      width: radius * 2,
+      height: radius * 2,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [baseColor, scheme.secondary.withAlpha(90)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: scheme.outline.withAlpha(120)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(30),
+            blurRadius: 14,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      alignment: Alignment.center,
       child: Text(
         initials ?? '',
         style: TextStyle(
-          color: Theme.of(context).colorScheme.secondary,
-          fontWeight: FontWeight.bold,
+          color: scheme.onPrimary,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
         ),
       ),
     );

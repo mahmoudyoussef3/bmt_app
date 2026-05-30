@@ -16,40 +16,83 @@ class SeatWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color bg;
-    Color text;
-    switch (status) {
-      case SeatStatus.reserved:
-        bg = Theme.of(context).colorScheme.onSurface.withAlpha(20);
-        text = Theme.of(context).textTheme.bodySmall!.color!;
-        break;
-      case SeatStatus.selected:
-        bg = Theme.of(context).colorScheme.primary;
-        text = Colors.white;
-        break;
-      case SeatStatus.available:
-        bg = Theme.of(context).cardColor;
-        text = Theme.of(context).textTheme.bodyMedium!.color!;
-    }
+    final scheme = Theme.of(context).colorScheme;
+    final isReserved = status == SeatStatus.reserved;
+    final isSelected = status == SeatStatus.selected;
 
-    final child = Container(
-      height: 48,
+    final backgroundColor = switch (status) {
+      SeatStatus.reserved => scheme.surfaceContainerHighest.withAlpha(200),
+      SeatStatus.selected => scheme.primary,
+      SeatStatus.available => scheme.surface,
+    };
+
+    final foregroundColor = switch (status) {
+      SeatStatus.reserved => scheme.onSurface.withAlpha(130),
+      SeatStatus.selected => scheme.onPrimary,
+      SeatStatus.available => scheme.onSurface,
+    };
+
+    final borderColor = switch (status) {
+      SeatStatus.reserved => scheme.outline.withAlpha(70),
+      SeatStatus.selected => scheme.primary,
+      SeatStatus.available => scheme.outline.withAlpha(120),
+    };
+
+    final child = AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      width: double.infinity,
+      height: 64,
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Theme.of(context).dividerColor.withAlpha(51)),
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: borderColor, width: isSelected ? 1.5 : 1),
+        boxShadow: isSelected
+            ? [
+                BoxShadow(
+                  color: scheme.primary.withAlpha(60),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : [],
       ),
-      alignment: Alignment.center,
-      child: Text(
-        id,
-        style: TextStyle(color: text, fontWeight: FontWeight.w600),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isReserved
+                ? Icons.lock_rounded
+                : isSelected
+                ? Icons.check_rounded
+                : Icons.event_seat_rounded,
+            size: 16,
+            color: foregroundColor,
+          ),
+          const SizedBox(height: 4),
+          Text(
+            id,
+            style: TextStyle(
+              color: foregroundColor,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
       ),
     );
 
-    if (status == SeatStatus.reserved) {
-      return Opacity(opacity: 0.55, child: child);
+    if (isReserved) {
+      return Opacity(opacity: 0.62, child: child);
     }
 
-    return GestureDetector(onTap: onTap, child: child);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: child,
+      ),
+    );
   }
 }

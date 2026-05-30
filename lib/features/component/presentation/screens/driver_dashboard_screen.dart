@@ -6,6 +6,7 @@ class CaptainDashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final passengers = [
       _Passenger(
         id: 1,
@@ -55,48 +56,109 @@ class CaptainDashboardScreen extends StatelessWidget {
           children: [
             _header(context),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: Column(
                 children: [
-                  Row(
-                    children: const [
-                      Expanded(
-                        child: _StatTile(label: 'Vehicle', value: 'MT-2847'),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: _StatTile(label: 'Route', value: 'Banha → SV'),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: _StatTile(label: 'Passengers', value: '9/12'),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: _StatTile(label: 'Progress', value: '75%'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const AppProgressBar(progress: 0.75),
-                  const SizedBox(height: 8),
-                  Text(
-                    '8:40 AM - On Schedule',
-                    style: Theme.of(context).textTheme.bodySmall,
+                  AppCard(
+                    padding: const EdgeInsets.all(18),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: scheme.primary.withAlpha(40),
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              child: Icon(
+                                Icons.route_rounded,
+                                color: scheme.primary,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Captain Dashboard',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.displaySmall,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Banha → Smart Village route overview',
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(
+                                          color: scheme.onSurface.withAlpha(
+                                            170,
+                                          ),
+                                        ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const AppBadge(text: 'On time'),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+                        Row(
+                          children: const [
+                            Expanded(
+                              child: _StatTile(
+                                label: 'Vehicle',
+                                value: 'MT-2847',
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: _StatTile(
+                                label: 'Route',
+                                value: 'Banha → SV',
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: _StatTile(
+                                label: 'Passengers',
+                                value: '9/12',
+                              ),
+                            ),
+                            SizedBox(width: 10),
+                            Expanded(
+                              child: _StatTile(label: 'Progress', value: '75%'),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        const AppProgressBar(progress: 0.75),
+                        const SizedBox(height: 8),
+                        Text(
+                          '8:40 AM - On Schedule',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: scheme.onSurface.withAlpha(170),
+                              ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
             ),
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
                 itemCount: passengers.length + 2,
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (context, index) {
                   if (index == 0) {
                     return Text(
                       'Passenger List',
-                      style: Theme.of(context).textTheme.titleMedium,
+                      style: Theme.of(context).textTheme.displaySmall,
                     );
                   }
                   if (index == passengers.length + 1) {
@@ -106,35 +168,47 @@ class CaptainDashboardScreen extends StatelessWidget {
                 },
               ),
             ),
-            Container(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
               child: Column(
                 children: [
                   AppCard(
+                    padding: const EdgeInsets.all(16),
                     child: Row(
                       children: [
-                        Icon(
-                          Icons.schedule_rounded,
-                          color: Theme.of(context).colorScheme.secondary,
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: scheme.secondary.withAlpha(34),
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          child: Icon(
+                            Icons.schedule_rounded,
+                            color: scheme.secondary,
+                          ),
                         ),
                         const SizedBox(width: 12),
-                        const Expanded(
+                        Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Next Stop',
-                                style: TextStyle(fontWeight: FontWeight.w600),
+                                style: Theme.of(context).textTheme.bodyMedium,
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 'Banha Downtown',
-                                style: TextStyle(fontWeight: FontWeight.w700),
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
                               ),
-                              SizedBox(height: 4),
+                              const SizedBox(height: 4),
                               Text(
                                 'in 5 minutes',
-                                style: TextStyle(color: Colors.grey),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: scheme.onSurface.withAlpha(170),
+                                    ),
                               ),
                             ],
                           ),
@@ -171,16 +245,28 @@ class CaptainDashboardScreen extends StatelessWidget {
   }
 
   Widget _header(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
+      margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            Theme.of(context).colorScheme.primary.withAlpha(20),
-            Colors.transparent,
+            scheme.primary.withAlpha(72),
+            scheme.secondary.withAlpha(28),
           ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        border: Border(bottom: BorderSide(color: Colors.black.withAlpha(15))),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: scheme.outline.withAlpha(110)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(32),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Row(
         children: [
@@ -194,11 +280,13 @@ class CaptainDashboardScreen extends StatelessWidget {
             children: [
               Text(
                 'Captain Dashboard',
-                style: Theme.of(context).textTheme.titleMedium,
+                style: Theme.of(context).textTheme.displaySmall,
               ),
               Text(
                 'Today\'s Route',
-                style: Theme.of(context).textTheme.bodySmall,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurface.withAlpha(170),
+                ),
               ),
             ],
           ),
@@ -216,13 +304,16 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AppCard(
       padding: const EdgeInsets.all(10),
       child: Column(
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: scheme.onSurface.withAlpha(170),
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 6),
@@ -264,18 +355,19 @@ class _PassengerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final isBoarded = passenger.status == 'boarded';
     final isArrived = passenger.status == 'arrived';
     final bgColor = isBoarded
-        ? Theme.of(context).colorScheme.secondary.withAlpha(15)
+        ? scheme.secondary.withAlpha(28)
         : isArrived
-        ? Theme.of(context).colorScheme.primary.withAlpha(15)
-        : Theme.of(context).cardColor;
+        ? scheme.primary.withAlpha(28)
+        : scheme.surfaceContainerHighest.withAlpha(180);
     final statusColor = isBoarded
-        ? Theme.of(context).colorScheme.secondary
+        ? scheme.secondary
         : isArrived
-        ? Theme.of(context).colorScheme.primary
-        : Colors.grey;
+        ? scheme.primary
+        : scheme.onSurface.withAlpha(170);
 
     return AppCard(
       padding: const EdgeInsets.all(14),
@@ -283,14 +375,21 @@ class _PassengerCard extends StatelessWidget {
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: statusColor.withAlpha(80)),
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            CircleAvatar(
-              radius: 14,
-              backgroundColor: statusColor.withAlpha(36),
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: statusColor.withAlpha(50),
+                shape: BoxShape.circle,
+                border: Border.all(color: statusColor.withAlpha(100)),
+              ),
+              alignment: Alignment.center,
               child: Text(
                 '${passenger.id}',
                 style: TextStyle(
@@ -314,7 +413,9 @@ class _PassengerCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '${passenger.pickup} → ${passenger.dest}',
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(170),
+                    ),
                   ),
                 ],
               ),
@@ -324,7 +425,9 @@ class _PassengerCard extends StatelessWidget {
               children: [
                 Text(
                   passenger.time,
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: scheme.onSurface.withAlpha(170),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(

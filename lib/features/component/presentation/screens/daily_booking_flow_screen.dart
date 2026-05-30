@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/features/component/presentation/widgets/route_selection_tile.dart';
+import 'package:bmt_app/features/component/presentation/widgets/time_selection_chip.dart';
+import 'package:bmt_app/features/component/presentation/widgets/vehicle_card.dart';
+import 'package:bmt_app/features/component/presentation/widgets/booking_summary_card.dart';
 
 class DailyBookingFlowScreen extends StatefulWidget {
   const DailyBookingFlowScreen({super.key});
@@ -13,6 +17,7 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
   String _pickup = '';
   String _destination = '';
   String _time = '';
+  final ScrollController _step4Controller = ScrollController();
 
   final pickupPoints = const [
     'Banha Station',
@@ -50,7 +55,9 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
                       decoration: BoxDecoration(
                         color: active
                             ? Theme.of(context).colorScheme.primary
-                            : Colors.black.withAlpha(20),
+                            : Theme.of(
+                                context,
+                              ).colorScheme.surface.withAlpha(40),
                         borderRadius: BorderRadius.circular(99),
                       ),
                     ),
@@ -59,7 +66,6 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
               ),
             ),
             Expanded(child: _buildStep(context)),
-            if (_step == 4) _bookingSummary(context),
           ],
         ),
       ),
@@ -97,54 +103,95 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
           childAspectRatio: 2.2,
           children: [
             for (final time in arrivalTimes)
-              AppCard(
+              TimeSelectionChip(
+                time: time,
                 onTap: () => setState(() {
                   _time = time;
                   _step = 4;
                 }),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.schedule_rounded,
-                      size: 18,
-                      color: Theme.of(context).colorScheme.tertiary,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      time,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
               ),
           ],
         );
       case 4:
       default:
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+          controller: _step4Controller,
+          primary: false,
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           children: [
-            Text(
-              'Available Vehicles',
-              style: Theme.of(context).textTheme.titleMedium,
+            AppSurface(
+              padding: const EdgeInsets.all(16),
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withAlpha(30),
+                    ),
+                    child: Icon(
+                      Icons.directions_bus_rounded,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Available Vehicles',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Pick the best shuttle for your trip',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 12),
-            _vehicleCard(
-              context,
-              'MT-2847',
-              'Ahmed Mohamed',
-              '8:40 AM',
-              4,
-              0.75,
+            const SizedBox(height: 14),
+            VehicleCard(
+              id: 'MT-2847',
+              driver: 'Ahmed Mohamed',
+              time: '8:40 AM',
+              seatsLeft: 4,
+              occupancy: 0.75,
+              onBook: () => Navigator.of(context).pushNamed('/seat-selection'),
             ),
             const SizedBox(height: 10),
-            _vehicleCard(context, 'MT-2848', 'Karim Hassan', '8:50 AM', 2, 0.9),
+            VehicleCard(
+              id: 'MT-2848',
+              driver: 'Karim Hassan',
+              time: '8:50 AM',
+              seatsLeft: 2,
+              occupancy: 0.9,
+              onBook: () => Navigator.of(context).pushNamed('/seat-selection'),
+            ),
             const SizedBox(height: 10),
-            _vehicleCard(context, 'MT-2849', 'Mostafa Ali', '9:05 AM', 6, 0.5),
-            const SizedBox(height: 100),
+            VehicleCard(
+              id: 'MT-2849',
+              driver: 'Mostafa Ali',
+              time: '9:05 AM',
+              seatsLeft: 6,
+              occupancy: 0.5,
+              onBook: () => Navigator.of(context).pushNamed('/seat-selection'),
+            ),
+            const SizedBox(height: 16),
+            BookingSummaryCard(
+              pickup: _pickup,
+              destination: _destination,
+              time: _time,
+            ),
+            const SizedBox(height: 8),
           ],
         );
     }
@@ -162,106 +209,14 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
         Text(title, style: Theme.of(context).textTheme.titleMedium),
         const SizedBox(height: 12),
         for (final item in items) ...[
-          AppCard(
+          RouteSelectionTile(
+            label: item,
+            color: activeColor,
             onTap: () => onSelect(item),
-            padding: const EdgeInsets.all(14),
-            child: Row(
-              children: [
-                Icon(Icons.location_on_rounded, color: activeColor),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    item,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ],
-            ),
           ),
           const SizedBox(height: 10),
         ],
       ],
-    );
-  }
-
-  Widget _vehicleCard(
-    BuildContext context,
-    String id,
-    String driver,
-    String time,
-    int seats,
-    double occupancy,
-  ) {
-    return AppCard(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Vehicle $id',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                  Text(driver, style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-              const AppBadge(text: 'Available'),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Icon(
-                Icons.schedule_rounded,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 6),
-              Text(time, style: Theme.of(context).textTheme.bodySmall),
-              const SizedBox(width: 14),
-              Icon(
-                Icons.event_seat_rounded,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                '$seats seats left',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('Occupancy', style: Theme.of(context).textTheme.bodySmall),
-              Text(
-                '${(occupancy * 100).round()}%',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          AppProgressBar(progress: occupancy),
-          const SizedBox(height: 12),
-          AppButton(
-            label: 'Book Now',
-            onPressed: () => Navigator.of(context).pushNamed('/seat-selection'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -304,56 +259,9 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
     );
   }
 
-  Widget _bookingSummary(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: Colors.black.withAlpha(15))),
-        color: Theme.of(context).scaffoldBackgroundColor,
-      ),
-      child: AppCard(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Expanded(
-              child: _SummaryCell(label: 'From', value: _pickup),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _SummaryCell(label: 'To', value: _destination),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _SummaryCell(label: 'Time', value: _time),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SummaryCell extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _SummaryCell({required this.label, required this.value});
-
   @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-        const SizedBox(height: 4),
-        Text(
-          value.isEmpty ? '-' : value,
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-        ),
-      ],
-    );
+  void dispose() {
+    _step4Controller.dispose();
+    super.dispose();
   }
 }

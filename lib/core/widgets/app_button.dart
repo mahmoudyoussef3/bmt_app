@@ -16,16 +16,15 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final shape = RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(16),
+    );
     if (outline) {
       return SizedBox(
         height: height ?? 48,
         child: OutlinedButton(
           onPressed: onPressed,
-          style: OutlinedButton.styleFrom(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
+          style: OutlinedButton.styleFrom(shape: shape),
           child: Text(label),
         ),
       );
@@ -35,11 +34,7 @@ class AppButton extends StatelessWidget {
       height: height ?? 48,
       child: ElevatedButton(
         onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
+        style: ElevatedButton.styleFrom(shape: shape),
         child: Text(label),
       ),
     );

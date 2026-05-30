@@ -15,7 +15,15 @@ class AppSeparator extends StatelessWidget {
     return Container(
       margin: margin,
       height: thickness,
-      color: Theme.of(context).dividerColor.withAlpha(31),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            Colors.transparent,
+            Theme.of(context).dividerColor.withAlpha(60),
+            Colors.transparent,
+          ],
+        ),
+      ),
     );
   }
 }
