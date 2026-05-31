@@ -1,5 +1,4 @@
 import 'position.dart';
-import 'package:flutter/foundation.dart';
 import 'trip.dart';
 
 class TripUpdate {

@@ -11,7 +11,6 @@ class MockTripStreamRepository implements TripStreamRepository {
   final _random = Random();
   final WebSocketService? ws;
   final _controller = StreamController<TripUpdate>.broadcast();
-  Timer? _timer;
 
   MockTripStreamRepository({this.ws}) {
     _start();
@@ -24,7 +23,7 @@ class MockTripStreamRepository implements TripStreamRepository {
       trips.map((t) => MapEntry(t, _random.nextDouble() * 0.6)),
     );
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    Timer.periodic(const Duration(seconds: 1), (_) {
       for (var tripId in trips) {
         var p = progresses[tripId]! + 0.02 + _random.nextDouble() * 0.02;
         if (p >= 1.0) p = 1.0;

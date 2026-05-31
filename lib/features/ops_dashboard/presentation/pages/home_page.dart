@@ -26,70 +26,83 @@ class _OpsHomePageState extends State<OpsHomePage> {
       appBar: AppBar(title: const Text('Operations Home')),
       body: Padding(
         padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            // KPI row
-            SizedBox(
-              height: 100,
-              child: BlocBuilder<KpiCubit, KpiState>(
-                builder: (context, state) {
-                  if (state is KpiLoading)
-                    return const Center(child: CircularProgressIndicator());
-                  if (state is KpiError)
-                    return Center(child: Text('Error: ${state.message}'));
-                  final kpis = (state as KpiLoaded).kpis;
-                  return ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: kpis.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 12),
-                    itemBuilder: (context, i) {
-                      final k = kpis[i];
-                      final mapped = _mapKpiToStyle(k.id);
-                      return SizedBox(
-                        width: 220,
-                        child: KpiCard(
-                          title: k.label,
-                          value: k.value,
-                          color: mapped['color'] as Color,
-                          icon: mapped['icon'] as IconData,
-                        ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final w = constraints.maxWidth;
+            final gridCount = w < 700 ? 1 : (w < 1100 ? 2 : 3);
+            final kpiHeight = w < 600 ? 140.0 : 100.0;
+            return Column(
+              children: [
+                // KPI row
+                SizedBox(
+                  height: kpiHeight,
+                  child: BlocBuilder<KpiCubit, KpiState>(
+                    builder: (context, state) {
+                      if (state is KpiLoading)
+                        return const Center(child: CircularProgressIndicator());
+                      if (state is KpiError)
+                        return Center(child: Text('Error: ${state.message}'));
+                      final kpis = (state as KpiLoaded).kpis;
+                      return ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: kpis.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 12),
+                        itemBuilder: (context, i) {
+                          final k = kpis[i];
+                          final mapped = _mapKpiToStyle(k.id);
+                          return SizedBox(
+                            width: 220,
+                            child: KpiCard(
+                              title: k.label,
+                              value: k.value,
+                              color: mapped['color'] as Color,
+                              icon: mapped['icon'] as IconData,
+                            ),
+                          );
+                        },
                       );
                     },
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: 12),
-            Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                childAspectRatio: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                children: const [
-                  AppCard(title: 'Alerts', child: Text('No critical alerts')),
-                  AppCard(
-                    title: 'Quick Actions',
-                    child: Wrap(
-                      spacing: 8,
-                      children: [
-                        ElevatedButton(
-                          onPressed: null,
-                          child: Text('Open Ticket'),
-                        ),
-                        ElevatedButton(
-                          onPressed: null,
-                          child: Text('Assign Driver'),
-                        ),
-                      ],
-                    ),
                   ),
-                  AppCard(title: 'Active Drivers', child: Text('120 online')),
-                  AppCard(title: 'Incidents', child: Text('2 ongoing')),
-                ],
-              ),
-            ),
-          ],
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: GridView.count(
+                    crossAxisCount: gridCount,
+                    childAspectRatio: 3,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    children: const [
+                      AppCard(
+                        title: 'Alerts',
+                        child: Text('No critical alerts'),
+                      ),
+                      AppCard(
+                        title: 'Quick Actions',
+                        child: Wrap(
+                          spacing: 8,
+                          children: [
+                            ElevatedButton(
+                              onPressed: null,
+                              child: Text('Open Ticket'),
+                            ),
+                            ElevatedButton(
+                              onPressed: null,
+                              child: Text('Assign Driver'),
+                            ),
+                          ],
+                        ),
+                      ),
+                      AppCard(
+                        title: 'Active Drivers',
+                        child: Text('120 online'),
+                      ),
+                      AppCard(title: 'Incidents', child: Text('2 ongoing')),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         ),
       ),
     );

@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/live_ops_cubit.dart';
 import '../cubit/live_ops_state.dart';
 import '../../domain/models/trip_update.dart';
+import '../../domain/models/trip.dart';
 import '../../domain/models/driver_position.dart';
+import '../../domain/models/driver.dart';
 import '../../domain/models/trip_event.dart';
 
 class LiveOpsPage extends StatelessWidget {
@@ -20,30 +22,66 @@ class LiveOpsPage extends StatelessWidget {
           if (state is LiveOpsError)
             return Center(child: Text('Error: ${state.message}'));
           final loaded = state as LiveOpsLoaded;
-          return Row(
-            children: [
-              // Left: active trips list
-              Container(
-                width: 320,
-                padding: const EdgeInsets.all(8),
-                child: _TripList(trips: loaded.trips),
-              ),
-              const VerticalDivider(width: 1),
-              // Center: mock map
-              Expanded(
-                child: _MapView(trips: loaded.trips, drivers: loaded.drivers),
-              ),
-              const VerticalDivider(width: 1),
-              // Right: events + drivers
-              Container(
-                width: 340,
-                padding: const EdgeInsets.all(8),
-                child: _RightPanel(
-                  events: loaded.events,
-                  drivers: loaded.drivers,
-                ),
-              ),
-            ],
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final w = constraints.maxWidth;
+              if (w < 900) {
+                // stacked layout for narrow screens
+                return Column(
+                  children: [
+                    SizedBox(
+                      height: 220,
+                      child: _TripList(trips: loaded.trips),
+                    ),
+                    const Divider(height: 1),
+                    Expanded(
+                      child: _MapView(
+                        trips: loaded.trips,
+                        drivers: loaded.drivers,
+                      ),
+                    ),
+                    const Divider(height: 1),
+                    SizedBox(
+                      height: 200,
+                      child: _RightPanel(
+                        events: loaded.events,
+                        drivers: loaded.drivers,
+                      ),
+                    ),
+                  ],
+                );
+              }
+
+              // wide layout (original)
+              return Row(
+                children: [
+                  // Left: active trips list
+                  Container(
+                    width: 320,
+                    padding: const EdgeInsets.all(8),
+                    child: _TripList(trips: loaded.trips),
+                  ),
+                  const VerticalDivider(width: 1),
+                  // Center: mock map
+                  Expanded(
+                    child: _MapView(
+                      trips: loaded.trips,
+                      drivers: loaded.drivers,
+                    ),
+                  ),
+                  const VerticalDivider(width: 1),
+                  // Right: events + drivers
+                  Container(
+                    width: 340,
+                    padding: const EdgeInsets.all(8),
+                    child: _RightPanel(
+                      events: loaded.events,
+                      drivers: loaded.drivers,
+                    ),
+                  ),
+                ],
+              );
+            },
           );
         },
       ),
@@ -115,65 +153,52 @@ class _MapView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // Simple mock map: a box with moving markers based on normalized positions
-    return Container(
-      color: Colors.grey.shade100,
-      child: Stack(
-        children: [
-          // routes or background grid
-          Positioned.fill(child: CustomPaint(painter: _GridPainter())),
-          // trip markers
-          for (var t in trips)
-            if (t.location != null)
-              Positioned(
-                left:
-                    (t.location!.lng * MediaQuery.of(context).size.width * 0.5)
-                        .clamp(
-                          0.0,
-                          MediaQuery.of(context).size.width * 0.5 - 24,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final h = constraints.maxHeight;
+        return Container(
+          color: Colors.grey.shade100,
+          child: Stack(
+            children: [
+              // routes or background grid
+              Positioned.fill(child: CustomPaint(painter: _GridPainter())),
+              // trip markers
+              for (var t in trips)
+                if (t.location != null)
+                  Positioned(
+                    left: (t.location!.lng * w).clamp(0.0, w - 24),
+                    top: (t.location!.lat * h).clamp(0.0, h - 24),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.directions_bus,
+                          color: t.status == TripStatus.cancelled
+                              ? Colors.red
+                              : (t.status == TripStatus.completed
+                                    ? Colors.grey
+                                    : Colors.blue),
                         ),
-                top:
-                    (t.location!.lat * MediaQuery.of(context).size.height * 0.7)
-                        .clamp(
-                          0.0,
-                          MediaQuery.of(context).size.height * 0.7 - 24,
-                        ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.directions_bus,
-                      color: t.status == TripStatus.cancelled
-                          ? Colors.red
-                          : (t.status == TripStatus.completed
-                                ? Colors.grey
-                                : Colors.blue),
+                        Text(t.tripId, style: const TextStyle(fontSize: 10)),
+                      ],
                     ),
-                    Text(t.tripId, style: const TextStyle(fontSize: 10)),
-                  ],
+                  ),
+              // driver markers
+              for (var d in drivers)
+                Positioned(
+                  left: (d.position.lng * w).clamp(0.0, w - 24),
+                  top: (d.position.lat * h).clamp(0.0, h - 24),
+                  child: Icon(
+                    Icons.person_pin_circle,
+                    color: d.status == DriverStatus.onTrip
+                        ? Colors.orange
+                        : Colors.green,
+                  ),
                 ),
-              ),
-          // driver markers
-          for (var d in drivers)
-            Positioned(
-              left:
-                  (d.position.lng * MediaQuery.of(context).size.width * 0.5 +
-                          MediaQuery.of(context).size.width * 0.5 * 0.05)
-                      .clamp(0.0, MediaQuery.of(context).size.width * 0.5 - 24),
-              top:
-                  (d.position.lat * MediaQuery.of(context).size.height * 0.7 +
-                          20)
-                      .clamp(
-                        0.0,
-                        MediaQuery.of(context).size.height * 0.7 - 24,
-                      ),
-              child: Icon(
-                Icons.person_pin_circle,
-                color: d.status == DriverStatus.onTrip
-                    ? Colors.orange
-                    : Colors.green,
-              ),
-            ),
-        ],
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

@@ -139,10 +139,14 @@ class _DevVersionSwitcher extends StatelessWidget {
     final current = cubit.state.mode;
 
     return AppCard(
-      title: 'App Mode (Dev Only)',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const Text(
+            'App Mode (Dev Only)',
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 8),
           Wrap(
             spacing: 8,
             children: AppMode.values.map((m) {

@@ -7,7 +7,7 @@ import '../../domain/repositories/driver_stream_repository.dart';
 
 class MockDriverStreamRepository implements DriverStreamRepository {
   final _controller = StreamController<DriverPosition>.broadcast();
-  Timer? _timer;
+
   final _random = Random();
 
   MockDriverStreamRepository() {
@@ -24,7 +24,7 @@ class MockDriverStreamRepository implements DriverStreamRepository {
         ),
     };
 
-    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+    Timer.periodic(const Duration(seconds: 1), (_) {
       for (var d in drivers) {
         final p = positions[d]!;
         final newP = Position(

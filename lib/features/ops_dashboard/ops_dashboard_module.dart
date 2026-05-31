@@ -42,7 +42,7 @@ class OpsDashboardModule extends StatelessWidget {
 }
 
 class _OpsShell extends StatefulWidget {
-  const _OpsShell({super.key});
+  const _OpsShell({Key? key}) : super(key: key);
 
   @override
   State<_OpsShell> createState() => _OpsShellState();
@@ -56,30 +56,62 @@ class _OpsShellState extends State<_OpsShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Row(
-        children: [
-          NavigationRail(
-            selectedIndex: _index,
-            onDestinationSelected: (i) => setState(() => _index = i),
-            labelType: NavigationRailLabelType.all,
-            destinations: const [
-              NavigationRailDestination(
-                icon: Icon(Icons.dashboard),
-                label: Text('Home'),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth;
+          // Narrow: phone / small tablet — use BottomNavigation
+          if (w < 720) {
+            final titles = ['Home', 'Tickets', 'Live'];
+            return Scaffold(
+              appBar: AppBar(title: Text(titles[_index])),
+              body: _pages[_index],
+              bottomNavigationBar: BottomNavigationBar(
+                currentIndex: _index,
+                onTap: (i) => setState(() => _index = i),
+                items: const [
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.dashboard),
+                    label: 'Home',
+                  ),
+                  BottomNavigationBarItem(
+                    icon: Icon(Icons.support_agent),
+                    label: 'Tickets',
+                  ),
+                  BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Live'),
+                ],
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.support_agent),
-                label: Text('Tickets'),
+            );
+          }
+
+          // Wide: show NavigationRail + content
+          return Row(
+            children: [
+              NavigationRail(
+                selectedIndex: _index,
+                onDestinationSelected: (i) => setState(() => _index = i),
+                labelType: w < 1000
+                    ? NavigationRailLabelType.selected
+                    : NavigationRailLabelType.all,
+                destinations: const [
+                  NavigationRailDestination(
+                    icon: Icon(Icons.dashboard),
+                    label: Text('Home'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.support_agent),
+                    label: Text('Tickets'),
+                  ),
+                  NavigationRailDestination(
+                    icon: Icon(Icons.map),
+                    label: Text('Live'),
+                  ),
+                ],
               ),
-              NavigationRailDestination(
-                icon: Icon(Icons.map),
-                label: Text('Live'),
-              ),
+              const VerticalDivider(thickness: 1, width: 1),
+              Expanded(child: _pages[_index]),
             ],
-          ),
-          const VerticalDivider(thickness: 1, width: 1),
-          Expanded(child: _pages[_index]),
-        ],
+          );
+        },
       ),
     );
   }

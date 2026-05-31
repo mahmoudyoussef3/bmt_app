@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../domain/models/support_ticket.dart';
 
 class StatusChip extends StatelessWidget {
   final String label;
