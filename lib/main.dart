@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
         '/': (_) => const ComponentDemoApp(),
         '/ops': (_) => const OpsDashboardModule(),
       },
-      initialRoute: '/',
+      initialRoute: '/ops',
     );
   }
 }
