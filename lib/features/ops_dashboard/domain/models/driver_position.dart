@@ -6,5 +6,9 @@ class DriverPosition {
   final Position position;
   final DriverStatus status;
 
-  DriverPosition({required this.driverId, required this.position, this.status = DriverStatus.offline});
+  DriverPosition({
+    required this.driverId,
+    required this.position,
+    this.status = DriverStatus.offline,
+  });
 }

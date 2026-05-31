@@ -13,7 +13,6 @@ import 'presentation/cubit/live_ops_cubit.dart';
 import 'presentation/pages/support_ticket_list_page.dart';
 import 'presentation/pages/home_page.dart';
 
-
 class OpsDashboardModule extends StatelessWidget {
   const OpsDashboardModule({super.key});
 
@@ -30,7 +29,11 @@ class OpsDashboardModule extends StatelessWidget {
           create: (_) => KpiCubit(di.di<KpiRepository>())..loadKpis(),
         ),
         BlocProvider(
-          create: (_) => LiveOpsCubit(tripRepo: di.di<TripStreamRepository>(), driverRepo: di.di<DriverStreamRepository>(), eventBus: di.di<LiveEventBus>()),
+          create: (_) => LiveOpsCubit(
+            tripRepo: di.di<TripStreamRepository>(),
+            driverRepo: di.di<DriverStreamRepository>(),
+            eventBus: di.di<LiveEventBus>(),
+          ),
         ),
       ],
       child: const _OpsShell(),
@@ -60,9 +63,18 @@ class _OpsShellState extends State<_OpsShell> {
             onDestinationSelected: (i) => setState(() => _index = i),
             labelType: NavigationRailLabelType.all,
             destinations: const [
-              NavigationRailDestination(icon: Icon(Icons.dashboard), label: Text('Home')),
-              NavigationRailDestination(icon: Icon(Icons.support_agent), label: Text('Tickets')),
-              NavigationRailDestination(icon: Icon(Icons.map), label: Text('Live')),
+              NavigationRailDestination(
+                icon: Icon(Icons.dashboard),
+                label: Text('Home'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.support_agent),
+                label: Text('Tickets'),
+              ),
+              NavigationRailDestination(
+                icon: Icon(Icons.map),
+                label: Text('Live'),
+              ),
             ],
           ),
           const VerticalDivider(thickness: 1, width: 1),

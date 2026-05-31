@@ -5,7 +5,6 @@ import '../widgets/app_card.dart';
 import '../cubit/kpi_cubit.dart';
 import '../cubit/kpi_state.dart';
 
-
 class OpsHomePage extends StatefulWidget {
   const OpsHomePage({super.key});
 
@@ -34,8 +33,10 @@ class _OpsHomePageState extends State<OpsHomePage> {
               height: 100,
               child: BlocBuilder<KpiCubit, KpiState>(
                 builder: (context, state) {
-                  if (state is KpiLoading) return const Center(child: CircularProgressIndicator());
-                  if (state is KpiError) return Center(child: Text('Error: ${state.message}'));
+                  if (state is KpiLoading)
+                    return const Center(child: CircularProgressIndicator());
+                  if (state is KpiError)
+                    return Center(child: Text('Error: ${state.message}'));
                   final kpis = (state as KpiLoaded).kpis;
                   return ListView.separated(
                     scrollDirection: Axis.horizontal,
@@ -44,7 +45,15 @@ class _OpsHomePageState extends State<OpsHomePage> {
                     itemBuilder: (context, i) {
                       final k = kpis[i];
                       final mapped = _mapKpiToStyle(k.id);
-                      return SizedBox(width: 220, child: KpiCard(title: k.label, value: k.value, color: mapped['color'] as Color, icon: mapped['icon'] as IconData));
+                      return SizedBox(
+                        width: 220,
+                        child: KpiCard(
+                          title: k.label,
+                          value: k.value,
+                          color: mapped['color'] as Color,
+                          icon: mapped['icon'] as IconData,
+                        ),
+                      );
                     },
                   );
                 },
@@ -59,12 +68,27 @@ class _OpsHomePageState extends State<OpsHomePage> {
                 mainAxisSpacing: 12,
                 children: const [
                   AppCard(title: 'Alerts', child: Text('No critical alerts')),
-                  AppCard(title: 'Quick Actions', child: Wrap(spacing: 8, children: [ElevatedButton(onPressed: null, child: Text('Open Ticket')), ElevatedButton(onPressed: null, child: Text('Assign Driver'))])),
+                  AppCard(
+                    title: 'Quick Actions',
+                    child: Wrap(
+                      spacing: 8,
+                      children: [
+                        ElevatedButton(
+                          onPressed: null,
+                          child: Text('Open Ticket'),
+                        ),
+                        ElevatedButton(
+                          onPressed: null,
+                          child: Text('Assign Driver'),
+                        ),
+                      ],
+                    ),
+                  ),
                   AppCard(title: 'Active Drivers', child: Text('120 online')),
                   AppCard(title: 'Incidents', child: Text('2 ongoing')),
                 ],
               ),
-            )
+            ),
           ],
         ),
       ),

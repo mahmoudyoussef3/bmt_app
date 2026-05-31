@@ -4,7 +4,8 @@ import '../../domain/models/trip_event.dart';
 
 class LiveEventBus {
   final WebSocketService ws;
-  final StreamController<TripEvent> _controller = StreamController<TripEvent>.broadcast();
+  final StreamController<TripEvent> _controller =
+      StreamController<TripEvent>.broadcast();
 
   LiveEventBus(this.ws) {
     // Forward events from WebSocketService into the typed event stream

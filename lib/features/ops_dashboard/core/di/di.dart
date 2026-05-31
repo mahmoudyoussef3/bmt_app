@@ -23,7 +23,13 @@ void registerOpsCenterDependencies() {
     () => MockSupportTicketRepository(),
   );
   di.registerLazySingleton<KpiRepository>(() => MockKpiRepository());
-  di.registerLazySingleton<TripStreamRepository>(() => MockTripStreamRepository(ws: di<WebSocketService>()));
-  di.registerLazySingleton<DriverStreamRepository>(() => MockDriverStreamRepository());
-  di.registerLazySingleton<LiveEventBus>(() => LiveEventBus(di<WebSocketService>()));
+  di.registerLazySingleton<TripStreamRepository>(
+    () => MockTripStreamRepository(ws: di<WebSocketService>()),
+  );
+  di.registerLazySingleton<DriverStreamRepository>(
+    () => MockDriverStreamRepository(),
+  );
+  di.registerLazySingleton<LiveEventBus>(
+    () => LiveEventBus(di<WebSocketService>()),
+  );
 }

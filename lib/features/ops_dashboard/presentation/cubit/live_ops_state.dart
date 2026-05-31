@@ -11,7 +11,11 @@ class LiveOpsLoaded extends LiveOpsState {
   final List<DriverPosition> drivers;
   final List<TripEvent> events;
 
-  LiveOpsLoaded({required this.trips, required this.drivers, required this.events});
+  LiveOpsLoaded({
+    required this.trips,
+    required this.drivers,
+    required this.events,
+  });
 }
 
 class LiveOpsError extends LiveOpsState {

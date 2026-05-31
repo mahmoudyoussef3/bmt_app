@@ -8,5 +8,10 @@ class TripUpdate {
   final double progress; // 0.0 - 1.0
   final Position? location;
 
-  TripUpdate({required this.tripId, required this.status, this.progress = 0.0, this.location});
+  TripUpdate({
+    required this.tripId,
+    required this.status,
+    this.progress = 0.0,
+    this.location,
+  });
 }
