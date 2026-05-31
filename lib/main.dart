@@ -23,10 +23,10 @@ class MyApp extends StatelessWidget {
       listener: (context, state) {
         // navigate to the appropriate entry screen when mode changes (dev-only)
         if (!kDebugMode) return;
-        final route = _routeForMode(state.mode);
-        if (route != null) {
-          _navKey.currentState?.pushNamedAndRemoveUntil(route, (_) => false);
-        }
+        _navKey.currentState?.pushNamedAndRemoveUntil(
+          state.mode.routePath,
+          (_) => false,
+        );
       },
       child: MaterialApp(
         navigatorKey: _navKey,
@@ -34,24 +34,13 @@ class MyApp extends StatelessWidget {
         theme: ThemeData(primarySwatch: Colors.blue),
         routes: {
           '/': (_) => const ComponentDemoApp(),
+          '/driver': (_) => const ComponentDemoApp(),
+          '/admin': (_) => const ComponentDemoApp(),
           '/ops': (_) => const OpsDashboardModule(),
-          // other routes like /driver and /admin are left to existing app routing
+          '/ops-dashboard': (_) => const OpsDashboardModule(),
         },
         initialRoute: '/',
       ),
     );
-  }
-
-  String? _routeForMode(AppMode mode) {
-    switch (mode) {
-      case AppMode.client:
-        return '/';
-      case AppMode.driver:
-        return '/driver';
-      case AppMode.admin:
-        return '/admin';
-      case AppMode.ops:
-        return '/ops';
-    }
   }
 }

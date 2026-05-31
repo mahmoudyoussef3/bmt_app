@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/theme/app_theme.dart';
 import 'core/di/di.dart' as di;
 import 'domain/repositories/support_ticket_repository.dart';
 import 'presentation/cubit/support_ticket_cubit.dart';
@@ -20,23 +21,26 @@ class OpsDashboardModule extends StatelessWidget {
   Widget build(BuildContext context) {
     di.registerOpsCenterDependencies();
 
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider(
-          create: (_) => SupportTicketCubit(di.di<SupportTicketRepository>()),
-        ),
-        BlocProvider(
-          create: (_) => KpiCubit(di.di<KpiRepository>())..loadKpis(),
-        ),
-        BlocProvider(
-          create: (_) => LiveOpsCubit(
-            tripRepo: di.di<TripStreamRepository>(),
-            driverRepo: di.di<DriverStreamRepository>(),
-            eventBus: di.di<LiveEventBus>(),
+    return Theme(
+      data: AppTheme.darkTheme(),
+      child: MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => SupportTicketCubit(di.di<SupportTicketRepository>()),
           ),
-        ),
-      ],
-      child: const _OpsShell(),
+          BlocProvider(
+            create: (_) => KpiCubit(di.di<KpiRepository>())..loadKpis(),
+          ),
+          BlocProvider(
+            create: (_) => LiveOpsCubit(
+              tripRepo: di.di<TripStreamRepository>(),
+              driverRepo: di.di<DriverStreamRepository>(),
+              eventBus: di.di<LiveEventBus>(),
+            ),
+          ),
+        ],
+        child: const _OpsShell(),
+      ),
     );
   }
 }

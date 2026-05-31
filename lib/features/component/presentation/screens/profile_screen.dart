@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 import 'package:bmt_app/core/app_mode/app_mode.dart';
@@ -60,7 +59,7 @@ class ProfileScreen extends StatelessWidget {
               child: AppButton(
                 label: 'Driver Dashboard',
                 outline: true,
-                onPressed: () => onOpenRoute('/driver'),
+                onPressed: () => onOpenRoute(AppMode.driver.routePath),
               ),
             ),
             const SizedBox(width: 10),
@@ -68,7 +67,7 @@ class ProfileScreen extends StatelessWidget {
               child: AppButton(
                 label: 'Admin Dashboard',
                 outline: true,
-                onPressed: () => onOpenRoute('/admin'),
+                onPressed: () => onOpenRoute(AppMode.admin.routePath),
               ),
             ),
           ],
@@ -91,7 +90,7 @@ class ProfileScreen extends StatelessWidget {
           builder: (context) {
             Widget devPanel = const SizedBox.shrink();
             assert(() {
-              devPanel = _DevVersionSwitcher(onOpenRoute: onOpenRoute);
+              devPanel = const _DevVersionSwitcher();
               return true;
             }());
             return devPanel;
@@ -129,12 +128,10 @@ class _InfoRow extends StatelessWidget {
 }
 
 class _DevVersionSwitcher extends StatelessWidget {
-  final void Function(String route) onOpenRoute;
-  const _DevVersionSwitcher({required this.onOpenRoute});
+  const _DevVersionSwitcher();
 
   @override
   Widget build(BuildContext context) {
-    // This widget is added only in debug builds via assert()
     final cubit = context.read<AppModeCubit>();
     final current = cubit.state.mode;
 
@@ -143,7 +140,7 @@ class _DevVersionSwitcher extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'App Mode (Dev Only)',
+            'App Mode Switcher (Dev Only)',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
@@ -152,28 +149,15 @@ class _DevVersionSwitcher extends StatelessWidget {
             children: AppMode.values.map((m) {
               final active = m == current;
               return ChoiceChip(
-                label: Text(_label(m)),
+                label: Text(m.displayLabel),
                 selected: active,
-                selectedColor: Colors.blue,
+                selectedColor: Theme.of(context).colorScheme.primary,
+                labelStyle: TextStyle(
+                  color: active ? Colors.white : null,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.normal,
+                ),
                 onSelected: (_) async {
                   await cubit.changeMode(m);
-                  // navigate immediately to the entry route
-                  if (kDebugMode) {
-                    switch (m) {
-                      case AppMode.client:
-                        onOpenRoute('/');
-                        break;
-                      case AppMode.driver:
-                        onOpenRoute('/driver');
-                        break;
-                      case AppMode.admin:
-                        onOpenRoute('/admin');
-                        break;
-                      case AppMode.ops:
-                        onOpenRoute('/ops');
-                        break;
-                    }
-                  }
                 },
               );
             }).toList(),
@@ -183,21 +167,13 @@ class _DevVersionSwitcher extends StatelessWidget {
             'Switch app mode for development/testing only.',
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'Active: ${current.displayLabel}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
         ],
       ),
     );
-  }
-
-  String _label(AppMode m) {
-    switch (m) {
-      case AppMode.client:
-        return 'Client Mode';
-      case AppMode.driver:
-        return 'Driver Mode';
-      case AppMode.admin:
-        return 'Admin Mode';
-      case AppMode.ops:
-        return 'Ops Dashboard Mode';
-    }
   }
 }
