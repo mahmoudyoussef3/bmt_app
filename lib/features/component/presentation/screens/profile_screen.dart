@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
+import 'package:bmt_app/core/app_mode/app_mode.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 class ProfileScreen extends StatelessWidget {
@@ -81,6 +85,18 @@ class ProfileScreen extends StatelessWidget {
             ],
           ),
         ),
+        const SizedBox(height: 16),
+        // Dev-only version switcher
+        Builder(
+          builder: (context) {
+            Widget devPanel = const SizedBox.shrink();
+            assert(() {
+              devPanel = _DevVersionSwitcher(onOpenRoute: onOpenRoute);
+              return true;
+            }());
+            return devPanel;
+          },
+        ),
       ],
     );
   }
@@ -109,5 +125,75 @@ class _InfoRow extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+class _DevVersionSwitcher extends StatelessWidget {
+  final void Function(String route) onOpenRoute;
+  const _DevVersionSwitcher({required this.onOpenRoute});
+
+  @override
+  Widget build(BuildContext context) {
+    // This widget is added only in debug builds via assert()
+    final cubit = context.read<AppModeCubit>();
+    final current = cubit.state.mode;
+
+    return AppCard(
+      title: 'App Mode (Dev Only)',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            children: AppMode.values.map((m) {
+              final active = m == current;
+              return ChoiceChip(
+                label: Text(_label(m)),
+                selected: active,
+                selectedColor: Colors.blue,
+                onSelected: (_) async {
+                  await cubit.changeMode(m);
+                  // navigate immediately to the entry route
+                  if (kDebugMode) {
+                    switch (m) {
+                      case AppMode.client:
+                        onOpenRoute('/');
+                        break;
+                      case AppMode.driver:
+                        onOpenRoute('/driver');
+                        break;
+                      case AppMode.admin:
+                        onOpenRoute('/admin');
+                        break;
+                      case AppMode.ops:
+                        onOpenRoute('/ops');
+                        break;
+                    }
+                  }
+                },
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Switch app mode for development/testing only.',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _label(AppMode m) {
+    switch (m) {
+      case AppMode.client:
+        return 'Client Mode';
+      case AppMode.driver:
+        return 'Driver Mode';
+      case AppMode.admin:
+        return 'Admin Mode';
+      case AppMode.ops:
+        return 'Ops Dashboard Mode';
+    }
   }
 }
