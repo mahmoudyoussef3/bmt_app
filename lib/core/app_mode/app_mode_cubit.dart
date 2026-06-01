@@ -18,16 +18,7 @@ class AppModeCubit extends Cubit<AppModeState> {
 
   Future<void> load() async {
     if (!kDebugMode) return;
-    try {
-      final v = await _storage.read(key: _storageKey);
-      if (v != null) {
-        final mode = AppMode.values.firstWhere(
-          (e) => e.name == v,
-          orElse: () => AppMode.client,
-        );
-        emit(AppModeState(mode));
-      }
-    } catch (_) {}
+    emit(const AppModeState(AppMode.client));
   }
 
   Future<void> changeMode(AppMode mode) async {

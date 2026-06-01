@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class KpiCard extends StatelessWidget {
   final String title;
@@ -17,32 +19,51 @@ class KpiCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      elevation: AppTokens.surfaceElevation,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      ),
+      color: Theme.of(context).colorScheme.surfaceVariant,
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: AppSpacing.cardTight,
         child: Row(
           children: [
             CircleAvatar(
+              radius: AppTokens.avatarSmall / 2,
               backgroundColor: color.withOpacity(0.12),
-              child: Icon(icon, color: color),
+              child: Icon(icon, color: color, size: 18),
             ),
-            const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                Text(
-                  value,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.8),
+                    ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: AppSpacing.xSmall),
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize:
+                          (Theme.of(context).textTheme.titleMedium?.fontSize ??
+                              16) *
+                          AppTokens.kpiValueScale,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),

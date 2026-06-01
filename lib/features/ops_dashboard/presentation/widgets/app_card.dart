@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class AppCard extends StatelessWidget {
   final Widget child;
@@ -8,15 +10,18 @@ class AppCard extends StatelessWidget {
   const AppCard({
     required this.child,
     this.title,
-    this.padding = const EdgeInsets.all(12),
+    this.padding = AppSpacing.card,
     super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      elevation: AppTokens.cardElevation,
+      color: Theme.of(context).colorScheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+      ),
       child: Padding(
         padding: padding,
         child: Column(

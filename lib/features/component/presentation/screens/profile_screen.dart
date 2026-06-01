@@ -57,17 +57,37 @@ class ProfileScreen extends StatelessWidget {
           children: [
             Expanded(
               child: AppButton(
-                label: 'Driver Dashboard',
+                label: 'Driver Version',
                 outline: true,
-                onPressed: () => onOpenRoute(AppMode.driver.routePath),
+                onPressed: () => _openVersion(context, AppMode.driver),
               ),
             ),
             const SizedBox(width: 10),
             Expanded(
               child: AppButton(
-                label: 'Admin Dashboard',
+                label: 'Admin Version',
                 outline: true,
-                onPressed: () => onOpenRoute(AppMode.admin.routePath),
+                onPressed: () => _openVersion(context, AppMode.admin),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: AppButton(
+                label: 'Ops Version',
+                outline: true,
+                onPressed: () => _openVersion(context, AppMode.ops),
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: AppButton(
+                label: 'Client Home',
+                outline: true,
+                onPressed: () => _openVersion(context, AppMode.client),
               ),
             ),
           ],
@@ -98,6 +118,13 @@ class ProfileScreen extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  void _openVersion(BuildContext context, AppMode mode) {
+    Navigator.of(
+      context,
+      rootNavigator: true,
+    ).pushNamedAndRemoveUntil(mode.routePath, (_) => false);
   }
 }
 
@@ -139,33 +166,66 @@ class _DevVersionSwitcher extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'App Mode Switcher (Dev Only)',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            children: AppMode.values.map((m) {
-              final active = m == current;
-              return ChoiceChip(
-                label: Text(m.displayLabel),
-                selected: active,
-                selectedColor: Theme.of(context).colorScheme.primary,
-                labelStyle: TextStyle(
-                  color: active ? Colors.white : null,
-                  fontWeight: active ? FontWeight.w600 : FontWeight.normal,
-                ),
-                onSelected: (_) async {
-                  await cubit.changeMode(m);
-                },
+          const SizedBox(height: 10),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 520;
+              final modes = AppMode.values.where((mode) => mode != current);
+
+              if (isNarrow) {
+                return Column(
+                  children: modes
+                      .map(
+                        (m) => Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: SizedBox(
+                            width: double.infinity,
+                            child: AppButton(
+                              label: m.displayLabel,
+                              outline: true,
+                              onPressed: () async => cubit.changeMode(m),
+                            ),
+                          ),
+                        ),
+                      )
+                      .toList(),
+                );
+              }
+
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: AppMode.values.map((m) {
+                  final active = m == current;
+                  return FilterChip(
+                    label: Text(m.displayLabel),
+                    selected: active,
+                    showCheckmark: false,
+                    selectedColor: Theme.of(context).colorScheme.primary,
+                    labelStyle: TextStyle(
+                      color: active ? Colors.white : null,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    onSelected: (_) async {
+                      if (!active) await cubit.changeMode(m);
+                    },
+                  );
+                }).toList(),
               );
-            }).toList(),
+            },
           ),
           const SizedBox(height: 8),
-          const Text(
-            'Switch app mode for development/testing only.',
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+          Text(
+            'Use these controls to jump between client, driver, admin, and ops app versions.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface.withAlpha(170),
+            ),
           ),
           const SizedBox(height: 8),
           Text(

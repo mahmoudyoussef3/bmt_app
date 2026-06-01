@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class StatusChip extends StatelessWidget {
   final String label;
@@ -9,14 +11,17 @@ class StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: AppSpacing.chip,
       decoration: BoxDecoration(
         color: color.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontWeight: FontWeight.w600),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }

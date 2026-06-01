@@ -59,29 +59,41 @@ class _OpsShellState extends State<_OpsShell> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: LayoutBuilder(
         builder: (context, constraints) {
           final w = constraints.maxWidth;
-          // Narrow: phone / small tablet — use BottomNavigation
+          final horizontalPadding = w < 900 ? 12.0 : 18.0;
+          final verticalPadding = w < 900 ? 10.0 : 14.0;
+
           if (w < 720) {
-            final titles = ['Home', 'Tickets', 'Live'];
             return Scaffold(
-              appBar: AppBar(title: Text(titles[_index])),
-              body: _pages[_index],
-              bottomNavigationBar: BottomNavigationBar(
-                currentIndex: _index,
-                onTap: (i) => setState(() => _index = i),
-                items: const [
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.dashboard),
+              body: _buildPageHost(
+                horizontalPadding: horizontalPadding,
+                verticalPadding: verticalPadding,
+              ),
+              bottomNavigationBar: NavigationBar(
+                selectedIndex: _index,
+                labelBehavior:
+                    NavigationDestinationLabelBehavior.onlyShowSelected,
+                onDestinationSelected: (i) => setState(() => _index = i),
+                destinations: const [
+                  NavigationDestination(
+                    icon: Icon(Icons.dashboard_outlined),
+                    selectedIcon: Icon(Icons.dashboard),
                     label: 'Home',
                   ),
-                  BottomNavigationBarItem(
-                    icon: Icon(Icons.support_agent),
+                  NavigationDestination(
+                    icon: Icon(Icons.support_agent_outlined),
+                    selectedIcon: Icon(Icons.support_agent),
                     label: 'Tickets',
                   ),
-                  BottomNavigationBarItem(icon: Icon(Icons.map), label: 'Live'),
+                  NavigationDestination(
+                    icon: Icon(Icons.map_outlined),
+                    selectedIcon: Icon(Icons.map),
+                    label: 'Live',
+                  ),
                 ],
               ),
             );
@@ -90,32 +102,110 @@ class _OpsShellState extends State<_OpsShell> {
           // Wide: show NavigationRail + content
           return Row(
             children: [
-              NavigationRail(
-                selectedIndex: _index,
-                onDestinationSelected: (i) => setState(() => _index = i),
-                labelType: w < 1000
-                    ? NavigationRailLabelType.selected
-                    : NavigationRailLabelType.all,
-                destinations: const [
-                  NavigationRailDestination(
-                    icon: Icon(Icons.dashboard),
-                    label: Text('Home'),
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHighest.withOpacity(0.18),
+                  border: Border(
+                    right: BorderSide(
+                      color: colorScheme.outline.withOpacity(0.16),
+                    ),
                   ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.support_agent),
-                    label: Text('Tickets'),
+                ),
+                child: NavigationRail(
+                  selectedIndex: _index,
+                  extended: w >= 1200,
+                  onDestinationSelected: (i) => setState(() => _index = i),
+                  labelType: w < 1200
+                      ? NavigationRailLabelType.selected
+                      : NavigationRailLabelType.none,
+                  leading: Padding(
+                    padding: const EdgeInsets.only(top: 12, bottom: 8),
+                    child: Text(
+                      'Ops',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
-                  NavigationRailDestination(
-                    icon: Icon(Icons.map),
-                    label: Text('Live'),
-                  ),
-                ],
+                  destinations: const [
+                    NavigationRailDestination(
+                      icon: Icon(Icons.dashboard_outlined),
+                      selectedIcon: Icon(Icons.dashboard),
+                      label: Text('Home'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.support_agent_outlined),
+                      selectedIcon: Icon(Icons.support_agent),
+                      label: Text('Tickets'),
+                    ),
+                    NavigationRailDestination(
+                      icon: Icon(Icons.map_outlined),
+                      selectedIcon: Icon(Icons.map),
+                      label: Text('Live'),
+                    ),
+                  ],
+                ),
               ),
-              const VerticalDivider(thickness: 1, width: 1),
-              Expanded(child: _pages[_index]),
+              Expanded(
+                child: _buildPageHost(
+                  horizontalPadding: horizontalPadding,
+                  verticalPadding: verticalPadding,
+                ),
+              ),
             ],
           );
         },
+      ),
+    );
+  }
+
+  Widget _buildPageHost({
+    required double horizontalPadding,
+    required double verticalPadding,
+  }) {
+    return SafeArea(
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1240),
+          child: Padding(
+            padding: EdgeInsets.symmetric(
+              horizontal: horizontalPadding,
+              vertical: verticalPadding,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 220),
+                    switchInCurve: Curves.easeOutCubic,
+                    switchOutCurve: Curves.easeInCubic,
+                    transitionBuilder: (child, animation) {
+                      final fade = CurvedAnimation(
+                        parent: animation,
+                        curve: Curves.easeOut,
+                      );
+                      return FadeTransition(
+                        opacity: fade,
+                        child: SlideTransition(
+                          position: Tween<Offset>(
+                            begin: const Offset(0.02, 0),
+                            end: Offset.zero,
+                          ).animate(fade),
+                          child: child,
+                        ),
+                      );
+                    },
+                    child: KeyedSubtree(
+                      key: ValueKey<int>(_index),
+                      child: _pages[_index],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
