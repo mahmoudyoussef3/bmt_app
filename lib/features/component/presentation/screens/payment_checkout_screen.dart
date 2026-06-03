@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/features/component/presentation/models/payment_models.dart';
 import 'package:bmt_app/features/component/presentation/screens/payment_processing_screen.dart';
+import 'package:bmt_app/features/component/presentation/screens/receipt_upload_screen.dart';
 import 'package:bmt_app/features/component/presentation/widgets/payment_widgets.dart';
 
 class PaymentCheckoutScreen extends StatefulWidget {
@@ -16,40 +17,41 @@ class PaymentCheckoutScreen extends StatefulWidget {
 class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   late PaymentMethodType _selectedMethod;
   final TextEditingController _promoController = TextEditingController();
+  final TextEditingController _notesController = TextEditingController();
   String? _appliedPromoCode;
   int _promoDiscount = 0;
 
   final List<PaymentMethodData> _methods = const [
     PaymentMethodData(
       type: PaymentMethodType.creditCard,
-      title: 'Credit / Debit Card',
-      subtitle: 'Secure card checkout with instant confirmation',
+      title: 'Credit Card',
+      subtitle: 'Pay securely using your Visa or Mastercard',
       icon: Icons.credit_card_rounded,
       recommended: true,
     ),
     PaymentMethodData(
-      type: PaymentMethodType.vodafoneCash,
-      title: 'Vodafone Cash',
-      subtitle: 'Pay from your mobile wallet in seconds',
-      icon: Icons.phone_android_rounded,
-    ),
-    PaymentMethodData(
       type: PaymentMethodType.instapay,
-      title: 'Instapay',
-      subtitle: 'Transfer using your Instapay identity',
+      title: 'InstaPay',
+      subtitle: 'Transfer directly using InstaPay ID & upload receipt',
       icon: Icons.account_balance_wallet_rounded,
     ),
     PaymentMethodData(
-      type: PaymentMethodType.walletBalance,
-      title: 'Wallet Balance',
-      subtitle: 'Use your onboard balance for faster checkout',
-      icon: Icons.account_balance_rounded,
+      type: PaymentMethodType.vodafoneCash,
+      title: 'Mobile Wallet',
+      subtitle: 'Pay via Vodafone Cash or other wallets & upload receipt',
+      icon: Icons.phone_android_rounded,
     ),
     PaymentMethodData(
       type: PaymentMethodType.cashOnBoarding,
-      title: 'Cash on Boarding',
-      subtitle: 'Optional cash payment for demo and edge cases',
+      title: 'Cash with Driver',
+      subtitle: 'Pay cash directly to driver upon boarding',
       icon: Icons.payments_rounded,
+    ),
+    PaymentMethodData(
+      type: PaymentMethodType.walletBalance,
+      title: 'User Balance',
+      subtitle: 'Deduct fare instantly from your account balance',
+      icon: Icons.account_balance_rounded,
     ),
   ];
 
@@ -62,6 +64,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   @override
   void dispose() {
     _promoController.dispose();
+    _notesController.dispose();
     super.dispose();
   }
 
@@ -69,6 +72,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       _methods.firstWhere((method) => method.type == _selectedMethod);
 
   int get _totalAmount => widget.checkoutData.totalForDiscount(_promoDiscount);
+
+  bool get _requiresReceipt =>
+      _selectedMethod == PaymentMethodType.instapay ||
+      _selectedMethod == PaymentMethodType.vodafoneCash;
 
   void _applyPromo() {
     final code = _promoController.text.trim().toUpperCase();
@@ -82,15 +89,49 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     });
   }
 
-  void _payNow({required bool simulateFailure}) {
+  void _onPayPressed() {
+    final method = _selectedPaymentMethod;
+    final notes = _notesController.text.trim();
+
+    if (_requiresReceipt) {
+      // Navigate to receipt upload screen
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => ReceiptUploadScreen(
+            checkoutData: widget.checkoutData,
+            paymentMethod: method,
+            promoCode: _appliedPromoCode,
+            promoDiscount: _promoDiscount,
+            paymentNotes: notes.isEmpty ? null : notes,
+          ),
+        ),
+      );
+    } else {
+      // Direct payment processing
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PaymentProcessingScreen(
+            checkoutData: widget.checkoutData,
+            paymentMethod: method,
+            promoCode: _appliedPromoCode,
+            promoDiscount: _promoDiscount,
+            simulateFailure: false,
+          ),
+        ),
+      );
+    }
+  }
+
+  void _onSimulateFailurePressed() {
+    final method = _selectedPaymentMethod;
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => PaymentProcessingScreen(
           checkoutData: widget.checkoutData,
-          paymentMethod: _selectedPaymentMethod,
+          paymentMethod: method,
           promoCode: _appliedPromoCode,
           promoDiscount: _promoDiscount,
-          simulateFailure: simulateFailure,
+          simulateFailure: true,
         ),
       ),
     );
@@ -101,6 +142,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     final scheme = Theme.of(context).colorScheme;
     final width = MediaQuery.sizeOf(context).width;
     final contentPadding = width < 380 ? 16.0 : 20.0;
+
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -205,6 +247,42 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                       onApply: _applyPromo,
                     ),
                     const SizedBox(height: 14),
+
+                    // Payment Notes section
+                    AppSurface(
+                      radius: 24,
+                      padding: const EdgeInsets.all(18),
+                      color: scheme.surfaceContainerHigh,
+                      border: Border.all(color: scheme.outline.withAlpha(50)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Payment Notes',
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const SizedBox(height: 8),
+                          TextField(
+                            controller: _notesController,
+                            maxLines: 2,
+                            maxLength: 100,
+                            style: const TextStyle(fontSize: 13),
+                            decoration: InputDecoration(
+                              hintText: 'Enter any payment notes or request details here...',
+                              hintStyle: TextStyle(color: Colors.grey.withAlpha(180), fontSize: 13),
+                              fillColor: scheme.surfaceContainerHighest,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(16),
+                                borderSide: BorderSide(color: scheme.outline),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
                     AppSurface(
                       radius: 24,
                       padding: const EdgeInsets.all(18),
@@ -267,8 +345,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                         children: [
                           Expanded(
                             child: AppButton(
-                              label: 'Pay Now • $_totalAmount EGP',
-                              onPressed: () => _payNow(simulateFailure: false),
+                              label: _requiresReceipt
+                                  ? 'Proceed to Upload Receipt'
+                                  : 'Pay Now • $_totalAmount EGP',
+                              onPressed: _onPayPressed,
                             ),
                           ),
                         ],
@@ -278,7 +358,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                         children: [
                           Expanded(
                             child: TextButton(
-                              onPressed: () => _payNow(simulateFailure: true),
+                              onPressed: _onSimulateFailurePressed,
                               child: const Text('Simulate failure demo'),
                             ),
                           ),

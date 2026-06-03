@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:math';
-
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/features/component/presentation/models/payment_models.dart';
 import 'package:bmt_app/features/component/presentation/screens/booking_confirmation_screen.dart';
-import 'package:bmt_app/features/component/presentation/widgets/payment_widgets.dart';
 
 class PaymentProcessingScreen extends StatefulWidget {
   final PaymentCheckoutData checkoutData;
@@ -32,32 +30,60 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
     with TickerProviderStateMixin {
   late final AnimationController _pulseController;
   late final AnimationController _checkController;
+  late final AnimationController _loaderRotationController;
+  
   bool _loading = true;
   bool _failed = false;
+  int _currentStepIndex = 0;
+  Timer? _stepTimer;
+  Timer? _transitionTimer;
+
   late final String _transactionId;
   late final String _bookingReference;
-  PaymentResultData? _result;
+
+  final List<String> _progressSteps = [
+    'Establishing secure fintech connection...',
+    'Verifying account status and limit...',
+    'Reserving seat and finalising ticket metadata...',
+  ];
 
   @override
   void initState() {
     super.initState();
     _transactionId = _generateId(prefix: 'TXN');
     _bookingReference = _generateId(prefix: 'MGT');
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     )..repeat(reverse: true);
+
     _checkController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 650),
+      duration: const Duration(milliseconds: 1000),
     );
 
-    Timer(const Duration(milliseconds: 1400), () {
+    _loaderRotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+
+    // Rotate step text during loading
+    _stepTimer = Timer.periodic(const Duration(milliseconds: 900), (timer) {
       if (!mounted) return;
-      final shouldFail =
-          widget.simulateFailure ||
-          (widget.paymentMethod.type == PaymentMethodType.cashOnBoarding &&
-              widget.checkoutData.totalForDiscount(widget.promoDiscount) > 90);
+      if (_currentStepIndex < _progressSteps.length - 1) {
+        setState(() {
+          _currentStepIndex++;
+        });
+      } else {
+        timer.cancel();
+      }
+    });
+
+    // Complete transaction simulation
+    _transitionTimer = Timer(const Duration(milliseconds: 2800), () {
+      if (!mounted) return;
+      final shouldFail = widget.simulateFailure;
 
       if (shouldFail) {
         setState(() {
@@ -67,31 +93,16 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
         return;
       }
 
-      final total = widget.checkoutData.totalForDiscount(widget.promoDiscount);
-      final remaining =
-          widget.paymentMethod.type == PaymentMethodType.walletBalance
-          ? widget.checkoutData.remainingWalletAfterPayment(total)
-          : null;
       setState(() {
         _loading = false;
-        _result = PaymentResultData(
-          transactionId: _transactionId,
-          bookingReference: _bookingReference,
-          paidAmount: total,
-          paymentMethodTitle: widget.paymentMethod.title,
-          promoCode: widget.promoCode,
-          promoDiscount: widget.promoDiscount,
-          fromWallet:
-              widget.paymentMethod.type == PaymentMethodType.walletBalance,
-          remainingWalletBalance: remaining,
-        );
+        _failed = false;
       });
       _checkController.forward();
     });
   }
 
   String _generateId({required String prefix}) {
-    final rng = Random();
+    final rng = math.Random();
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
     final body = List.generate(
       5,
@@ -104,6 +115,9 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
   void dispose() {
     _pulseController.dispose();
     _checkController.dispose();
+    _loaderRotationController.dispose();
+    _stepTimer?.cancel();
+    _transitionTimer?.cancel();
     super.dispose();
   }
 
@@ -124,6 +138,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
         child: SafeArea(
           child: Column(
             children: [
+              // Screen Header
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                 child: Row(
@@ -134,10 +149,10 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Payment',
+                      'Secure Checkout',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                            fontWeight: FontWeight.w800,
+                          ),
                     ),
                   ],
                 ),
@@ -145,12 +160,12 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
               Expanded(
                 child: Center(
                   child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 320),
+                    duration: const Duration(milliseconds: 350),
                     child: _loading
-                        ? _processingView(context, total)
+                        ? _buildProcessingView(context, scheme, total)
                         : _failed
-                        ? _failureView(context)
-                        : _successView(context, total),
+                            ? _buildFailureView(context, scheme)
+                            : _buildSuccessView(context, scheme, total),
                   ),
                 ),
               ),
@@ -161,88 +176,127 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
     );
   }
 
-  Widget _processingView(BuildContext context, int total) {
+  // --- SCREEN 3: PAYMENT PROCESSING VIEW ---
+  Widget _buildProcessingView(BuildContext context, ColorScheme scheme, int total) {
     return _stateShell(
       key: const ValueKey('processing'),
       child: AppSurface(
         radius: 28,
-        padding: const EdgeInsets.all(20),
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
+        padding: const EdgeInsets.all(22),
+        color: scheme.surfaceContainerHigh,
+        border: Border.all(color: scheme.outline.withAlpha(55)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                return AnimatedScale(
-                  scale: 0.95 + (_pulseController.value * 0.08),
-                  duration: const Duration(milliseconds: 120),
-                  child: AnimatedOpacity(
-                    opacity: 0.55 + (_pulseController.value * 0.45),
-                    duration: const Duration(milliseconds: 120),
-                    child: child,
-                  ),
-                );
-              },
-              child: Container(
-                width: 110,
-                height: 110,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [
-                      Theme.of(context).colorScheme.primary,
-                      Theme.of(context).colorScheme.secondary,
-                    ],
+            // Rotating Fintech Loader
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                RotationTransition(
+                  turns: _loaderRotationController,
+                  child: CustomPaint(
+                    size: const Size(120, 120),
+                    painter: LoaderRingPainter(scheme.primary, scheme.secondary),
                   ),
                 ),
-                child: const Icon(
-                  Icons.lock_clock_rounded,
-                  color: Colors.white,
-                  size: 56,
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: scheme.surface,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.security_rounded,
+                    color: scheme.primary,
+                    size: 38,
+                  ),
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 18),
-            Text(
-              'Processing Payment...',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-              textAlign: TextAlign.center,
+            const SizedBox(height: 24),
+            const Text(
+              'Processing Payment',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 6),
             Text(
-              'Please wait. We are confirming your digital checkout.',
-              style: Theme.of(context).textTheme.bodySmall,
+              'Please do not close this screen or press back button.',
               textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: scheme.onSurface.withAlpha(160)),
             ),
-            const SizedBox(height: 18),
-            PaymentStatusView(
-              success: false,
-              failure: false,
-              title: 'Verifying payment method',
-              subtitle: 'Checking transaction details and seat availability',
-              detailLabel: 'Method',
-              detailValue: widget.paymentMethod.title,
-              transactionId: _transactionId,
+            const SizedBox(height: 20),
+
+            // Step-by-step Status Indicator
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withAlpha(120),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: scheme.outline.withAlpha(45)),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: scheme.primary),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          _progressSteps[_currentStepIndex],
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  const Divider(height: 1),
+                  const SizedBox(height: 12),
+                  _buildDetailTextRow('Method:', widget.paymentMethod.title),
+                  const SizedBox(height: 6),
+                  _buildDetailTextRow('Transaction ID:', _transactionId),
+                ],
+              ),
             ),
             const SizedBox(height: 16),
-            TransactionSummaryCard(
-              data: PaymentResultData(
-                transactionId: _transactionId,
-                bookingReference: _bookingReference,
-                paidAmount: total,
-                paymentMethodTitle: widget.paymentMethod.title,
-                promoCode: widget.promoCode,
-                promoDiscount: widget.promoDiscount,
-                fromWallet:
-                    widget.paymentMethod.type ==
-                    PaymentMethodType.walletBalance,
-                remainingWalletBalance:
-                    widget.paymentMethod.type == PaymentMethodType.walletBalance
-                    ? widget.checkoutData.remainingWalletAfterPayment(total)
-                    : null,
+
+            // Booking summary summary
+            AppSurface(
+              radius: 16,
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              color: scheme.surfaceContainerLow,
+              child: Row(
+                children: [
+                  Icon(Icons.directions_bus_rounded, color: scheme.secondary, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '${widget.checkoutData.pickupPoint} → ${widget.checkoutData.destination}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          'Driver: ${widget.checkoutData.driverName} • Seat: ${widget.checkoutData.selectedSeat}',
+                          style: const TextStyle(fontSize: 11, color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    '$total EGP',
+                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14, color: scheme.primary),
+                  )
+                ],
               ),
             ),
           ],
@@ -251,31 +305,99 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
     );
   }
 
-  Widget _successView(BuildContext context, int total) {
+  // --- SCREEN 4: PAYMENT SUCCESS VIEW ---
+  Widget _buildSuccessView(BuildContext context, ColorScheme scheme, int total) {
     return _stateShell(
       key: const ValueKey('success'),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          PaymentStatusView(
-            success: true,
-            failure: false,
-            title: 'Payment Successful',
-            subtitle: 'Your ride has been paid for and is ready to confirm',
-            detailLabel: 'Amount paid',
-            detailValue: '$total EGP',
-            transactionId: _transactionId,
-            secondaryDetailLabel: 'Booking reference',
-            secondaryDetailValue: _bookingReference,
+          AppSurface(
+            radius: 28,
+            padding: const EdgeInsets.all(22),
+            color: scheme.surfaceContainerHigh,
+            border: Border.all(color: Colors.green.withAlpha(60)),
+            child: Column(
+              children: [
+                // Custom Confetti & Expanding checkmark animation
+                Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    ScaleTransition(
+                      scale: Tween(begin: 0.0, end: 1.0).animate(
+                        CurvedAnimation(parent: _checkController, curve: Curves.elasticOut),
+                      ),
+                      child: Container(
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const LinearGradient(
+                            colors: [Colors.green, Colors.teal],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.green.withAlpha(45),
+                              blurRadius: 18,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.check_rounded, size: 50, color: Colors.white),
+                        ),
+                      ),
+                    ),
+                    // Confetti Particles
+                    CustomPaint(
+                      size: const Size(120, 120),
+                      painter: ConfettiPainter(progress: _checkController),
+                    )
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Payment Successful',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.green),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Your booking reference has been confirmed',
+                  style: TextStyle(fontSize: 12, color: scheme.onSurface.withAlpha(160)),
+                ),
+                const SizedBox(height: 20),
+
+                // Transaction confirmation card
+                Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: scheme.outline.withAlpha(45)),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildDetailTextRow('Booking Ref:', _bookingReference, isBoldValue: true, valueColor: scheme.primary),
+                      const SizedBox(height: 10),
+                      _buildDetailTextRow('Paid Amount:', '$total EGP'),
+                      const SizedBox(height: 6),
+                      _buildDetailTextRow('Payment Method:', widget.paymentMethod.title),
+                      const SizedBox(height: 6),
+                      _buildDetailTextRow('Transaction ID:', _transactionId),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-          const SizedBox(height: 16),
-          TransactionSummaryCard(data: _result!),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
+
+          // Action Buttons: View Ticket & Back to Home
           Row(
             children: [
               Expanded(
                 child: AppButton(
-                  label: 'Continue To Booking Confirmation',
+                  label: 'View Ticket',
                   onPressed: () {
                     Navigator.of(context).pushReplacement(
                       MaterialPageRoute(
@@ -294,55 +416,130 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
               ),
             ],
           ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Back to Home',
+                  outline: true,
+                  onPressed: () {
+                    Navigator.of(context).popUntil((route) => route.isFirst);
+                  },
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 
-  Widget _failureView(BuildContext context) {
+  // --- SCREEN 5: PAYMENT FAILURE VIEW ---
+  Widget _buildFailureView(BuildContext context, ColorScheme scheme) {
     return _stateShell(
       key: const ValueKey('failure'),
-      child: AppSurface(
-        radius: 28,
-        padding: const EdgeInsets.all(20),
-        color: Theme.of(context).colorScheme.surfaceContainerHigh,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            PaymentStatusView(
-              success: false,
-              failure: true,
-              title: 'Payment Failed',
-              subtitle: 'A simulated issue interrupted the checkout flow',
-              detailLabel: 'Reason',
-              detailValue: 'Network issue / timeout',
-              transactionId: _transactionId,
-            ),
-            const SizedBox(height: 16),
-            Row(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          AppSurface(
+            radius: 28,
+            padding: const EdgeInsets.all(22),
+            color: scheme.surfaceContainerHigh,
+            border: Border.all(color: scheme.error.withAlpha(60)),
+            child: Column(
               children: [
-                Expanded(
-                  child: AppButton(
-                    label: 'Retry',
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+                // Error Illustration
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: scheme.error.withAlpha(15),
+                    border: Border.all(color: scheme.error.withAlpha(45)),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.gpp_bad_rounded,
+                      size: 48,
+                      color: scheme.error,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: AppButton(
-                    label: 'Change Payment Method',
-                    outline: true,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
+                const SizedBox(height: 20),
+                Text(
+                  'Payment Failed',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: scheme.error),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Your transaction could not be processed.',
+                  style: TextStyle(fontSize: 12, color: scheme.onSurface.withAlpha(160)),
+                ),
+                const SizedBox(height: 20),
+
+                // Failure Reason Card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerLowest,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: scheme.outline.withAlpha(55)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Reason for Failure',
+                        style: TextStyle(fontSize: 11, color: Colors.grey, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _getMockFailureReason(),
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 12),
+                      const Divider(height: 1),
+                      const SizedBox(height: 12),
+                      _buildDetailTextRow('Transaction ID:', _transactionId),
+                    ],
                   ),
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+
+          // Action Buttons: Retry & Contact Support
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Retry Payment',
+                  onPressed: () {
+                    // Navigate back to checkout screen to let them retry
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: AppButton(
+                  label: 'Contact Support',
+                  outline: true,
+                  onPressed: () {
+                    _showSupportDialog(context, scheme);
+                  },
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -361,4 +558,140 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
       },
     );
   }
+
+  Widget _buildDetailTextRow(String label, String value, {bool isBoldValue = false, Color? valueColor}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isBoldValue ? FontWeight.w900 : FontWeight.bold,
+            color: valueColor,
+          ),
+        ),
+      ],
+    );
+  }
+
+  String _getMockFailureReason() {
+    if (widget.paymentMethod.type == PaymentMethodType.walletBalance) {
+      return 'Insufficient wallet balance for this transaction.';
+    }
+    if (widget.paymentMethod.type == PaymentMethodType.creditCard) {
+      return '3D Secure authorization failed / timeout.';
+    }
+    return 'Verification error. The receipt upload screenshot was rejected / invalid transaction reference.';
+  }
+
+  void _showSupportDialog(BuildContext context, ColorScheme scheme) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: scheme.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Text('Contact Customer Support', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                'Our customer support agents are ready to assist you. Reference ticket number: $_transactionId',
+                style: TextStyle(fontSize: 13, color: scheme.onSurface.withAlpha(200)),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text('Close', style: TextStyle(color: scheme.primary)),
+            )
+          ],
+        );
+      },
+    );
+  }
+}
+
+// --- CUSTOM PAINTER: ROTATING LOADER ARC ---
+class LoaderRingPainter extends CustomPainter {
+  final Color primaryColor;
+  final Color secondaryColor;
+
+  LoaderRingPainter(this.primaryColor, this.secondaryColor);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..strokeWidth = 6
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.round;
+
+    final rect = Rect.fromLTWH(3, 3, size.width - 6, size.height - 6);
+
+    // Draw background dim track
+    paint.color = primaryColor.withAlpha(30);
+    canvas.drawArc(rect, 0, 2 * math.pi, false, paint);
+
+    // Draw active gradient arc
+    paint.color = primaryColor;
+    canvas.drawArc(rect, 0, 1.2 * math.pi, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// --- CUSTOM PAINTER: CONFETTI PARTICLES ---
+class ConfettiPainter extends CustomPainter {
+  final Animation<double> progress;
+
+  ConfettiPainter({required this.progress}) : super(repaint: progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress.value == 0) return;
+
+    final random = math.Random(42);
+    final center = Offset(size.width / 2, size.height / 2);
+    final count = 28;
+    final maxRadius = size.width * 0.7;
+
+    for (var i = 0; i < count; i++) {
+      final angle = random.nextDouble() * 2 * math.pi;
+      final distance = progress.value * maxRadius * (0.4 + random.nextDouble() * 0.6);
+      
+      final offset = Offset(
+        center.dx + math.cos(angle) * distance,
+        center.dy + math.sin(angle) * distance,
+      );
+
+      final sizeFactor = (1.0 - progress.value) * (4 + random.nextDouble() * 6);
+      final color = _getConfettiColor(random.nextInt(4));
+      
+      final paint = Paint()
+        ..color = color.withAlpha(((1.0 - progress.value).clamp(0.0, 1.0) * 255).toInt())
+        ..style = PaintingStyle.fill;
+
+      canvas.drawCircle(offset, sizeFactor, paint);
+    }
+  }
+
+  Color _getConfettiColor(int index) {
+    switch (index) {
+      case 0:
+        return Colors.blue;
+      case 1:
+        return Colors.green;
+      case 2:
+        return Colors.amber;
+      default:
+        return Colors.pink;
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
