@@ -261,10 +261,41 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: _QuickAction(
+                      title: 'Rewards',
+                      icon: Icons.emoji_events_outlined,
+                      color: Colors.orange,
+                      onTap: () => widget.onOpenRoute('/rewards'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _QuickAction(
                       title: 'Payments',
                       icon: Icons.payment_rounded,
                       color: Colors.amber,
                       onTap: () => widget.onOpenRoute('/payment-demo'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _QuickAction(
+                      title: 'Loyalty Portal',
+                      icon: Icons.stars_rounded,
+                      color: Colors.indigo,
+                      onTap: () => widget.onOpenRoute('/loyalty'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _QuickAction(
+                      title: 'Profile',
+                      icon: Icons.person_rounded,
+                      color: Colors.blueGrey,
+                      onTap: () => widget.onOpenRoute('/profile'),
                     ),
                   ),
                 ],

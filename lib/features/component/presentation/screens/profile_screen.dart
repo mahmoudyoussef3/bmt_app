@@ -105,6 +105,28 @@ class ProfileScreen extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
+        AppCard(
+          onTap: () => onOpenRoute('/settings'),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            children: [
+              Icon(Icons.settings_outlined, color: scheme.primary),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Settings & Preferences', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                    const SizedBox(height: 2),
+                    Text('General, Security, Privacy, Languages...', style: TextStyle(fontSize: 10, color: scheme.onSurface.withAlpha(150))),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurface.withAlpha(120)),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
         // Dev-only version switcher
         Builder(
           builder: (context) {

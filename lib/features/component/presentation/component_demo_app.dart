@@ -11,6 +11,10 @@ import 'package:bmt_app/features/component/presentation/screens/subscription_con
 import 'package:bmt_app/features/component/presentation/screens/tracking_screen.dart';
 import 'package:bmt_app/features/component/presentation/screens/support_center_screen.dart';
 import 'package:bmt_app/features/component/presentation/screens/communication_screen.dart';
+import 'package:bmt_app/features/component/presentation/screens/referral_rewards_screen.dart';
+import 'package:bmt_app/features/component/presentation/screens/loyalty_screen.dart';
+import 'package:bmt_app/features/component/presentation/screens/profile_screen.dart';
+import 'package:bmt_app/features/component/presentation/screens/settings_screen.dart';
 import 'package:bmt_app/features/component/presentation/auth/auth_routes.dart';
 import 'package:bmt_app/features/component/presentation/screens/auth/auth_success_screen.dart';
 import 'package:bmt_app/features/component/presentation/screens/auth/otp_verification_screen.dart';
@@ -122,6 +126,14 @@ class ComponentDemoApp extends StatelessWidget {
         '/tracking': (_) => const TrackingScreen(),
         '/support': (_) => const SupportCenterScreen(),
         '/communication': (_) => const CommunicationScreen(),
+        '/rewards': (_) => const ReferralRewardsScreen(),
+        '/loyalty': (_) => const LoyaltyScreen(),
+        '/settings': (_) => const SettingsScreen(),
+        '/profile': (context) => ProfileScreen(
+              onOpenRoute: (route, [arguments]) => Navigator.of(
+                context,
+              ).pushNamed(route, arguments: arguments),
+            ),
         '/driver': (_) => const CaptainDashboardScreen(),
         '/admin': (_) => const DashboardWebScreen(),
       },
