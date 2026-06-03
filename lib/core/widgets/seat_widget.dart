@@ -34,7 +34,7 @@ class SeatWidget extends StatelessWidget {
 
     final borderColor = switch (status) {
       SeatStatus.reserved => scheme.outline.withAlpha(70),
-      SeatStatus.selected => scheme.primary,
+      SeatStatus.selected => scheme.primary.withAlpha(220),
       SeatStatus.available => scheme.outline.withAlpha(120),
     };
 
@@ -42,20 +42,28 @@ class SeatWidget extends StatelessWidget {
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOutCubic,
       width: double.infinity,
-      height: 64,
+      height: isSelected ? 68 : 64,
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: borderColor, width: isSelected ? 1.5 : 1),
-        boxShadow: isSelected
-            ? [
-                BoxShadow(
-                  color: scheme.primary.withAlpha(60),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ]
-            : [],
+        border: Border.all(
+          color: borderColor,
+          width: isSelected ? 2 : 1,
+        ),
+        boxShadow: [
+          if (isSelected)
+            BoxShadow(
+              color: scheme.primary.withAlpha(70),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            )
+          else if (!isReserved)
+            BoxShadow(
+              color: Colors.black.withAlpha(16),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -66,7 +74,7 @@ class SeatWidget extends StatelessWidget {
                 : isSelected
                 ? Icons.check_rounded
                 : Icons.event_seat_rounded,
-            size: 16,
+            size: isSelected ? 18 : 16,
             color: foregroundColor,
           ),
           const SizedBox(height: 4),
@@ -76,6 +84,7 @@ class SeatWidget extends StatelessWidget {
               color: foregroundColor,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.3,
+              fontSize: isSelected ? 15 : 14,
             ),
           ),
         ],
@@ -91,6 +100,8 @@ class SeatWidget extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
+        splashColor: scheme.primary.withAlpha(40),
+        highlightColor: scheme.primary.withAlpha(20),
         child: child,
       ),
     );

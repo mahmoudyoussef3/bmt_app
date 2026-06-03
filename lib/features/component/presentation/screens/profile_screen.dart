@@ -5,7 +5,7 @@ import 'package:bmt_app/core/app_mode/app_mode.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 class ProfileScreen extends StatelessWidget {
-  final void Function(String route) onOpenRoute;
+  final void Function(String route, [Object? arguments]) onOpenRoute;
 
   const ProfileScreen({super.key, required this.onOpenRoute});
 

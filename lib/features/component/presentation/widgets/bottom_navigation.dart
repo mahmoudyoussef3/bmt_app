@@ -15,7 +15,7 @@ class ComponentBottomNavigation extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final tabs = <({String id, String label, IconData icon})>[
       (id: 'home', label: 'Home', icon: Icons.home_rounded),
-      (id: 'bookings', label: 'Bookings', icon: Icons.calendar_month_rounded),
+      (id: 'bookings', label: 'My Trips', icon: Icons.luggage_rounded),
       (id: 'tracking', label: 'Tracking', icon: Icons.map_rounded),
       (id: 'profile', label: 'Profile', icon: Icons.person_rounded),
     ];

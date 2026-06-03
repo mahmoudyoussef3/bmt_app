@@ -39,6 +39,12 @@ class _InteractiveSeatState extends State<InteractiveSeat> {
     }
   }
 
+  void _toggleSelection() {
+    final currently = widget.selectedNotifier.value;
+    widget.selectedNotifier.value =
+        currently == widget.id ? null : widget.id;
+  }
+
   @override
   void dispose() {
     widget.selectedNotifier.removeListener(_onSelectedChanged);
@@ -50,32 +56,16 @@ class _InteractiveSeatState extends State<InteractiveSeat> {
     final isReserved = widget.initialStatus == SeatStatus.reserved;
 
     return AnimatedScale(
-      duration: const Duration(milliseconds: 220),
-      scale: _status == SeatStatus.selected ? 1.04 : 1.0,
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutBack,
+      scale: _status == SeatStatus.selected ? 1.05 : 1.0,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 260),
         curve: Curves.easeOutQuad,
-        child: GestureDetector(
-          onTap: isReserved
-              ? null
-              : () {
-                  final currently = widget.selectedNotifier.value;
-                  widget.selectedNotifier.value = currently == widget.id
-                      ? null
-                      : widget.id;
-                },
-          child: SeatWidget(
-            id: widget.id,
-            status: _status,
-            onTap: isReserved
-                ? null
-                : () {
-                    final currently = widget.selectedNotifier.value;
-                    widget.selectedNotifier.value = currently == widget.id
-                        ? null
-                        : widget.id;
-                  },
-          ),
+        child: SeatWidget(
+          id: widget.id,
+          status: _status,
+          onTap: isReserved ? null : _toggleSelection,
         ),
       ),
     );

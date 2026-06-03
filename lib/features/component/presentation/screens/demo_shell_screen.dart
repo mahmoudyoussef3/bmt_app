@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/features/component/presentation/screens/bookings_screen.dart';
+import 'package:bmt_app/features/component/presentation/screens/trips/my_trips_screen.dart';
 import 'package:bmt_app/features/component/presentation/screens/home_screen.dart';
 import 'package:bmt_app/features/component/presentation/screens/profile_screen.dart';
 import 'package:bmt_app/features/component/presentation/screens/tracking_screen.dart';
@@ -19,14 +19,17 @@ class _DemoShellScreenState extends State<DemoShellScreen> {
   Widget build(BuildContext context) {
     final pages = <Widget>[
       HomeScreen(
-        onOpenRoute: (route) => Navigator.of(context).pushNamed(route),
+        onOpenRoute: (route, [arguments]) =>
+            Navigator.of(context).pushNamed(route, arguments: arguments),
       ),
-      BookingsScreen(
-        onOpenRoute: (route) => Navigator.of(context).pushNamed(route),
+      MyTripsScreen(
+        onOpenRoute: (route, [arguments]) =>
+            Navigator.of(context).pushNamed(route, arguments: arguments),
       ),
       const TrackingScreen(shellMode: true),
       ProfileScreen(
-        onOpenRoute: (route) => Navigator.of(context).pushNamed(route),
+        onOpenRoute: (route, [arguments]) =>
+            Navigator.of(context).pushNamed(route, arguments: arguments),
       ),
     ];
 

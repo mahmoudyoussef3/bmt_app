@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 class BookingsScreen extends StatelessWidget {
-  final void Function(String route) onOpenRoute;
+  final void Function(String route, [Object? arguments]) onOpenRoute;
 
   const BookingsScreen({super.key, required this.onOpenRoute});
 

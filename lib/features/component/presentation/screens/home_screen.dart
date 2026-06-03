@@ -1,232 +1,221 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/core/theme/text_themes.dart';
+import 'package:bmt_app/features/component/presentation/widgets/home/home_mock_data.dart';
+import 'package:bmt_app/features/component/presentation/widgets/home/nearby_trip_card.dart';
+import 'package:bmt_app/features/component/presentation/widgets/home/package_plan_card.dart';
+import 'package:bmt_app/features/component/presentation/widgets/home/popular_route_card.dart';
+import 'package:bmt_app/features/component/presentation/widgets/home/promo_banner.dart';
+import 'package:bmt_app/features/component/presentation/booking/booking_routes.dart';
+import 'package:bmt_app/features/component/presentation/trips/trips_routes.dart';
+import 'package:bmt_app/features/component/presentation/booking/booking_search_query.dart';
+import 'package:bmt_app/features/component/presentation/widgets/home/search_trip_card.dart';
 
-class HomeScreen extends StatelessWidget {
-  final void Function(String route) onOpenRoute;
+class HomeScreen extends StatefulWidget {
+  final void Function(String route, [Object? arguments]) onOpenRoute;
 
   const HomeScreen({super.key, required this.onOpenRoute});
 
   @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _pickup = '';
+  String _destination = '';
+  String _date = 'Today, Jun 3';
+  String _time = '';
+
+  Future<void> _pickLocation({
+    required String title,
+    required List<String> options,
+    required void Function(String) onSelected,
+    String? current,
+  }) async {
+    final value = await showHomePickerSheet(
+      context: context,
+      title: title,
+      options: options,
+      selected: current?.isEmpty == true ? null : current,
+    );
+    if (value != null) {
+      setState(() => onSelected(value));
+    }
+  }
+
+  void _pickDate() async {
+    final value = await showHomePickerSheet(
+      context: context,
+      title: 'Select date',
+      options: const ['Today, Jun 3', 'Tomorrow, Jun 4', 'Fri, Jun 5'],
+      selected: _date,
+    );
+    if (value != null) setState(() => _date = value);
+  }
+
+  void _pickTime() async {
+    final value = await showHomePickerSheet(
+      context: context,
+      title: 'Select time',
+      options: kTimeSuggestions,
+      selected: _time.isEmpty ? null : _time,
+    );
+    if (value != null) setState(() => _time = value);
+  }
+
+  BookingSearchQuery get _searchQuery => BookingSearchQuery(
+    pickup: _pickup,
+    destination: _destination,
+    date: _date,
+    time: _time,
+  );
+
+  void _onSearchTrips() {
+    final query = _searchQuery;
+    if (!query.isComplete) {
+      widget.onOpenRoute(BookingRoutes.search, query.toArguments());
+      return;
+    }
+    widget.onOpenRoute(BookingRoutes.routeSelection, query.toArguments());
+  }
+
+  void _openBookingSearch() {
+    widget.onOpenRoute(BookingRoutes.search, _searchQuery.toArguments());
+  }
+
+  @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+
     return CustomScrollView(
       slivers: [
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    scheme.primary.withAlpha(82),
-                    scheme.secondary.withAlpha(28),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(26),
-                border: Border.all(color: scheme.outline.withAlpha(110)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withAlpha(28),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Good Morning',
-                            style: Theme.of(context).textTheme.labelLarge
-                                ?.copyWith(
-                                  color: scheme.onSurface.withAlpha(200),
-                                ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Ahmed Hassan',
-                            style: AppTextThemes.headlineStrong(
-                              scheme,
-                            ).copyWith(color: scheme.onSurface),
-                          ),
-                        ],
-                      ),
-                      AppAvatar(initials: 'AH', radius: 26),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'Transportation dashboard and commute access',
-                    style: AppTextThemes.caption(
-                      scheme,
-                    ).copyWith(color: scheme.onSurface.withAlpha(180)),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: const [
-                      Expanded(
-                        child: _HeroStat(
-                          label: 'Next ride',
-                          value: '8:45 AM',
-                          icon: Icons.schedule_rounded,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: _HeroStat(
-                          label: 'Seat',
-                          value: 'A3',
-                          icon: Icons.event_seat_rounded,
-                        ),
-                      ),
-                      SizedBox(width: 10),
-                      Expanded(
-                        child: _HeroStat(
-                          label: 'Status',
-                          value: 'Live',
-                          icon: Icons.bolt_rounded,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
+        SliverToBoxAdapter(child: _HomeGreetingHeader(scheme: scheme)),
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
           sliver: SliverList(
             delegate: SliverChildListDelegate([
-              AppSurface(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          "Today's Booking",
-                          style: AppTextThemes.subtitle(scheme),
-                        ),
-                        const AppBadge(text: 'Active'),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _PointInfo(
-                            label: 'Pickup',
-                            value: 'Banha Center',
-                            iconColor: Theme.of(context).colorScheme.secondary,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _PointInfo(
-                            label: 'Destination',
-                            value: 'Smart Village',
-                            iconColor: Theme.of(context).colorScheme.tertiary,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.schedule_rounded,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.secondary,
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              'ETA: 8:45 AM',
-                              style: Theme.of(context).textTheme.bodyMedium
-                                  ?.copyWith(fontWeight: FontWeight.w600),
-                            ),
-                          ],
-                        ),
-                        Text(
-                          '3 min away',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    const AppProgressBar(progress: 0.33),
-                  ],
+              SearchTripCard(
+                pickup: _pickup,
+                destination: _destination,
+                date: _date,
+                time: _time,
+                onPickupTap: () => _pickLocation(
+                  title: 'Pickup location',
+                  options: kPickupSuggestions,
+                  current: _pickup,
+                  onSelected: (v) => _pickup = v,
+                ),
+                onDestinationTap: () => _pickLocation(
+                  title: 'Destination',
+                  options: kDestinationSuggestions,
+                  current: _destination,
+                  onSelected: (v) => _destination = v,
+                ),
+                onDateTap: _pickDate,
+                onTimeTap: _pickTime,
+                onSearch: _onSearchTrips,
+              ),
+              const SizedBox(height: 24),
+              SectionHeader(
+                title: 'Popular Routes',
+                subtitle: 'Frequent commutes from your area',
+                action: TextButton(
+                  onPressed: () =>
+                      widget.onOpenRoute(BookingRoutes.popularRoutes),
+                  child: const Text('See all'),
                 ),
               ),
               const SizedBox(height: 12),
-              AppSurface(
-                padding: const EdgeInsets.all(14),
-                child: Row(
-                  children: [
-                    AppAvatar(initials: 'AM', radius: 22),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Ahmed Mohamed',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Vehicle #MT-2847',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  color: scheme.onSurface.withAlpha(160),
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () {},
-                      icon: const Icon(Icons.chevron_right_rounded),
-                    ),
-                  ],
+              SizedBox(
+                height: 200,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: kPopularRoutes.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(width: 12),
+                  itemBuilder: (context, index) {
+                    return PopularRouteCard(
+                      route: kPopularRoutes[index],
+                      onTap: () {
+                        final route = kPopularRoutes[index];
+                        final query = _searchQuery.copyWith(
+                          pickup: route.pickup,
+                          destination: route.destination,
+                        );
+                        setState(() {
+                          _pickup = route.pickup;
+                          _destination = route.destination;
+                        });
+                        widget.onOpenRoute(
+                          BookingRoutes.routeSelection,
+                          query.toArguments(),
+                        );
+                      },
+                    );
+                  },
                 ),
               ),
+              const SizedBox(height: 24),
+              SectionHeader(
+                title: 'Nearby Trips',
+                subtitle: 'Active routes departing soon',
+              ),
+              const SizedBox(height: 12),
+              ...kNearbyTrips.map(
+                (trip) => Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: NearbyTripCard(
+                    trip: trip,
+                    onTap: () => widget.onOpenRoute(
+                      BookingRoutes.vehicleListing,
+                      _searchQuery.toArguments(),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Center(
+                child: TextButton.icon(
+                  onPressed: _openBookingSearch,
+                  icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                  label: const Text('Open full search'),
+                ),
+              ),
+              const SizedBox(height: 24),
+              PromoBanner(onTap: () => widget.onOpenRoute('/subscription')),
+              const SizedBox(height: 24),
+              SectionHeader(
+                title: 'Package Booking',
+                subtitle: 'Save more with commute bundles',
+                action: TextButton(
+                  onPressed: () => widget.onOpenRoute('/subscription'),
+                  child: const Text('Compare'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ...kPackagePlans.asMap().entries.map((entry) {
+                final index = entry.key;
+                final plan = entry.value;
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: PackagePlanCard(
+                    plan: plan,
+                    highlighted: index == kPackagePlans.length - 1,
+                    onTap: () => widget.onOpenRoute('/subscription'),
+                  ),
+                );
+              }),
               const SizedBox(height: 20),
-              const SizedBox(height: 4),
               SectionHeader(title: 'Quick Actions'),
               const SizedBox(height: 12),
               Row(
                 children: [
                   Expanded(
                     child: _QuickAction(
-                      title: 'Daily Booking',
-                      icon: Icons.directions_bus_rounded,
-                      color: Theme.of(context).colorScheme.primary,
-                      onTap: () => onOpenRoute('/daily-booking'),
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: _QuickAction(
-                      title: 'Monthly Plan',
-                      icon: Icons.calendar_month_rounded,
-                      color: Theme.of(context).colorScheme.secondary,
-                      onTap: () => onOpenRoute('/subscription'),
+                      title: 'Search Trip',
+                      icon: Icons.search_rounded,
+                      color: scheme.primary,
+                      onTap: _openBookingSearch,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -234,8 +223,17 @@ class HomeScreen extends StatelessWidget {
                     child: _QuickAction(
                       title: 'Track Vehicle',
                       icon: Icons.map_rounded,
-                      color: Theme.of(context).colorScheme.tertiary,
-                      onTap: () => onOpenRoute('/tracking'),
+                      color: scheme.tertiary,
+                      onTap: () => widget.onOpenRoute('/tracking'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _QuickAction(
+                      title: 'My Trips',
+                      icon: Icons.luggage_rounded,
+                      color: scheme.secondary,
+                      onTap: () => widget.onOpenRoute(TripsRoutes.myTrips),
                     ),
                   ),
                 ],
@@ -249,92 +247,69 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class _PointInfo extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color iconColor;
+class _HomeGreetingHeader extends StatelessWidget {
+  const _HomeGreetingHeader({required this.scheme});
 
-  const _PointInfo({
-    required this.label,
-    required this.value,
-    required this.iconColor,
-  });
+  final ColorScheme scheme;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.black.withAlpha(10)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.location_on_rounded, size: 16, color: iconColor),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: Theme.of(context).textTheme.bodySmall),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 12),
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 18),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              scheme.primary.withAlpha(82),
+              scheme.secondary.withAlpha(28),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(26),
+          border: Border.all(color: scheme.outline.withAlpha(110)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(28),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroStat extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-
-  const _HeroStat({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: scheme.surface.withAlpha(58),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.onSurface.withAlpha(38)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: scheme.onSurface),
-          const SizedBox(height: 10),
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: scheme.onSurface.withAlpha(170),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Good Morning',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      color: scheme.onSurface.withAlpha(200),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    'Book your trip',
+                    style: AppTextThemes.headlineStrong(
+                      scheme,
+                    ).copyWith(color: scheme.onSurface),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Search, compare routes, and reserve your seat',
+                    style: AppTextThemes.caption(
+                      scheme,
+                    ).copyWith(color: scheme.onSurface.withAlpha(180)),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+            const AppAvatar(initials: 'AH', radius: 26),
+          ],
+        ),
       ),
     );
   }

@@ -4,7 +4,11 @@ import 'package:bmt_app/features/component/presentation/models/payment_models.da
 import 'package:bmt_app/features/component/presentation/screens/payment_checkout_screen.dart';
 import 'package:bmt_app/features/component/presentation/widgets/booking_footer_summary.dart';
 import 'package:bmt_app/features/component/presentation/widgets/interactive_seat.dart';
+import 'package:bmt_app/features/component/presentation/widgets/passenger_info_bottom_sheet.dart';
+import 'package:bmt_app/features/component/presentation/widgets/seat_booking_summary_panel.dart';
 import 'package:bmt_app/features/component/presentation/widgets/seat_legend.dart';
+import 'package:bmt_app/features/component/presentation/widgets/seat_passenger_preview_card.dart';
+import 'package:bmt_app/features/component/presentation/widgets/seat_selection_vehicle_card.dart';
 
 class SeatSelectionScreen extends StatefulWidget {
   const SeatSelectionScreen({super.key});
@@ -41,9 +45,12 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
         .length;
     final width = MediaQuery.sizeOf(context).width;
     final contentPadding = width < 380 ? 16.0 : 20.0;
-    final horizontalGap = width < 380 ? 8.0 : 12.0;
-    final aisleGap = width < 380 ? 20.0 : 28.0;
-    final rowGap = width < 380 ? 10.0 : 14.0;
+    final horizontalGap = width < 380 ? 10.0 : 14.0;
+    final aisleGap = width < 380 ? 22.0 : 32.0;
+    final rowGap = width < 380 ? 12.0 : 16.0;
+    final maxContentWidth = width >= 900
+        ? 720.0
+        : (width >= 600 ? 560.0 : width);
 
     return Scaffold(
       body: Container(
@@ -62,26 +69,59 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
             children: [
               _buildHeader(context, availableCount),
               Expanded(
-                child: ListView(
-                  padding: EdgeInsets.fromLTRB(
-                    contentPadding,
-                    12,
-                    contentPadding,
-                    24,
-                  ),
-                  children: [
-                    _buildTripOverview(context, availableCount),
-                    const SizedBox(height: 14),
-                    _buildBusLayout(
-                      context,
-                      horizontalGap: horizontalGap,
-                      aisleGap: aisleGap,
-                      rowGap: rowGap,
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: maxContentWidth),
+                    child: ValueListenableBuilder<String?>(
+                      valueListenable: _selectedSeat,
+                      builder: (context, selected, _) {
+                        return ListView(
+                          padding: EdgeInsets.fromLTRB(
+                            contentPadding,
+                            12,
+                            contentPadding,
+                            24,
+                          ),
+                          children: [
+                            const SeatLegend(),
+                            const SizedBox(height: 14),
+                            SeatSelectionVehicleCard(
+                              availableSeats: availableCount,
+                            ),
+                            const SizedBox(height: 14),
+                            _buildTripOverview(context, availableCount),
+                            const SizedBox(height: 14),
+                            _buildBusLayout(
+                              context,
+                              horizontalGap: horizontalGap,
+                              aisleGap: aisleGap,
+                              rowGap: rowGap,
+                            ),
+                            const SizedBox(height: 14),
+                            if (selected == null)
+                              _buildEmptyState(context)
+                            else
+                              _buildSelectedSeatsSummary(context, selected),
+                            const SizedBox(height: 12),
+                            SeatPassengerPreviewCard(selectedSeat: selected),
+                            const SizedBox(height: 12),
+                            SeatBookingSummaryPanel(
+                              selectedSeat: selected,
+                              onPassengerDetailsTap: selected == null
+                                  ? null
+                                  : () => showPassengerInfoBottomSheet(
+                                      context,
+                                      seatLabel: selected,
+                                    ),
+                            ),
+                            const SizedBox(height: 14),
+                            _buildHintCard(context),
+                            const SizedBox(height: 120),
+                          ],
+                        );
+                      },
                     ),
-                    const SizedBox(height: 14),
-                    _buildHintCard(context),
-                    const SizedBox(height: 90),
-                  ],
+                  ),
                 ),
               ),
               _buildBottomSummary(context),
@@ -415,8 +455,92 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
             aisleGap: aisleGap,
             rowGap: rowGap,
           ),
-          const SizedBox(height: 18),
-          const SeatLegend(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AppSurface(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
+      radius: 22,
+      color: scheme.surfaceContainerLow,
+      border: Border.all(color: scheme.outline.withAlpha(70)),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: scheme.primary.withAlpha(30),
+            ),
+            child: Icon(
+              Icons.event_seat_outlined,
+              size: 36,
+              color: scheme.primary.withAlpha(200),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Select one or more seats to continue',
+            textAlign: TextAlign.center,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Tap any available seat on the layout above. Your fare updates instantly below.',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: scheme.onSurface.withAlpha(170),
+              height: 1.45,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSelectedSeatsSummary(BuildContext context, String seat) {
+    final scheme = Theme.of(context).colorScheme;
+    const pricePerSeat = 25.0;
+
+    return AppSurface(
+      padding: const EdgeInsets.all(16),
+      radius: 20,
+      color: scheme.primary.withAlpha(22),
+      border: Border.all(color: scheme.primary.withAlpha(90), width: 1.5),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: scheme.primary,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.check_rounded, color: scheme.onPrimary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Seat $seat selected',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                ),
+                Text(
+                  '1 seat · EGP ${pricePerSeat.toStringAsFixed(2)} each · '
+                  'Total EGP ${pricePerSeat.toStringAsFixed(2)}',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -449,8 +573,12 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
   }
 
   Widget _buildBottomSummary(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final maxContentWidth = width >= 900
+        ? 720.0
+        : (width >= 600 ? 560.0 : width);
+
     return Container(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface.withAlpha(245),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -459,35 +587,43 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(24),
-            blurRadius: 24,
-            offset: const Offset(0, -8),
+            color: Colors.black.withAlpha(28),
+            blurRadius: 28,
+            offset: const Offset(0, -10),
           ),
         ],
       ),
       child: SafeArea(
         top: false,
-        child: ValueListenableBuilder<String?>(
-          valueListenable: _selectedSeat,
-          builder: (context, value, _) => BookingFooterSummary(
-            selectedSeat: value,
-            onConfirm: value == null
-                ? null
-                : () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => PaymentCheckoutScreen(
-                        checkoutData: PaymentCheckoutData(
-                          pickupPoint: 'Banha Station',
-                          destination: 'Smart Village',
-                          vehicleNumber: 'MB-15-2847',
-                          departureTime: '8:40 AM',
-                          arrivalTime: '9:20 AM',
-                          selectedSeat: value,
-                          driverName: 'Ahmed Mohamed',
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxContentWidth),
+              child: ValueListenableBuilder<String?>(
+                valueListenable: _selectedSeat,
+                builder: (context, value, _) => BookingFooterSummary(
+                  selectedSeat: value,
+                  onConfirm: value == null
+                      ? null
+                      : () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => PaymentCheckoutScreen(
+                              checkoutData: PaymentCheckoutData(
+                                pickupPoint: 'Banha Station',
+                                destination: 'Smart Village',
+                                vehicleNumber: 'MB-15-2847',
+                                departureTime: '8:40 AM',
+                                arrivalTime: '9:20 AM',
+                                selectedSeat: value,
+                                driverName: 'Ahmed Mohamed',
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ),
