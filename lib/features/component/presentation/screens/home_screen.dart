@@ -218,7 +218,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: _openBookingSearch,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _QuickAction(
                       title: 'Track Vehicle',
@@ -227,13 +227,44 @@ class _HomeScreenState extends State<HomeScreen> {
                       onTap: () => widget.onOpenRoute('/tracking'),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: _QuickAction(
                       title: 'My Trips',
                       icon: Icons.luggage_rounded,
                       color: scheme.secondary,
                       onTap: () => widget.onOpenRoute(TripsRoutes.myTrips),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _QuickAction(
+                      title: 'Support',
+                      icon: Icons.support_agent_rounded,
+                      color: scheme.error,
+                      onTap: () => widget.onOpenRoute('/support'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Expanded(
+                    child: _QuickAction(
+                      title: 'Chat Hub',
+                      icon: Icons.chat_bubble_outline_rounded,
+                      color: Colors.teal,
+                      onTap: () => widget.onOpenRoute('/communication'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _QuickAction(
+                      title: 'Payments',
+                      icon: Icons.payment_rounded,
+                      color: Colors.amber,
+                      onTap: () => widget.onOpenRoute('/payment-demo'),
                     ),
                   ),
                 ],

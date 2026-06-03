@@ -9,6 +9,8 @@ import 'package:bmt_app/features/component/presentation/models/payment_models.da
 import 'package:bmt_app/features/component/presentation/screens/subscription_screen.dart';
 import 'package:bmt_app/features/component/presentation/screens/subscription_confirmation_screen.dart';
 import 'package:bmt_app/features/component/presentation/screens/tracking_screen.dart';
+import 'package:bmt_app/features/component/presentation/screens/support_center_screen.dart';
+import 'package:bmt_app/features/component/presentation/screens/communication_screen.dart';
 import 'package:bmt_app/features/component/presentation/auth/auth_routes.dart';
 import 'package:bmt_app/features/component/presentation/screens/auth/auth_success_screen.dart';
 import 'package:bmt_app/features/component/presentation/screens/auth/otp_verification_screen.dart';
@@ -118,6 +120,8 @@ class ComponentDemoApp extends StatelessWidget {
           return TripDetailsScreen(tripId: tripId);
         },
         '/tracking': (_) => const TrackingScreen(),
+        '/support': (_) => const SupportCenterScreen(),
+        '/communication': (_) => const CommunicationScreen(),
         '/driver': (_) => const CaptainDashboardScreen(),
         '/admin': (_) => const DashboardWebScreen(),
       },
