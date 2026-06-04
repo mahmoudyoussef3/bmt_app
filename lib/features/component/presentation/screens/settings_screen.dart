@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/features/component/presentation/client_app_theme.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -15,8 +16,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   // State Variables
   String _selectedLanguage = 'en'; // 'en' or 'ar'
-  String _selectedTheme = 'dark'; // 'system', 'light', 'dark'
-  
+  String _selectedTheme = 'system'; // 'system', 'light', 'dark'
+
   // Privacy States
   bool _allowLocation = true;
   bool _allowBackgroundLocation = false;
@@ -29,13 +30,37 @@ class _SettingsScreenState extends State<SettingsScreen> {
   bool _biometricEnabled = false;
   bool _faceIdEnabled = false;
   bool _fingerprintEnabled = false;
-  
+
   // Active Sessions
   final List<Map<String, String>> _activeSessions = [
-    {'id': 's1', 'device': 'iPhone 15 Pro', 'platform': 'iOS App', 'time': 'Active Now (This Device)', 'current': 'true'},
-    {'id': 's2', 'device': 'MacBook Pro 16"', 'platform': 'macOS Chrome', 'time': '2 hours ago', 'current': 'false'},
-    {'id': 's3', 'device': 'iPad Pro', 'platform': 'iPadOS App', 'time': '3 days ago', 'current': 'false'},
-    {'id': 's4', 'device': 'Windows Desktop', 'platform': 'Windows Firefox', 'time': 'May 28, 2026', 'current': 'false'},
+    {
+      'id': 's1',
+      'device': 'iPhone 15 Pro',
+      'platform': 'iOS App',
+      'time': 'Active Now (This Device)',
+      'current': 'true',
+    },
+    {
+      'id': 's2',
+      'device': 'MacBook Pro 16"',
+      'platform': 'macOS Chrome',
+      'time': '2 hours ago',
+      'current': 'false',
+    },
+    {
+      'id': 's3',
+      'device': 'iPad Pro',
+      'platform': 'iPadOS App',
+      'time': '3 days ago',
+      'current': 'false',
+    },
+    {
+      'id': 's4',
+      'device': 'Windows Desktop',
+      'platform': 'Windows Firefox',
+      'time': 'May 28, 2026',
+      'current': 'false',
+    },
   ];
 
   // Profile States
@@ -55,47 +80,53 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // FAQ Search & Accordion State
   String _faqSearch = '';
   final Set<String> _expandedFaqIds = {};
-  
+
   // Terms & Conditions Search
   double _termsScrollProgress = 0.0;
-  
+
   // FAQ Data List
   final List<Map<String, String>> _faqs = [
     {
       'id': 'faq1',
       'category': 'Booking',
       'question': 'How do I cancel my daily reserved seat?',
-      'answer': 'You can release or cancel your seat from the Seat Release Hub. Seat release requests must be submitted at least 12 hours before the trip departure time.'
+      'answer':
+          'You can release or cancel your seat from the Seat Release Hub. Seat release requests must be submitted at least 12 hours before the trip departure time.',
     },
     {
       'id': 'faq2',
       'category': 'Booking',
       'question': 'Can I change my pickup location mid-trip?',
-      'answer': 'No, to ensure route optimization and timely arrivals for all passengers, pickup and dropoff locations cannot be changed once the ride starts.'
+      'answer':
+          'No, to ensure route optimization and timely arrivals for all passengers, pickup and dropoff locations cannot be changed once the ride starts.',
     },
     {
       'id': 'faq3',
       'category': 'Payments',
       'question': 'What payment methods do you support?',
-      'answer': 'We support major credit cards (Visa, MasterCard), InstaPay transfers, Mobile Wallets (Vodafone Cash, Orange Money, etc.), and Cash payment to the driver.'
+      'answer':
+          'We support major credit cards (Visa, MasterCard), InstaPay transfers, Mobile Wallets (Vodafone Cash, Orange Money, etc.), and Cash payment to the driver.',
     },
     {
       'id': 'faq4',
       'category': 'Packages',
       'question': 'How does package subscription renewal work?',
-      'answer': 'Your package remains active until the end date. If you have auto-renewal enabled, it will renew 24 hours prior to expiration using your preferred payment method.'
+      'answer':
+          'Your package remains active until the end date. If you have auto-renewal enabled, it will renew 24 hours prior to expiration using your preferred payment method.',
     },
     {
       'id': 'faq5',
       'category': 'Refunds',
       'question': 'When will I receive my rebooked seat compensation?',
-      'answer': 'If another passenger books your released seat, compensation is instantly credited to your wallet in the form of wallet credits, cashback, or loyalty points.'
+      'answer':
+          'If another passenger books your released seat, compensation is instantly credited to your wallet in the form of wallet credits, cashback, or loyalty points.',
     },
     {
       'id': 'faq6',
       'category': 'Technical Issues',
       'question': 'Why is my live trip tracking map not updating?',
-      'answer': 'Please verify that your device has a stable internet connection and location permissions are enabled. If issues persist, try restarting the application.'
+      'answer':
+          'Please verify that your device has a stable internet connection and location permissions are enabled. If issues persist, try restarting the application.',
     },
   ];
 
@@ -116,6 +147,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // Navigation Logic
   void _navigateTo(int view) {
     setState(() {
+      if (view == 3) {
+        final host = ClientAppTheme.maybeOf(context);
+        if (host != null) {
+          _selectedTheme = ClientAppTheme.keyFromThemeMode(host.themeMode);
+        }
+      }
       _viewHistory.add(view);
       _currentView = view;
     });
@@ -159,7 +196,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       SnackBar(
         content: Row(
           children: [
-            const Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 20),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.greenAccent,
+              size: 20,
+            ),
             const SizedBox(width: 10),
             Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
           ],
@@ -244,7 +285,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 24),
 
         // Settings Groups
-        const Text('GENERAL PREFERENCES', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+        const Text(
+          'GENERAL PREFERENCES',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 8),
         AppSurface(
           padding: EdgeInsets.zero,
@@ -253,7 +302,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSettingsTile(
                 icon: Icons.language_rounded,
                 title: 'Language & Localization',
-                subtitle: _selectedLanguage == 'en' ? 'English (Save Option)' : 'العربية (خيار الحفظ)',
+                subtitle: _selectedLanguage == 'en'
+                    ? 'English (Save Option)'
+                    : 'العربية (خيار الحفظ)',
                 onTap: () => _navigateTo(2),
                 scheme: scheme,
               ),
@@ -261,7 +312,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSettingsTile(
                 icon: Icons.dark_mode_rounded,
                 title: 'Appearance & Theme',
-                subtitle: _selectedTheme == 'dark' ? 'Dark Mode Active' : (_selectedTheme == 'light' ? 'Light Mode Active' : 'System Default'),
+                subtitle: _selectedTheme == 'dark'
+                    ? 'Dark Mode Active'
+                    : (_selectedTheme == 'light'
+                          ? 'Light Mode Active'
+                          : 'System Default'),
                 onTap: () => _navigateTo(3),
                 scheme: scheme,
               ),
@@ -270,7 +325,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        const Text('PRIVACY & PERMISSIONS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+        const Text(
+          'PRIVACY & PERMISSIONS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 8),
         AppSurface(
           padding: EdgeInsets.zero,
@@ -288,7 +351,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        const Text('SECURITY & SESSIONS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+        const Text(
+          'SECURITY & SESSIONS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 8),
         AppSurface(
           padding: EdgeInsets.zero,
@@ -305,7 +376,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSettingsTile(
                 icon: Icons.devices_rounded,
                 title: 'Active Sessions',
-                subtitle: '${_activeSessions.length} connected device authorizations',
+                subtitle:
+                    '${_activeSessions.length} connected device authorizations',
                 onTap: () => _navigateTo(6),
                 scheme: scheme,
               ),
@@ -314,7 +386,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        const Text('COMMUNICATION ALERTS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+        const Text(
+          'COMMUNICATION ALERTS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 8),
         AppSurface(
           padding: EdgeInsets.zero,
@@ -332,7 +412,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        const Text('SUPPORT & LEGAL', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+        const Text(
+          'SUPPORT & LEGAL',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 8),
         AppSurface(
           padding: EdgeInsets.zero,
@@ -366,7 +454,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        const Text('APP SPECIFICS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey, letterSpacing: 0.5)),
+        const Text(
+          'APP SPECIFICS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+            letterSpacing: 0.5,
+          ),
+        ),
         const SizedBox(height: 8),
         AppSurface(
           padding: EdgeInsets.zero,
@@ -418,12 +514,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: scheme.primary.withAlpha(50),
             blurRadius: 18,
             offset: const Offset(0, 8),
-          )
+          ),
         ],
       ),
       child: Row(
         children: [
-          AppAvatar(initials: _userName.split(' ').map((e) => e[0]).join(), radius: 32),
+          AppAvatar(
+            initials: _userName.split(' ').map((e) => e[0]).join(),
+            radius: 32,
+          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -431,29 +530,47 @@ class _SettingsScreenState extends State<SettingsScreen> {
               children: [
                 Text(
                   _userName,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   _userPhone,
-                  style: TextStyle(fontSize: 12, color: Colors.white.withAlpha(200)),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withAlpha(200),
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white.withAlpha(50),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Row(
                         children: [
-                          Icon(Icons.stars_rounded, color: Colors.amber, size: 12),
+                          Icon(
+                            Icons.stars_rounded,
+                            color: Colors.amber,
+                            size: 12,
+                          ),
                           SizedBox(width: 4),
                           Text(
                             'Gold Commuter',
-                            style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -529,7 +646,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Icon(icon, color: color, size: 22),
                   const SizedBox(height: 6),
-                  Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -553,9 +676,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
         backgroundColor: scheme.primary.withAlpha(24),
         child: Icon(icon, color: scheme.primary, size: 18),
       ),
-      title: Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
-      subtitle: Text(subtitle, style: const TextStyle(fontSize: 10, color: Colors.grey)),
-      trailing: const Icon(Icons.chevron_right_rounded, size: 18, color: Colors.grey),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+      ),
+      subtitle: Text(
+        subtitle,
+        style: const TextStyle(fontSize: 10, color: Colors.grey),
+      ),
+      trailing: const Icon(
+        Icons.chevron_right_rounded,
+        size: 18,
+        color: Colors.grey,
+      ),
     );
   }
 
@@ -590,7 +723,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 30),
 
         // Translated Preview area
-        const Text('PREVIEW TRANSLATION', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'PREVIEW TRANSLATION',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 10),
         AppSurface(
           color: scheme.surface,
@@ -601,18 +741,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    _selectedLanguage == 'en' ? 'Mega Commute Portal' : 'بوابة ميجا للتنقل',
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    _selectedLanguage == 'en'
+                        ? 'Mega Commute Portal'
+                        : 'بوابة ميجا للتنقل',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  AppBadge(text: _selectedLanguage == 'en' ? 'English translation' : 'مترجم للعربية'),
+                  AppBadge(
+                    text: _selectedLanguage == 'en'
+                        ? 'English translation'
+                        : 'مترجم للعربية',
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
               Text(
-                _selectedLanguage == 'en' 
-                    ? 'Flexible commutes made simpler. Tap to release your reserved seat or book daily luxury shuttle trips in seconds.' 
+                _selectedLanguage == 'en'
+                    ? 'Flexible commutes made simpler. Tap to release your reserved seat or book daily luxury shuttle trips in seconds.'
                     : 'التنقلات المرنة أصبحت أكثر بساطة. اضغط لتحرير مقعدك المحجوز أو احجز رحلات مكوكية فاخرة يومية في ثوانٍ.',
-                style: const TextStyle(fontSize: 11, color: Colors.grey, height: 1.4),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: Colors.grey,
+                  height: 1.4,
+                ),
               ),
             ],
           ),
@@ -633,13 +786,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: AppButton(
                 label: 'Save Language',
                 onPressed: () {
-                  _showSuccessSnack('Language updated to ${_selectedLanguage == 'en' ? 'English' : 'Arabic'} successfully!');
+                  _showSuccessSnack(
+                    'Language updated to ${_selectedLanguage == 'en' ? 'English' : 'Arabic'} successfully!',
+                  );
                   _navigateBack();
                 },
               ),
             ),
           ],
-        )
+        ),
       ],
     );
   }
@@ -653,7 +808,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isSelected = _selectedLanguage == langCode;
     return AppSurface(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      border: Border.all(color: isSelected ? scheme.primary : scheme.outline.withAlpha(45), width: isSelected ? 1.5 : 1.0),
+      border: Border.all(
+        color: isSelected ? scheme.primary : scheme.outline.withAlpha(45),
+        width: isSelected ? 1.5 : 1.0,
+      ),
       onTap: () => setState(() => _selectedLanguage = langCode),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -662,19 +820,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               CircleAvatar(
                 radius: 16,
-                backgroundColor: isSelected ? scheme.primary.withAlpha(24) : Colors.grey.withAlpha(24),
+                backgroundColor: isSelected
+                    ? scheme.primary.withAlpha(24)
+                    : Colors.grey.withAlpha(24),
                 child: Text(
                   langCode.toUpperCase(),
-                  style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isSelected ? scheme.primary : Colors.grey),
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: isSelected ? scheme.primary : Colors.grey,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 2),
-                  Text(nativeName, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                  Text(
+                    nativeName,
+                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
                 ],
               ),
             ],
@@ -686,7 +859,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               if (val != null) setState(() => _selectedLanguage = val);
             },
             activeColor: scheme.primary,
-          )
+          ),
         ],
       ),
     );
@@ -707,16 +880,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
         // Visual options grid
         Row(
           children: [
-            Expanded(child: _buildThemeOptionCard('system', 'System', Icons.settings_brightness_rounded, scheme)),
+            Expanded(
+              child: _buildThemeOptionCard(
+                'system',
+                'System',
+                Icons.settings_brightness_rounded,
+                scheme,
+              ),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: _buildThemeOptionCard('light', 'Light Mode', Icons.light_mode_rounded, scheme)),
+            Expanded(
+              child: _buildThemeOptionCard(
+                'light',
+                'Light Mode',
+                Icons.light_mode_rounded,
+                scheme,
+              ),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: _buildThemeOptionCard('dark', 'Dark Mode', Icons.dark_mode_rounded, scheme)),
+            Expanded(
+              child: _buildThemeOptionCard(
+                'dark',
+                'Dark Mode',
+                Icons.dark_mode_rounded,
+                scheme,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 30),
 
-        const Text('COMPONENT RENDERING PREVIEW', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'COMPONENT RENDERING PREVIEW',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 10),
 
         // Render preview mockups depending on select
@@ -735,7 +936,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
-                  color: _selectedTheme == 'light' ? Colors.black : Colors.white,
+                  color: _selectedTheme == 'light'
+                      ? Colors.black
+                      : Colors.white,
                 ),
               ),
               const SizedBox(height: 4),
@@ -743,7 +946,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Secondary supporting preview text.',
                 style: TextStyle(
                   fontSize: 10,
-                  color: _selectedTheme == 'light' ? Colors.grey[700] : Colors.grey[400],
+                  color: _selectedTheme == 'light'
+                      ? Colors.grey[700]
+                      : Colors.grey[400],
                 ),
               ),
               const SizedBox(height: 16),
@@ -758,7 +963,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         color: scheme.primary,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: const Text('Primary', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.white)),
+                      child: const Text(
+                        'Primary',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -771,7 +983,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(color: scheme.primary),
                       ),
-                      child: Text('Outline', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: scheme.primary)),
+                      child: Text(
+                        'Outline',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: scheme.primary,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -781,27 +1000,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: _selectedTheme == 'light' ? Colors.grey[100] : Colors.grey[800],
+                  color: _selectedTheme == 'light'
+                      ? Colors.grey[100]
+                      : Colors.grey[800],
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: scheme.outline.withAlpha(30)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.directions_bus_rounded, color: scheme.secondary, size: 18),
+                    Icon(
+                      Icons.directions_bus_rounded,
+                      color: scheme.secondary,
+                      size: 18,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Container(width: 80, height: 8, decoration: BoxDecoration(color: _selectedTheme == 'light' ? Colors.grey[400] : Colors.grey[600], borderRadius: BorderRadius.circular(4))),
+                          Container(
+                            width: 80,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: _selectedTheme == 'light'
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
                           const SizedBox(height: 4),
-                          Container(width: 40, height: 6, decoration: BoxDecoration(color: _selectedTheme == 'light' ? Colors.grey[300] : Colors.grey[700], borderRadius: BorderRadius.circular(4))),
+                          Container(
+                            width: 40,
+                            height: 6,
+                            decoration: BoxDecoration(
+                              color: _selectedTheme == 'light'
+                                  ? Colors.grey[300]
+                                  : Colors.grey[700],
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -810,7 +1053,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         AppButton(
           label: 'Apply Appearance Change',
           onPressed: () {
-            _showSuccessSnack('Appearance Theme applied successfully!');
+            ClientAppTheme.maybeOf(
+              context,
+            )?.setThemeMode(ClientAppTheme.themeModeFromKey(_selectedTheme));
+            _showSuccessSnack('Appearance theme applied successfully!');
             _navigateBack();
           },
         ),
@@ -818,22 +1064,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildThemeOptionCard(String themeKey, String label, IconData icon, ColorScheme scheme) {
+  Widget _buildThemeOptionCard(
+    String themeKey,
+    String label,
+    IconData icon,
+    ColorScheme scheme,
+  ) {
     final isSelected = _selectedTheme == themeKey;
     return AppSurface(
       padding: const EdgeInsets.all(14),
-      border: Border.all(color: isSelected ? scheme.primary : scheme.outline.withAlpha(45), width: isSelected ? 1.5 : 1.0),
+      border: Border.all(
+        color: isSelected ? scheme.primary : scheme.outline.withAlpha(45),
+        width: isSelected ? 1.5 : 1.0,
+      ),
       onTap: () => setState(() => _selectedTheme = themeKey),
       child: Column(
         children: [
-          Icon(icon, color: isSelected ? scheme.primary : Colors.grey, size: 24),
+          Icon(
+            icon,
+            color: isSelected ? scheme.primary : Colors.grey,
+            size: 24,
+          ),
           const SizedBox(height: 8),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: isSelected ? scheme.primary : Colors.grey)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: isSelected ? scheme.primary : Colors.grey,
+            ),
+          ),
           const SizedBox(height: 6),
           CircleAvatar(
             radius: 8,
             backgroundColor: isSelected ? scheme.primary : Colors.transparent,
-            child: isSelected ? const Icon(Icons.check, size: 10, color: Colors.white) : null,
+            child: isSelected
+                ? const Icon(Icons.check, size: 10, color: Colors.white)
+                : null,
           ),
         ],
       ),
@@ -852,12 +1119,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        const Text('LOCATION ACCESS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'LOCATION ACCESS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 8),
         _buildPrivacyToggleCard(
           icon: Icons.my_location_rounded,
           title: 'Allow Location Access',
-          description: 'Required to locate close pickup hubs and trace real-time tracking navigation correctly.',
+          description:
+              'Required to locate close pickup hubs and trace real-time tracking navigation correctly.',
           value: _allowLocation,
           onChanged: (val) => setState(() => _allowLocation = val),
           scheme: scheme,
@@ -866,14 +1141,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildPrivacyToggleCard(
           icon: Icons.explore_rounded,
           title: 'Allow Background Location',
-          description: 'Tracks vehicle distance relative to your position even when app is closed to trigger delay updates.',
+          description:
+              'Tracks vehicle distance relative to your position even when app is closed to trigger delay updates.',
           value: _allowBackgroundLocation,
           onChanged: (val) => setState(() => _allowBackgroundLocation = val),
           scheme: scheme,
         ),
         const SizedBox(height: 20),
 
-        const Text('ACCOUNT VISIBILITY', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'ACCOUNT VISIBILITY',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 8),
         AppSurface(
           child: Column(
@@ -881,14 +1164,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildVisibilityRadioTile(
                 value: 'public',
                 title: 'Public Profile Visibility',
-                description: 'Other subscribers sharing the same vehicle can view your avatar name in group logs.',
+                description:
+                    'Other subscribers sharing the same vehicle can view your avatar name in group logs.',
                 scheme: scheme,
               ),
               const AppSeparator(),
               _buildVisibilityRadioTile(
                 value: 'private',
                 title: 'Private Profile Visibility',
-                description: 'Stops other passengers from viewing your profile details. Recommended for complete anonymity.',
+                description:
+                    'Stops other passengers from viewing your profile details. Recommended for complete anonymity.',
                 scheme: scheme,
               ),
             ],
@@ -896,12 +1181,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        const Text('DATA SHARING & MARKETING', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'DATA SHARING & MARKETING',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 8),
         _buildPrivacyToggleCard(
           icon: Icons.analytics_outlined,
           title: 'Share Usage Analytics',
-          description: 'Help us improve by sending anonymous logs of performance and interface interactions.',
+          description:
+              'Help us improve by sending anonymous logs of performance and interface interactions.',
           value: _dataSharing,
           onChanged: (val) => setState(() => _dataSharing = val),
           scheme: scheme,
@@ -910,9 +1203,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildPrivacyToggleCard(
           icon: Icons.recommend_rounded,
           title: 'Personalized Recommendations',
-          description: 'Get relevant discount promos, package offers, and custom loyalty tiers notifications.',
+          description:
+              'Get relevant discount promos, package offers, and custom loyalty tiers notifications.',
           value: _personalizedRecommendations,
-          onChanged: (val) => setState(() => _personalizedRecommendations = val),
+          onChanged: (val) =>
+              setState(() => _personalizedRecommendations = val),
           scheme: scheme,
         ),
         const SizedBox(height: 30),
@@ -947,9 +1242,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(description, style: const TextStyle(fontSize: 10, color: Colors.grey, height: 1.35)),
+                Text(
+                  description,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey,
+                    height: 1.35,
+                  ),
+                ),
               ],
             ),
           ),
@@ -986,9 +1294,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text(description, style: const TextStyle(fontSize: 10, color: Colors.grey, height: 1.3)),
+                  Text(
+                    description,
+                    style: const TextStyle(
+                      fontSize: 10,
+                      color: Colors.grey,
+                      height: 1.3,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -1008,7 +1329,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildSecurityScoreCard(scheme),
         const SizedBox(height: 20),
 
-        const Text('SECURITY TILE ACTIONS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'SECURITY TILE ACTIONS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 8),
         AppSurface(
           padding: EdgeInsets.zero,
@@ -1033,7 +1361,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               _buildSettingsTile(
                 icon: Icons.fingerprint_rounded,
                 title: 'Biometric Access Settings',
-                subtitle: _biometricEnabled ? 'Enabled (Face ID / Touch ID)' : 'Disabled',
+                subtitle: _biometricEnabled
+                    ? 'Enabled (Face ID / Touch ID)'
+                    : 'Disabled',
                 onTap: () => _navigateTo(7),
                 scheme: scheme,
               ),
@@ -1042,12 +1372,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        const Text('SECURITY VERIFICATIONS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'SECURITY VERIFICATIONS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 8),
         _buildPrivacyToggleCard(
           icon: Icons.phonelink_ring_rounded,
           title: 'Two-Step Verification (2FA)',
-          description: 'Require SMS OTP confirmation whenever logging in from a new unrecognized device.',
+          description:
+              'Require SMS OTP confirmation whenever logging in from a new unrecognized device.',
           value: _twoStepVerification,
           onChanged: (val) => setState(() => _twoStepVerification = val),
           scheme: scheme,
@@ -1081,10 +1419,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     value: 0.9,
                     strokeWidth: 8,
                     backgroundColor: scheme.outline.withAlpha(40),
-                    valueColor: const AlwaysStoppedAnimation(Colors.greenAccent),
+                    valueColor: const AlwaysStoppedAnimation(
+                      Colors.greenAccent,
+                    ),
                   ),
                 ),
-                const Text('90%', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text(
+                  '90%',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
               ],
             ),
           ),
@@ -1093,11 +1436,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text('High Protection Score', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                const Text(
+                  'High Protection Score',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
                 const SizedBox(height: 4),
                 const Text(
                   'Your account security looks great. Turn on biometric locks to hit 100% protection.',
-                  style: TextStyle(fontSize: 10, color: Colors.grey, height: 1.35),
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: Colors.grey,
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),
@@ -1116,32 +1466,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('Change Password', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Text(
+            'Change Password',
+            style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               TextField(
                 controller: oldCtrl,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Current Password', hintText: '••••••••'),
+                decoration: const InputDecoration(
+                  labelText: 'Current Password',
+                  hintText: '••••••••',
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: newCtrl,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'New Password', hintText: '••••••••'),
+                decoration: const InputDecoration(
+                  labelText: 'New Password',
+                  hintText: '••••••••',
+                ),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: confCtrl,
                 obscureText: true,
-                decoration: const InputDecoration(labelText: 'Confirm Password', hintText: '••••••••'),
+                decoration: const InputDecoration(
+                  labelText: 'Confirm Password',
+                  hintText: '••••••••',
+                ),
               ),
             ],
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
             AppButton(
               height: 38,
               label: 'Update',
@@ -1152,7 +1519,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Navigator.pop(context);
                 _showSuccessSnack('Password updated successfully!');
               },
-            )
+            ),
           ],
         );
       },
@@ -1169,29 +1536,49 @@ class _SettingsScreenState extends State<SettingsScreen> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-              title: Text(step == 1 ? 'Change Phone Number' : 'Verify SMS Code', style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              title: Text(
+                step == 1 ? 'Change Phone Number' : 'Verify SMS Code',
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               content: step == 1
                   ? TextField(
                       controller: phoneCtrl,
                       keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(labelText: 'New Phone Number', prefixText: ''),
+                      decoration: const InputDecoration(
+                        labelText: 'New Phone Number',
+                        prefixText: '',
+                      ),
                     )
                   : const Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text('Enter the 4-digit code sent to your new phone number.', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                        Text(
+                          'Enter the 4-digit code sent to your new phone number.',
+                          style: TextStyle(fontSize: 10, color: Colors.grey),
+                        ),
                         SizedBox(height: 14),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: [
-                            _OtpBox(), _OtpBox(), _OtpBox(), _OtpBox(),
+                            _OtpBox(),
+                            _OtpBox(),
+                            _OtpBox(),
+                            _OtpBox(),
                           ],
                         ),
                       ],
                     ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel'),
+                ),
                 AppButton(
                   height: 38,
                   label: step == 1 ? 'Send OTP' : 'Verify & Save',
@@ -1201,7 +1588,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     } else {
                       setState(() => _userPhone = phoneCtrl.text);
                       Navigator.pop(context);
-                      _showSuccessSnack('Phone number verified and updated successfully!');
+                      _showSuccessSnack(
+                        'Phone number verified and updated successfully!',
+                      );
                     }
                   },
                 ),
@@ -1234,7 +1623,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             decoration: BoxDecoration(
               color: scheme.surface,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: isCurrent ? scheme.primary.withAlpha(140) : scheme.outline.withAlpha(45)),
+              border: Border.all(
+                color: isCurrent
+                    ? scheme.primary.withAlpha(140)
+                    : scheme.outline.withAlpha(45),
+              ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1243,10 +1636,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     CircleAvatar(
                       radius: 20,
-                      backgroundColor: isCurrent ? scheme.primary.withAlpha(24) : Colors.grey.withAlpha(24),
+                      backgroundColor: isCurrent
+                          ? scheme.primary.withAlpha(24)
+                          : Colors.grey.withAlpha(24),
                       child: Icon(
-                        session['device']!.contains('MacBook') || session['device']!.contains('Windows') 
-                            ? Icons.laptop_mac_rounded 
+                        session['device']!.contains('MacBook') ||
+                                session['device']!.contains('Windows')
+                            ? Icons.laptop_mac_rounded
                             : Icons.phone_iphone_rounded,
                         color: isCurrent ? scheme.primary : Colors.grey,
                         size: 20,
@@ -1256,30 +1652,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(session['device']!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                        Text(
+                          session['device']!,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         const SizedBox(height: 2),
-                        Text('${session['platform']} • ${session['time']}', style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                        Text(
+                          '${session['platform']} • ${session['time']}',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.grey,
+                          ),
+                        ),
                       ],
                     ),
                   ],
                 ),
                 if (isCurrent)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(color: Colors.greenAccent.withAlpha(30), borderRadius: BorderRadius.circular(8)),
-                    child: const Text('Current', style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.greenAccent.withAlpha(30),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Current',
+                      style: TextStyle(
+                        fontSize: 8,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.greenAccent,
+                      ),
+                    ),
                   )
                 else
                   IconButton(
                     onPressed: () {
                       setState(() {
-                        _activeSessions.removeWhere((s) => s['id'] == session['id']);
+                        _activeSessions.removeWhere(
+                          (s) => s['id'] == session['id'],
+                        );
                       });
                       _showSuccessSnack('Session terminated successfully.');
                     },
-                    icon: const Icon(Icons.logout_rounded, color: Colors.redAccent, size: 18),
+                    icon: const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.redAccent,
+                      size: 18,
+                    ),
                     tooltip: 'Revoke access',
-                  )
+                  ),
               ],
             ),
           );
@@ -1295,7 +1722,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               setState(() {
                 _activeSessions.removeWhere((s) => s['current'] != 'true');
               });
-              _showSuccessSnack('Logged out of all other devices successfully.');
+              _showSuccessSnack(
+                'Logged out of all other devices successfully.',
+              );
             },
           ),
       ],
@@ -1308,7 +1737,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        const Icon(Icons.fingerprint_rounded, size: 60, color: Colors.blueAccent),
+        const Icon(
+          Icons.fingerprint_rounded,
+          size: 60,
+          color: Colors.blueAccent,
+        ),
         const SizedBox(height: 20),
         const Text(
           'Biometric Credentials Security',
@@ -1332,9 +1765,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.face_retouching_natural_rounded, color: Colors.grey, size: 18),
+                      Icon(
+                        Icons.face_retouching_natural_rounded,
+                        color: Colors.grey,
+                        size: 18,
+                      ),
                       SizedBox(width: 12),
-                      Text('Enable Face ID Access', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(
+                        'Enable Face ID Access',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   AppSwitch(
@@ -1342,9 +1785,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onChanged: (val) {
                       setState(() {
                         _faceIdEnabled = val;
-                        _biometricEnabled = _faceIdEnabled || _fingerprintEnabled;
+                        _biometricEnabled =
+                            _faceIdEnabled || _fingerprintEnabled;
                       });
-                      _showSuccessSnack(val ? 'Face ID authorization enabled.' : 'Face ID authorization disabled.');
+                      _showSuccessSnack(
+                        val
+                            ? 'Face ID authorization enabled.'
+                            : 'Face ID authorization disabled.',
+                      );
                     },
                   ),
                 ],
@@ -1355,9 +1803,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   const Row(
                     children: [
-                      Icon(Icons.fingerprint_rounded, color: Colors.grey, size: 18),
+                      Icon(
+                        Icons.fingerprint_rounded,
+                        color: Colors.grey,
+                        size: 18,
+                      ),
                       SizedBox(width: 12),
-                      Text('Enable Fingerprint Access', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                      Text(
+                        'Enable Fingerprint Access',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ],
                   ),
                   AppSwitch(
@@ -1365,9 +1823,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onChanged: (val) {
                       setState(() {
                         _fingerprintEnabled = val;
-                        _biometricEnabled = _faceIdEnabled || _fingerprintEnabled;
+                        _biometricEnabled =
+                            _faceIdEnabled || _fingerprintEnabled;
                       });
-                      _showSuccessSnack(val ? 'Fingerprint authentication enabled.' : 'Fingerprint authentication disabled.');
+                      _showSuccessSnack(
+                        val
+                            ? 'Fingerprint authentication enabled.'
+                            : 'Fingerprint authentication disabled.',
+                      );
                     },
                   ),
                 ],
@@ -1388,14 +1851,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: const Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.info_outline_rounded, color: Colors.blueAccent, size: 16),
+              Icon(
+                Icons.info_outline_rounded,
+                color: Colors.blueAccent,
+                size: 16,
+              ),
               SizedBox(width: 10),
               Expanded(
                 child: Text(
                   'Mega Commute never transfers or stores your biometric records. Authentication is executed locally via device Hardware Keychains.',
-                  style: TextStyle(fontSize: 9, color: Colors.blueAccent, height: 1.35),
+                  style: TextStyle(
+                    fontSize: 9,
+                    color: Colors.blueAccent,
+                    height: 1.35,
+                  ),
                 ),
-              )
+              ),
             ],
           ),
         ),
@@ -1415,21 +1886,48 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        _buildNotificationChannelGroup('TRIPS & RIDES', 'trips', 'Booking confirmations, reminders, and route delays.', scheme),
+        _buildNotificationChannelGroup(
+          'TRIPS & RIDES',
+          'trips',
+          'Booking confirmations, reminders, and route delays.',
+          scheme,
+        ),
         const SizedBox(height: 18),
-        _buildNotificationChannelGroup('PAYMENT & BILLING', 'payments', 'Invoices, transaction updates, and cashback alerts.', scheme),
+        _buildNotificationChannelGroup(
+          'PAYMENT & BILLING',
+          'payments',
+          'Invoices, transaction updates, and cashback alerts.',
+          scheme,
+        ),
         const SizedBox(height: 18),
-        _buildNotificationChannelGroup('PACKAGES & SUBSCRIPTIONS', 'packages', 'Package renewal alerts and seat confirmations.', scheme),
+        _buildNotificationChannelGroup(
+          'PACKAGES & SUBSCRIPTIONS',
+          'packages',
+          'Package renewal alerts and seat confirmations.',
+          scheme,
+        ),
         const SizedBox(height: 18),
-        _buildNotificationChannelGroup('OFFERS & REFERRALS', 'promotions', 'Discount codes, referral bonuses, and milestones.', scheme),
+        _buildNotificationChannelGroup(
+          'OFFERS & REFERRALS',
+          'promotions',
+          'Discount codes, referral bonuses, and milestones.',
+          scheme,
+        ),
         const SizedBox(height: 18),
-        _buildNotificationChannelGroup('CUSTOMER SUPPORT', 'support', 'Support responses and live driver chat updates.', scheme),
-        
+        _buildNotificationChannelGroup(
+          'CUSTOMER SUPPORT',
+          'support',
+          'Support responses and live driver chat updates.',
+          scheme,
+        ),
+
         const SizedBox(height: 30),
         AppButton(
           label: 'Save Notification Preferences',
           onPressed: () {
-            _showSuccessSnack('Notification configurations updated successfully.');
+            _showSuccessSnack(
+              'Notification configurations updated successfully.',
+            );
             _navigateBack();
           },
         ),
@@ -1437,27 +1935,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildNotificationChannelGroup(String label, String key, String description, ColorScheme scheme) {
+  Widget _buildNotificationChannelGroup(
+    String label,
+    String key,
+    String description,
+    ColorScheme scheme,
+  ) {
     return AppSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: scheme.primary)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+              color: scheme.primary,
+            ),
+          ),
           const SizedBox(height: 4),
-          Text(description, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+          Text(
+            description,
+            style: const TextStyle(fontSize: 9, color: Colors.grey),
+          ),
           const SizedBox(height: 14),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildNotificationToggle('Push App', _notificationsSettings[key]!['push']!, (val) {
-                setState(() => _notificationsSettings[key]!['push'] = val);
-              }),
-              _buildNotificationToggle('SMS text', _notificationsSettings[key]!['sms']!, (val) {
-                setState(() => _notificationsSettings[key]!['sms'] = val);
-              }),
-              _buildNotificationToggle('Email', _notificationsSettings[key]!['email']!, (val) {
-                setState(() => _notificationsSettings[key]!['email'] = val);
-              }),
+              _buildNotificationToggle(
+                'Push App',
+                _notificationsSettings[key]!['push']!,
+                (val) {
+                  setState(() => _notificationsSettings[key]!['push'] = val);
+                },
+              ),
+              _buildNotificationToggle(
+                'SMS text',
+                _notificationsSettings[key]!['sms']!,
+                (val) {
+                  setState(() => _notificationsSettings[key]!['sms'] = val);
+                },
+              ),
+              _buildNotificationToggle(
+                'Email',
+                _notificationsSettings[key]!['email']!,
+                (val) {
+                  setState(() => _notificationsSettings[key]!['email'] = val);
+                },
+              ),
             ],
           ),
         ],
@@ -1465,7 +1990,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildNotificationToggle(String label, bool value, ValueChanged<bool> onChanged) {
+  Widget _buildNotificationToggle(
+    String label,
+    bool value,
+    ValueChanged<bool> onChanged,
+  ) {
     return Row(
       children: [
         Checkbox(
@@ -1474,7 +2003,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             if (val != null) onChanged(val);
           },
         ),
-        Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
@@ -1496,7 +2028,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildSupportTile(
           icon: Icons.quiz_outlined,
           title: 'Frequently Asked Questions (FAQ)',
-          description: 'Search solutions to booking, refunds, and technical issues.',
+          description:
+              'Search solutions to booking, refunds, and technical issues.',
           onTap: () => _navigateTo(10),
           scheme: scheme,
         ),
@@ -1506,7 +2039,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildSupportTile(
           icon: Icons.chat_bubble_outline_rounded,
           title: 'Start Live Support Chat',
-          description: 'Chat instantly with one of our desk agents in real-time.',
+          description:
+              'Chat instantly with one of our desk agents in real-time.',
           onTap: () => Navigator.of(context).pushNamed('/communication'),
           scheme: scheme,
         ),
@@ -1516,7 +2050,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildSupportTile(
           icon: Icons.assignment_late_outlined,
           title: 'Open Urgent Support Ticket',
-          description: 'Submit an issue ticket (driver, refund, or booking errors).',
+          description:
+              'Submit an issue ticket (driver, refund, or booking errors).',
           onTap: () => Navigator.of(context).pushNamed('/support'),
           scheme: scheme,
         ),
@@ -1526,26 +2061,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildSupportTile(
           icon: Icons.contact_phone_outlined,
           title: 'Contact Customer Support Care',
-          description: 'Get support phone hotlines, WhatsApp, and operating hours.',
+          description:
+              'Get support phone hotlines, WhatsApp, and operating hours.',
           onTap: () => _navigateTo(13),
           scheme: scheme,
         ),
         const SizedBox(height: 24),
 
-        const Text('SEND FEEDBACK OR REPORT COMPLAINT', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'SEND FEEDBACK OR REPORT COMPLAINT',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 10),
 
         // Feedback Text inputs
         AppSurface(
           child: Column(
             children: [
-              const Text('Send Us Your Feedback', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              const Text(
+                'Send Us Your Feedback',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 8),
               TextField(
                 maxLines: 2,
                 decoration: InputDecoration(
                   hintText: 'Share your suggestion or report a problem...',
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
               ),
               const SizedBox(height: 12),
@@ -1553,13 +2101,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 height: 38,
                 label: 'Submit Feedback',
                 onPressed: () {
-                  _showSuccessSnack('Thank you! Your feedback has been received.');
+                  _showSuccessSnack(
+                    'Thank you! Your feedback has been received.',
+                  );
                   _navigateBack();
                 },
               ),
             ],
           ),
-        )
+        ),
       ],
     );
   }
@@ -1585,13 +2135,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 2),
-                Text(description, style: const TextStyle(fontSize: 9, color: Colors.grey)),
+                Text(
+                  description,
+                  style: const TextStyle(fontSize: 9, color: Colors.grey),
+                ),
               ],
             ),
           ),
-          const Icon(Icons.arrow_forward_ios_rounded, size: 12, color: Colors.grey),
+          const Icon(
+            Icons.arrow_forward_ios_rounded,
+            size: 12,
+            color: Colors.grey,
+          ),
         ],
       ),
     );
@@ -1617,13 +2180,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             decoration: InputDecoration(
               hintText: 'Search FAQ questions...',
               prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _faqSearch.isNotEmpty 
+              suffixIcon: _faqSearch.isNotEmpty
                   ? IconButton(
                       icon: const Icon(Icons.close_rounded),
                       onPressed: () => setState(() => _faqSearch = ''),
                     )
                   : null,
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
             ),
           ),
         ),
@@ -1633,13 +2198,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ? const Center(
                   child: EmptyState(
                     title: 'No FAQ matches found',
-                    subtitle: 'Try searching other keywords like booking, payments, or wallets.',
+                    subtitle:
+                        'Try searching other keywords like booking, payments, or wallets.',
                     emoji: '🔍',
                   ),
                 )
               : ListView.builder(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 4,
+                  ),
                   itemCount: filteredFaqs.length,
                   itemBuilder: (context, idx) {
                     final faq = filteredFaqs[idx];
@@ -1667,18 +2236,42 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             title: Row(
                               children: [
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(color: scheme.secondary.withAlpha(24), borderRadius: BorderRadius.circular(6)),
-                                  child: Text(faq['category']!, style: TextStyle(fontSize: 8, color: scheme.secondary, fontWeight: FontWeight.bold)),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: scheme.secondary.withAlpha(24),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    faq['category']!,
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      color: scheme.secondary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
                                 ),
                                 const SizedBox(width: 8),
                               ],
                             ),
                             subtitle: Padding(
                               padding: const EdgeInsets.only(top: 6),
-                              child: Text(faq['question']!, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, height: 1.3)),
+                              child: Text(
+                                faq['question']!,
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                  height: 1.3,
+                                ),
+                              ),
                             ),
-                            trailing: Icon(isExpanded ? Icons.expand_less_rounded : Icons.expand_more_rounded),
+                            trailing: Icon(
+                              isExpanded
+                                  ? Icons.expand_less_rounded
+                                  : Icons.expand_more_rounded,
+                            ),
                           ),
                           if (isExpanded)
                             Padding(
@@ -1688,11 +2281,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                   const Divider(height: 12),
                                   Text(
                                     faq['answer']!,
-                                    style: const TextStyle(fontSize: 11, color: Colors.grey, height: 1.4),
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      color: Colors.grey,
+                                      height: 1.4,
+                                    ),
                                   ),
                                 ],
                               ),
-                            )
+                            ),
                         ],
                       ),
                     );
@@ -1724,11 +2321,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
             itemCount: _termsTOC.length,
             itemBuilder: (context, idx) {
               final toc = _termsTOC[idx];
-              final isCurrent = _termsScrollProgress >= (toc['progress'] - 0.1) && _termsScrollProgress <= (toc['progress'] + 0.15);
+              final isCurrent =
+                  _termsScrollProgress >= (toc['progress'] - 0.1) &&
+                  _termsScrollProgress <= (toc['progress'] + 0.15);
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
                 child: ChoiceChip(
-                  label: Text(toc['title'], style: const TextStyle(fontSize: 10)),
+                  label: Text(
+                    toc['title'],
+                    style: const TextStyle(fontSize: 10),
+                  ),
                   selected: isCurrent,
                   onSelected: (selected) {
                     setState(() {
@@ -1747,7 +2349,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             onNotification: (ScrollNotification scroll) {
               if (scroll.metrics.maxScrollExtent > 0) {
                 setState(() {
-                  _termsScrollProgress = scroll.metrics.pixels / scroll.metrics.maxScrollExtent;
+                  _termsScrollProgress =
+                      scroll.metrics.pixels / scroll.metrics.maxScrollExtent;
                 });
               }
               return true;
@@ -1756,48 +2359,89 @@ class _SettingsScreenState extends State<SettingsScreen> {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.all(20),
               children: [
-                const Text('TERMS OF SERVICE', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                const Text(
+                  'TERMS OF SERVICE',
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 4),
-                const Text('Last updated: June 3, 2026', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                const Text(
+                  'Last updated: June 3, 2026',
+                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                ),
                 const Divider(height: 24),
 
-                const Text('1. Introduction', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                const Text(
+                  '1. Introduction',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 6),
                 const Text(
                   'Welcome to Mega Commute. By subscribing to or utilizing our transportation platform and package booking options, you represent that you have read, understood, and agreed to these Terms of Service. If you do not accept these rules, please stop using our services.',
-                  style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 18),
 
-                const Text('2. User Accounts & Registration', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                const Text(
+                  '2. User Accounts & Registration',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 6),
                 const Text(
                   'You must create a verified account by providing a valid phone number and full name. You are solely responsible for all actions taken on your account. If you suspect any security breaches or session hijackings, contact support care immediately.',
-                  style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 18),
 
-                const Text('3. Subscription Packages & Billing', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                const Text(
+                  '3. Subscription Packages & Billing',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 6),
                 const Text(
                   'Subscribers can choose weekly, monthly, or quarterly packages. Package bookings guarantee reserved seats on chosen routes. All payments are billed upfront. Subscriptions are non-refundable but allow flexible seat releases.',
-                  style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 18),
 
-                const Text('4. Seat Release & Cancellation Policy', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                const Text(
+                  '4. Seat Release & Cancellation Policy',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 6),
                 const Text(
                   'Seats can be released at least 12 hours before trip departure times. If a released seat gets rebooked by a third-party passenger, you receive compensation wallet credits or points. Late releases (under 12 hours) are subject to partial or full forfeiture.',
-                  style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 18),
 
-                const Text('5. Fair Use & Code of Conduct', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                const Text(
+                  '5. Fair Use & Code of Conduct',
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(height: 6),
                 const Text(
                   'Mega Commute enforces a zero-tolerance policy against misconduct, harassment, or damage to luxury shuttle interiors. Drivers hold authority to drop passengers violating safety conduct without refund options.',
-                  style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.4),
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey,
+                    height: 1.4,
+                  ),
                 ),
                 const SizedBox(height: 30),
               ],
@@ -1814,15 +2458,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        const Text('PRIVACY CHARTER & DATA CHARTERS', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+        const Text(
+          'PRIVACY CHARTER & DATA CHARTERS',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+        ),
         const SizedBox(height: 4),
-        const Text('Last updated: June 3, 2026', style: TextStyle(fontSize: 10, color: Colors.grey)),
+        const Text(
+          'Last updated: June 3, 2026',
+          style: TextStyle(fontSize: 10, color: Colors.grey),
+        ),
         const Divider(height: 24),
 
         _buildPolicySectionCard(
           icon: Icons.analytics_rounded,
           title: 'Data Collection',
-          content: 'We collect phone numbers, profile names, payment transaction metadata, and live device geo-coordinates during rides to offer route tracking and secure payouts verification.',
+          content:
+              'We collect phone numbers, profile names, payment transaction metadata, and live device geo-coordinates during rides to offer route tracking and secure payouts verification.',
           scheme: scheme,
         ),
         const SizedBox(height: 12),
@@ -1830,7 +2481,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildPolicySectionCard(
           icon: Icons.tune_rounded,
           title: 'Data Usage',
-          content: 'We use your telemetry data to map optimal shuttles pathways, identify high utilization routes, verify package billing validity, and distribute seat release compensations instantly.',
+          content:
+              'We use your telemetry data to map optimal shuttles pathways, identify high utilization routes, verify package billing validity, and distribute seat release compensations instantly.',
           scheme: scheme,
         ),
         const SizedBox(height: 12),
@@ -1838,7 +2490,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildPolicySectionCard(
           icon: Icons.lock_person_rounded,
           title: 'Security Measures',
-          content: 'Account files, passwords, and sessions are encrypted using industry-standard TLS protocols. Offline telemetry logs are anonymized and stored inside secure clouds keys.',
+          content:
+              'Account files, passwords, and sessions are encrypted using industry-standard TLS protocols. Offline telemetry logs are anonymized and stored inside secure clouds keys.',
           scheme: scheme,
         ),
         const SizedBox(height: 12),
@@ -1846,7 +2499,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildPolicySectionCard(
           icon: Icons.badge_rounded,
           title: 'User Rights',
-          content: 'You retain the right to download a copy of all shared usage logs, request immediate data anonymization, or permanently delete your account visages from Settings hub.',
+          content:
+              'You retain the right to download a copy of all shared usage logs, request immediate data anonymization, or permanently delete your account visages from Settings hub.',
           scheme: scheme,
         ),
       ],
@@ -1867,13 +2521,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Icon(icon, color: scheme.primary, size: 18),
               const SizedBox(width: 10),
-              Text(title, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             content,
-            style: const TextStyle(fontSize: 10, color: Colors.grey, height: 1.35),
+            style: const TextStyle(
+              fontSize: 10,
+              color: Colors.grey,
+              height: 1.35,
+            ),
           ),
         ],
       ),
@@ -1895,13 +2559,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
         AppSurface(
           child: Column(
             children: [
-              _buildContactDetailItem(Icons.headset_mic_rounded, 'Hotline Support', '19876 (24/7 Toll Free)', scheme),
+              _buildContactDetailItem(
+                Icons.headset_mic_rounded,
+                'Hotline Support',
+                '19876 (24/7 Toll Free)',
+                scheme,
+              ),
               const AppSeparator(),
-              _buildContactDetailItem(Icons.email_outlined, 'Email Support', 'support@megacommute.com', scheme),
+              _buildContactDetailItem(
+                Icons.email_outlined,
+                'Email Support',
+                'support@megacommute.com',
+                scheme,
+              ),
               const AppSeparator(),
-              _buildContactDetailItem(Icons.chat_outlined, 'WhatsApp Chatbot', '+20 10 9988 7766', scheme),
+              _buildContactDetailItem(
+                Icons.chat_outlined,
+                'WhatsApp Chatbot',
+                '+20 10 9988 7766',
+                scheme,
+              ),
               const AppSeparator(),
-              _buildContactDetailItem(Icons.schedule_rounded, 'Support Hours', 'Daily: 6:00 AM - 12:00 AM', scheme),
+              _buildContactDetailItem(
+                Icons.schedule_rounded,
+                'Support Hours',
+                'Daily: 6:00 AM - 12:00 AM',
+                scheme,
+              ),
             ],
           ),
         ),
@@ -1924,7 +2608,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildContactDetailItem(IconData icon, String label, String value, ColorScheme scheme) {
+  Widget _buildContactDetailItem(
+    IconData icon,
+    String label,
+    String value,
+    ColorScheme scheme,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -1935,12 +2624,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+                Text(
+                  label,
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                ),
                 const SizedBox(height: 2),
-                Text(value, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
     );
@@ -1951,24 +2649,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const CircleAvatar(
                 radius: 30,
                 backgroundColor: Colors.teal,
-                child: Icon(Icons.phone_in_talk_rounded, color: Colors.white, size: 30),
+                child: Icon(
+                  Icons.phone_in_talk_rounded,
+                  color: Colors.white,
+                  size: 30,
+                ),
               ),
               const SizedBox(height: 18),
-              const Text('Calling Support Care...', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+              const Text(
+                'Calling Support Care...',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
               const SizedBox(height: 6),
-              const Text('Dialing 19876...', style: TextStyle(fontSize: 11, color: Colors.grey)),
+              const Text(
+                'Dialing 19876...',
+                style: TextStyle(fontSize: 11, color: Colors.grey),
+              ),
               const SizedBox(height: 20),
               AppButton(
                 label: 'Hang Up',
                 onPressed: () => Navigator.pop(context),
-              )
+              ),
             ],
           ),
         );
@@ -1990,42 +2700,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(colors: [scheme.primary, scheme.secondary]),
+                  gradient: LinearGradient(
+                    colors: [scheme.primary, scheme.secondary],
+                  ),
                   borderRadius: BorderRadius.circular(22),
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.directions_bus_filled_rounded, color: Colors.white, size: 40),
+                child: const Icon(
+                  Icons.directions_bus_filled_rounded,
+                  color: Colors.white,
+                  size: 40,
+                ),
               ),
               const SizedBox(height: 14),
-              const Text('Mega Commute Client', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text(
+                'Mega Commute Client',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 4),
-              const Text('Version 2.4.0 (Build 8204)', style: TextStyle(fontSize: 10, color: Colors.grey)),
+              const Text(
+                'Version 2.4.0 (Build 8204)',
+                style: TextStyle(fontSize: 10, color: Colors.grey),
+              ),
             ],
           ),
         ),
         const SizedBox(height: 30),
 
-        const Text('YOUR COMMUTE IN METRICS', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'YOUR COMMUTE IN METRICS',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 8),
         // Stats grid
         Row(
           children: [
-            Expanded(child: _buildMetricMiniCard('Total Trips', '148', Icons.directions_bus_rounded, scheme)),
+            Expanded(
+              child: _buildMetricMiniCard(
+                'Total Trips',
+                '148',
+                Icons.directions_bus_rounded,
+                scheme,
+              ),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: _buildMetricMiniCard('Active Tier', 'Gold Level', Icons.stars_rounded, scheme)),
+            Expanded(
+              child: _buildMetricMiniCard(
+                'Active Tier',
+                'Gold Level',
+                Icons.stars_rounded,
+                scheme,
+              ),
+            ),
             const SizedBox(width: 8),
-            Expanded(child: _buildMetricMiniCard('Subscriber', '2 Years', Icons.history_toggle_off_rounded, scheme)),
+            Expanded(
+              child: _buildMetricMiniCard(
+                'Subscriber',
+                '2 Years',
+                Icons.history_toggle_off_rounded,
+                scheme,
+              ),
+            ),
           ],
         ),
         const SizedBox(height: 20),
 
-        const Text('COMPANY INFORMATION', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'COMPANY INFORMATION',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 8),
         const AppSurface(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Mega Transport Solutions LLC', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+              Text(
+                'Mega Transport Solutions LLC',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              ),
               SizedBox(height: 4),
               Text(
                 'Our mission is to establish sustainable, comfortable, and intelligent corporate transportation pathways that solve daily commuting challenges in crowded cities.',
@@ -2038,14 +2798,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildMetricMiniCard(String label, String value, IconData icon, ColorScheme scheme) {
+  Widget _buildMetricMiniCard(
+    String label,
+    String value,
+    IconData icon,
+    ColorScheme scheme,
+  ) {
     return AppSurface(
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
           Icon(icon, color: scheme.primary, size: 18),
           const SizedBox(height: 6),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11),
+          ),
           const SizedBox(height: 2),
           Text(label, style: const TextStyle(fontSize: 8, color: Colors.grey)),
         ],
@@ -2065,48 +2833,76 @@ class _SettingsScreenState extends State<SettingsScreen> {
           border: Border.all(color: Colors.greenAccent.withAlpha(60)),
           child: const Row(
             children: [
-              Icon(Icons.check_circle_rounded, color: Colors.greenAccent, size: 30),
+              Icon(
+                Icons.check_circle_rounded,
+                color: Colors.greenAccent,
+                size: 30,
+              ),
               SizedBox(width: 16),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Application is Up-to-Date', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+                  Text(
+                    'Application is Up-to-Date',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.greenAccent,
+                    ),
+                  ),
                   SizedBox(height: 2),
-                  Text('Active: v2.4.0 (Latest version)', style: TextStyle(fontSize: 10, color: Colors.grey)),
+                  Text(
+                    'Active: v2.4.0 (Latest version)',
+                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                  ),
                 ],
-              )
+              ),
             ],
           ),
         ),
         const SizedBox(height: 24),
 
-        const Text('RELEASE NOTES HISTORY', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.grey)),
+        const Text(
+          'RELEASE NOTES HISTORY',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: Colors.grey,
+          ),
+        ),
         const SizedBox(height: 10),
 
         _buildReleaseLogItem('Version 2.4.0', 'June 2026', [
           'Added complete Seat Release Management Module.',
           'Stateful timelines and fintech rebooking trackers.',
-          'Subtle micro-animations and confetti celebrations.'
+          'Subtle micro-animations and confetti celebrations.',
         ], scheme),
         const SizedBox(height: 14),
         _buildReleaseLogItem('Version 2.3.0', 'May 2026', [
           'Enhanced Live Trip Tracking widgets.',
           'Integrated custom map layouts with moving shuttle icons.',
-          'Introduced Loyalty level progressions and perks.'
+          'Introduced Loyalty level progressions and perks.',
         ], scheme),
 
         const SizedBox(height: 30),
         AppButton(
           label: 'Force Update Checks',
           onPressed: () {
-            _showSuccessSnack('Checking servers... You already have the latest build.');
+            _showSuccessSnack(
+              'Checking servers... You already have the latest build.',
+            );
           },
         ),
       ],
     );
   }
 
-  Widget _buildReleaseLogItem(String version, String date, List<String> notes, ColorScheme scheme) {
+  Widget _buildReleaseLogItem(
+    String version,
+    String date,
+    List<String> notes,
+    ColorScheme scheme,
+  ) {
     return AppSurface(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2114,8 +2910,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(version, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              Text(date, style: const TextStyle(fontSize: 10, color: Colors.grey)),
+              Text(
+                version,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              Text(
+                date,
+                style: const TextStyle(fontSize: 10, color: Colors.grey),
+              ),
             ],
           ),
           const Divider(height: 16),
@@ -2125,9 +2930,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('• ', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold)),
+                  Text(
+                    '• ',
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                   Expanded(
-                    child: Text(n, style: const TextStyle(fontSize: 10, color: Colors.grey, height: 1.3)),
+                    child: Text(
+                      n,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey,
+                        height: 1.3,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -2144,13 +2962,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.redAccent, size: 50),
+              const Icon(
+                Icons.warning_amber_rounded,
+                color: Colors.redAccent,
+                size: 50,
+              ),
               const SizedBox(height: 16),
-              const Text('Confirm Logout', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+              const Text(
+                'Confirm Logout',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
               const SizedBox(height: 8),
               const Text(
                 'Are you sure you want to log out of your Mega Commute account? You will need to verify your phone number to sign back in.',
@@ -2178,7 +3005,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         );
@@ -2202,14 +3029,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
             color: scheme.surfaceContainerHighest,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
-          padding: EdgeInsets.fromLTRB(24, 16, 24, MediaQuery.of(context).viewInsets.bottom + 30),
+          padding: EdgeInsets.fromLTRB(
+            24,
+            16,
+            24,
+            MediaQuery.of(context).viewInsets.bottom + 30,
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[600], borderRadius: BorderRadius.circular(10)))),
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[600],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+              ),
               const SizedBox(height: 20),
-              const Text('Edit Profile Details', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              const Text(
+                'Edit Profile Details',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              ),
               const SizedBox(height: 18),
               TextField(
                 controller: nameCtrl,
@@ -2245,12 +3089,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           _userPhone = phoneCtrl.text;
                         });
                         Navigator.pop(context);
-                        _showSuccessSnack('Profile details updated successfully.');
+                        _showSuccessSnack(
+                          'Profile details updated successfully.',
+                        );
                       },
                     ),
                   ),
                 ],
-              )
+              ),
             ],
           ),
         );
@@ -2274,7 +3120,10 @@ class _OtpBox extends StatelessWidget {
         border: Border.all(color: Colors.grey[700]!),
       ),
       alignment: Alignment.center,
-      child: const Text('•', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+      child: const Text(
+        '•',
+        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      ),
     );
   }
 }

@@ -65,7 +65,6 @@ class HomePackagesSection extends StatelessWidget {
                         HomePackagePlanRow(
                           plan: plans[i],
                           featured: i == plans.length - 1,
-                          showDivider: i < plans.length - 1,
                           onTap: onOpenSubscription,
                         ),
                     ],

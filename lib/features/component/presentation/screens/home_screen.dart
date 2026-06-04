@@ -1,4 +1,3 @@
-import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/features/component/presentation/screens/notifications_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -177,7 +176,7 @@ class _HomeHero extends StatelessWidget {
                     backgroundColor: scheme.primary,
                     child: Icon(
                       Icons.notifications_active_outlined,
-                      color: AppColors.cardDark,
+                      color: scheme.onPrimary,
                     ),
                   ),
                 ),

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 /// Centralized, semantic color palette used across the app.
-/// Keep names semantic (role-based) so the design can evolve
-/// without changing usages throughout the codebase.
+/// Client app light: `#FAFAF5` background, `#2563EB` primary.
+/// Client app dark: `#1F1F1F` background, `#00D9FF` primary.
 class AppColors {
-  AppColors._(); // no instances
-  // Light theme tokens (from COLOR-PALLETTE.md)
-  // Updated to premium transportation brand blue
-  static const Color primary = Color(0xFF1E3A8A);
+  AppColors._();
+
+  // Light theme
+  static const Color primary = Color(0xFF2563EB);
   static const Color primaryForeground = Color(0xFFFFFFFF);
 
   static const Color secondary = Color(0xFF06B6D4);
@@ -16,26 +16,25 @@ class AppColors {
   static const Color accent = Color(0xFFFB923C);
   static const Color accentForeground = Color(0xFFFFFFFF);
 
-  // Slightly cooler neutral background (matches suggested palette)
-  static const Color background = Color(0xFFF8FAFC);
+  static const Color background = Color(0xFFFAFAF5);
   static const Color card = Color(0xFFFFFFFF);
   static const Color popover = Color(0xFFFFFFFF);
 
-  static const Color foreground = Color(0xFF262626);
-  static const Color cardForeground = Color(0xFF262626);
-  static const Color popoverForeground = Color(0xFF262626);
+  static const Color foreground = Color(0xFF1F2937);
+  static const Color cardForeground = Color(0xFF1F2937);
+  static const Color popoverForeground = Color(0xFF1F2937);
 
-  static const Color muted = Color(0xFFF5F5F5);
-  static const Color mutedForeground = Color(0xFF8C8C8C);
-  static const Color border = Color(0xFFF5F5F5);
-  static const Color input = Color(0xFFF9F9F9);
+  static const Color muted = Color(0xFFF0F0EB);
+  static const Color mutedForeground = Color(0xFF6B7280);
+  static const Color border = Color(0xFFE5E7EB);
+  static const Color input = Color(0xFFFFFFFF);
 
   static const Color destructive = Color(0xFFDC2626);
   static const Color destructiveForeground = Color(0xFFFFFFFF);
 
-  static const Color ring = Color(0xFF1E3A8A);
+  static const Color ring = Color(0xFF2563EB);
 
-  // Dark theme tokens
+  // Dark theme
   static const Color primaryDark = Color(0xFF00D9FF);
   static const Color primaryForegroundDark = Color(0xFF1F1F1F);
 
@@ -59,9 +58,8 @@ class AppColors {
   static const Color ringDark = Color(0xFF00D9FF);
 }
 
-/// Helper that returns a light color scheme based on the palette above.
 ColorScheme lightColorSchemeFromPalette() {
-  return ColorScheme(
+  return const ColorScheme(
     brightness: Brightness.light,
     primary: AppColors.primary,
     onPrimary: AppColors.primaryForeground,
@@ -73,15 +71,15 @@ ColorScheme lightColorSchemeFromPalette() {
     onError: AppColors.destructiveForeground,
     surface: AppColors.card,
     onSurface: AppColors.foreground,
-    surfaceContainerHighest: AppColors.background,
-    surfaceContainerLowest: AppColors.muted,
+    surfaceContainerHighest: AppColors.muted,
+    surfaceContainerLow: AppColors.background,
+    surfaceContainerLowest: AppColors.background,
     outline: AppColors.border,
   );
 }
 
-/// Helper that returns a dark color scheme for nighttime mode.
 ColorScheme darkColorSchemeFromPalette() {
-  return ColorScheme(
+  return const ColorScheme(
     brightness: Brightness.dark,
     primary: AppColors.primaryDark,
     onPrimary: AppColors.primaryForegroundDark,
@@ -94,6 +92,7 @@ ColorScheme darkColorSchemeFromPalette() {
     surface: AppColors.cardDark,
     onSurface: AppColors.foregroundDark,
     surfaceContainerHighest: AppColors.backgroundDark,
+    surfaceContainerLow: AppColors.cardDark,
     surfaceContainerLowest: AppColors.cardDark,
     outline: AppColors.borderDark,
   );

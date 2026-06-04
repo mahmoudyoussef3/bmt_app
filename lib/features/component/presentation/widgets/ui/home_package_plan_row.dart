@@ -12,109 +12,111 @@ class HomePackagePlanRow extends StatelessWidget {
     required this.plan,
     required this.onTap,
     this.featured = false,
-    this.showDivider = true,
   });
 
   final PackagePlanData plan;
   final VoidCallback onTap;
   final bool featured;
-  final bool showDivider;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final accent = featured ? scheme.tertiary : scheme.primary;
 
-    return Column(
-      children: [
-        Material(
-          color: featured ? accent.withAlpha(14) : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppLayout.radiusMd),
-          child: InkWell(
-            onTap: onTap,
-            borderRadius: BorderRadius.circular(AppLayout.radiusMd),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppLayout.spaceMd,
-                vertical: AppLayout.spaceMd,
-              ),
-              child: Row(
-                children: [
-                  if (featured)
-                    Container(
-                      width: 3,
-                      height: 44,
-                      margin: const EdgeInsets.only(right: AppLayout.spaceSm),
-                      decoration: BoxDecoration(
-                        color: accent,
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                    ),
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: accent.withAlpha(28),
-                      borderRadius: BorderRadius.circular(AppLayout.radiusMd),
-                    ),
-                    child: Icon(plan.icon, color: accent, size: 22),
-                  ),
-                  const SizedBox(width: AppLayout.spaceMd),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                plan.title,
-                                style: AppTypography.subheading(scheme),
-                              ),
-                            ),
-                            AppBadge(text: plan.badge),
-                          ],
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          plan.subtitle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: AppTypography.caption(scheme),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: AppLayout.spaceSm),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        plan.price,
-                        style: AppTextThemes.priceEmphasis(
-                          scheme,
-                        ).copyWith(fontSize: 15),
-                      ),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 20,
-                        color: scheme.onSurface.withAlpha(130),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
+    final color = featured ? scheme.tertiary : scheme.primary;
+
+    return Material(
+      color: featured ? color.withOpacity(0.06) : Colors.transparent,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: featured
+                  ? color.withOpacity(0.35)
+                  : scheme.outline.withOpacity(0.15),
+              width: featured ? 1.2 : 1,
             ),
           ),
-        ),
-        if (showDivider)
-          Divider(
-            height: 1,
-            indent: AppLayout.spaceMd,
-            endIndent: AppLayout.spaceMd,
-            color: scheme.outline.withAlpha(55),
+          child: Row(
+            children: [
+              /// ICON
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.12),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(plan.icon, color: color, size: 22),
+              ),
+
+              const SizedBox(width: 12),
+
+              /// CONTENT
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    /// TITLE + BADGE
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            plan.title,
+                            style: AppTypography.subheading(scheme).copyWith(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        if (plan.badge.isNotEmpty)
+                          AppBadge(text: plan.badge),
+                      ],
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    /// SUBTITLE
+                    Text(
+                      plan.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTypography.caption(scheme).copyWith(
+                        color: scheme.onSurface.withOpacity(0.65),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    /// PRICE (moved left → better hierarchy)
+                    Text(
+                      plan.price,
+                      style: AppTextThemes.priceEmphasis(scheme).copyWith(
+                        fontSize: 15,
+                        color: color,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(width: 8),
+
+              /// ARROW
+              Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 16,
+                color: scheme.onSurface.withOpacity(0.35),
+              ),
+            ],
           ),
-      ],
+        ),
+      ),
     );
   }
 }
