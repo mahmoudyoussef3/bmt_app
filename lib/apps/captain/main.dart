@@ -14,7 +14,9 @@ class CaptainApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Captain App',
-      theme: AppTheme.lightTheme(),
+      theme: AppTheme.darkTheme(),
+      darkTheme: AppTheme.darkTheme(),
+      themeMode: ThemeMode.system,
       home: const CaptainDashboardScreen(),
     );
   }
