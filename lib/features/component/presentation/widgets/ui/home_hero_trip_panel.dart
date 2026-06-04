@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/app_button.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/features/component/presentation/widgets/home/home_mock_data.dart';
 
-/// Current-trip summary or book-a-trip prompt inside the home hero.
+/// Stands alone as a premium top-level card for trip overview/booking search.
 class HomeHeroTripPanel extends StatelessWidget {
   const HomeHeroTripPanel({
     super.key,
@@ -52,103 +51,146 @@ class _ActiveTripPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: scheme.surface.withAlpha(238),
-      borderRadius: BorderRadius.circular(AppLayout.radiusLg),
-      child: InkWell(
-        onTap: onViewTrip,
-        borderRadius: BorderRadius.circular(AppLayout.radiusLg),
-        child: Padding(
-          padding: const EdgeInsets.all(AppLayout.spaceMd),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'Current trip',
-                    style: AppTypography.caption(
-                      scheme,
-                    ).copyWith(fontWeight: FontWeight.w700, letterSpacing: 0.3),
-                  ),
-                  const Spacer(),
-                  StatusChip(label: trip.statusLabel),
-                ],
-              ),
-              const SizedBox(height: AppLayout.spaceMd),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _RouteDots(scheme: scheme),
-                  const SizedBox(width: AppLayout.spaceMd),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          trip.routeLabel,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w800,
-                                height: 1.2,
-                              ),
-                        ),
-                        const SizedBox(height: AppLayout.spaceXs),
-                        Text(
-                          trip.schedule,
-                          style: AppTypography.caption(
-                            scheme,
-                          ).copyWith(color: scheme.onSurface.withAlpha(175)),
-                        ),
-                        if (trip.driverLine != null) ...[
-                          const SizedBox(height: AppLayout.spaceXs),
-                          Text(
-                            trip.driverLine!,
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: scheme.secondary,
-                                ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppLayout.spaceMd),
-              Row(
-                children: [
-                  if (onTrackTrip != null)
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: onTrackTrip,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: AppLayout.spaceSm,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppLayout.radiusMd,
-                            ),
-                          ),
-                        ),
-                        child: const Text('Track'),
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: scheme.outline.withAlpha(50),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.onSurface.withAlpha(12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(20),
+        child: InkWell(
+          onTap: onViewTrip,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Top Row: Category label & Status
+                Row(
+                  children: [
+                    Text(
+                      'UPCOMING RIDE',
+                      style: AppTypography.caption(scheme).copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.8,
+                        fontSize: 11,
+                        color: scheme.primary,
                       ),
                     ),
-                  if (onTrackTrip != null)
-                    const SizedBox(width: AppLayout.spaceSm),
-                  Expanded(
-                    child: TextButton(
-                      onPressed: onViewTrip,
-                      child: const Text('Trip details'),
-                    ),
+                    const Spacer(),
+                    StatusChip(label: trip.statusLabel),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                // Visual Timeline
+                _TripTimeline(
+                  scheme: scheme,
+                  pickup: trip.pickup,
+                  destination: trip.destination,
+                  schedule: trip.schedule,
+                ),
+                
+                // Driver Details (if assigned)
+                if (trip.driverLine != null) ...[
+                  const SizedBox(height: 16),
+                  Divider(height: 1, color: scheme.outline.withAlpha(55)),
+                  const SizedBox(height: 14),
+                  Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 20,
+                        backgroundColor: scheme.primary.withAlpha(20),
+                        child: Icon(
+                          Icons.person_rounded,
+                          color: scheme.primary,
+                          size: 22,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Ahmed Captain',
+                              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                    fontSize: 13.5,
+                                  ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              trip.driverLine!,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: scheme.secondary,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: scheme.primary.withAlpha(20),
+                          shape: BoxShape.circle,
+                        ),
+                        child: IconButton(
+                          padding: EdgeInsets.zero,
+                          icon: Icon(
+                            Icons.chat_bubble_outline_rounded,
+                            color: scheme.primary,
+                            size: 18,
+                          ),
+                          onPressed: () {},
+                        ),
+                      ),
+                    ],
                   ),
                 ],
-              ),
-            ],
+                const SizedBox(height: 18),
+                
+                // Action Buttons
+                Row(
+                  children: [
+                    if (onTrackTrip != null) ...[
+                      Expanded(
+                        child: AppButton(
+                          label: 'Track Ride',
+                          onPressed: onTrackTrip!,
+                          height: 46,
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                    ],
+                    Expanded(
+                      child: AppButton(
+                        label: 'Details',
+                        onPressed: onViewTrip,
+                        outline: true,
+                          height: 46,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -156,35 +198,126 @@ class _ActiveTripPanel extends StatelessWidget {
   }
 }
 
-class _RouteDots extends StatelessWidget {
-  const _RouteDots({required this.scheme});
+class _TripTimeline extends StatelessWidget {
+  const _TripTimeline({
+    required this.scheme,
+    required this.pickup,
+    required this.destination,
+    required this.schedule,
+  });
 
   final ColorScheme scheme;
+  final String pickup;
+  final String destination;
+  final String schedule;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    // Extract a mock departure time if available, else default
+    final timeStr = schedule.contains('Departs') 
+        ? schedule.split('Departs').last.trim() 
+        : '8:40 AM';
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: scheme.secondary,
-            shape: BoxShape.circle,
-          ),
+        // Left Column: Times
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            const SizedBox(height: 2),
+            Text(
+              timeStr,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 13,
+                  ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              'Est. +45m',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurface.withAlpha(120),
+                    fontWeight: FontWeight.w500,
+                    fontSize: 11,
+                  ),
+            ),
+          ],
         ),
-        Container(
-          width: 2,
-          height: 28,
-          margin: const EdgeInsets.symmetric(vertical: 4),
-          color: scheme.outline.withAlpha(90),
+        const SizedBox(width: 12),
+        
+        // Center Column: Visual Dots & Timeline Line
+        Column(
+          children: [
+            const SizedBox(height: 5),
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: scheme.secondary,
+                shape: BoxShape.circle,
+                border: Border.all(color: scheme.secondary.withAlpha(120), width: 2),
+              ),
+            ),
+            Container(
+              width: 2,
+              height: 34,
+              color: scheme.outline.withAlpha(85),
+            ),
+            Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: scheme.error,
+                shape: BoxShape.circle,
+                border: Border.all(color: scheme.error.withAlpha(120), width: 2),
+              ),
+            ),
+          ],
         ),
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: scheme.error,
-            shape: BoxShape.circle,
+        const SizedBox(width: 12),
+        
+        // Right Column: Location labels
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                pickup,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Pickup Station',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(130),
+                      fontSize: 11.5,
+                    ),
+              ),
+              const SizedBox(height: 14),
+              Text(
+                destination,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 14,
+                    ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Drop-off Destination',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(130),
+                      fontSize: 11.5,
+                    ),
+              ),
+            ],
           ),
         ),
       ],
@@ -201,81 +334,150 @@ class _NoTripPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppLayout.spaceLg,
-        vertical: AppLayout.spaceXl,
-      ),
       decoration: BoxDecoration(
-        color: scheme.surface.withAlpha(235),
-        borderRadius: BorderRadius.circular(AppLayout.radiusLg),
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
           color: scheme.outline.withAlpha(50),
-          style: BorderStyle.solid,
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.onSurface.withAlpha(12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(18),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Where would you like to go?',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 16.5,
+                    letterSpacing: -0.2,
+                  ),
+            ),
+            const SizedBox(height: 12),
+            
+            // Mock Search Bar Input Field
+            InkWell(
+              onTap: onBookTrip,
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest.withAlpha(130),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: scheme.outline.withAlpha(45),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.search_rounded,
+                      color: scheme.primary,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        'Enter destination...',
+                        style: TextStyle(
+                          color: scheme.onSurface.withAlpha(120),
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    Icon(
+                      Icons.my_location_rounded,
+                      color: scheme.onSurface.withAlpha(130),
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 14),
+            
+            // Quick Shortcuts / Destinations
+            Row(
+              children: [
+                Icon(
+                  Icons.history_rounded,
+                  size: 15,
+                  color: scheme.onSurface.withAlpha(110),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Quick Commutes',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(120),
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _buildShortcutChip(
+                  context,
+                  icon: Icons.work_outline_rounded,
+                  label: 'Smart Village',
+                ),
+                _buildShortcutChip(
+                  context,
+                  icon: Icons.train_outlined,
+                  label: 'Banha Station',
+                ),
+              ],
+            ),
+          ],
         ),
       ),
-      child: Column(
-        children: [
-          Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 88,
-                height: 88,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: scheme.primary.withAlpha(22),
-                ),
-              ),
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: scheme.primary.withAlpha(40),
-                ),
-                child: Icon(
-                  Icons.directions_bus_filled_rounded,
-                  size: 32,
-                  color: scheme.primary,
-                ),
-              ),
-              Positioned(
-                right: 4,
-                top: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: scheme.surface,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: scheme.outline.withAlpha(80)),
+    );
+  }
+
+  Widget _buildShortcutChip(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+  }) {
+    return InkWell(
+      onTap: onBookTrip,
+      borderRadius: BorderRadius.circular(30),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: scheme.primary.withAlpha(12),
+          borderRadius: BorderRadius.circular(30),
+          border: Border.all(
+            color: scheme.primary.withAlpha(30),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: scheme.primary),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w700,
                   ),
-                  child: Icon(
-                    Icons.add_road_rounded,
-                    size: 16,
-                    color: scheme.secondary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppLayout.spaceMd),
-          Text(
-            'No trip scheduled',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: AppLayout.spaceXs),
-          Text(
-            'Search routes and book your next commute when you are ready.',
-            textAlign: TextAlign.center,
-            style: AppTypography.caption(
-              scheme,
-            ).copyWith(color: scheme.onSurface.withAlpha(165), height: 1.4),
-          ),
-          const SizedBox(height: AppLayout.spaceLg),
-          AppButton(label: 'Find a trip', height: 46, onPressed: onBookTrip),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -22,11 +22,11 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   BookingSearchQuery get _searchQuery => const BookingSearchQuery(
-    pickup: 'Banha Station',
-    destination: 'Smart Village',
-    date: 'Today, Jun 3',
-    time: '8:40 AM',
-  );
+        pickup: 'Banha Station',
+        destination: 'Smart Village',
+        date: 'Today, Jun 3',
+        time: '8:40 AM',
+      );
 
   void _openSearch() {
     widget.onOpenRoute(BookingRoutes.search, _searchQuery.toArguments());
@@ -38,7 +38,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final maxW = AppLayout.maxContentWidth(width);
     final currentTrip = kHomeCurrentTrip;
-    final hasTrip = currentTrip != null;
 
     return Center(
       child: ConstrainedBox(
@@ -48,27 +47,36 @@ class _HomeScreenState extends State<HomeScreen> {
             parent: AlwaysScrollableScrollPhysics(),
           ),
           slivers: [
+            // Top greeting header and the primary booking/trip panel
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(
                   AppLayout.spaceLg,
+                  AppLayout.spaceXl,
                   AppLayout.spaceLg,
-                  AppLayout.spaceLg,
-                  AppLayout.spaceSm,
+                  AppLayout.spaceXl, // Spacious bottom padding before next section
                 ),
-                child: _HomeHero(
-                  scheme: scheme,
-                  hasTrip: hasTrip,
-                  currentTrip: currentTrip,
-                  onBookTrip: _openSearch,
-                  onViewTrip: () => widget.onOpenRoute(
-                    TripsRoutes.tripDetails,
-                    {'tripId': 'T1'},
-                  ),
-                  onTrackTrip: () => widget.onOpenRoute('/tracking'),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _HomeHeader(scheme: scheme),
+                    const SizedBox(height: AppLayout.spaceLg),
+                    HomeHeroTripPanel(
+                      scheme: scheme,
+                      trip: currentTrip,
+                      onBookTrip: _openSearch,
+                      onViewTrip: () => widget.onOpenRoute(
+                        TripsRoutes.tripDetails,
+                        {'tripId': 'T1'},
+                      ),
+                      onTrackTrip: () => widget.onOpenRoute('/tracking'),
+                    ),
+                  ],
                 ),
               ),
             ),
+            
+            // Popular routes & Packages & Support links
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppLayout.spaceLg,
@@ -76,12 +84,12 @@ class _HomeScreenState extends State<HomeScreen> {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   PopularRoutesPreview(onOpenRoute: widget.onOpenRoute),
-                  const SizedBox(height: AppLayout.spaceXxl),
+                  const SizedBox(height: AppLayout.spaceXl),
                   HomePackagesSection(
                     onOpenSubscription: () =>
                         widget.onOpenRoute('/subscription'),
                   ),
-                  const SizedBox(height: AppLayout.spaceXxl),
+                  const SizedBox(height: AppLayout.spaceXl),
                   _SupportLink(
                     scheme: scheme,
                     onTap: () => widget.onOpenRoute('/support'),
@@ -97,102 +105,84 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _HomeHero extends StatelessWidget {
-  const _HomeHero({
-    required this.scheme,
-    required this.hasTrip,
-    required this.currentTrip,
-    required this.onBookTrip,
-    required this.onViewTrip,
-    required this.onTrackTrip,
-  });
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({required this.scheme});
 
   final ColorScheme scheme;
-  final bool hasTrip;
-  final HomeCurrentTripData? currentTrip;
-  final VoidCallback onBookTrip;
-  final VoidCallback onViewTrip;
-  final VoidCallback onTrackTrip;
 
   @override
   Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppLayout.radiusXl),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            scheme.primary.withAlpha(hasTrip ? 62 : 48),
-            scheme.surfaceContainerHighest.withAlpha(130),
-          ],
-        ),
-        border: Border.all(color: scheme.outline.withAlpha(70)),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withAlpha(20),
-            blurRadius: 28,
-            offset: const Offset(0, 12),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppLayout.spaceLg),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Good morning, Ahmed',
-                        style: AppTypography.caption(scheme).copyWith(
-                          color: scheme.onSurface.withAlpha(190),
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                      const SizedBox(height: AppLayout.spaceXs),
-                      Text(
-                        hasTrip ? 'Your trip today' : 'Ready for your commute?',
-                        style: AppTypography.display(
-                          scheme,
-                        ).copyWith(fontSize: 24, height: 1.15),
-                      ),
-                    ],
-                  ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Good morning, Ahmed 👋',
+                style: AppTypography.display(scheme).copyWith(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.4,
                 ),
-                GestureDetector(
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const NotificationsScreen(),
-                    ),
-                  ),
-                  child: CircleAvatar(
-                    backgroundColor: scheme.primary,
-                    child: Icon(
-                      Icons.notifications_active_outlined,
-                      color: scheme.onPrimary,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                'Ready for your commute today?',
+                style: AppTypography.caption(scheme).copyWith(
+                  color: scheme.onSurface.withAlpha(150),
+                  fontSize: 13.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+        GestureDetector(
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const NotificationsScreen(),
+            ),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: scheme.surface,
+              shape: BoxShape.circle,
+              border: Border.all(color: scheme.outline.withAlpha(70)),
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.onSurface.withAlpha(10),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                Icon(
+                  Icons.notifications_none_rounded,
+                  color: scheme.onSurface,
+                  size: 24,
+                ),
+                Positioned(
+                  right: 2,
+                  top: 2,
+                  child: Container(
+                    width: 7,
+                    height: 7,
+                    decoration: BoxDecoration(
+                      color: scheme.error,
+                      shape: BoxShape.circle,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: AppLayout.spaceLg),
-            HomeHeroTripPanel(
-              scheme: scheme,
-              trip: currentTrip,
-              onBookTrip: onBookTrip,
-              onViewTrip: onViewTrip,
-              onTrackTrip: onTrackTrip,
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/app_layout.dart';
-import 'package:bmt_app/core/theme/app_typography.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/badge.dart';
 import 'package:bmt_app/core/widgets/section_header.dart';
 import 'package:bmt_app/features/component/presentation/widgets/home/home_mock_data.dart';
-import 'package:bmt_app/features/component/presentation/widgets/ui/home_package_plan_row.dart';
-import 'package:bmt_app/features/component/presentation/widgets/ui/package_benefits_banner.dart';
+import 'package:bmt_app/features/component/presentation/widgets/ui/home_package_card.dart';
 
-/// Packages block: benefits header + plans list in one elevated surface.
+/// Refactored Packages section: 
+/// - Premium active pass card (if subscribed) showing remaining trips progress.
+/// - Sleek horizontal carousel of available package plans.
 class HomePackagesSection extends StatelessWidget {
   const HomePackagesSection({
     super.key,
@@ -40,53 +39,31 @@ class HomePackagesSection extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppLayout.spaceMd),
-        AppCard(
-          padding: EdgeInsets.zero,
-          onTap: onOpenSubscription,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const PackageBenefitsBanner(),
-                if (showActivePackage)
-                  _ActivePackageInset(
-                    scheme: scheme,
-                    onTap: onOpenSubscription,
-                  ),
-                Padding(
-                  padding: const EdgeInsets.only(
-                    top: AppLayout.spaceSm,
-                    bottom: AppLayout.spaceXs,
-                  ),
-                  child: Column(
-                    children: [
-                      for (var i = 0; i < plans.length; i++)
-                        HomePackagePlanRow(
-                          plan: plans[i],
-                          featured: i == plans.length - 1,
-                          onTap: onOpenSubscription,
-                        ),
-                    ],
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppLayout.spaceLg,
-                    0,
-                    AppLayout.spaceLg,
-                    AppLayout.spaceMd,
-                  ),
-                  child: Text(
-                    'Tap any plan to compare features and subscribe',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.caption(
-                      scheme,
-                    ).copyWith(color: scheme.onSurface.withAlpha(140)),
-                  ),
-                ),
-              ],
-            ),
+        if (showActivePackage) ...[
+          _ActivePackageCard(
+            scheme: scheme,
+            onTap: onOpenSubscription,
+          ),
+          const SizedBox(height: AppLayout.spaceLg),
+        ],
+        
+        // Horizontal list of available packages
+        SizedBox(
+          height: HomePackageCard.cardHeight,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            clipBehavior: Clip.none,
+            physics: const BouncingScrollPhysics(),
+            itemCount: plans.length,
+            separatorBuilder: (context, index) =>
+                const SizedBox(width: AppLayout.spaceMd),
+            itemBuilder: (context, index) {
+              return HomePackageCard(
+                plan: plans[index],
+                width: 210,
+                onTap: onOpenSubscription,
+              );
+            },
           ),
         ),
       ],
@@ -94,36 +71,127 @@ class HomePackagesSection extends StatelessWidget {
   }
 }
 
-class _ActivePackageInset extends StatelessWidget {
-  const _ActivePackageInset({required this.scheme, required this.onTap});
+class _ActivePackageCard extends StatelessWidget {
+  const _ActivePackageCard({required this.scheme, required this.onTap});
 
   final ColorScheme scheme;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    const int remainingTrips = 18;
+    const int totalTrips = 30;
+    const double progress = remainingTrips / totalTrips;
+
     return Material(
-      color: scheme.secondary.withAlpha(22),
+      color: scheme.surface,
+      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppLayout.spaceLg,
-            vertical: AppLayout.spaceMd,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: scheme.secondary.withAlpha(80),
+              width: 1.5,
+            ),
+            gradient: LinearGradient(
+              colors: [
+                scheme.surface,
+                scheme.primary.withAlpha(15),
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.primary.withAlpha(10),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Icon(Icons.verified_rounded, size: 18, color: scheme.secondary),
-              const SizedBox(width: AppLayout.spaceSm),
-              Expanded(
-                child: Text(
-                  'Your Monthly plan · 18 trips left',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+              // Header Row: Pass Icon, Title, Active Badge
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withAlpha(20),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.stars_rounded,
+                      color: scheme.primary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Monthly Pass',
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14.5,
+                              ),
+                        ),
+                        Text(
+                          'Expires in 12 days',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurface.withAlpha(130),
+                                fontSize: 11.5,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const AppBadge(text: 'Active'),
+                ],
+              ),
+              const SizedBox(height: 14),
+              
+              // Progress Labels
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Trips remaining',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurface.withAlpha(150),
+                          fontWeight: FontWeight.w600,
+                          fontSize: 11.5,
+                        ),
+                  ),
+                  Text(
+                    '$remainingTrips / $totalTrips left',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.black,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 11.5,
+                        ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              
+              // Linear Progress Indicator
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 6,
+                  backgroundColor: scheme.secondary.withAlpha(25),
+                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
                 ),
               ),
-              const AppBadge(text: 'Active'),
             ],
           ),
         ),

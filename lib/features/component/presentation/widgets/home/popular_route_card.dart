@@ -22,7 +22,7 @@ class PopularRouteCard extends StatelessWidget {
   final double width;
 
   /// Cross-axis size for horizontal [ListView] parents.
-  static const double listHeight = 152;
+  static const double listHeight = 168;
 
   @override
   Widget build(BuildContext context) {
