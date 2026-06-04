@@ -98,6 +98,34 @@ const kNearbyTrips = [
   ),
 ];
 
+/// Simple upcoming trip shown in the home hero (UI mock).
+/// Set to `null` to preview the empty-hero state.
+class HomeCurrentTripData {
+  const HomeCurrentTripData({
+    required this.pickup,
+    required this.destination,
+    required this.schedule,
+    required this.statusLabel,
+    this.driverLine,
+  });
+
+  final String pickup;
+  final String destination;
+  final String schedule;
+  final String statusLabel;
+  final String? driverLine;
+
+  String get routeLabel => '$pickup → $destination';
+}
+
+const HomeCurrentTripData? kHomeCurrentTrip = HomeCurrentTripData(
+  pickup: 'Banha Station',
+  destination: 'Smart Village',
+  schedule: 'Today, Jun 3 · Departs 8:40 AM',
+  statusLabel: 'Driver assigned',
+  driverLine: 'Pickup ETA 8:32 AM',
+);
+
 const kPackagePlans = [
   PackagePlanData(
     title: 'Weekly Package',

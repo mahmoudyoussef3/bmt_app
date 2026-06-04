@@ -1,176 +1,150 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
+
 import 'package:bmt_app/core/app_mode/app_mode.dart';
+import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
+import 'package:bmt_app/core/theme/app_layout.dart';
+import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/features/component/presentation/booking/booking_routes.dart';
+import 'package:bmt_app/features/component/presentation/trips/trips_routes.dart';
+import 'package:bmt_app/features/component/presentation/widgets/ui/profile_hub_tile.dart';
 
 class ProfileScreen extends StatelessWidget {
-  final void Function(String route, [Object? arguments]) onOpenRoute;
-
   const ProfileScreen({super.key, required this.onOpenRoute});
+
+  final void Function(String route, [Object? arguments]) onOpenRoute;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        AppCard(
-          padding: const EdgeInsets.all(18),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+    final width = MediaQuery.sizeOf(context).width;
+    final maxW = AppLayout.maxContentWidth(width);
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxWidth: maxW),
+        child: ListView(
+          padding: AppLayout.pagePaddingWithTop,
+          children: [
+            AppCard(
+              padding: const EdgeInsets.all(AppLayout.spaceLg),
+              child: Row(
                 children: [
-                  const AppAvatar(initials: 'AH', radius: 26),
-                  const SizedBox(width: 14),
+                  const AppAvatar(initials: 'AH', radius: 28),
+                  const SizedBox(width: AppLayout.spaceMd),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           'Ahmed Hassan',
-                          style: Theme.of(context).textTheme.displaySmall,
+                          style: AppTypography.heading(scheme),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Employee commute account',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: scheme.onSurface.withAlpha(170),
-                              ),
+                          'ahmed.hassan@company.com',
+                          style: AppTypography.caption(scheme),
                         ),
                       ],
                     ),
                   ),
+                  const AppBadge(text: 'Premium'),
                 ],
               ),
-              const SizedBox(height: 14),
-              const AppBadge(text: 'Premium access'),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        Text('Access', style: Theme.of(context).textTheme.displaySmall),
-        const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: AppButton(
-                label: 'Driver Version',
-                outline: true,
-                onPressed: () => _openVersion(context, AppMode.driver),
-              ),
             ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: AppButton(
-                label: 'Admin Version',
-                outline: true,
-                onPressed: () => _openVersion(context, AppMode.admin),
-              ),
+            const SizedBox(height: AppLayout.spaceXl),
+            const SectionHeader(title: 'Account'),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.person_outline_rounded,
+              title: 'Account details',
+              subtitle: 'Employee ID · Operations',
+              onTap: () {},
             ),
+            const SizedBox(height: AppLayout.spaceXl),
+            const SectionHeader(title: 'Travel'),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.luggage_rounded,
+              title: 'My trips',
+              subtitle: 'Upcoming, active & history',
+              onTap: () => onOpenRoute(TripsRoutes.myTrips),
+            ),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.card_membership_outlined,
+              title: 'Packages',
+              subtitle: 'Monthly & weekly plans',
+              onTap: () => onOpenRoute('/subscription'),
+            ),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.search_rounded,
+              title: 'Book a route',
+              subtitle: 'Search trips & vehicles',
+              onTap: () => onOpenRoute(BookingRoutes.search),
+            ),
+            const SizedBox(height: AppLayout.spaceXl),
+            const SectionHeader(title: 'Wallet & rewards'),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.account_balance_wallet_outlined,
+              title: 'Wallet',
+              subtitle: 'EGP 240.00 available',
+              onTap: () => onOpenRoute('/payment-demo'),
+            ),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.emoji_events_outlined,
+              title: 'Rewards',
+              subtitle: '1,250 points · Refer friends',
+              onTap: () => onOpenRoute('/rewards'),
+            ),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.stars_outlined,
+              title: 'Loyalty',
+              subtitle: 'Tier benefits & perks',
+              onTap: () => onOpenRoute('/loyalty'),
+            ),
+            const SizedBox(height: AppLayout.spaceXl),
+            const SectionHeader(title: 'Support'),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.support_agent_outlined,
+              title: 'Help center',
+              subtitle: 'FAQs, chat & tickets',
+              onTap: () => onOpenRoute('/support'),
+            ),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.chat_bubble_outline_rounded,
+              title: 'Messages',
+              subtitle: 'Driver & support chat',
+              onTap: () => onOpenRoute('/communication'),
+            ),
+            const SizedBox(height: AppLayout.spaceXl),
+            const SectionHeader(title: 'Settings & legal'),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.settings_outlined,
+              title: 'Settings',
+              subtitle: 'Preferences & security',
+              onTap: () => onOpenRoute('/settings'),
+            ),
+            const SizedBox(height: AppLayout.spaceSm),
+            ProfileHubTile(
+              icon: Icons.description_outlined,
+              title: 'Terms & privacy',
+              subtitle: 'Legal information',
+              onTap: () {},
+            ),
+            const SizedBox(height: AppLayout.spaceLg),
+            const _DevVersionSwitcher(),
+            const SizedBox(height: 120),
           ],
         ),
-        const SizedBox(height: 10),
-        Row(
-          children: [
-            Expanded(
-              child: AppButton(
-                label: 'Ops Version',
-                outline: true,
-                onPressed: () => _openVersion(context, AppMode.ops),
-              ),
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: AppButton(
-                label: 'Client Home',
-                outline: true,
-                onPressed: () => _openVersion(context, AppMode.client),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        AppCard(
-          child: Column(
-            children: const [
-              _InfoRow(title: 'Employee ID', value: 'EMP-2047'),
-              AppSeparator(),
-              _InfoRow(title: 'Department', value: 'Operations'),
-              AppSeparator(),
-              _InfoRow(title: 'Route', value: 'Banha → Smart Village'),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        AppCard(
-          onTap: () => onOpenRoute('/settings'),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          child: Row(
-            children: [
-              Icon(Icons.settings_outlined, color: scheme.primary),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Settings & Preferences', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 2),
-                    Text('General, Security, Privacy, Languages...', style: TextStyle(fontSize: 10, color: scheme.onSurface.withAlpha(150))),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right_rounded, color: scheme.onSurface.withAlpha(120)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        // Dev-only version switcher
-        Builder(
-          builder: (context) {
-            Widget devPanel = const SizedBox.shrink();
-            assert(() {
-              devPanel = const _DevVersionSwitcher();
-              return true;
-            }());
-            return devPanel;
-          },
-        ),
-      ],
-    );
-  }
-
-  void _openVersion(BuildContext context, AppMode mode) {
-    Navigator.of(
-      context,
-      rootNavigator: true,
-    ).pushNamedAndRemoveUntil(mode.routePath, (_) => false);
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  final String title;
-  final String value;
-
-  const _InfoRow({required this.title, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.bodySmall),
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ],
       ),
     );
   }
@@ -189,70 +163,30 @@ class _DevVersionSwitcher extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'App Mode Switcher (Dev Only)',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+            'Developer',
+            style: AppTypography.caption(
+              Theme.of(context).colorScheme,
+            ).copyWith(fontWeight: FontWeight.w700),
           ),
-          const SizedBox(height: 10),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isNarrow = constraints.maxWidth < 520;
-              final modes = AppMode.values.where((mode) => mode != current);
-
-              if (isNarrow) {
-                return Column(
-                  children: modes
-                      .map(
-                        (m) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: SizedBox(
-                            width: double.infinity,
-                            child: AppButton(
-                              label: m.displayLabel,
-                              outline: true,
-                              onPressed: () async => cubit.changeMode(m),
-                            ),
-                          ),
-                        ),
-                      )
-                      .toList(),
-                );
-              }
-
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: AppMode.values.map((m) {
-                  final active = m == current;
-                  return FilterChip(
-                    label: Text(m.displayLabel),
-                    selected: active,
-                    showCheckmark: false,
-                    selectedColor: Theme.of(context).colorScheme.primary,
-                    labelStyle: TextStyle(
-                      color: active ? Colors.white : null,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    onSelected: (_) async {
-                      if (!active) await cubit.changeMode(m);
-                    },
-                  );
-                }).toList(),
-              );
-            },
-          ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppLayout.spaceSm),
           Text(
-            'Use these controls to jump between client, driver, admin, and ops app versions.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withAlpha(170),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Active: ${current.displayLabel}',
+            'Switch app mode (dev only)',
             style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: AppLayout.spaceSm),
+          Wrap(
+            spacing: AppLayout.spaceSm,
+            runSpacing: AppLayout.spaceSm,
+            children: AppMode.values.map((m) {
+              final active = m == current;
+              return FilterChip(
+                label: Text(m.displayLabel),
+                selected: active,
+                onSelected: (_) {
+                  if (!active) cubit.changeMode(m);
+                },
+              );
+            }).toList(),
           ),
         ],
       ),

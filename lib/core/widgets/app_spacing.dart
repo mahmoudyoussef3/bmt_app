@@ -1,20 +1,31 @@
 import 'package:flutter/widgets.dart';
 
-/// AppSpacing: centralized spacing tokens and helpers to keep consistent gaps.
+import 'package:bmt_app/core/theme/app_layout.dart';
+
+/// Centralized spacing tokens (XS–XXL) and vertical/horizontal gaps.
 class AppSpacing {
   AppSpacing._();
 
-  static const double xs = 6.0;
-  static const double sm = 10.0;
-  static const double md = 16.0;
-  static const double lg = 24.0;
-  static const double xl = 32.0;
+  static const double xs = AppLayout.spaceXs;
+  static const double sm = AppLayout.spaceSm;
+  static const double md = AppLayout.spaceMd;
+  static const double lg = AppLayout.spaceLg;
+  static const double xl = AppLayout.spaceXl;
+  static const double xxl = AppLayout.spaceXxl;
+
+  // Legacy aliases
+  static const double xSmall = xs;
+  static const double small = sm;
+  static const double medium = md;
+  static const double large = lg;
+  static const double xLarge = xl;
 
   static const SizedBox hXs = SizedBox(height: xs);
   static const SizedBox hSm = SizedBox(height: sm);
   static const SizedBox hMd = SizedBox(height: md);
   static const SizedBox hLg = SizedBox(height: lg);
   static const SizedBox hXl = SizedBox(height: xl);
+  static const SizedBox hXxl = SizedBox(height: xxl);
 
   static const SizedBox wXs = SizedBox(width: xs);
   static const SizedBox wSm = SizedBox(width: sm);

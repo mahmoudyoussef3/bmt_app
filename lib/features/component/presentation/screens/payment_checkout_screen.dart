@@ -174,8 +174,12 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                                 ?.copyWith(fontWeight: FontWeight.w800),
                           ),
                           Text(
-                            'Premium payment experience',
-                            style: Theme.of(context).textTheme.bodySmall,
+                            'Secure checkout · encrypted',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: scheme.secondary,
+                                  fontWeight: FontWeight.w600,
+                                ),
                           ),
                         ],
                       ),

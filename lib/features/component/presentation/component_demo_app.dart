@@ -43,23 +43,31 @@ class ComponentDemoApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Mega Transportation',
-      // Force dark theme across the client demo app
+
       theme: AppTheme.darkTheme(),
       darkTheme: AppTheme.darkTheme(),
       themeMode: ThemeMode.dark,
-      home: const WelcomeScreen(),
+
+      // Skip Authentication during UI development
+      home: const DemoShellScreen(),
+
       routes: {
         '/home': (_) => const DemoShellScreen(),
+
+        // Authentication Screens
         AuthRoutes.welcome: (_) => const WelcomeScreen(),
         AuthRoutes.phone: (_) => const PhoneNumberScreen(),
+
         AuthRoutes.otp: (context) {
           final phone = ModalRoute.of(context)?.settings.arguments as String?;
           return OtpVerificationScreen(phoneNumber: phone);
         },
+
         AuthRoutes.registration: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           String? phone;
           String? via;
+
           if (args is Map<String, dynamic>) {
             phone = args['phone'] as String?;
             via = args['via'] as String?;
@@ -67,41 +75,56 @@ class ComponentDemoApp extends StatelessWidget {
             phone = args['phone']?.toString();
             via = args['via']?.toString();
           }
-          return RegistrationScreen(prefilledPhone: phone, viaSocial: via);
+
+          return RegistrationScreen(
+            prefilledPhone: phone,
+            viaSocial: via,
+          );
         },
+
         AuthRoutes.success: (_) => const AuthSuccessScreen(),
+
+        // Booking
         BookingRoutes.search: (context) => SearchTripScreen(
-          initialQuery: BookingSearchQuery.fromArguments(
-            ModalRoute.of(context)?.settings.arguments,
-          ),
-        ),
+              initialQuery: BookingSearchQuery.fromArguments(
+                ModalRoute.of(context)?.settings.arguments,
+              ),
+            ),
+
         BookingRoutes.routeSelection: (_) => const RouteSelectionScreen(),
         BookingRoutes.popularRoutes: (_) => const PopularRoutesScreen(),
         BookingRoutes.mapSelection: (_) => const MapRouteSelectionScreen(),
         BookingRoutes.availableTrips: (_) => const AvailableTripsScreen(),
         BookingRoutes.vehicleListing: (_) => const VehicleListingScreen(),
+
         BookingRoutes.vehicleDetails: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           String? vehicleId;
+
           if (args is Map) {
             vehicleId = args['vehicleId']?.toString();
           }
+
           return VehicleDetailsScreen(vehicleId: vehicleId);
         },
+
         '/daily-booking': (_) => const DailyBookingFlowScreen(),
         '/seat-selection': (_) => const SeatSelectionScreen(),
+
         '/payment-demo': (_) => PaymentCheckoutScreen(
-          checkoutData: PaymentCheckoutData(
-            pickupPoint: 'Banha Station',
-            destination: 'Smart Village',
-            vehicleNumber: 'MB-15-2847',
-            departureTime: '8:40 AM',
-            arrivalTime: '9:20 AM',
-            selectedSeat: '6',
-            driverName: 'Ahmed Mohamed',
-          ),
-        ),
+              checkoutData: PaymentCheckoutData(
+                pickupPoint: 'Banha Station',
+                destination: 'Smart Village',
+                vehicleNumber: 'MB-15-2847',
+                departureTime: '8:40 AM',
+                arrivalTime: '9:20 AM',
+                selectedSeat: '6',
+                driverName: 'Ahmed Mohamed',
+              ),
+            ),
+
         '/subscription': (_) => const SubscriptionScreen(),
+
         '/subscription-confirmation': (_) =>
             const SubscriptionConfirmationScreen(
               pickup: '',
@@ -110,30 +133,42 @@ class ComponentDemoApp extends StatelessWidget {
               planName: 'Monthly',
               price: 'EGP 1,200/month',
             ),
+
+        // Trips
         TripsRoutes.myTrips: (context) => MyTripsScreen(
-          onOpenRoute: (route, [arguments]) => Navigator.of(
-            context,
-          ).pushNamed(route, arguments: arguments),
-        ),
+              onOpenRoute: (route, [arguments]) {
+                Navigator.of(context)
+                    .pushNamed(route, arguments: arguments);
+              },
+            ),
+
         TripsRoutes.tripDetails: (context) {
           final args = ModalRoute.of(context)?.settings.arguments;
           String? tripId;
+
           if (args is Map) {
             tripId = args['tripId']?.toString();
           }
+
           return TripDetailsScreen(tripId: tripId);
         },
+
+        // Other Features
         '/tracking': (_) => const TrackingScreen(),
         '/support': (_) => const SupportCenterScreen(),
         '/communication': (_) => const CommunicationScreen(),
         '/rewards': (_) => const ReferralRewardsScreen(),
         '/loyalty': (_) => const LoyaltyScreen(),
         '/settings': (_) => const SettingsScreen(),
+
         '/profile': (context) => ProfileScreen(
-              onOpenRoute: (route, [arguments]) => Navigator.of(
-                context,
-              ).pushNamed(route, arguments: arguments),
+              onOpenRoute: (route, [arguments]) {
+                Navigator.of(context)
+                    .pushNamed(route, arguments: arguments);
+              },
             ),
+
+        // Other Versions
         '/driver': (_) => const CaptainDashboardScreen(),
         '/admin': (_) => const DashboardWebScreen(),
       },

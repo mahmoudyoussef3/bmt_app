@@ -151,10 +151,16 @@ class _TrackingScreenState extends State<TrackingScreen>
           ),
         ),
         actions: [
+          if (widget.shellMode)
+            IconButton(
+              icon: const Icon(Icons.tune_rounded),
+              tooltip: 'Preview trip states',
+              onPressed: () => _showStatePreviewSheet(context, scheme),
+            ),
           const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 16.0),
+            padding: EdgeInsets.symmetric(horizontal: 8.0),
             child: LiveStatusBadge(),
-          )
+          ),
         ],
         elevation: 0,
         backgroundColor: scheme.surface,
@@ -180,14 +186,54 @@ class _TrackingScreenState extends State<TrackingScreen>
               : _buildMobileLayout(context, scheme),
           ),
 
-          // Floating State Switcher for demo purposes
-          Positioned(
-            left: 16,
-            right: 16,
-            top: 16,
-            child: _buildDemoStateController(scheme),
-          ),
+          if (!widget.shellMode)
+            Positioned(
+              left: 16,
+              right: 16,
+              top: 16,
+              child: _buildDemoStateController(scheme),
+            ),
         ],
+      ),
+    );
+  }
+
+  void _showStatePreviewSheet(BuildContext context, ColorScheme scheme) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Theme.of(context).cardColor,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'Preview trip state',
+                style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _buildStateTab('Waiting', TripState.notStarted, scheme),
+                    _buildStateTab('Heading', TripState.driverOnWay, scheme),
+                    _buildStateTab('Boarding', TripState.boarding, scheme),
+                    _buildStateTab('In route', TripState.inProgress, scheme),
+                    _buildStateTab('Done', TripState.completed, scheme),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -197,7 +243,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     if (_currentState == TripState.notStarted) {
       return ListView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 84, 16, 24),
+        padding: EdgeInsets.fromLTRB(16, widget.shellMode ? 16 : 84, 16, 24),
         children: [
           _buildCountdownCard(scheme),
           const SizedBox(height: 16),
@@ -223,7 +269,7 @@ class _TrackingScreenState extends State<TrackingScreen>
         Expanded(
           flex: 6,
           child: Padding(
-            padding: const EdgeInsets.only(top: 76.0), // space for state switcher
+            padding: EdgeInsets.only(top: widget.shellMode ? 8.0 : 76.0),
             child: _buildMapArea(scheme),
           ),
         ),

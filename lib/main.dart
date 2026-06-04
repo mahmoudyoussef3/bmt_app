@@ -23,7 +23,6 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<AppModeCubit, AppModeState>(
       listener: (context, state) {
-        // navigate to the appropriate entry screen when mode changes (dev-only)
         if (!kDebugMode) return;
         _navKey.currentState?.pushNamedAndRemoveUntil(
           state.mode.routePath,
