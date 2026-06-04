@@ -31,7 +31,8 @@ class ProfileScreen extends StatelessWidget {
               padding: const EdgeInsets.all(AppLayout.spaceLg),
               child: Row(
                 children: [
-                  const AppAvatar(initials: 'AH', radius: 28),
+                  AppAvatar(initials: 'AH', radius: 28,
+                  backgroundColor: scheme.primary,),
                   const SizedBox(width: AppLayout.spaceMd),
                   Expanded(
                     child: Column(
