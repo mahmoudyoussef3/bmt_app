@@ -13,7 +13,7 @@ void main() {
   testWidgets('renders the component demo shell', (tester) async {
     await tester.pumpWidget(const ComponentDemoApp());
 
-    expect(find.text('Good Morning'), findsOneWidget);
-    expect(find.text('Bookings'), findsOneWidget);
+    expect(find.text('Good morning, Ahmed 👋'), findsOneWidget);
+    expect(find.text('Ready for your commute today?'), findsOneWidget);
   });
 }
