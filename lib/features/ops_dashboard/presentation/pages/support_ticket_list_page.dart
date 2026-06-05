@@ -1,56 +1,45 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-import '../../domain/models/support_ticket.dart';
-import '../widgets/app_card.dart';
 import '../widgets/status_chip.dart';
-import '../cubit/support_ticket_cubit.dart';
-import '../cubit/support_ticket_state.dart';
 
-// Helpers
-String _statusLabelFor(TicketStatus s) {
-  switch (s) {
-    case TicketStatus.open:
-      return 'Open';
-    case TicketStatus.inProgress:
-      return 'In Progress';
-    case TicketStatus.resolved:
-      return 'Resolved';
-    case TicketStatus.escalated:
-      return 'Escalated';
-    case TicketStatus.closed:
-      return 'Closed';
-  }
+class _SupportTicketItem {
+  final String id;
+  final String customerName;
+  final String complaintType;
+  final DateTime createdAt;
+  final String priority;
+  String status;
+  String? assignedAgent;
+  final String details;
+  final String? attachmentName;
+
+  _SupportTicketItem({
+    required this.id,
+    required this.customerName,
+    required this.complaintType,
+    required this.createdAt,
+    required this.priority,
+    required this.status,
+    required this.details,
+    this.assignedAgent,
+    this.attachmentName,
+  });
 }
 
-Color _statusColorFor(TicketStatus s) {
-  switch (s) {
-    case TicketStatus.open:
-      return Colors.green;
-    case TicketStatus.inProgress:
-      return Colors.blue;
-    case TicketStatus.resolved:
-      return Colors.grey;
-    case TicketStatus.escalated:
-      return Colors.red;
-    case TicketStatus.closed:
-      return Colors.black54;
+String _arabicDigits(Object value) {
+  const western = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+  const arabic = ['٠', '١', '٢', '٣', '٤', '٥', '٦', '٧', '٨', '٩'];
+  var text = value.toString();
+  for (var i = 0; i < western.length; i++) {
+    text = text.replaceAll(western[i], arabic[i]);
   }
+  return text;
 }
 
-Color _priorityColorFor(TicketPriority p) {
-  switch (p) {
-    case TicketPriority.low:
-      return Colors.grey;
-    case TicketPriority.medium:
-      return Colors.blue;
-    case TicketPriority.high:
-      return Colors.orange;
-    case TicketPriority.critical:
-      return Colors.red;
-  }
+String _complaintNumber(String id) {
+  final digits = id.replaceAll(RegExp('[^0-9]'), '');
+  return _arabicDigits(digits);
 }
 
 class SupportTicketListPage extends StatefulWidget {
@@ -60,1052 +49,755 @@ class SupportTicketListPage extends StatefulWidget {
   State<SupportTicketListPage> createState() => _SupportTicketListPageState();
 }
 
-class _SupportTicketListPageState extends State<SupportTicketListPage> {
-  TicketStatus? _filterStatus;
-  String _search = '';
-  final _searchController = TextEditingController();
-  String? _selectedTicketId;
+class _SupportTicketListPageState extends State<SupportTicketListPage>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+
+  final List<String> _tabs = const [
+    'جديدة',
+    'قيد المراجعة',
+    'تم الحل',
+    'مغلقة',
+  ];
+
+  final List<String> _agents = const [
+    'أحمد محمود',
+    'ندى خالد',
+    'كريم حسن',
+    'سارة علي',
+  ];
+
+  final List<_SupportTicketItem> _tickets = [
+    _SupportTicketItem(
+      id: 'SC-1001',
+      customerName: 'خالد محمود',
+      complaintType: 'مشكلة دفع',
+      createdAt: DateTime(2026, 6, 5, 9, 15),
+      priority: 'عاجل',
+      status: 'جديدة',
+      details: 'تم خصم المبلغ ولم يظهر الحجز في حساب العميل.',
+      attachmentName: 'إيصال التحويل',
+    ),
+    _SupportTicketItem(
+      id: 'SC-1002',
+      customerName: 'رنا يوسف',
+      complaintType: 'تغيير موعد',
+      createdAt: DateTime(2026, 6, 5, 9, 42),
+      priority: 'متوسط',
+      status: 'جديدة',
+      details: 'تحتاج نقل الحجز إلى رحلة لاحقة اليوم.',
+    ),
+    _SupportTicketItem(
+      id: 'SC-1003',
+      customerName: 'طارق محمد',
+      complaintType: 'سائق متأخر',
+      createdAt: DateTime(2026, 6, 5, 8, 30),
+      priority: 'عاجل',
+      status: 'قيد المراجعة',
+      assignedAgent: 'ندى خالد',
+      details: 'العميل ينتظر تحديثاً سريعاً عن مكان السائق.',
+      attachmentName: 'صورة المحادثة',
+    ),
+    _SupportTicketItem(
+      id: 'SC-1004',
+      customerName: 'سارة أحمد',
+      complaintType: 'استرداد مبلغ',
+      createdAt: DateTime(2026, 6, 4, 18, 10),
+      priority: 'متوسط',
+      status: 'قيد المراجعة',
+      assignedAgent: 'أحمد محمود',
+      details: 'طلب استرداد بعد إلغاء رحلة من طرف التشغيل.',
+    ),
+    _SupportTicketItem(
+      id: 'SC-1005',
+      customerName: 'عمر فاروق',
+      complaintType: 'استفسار اشتراك',
+      createdAt: DateTime(2026, 6, 4, 14, 25),
+      priority: 'منخفض',
+      status: 'تم الحل',
+      assignedAgent: 'كريم حسن',
+      details: 'تم توضيح تاريخ تجديد الاشتراك ورصيد المحفظة.',
+    ),
+    _SupportTicketItem(
+      id: 'SC-1006',
+      customerName: 'ياسمين علي',
+      complaintType: 'مقعد غير صحيح',
+      createdAt: DateTime(2026, 6, 3, 11, 5),
+      priority: 'منخفض',
+      status: 'مغلقة',
+      assignedAgent: 'سارة علي',
+      details: 'تم تصحيح المقعد وإغلاق الشكوى بعد تأكيد العميل.',
+      attachmentName: 'تذكرة الحجز',
+    ),
+  ];
 
   @override
   void initState() {
     super.initState();
-    context.read<SupportTicketCubit>().loadTicketsFiltered();
+    _tabController = TabController(length: _tabs.length, vsync: this);
   }
 
   @override
   void dispose() {
-    _searchController.dispose();
+    _tabController.dispose();
     super.dispose();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final hasActiveFilters = _filterStatus != null || _search.trim().isNotEmpty;
+  List<_SupportTicketItem> _ticketsFor(String status) {
+    return _tickets.where((ticket) => ticket.status == status).toList();
+  }
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Support Tickets'),
-        actions: [
-          IconButton(
-            onPressed: () {
-              context.read<SupportTicketCubit>().loadTicketsFiltered(
-                status: _filterStatus,
-                search: _search,
-              );
-            },
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Refresh',
-          ),
-          if (hasActiveFilters)
-            IconButton(
-              onPressed: _resetFilters,
-              icon: const Icon(Icons.filter_alt_off_rounded),
-              tooltip: 'Clear filters',
-            ),
-        ],
-      ),
-      body: BlocBuilder<SupportTicketCubit, SupportTicketState>(
-        builder: (context, state) {
-          if (state is SupportTicketLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
-          if (state is SupportTicketError) {
-            return _buildErrorState(state.message);
-          }
-          final tickets = (state as SupportTicketLoaded).tickets;
-          final openCount = tickets
-              .where((t) => t.status == TicketStatus.open)
-              .length;
-          final inProgressCount = tickets
-              .where((t) => t.status == TicketStatus.inProgress)
-              .length;
-          final escalatedCount = tickets
-              .where((t) => t.status == TicketStatus.escalated)
-              .length;
+  Color _priorityColor(String priority) {
+    switch (priority) {
+      case 'عاجل':
+        return Colors.red.shade400;
+      case 'متوسط':
+        return Colors.orange.shade300;
+      case 'منخفض':
+        return Colors.green.shade400;
+      default:
+        return Colors.grey.shade400;
+    }
+  }
 
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              final w = constraints.maxWidth;
-              if (w >= 900) {
-                // master-detail two-pane
-                final leftWidth = math
-                    .max(320, math.min(520, (w * 0.36)))
-                    .toDouble();
-                return Row(
-                  children: [
-                    SizedBox(
-                      width: leftWidth,
-                      child: Padding(
-                        padding: const EdgeInsets.all(8),
-                        child: Column(
-                          children: [
-                            _buildPageSummary(
-                              total: tickets.length,
-                              open: openCount,
-                              inProgress: inProgressCount,
-                              escalated: escalatedCount,
-                            ),
-                            const SizedBox(height: AppSpacing.small),
-                            Padding(
-                              padding: const EdgeInsets.all(8.0),
-                              child: _buildFilterControls(isNarrow: false),
-                            ),
-                            Expanded(
-                              child: tickets.isEmpty
-                                  ? _buildEmptyState()
-                                  : ListView.separated(
-                                      itemCount: tickets.length,
-                                      separatorBuilder: (_, __) =>
-                                          const Divider(height: 1),
-                                      itemBuilder: (context, i) =>
-                                          _buildRow(tickets[i]),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const VerticalDivider(width: 1),
-                    Expanded(
-                      child: _selectedTicketId == null
-                          ? const Center(child: Text('Select a ticket'))
-                          : _SupportTicketDetailPanel(
-                              ticketId: _selectedTicketId!,
-                            ),
-                    ),
-                  ],
-                );
-              }
+  Color _statusColor(String status) {
+    switch (status) {
+      case 'جديدة':
+        return Colors.cyan.shade300;
+      case 'قيد المراجعة':
+        return Colors.orange.shade300;
+      case 'تم الحل':
+        return Colors.green.shade400;
+      case 'مغلقة':
+        return Colors.grey.shade400;
+      default:
+        return Colors.blueGrey.shade300;
+    }
+  }
 
-              // narrow single-column
-              return Column(
-                children: [
-                  _buildPageSummary(
-                    total: tickets.length,
-                    open: openCount,
-                    inProgress: inProgressCount,
-                    escalated: escalatedCount,
-                  ),
-                  const SizedBox(height: AppSpacing.small),
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: _buildFilterControls(isNarrow: true),
-                  ),
-                  Expanded(
-                    child: tickets.isEmpty
-                        ? _buildEmptyState()
-                        : ListView.separated(
-                            itemCount: tickets.length,
-                            separatorBuilder: (_, __) =>
-                                const Divider(height: 1),
-                            itemBuilder: (context, i) => _buildRow(tickets[i]),
-                          ),
-                  ),
-                ],
-              );
-            },
-          );
-        },
+  String _formatDate(DateTime date) {
+    final day = _arabicDigits(date.day.toString().padLeft(2, '0'));
+    final month = _arabicDigits(date.month.toString().padLeft(2, '0'));
+    final hour = _arabicDigits(date.hour.toString().padLeft(2, '0'));
+    final minute = _arabicDigits(date.minute.toString().padLeft(2, '0'));
+    return '$day/$month - $hour:$minute';
+  }
+
+  void _showActionToast(String label) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Directionality(
+          textDirection: TextDirection.rtl,
+          child: Text(label),
+        ),
+        behavior: SnackBarBehavior.floating,
       ),
     );
   }
 
-  Widget _buildSearch() {
-    return TextField(
-      controller: _searchController,
-      decoration: InputDecoration(
-        prefixIcon: const Icon(Icons.search),
-        hintText: 'Search by id, customer, or subject',
-        filled: true,
-        fillColor: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.25),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-          borderSide: BorderSide.none,
-        ),
-        contentPadding: const EdgeInsets.symmetric(vertical: 12),
-        suffixIcon: _search.isEmpty
-            ? null
-            : IconButton(
-                icon: const Icon(Icons.close_rounded),
-                onPressed: () {
-                  _searchController.clear();
-                  _search = '';
-                  context.read<SupportTicketCubit>().loadTicketsFiltered(
-                    status: _filterStatus,
-                    search: _search,
+  void _assignTicket(_SupportTicketItem ticket) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        final scheme = Theme.of(context).colorScheme;
+
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: Text('تعيين الشكوى ${_complaintNumber(ticket.id)}'),
+            content: SizedBox(
+              width: double.maxFinite,
+              child: ListView.separated(
+                shrinkWrap: true,
+                itemCount: _agents.length,
+                separatorBuilder: (context, index) => const Divider(height: 1),
+                itemBuilder: (context, index) {
+                  final agent = _agents[index];
+                  final isCurrent = ticket.assignedAgent == agent;
+
+                  return ListTile(
+                    leading: Icon(
+                      Icons.support_agent_rounded,
+                      color: isCurrent
+                          ? scheme.primary
+                          : scheme.onSurface.withValues(alpha: 0.55),
+                    ),
+                    title: Text(agent),
+                    trailing: isCurrent
+                        ? Icon(Icons.check_rounded, color: scheme.primary)
+                        : null,
+                    onTap: () {
+                      setState(() {
+                        ticket.assignedAgent = agent;
+                        if (ticket.status == 'جديدة') {
+                          ticket.status = 'قيد المراجعة';
+                          _tabController.index = 1;
+                        }
+                      });
+                      Navigator.pop(context);
+                      _showActionToast('تم تعيين الشكوى إلى $agent');
+                    },
                   );
-                  setState(() {});
                 },
               ),
-      ),
-      onChanged: (v) {
-        _search = v;
-        setState(() {});
-        _debouncedSearch();
+            ),
+          ),
+        );
       },
     );
   }
 
-  Widget _buildFilterControls({required bool isNarrow}) {
-    if (isNarrow) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildSearch(),
-          const SizedBox(height: AppSpacing.small),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: _buildStatusFilters(),
-          ),
-        ],
-      );
-    }
+  void _replyToTicket(_SupportTicketItem ticket) {
+    final replyController = TextEditingController();
 
-    return Row(
-      children: [
-        Expanded(child: _buildSearch()),
-        const SizedBox(width: AppSpacing.small),
-        Flexible(
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: _buildStatusFilters(),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildPageSummary({
-    required int total,
-    required int open,
-    required int inProgress,
-    required int escalated,
-  }) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Ticket Operations',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: AppSpacing.xSmall),
-          Text(
-            'Track incoming load, active work, and urgent escalations.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.72),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.small),
-          Wrap(
-            spacing: AppSpacing.small,
-            runSpacing: AppSpacing.small,
-            children: [
-              _summaryPill('Total', total.toString(), Colors.blueGrey),
-              _summaryPill('Open', open.toString(), Colors.green),
-              _summaryPill('In Progress', inProgress.toString(), Colors.blue),
-              _summaryPill('Escalated', escalated.toString(), Colors.red),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _summaryPill(String label, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.14),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      ),
-      child: Text(
-        '$label: $value',
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
-  }
-
-  void _debouncedSearch() {
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (_searchController.text == _search)
-        context.read<SupportTicketCubit>().loadTicketsFiltered(
-          status: _filterStatus,
-          search: _search,
-        );
-    });
-  }
-
-  Widget _buildStatusFilters() {
-    return Wrap(
-      spacing: 6,
-      children: TicketStatus.values.map((s) {
-        final selected = s == _filterStatus;
-        return ChoiceChip(
-          label: Text(_statusLabelFor(s)),
-          selected: selected,
-          onSelected: (sel) {
-            setState(() {
-              _filterStatus = sel ? s : null;
-            });
-            context.read<SupportTicketCubit>().loadTicketsFiltered(
-              status: _filterStatus,
-              search: _search,
-            );
-          },
-          backgroundColor: _statusColorFor(s).withOpacity(0.15),
-          selectedColor: _statusColorFor(s),
-          labelStyle: TextStyle(
-            color: selected ? Colors.white : _statusColorFor(s),
-          ),
-        );
-      }).toList(),
-    );
-  }
-
-  Widget _buildRow(SupportTicket t) {
-    final scheme = Theme.of(context).colorScheme;
-    final isSelected = _selectedTicketId == t.id;
-    final createdAtText = _formatTicketDate(t.createdAt);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
-      child: Material(
-        color: isSelected
-            ? scheme.primaryContainer.withOpacity(0.34)
-            : scheme.surface,
-        elevation: AppTokens.surfaceElevation,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-          side: BorderSide(
-            color: isSelected
-                ? scheme.primary.withOpacity(0.6)
-                : scheme.outline.withOpacity(0.12),
-          ),
-        ),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-          onTap: () {
-            final w = MediaQuery.of(context).size.width;
-            if (w >= 900) {
-              setState(() => _selectedTicketId = t.id);
-            } else {
-              final cubit = context.read<SupportTicketCubit>();
-              Navigator.of(context).push(
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider.value(
-                    value: cubit,
-                    child: SupportTicketDetailPage(ticketId: t.id),
-                  ),
-                ),
-              );
-            }
-          },
-          child: Padding(
-            padding: AppSpacing.card,
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: _statusColorFor(t.status),
-                    borderRadius: BorderRadius.circular(99),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.small),
-                CircleAvatar(
-                  radius: 18,
-                  backgroundColor: scheme.primaryContainer,
-                  child: Text(
-                    t.customerId.length >= 2
-                        ? t.customerId.substring(0, 2)
-                        : t.customerId,
-                    style: TextStyle(
-                      color: scheme.onPrimaryContainer,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        t.subject,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xSmall),
-                      Text(
-                        'Customer: ${t.customerId} • $createdAtText',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.7),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.small),
-                Flexible(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      StatusChip(
-                        label: _statusLabelFor(t.status),
-                        color: _statusColorFor(t.status),
-                      ),
-                      const SizedBox(height: 6),
-                      _priorityBadge(t.priority),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _priorityBadge(TicketPriority p) {
-    final c = _priorityColorFor(p);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: c.withOpacity(0.12),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      ),
-      child: Text(
-        p.name.toUpperCase(),
-        style: TextStyle(color: c, fontWeight: FontWeight.bold, fontSize: 12),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.xLarge),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.inbox_rounded,
-              size: 44,
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.42),
-            ),
-            const SizedBox(height: AppSpacing.small),
-            Text(
-              'No Tickets Found',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: AppSpacing.xSmall),
-            Text(
-              'Try adjusting filters or search terms to find matching tickets.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withOpacity(0.72),
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: Text('الرد على الشكوى ${_complaintNumber(ticket.id)}'),
+            content: TextField(
+              controller: replyController,
+              minLines: 4,
+              maxLines: 6,
+              textDirection: TextDirection.rtl,
+              decoration: const InputDecoration(
+                labelText: 'نص الرد',
+                alignLabelWithHint: true,
               ),
             ),
-          ],
-        ),
-      ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _showActionToast(
+                    'تم إرسال الرد للعميل ${ticket.customerName}',
+                  );
+                },
+                child: const Text('إرسال الرد'),
+              ),
+            ],
+          ),
+        );
+      },
+    ).whenComplete(replyController.dispose);
+  }
+
+  void _closeTicket(_SupportTicketItem ticket) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: Text('إغلاق الشكوى ${_complaintNumber(ticket.id)}'),
+            content: const Text('سيتم نقل الشكوى إلى تبويب مغلقة.'),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('تراجع'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  setState(() {
+                    ticket.status = 'مغلقة';
+                    _tabController.index = 3;
+                  });
+                  Navigator.pop(context);
+                  _showActionToast('تم إغلاق الشكوى');
+                },
+                child: const Text('إغلاق الشكوى'),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildErrorState(String message) {
-    return Center(
-      child: AppCard(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline_rounded, color: Colors.redAccent),
-            const SizedBox(height: AppSpacing.small),
-            Text(
-              'Unable to load tickets',
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: AppSpacing.xSmall),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: AppSpacing.small),
-            ElevatedButton.icon(
-              onPressed: () {
-                context.read<SupportTicketCubit>().loadTicketsFiltered(
-                  status: _filterStatus,
-                  search: _search,
-                );
-              },
+  @override
+  Widget build(BuildContext context) {
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('مركز الدعم'),
+          centerTitle: true,
+          actions: [
+            IconButton(
+              onPressed: () => _showActionToast('تم تحديث قائمة الشكاوى'),
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
+              tooltip: 'تحديث',
             ),
           ],
+          bottom: TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabs: _tabs.map((status) {
+              final count = _ticketsFor(status).length;
+              return Tab(text: '$status (${_arabicDigits(count)})');
+            }).toList(),
+          ),
         ),
-      ),
-    );
-  }
-
-  void _resetFilters() {
-    setState(() {
-      _filterStatus = null;
-      _search = '';
-      _searchController.clear();
-    });
-    context.read<SupportTicketCubit>().loadTicketsFiltered();
-  }
-
-  String _formatTicketDate(DateTime date) {
-    final d = date.toLocal();
-    String two(int n) => n.toString().padLeft(2, '0');
-    return '${two(d.day)}/${two(d.month)} ${two(d.hour)}:${two(d.minute)}';
-  }
-}
-
-class _SupportTicketDetailPanel extends StatefulWidget {
-  final String ticketId;
-  const _SupportTicketDetailPanel({required this.ticketId});
-
-  @override
-  State<_SupportTicketDetailPanel> createState() =>
-      _SupportTicketDetailPanelState();
-}
-
-class _SupportTicketDetailPanelState extends State<_SupportTicketDetailPanel> {
-  String? _selectedAgent;
-  final _noteController = TextEditingController();
-
-  @override
-  void dispose() {
-    _noteController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cubit = context.read<SupportTicketCubit>();
-    final state = cubit.state;
-    SupportTicket? ticket;
-    if (state is SupportTicketLoaded) {
-      ticket = state.tickets.firstWhere(
-        (t) => t.id == widget.ticketId,
-        orElse: () => SupportTicket(
-          id: widget.ticketId,
-          customerId: 'unknown',
-          subject: 'Unknown',
-          description: '',
-        ),
-      );
-    }
-
-    if (ticket == null) return const Center(child: Text('Ticket not loaded'));
-    final t = ticket;
-
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: _TicketDetailContent(
-        ticket: t,
-        selectedAgent: _selectedAgent,
-        onAgentChanged: (v) => setState(() => _selectedAgent = v),
-        statusActions: _buildStatusActions(t, cubit),
-        noteController: _noteController,
-        onAssign: () async {
-          if (_selectedAgent != null) {
-            await cubit.assignAgent(t.id, _selectedAgent!);
-            if (mounted) setState(() {});
-          }
-        },
-        onAddNote: () async {
-          final text = _noteController.text.trim();
-          if (text.isNotEmpty) {
-            await cubit.addNote(
-              t.id,
-              _selectedAgent ?? 'AGENT-UNASSIGNED',
-              text,
+        body: TabBarView(
+          controller: _tabController,
+          children: _tabs.map((status) {
+            final tickets = _ticketsFor(status);
+            return _TicketStatusList(
+              tickets: tickets,
+              statusColor: _statusColor(status),
+              priorityColor: _priorityColor,
+              formatDate: _formatDate,
+              onAssign: _assignTicket,
+              onReply: _replyToTicket,
+              onClose: _closeTicket,
             );
-            _noteController.clear();
-            if (mounted) setState(() {});
-          }
-        },
-      ),
-    );
-  }
-
-  List<Widget> _buildStatusActions(
-    SupportTicket ticket,
-    SupportTicketCubit cubit,
-  ) {
-    final actions = <Widget>[];
-    if (ticket.status == TicketStatus.open) {
-      actions.add(
-        ElevatedButton(
-          onPressed: () =>
-              cubit.changeStatus(ticket.id, TicketStatus.inProgress),
-          child: const Text('Start'),
-        ),
-      );
-      actions.add(
-        TextButton(
-          onPressed: () =>
-              cubit.changeStatus(ticket.id, TicketStatus.escalated),
-          child: const Text('Escalate'),
-        ),
-      );
-    } else if (ticket.status == TicketStatus.inProgress) {
-      actions.add(
-        ElevatedButton(
-          onPressed: () => cubit.changeStatus(ticket.id, TicketStatus.resolved),
-          child: const Text('Resolve'),
-        ),
-      );
-      actions.add(
-        TextButton(
-          onPressed: () =>
-              cubit.changeStatus(ticket.id, TicketStatus.escalated),
-          child: const Text('Escalate'),
-        ),
-      );
-    } else if (ticket.status == TicketStatus.resolved) {
-      actions.add(
-        TextButton(
-          onPressed: () => cubit.changeStatus(ticket.id, TicketStatus.closed),
-          child: const Text('Close'),
-        ),
-      );
-    } else if (ticket.status == TicketStatus.escalated) {
-      actions.add(
-        ElevatedButton(
-          onPressed: () =>
-              cubit.changeStatus(ticket.id, TicketStatus.inProgress),
-          child: const Text('Take Ownership'),
-        ),
-      );
-    }
-    return actions;
-  }
-}
-
-class SupportTicketDetailPage extends StatefulWidget {
-  final String ticketId;
-  const SupportTicketDetailPage({required this.ticketId, super.key});
-
-  @override
-  State<SupportTicketDetailPage> createState() =>
-      _SupportTicketDetailPageState();
-}
-
-class _SupportTicketDetailPageState extends State<SupportTicketDetailPage> {
-  String? _selectedAgent;
-  final _noteController = TextEditingController();
-
-  @override
-  void dispose() {
-    _noteController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cubit = context.read<SupportTicketCubit>();
-    final state = cubit.state;
-    SupportTicket? ticket;
-    if (state is SupportTicketLoaded) {
-      ticket = state.tickets.firstWhere(
-        (t) => t.id == widget.ticketId,
-        orElse: () => SupportTicket(
-          id: widget.ticketId,
-          customerId: 'unknown',
-          subject: 'Unknown',
-          description: '',
-        ),
-      );
-    }
-
-    if (ticket == null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Ticket')),
-        body: const Padding(
-          padding: EdgeInsets.all(16.0),
-          child: Center(child: Text('Ticket not loaded')),
-        ),
-      );
-    }
-
-    final t = ticket;
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Ticket')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: _TicketDetailContent(
-          ticket: t,
-          selectedAgent: _selectedAgent,
-          onAgentChanged: (v) => setState(() => _selectedAgent = v),
-          statusActions: _buildStatusActions(t, cubit),
-          noteController: _noteController,
-          onAssign: () async {
-            if (_selectedAgent != null) {
-              await cubit.assignAgent(t.id, _selectedAgent!);
-              if (mounted) setState(() {});
-            }
-          },
-          onAddNote: () async {
-            final text = _noteController.text.trim();
-            if (text.isNotEmpty) {
-              await cubit.addNote(
-                t.id,
-                _selectedAgent ?? 'AGENT-UNASSIGNED',
-                text,
-              );
-              _noteController.clear();
-              if (mounted) setState(() {});
-            }
-          },
+          }).toList(),
         ),
       ),
     );
   }
-
-  List<Widget> _buildStatusActions(
-    SupportTicket ticket,
-    SupportTicketCubit cubit,
-  ) {
-    final actions = <Widget>[];
-    if (ticket.status == TicketStatus.open) {
-      actions.add(
-        ElevatedButton(
-          onPressed: () =>
-              cubit.changeStatus(ticket.id, TicketStatus.inProgress),
-          child: const Text('Start'),
-        ),
-      );
-      actions.add(
-        TextButton(
-          onPressed: () =>
-              cubit.changeStatus(ticket.id, TicketStatus.escalated),
-          child: const Text('Escalate'),
-        ),
-      );
-    } else if (ticket.status == TicketStatus.inProgress) {
-      actions.add(
-        ElevatedButton(
-          onPressed: () => cubit.changeStatus(ticket.id, TicketStatus.resolved),
-          child: const Text('Resolve'),
-        ),
-      );
-      actions.add(
-        TextButton(
-          onPressed: () =>
-              cubit.changeStatus(ticket.id, TicketStatus.escalated),
-          child: const Text('Escalate'),
-        ),
-      );
-    } else if (ticket.status == TicketStatus.resolved) {
-      actions.add(
-        TextButton(
-          onPressed: () => cubit.changeStatus(ticket.id, TicketStatus.closed),
-          child: const Text('Close'),
-        ),
-      );
-    } else if (ticket.status == TicketStatus.escalated) {
-      actions.add(
-        ElevatedButton(
-          onPressed: () =>
-              cubit.changeStatus(ticket.id, TicketStatus.inProgress),
-          child: const Text('Take Ownership'),
-        ),
-      );
-    }
-    return actions;
-  }
 }
 
-class _TicketDetailContent extends StatelessWidget {
-  final SupportTicket ticket;
-  final String? selectedAgent;
-  final ValueChanged<String?> onAgentChanged;
-  final List<Widget> statusActions;
-  final TextEditingController noteController;
-  final Future<void> Function() onAssign;
-  final Future<void> Function() onAddNote;
+class _TicketStatusList extends StatelessWidget {
+  final List<_SupportTicketItem> tickets;
+  final Color statusColor;
+  final Color Function(String priority) priorityColor;
+  final String Function(DateTime date) formatDate;
+  final void Function(_SupportTicketItem ticket) onAssign;
+  final void Function(_SupportTicketItem ticket) onReply;
+  final void Function(_SupportTicketItem ticket) onClose;
 
-  const _TicketDetailContent({
-    required this.ticket,
-    required this.selectedAgent,
-    required this.onAgentChanged,
-    required this.statusActions,
-    required this.noteController,
+  const _TicketStatusList({
+    required this.tickets,
+    required this.statusColor,
+    required this.priorityColor,
+    required this.formatDate,
     required this.onAssign,
-    required this.onAddNote,
+    required this.onReply,
+    required this.onClose,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final agents = const ['AGENT-1', 'AGENT-2', 'AGENT-3'];
-    final priorityColor = _priorityColorFor(ticket.priority);
 
-    return Column(
-      children: [
-        AppCard(
-          child: Column(
+    if (tickets.isEmpty) {
+      return Center(
+        child: Text(
+          'لا توجد شكاوى في هذا التبويب',
+          style: TextStyle(
+            color: scheme.onSurface.withValues(alpha: 0.62),
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isWide = constraints.maxWidth >= 900;
+
+        return ListView.separated(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.symmetric(
+            horizontal: isWide ? AppSpacing.xLarge : AppSpacing.medium,
+            vertical: AppSpacing.medium,
+          ),
+          itemCount: tickets.length,
+          separatorBuilder: (context, index) =>
+              const SizedBox(height: AppSpacing.medium),
+          itemBuilder: (context, index) {
+            return _TicketCard(
+              ticket: tickets[index],
+              statusColor: statusColor,
+              priorityColor: priorityColor(tickets[index].priority),
+              createdAtText: formatDate(tickets[index].createdAt),
+              onAssign: () => onAssign(tickets[index]),
+              onReply: () => onReply(tickets[index]),
+              onClose: tickets[index].status == 'مغلقة'
+                  ? null
+                  : () => onClose(tickets[index]),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+class _TicketCard extends StatelessWidget {
+  final _SupportTicketItem ticket;
+  final Color statusColor;
+  final Color priorityColor;
+  final String createdAtText;
+  final VoidCallback onAssign;
+  final VoidCallback onReply;
+  final VoidCallback? onClose;
+
+  const _TicketCard({
+    required this.ticket,
+    required this.statusColor,
+    required this.priorityColor,
+    required this.createdAtText,
+    required this.onAssign,
+    required this.onReply,
+    required this.onClose,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Card(
+      margin: EdgeInsets.zero,
+      elevation: AppTokens.cardElevation,
+      color: scheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        side: BorderSide(color: scheme.outline.withValues(alpha: 0.12)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.medium),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 4,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: statusColor,
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.small),
+                CircleAvatar(
+                  radius: 21,
+                  backgroundColor: scheme.primary.withValues(alpha: 0.12),
+                  child: Text(
+                    ticket.customerName[0],
+                    style: TextStyle(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.small),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        ticket.customerName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        ticket.complaintType,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: scheme.onSurface.withValues(alpha: 0.62),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.small),
+                _PriorityBadge(label: ticket.priority, color: priorityColor),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.medium),
+            Wrap(
+              spacing: AppSpacing.small,
+              runSpacing: AppSpacing.small,
+              children: [
+                _TicketFact(
+                  icon: Icons.confirmation_number_rounded,
+                  label: 'رقم الشكوى',
+                  value: _complaintNumber(ticket.id),
+                ),
+                _TicketFact(
+                  icon: Icons.person_rounded,
+                  label: 'اسم العميل',
+                  value: ticket.customerName,
+                ),
+                _TicketFact(
+                  icon: Icons.category_rounded,
+                  label: 'نوع الشكوى',
+                  value: ticket.complaintType,
+                ),
+                _TicketFact(
+                  icon: Icons.schedule_rounded,
+                  label: 'تاريخ الإنشاء',
+                  value: createdAtText,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.medium),
+            Text(
+              ticket.details,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: scheme.onSurface.withValues(alpha: 0.76),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            if (ticket.attachmentName != null) ...[
+              const SizedBox(height: AppSpacing.medium),
+              _AttachmentPreview(name: ticket.attachmentName!),
+            ],
+            const SizedBox(height: AppSpacing.medium),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    ticket.assignedAgent == null
+                        ? 'غير معينة لموظف'
+                        : 'الموظف: ${ticket.assignedAgent}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: scheme.onSurface.withValues(alpha: 0.58),
+                      fontWeight: FontWeight.w700,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                StatusChip(label: ticket.status, color: statusColor),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.medium),
+            Wrap(
+              spacing: AppSpacing.small,
+              runSpacing: AppSpacing.small,
+              children: [
+                _TicketActionButton(
+                  label: 'تعيين لموظف',
+                  icon: Icons.assignment_ind_rounded,
+                  onPressed: onAssign,
+                  isPrimary: true,
+                ),
+                _TicketActionButton(
+                  label: 'الرد',
+                  icon: Icons.reply_rounded,
+                  onPressed: onReply,
+                ),
+                _TicketActionButton(
+                  label: 'إغلاق الشكوى',
+                  icon: Icons.lock_rounded,
+                  onPressed: onClose,
+                  isDestructive: true,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PriorityBadge extends StatelessWidget {
+  final String label;
+  final Color color;
+
+  const _PriorityBadge({required this.label, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: color.withValues(alpha: 0.28)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+        ),
+      ),
+    );
+  }
+}
+
+class _TicketFact extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _TicketFact({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      constraints: const BoxConstraints(minWidth: 155),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.small,
+        vertical: AppSpacing.small,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withValues(alpha: 0.28),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: scheme.outline.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: scheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            '$label: ',
+            style: TextStyle(
+              color: scheme.onSurface.withValues(alpha: 0.56),
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AttachmentPreview extends StatelessWidget {
+  final String name;
+
+  const _AttachmentPreview({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.small),
+      decoration: BoxDecoration(
+        color: scheme.primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: scheme.primary.withValues(alpha: 0.18)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 42,
+            height: 34,
+            decoration: BoxDecoration(
+              color: scheme.primary.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Icon(
+              Icons.attach_file_rounded,
+              size: 18,
+              color: scheme.primary,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.small),
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                ticket.subject,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              const Text(
+                'مرفق',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700),
               ),
-              const SizedBox(height: AppSpacing.small),
-              Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: [
-                  StatusChip(
-                    label: _statusLabelFor(ticket.status),
-                    color: _statusColorFor(ticket.status),
-                  ),
-                  Container(
-                    padding: AppSpacing.chip,
-                    decoration: BoxDecoration(
-                      color: priorityColor.withOpacity(0.12),
-                      borderRadius: BorderRadius.circular(
-                        AppTokens.radiusSmall,
-                      ),
-                    ),
-                    child: Text(
-                      'Priority: ${ticket.priority.name.toUpperCase()}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: priorityColor,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.small),
               Text(
-                'Ticket ID: ${ticket.id}  •  Customer: ${ticket.customerId}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurface.withOpacity(0.72),
+                name,
+                style: TextStyle(
+                  color: scheme.onSurface.withValues(alpha: 0.72),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        Expanded(
-          child: ListView(
-            children: [
-              AppCard(
-                title: 'Description',
-                child: Text(
-                  ticket.description.isEmpty
-                      ? 'No description provided.'
-                      : ticket.description,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              AppCard(
-                title: 'Workflow',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        final narrow = constraints.maxWidth < 520;
-                        if (narrow) {
-                          return Column(
-                            children: [
-                              DropdownButtonFormField<String>(
-                                value: selectedAgent,
-                                hint: const Text('Assign agent'),
-                                isExpanded: true,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: scheme.surfaceContainerHighest
-                                      .withOpacity(0.25),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppTokens.radiusSmall,
-                                    ),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                items: agents
-                                    .map(
-                                      (a) => DropdownMenuItem(
-                                        value: a,
-                                        child: Text(a),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: onAgentChanged,
-                              ),
-                              const SizedBox(height: AppSpacing.small),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton.icon(
-                                  onPressed: onAssign,
-                                  icon: const Icon(Icons.person_add_alt_1),
-                                  label: const Text('Assign'),
-                                ),
-                              ),
-                            ],
-                          );
-                        }
+        ],
+      ),
+    );
+  }
+}
 
-                        return Row(
-                          children: [
-                            Expanded(
-                              child: DropdownButtonFormField<String>(
-                                value: selectedAgent,
-                                hint: const Text('Assign agent'),
-                                isExpanded: true,
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: scheme.surfaceContainerHighest
-                                      .withOpacity(0.25),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(
-                                      AppTokens.radiusSmall,
-                                    ),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                                items: agents
-                                    .map(
-                                      (a) => DropdownMenuItem(
-                                        value: a,
-                                        child: Text(a),
-                                      ),
-                                    )
-                                    .toList(),
-                                onChanged: onAgentChanged,
-                              ),
-                            ),
-                            const SizedBox(width: AppSpacing.small),
-                            ElevatedButton.icon(
-                              onPressed: onAssign,
-                              icon: const Icon(Icons.person_add_alt_1),
-                              label: const Text('Assign'),
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                    const SizedBox(height: AppSpacing.small),
-                    Wrap(
-                      spacing: AppSpacing.small,
-                      runSpacing: AppSpacing.small,
-                      children: statusActions,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              AppCard(
-                title: 'Internal Notes',
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    if (ticket.internalNotes.isEmpty)
-                      Text(
-                        'No notes added yet.',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurface.withOpacity(0.72),
-                        ),
-                      ),
-                    ...ticket.internalNotes.map(
-                      (n) => Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSpacing.small,
-                        ),
-                        child: Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(AppSpacing.small),
-                          decoration: BoxDecoration(
-                            color: scheme.surfaceContainerHighest.withOpacity(
-                              0.2,
-                            ),
-                            borderRadius: BorderRadius.circular(
-                              AppTokens.radiusSmall,
-                            ),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(n.note),
-                              const SizedBox(height: AppSpacing.xSmall),
-                              Text(
-                                'By ${n.agentId} • ${n.createdAt.toLocal()}',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: scheme.onSurface.withOpacity(0.68),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.small),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: noteController,
-                            decoration: InputDecoration(
-                              hintText: 'Add internal note',
-                              filled: true,
-                              fillColor: scheme.surfaceContainerHighest
-                                  .withOpacity(0.25),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(
-                                  AppTokens.radiusSmall,
-                                ),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.small),
-                        ElevatedButton.icon(
-                          onPressed: onAddNote,
-                          icon: const Icon(Icons.add_comment_outlined),
-                          label: const Text('Add'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+class _TicketActionButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback? onPressed;
+  final bool isPrimary;
+  final bool isDestructive;
+
+  const _TicketActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.isPrimary = false,
+    this.isDestructive = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = isDestructive ? scheme.error : scheme.primary;
+
+    if (isPrimary) {
+      return ElevatedButton.icon(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 17),
+        label: Text(label),
+        style: ElevatedButton.styleFrom(
+          minimumSize: const Size(0, 40),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
           ),
         ),
-      ],
+      );
+    }
+
+    return OutlinedButton.icon(
+      onPressed: onPressed,
+      icon: Icon(icon, size: 17),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(
+        minimumSize: const Size(0, 40),
+        foregroundColor: color,
+        disabledForegroundColor: scheme.onSurface.withValues(alpha: 0.32),
+        side: BorderSide(
+          color: onPressed == null
+              ? scheme.outline.withValues(alpha: 0.18)
+              : color.withValues(alpha: 0.38),
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        ),
+      ),
     );
   }
 }

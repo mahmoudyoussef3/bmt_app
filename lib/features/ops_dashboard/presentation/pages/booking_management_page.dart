@@ -30,7 +30,9 @@ class _BookingItem {
 }
 
 class BookingManagementPage extends StatefulWidget {
-  const BookingManagementPage({super.key});
+  final bool showBackButton;
+
+  const BookingManagementPage({this.showBackButton = true, super.key});
 
   @override
   State<BookingManagementPage> createState() => _BookingManagementPageState();
@@ -460,10 +462,12 @@ class _BookingManagementPageState extends State<BookingManagementPage> {
         appBar: AppBar(
           title: const Text('إدارة الحجوزات'),
           centerTitle: true,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
-            onPressed: () => Navigator.pop(context),
-          ),
+          leading: widget.showBackButton
+              ? IconButton(
+                  icon: const Icon(Icons.arrow_back_ios_new_rounded, size: 20),
+                  onPressed: () => Navigator.pop(context),
+                )
+              : null,
         ),
         floatingActionButton: FloatingActionButton.extended(
           backgroundColor: scheme.primary,

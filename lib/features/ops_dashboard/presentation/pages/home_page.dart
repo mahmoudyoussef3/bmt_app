@@ -1,162 +1,95 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
-import '../widgets/app_card.dart';
-import '../widgets/status_chip.dart';
+
 import '../cubit/kpi_cubit.dart';
+import '../widgets/app_card.dart';
 import 'booking_management_page.dart';
+import 'customer_management_page.dart';
 import 'trip_operations_page.dart';
 
-// Private helper models for the clean mock datasets
-class _KpiMock {
-  final String label;
-  final String value;
-  final IconData icon;
-  final Color color;
-  const _KpiMock({
-    required this.label,
-    required this.value,
-    required this.icon,
-    required this.color,
-  });
-}
-
-class _QuickActionMock {
-  final String label;
-  final IconData icon;
-  final VoidCallback onTap;
-  const _QuickActionMock({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-}
-
-class _AlertMock {
-  final String title;
-  final String detail;
-  final String priority; // عاجل, متوسط, منخفض
-  const _AlertMock({
-    required this.title,
-    required this.detail,
-    required this.priority,
-  });
-}
-
-class _TripMock {
-  final String route;
-  final String departureTime;
-  final String driver;
-  final double fillPercentage; // e.g. 0.85
-  const _TripMock({
-    required this.route,
-    required this.departureTime,
-    required this.driver,
-    required this.fillPercentage,
-  });
-}
-
 class OpsHomePage extends StatefulWidget {
-  const OpsHomePage({super.key});
+  final String roleLabel;
+  final List<String> availableQuickActions;
+
+  const OpsHomePage({
+    required this.roleLabel,
+    required this.availableQuickActions,
+    super.key,
+  });
 
   @override
   State<OpsHomePage> createState() => _OpsHomePageState();
 }
 
 class _OpsHomePageState extends State<OpsHomePage> {
-  // Simplified mock datasets
-  final List<_KpiMock> _kpisList = const [
-    _KpiMock(
+  static const _overview = [
+    _OverviewItem(
       label: 'الرحلات اليوم',
-      value: '٢٤ رحلة',
-      icon: Icons.directions_bus_rounded,
-      color: Colors.green,
+      value: '٢٤',
+      icon: Icons.route_rounded,
     ),
-    _KpiMock(
+    _OverviewItem(
       label: 'الحجوزات الجديدة',
-      value: '١٥٦ حجز',
-      icon: Icons.bookmark_add_rounded,
-      color: Colors.green,
+      value: '١٥٦',
+      icon: Icons.event_seat_rounded,
     ),
-    _KpiMock(
+    _OverviewItem(
       label: 'الشكاوى المفتوحة',
-      value: '٣ شكاوى',
-      icon: Icons.warning_amber_rounded,
-      color: Colors.red,
+      value: '٣',
+      icon: Icons.support_agent_rounded,
     ),
-    _KpiMock(
+    _OverviewItem(
       label: 'المدفوعات المعلقة',
-      value: '٥ مدفوعات',
-      icon: Icons.pending_actions_rounded,
-      color: Colors.orange,
+      value: '٥',
+      icon: Icons.payments_rounded,
     ),
   ];
 
-  final List<_AlertMock> _alerts = const [
-    _AlertMock(
-      title: 'رحلة متأخرة TR-224',
-      detail: 'متأخرة عن موعد الانطلاق بـ ١٥ دقيقة',
-      priority: 'عاجل',
+  static const _alerts = [
+    _AlertItem(
+      title: 'الرحلات المتأخرة',
+      detail: 'رحلة واحدة تحتاج متابعة قبل التواصل مع العملاء.',
+      icon: Icons.schedule_rounded,
     ),
-    _AlertMock(
-      title: 'دفعة تحتاج مراجعة',
-      detail: 'تحويل بقيمة ٢٥٠ ج.م من العميل عمر فاروق',
-      priority: 'متوسط',
+    _AlertItem(
+      title: 'الشكاوى العاجلة',
+      detail: '٣ شكاوى مفتوحة بانتظار إجراء من الفريق.',
+      icon: Icons.priority_high_rounded,
     ),
-    _AlertMock(
-      title: 'شكوى جديدة قيد الانتظار',
-      detail: 'العميل يوسف شريف يبلغ عن مشكلة تقنية بالدفع',
-      priority: 'منخفض',
+    _AlertItem(
+      title: 'المدفوعات المعلقة',
+      detail: '٥ تحويلات تحتاج مراجعة وتأكيد اليوم.',
+      icon: Icons.receipt_long_rounded,
     ),
   ];
 
-  final List<_TripMock> _upcomingTrips = const [
-    _TripMock(
+  static const _upcomingTrips = [
+    _TripItem(
       route: 'بنها ← القرية الذكية',
-      departureTime: '08:30 ص',
+      time: '٠٨:٣٠ ص',
       driver: 'محمد أحمد',
-      fillPercentage: 0.83, // 10/12
+      seats: '١٠ / ١٢',
     ),
-    _TripMock(
+    _TripItem(
       route: 'بنها ← مدينة نصر',
-      departureTime: '08:45 ص',
+      time: '٠٨:٤٥ ص',
       driver: 'كريم حسن',
-      fillPercentage: 1.0, // 12/12
+      seats: '١٢ / ١٢',
     ),
-    _TripMock(
+    _TripItem(
       route: 'بنها ← المهندسين',
-      departureTime: '09:00 ص',
+      time: '٠٩:٠٠ ص',
       driver: 'مصطفى علي',
-      fillPercentage: 0.66, // 8/12
-    ),
-    _TripMock(
-      route: 'بنها ← أكتوبر',
-      departureTime: '09:15 ص',
-      driver: 'أحمد سعيد',
-      fillPercentage: 0.41, // 5/12
-    ),
-    _TripMock(
-      route: 'بنها ← التجمع الخامس',
-      departureTime: '09:30 ص',
-      driver: 'سعد مرسي',
-      fillPercentage: 0.75, // 9/12
+      seats: '٨ / ١٢',
     ),
   ];
-
-  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    final cubit = context.read<KpiCubit>();
-    Future.microtask(() => cubit.loadKpis());
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
+    context.read<KpiCubit>().loadKpis();
   }
 
   void _showActionToast(String label) {
@@ -171,593 +104,394 @@ class _OpsHomePageState extends State<OpsHomePage> {
     );
   }
 
-  List<_QuickActionMock> _getQuickActions() {
-    return [
-      _QuickActionMock(
-        label: 'إنشاء رحلة',
-        icon: Icons.add_road_rounded,
-        onTap: () => Navigator.push(
+  void _openAction(String label) {
+    switch (label) {
+      case 'إنشاء حجز':
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const BookingManagementPage(),
+          ),
+        );
+        return;
+      case 'إنشاء رحلة':
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const TripOperationsPage()),
-        ),
-      ),
-      _QuickActionMock(
-        label: 'إنشاء حجز',
-        icon: Icons.add_shopping_cart_rounded,
-        onTap: () => Navigator.push(
+        );
+        return;
+      case 'إضافة عميل':
+        Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const BookingManagementPage()),
-        ),
-      ),
-      _QuickActionMock(
-        label: 'إضافة عميل',
-        icon: Icons.person_add_rounded,
-        onTap: () => _showActionToast('إضافة عميل جديد'),
-      ),
-      _QuickActionMock(
-        label: 'إضافة سائق',
-        icon: Icons.local_shipping_rounded,
-        onTap: () => _showActionToast('إضافة سائق جديد'),
-      ),
-      _QuickActionMock(
-        label: 'فتح الشكاوى',
-        icon: Icons.rate_review_rounded,
-        onTap: () => _showActionToast('فتح قائمة الشكاوى'),
-      ),
-    ];
+          MaterialPageRoute(
+            builder: (context) => const CustomerManagementPage(),
+          ),
+        );
+        return;
+      case 'إضافة سائق':
+        _showActionToast('فتح نموذج إضافة سائق');
+        return;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        body: LayoutBuilder(
-          builder: (context, constraints) {
-            final w = constraints.maxWidth;
-
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // SECTION 1: HEADER
-                  _buildHeader(context, scheme, w),
-                  const SizedBox(height: AppSpacing.large),
-
-                  // RESPONSIVE SPLIT LAYOUT
-                  _buildResponsiveDashboardLayout(w, scheme),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-
-  // Section 1: Header
-  Widget _buildHeader(BuildContext context, ColorScheme scheme, double width) {
-    final bool isCompact = width < 720;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppSpacing.large),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-        border: Border.all(color: scheme.outline.withOpacity(0.12)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Flex(
-        direction: isCompact ? Axis.vertical : Axis.horizontal,
-        crossAxisAlignment: isCompact ? CrossAxisAlignment.stretch : CrossAxisAlignment.center,
-        children: [
-          // Greeting & Active Staff Info
-          Expanded(
-            flex: isCompact ? 0 : 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'مرحباً أحمد 👋',
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: scheme.onSurface,
-                      ),
-                ),
-                const SizedBox(height: AppSpacing.xSmall),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isWide = constraints.maxWidth >= 1000;
+          return ListView(
+            children: [
+              _DashboardHeader(roleLabel: widget.roleLabel),
+              const SizedBox(height: AppSpacing.xLarge),
+              _DailyOverview(items: _overview),
+              const SizedBox(height: AppSpacing.xLarge),
+              if (isWide)
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'الجمعة ٥ يونيو ٢٠٢٦',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurface.withOpacity(0.55),
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(width: AppSpacing.medium),
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Colors.green,
-                        shape: BoxShape.circle,
+                    Expanded(
+                      flex: 2,
+                      child: _QuickActions(
+                        actions: widget.availableQuickActions,
+                        onSelected: _openAction,
                       ),
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '١٥ موظف نشط حالياً',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.green.shade400,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
+                    const SizedBox(width: AppSpacing.xLarge),
+                    const Expanded(flex: 3, child: _Alerts(items: _alerts)),
                   ],
-                ),
-              ],
-            ),
-          ),
-          if (isCompact) const SizedBox(height: AppSpacing.medium),
-          // Actions: Quick Search & Notifications
-          Expanded(
-            flex: isCompact ? 0 : 3,
-            child: Row(
-              children: [
-                // Quick Search Bar
-                Expanded(
-                  child: Container(
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest.withOpacity(0.4),
-                      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                      border: Border.all(color: scheme.outline.withOpacity(0.12)),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      style: const TextStyle(fontSize: 14),
-                      textDirection: TextDirection.rtl,
-                      decoration: InputDecoration(
-                        hintText: 'بحث سريع...',
-                        hintStyle: TextStyle(
-                          color: scheme.onSurface.withOpacity(0.4),
-                          fontSize: 13,
-                        ),
-                        prefixIcon: Icon(Icons.search_rounded, color: scheme.onSurface.withOpacity(0.5)),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                        filled: false,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                      ),
-                      onSubmitted: (val) => _showActionToast('البحث عن: $val'),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.medium),
-                // Notifications button
-                Stack(
-                  children: [
-                    IconButton(
-                      icon: Icon(
-                        Icons.notifications_none_rounded,
-                        color: scheme.onSurface,
-                        size: 26,
-                      ),
-                      onPressed: () => _showActionToast('تم فتح التنبيهات'),
-                    ),
-                    Positioned(
-                      right: 8,
-                      top: 8,
-                      child: Container(
-                        width: 9,
-                        height: 9,
-                        decoration: BoxDecoration(
-                          color: scheme.error,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: scheme.surface, width: 1.5),
-                        ),
-                      ),
-                    )
-                  ],
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
-  }
-
-  // Responsive Layout Dispatcher
-  Widget _buildResponsiveDashboardLayout(double width, ColorScheme scheme) {
-    if (width >= 1100) {
-      // Desktop Layout: Main feed on the right (flex 5), alerts/actions on the left sidebar (flex 2)
-      return Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Main Column
-          Expanded(
-            flex: 5,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildKpiOverview(width, scheme),
-                const SizedBox(height: AppSpacing.large),
-                _buildQuickActions(width, scheme),
-                const SizedBox(height: AppSpacing.large),
-                _buildUpcomingTrips(scheme),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.large),
-          // Sidebar Column
-          Expanded(
-            flex: 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildAlertsSection(scheme),
-              ],
-            ),
-          )
-        ],
-      );
-    } else {
-      // Mobile / Tablet stacked column layout
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _buildKpiOverview(width, scheme),
-          const SizedBox(height: AppSpacing.large),
-          _buildQuickActions(width, scheme),
-          const SizedBox(height: AppSpacing.large),
-          _buildAlertsSection(scheme),
-          const SizedBox(height: AppSpacing.large),
-          _buildUpcomingTrips(scheme),
-        ],
-      );
-    }
-  }
-
-  // Section 2: Daily Operations Overview
-  Widget _buildKpiOverview(double width, ColorScheme scheme) {
-    int crossAxisCount = 4;
-    if (width < 600) {
-      crossAxisCount = 1;
-    } else if (width < 1100) {
-      crossAxisCount = 2;
-    }
-
-    final double childAspectRatio = width < 600 ? 3.8 : 2.5;
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: _kpisList.length,
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        crossAxisSpacing: AppSpacing.medium,
-        mainAxisSpacing: AppSpacing.medium,
-        childAspectRatio: childAspectRatio,
-      ),
-      itemBuilder: (context, i) {
-        final k = _kpisList[i];
-        return Card(
-          elevation: AppTokens.surfaceElevation,
-          margin: EdgeInsets.zero,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTokens.radius),
-          ),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(
-                right: BorderSide(color: k.color, width: 4.5),
-              ),
-            ),
-            padding: const EdgeInsets.all(AppSpacing.medium),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 22,
-                  backgroundColor: k.color.withOpacity(0.12),
-                  child: Icon(k.icon, color: k.color, size: 22),
-                ),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        k.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurface.withOpacity(0.6),
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        k.value,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              fontSize: 18,
-                            ),
-                      ),
-                    ],
-                  ),
                 )
+              else ...[
+                _QuickActions(
+                  actions: widget.availableQuickActions,
+                  onSelected: _openAction,
+                ),
+                const SizedBox(height: AppSpacing.xLarge),
+                const _Alerts(items: _alerts),
+              ],
+              const SizedBox(height: AppSpacing.xLarge),
+              const _UpcomingTrips(items: _upcomingTrips),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _DashboardHeader extends StatelessWidget {
+  final String roleLabel;
+
+  const _DashboardHeader({required this.roleLabel});
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    return AppCard(
+      child: Row(
+        children: [
+          Icon(Icons.space_dashboard_rounded, color: scheme.primary),
+          const SizedBox(width: AppSpacing.medium),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('الرئيسية', style: textTheme.displaySmall),
+                const SizedBox(height: AppSpacing.xSmall),
+                Text(
+                  'أهم ما يحتاجه فريق $roleLabel اليوم.',
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
               ],
             ),
           ),
-        );
-      },
+        ],
+      ),
     );
   }
+}
 
-  // Section 3: Quick Actions
-  Widget _buildQuickActions(double width, ColorScheme scheme) {
-    final actions = _getQuickActions();
-    int crossAxisCount = 5;
-    if (width < 600) {
-      crossAxisCount = 2;
-    } else if (width < 960) {
-      crossAxisCount = 3;
-    }
+class _DailyOverview extends StatelessWidget {
+  final List<_OverviewItem> items;
 
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'الإجراءات السريعة',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: scheme.onSurface,
-                ),
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          GridView.builder(
+  const _DailyOverview({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'نظرة اليوم',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth >= 900
+              ? 4
+              : constraints.maxWidth >= 560
+              ? 2
+              : 1;
+          return GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            itemCount: actions.length,
+            itemCount: items.length,
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
+              crossAxisCount: columns,
               crossAxisSpacing: AppSpacing.medium,
               mainAxisSpacing: AppSpacing.medium,
-              childAspectRatio: width < 600 ? 2.2 : 1.35,
+              childAspectRatio: columns == 1 ? 4 : 2.4,
             ),
-            itemBuilder: (context, i) {
-              final act = actions[i];
-              return InkWell(
-                onTap: act.onTap,
-                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest.withOpacity(0.25),
-                    borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                    border: Border.all(color: scheme.outline.withOpacity(0.1)),
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.small, vertical: AppSpacing.medium),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(act.icon, color: scheme.primary, size: 24),
-                      const SizedBox(height: AppSpacing.small),
-                      Text(
-                        act.label,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return AppCard(
+                child: Row(
+                  children: [
+                    Icon(
+                      item.icon,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            item.label,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.xSmall),
+                          Text(
+                            item.value,
+                            style: Theme.of(context).textTheme.displaySmall,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               );
             },
-          )
-        ],
+          );
+        },
       ),
     );
   }
+}
 
-  // Section 4: Today's Alerts
-  Widget _buildAlertsSection(ColorScheme scheme) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'تنبيهات اليوم',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: scheme.onSurface,
+class _QuickActions extends StatelessWidget {
+  final List<String> actions;
+  final ValueChanged<String> onSelected;
+
+  const _QuickActions({required this.actions, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'المهام اليومية',
+      child: AppCard(
+        child: Column(
+          children: [
+            if (actions.isEmpty)
+              Text(
+                'لا توجد مهام يومية مباشرة لهذا الدور.',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          ..._alerts.map((a) => _buildAlertItem(a, scheme)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAlertItem(_AlertMock a, ColorScheme scheme) {
-    Color priorityColor;
-    String priorityText;
-    Color bgTint;
-
-    switch (a.priority) {
-      case 'عاجل':
-        priorityColor = Colors.red.shade400;
-        priorityText = 'عاجل';
-        bgTint = Colors.red.shade900.withOpacity(0.12);
-        break;
-      case 'متوسط':
-        priorityColor = Colors.orange.shade400;
-        priorityText = 'متوسط';
-        bgTint = Colors.orange.shade900.withOpacity(0.1);
-        break;
-      case 'منخفض':
-      default:
-        priorityColor = Colors.blue.shade400;
-        priorityText = 'منخفض';
-        bgTint = Colors.blue.shade900.withOpacity(0.1);
-        break;
-    }
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.small),
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      decoration: BoxDecoration(
-        color: bgTint,
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border(
-          right: BorderSide(color: priorityColor, width: 4),
+              ),
+            for (final action in actions) ...[
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: () => onSelected(action),
+                  icon: Icon(_actionIcon(action)),
+                  label: Text(action),
+                ),
+              ),
+              if (action != actions.last)
+                const SizedBox(height: AppSpacing.medium),
+            ],
+          ],
         ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                a.title,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13.5,
-                  color: priorityColor,
-                ),
-              ),
-              StatusChip(
-                label: priorityText,
-                color: priorityColor,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            a.detail,
-            style: TextStyle(
-              fontSize: 12,
-              color: scheme.onSurface.withOpacity(0.75),
-            ),
-          )
-        ],
-      ),
     );
   }
 
-  // Section 5: Upcoming Trips
-  Widget _buildUpcomingTrips(ColorScheme scheme) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'الرحلات القادمة (الـ 5 القادمة)',
-            style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: scheme.onSurface,
-                ),
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          ..._upcomingTrips.map((t) => _buildTripCard(t, scheme)),
-        ],
+  IconData _actionIcon(String action) {
+    return switch (action) {
+      'إنشاء حجز' => Icons.add_rounded,
+      'إنشاء رحلة' => Icons.add_road_rounded,
+      'إضافة عميل' => Icons.person_add_rounded,
+      'إضافة سائق' => Icons.badge_rounded,
+      _ => Icons.play_arrow_rounded,
+    };
+  }
+}
+
+class _Alerts extends StatelessWidget {
+  final List<_AlertItem> items;
+
+  const _Alerts({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return _Section(
+      title: 'ما يحتاج متابعة',
+      child: AppCard(
+        child: Column(
+          children: [
+            for (final item in items) ...[
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(item.icon, color: scheme.error),
+                  const SizedBox(width: AppSpacing.medium),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.title,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: AppSpacing.xSmall),
+                        Text(
+                          item.detail,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              if (item != items.last) ...[
+                const SizedBox(height: AppSpacing.medium),
+                const Divider(),
+                const SizedBox(height: AppSpacing.medium),
+              ],
+            ],
+          ],
+        ),
       ),
     );
   }
+}
 
-  Widget _buildTripCard(_TripMock t, ColorScheme scheme) {
-    final bool isFull = t.fillPercentage >= 1.0;
-    final Color progressColor = isFull ? Colors.red.shade400 : Colors.green.shade400;
+class _UpcomingTrips extends StatelessWidget {
+  final List<_TripItem> items;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.medium),
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withOpacity(0.15),
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: scheme.outline.withOpacity(0.08)),
+  const _UpcomingTrips({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'الرحلات القادمة',
+      child: AppCard(
+        child: Column(
+          children: [
+            for (final trip in items) ...[
+              _TripRow(trip: trip),
+              if (trip != items.last) ...[
+                const SizedBox(height: AppSpacing.medium),
+                const Divider(),
+                const SizedBox(height: AppSpacing.medium),
+              ],
+            ],
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    );
+  }
+}
+
+class _TripRow extends StatelessWidget {
+  final _TripItem trip;
+
+  const _TripRow({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Icon(Icons.directions_bus_rounded, color: scheme.primary),
+        const SizedBox(width: AppSpacing.medium),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Text(trip.route, style: textTheme.titleLarge),
+              const SizedBox(height: AppSpacing.xSmall),
               Text(
-                t.route,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14.5,
-                ),
-              ),
-              Text(
-                t.departureTime,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: scheme.primary,
-                  fontSize: 13,
+                '${trip.time} · ${trip.driver} · ${trip.seats}',
+                style: textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: AppSpacing.small),
-          Row(
-            children: [
-              Icon(Icons.person_outline_rounded, size: 14, color: scheme.onSurface.withOpacity(0.5)),
-              const SizedBox(width: 4),
-              Text(
-                'السائق: ${t.driver}',
-                style: TextStyle(fontSize: 12, color: scheme.onSurface.withOpacity(0.7)),
-              ),
-              const Spacer(),
-              Text(
-                'نسبة الامتلاء: ${(t.fillPercentage * 100).toStringAsFixed(0)}%',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: progressColor),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.small),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(99),
-            child: LinearProgressIndicator(
-              value: t.fillPercentage,
-              minHeight: 5,
-              color: progressColor,
-              backgroundColor: progressColor.withOpacity(0.15),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                minimumSize: Size.zero,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                ),
-              ),
-              onPressed: () => _showActionToast('تفاصيل رحلة: ${t.route}'),
-              child: const Text('عرض التفاصيل', style: TextStyle(fontSize: 12)),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
+}
+
+class _Section extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _Section({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.displaySmall),
+        const SizedBox(height: AppSpacing.medium),
+        child,
+      ],
+    );
+  }
+}
+
+class _OverviewItem {
+  final String label;
+  final String value;
+  final IconData icon;
+
+  const _OverviewItem({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+}
+
+class _AlertItem {
+  final String title;
+  final String detail;
+  final IconData icon;
+
+  const _AlertItem({
+    required this.title,
+    required this.detail,
+    required this.icon,
+  });
+}
+
+class _TripItem {
+  final String route;
+  final String time;
+  final String driver;
+  final String seats;
+
+  const _TripItem({
+    required this.route,
+    required this.time,
+    required this.driver,
+    required this.seats,
+  });
 }
