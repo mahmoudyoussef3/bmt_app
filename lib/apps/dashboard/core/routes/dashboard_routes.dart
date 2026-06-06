@@ -1,7 +1,18 @@
-/// Dashboard route names and route construction placeholder.
-///
-/// Existing prototype routes remain wired in their current locations during
-/// Phase 0. Move route ownership here when dashboard features migrate.
 class DashboardRoutes {
   const DashboardRoutes._();
+
+  static const home = '/';
+  static const bookings = '/bookings';
+  static const trips = '/trips';
+  static const liveTrips = '/live-trips';
+  static const drivers = '/drivers';
+  static const vehicles = '/vehicles';
+  static const routes = '/routes';
+  static const users = '/users';
+  static const subscriptions = '/subscriptions';
+  static const payments = '/payments';
+  static const tickets = '/tickets';
+  static const reports = '/reports';
+  static const settings = '/settings';
+  static const permissions = '/permissions';
 }

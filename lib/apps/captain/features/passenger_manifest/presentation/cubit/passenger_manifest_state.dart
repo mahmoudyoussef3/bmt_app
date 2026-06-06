@@ -1,0 +1,21 @@
+import '../../domain/entities/passenger.dart';
+
+sealed class PassengerManifestState {
+  const PassengerManifestState();
+}
+
+class PassengerManifestLoading extends PassengerManifestState {
+  const PassengerManifestLoading();
+}
+
+class PassengerManifestLoaded extends PassengerManifestState {
+  const PassengerManifestLoaded(this.passengers);
+
+  final List<Passenger> passengers;
+}
+
+class PassengerManifestError extends PassengerManifestState {
+  const PassengerManifestError(this.message);
+
+  final String message;
+}

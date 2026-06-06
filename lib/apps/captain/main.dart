@@ -1,8 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
 import 'package:bmt_app/core/theme/app_theme.dart';
-import 'package:bmt_app/features/component/presentation/screens/driver_dashboard_screen.dart';
+import 'package:flutter/material.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  registerCaptainDependencies();
   runApp(const CaptainApp());
 }
 
@@ -17,7 +20,11 @@ class CaptainApp extends StatelessWidget {
       theme: AppTheme.darkTheme(),
       darkTheme: AppTheme.darkTheme(),
       themeMode: ThemeMode.system,
-      home: const CaptainDashboardScreen(),
+      home: const CaptainAppShell(),
+      routes: {
+        '/captain/home': (_) => const CaptainAppShell(),
+        '/captain/trips': (_) => const CaptainAppShell(),
+      },
     );
   }
 }
