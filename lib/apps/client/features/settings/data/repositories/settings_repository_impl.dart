@@ -1,0 +1,14 @@
+import '../../domain/entities/settings_data.dart';
+import '../../domain/repositories/settings_repository.dart';
+import '../datasources/mock_settings_datasource.dart';
+
+class SettingsRepositoryImpl implements SettingsRepository {
+  const SettingsRepositoryImpl(this._datasource);
+
+  final MockSettingsDatasource _datasource;
+
+  @override
+  Future<SettingsData> getSettingsData() {
+    return _datasource.getSettingsData();
+  }
+}
