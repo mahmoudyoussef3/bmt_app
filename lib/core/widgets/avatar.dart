@@ -23,7 +23,7 @@ class AppAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: [baseColor, scheme.secondary.withAlpha(90)],
+          colors: [scheme.primary, scheme.primary],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

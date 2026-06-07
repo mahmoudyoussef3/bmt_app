@@ -40,53 +40,30 @@ class _DashboardHomeContent extends StatelessWidget {
       children: [
         _PageTitle(
           title: 'الرئيسية',
-          subtitle: 'مختصر يوم التشغيل وأهم الطوابير التي تحتاج متابعة.',
+          subtitle: 'مختصر سريع لليوم وما يحتاج تدخل من فريق التشغيل.',
         ),
         const SizedBox(height: AppSpacing.large),
         _MetricGrid(metrics: data.metrics.take(4).toList()),
         const SizedBox(height: AppSpacing.large),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isWide = constraints.maxWidth >= 980;
-            final queues = [
-              _QueueSection(title: 'آخر الحجوزات', items: data.recentBookings),
-              _QueueSection(
-                title: 'رحلات تحتاج تدخل',
-                items: data.tripsNeedingAction,
-              ),
-              _QueueSection(
-                title: 'سائقين متأخرين',
-                items: data.delayedDrivers,
-              ),
-              _QueueSection(title: 'تذاكر مفتوحة', items: data.openTickets),
-            ];
-
-            if (!isWide) {
-              return Column(
-                children: queues
-                    .map(
-                      (queue) => Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSpacing.medium,
-                        ),
-                        child: queue,
-                      ),
-                    )
-                    .toList(),
-              );
-            }
-
-            return GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: AppSpacing.medium,
-              mainAxisSpacing: AppSpacing.medium,
-              childAspectRatio: 2.2,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: queues,
-            );
-          },
+        _QueueSection(
+          title: 'يتطلب إجراء',
+          items: [
+            const DashboardQueueItem(
+              title: 'مدفوعات معلقة',
+              subtitle: '٥ عمليات تحتاج قبول أو رفض',
+              status: 'مراجعة',
+            ),
+            ...data.tripsNeedingAction,
+            ...data.openTickets.take(1),
+            const DashboardQueueItem(
+              title: 'طلبات اشتراك جديدة',
+              subtitle: '٦ طلبات تحتاج مراجعة الباقة',
+              status: 'جديد',
+            ),
+          ],
         ),
+        const SizedBox(height: AppSpacing.large),
+        _QueueSection(title: 'آخر العمليات', items: data.recentBookings),
       ],
     );
   }
@@ -141,7 +118,7 @@ class _MetricGrid extends StatelessWidget {
             crossAxisCount: columns,
             crossAxisSpacing: AppSpacing.medium,
             mainAxisSpacing: AppSpacing.medium,
-            childAspectRatio: columns == 1 ? 3.4 : 1.8,
+            mainAxisExtent: 116,
           ),
           itemBuilder: (context, index) {
             final metric = metrics[index];
@@ -172,16 +149,13 @@ class _QueueSection extends StatelessWidget {
         children: [
           Text(title, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppSpacing.small),
-          Expanded(
-            child: ListView.separated(
-              itemCount: items.length,
-              separatorBuilder: (context, index) =>
-                  const Divider(height: AppSpacing.medium),
-              itemBuilder: (context, index) {
-                return _QueueRow(item: items[index]);
-              },
-            ),
-          ),
+          ...items.indexed.expand((entry) {
+            final (index, item) = entry;
+            return [
+              if (index > 0) const Divider(height: AppSpacing.medium),
+              _QueueRow(item: item),
+            ];
+          }),
         ],
       ),
     );

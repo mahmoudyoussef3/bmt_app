@@ -170,7 +170,7 @@ class _HomeHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Good morning, Ahmed 👋',
+                'Good morning, Ahmed',
                 style: AppTypography.display(scheme).copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,

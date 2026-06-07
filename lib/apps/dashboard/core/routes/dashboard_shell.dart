@@ -5,24 +5,33 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
+import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
 import '../../features/bookings/presentation/screens/bookings_screen.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
 import '../../features/dashboard_home/presentation/screens/dashboard_home_screen.dart';
+import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
+import '../../features/drivers/presentation/cubit/drivers_cubit.dart';
 import '../../features/drivers/presentation/screens/drivers_screen.dart';
 import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
+import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
+import '../../features/payments/presentation/cubit/payments_cubit.dart';
 import '../../features/payments/presentation/screens/payments_screen.dart';
 import '../../features/permissions/presentation/screens/permissions_screen.dart';
 import '../../features/reports/presentation/screens/reports_screen.dart';
+import '../../features/routes/presentation/cubit/routes_cubit.dart';
 import '../../features/routes/presentation/screens/routes_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/subscriptions/presentation/screens/subscriptions_screen.dart';
 import '../../features/tickets/presentation/screens/tickets_screen.dart';
+import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/trips/presentation/screens/trips_screen.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
+import '../../features/vehicles/presentation/cubit/vehicles_cubit.dart';
 import '../../features/vehicles/presentation/screens/vehicles_screen.dart';
 import '../di/dashboard_di.dart';
 import '../permissions/dashboard_permission.dart';
 import '../permissions/dashboard_role.dart';
+import '../theme/dashboard_theme_cubit.dart';
 import 'dashboard_routes.dart';
 
 class DashboardShell extends StatefulWidget {
@@ -107,7 +116,7 @@ class _DashboardShellState extends State<DashboardShell> {
       permission: DashboardPermission.payments,
     ),
     const _DashboardNavItem(
-      label: 'التذاكر',
+      label: 'الشكاوى',
       route: DashboardRoutes.tickets,
       icon: Icons.support_agent_outlined,
       selectedIcon: Icons.support_agent_rounded,
@@ -200,21 +209,58 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<DashboardHomeCubit>()..load(),
         child: const DashboardHomeScreen(),
       ),
-      DashboardRoutes.bookings => const BookingsScreen(),
-      DashboardRoutes.trips => const TripsScreen(),
-      DashboardRoutes.liveTrips => const LiveTripsScreen(),
-      DashboardRoutes.drivers => const DriversScreen(),
-      DashboardRoutes.vehicles => const VehiclesScreen(),
-      DashboardRoutes.routes => const RoutesScreen(),
-      DashboardRoutes.users => const UsersScreen(),
-      DashboardRoutes.subscriptions => const SubscriptionsScreen(),
-      DashboardRoutes.payments => const PaymentsScreen(),
-      DashboardRoutes.tickets => const TicketsScreen(),
-      DashboardRoutes.reports => const ReportsScreen(),
-      DashboardRoutes.settings => const SettingsScreen(),
-      DashboardRoutes.permissions => const PermissionsScreen(),
+      DashboardRoutes.bookings => BlocProvider(
+        create: (_) => dashboardDi<BookingsCubit>()..load(),
+        child: const BookingsScreen(),
+      ),
+      DashboardRoutes.trips => BlocProvider(
+        create: (_) => dashboardDi<TripsCubit>()..load(),
+        child: const TripsScreen(),
+      ),
+      DashboardRoutes.liveTrips => BlocProvider(
+        create: (_) => dashboardDi<LiveTripsCubit>()..load(),
+        child: const LiveTripsScreen(),
+      ),
+      DashboardRoutes.drivers => BlocProvider(
+        create: (_) => dashboardDi<DriversCubit>()..load(),
+        child: const DriversScreen(),
+      ),
+      DashboardRoutes.vehicles => BlocProvider(
+        create: (_) => dashboardDi<VehiclesCubit>()..load(),
+        child: const VehiclesScreen(),
+      ),
+      DashboardRoutes.routes => BlocProvider(
+        create: (_) => dashboardDi<RoutesCubit>()..load(),
+        child: const RoutesScreen(),
+      ),
+      DashboardRoutes.users => _workspace('users', const UsersScreen()),
+      DashboardRoutes.subscriptions => _workspace(
+        'subscriptions',
+        const SubscriptionsScreen(),
+      ),
+      DashboardRoutes.payments => BlocProvider(
+        create: (_) => dashboardDi<PaymentsCubit>()..load(),
+        child: const PaymentsScreen(),
+      ),
+      DashboardRoutes.tickets => _workspace('tickets', const TicketsScreen()),
+      DashboardRoutes.reports => _workspace('reports', const ReportsScreen()),
+      DashboardRoutes.settings => _workspace(
+        'settings',
+        const SettingsScreen(),
+      ),
+      DashboardRoutes.permissions => _workspace(
+        'permissions',
+        const PermissionsScreen(),
+      ),
       _ => const DashboardHomeScreen(),
     };
+  }
+
+  Widget _workspace(String workspaceId, Widget child) {
+    return BlocProvider(
+      create: (_) => dashboardDi<DashboardWorkspaceCubit>()..load(workspaceId),
+      child: child,
+    );
   }
 }
 
@@ -306,6 +352,10 @@ class _DashboardTopBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final themeMode = context.select(
+      (DashboardThemeCubit cubit) => cubit.state.themeMode,
+    );
+    final isDark = themeMode == ThemeMode.dark;
 
     return Container(
       height: 72,
@@ -319,6 +369,16 @@ class _DashboardTopBar extends StatelessWidget {
           Expanded(
             child: Text(title, style: Theme.of(context).textTheme.titleLarge),
           ),
+          IconButton(
+            tooltip: isDark ? 'الوضع الفاتح' : 'الوضع الداكن',
+            onPressed: () {
+              context.read<DashboardThemeCubit>().setThemeMode(
+                isDark ? ThemeMode.light : ThemeMode.dark,
+              );
+            },
+            icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+          ),
+          const SizedBox(width: AppSpacing.small),
           StatusChip(label: role.label),
         ],
       ),

@@ -17,6 +17,11 @@ class SettingsScreen extends StatelessWidget {
       children: [
         const _SettingsHeader(),
         const SizedBox(height: AppSpacing.large),
+        const SizedBox(
+          height: 520,
+          child: DashboardOperationsScreen(workspaceId: 'settings'),
+        ),
+        const SizedBox(height: AppSpacing.large),
         AppCard(
           child: BlocBuilder<DashboardThemeCubit, DashboardThemeState>(
             builder: (context, state) {
@@ -57,15 +62,8 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-class _SettingsHeader extends DashboardOperationsScreen {
-  const _SettingsHeader()
-    : super(
-        title: 'الإعدادات',
-        subtitle: 'إعدادات عامة للوحة التشغيل.',
-        actions: const [],
-        columns: const ['الإعداد', 'الحالة'],
-        rows: const [],
-      );
+class _SettingsHeader extends StatelessWidget {
+  const _SettingsHeader();
 
   @override
   Widget build(BuildContext context) {

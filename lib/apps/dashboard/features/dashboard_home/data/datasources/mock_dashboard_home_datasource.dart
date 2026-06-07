@@ -21,14 +21,14 @@ class MockDashboardHomeDatasource implements DashboardHomeDatasource {
           note: '٣ رحلات تحتاج تدخل',
         ),
         DashboardMetric(
-          label: 'التذاكر المفتوحة',
-          value: '٨',
-          note: '٢ أولوية عالية',
+          label: 'السائقين المتاحين',
+          value: '٢٦',
+          note: 'جاهزون للإسناد',
         ),
         DashboardMetric(
-          label: 'المدفوعات المعلقة',
-          value: '٥',
-          note: 'في انتظار المراجعة',
+          label: 'الشكاوى المفتوحة',
+          value: '٨',
+          note: '٢ أولوية عالية',
         ),
       ],
       recentBookings: [
@@ -74,12 +74,12 @@ class MockDashboardHomeDatasource implements DashboardHomeDatasource {
       ],
       openTickets: [
         DashboardQueueItem(
-          title: 'تذكرة ١٠٠١',
+          title: 'شكوى ١٠٠١',
           subtitle: 'مشكلة دفع - خالد محمود',
           status: 'عالية',
         ),
         DashboardQueueItem(
-          title: 'تذكرة ١٠٠٢',
+          title: 'شكوى ١٠٠٢',
           subtitle: 'تغيير موعد - رنا يوسف',
           status: 'متوسطة',
         ),
