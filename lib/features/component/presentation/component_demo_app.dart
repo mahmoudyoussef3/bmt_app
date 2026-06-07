@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/dashboard/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
@@ -11,7 +12,6 @@ import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_rou
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/trip_details_screen.dart';
 import 'package:bmt_app/core/theme/app_theme.dart';
-import 'package:bmt_app/features/component/presentation/screens/admin_dashboard_screen.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_cubit.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_checkout_screen.dart';
@@ -250,7 +250,7 @@ class _ComponentDemoAppState extends State<ComponentDemoApp> {
 
           // Other Versions
           '/driver': (_) => const CaptainAppShell(),
-          '/admin': (_) => const DashboardWebScreen(),
+          '/admin': (_) => const DashboardWebApp(),
         },
       ),
     );

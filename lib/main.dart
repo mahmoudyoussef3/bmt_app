@@ -1,11 +1,10 @@
+import 'package:bmt_app/apps/dashboard/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter/foundation.dart';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
 import 'package:bmt_app/features/component/presentation/component_demo_app.dart';
-import 'package:bmt_app/features/component/presentation/screens/admin_dashboard_screen.dart';
-import 'package:bmt_app/features/ops_dashboard/ops_dashboard_module.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 import 'package:bmt_app/core/app_mode/app_mode.dart';
 
@@ -39,9 +38,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (_) => const ComponentDemoApp(),
           '/driver': (_) => const CaptainAppShell(),
-          '/admin': (_) => const DashboardWebScreen(),
-          '/ops': (_) => const OpsDashboardModule(),
-          '/ops-dashboard': (_) => const OpsDashboardModule(),
+          '/ops-dashboard': (_) => const DashboardWebApp(),
         },
         initialRoute: '/',
       ),
