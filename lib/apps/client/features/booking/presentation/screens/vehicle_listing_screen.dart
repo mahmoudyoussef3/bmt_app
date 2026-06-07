@@ -11,7 +11,13 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/bookin
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_compare_card.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
-/// Compare and select from available vehicles before booking.
+/// شاشة اختيار العربية.
+///
+/// UX notes:
+/// - الشاشة مقصودة تكون هادية وبسيطة.
+/// - لا يوجد Hero كبير أو كلام تسويقي زائد.
+/// - التركيز الأساسي على كروت العربيات نفسها.
+/// - كل النصوص بالعربي.
 class VehicleListingScreen extends StatefulWidget {
   const VehicleListingScreen({super.key});
 
@@ -21,13 +27,17 @@ class VehicleListingScreen extends StatefulWidget {
 
 class _VehicleListingScreenState extends State<VehicleListingScreen> {
   VehicleSortOption _sort = VehicleSortOption.recommended;
-  String? _highlightedId;
+  String? _selectedVehicleId;
   late BookingSearchQuery _query;
+  bool _didLoad = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _query = bookingQueryFromContext(context);
+
+    if (_didLoad) return;
+    _didLoad = true;
     context.read<BookingCubit>().loadVehicles(sort: _sort);
   }
 
@@ -40,41 +50,43 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
   }
 
   void _selectVehicle(VehicleDetailData vehicle) {
+    setState(() => _selectedVehicleId = vehicle.id);
     Navigator.pushNamed(context, '/seat-selection');
   }
 
   void _selectSort(VehicleSortOption option) {
+    if (_sort == option) return;
     setState(() => _sort = option);
     context.read<BookingCubit>().loadVehicles(sort: option);
   }
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<BookingCubit, BookingState>(
-      builder: (context, state) {
-        final vehicles = state is VehiclesLoaded
-            ? state.vehicles
-            : <VehicleDetailData>[];
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: BlocBuilder<BookingCubit, BookingState>(
+        builder: (context, state) {
+          final vehicles = state is VehiclesLoaded
+              ? state.vehicles
+              : <VehicleDetailData>[];
 
-        return BookingFlowScaffold(
-          title: 'Choose Your Vehicle',
-          query: _query,
-          body: _VehicleListingBody(
-            state: state,
-            vehicles: vehicles,
-            sort: _sort,
-            highlightedId: _highlightedId,
-            onRetry: () =>
-                context.read<BookingCubit>().loadVehicles(sort: _sort),
-            onSort: _selectSort,
-            onOpenDetails: _openDetails,
-            onSelect: (vehicle) {
-              setState(() => _highlightedId = vehicle.id);
-              _selectVehicle(vehicle);
-            },
-          ),
-        );
-      },
+          return BookingFlowScaffold(
+            title: 'اختيار العربية',
+            query: _query,
+            body: _VehicleListingBody(
+              state: state,
+              vehicles: vehicles,
+              sort: _sort,
+              selectedVehicleId: _selectedVehicleId,
+              onRetry: () =>
+                  context.read<BookingCubit>().loadVehicles(sort: _sort),
+              onSort: _selectSort,
+              onOpenDetails: _openDetails,
+              onSelect: _selectVehicle,
+            ),
+          );
+        },
+      ),
     );
   }
 }
@@ -84,7 +96,7 @@ class _VehicleListingBody extends StatelessWidget {
     required this.state,
     required this.vehicles,
     required this.sort,
-    required this.highlightedId,
+    required this.selectedVehicleId,
     required this.onRetry,
     required this.onSort,
     required this.onOpenDetails,
@@ -94,7 +106,7 @@ class _VehicleListingBody extends StatelessWidget {
   final BookingState state;
   final List<VehicleDetailData> vehicles;
   final VehicleSortOption sort;
-  final String? highlightedId;
+  final String? selectedVehicleId;
   final VoidCallback onRetry;
   final ValueChanged<VehicleSortOption> onSort;
   final ValueChanged<VehicleDetailData> onOpenDetails;
@@ -103,8 +115,9 @@ class _VehicleListingBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state is BookingLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const _BookingLoadingState();
     }
+
     if (state is BookingError) {
       return _BookingErrorState(
         message: (state as BookingError).message,
@@ -112,41 +125,93 @@ class _VehicleListingBody extends StatelessWidget {
       );
     }
 
-    return ListView(
+    if (vehicles.isEmpty) {
+      return _BookingEmptyState(onRetry: onRetry);
+    }
+
+    return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-      children: [
-        SectionHeader(
-          title: 'Compare vehicles',
-          subtitle:
-              '${vehicles.length} options · review comfort, driver & price',
-        ),
-        const SizedBox(height: 12),
-        _SortBar(selected: sort, onSelected: onSort),
-        const SizedBox(height: 16),
-        ...vehicles.map((vehicle) {
-          final highlighted = highlightedId == vehicle.id;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: AnimatedContainer(
-              duration: const Duration(milliseconds: 220),
-              decoration: highlighted
-                  ? BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: Theme.of(context).colorScheme.primary,
-                        width: 2,
-                      ),
-                    )
-                  : null,
-              child: VehicleCompareCard(
-                vehicle: vehicle,
-                onViewDetails: () => onOpenDetails(vehicle),
-                onSelect: () => onSelect(vehicle),
-              ),
+      itemCount: vehicles.length + 2,
+      separatorBuilder: (context, index) {
+        if (index == 0) return const SizedBox(height: 12);
+        if (index == 1) return const SizedBox(height: 14);
+        return const SizedBox(height: 14);
+      },
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _CompactHeader(vehiclesCount: vehicles.length);
+        }
+
+        if (index == 1) {
+          return _SortBar(selected: sort, onSelected: onSort);
+        }
+
+        final vehicle = vehicles[index - 2];
+        final selected = selectedVehicleId == vehicle.id;
+
+        return _VehicleItemShell(
+          selected: selected,
+          child: VehicleCompareCard(
+            vehicle: vehicle,
+            onViewDetails: () => onOpenDetails(vehicle),
+            onSelect: () => onSelect(vehicle),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _CompactHeader extends StatelessWidget {
+  const _CompactHeader({required this.vehiclesCount});
+
+  final int vehiclesCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppSurface(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: scheme.primary.withAlpha(22),
+              borderRadius: BorderRadius.circular(14),
             ),
-          );
-        }),
-      ],
+            child: Icon(
+              Icons.directions_bus_filled_rounded,
+              color: scheme.primary,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'العربيات المتاحة',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  '$vehiclesCount اختيارات متاحة الآن',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(150),
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -159,12 +224,10 @@ class _SortBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     const options = [
-      (VehicleSortOption.recommended, 'Recommended'),
-      (VehicleSortOption.priceLow, 'Price'),
-      (VehicleSortOption.rating, 'Rating'),
-      (VehicleSortOption.seats, 'Seats'),
+      (VehicleSortOption.recommended, 'الأفضل', Icons.auto_awesome_rounded),
+      (VehicleSortOption.priceLow, 'السعر', Icons.payments_rounded),
+      (VehicleSortOption.rating, 'التقييم', Icons.star_rounded),
     ];
 
     return SingleChildScrollView(
@@ -173,19 +236,120 @@ class _SortBar extends StatelessWidget {
         children: options.map((entry) {
           final active = selected == entry.$1;
           return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(entry.$2),
-              selected: active,
-              onSelected: (_) => onSelected(entry.$1),
-              selectedColor: scheme.primary.withAlpha(50),
-              checkmarkColor: scheme.primary,
-              labelStyle: TextStyle(
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              ),
+            padding: const EdgeInsetsDirectional.only(end: 8),
+            child: _SortChip(
+              icon: entry.$3,
+              label: entry.$2,
+              active: active,
+              onTap: () => onSelected(entry.$1),
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+}
+
+class _SortChip extends StatelessWidget {
+  const _SortChip({
+    required this.icon,
+    required this.label,
+    required this.active,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(999),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 160),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: active ? scheme.primary.withAlpha(26) : scheme.surface,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: active ? scheme.primary.withAlpha(120) : scheme.outline,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: active ? scheme.primary : scheme.onSurface.withAlpha(160),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: active ? scheme.primary : scheme.onSurface,
+                    fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VehicleItemShell extends StatelessWidget {
+  const _VehicleItemShell({required this.selected, required this.child});
+
+  final bool selected;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      padding: selected ? const EdgeInsets.all(2) : EdgeInsets.zero,
+      decoration: selected
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: scheme.primary, width: 1.6),
+            )
+          : null,
+      child: child,
+    );
+  }
+}
+
+class _BookingLoadingState extends StatelessWidget {
+  const _BookingLoadingState();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const CircularProgressIndicator(),
+            const SizedBox(height: 14),
+            Text(
+              'جاري البحث عن أفضل الخيارات...',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -199,16 +363,93 @@ class _BookingErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            FilledButton(onPressed: onRetry, child: const Text('Try again')),
-          ],
+        child: AppSurface(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline_rounded, color: scheme.error, size: 44),
+              const SizedBox(height: 12),
+              Text(
+                'لم نتمكن من تحميل العربيات',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      height: 1.6,
+                    ),
+              ),
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('حاول مرة أخرى'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _BookingEmptyState extends StatelessWidget {
+  const _BookingEmptyState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: AppSurface(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.directions_bus_outlined,
+                color: scheme.primary,
+                size: 46,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                'لا توجد عربيات متاحة',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'لا توجد عربيات مناسبة لهذا الوقت. جرّب وقت وصول مختلف أو أعد البحث.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      height: 1.6,
+                    ),
+              ),
+              const SizedBox(height: 14),
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('إعادة البحث'),
+              ),
+            ],
+          ),
         ),
       ),
     );
