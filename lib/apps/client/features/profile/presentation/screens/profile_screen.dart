@@ -75,7 +75,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             ],
                           ),
                         ),
-                        AppBadge(text: data.profile.badge),
                       ],
                     ),
                   ),

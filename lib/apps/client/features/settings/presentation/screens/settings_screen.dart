@@ -264,8 +264,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       children: [
         // User Profile Header
-        _buildProfileHeaderCard(scheme),
-        const SizedBox(height: 18),
+    //    _buildProfileHeaderCard(scheme),
+      //  const SizedBox(height: 18),
 
         // Quick Actions
         _buildProfileQuickActionsRow(scheme),
@@ -485,7 +485,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
-
+/*
   Widget _buildProfileHeaderCard(ColorScheme scheme) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -571,6 +571,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+  */
 
   Widget _buildProfileQuickActionsRow(ColorScheme scheme) {
     return Row(
@@ -594,7 +595,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             scheme: scheme,
           ),
         ),
-        const SizedBox(width: 8),
+    /*    const SizedBox(width: 8),
         Expanded(
           child: _buildQuickActionCard(
             icon: Icons.card_giftcard_rounded,
@@ -604,6 +605,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             scheme: scheme,
           ),
         ),
+        */
       ],
     );
   }

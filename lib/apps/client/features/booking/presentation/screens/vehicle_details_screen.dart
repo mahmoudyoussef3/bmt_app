@@ -90,40 +90,11 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _VehicleSummaryCard(vehicle: vehicle),
-                        const SizedBox(height: 16),
+                    //    _VehicleSummaryCard(vehicle: vehicle),
+                      //  const SizedBox(height: 16),
                         _QuickStatsCard(vehicle: vehicle),
                         const SizedBox(height: 20),
-                        _DetailSection(
-                          title: 'بيانات العربية',
-                          subtitle: 'معلومات أساسية عن العربية المختارة',
-                          icon: Icons.directions_bus_filled_rounded,
-                          child: _InfoGrid(
-                            items: [
-                              _InfoItem(
-                                label: 'اسم العربية',
-                                value: vehicle.name,
-                                icon: Icons.badge_outlined,
-                              ),
-                              _InfoItem(
-                                label: 'الموديل',
-                                value: vehicle.model,
-                                icon: Icons.precision_manufacturing_outlined,
-                              ),
-                              _InfoItem(
-                                label: 'النوع',
-                                value: vehicle.vehicleType,
-                                icon: Icons.category_outlined,
-                              ),
-                              _InfoItem(
-                                label: 'الصور',
-                                value: '${vehicle.imageLabels.length} صور',
-                                icon: Icons.photo_library_outlined,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
+                    
                         _DetailSection(
                           title: 'الراحة والتجهيزات',
                           subtitle: 'راجع مستوى الراحة قبل اختيار المقعد',
@@ -255,7 +226,7 @@ class _VehicleGalleryAppBar extends StatelessWidget {
   }
 }
 
-class _VehicleSummaryCard extends StatelessWidget {
+/*class _VehicleSummaryCard extends StatelessWidget {
   const _VehicleSummaryCard({required this.vehicle});
 
   final dynamic vehicle;
@@ -345,6 +316,8 @@ class _VehicleSummaryCard extends StatelessWidget {
     );
   }
 }
+
+*/
 
 class _QuickStatsCard extends StatelessWidget {
   const _QuickStatsCard({required this.vehicle});

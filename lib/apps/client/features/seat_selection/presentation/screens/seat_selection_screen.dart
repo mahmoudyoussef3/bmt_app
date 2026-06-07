@@ -95,17 +95,7 @@ class _SeatSelectionContent extends StatelessWidget {
                       ),
                       children: [
                         const SeatLegend(),
-                        const SizedBox(height: 14),
-                        SeatSelectionVehicleCard(
-                          vehicleType: data.vehicleType,
-                          vehicleName: data.vehicleName,
-                          vehicleModel: data.vehicleModel,
-                          driverName: data.driverName,
-                          driverRating: data.driverRating,
-                          availableSeats: data.availableCount,
-                        ),
-                        const SizedBox(height: 14),
-                        _buildTripOverview(context),
+               
                         const SizedBox(height: 14),
                         _buildBusLayout(
                           context,
@@ -119,8 +109,8 @@ class _SeatSelectionContent extends StatelessWidget {
                         else
                           _buildSelectedSeatsSummary(context, selectedSeat!),
                         const SizedBox(height: 12),
-                        SeatPassengerPreviewCard(selectedSeat: selectedSeat),
-                        const SizedBox(height: 12),
+                    //    SeatPassengerPreviewCard(selectedSeat: selectedSeat),
+                      //  const SizedBox(height: 12),
                         SeatBookingSummaryPanel(
                           selectedSeat: selectedSeat,
                           vehicleName: data.vehicleName,
@@ -133,9 +123,9 @@ class _SeatSelectionContent extends StatelessWidget {
                                   seatLabel: selectedSeat,
                                 ),
                         ),
-                        const SizedBox(height: 14),
-                        _buildHintCard(context),
-                        const SizedBox(height: 120),
+                        //const SizedBox(height: 14),
+                        //_buildHintCard(context),
+                        const SizedBox(height: 20),
                       ],
                     ),
                   ),
@@ -160,8 +150,7 @@ class _SeatSelectionContent extends StatelessWidget {
           end: Alignment.bottomRight,
           colors: [
             scheme.primary.withAlpha(28),
-            scheme.secondary.withAlpha(16),
-            scheme.surfaceContainerHighest,
+            scheme.primary.withAlpha(28),
           ],
         ),
         borderRadius: BorderRadius.circular(28),
@@ -182,15 +171,9 @@ class _SeatSelectionContent extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: LinearGradient(
-                colors: [scheme.primary, scheme.secondary],
+                colors: [scheme.primary, scheme.primary],
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.primary.withAlpha(40),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ],
+  
             ),
             child: const Icon(
               Icons.directions_bus_rounded,

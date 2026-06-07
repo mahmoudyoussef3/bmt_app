@@ -135,36 +135,7 @@ class _ImagePlaceholder extends StatelessWidget {
               ],
             ),
           ),
-          Positioned(
-            top: 10,
-            right: 10,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-              decoration: BoxDecoration(
-                color: Colors.black.withAlpha(100),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.photo_library_outlined,
-                    size: 12,
-                    color: Colors.white.withAlpha(220),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Preview',
-                    style: TextStyle(
-                      color: Colors.white.withAlpha(220),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+
         ],
       ),
     );

@@ -42,11 +42,13 @@ class SeatBookingSummaryPanel extends StatelessWidget {
                   context,
                 ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
+           /*
               if (onPassengerDetailsTap != null && hasSelection)
                 TextButton(
                   onPressed: onPassengerDetailsTap,
                   child: const Text('Passenger details'),
                 ),
+                */
             ],
           ),
           const SizedBox(height: 12),

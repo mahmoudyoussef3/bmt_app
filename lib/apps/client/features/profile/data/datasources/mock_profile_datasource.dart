@@ -12,6 +12,7 @@ class MockProfileDatasource {
         badge: 'Premium',
       ),
       sections: [
+        /*
         ProfileMenuSectionModel(
           title: 'Account',
           items: [
@@ -22,6 +23,7 @@ class MockProfileDatasource {
             ),
           ],
         ),
+        */
         ProfileMenuSectionModel(
           title: 'Travel',
           items: [
@@ -31,18 +33,23 @@ class MockProfileDatasource {
               subtitle: 'Upcoming, active & history',
               route: '/trips',
             ),
+            /*
             ProfileMenuItemModel(
               iconKey: 'packages',
               title: 'Packages',
               subtitle: 'Monthly & weekly plans',
               route: '/subscription',
             ),
+
+
             ProfileMenuItemModel(
               iconKey: 'search',
               title: 'Book a route',
               subtitle: 'Search trips & vehicles',
               route: '/booking/search',
             ),
+
+            */
           ],
         ),
         ProfileMenuSectionModel(

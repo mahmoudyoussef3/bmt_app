@@ -120,11 +120,7 @@ class AvailableTripCard extends StatelessWidget {
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
-            child: AppButton(
-              label: 'Select Vehicle',
-              height: 46,
-              onPressed: onBook,
-            ),
+            child: AppButton(label: '', height: 46, onPressed: onBook),
           ),
         ],
       ),

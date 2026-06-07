@@ -46,20 +46,7 @@ class SeatLegend extends StatelessWidget {
                 iconColor: scheme.onSurface.withAlpha(120),
                 muted: true,
               ),
-              _LegendChip(
-                label: 'Female only',
-                icon: Icons.female_rounded,
-                color: const Color(0xFFE879F9).withAlpha(40),
-                borderColor: const Color(0xFFE879F9).withAlpha(120),
-                iconColor: const Color(0xFFD946EF),
-              ),
-              _LegendChip(
-                label: 'VIP',
-                icon: Icons.workspace_premium_rounded,
-                color: scheme.tertiary.withAlpha(45),
-                borderColor: scheme.tertiary.withAlpha(140),
-                iconColor: scheme.tertiary,
-              ),
+       
             ];
 
             if (wrap) {
