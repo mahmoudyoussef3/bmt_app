@@ -9,8 +9,12 @@ class OperationRouteModel extends OperationRoute {
     required super.duration,
     required super.distance,
     required super.tripsCount,
+    required super.activePackagesCount,
     required super.status,
     required super.stations,
+    required super.activeTrips,
+    required super.packages,
+    required super.statistics,
     required super.notes,
   });
 
@@ -23,8 +27,12 @@ class OperationRouteModel extends OperationRoute {
       duration: route.duration,
       distance: route.distance,
       tripsCount: route.tripsCount,
+      activePackagesCount: route.activePackagesCount,
       status: route.status,
       stations: route.stations,
+      activeTrips: route.activeTrips,
+      packages: route.packages,
+      statistics: route.statistics,
       notes: route.notes,
     );
   }

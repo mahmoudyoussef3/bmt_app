@@ -33,7 +33,7 @@ class MockRoutesDatasource implements RoutesDatasource {
       ...route.stations,
       station.copyWith(
         id: station.id.isEmpty
-            ? 'st-${route.stations.length + 10}'
+            ? 'st-${route.id}-${route.stations.length + 1}'
             : station.id,
         order: route.stations.length + 1,
       ),
@@ -45,8 +45,21 @@ class MockRoutesDatasource implements RoutesDatasource {
   Future<OperationRouteModel> createRoute(OperationRoute route) async {
     final model = OperationRouteModel.fromEntity(
       route.copyWith(
-        id: 'route-${_routes.length + 10}',
-        stations: _assignStationIds(route.stations),
+        id: 'route-${_routes.length + 1}',
+        activePackagesCount: route.packages.length,
+        tripsCount: route.activeTrips.length,
+        stations: _assignStationIds(route.id, route.stations),
+        statistics: route.statistics.tripsCount == 0
+            ? RouteStatistics(
+                tripsCount: route.activeTrips.length,
+                bookingsCount: 0,
+                averageOccupancy: '٠٪',
+                subscribersCount: route.packages.fold<int>(
+                  0,
+                  (total, package) => total + package.subscribersCount,
+                ),
+              )
+            : route.statistics,
       ),
     );
     _routes.insert(0, model);
@@ -86,7 +99,7 @@ class MockRoutesDatasource implements RoutesDatasource {
 
   @override
   Future<OperationRouteModel> updateRoute(OperationRoute route) async {
-    return _replace(route);
+    return _replace(route.copyWith(activePackagesCount: route.packages.length));
   }
 
   @override
@@ -123,135 +136,335 @@ class MockRoutesDatasource implements RoutesDatasource {
     }).toList();
   }
 
-  List<RouteStation> _assignStationIds(List<RouteStation> stations) {
+  List<RouteStation> _assignStationIds(
+    String routeId,
+    List<RouteStation> stations,
+  ) {
     return stations.indexed.map((entry) {
       final (index, station) = entry;
       return station.copyWith(
-        id: station.id.isEmpty ? 'st-new-${index + 1}' : station.id,
+        id: station.id.isEmpty ? 'st-$routeId-${index + 1}' : station.id,
         order: index + 1,
       );
     }).toList();
   }
 }
 
-const _seedRoutes = [
-  OperationRouteModel(
+final List<OperationRouteModel> _seedRoutes = [
+  _route(
     id: 'route-1',
     name: 'بنها - القرية الذكية',
-    startCity: 'بنها',
-    endCity: 'القرية الذكية',
+    start: 'بنها',
+    end: 'القرية الذكية',
     duration: '٧٥ دقيقة',
     distance: '٧٦ كم',
-    tripsCount: 18,
+    trips: 18,
+    packages: 4,
     status: OperationRouteStatus.active,
-    stations: [
-      RouteStation(
-        id: 'st-1',
-        name: 'محطة بنها الرئيسية',
-        area: 'بنها',
-        arrivalOffset: '٠ دقيقة',
-        notes: 'نقطة تجمع رئيسية بجوار مدخل المحطة.',
-        order: 1,
-      ),
-      RouteStation(
-        id: 'st-2',
-        name: 'موقف شبرا',
-        area: 'شبرا الخيمة',
-        arrivalOffset: '٢٠ دقيقة',
-        notes: 'تأكيد الوقوف في الجانب الشرقي وقت الذروة.',
-        order: 2,
-      ),
-      RouteStation(
-        id: 'st-3',
-        name: 'بوابة الشيخ زايد',
-        area: 'الشيخ زايد',
-        arrivalOffset: '٦٠ دقيقة',
-        notes: 'محطة إنزال فقط في الرحلات الصباحية.',
-        order: 3,
-      ),
-      RouteStation(
-        id: 'st-4',
-        name: 'القرية الذكية',
-        area: '٦ أكتوبر',
-        arrivalOffset: '٧٥ دقيقة',
-        notes: 'نهاية المسار أمام البوابة الرئيسية.',
-        order: 4,
-      ),
+    areas: [
+      'بنها',
+      'طوخ',
+      'شبرا الخيمة',
+      'رمسيس',
+      'محور ٢٦ يوليو',
+      'الشيخ زايد',
+      'القرية الذكية',
     ],
-    notes: ['مسار صباحي عالي الطلب', 'يفضل مركبات سعة ١٢ مقعد'],
+    bookings: 1260,
+    occupancy: '٨٧٪',
+    subscribers: 214,
   ),
-  OperationRouteModel(
+  _route(
     id: 'route-2',
-    name: 'بنها - مدينة نصر',
-    startCity: 'بنها',
-    endCity: 'مدينة نصر',
-    duration: '٦٥ دقيقة',
-    distance: '٦٢ كم',
-    tripsCount: 14,
+    name: 'المنصورة - القاهرة الجديدة',
+    start: 'المنصورة',
+    end: 'القاهرة الجديدة',
+    duration: '١٥٥ دقيقة',
+    distance: '١٤٣ كم',
+    trips: 10,
+    packages: 3,
     status: OperationRouteStatus.active,
-    stations: [
-      RouteStation(
-        id: 'st-5',
-        name: 'بنها الجديدة',
-        area: 'بنها',
-        arrivalOffset: '٠ دقيقة',
-        notes: 'تجمع أمام الموقف الجديد.',
-        order: 1,
-      ),
-      RouteStation(
-        id: 'st-6',
-        name: 'الدائري',
-        area: 'القاهرة',
-        arrivalOffset: '٣٥ دقيقة',
-        notes: 'نقطة حساسة للزحام، راقب التأخير.',
-        order: 2,
-      ),
-      RouteStation(
-        id: 'st-7',
-        name: 'عباس العقاد',
-        area: 'مدينة نصر',
-        arrivalOffset: '٦٥ دقيقة',
-        notes: 'نقطة وصول بجوار الشارع الرئيسي.',
-        order: 3,
-      ),
+    areas: [
+      'المنصورة',
+      'طلخا',
+      'أجا',
+      'ميت غمر',
+      'بنها',
+      'السلام',
+      'الرحاب',
+      'التجمع الخامس',
     ],
-    notes: ['ازدحام متكرر بعد ٨ صباحاً'],
+    bookings: 840,
+    occupancy: '٧٩٪',
+    subscribers: 132,
   ),
-  OperationRouteModel(
+  _route(
     id: 'route-3',
-    name: 'بنها - المهندسين',
-    startCity: 'بنها',
-    endCity: 'المهندسين',
+    name: 'الشروق - التجمع الخامس',
+    start: 'الشروق',
+    end: 'التجمع الخامس',
+    duration: '٤٥ دقيقة',
+    distance: '٣٢ كم',
+    trips: 16,
+    packages: 5,
+    status: OperationRouteStatus.active,
+    areas: [
+      'مدينة الشروق',
+      'مدينتي',
+      'الرحاب',
+      'شارع التسعين الشمالي',
+      'كايرو فيستيفال',
+      'التجمع الخامس',
+    ],
+    bookings: 980,
+    occupancy: '٨٢٪',
+    subscribers: 176,
+  ),
+  _route(
+    id: 'route-4',
+    name: 'مدينة نصر - القرية الذكية',
+    start: 'مدينة نصر',
+    end: 'القرية الذكية',
+    duration: '٩٠ دقيقة',
+    distance: '٧٨ كم',
+    trips: 12,
+    packages: 4,
+    status: OperationRouteStatus.active,
+    areas: [
+      'عباس العقاد',
+      'مصطفى النحاس',
+      'مصر الجديدة',
+      'رمسيس',
+      'الدائري',
+      'الشيخ زايد',
+      'القرية الذكية',
+    ],
+    bookings: 1015,
+    occupancy: '٨٤٪',
+    subscribers: 188,
+  ),
+  _route(
+    id: 'route-5',
+    name: 'العبور - الشيخ زايد',
+    start: 'العبور',
+    end: 'الشيخ زايد',
+    duration: '١١٠ دقيقة',
+    distance: '٩٢ كم',
+    trips: 8,
+    packages: 2,
+    status: OperationRouteStatus.paused,
+    areas: [
+      'مدينة العبور',
+      'السلام',
+      'موقف العاشر',
+      'رمسيس',
+      'المحور',
+      'هايبر وان',
+      'الشيخ زايد',
+    ],
+    bookings: 430,
+    occupancy: '٦٨٪',
+    subscribers: 72,
+  ),
+  _route(
+    id: 'route-6',
+    name: 'المعادي - العاصمة الإدارية',
+    start: 'المعادي',
+    end: 'العاصمة الإدارية',
     duration: '٧٠ دقيقة',
     distance: '٦٨ كم',
-    tripsCount: 9,
-    status: OperationRouteStatus.paused,
-    stations: [
-      RouteStation(
-        id: 'st-8',
-        name: 'بنها',
-        area: 'القليوبية',
-        arrivalOffset: '٠ دقيقة',
-        notes: 'تشغيل متوقف مؤقتاً.',
-        order: 1,
-      ),
-      RouteStation(
-        id: 'st-9',
-        name: 'المؤسسة',
-        area: 'شبرا',
-        arrivalOffset: '٢٥ دقيقة',
-        notes: 'مراجعة الطلب قبل إعادة التشغيل.',
-        order: 2,
-      ),
-      RouteStation(
-        id: 'st-10',
-        name: 'جامعة الدول',
-        area: 'المهندسين',
-        arrivalOffset: '٧٠ دقيقة',
-        notes: 'نهاية المسار المقترحة.',
-        order: 3,
-      ),
+    trips: 14,
+    packages: 4,
+    status: OperationRouteStatus.active,
+    areas: [
+      'كورنيش المعادي',
+      'زهراء المعادي',
+      'القطامية',
+      'التجمع الثالث',
+      'الطريق الإقليمي',
+      'الحي الحكومي',
     ],
-    notes: ['متوقف مؤقتاً لمراجعة الطلب'],
+    bookings: 1160,
+    occupancy: '٩١٪',
+    subscribers: 205,
+  ),
+  _route(
+    id: 'route-7',
+    name: '٦ أكتوبر - وسط البلد',
+    start: '٦ أكتوبر',
+    end: 'وسط البلد',
+    duration: '٦٠ دقيقة',
+    distance: '٤٨ كم',
+    trips: 9,
+    packages: 3,
+    status: OperationRouteStatus.active,
+    areas: [
+      'الحصري',
+      'مول العرب',
+      'وصلة دهشور',
+      'المحور',
+      'المهندسين',
+      'التحرير',
+    ],
+    bookings: 710,
+    occupancy: '٧٦٪',
+    subscribers: 119,
+  ),
+  _route(
+    id: 'route-8',
+    name: 'حلوان - التجمع الخامس',
+    start: 'حلوان',
+    end: 'التجمع الخامس',
+    duration: '٨٥ دقيقة',
+    distance: '٦١ كم',
+    trips: 7,
+    packages: 2,
+    status: OperationRouteStatus.paused,
+    areas: [
+      'حلوان',
+      'المعصرة',
+      'المعادي',
+      'القطامية',
+      'شارع التسعين',
+      'التجمع الخامس',
+    ],
+    bookings: 390,
+    occupancy: '٦٤٪',
+    subscribers: 58,
+  ),
+  _route(
+    id: 'route-9',
+    name: 'طنطا - مدينة نصر',
+    start: 'طنطا',
+    end: 'مدينة نصر',
+    duration: '١٣٥ دقيقة',
+    distance: '١٢١ كم',
+    trips: 6,
+    packages: 2,
+    status: OperationRouteStatus.active,
+    areas: ['طنطا', 'قويسنا', 'بنها', 'شبرا الخيمة', 'الدائري', 'عباس العقاد'],
+    bookings: 520,
+    occupancy: '٧٣٪',
+    subscribers: 86,
+  ),
+  _route(
+    id: 'route-10',
+    name: 'الإسكندرية - القاهرة الجديدة',
+    start: 'الإسكندرية',
+    end: 'القاهرة الجديدة',
+    duration: '٢٠٥ دقيقة',
+    distance: '٢٢٣ كم',
+    trips: 4,
+    packages: 1,
+    status: OperationRouteStatus.archived,
+    areas: [
+      'سموحة',
+      'محرم بك',
+      'العامرية',
+      'وادي النطرون',
+      'الرماية',
+      'الرحاب',
+      'التجمع الخامس',
+    ],
+    bookings: 280,
+    occupancy: '٥٨٪',
+    subscribers: 34,
   ),
 ];
+
+OperationRouteModel _route({
+  required String id,
+  required String name,
+  required String start,
+  required String end,
+  required String duration,
+  required String distance,
+  required int trips,
+  required int packages,
+  required OperationRouteStatus status,
+  required List<String> areas,
+  required int bookings,
+  required String occupancy,
+  required int subscribers,
+}) {
+  final stations = areas.indexed.map((entry) {
+    final (index, area) = entry;
+    final arrivalMinutes = index * 15;
+    final departureMinutes =
+        arrivalMinutes + (index == areas.length - 1 ? 0 : 3);
+    return RouteStation(
+      id: 'st-$id-${index + 1}',
+      name: index == 0
+          ? 'نقطة انطلاق $area'
+          : index == areas.length - 1
+          ? 'نقطة وصول $area'
+          : 'محطة $area',
+      area: area,
+      arrivalOffset: '$arrivalMinutes دقيقة',
+      departureOffset: '$departureMinutes دقيقة',
+      locationDescription: 'نقطة تجمع واضحة داخل نطاق $area',
+      notes: index == 0
+          ? 'تأكيد حضور الركاب قبل التحرك.'
+          : 'تسجيل الصعود والنزول من لوحة التشغيل.',
+      order: index + 1,
+    );
+  }).toList();
+
+  return OperationRouteModel(
+    id: id,
+    name: name,
+    startCity: start,
+    endCity: end,
+    duration: duration,
+    distance: distance,
+    tripsCount: trips,
+    activePackagesCount: packages,
+    status: status,
+    stations: stations,
+    activeTrips: _trips(id, trips),
+    packages: _packages(packages, subscribers),
+    statistics: RouteStatistics(
+      tripsCount: trips,
+      bookingsCount: bookings,
+      averageOccupancy: occupancy,
+      subscribersCount: subscribers,
+    ),
+    notes: [
+      'مسار ثابت قابل للاستخدام في الرحلات والباقات',
+      'آخر مراجعة تشغيلية تمت خلال يونيو ٢٠٢٦',
+    ],
+  );
+}
+
+List<RouteActiveTrip> _trips(String routeId, int count) {
+  final drivers = ['أحمد سامي', 'مصطفى عادل', 'كريم فتحي', 'محمد عبد الرازق'];
+  final vehicles = [
+    'كوستر ٣٣٤٥ ق ل',
+    'سبرنتر ٧٢١٨ م ن',
+    'هايس ١٥٥٢ ج ب',
+    'H1 ٩٠٢١ ص ج',
+  ];
+  final statuses = ['لم تبدأ', 'في الطريق', 'متأخرة', 'مكتملة'];
+  return List.generate(count.clamp(1, 4), (index) {
+    return RouteActiveTrip(
+      tripNumber: '${routeId.toUpperCase()}-${index + 101}',
+      driver: drivers[index % drivers.length],
+      vehicle: vehicles[index % vehicles.length],
+      passengersCount: 10 + (index * 4),
+      status: statuses[index % statuses.length],
+    );
+  });
+}
+
+List<RoutePackage> _packages(int count, int subscribers) {
+  final types = ['شهري', 'أسبوعي', 'نصف شهري', 'ربع سنوي'];
+  return List.generate(count.clamp(1, 4), (index) {
+    return RoutePackage(
+      name: 'باقة ${types[index]}',
+      type: types[index],
+      price: '${900 + (index * 450)} ج.م',
+      subscribersCount: (subscribers / count).round(),
+      status: 'نشطة',
+    );
+  });
+}

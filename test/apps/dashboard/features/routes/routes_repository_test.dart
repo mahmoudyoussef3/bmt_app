@@ -14,17 +14,22 @@ import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/update_ro
 
 void main() {
   group('Routes clean architecture chain', () {
-    test('loads visual route operations data', () async {
+    test('loads complete route operations data', () async {
       final repository = RoutesRepositoryImpl(MockRoutesDatasource());
       final getRoutes = GetOperationRoutesUseCase(repository);
 
       final routes = await getRoutes();
 
-      expect(routes, isNotEmpty);
+      expect(routes, hasLength(greaterThanOrEqualTo(10)));
       expect(routes.first.name, 'بنها - القرية الذكية');
-      expect(routes.first.stations, hasLength(4));
-      expect(routes.first.stations.first.name, 'محطة بنها الرئيسية');
+      expect(routes.first.stations.length, inInclusiveRange(5, 10));
       expect(routes.first.stations.first.notes, isNotEmpty);
+      expect(routes.first.stations.first.departureOffset, isNotEmpty);
+      expect(routes.first.stations.first.locationDescription, isNotEmpty);
+      expect(routes.first.activeTrips, isNotEmpty);
+      expect(routes.first.packages, isNotEmpty);
+      expect(routes.first.statistics.bookingsCount, greaterThan(0));
+      expect(routes.first.activePackagesCount, routes.first.packages.length);
     });
 
     test('adds, edits, reorders, and deletes stations locally', () async {
@@ -82,7 +87,7 @@ void main() {
       expect(created.status, OperationRouteStatus.draft);
       expect(
         created.stations.map((station) => station.name),
-        contains('Station 1'),
+        contains('محطة اختبار ١'),
       );
       expect(created.stations.first.id, isNotEmpty);
     });
@@ -117,6 +122,28 @@ void main() {
       expect(archived.status, OperationRouteStatus.archived);
     });
 
+    test('updates route status locally for pause and archive flows', () async {
+      final repository = RoutesRepositoryImpl(MockRoutesDatasource());
+      final getRoutes = GetOperationRoutesUseCase(repository);
+      final updateRoute = UpdateRouteUseCase(repository);
+
+      final original = (await getRoutes()).first;
+      final paused = await updateRoute(
+        original.copyWith(status: OperationRouteStatus.paused),
+      );
+      expect(paused.status.label, 'متوقف');
+
+      final archived = await updateRoute(
+        paused.copyWith(status: OperationRouteStatus.archived),
+      );
+      final routes = await getRoutes();
+      expect(archived.status.label, 'مؤرشف');
+      expect(
+        routes.firstWhere((route) => route.id == original.id).status,
+        OperationRouteStatus.archived,
+      );
+    });
+
     test('maps datasource failures to Arabic repository error', () {
       final repository = RoutesRepositoryImpl(_FailingRoutesDatasource());
       final getRoutes = GetOperationRoutesUseCase(repository);
@@ -147,13 +174,23 @@ const _newRoute = OperationRoute(
   stations: [
     RouteStation(
       id: 'draft-1',
-      name: 'Station 1',
+      name: 'محطة اختبار ١',
       area: 'بنها',
       arrivalOffset: '٠ دقيقة',
+      departureOffset: '٣ دقائق',
+      locationDescription: 'أمام موقف بنها الرئيسي',
       notes: 'محطة بداية اختبارية',
       order: 1,
     ),
   ],
+  activeTrips: [],
+  packages: [],
+  statistics: RouteStatistics(
+    tripsCount: 0,
+    bookingsCount: 0,
+    averageOccupancy: '٠٪',
+    subscribersCount: 0,
+  ),
   notes: [],
 );
 

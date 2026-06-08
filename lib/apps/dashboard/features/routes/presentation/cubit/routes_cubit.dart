@@ -49,29 +49,86 @@ class RoutesCubit extends Cubit<RoutesState> {
   void selectRoute(String routeId) {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(
-      current.copyWith(selectedRouteId: routeId, view: RoutesView.operations),
-    );
+    emit(current.copyWith(selectedRouteId: routeId, view: RoutesView.details));
   }
 
   void showBuilder() {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(current.copyWith(view: RoutesView.builder, clearEditingRoute: true));
+    emit(
+      current.copyWith(
+        view: RoutesView.form,
+        clearEditingRoute: true,
+        clearSuccessRoute: true,
+      ),
+    );
   }
 
   void showEditRoute(OperationRoute route) {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(current.copyWith(view: RoutesView.builder, editingRoute: route));
+    emit(
+      current.copyWith(
+        view: RoutesView.form,
+        editingRoute: route,
+        clearSuccessRoute: true,
+      ),
+    );
   }
 
   void showOperations() {
     final current = state;
     if (current is! RoutesLoaded) return;
     emit(
-      current.copyWith(view: RoutesView.operations, clearEditingRoute: true),
+      current.copyWith(
+        view: RoutesView.list,
+        clearEditingRoute: true,
+        clearSuccessRoute: true,
+      ),
     );
+  }
+
+  void showDetails(OperationRoute route) {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    emit(
+      current.copyWith(
+        selectedRouteId: route.id,
+        view: RoutesView.details,
+        clearEditingRoute: true,
+        clearSuccessRoute: true,
+      ),
+    );
+  }
+
+  void updateSearch(String query) {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    emit(current.copyWith(searchQuery: query, view: RoutesView.list));
+  }
+
+  void updateStatusFilter(OperationRouteStatus? status) {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    emit(
+      current.copyWith(
+        statusFilter: status,
+        clearStatusFilter: status == null,
+        view: RoutesView.list,
+      ),
+    );
+  }
+
+  void updateCityFilter(String city) {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    emit(current.copyWith(cityFilter: city, view: RoutesView.list));
+  }
+
+  void updateStopsFilter(StopsCountFilter filter) {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    emit(current.copyWith(stopsFilter: filter, view: RoutesView.list));
   }
 
   Future<void> createRoute(OperationRoute route) async {
@@ -83,7 +140,9 @@ class RoutesCubit extends Cubit<RoutesState> {
         current.copyWith(
           routes: [created, ...current.routes],
           selectedRouteId: created.id,
-          view: RoutesView.operations,
+          view: RoutesView.success,
+          successRoute: created,
+          clearEditingRoute: true,
         ),
       );
     } catch (error) {
@@ -96,7 +155,7 @@ class RoutesCubit extends Cubit<RoutesState> {
     if (current is! RoutesLoaded) return;
     try {
       final updated = await _updateRoute(route);
-      _emitUpdatedRoute(current, updated);
+      _emitUpdatedRoute(current, updated, view: RoutesView.details);
     } catch (error) {
       emit(RoutesError(error.toString()));
     }
@@ -130,7 +189,7 @@ class RoutesCubit extends Cubit<RoutesState> {
         current.copyWith(
           routes: [created, ...current.routes],
           selectedRouteId: created.id,
-          view: RoutesView.operations,
+          view: RoutesView.details,
           clearEditingRoute: true,
         ),
       );
@@ -146,7 +205,20 @@ class RoutesCubit extends Cubit<RoutesState> {
       final updated = await _updateRoute(
         route.copyWith(status: OperationRouteStatus.archived),
       );
-      _emitUpdatedRoute(current, updated);
+      _emitUpdatedRoute(current, updated, view: RoutesView.list);
+    } catch (error) {
+      emit(RoutesError(error.toString()));
+    }
+  }
+
+  Future<void> pauseRoute(OperationRoute route) async {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    try {
+      final updated = await _updateRoute(
+        route.copyWith(status: OperationRouteStatus.paused),
+      );
+      _emitUpdatedRoute(current, updated, view: RoutesView.list);
     } catch (error) {
       emit(RoutesError(error.toString()));
     }
@@ -201,10 +273,21 @@ class RoutesCubit extends Cubit<RoutesState> {
     }
   }
 
-  void _emitUpdatedRoute(RoutesLoaded current, OperationRoute updated) {
+  void _emitUpdatedRoute(
+    RoutesLoaded current,
+    OperationRoute updated, {
+    RoutesView? view,
+  }) {
     final routes = current.routes
         .map((route) => route.id == updated.id ? updated : route)
         .toList();
-    emit(current.copyWith(routes: routes, selectedRouteId: updated.id));
+    emit(
+      current.copyWith(
+        routes: routes,
+        selectedRouteId: updated.id,
+        view: view,
+        clearSuccessRoute: true,
+      ),
+    );
   }
 }
