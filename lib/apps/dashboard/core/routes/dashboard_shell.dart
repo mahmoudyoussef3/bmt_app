@@ -18,6 +18,8 @@ import '../../features/fleet/presentation/cubit/fleet_cubit.dart';
 import '../../features/fleet/presentation/screens/fleet_screen.dart';
 import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
+import '../../features/packages/presentation/cubit/packages_cubit.dart';
+import '../../features/packages/presentation/screens/packages_overview_screen.dart';
 import '../../features/payments/presentation/cubit/payments_cubit.dart';
 import '../../features/payments/presentation/screens/payments_screen.dart';
 import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
@@ -120,6 +122,13 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.groups_outlined,
       selectedIcon: Icons.groups_rounded,
       permission: DashboardPermission.users,
+    ),
+    const _DashboardNavItem(
+      label: 'الباقات والأسعار',
+      route: DashboardRoutes.packages,
+      icon: Icons.sell_outlined,
+      selectedIcon: Icons.sell_rounded,
+      permission: DashboardPermission.packages,
     ),
     const _DashboardNavItem(
       label: 'الاشتراكات',
@@ -274,6 +283,10 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.subscriptions => _workspace(
         'subscriptions',
         const SubscriptionsScreen(),
+      ),
+      DashboardRoutes.packages => BlocProvider(
+        create: (_) => dashboardDi<PackagesCubit>()..load(),
+        child: const PackagesOverviewScreen(),
       ),
       DashboardRoutes.payments => BlocProvider(
         create: (_) => dashboardDi<PaymentsCubit>()..load(),

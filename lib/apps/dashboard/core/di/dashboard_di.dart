@@ -45,6 +45,11 @@ import '../../features/live_trips/data/repositories/live_trips_repository_impl.d
 import '../../features/live_trips/domain/repositories/live_trips_repository.dart';
 import '../../features/live_trips/domain/usecases/get_live_trips_usecase.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
+import '../../features/packages/data/datasources/mock_packages_datasource.dart';
+import '../../features/packages/data/repositories/packages_repository_impl.dart';
+import '../../features/packages/domain/repositories/packages_repository.dart';
+import '../../features/packages/domain/usecases/packages_usecases.dart';
+import '../../features/packages/presentation/cubit/packages_cubit.dart';
 import '../../features/payments/data/datasources/mock_payments_datasource.dart';
 import '../../features/payments/data/repositories/payments_repository_impl.dart';
 import '../../features/payments/domain/repositories/payments_repository.dart';
@@ -157,6 +162,97 @@ void registerDashboardDependencies() {
     dashboardDi.registerFactory(
       () =>
           DashboardWorkspaceCubit(dashboardDi<GetDashboardWorkspaceUseCase>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<PackagesDatasource>()) {
+    dashboardDi.registerLazySingleton<PackagesDatasource>(
+      MockPackagesDatasource.new,
+    );
+  }
+
+  if (!dashboardDi.isRegistered<PackagesRepository>()) {
+    dashboardDi.registerLazySingleton<PackagesRepository>(
+      () => PackagesRepositoryImpl(dashboardDi<PackagesDatasource>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetPackagePlansUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetPackagePlansUseCase(dashboardDi<PackagesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CreatePackagePlanUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CreatePackagePlanUseCase(dashboardDi<PackagesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdatePackagePlanUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdatePackagePlanUseCase(dashboardDi<PackagesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<TogglePackagePlanStatusUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => TogglePackagePlanStatusUseCase(dashboardDi<PackagesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetPackageRoutesUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetPackageRoutesUseCase(dashboardDi<PackagesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetRoutePackagePricesUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetRoutePackagePricesUseCase(dashboardDi<PackagesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<AssignPackagePriceToRoutePointsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => AssignPackagePriceToRoutePointsUseCase(
+        dashboardDi<PackagesRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdateRoutePackagePriceUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateRoutePackagePriceUseCase(dashboardDi<PackagesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetTripPackagePricesUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetTripPackagePricesUseCase(dashboardDi<PackagesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<AssignPackagePriceToTripUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => AssignPackagePriceToTripUseCase(dashboardDi<PackagesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<PackagesCubit>()) {
+    dashboardDi.registerFactory(
+      () => PackagesCubit(
+        getPlans: dashboardDi<GetPackagePlansUseCase>(),
+        createPlan: dashboardDi<CreatePackagePlanUseCase>(),
+        updatePlan: dashboardDi<UpdatePackagePlanUseCase>(),
+        togglePlanStatus: dashboardDi<TogglePackagePlanStatusUseCase>(),
+        getRoutes: dashboardDi<GetPackageRoutesUseCase>(),
+        getRoutePrices: dashboardDi<GetRoutePackagePricesUseCase>(),
+        assignRoutePrice: dashboardDi<AssignPackagePriceToRoutePointsUseCase>(),
+        updateRoutePrice: dashboardDi<UpdateRoutePackagePriceUseCase>(),
+        getTripPrices: dashboardDi<GetTripPackagePricesUseCase>(),
+        assignTripPrice: dashboardDi<AssignPackagePriceToTripUseCase>(),
+      ),
     );
   }
 
