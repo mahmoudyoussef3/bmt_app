@@ -42,7 +42,7 @@ class _MapPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Live Map', style: Theme.of(context).textTheme.titleLarge),
+          Text('الخريطة الحية', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.medium),
           Container(
             height: 280,
@@ -96,7 +96,7 @@ class _DriverStatusPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Driver Status', style: Theme.of(context).textTheme.titleLarge),
+          Text('حالة السائق', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.medium),
           Row(
             children: [
@@ -139,7 +139,10 @@ class _TimelinePanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Trip Timeline', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'مسار تنفيذ الرحلة',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.medium),
           ...trip.timeline.map(
             (item) => Padding(
@@ -195,7 +198,7 @@ class _AlertsPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Alerts', style: Theme.of(context).textTheme.titleLarge),
+          Text('التنبيهات', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.medium),
           if (alerts.isEmpty)
             const Text('لا توجد تنبيهات على هذه الرحلة.')

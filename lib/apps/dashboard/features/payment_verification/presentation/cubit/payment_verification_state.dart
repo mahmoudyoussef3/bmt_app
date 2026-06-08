@@ -27,10 +27,10 @@ class PaymentVerificationLoaded extends PaymentVerificationState {
 
   BookingPaymentVerification? get selectedItem {
     if (items.isEmpty) return null;
-    return items.firstWhere(
-      (item) => item.id == selectedId,
-      orElse: () => items.first,
-    );
+    for (final item in items) {
+      if (item.id == selectedId) return item;
+    }
+    return items.first;
   }
 
   int get pendingCount {

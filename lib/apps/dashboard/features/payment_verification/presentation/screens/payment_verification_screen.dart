@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_button.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/booking_payment_verification.dart';
@@ -47,10 +48,16 @@ class _VerificationLoadedView extends StatelessWidget {
         final compact = constraints.maxWidth < 1080;
         final queue = _VerificationQueue(state: state, onSelect: cubit.select);
         final review = selected == null
-            ? const Center(child: Text('لا توجد إيصالات للمراجعة.'))
+            ? const AppCard(
+                child: EmptyState(
+                  title: 'لا توجد إيصالات للمراجعة',
+                  subtitle: 'ستظهر إيصالات الحجز الجديدة هنا فور وصولها.',
+                ),
+              )
             : _ReviewScreen(
                 item: selected,
                 zoom: state.receiptZoom,
+                scrollable: !compact,
                 onZoomChanged: cubit.setReceiptZoom,
                 onApprove: (note) => cubit.approve(selected, note),
                 onReject: (note) => cubit.reject(selected, note),
@@ -110,7 +117,7 @@ class _VerificationQueue extends StatelessWidget {
                   const SizedBox(width: AppSpacing.medium),
                   Expanded(
                     child: Text(
-                      'Verification Queue',
+                      'قائمة تحقق الدفع',
                       style: Theme.of(context).textTheme.headlineSmall,
                     ),
                   ),
@@ -241,6 +248,7 @@ class _QueueCard extends StatelessWidget {
 class _ReviewScreen extends StatefulWidget {
   final BookingPaymentVerification item;
   final double zoom;
+  final bool scrollable;
   final ValueChanged<double> onZoomChanged;
   final ValueChanged<String> onApprove;
   final ValueChanged<String> onReject;
@@ -250,6 +258,7 @@ class _ReviewScreen extends StatefulWidget {
   const _ReviewScreen({
     required this.item,
     required this.zoom,
+    this.scrollable = true,
     required this.onZoomChanged,
     required this.onApprove,
     required this.onReject,
@@ -273,50 +282,55 @@ class _ReviewScreenState extends State<_ReviewScreen> {
   @override
   Widget build(BuildContext context) {
     final item = widget.item;
+    final content = [
+      _ReviewHeader(item: item),
+      const SizedBox(height: AppSpacing.medium),
+      LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 980;
+          final receipt = _ReceiptPreview(
+            item: item,
+            zoom: widget.zoom,
+            onZoomChanged: widget.onZoomChanged,
+          );
+          final details = _ReviewDetails(
+            item: item,
+            notes: _notes,
+            onApprove: () => _submit(widget.onApprove),
+            onReject: () => _submit(widget.onReject),
+            onRequestReview: () => _submit(widget.onRequestReview),
+            onAddNote: () => _submit(widget.onAddNote),
+          );
+
+          if (compact) {
+            return Column(
+              children: [
+                receipt,
+                const SizedBox(height: AppSpacing.medium),
+                details,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 3, child: receipt),
+              const SizedBox(width: AppSpacing.medium),
+              Expanded(flex: 2, child: details),
+            ],
+          );
+        },
+      ),
+    ];
+
+    if (!widget.scrollable) {
+      return Column(children: content);
+    }
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
-      children: [
-        _ReviewHeader(item: item),
-        const SizedBox(height: AppSpacing.medium),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final compact = constraints.maxWidth < 980;
-            final receipt = _ReceiptPreview(
-              item: item,
-              zoom: widget.zoom,
-              onZoomChanged: widget.onZoomChanged,
-            );
-            final details = _ReviewDetails(
-              item: item,
-              notes: _notes,
-              onApprove: () => _submit(widget.onApprove),
-              onReject: () => _submit(widget.onReject),
-              onRequestReview: () => _submit(widget.onRequestReview),
-              onAddNote: () => _submit(widget.onAddNote),
-            );
-
-            if (compact) {
-              return Column(
-                children: [
-                  receipt,
-                  const SizedBox(height: AppSpacing.medium),
-                  details,
-                ],
-              );
-            }
-
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 3, child: receipt),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(flex: 2, child: details),
-              ],
-            );
-          },
-        ),
-      ],
+      children: content,
     );
   }
 
@@ -388,7 +402,7 @@ class _ReceiptPreview extends StatelessWidget {
           Row(
             children: [
               Text(
-                'Receipt Preview',
+                'معاينة الإيصال',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const Spacer(),
@@ -512,7 +526,10 @@ class _ReviewDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Booking & Seat', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'بيانات الحجز والمقعد',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: AppSpacing.medium),
           _InfoRow(label: 'العميل', value: item.customer.name),
           _InfoRow(label: 'الهاتف', value: item.customer.phone),
@@ -534,7 +551,7 @@ class _ReviewDetails extends StatelessWidget {
             maxLines: 4,
             textDirection: TextDirection.rtl,
             decoration: const InputDecoration(
-              labelText: 'Verification notes',
+              labelText: 'ملاحظات التحقق',
               hintText: 'اكتب سبب القرار أو ملاحظة للمتابعة',
             ),
           ),
@@ -543,21 +560,21 @@ class _ReviewDetails extends StatelessWidget {
             spacing: AppSpacing.small,
             runSpacing: AppSpacing.small,
             children: [
-              AppButton(label: 'Approve', height: 42, onPressed: onApprove),
+              AppButton(label: 'اعتماد', height: 42, onPressed: onApprove),
               AppButton(
-                label: 'Reject',
+                label: 'رفض',
                 height: 42,
                 outline: true,
                 onPressed: onReject,
               ),
               AppButton(
-                label: 'Request review',
+                label: 'طلب مراجعة',
                 height: 42,
                 outline: true,
                 onPressed: onRequestReview,
               ),
               AppButton(
-                label: 'Add note',
+                label: 'إضافة ملاحظة',
                 height: 42,
                 outline: true,
                 onPressed: onAddNote,
@@ -565,14 +582,14 @@ class _ReviewDetails extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.large),
-          Text('Notes', style: Theme.of(context).textTheme.titleMedium),
+          Text('الملاحظات', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppSpacing.small),
           if (item.notes.isEmpty)
             const Text('لا توجد ملاحظات.')
           else
             ...item.notes.map((note) => _NoteRow(note: note)),
           const SizedBox(height: AppSpacing.medium),
-          Text('Workflow', style: Theme.of(context).textTheme.titleMedium),
+          Text('مسار الإجراء', style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: AppSpacing.small),
           ...item.history.map((history) => _HistoryRow(item: history)),
         ],

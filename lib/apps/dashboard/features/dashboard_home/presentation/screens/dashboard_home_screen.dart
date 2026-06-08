@@ -4,9 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/progress_bar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
+import '../../../../core/routes/dashboard_routes.dart';
 import '../../domain/entities/dashboard_home_data.dart';
 import '../cubit/dashboard_home_cubit.dart';
 import '../cubit/dashboard_home_state.dart';
@@ -50,13 +52,22 @@ class _DashboardHomeContent extends StatelessWidget {
         const SizedBox(height: AppSpacing.large),
         _ActionNowSection(items: data.actionItems, onOpenModule: onOpenModule),
         const SizedBox(height: AppSpacing.large),
-        _TodayTripsSection(trips: data.todayTrips),
+        _TodayTripsSection(trips: data.todayTrips, onOpenModule: onOpenModule),
         const SizedBox(height: AppSpacing.large),
-        _PaymentReviewSection(items: data.paymentReviews),
+        _PaymentReviewSection(
+          items: data.paymentReviews,
+          onOpenModule: onOpenModule,
+        ),
         const SizedBox(height: AppSpacing.large),
         _TwoColumnSection(
-          first: _ComplaintsSection(items: data.openComplaints),
-          second: _SubscriptionsSection(items: data.subscriptions),
+          first: _ComplaintsSection(
+            items: data.openComplaints,
+            onOpenModule: onOpenModule,
+          ),
+          second: _SubscriptionsSection(
+            items: data.subscriptions,
+            onOpenModule: onOpenModule,
+          ),
         ),
         const SizedBox(height: AppSpacing.large),
         _AlertsSection(items: data.alerts, onOpenModule: onOpenModule),
@@ -114,7 +125,7 @@ class _ActionNowSection extends StatelessWidget {
               crossAxisCount: columns,
               crossAxisSpacing: AppSpacing.medium,
               mainAxisSpacing: AppSpacing.medium,
-              mainAxisExtent: 142,
+              mainAxisExtent: 178,
             ),
             itemBuilder: (context, index) {
               final item = items[index];
@@ -140,6 +151,7 @@ class _ActionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final priorityColor = _priorityColor(context, item.priority);
+    final icon = _moduleIcon(item.targetModule);
 
     return AppCard(
       onTap: onTap,
@@ -158,21 +170,28 @@ class _ActionCard extends StatelessWidget {
                   color: priorityColor.withAlpha(26),
                   borderRadius: BorderRadius.circular(AppTokens.radius),
                 ),
-                child: Text(
-                  item.count,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: priorityColor,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+                child: Icon(icon, color: priorityColor),
               ),
               const SizedBox(width: AppSpacing.small),
               Expanded(
-                child: Text(
-                  item.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.xSmall),
+                    Text(
+                      item.count,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        color: priorityColor,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -186,6 +205,20 @@ class _ActionCard extends StatelessWidget {
               context,
             ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
+          const SizedBox(height: AppSpacing.small),
+          Row(
+            children: [
+              Text(
+                _priorityLabel(item.priority),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: priorityColor,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const Spacer(),
+              Icon(Icons.chevron_left_rounded, color: scheme.onSurfaceVariant),
+            ],
+          ),
         ],
       ),
     );
@@ -194,8 +227,9 @@ class _ActionCard extends StatelessWidget {
 
 class _TodayTripsSection extends StatelessWidget {
   final List<TodayTripSummary> trips;
+  final ValueChanged<String>? onOpenModule;
 
-  const _TodayTripsSection({required this.trips});
+  const _TodayTripsSection({required this.trips, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
@@ -215,7 +249,10 @@ class _TodayTripsSection extends StatelessWidget {
               mainAxisSpacing: AppSpacing.medium,
               mainAxisExtent: 214,
             ),
-            itemBuilder: (context, index) => _TripCard(trip: trips[index]),
+            itemBuilder: (context, index) => _TripCard(
+              trip: trips[index],
+              onTap: () => onOpenModule?.call(_tripTargetRoute(trips[index])),
+            ),
           );
         },
       ),
@@ -225,14 +262,16 @@ class _TodayTripsSection extends StatelessWidget {
 
 class _TripCard extends StatelessWidget {
   final TodayTripSummary trip;
+  final VoidCallback? onTap;
 
-  const _TripCard({required this.trip});
+  const _TripCard({required this.trip, this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
     return AppCard(
+      onTap: onTap,
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -298,8 +337,9 @@ class _TripCard extends StatelessWidget {
 
 class _PaymentReviewSection extends StatelessWidget {
   final List<PaymentReviewItem> items;
+  final ValueChanged<String>? onOpenModule;
 
-  const _PaymentReviewSection({required this.items});
+  const _PaymentReviewSection({required this.items, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
@@ -307,32 +347,41 @@ class _PaymentReviewSection extends StatelessWidget {
       title: 'مراجعة المدفوعات',
       child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.medium),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final split = constraints.maxWidth >= 860;
-            final list = _PaymentList(items: items);
-            final receipt = _ReceiptPreview(item: items.first);
-            if (!split) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  list,
-                  const SizedBox(height: AppSpacing.medium),
-                  receipt,
-                ],
-              );
-            }
+        child: items.isEmpty
+            ? const EmptyState(
+                title: 'لا توجد مدفوعات قيد المراجعة',
+                subtitle: 'ستظهر طلبات الدفع الجديدة هنا عند وصولها.',
+              )
+            : LayoutBuilder(
+                builder: (context, constraints) {
+                  final split = constraints.maxWidth >= 860;
+                  final list = _PaymentList(
+                    items: items,
+                    onOpenDetails: () =>
+                        onOpenModule?.call(DashboardRoutes.paymentVerification),
+                  );
+                  final receipt = _ReceiptPreview(item: items.first);
+                  if (!split) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        list,
+                        const SizedBox(height: AppSpacing.medium),
+                        receipt,
+                      ],
+                    );
+                  }
 
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 3, child: list),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(flex: 2, child: receipt),
-              ],
-            );
-          },
-        ),
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 3, child: list),
+                      const SizedBox(width: AppSpacing.medium),
+                      Expanded(flex: 2, child: receipt),
+                    ],
+                  );
+                },
+              ),
       ),
     );
   }
@@ -340,8 +389,9 @@ class _PaymentReviewSection extends StatelessWidget {
 
 class _PaymentList extends StatelessWidget {
   final List<PaymentReviewItem> items;
+  final VoidCallback? onOpenDetails;
 
-  const _PaymentList({required this.items});
+  const _PaymentList({required this.items, this.onOpenDetails});
 
   @override
   Widget build(BuildContext context) {
@@ -351,7 +401,7 @@ class _PaymentList extends StatelessWidget {
         return Column(
           children: [
             if (index > 0) const Divider(height: AppSpacing.large),
-            _PaymentRow(item: item),
+            _PaymentRow(item: item, onOpenDetails: onOpenDetails),
           ],
         );
       }).toList(),
@@ -361,8 +411,9 @@ class _PaymentList extends StatelessWidget {
 
 class _PaymentRow extends StatelessWidget {
   final PaymentReviewItem item;
+  final VoidCallback? onOpenDetails;
 
-  const _PaymentRow({required this.item});
+  const _PaymentRow({required this.item, this.onOpenDetails});
 
   @override
   Widget build(BuildContext context) {
@@ -394,9 +445,15 @@ class _PaymentRow extends StatelessWidget {
           spacing: AppSpacing.xSmall,
           runSpacing: AppSpacing.xSmall,
           children: [
-            FilledButton.tonal(onPressed: () {}, child: const Text('اعتماد')),
-            OutlinedButton(onPressed: () {}, child: const Text('رفض')),
-            TextButton(onPressed: () {}, child: const Text('فتح التفاصيل')),
+            FilledButton.tonal(
+              onPressed: onOpenDetails,
+              child: const Text('اعتماد'),
+            ),
+            OutlinedButton(onPressed: onOpenDetails, child: const Text('رفض')),
+            TextButton(
+              onPressed: onOpenDetails,
+              child: const Text('فتح التفاصيل'),
+            ),
           ],
         ),
       ],
@@ -481,22 +538,32 @@ class _ReceiptPreview extends StatelessWidget {
 
 class _ComplaintsSection extends StatelessWidget {
   final List<ComplaintTicket> items;
+  final ValueChanged<String>? onOpenModule;
 
-  const _ComplaintsSection({required this.items});
+  const _ComplaintsSection({required this.items, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
       title: 'الشكاوى المفتوحة',
-      children: items.map((item) => _ComplaintCard(item: item)).toList(),
+      emptyTitle: 'لا توجد شكاوى مفتوحة',
+      children: items
+          .map(
+            (item) => _ComplaintCard(
+              item: item,
+              onOpen: () => onOpenModule?.call(DashboardRoutes.tickets),
+            ),
+          )
+          .toList(),
     );
   }
 }
 
 class _ComplaintCard extends StatelessWidget {
   final ComplaintTicket item;
+  final VoidCallback? onOpen;
 
-  const _ComplaintCard({required this.item});
+  const _ComplaintCard({required this.item, this.onOpen});
 
   @override
   Widget build(BuildContext context) {
@@ -545,9 +612,9 @@ class _ComplaintCard extends StatelessWidget {
             spacing: AppSpacing.xSmall,
             runSpacing: AppSpacing.xSmall,
             children: [
-              FilledButton.tonal(onPressed: () {}, child: const Text('فتح')),
-              OutlinedButton(onPressed: () {}, child: const Text('تحويل')),
-              TextButton(onPressed: () {}, child: const Text('إغلاق')),
+              FilledButton.tonal(onPressed: onOpen, child: const Text('فتح')),
+              OutlinedButton(onPressed: onOpen, child: const Text('تحويل')),
+              TextButton(onPressed: onOpen, child: const Text('إغلاق')),
             ],
           ),
         ],
@@ -558,22 +625,32 @@ class _ComplaintCard extends StatelessWidget {
 
 class _SubscriptionsSection extends StatelessWidget {
   final List<SubscriptionReviewItem> items;
+  final ValueChanged<String>? onOpenModule;
 
-  const _SubscriptionsSection({required this.items});
+  const _SubscriptionsSection({required this.items, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
     return _SectionCard(
       title: 'الاشتراكات',
-      children: items.map((item) => _SubscriptionRow(item: item)).toList(),
+      emptyTitle: 'لا توجد اشتراكات تحتاج متابعة',
+      children: items
+          .map(
+            (item) => _SubscriptionRow(
+              item: item,
+              onOpen: () => onOpenModule?.call(DashboardRoutes.subscriptions),
+            ),
+          )
+          .toList(),
     );
   }
 }
 
 class _SubscriptionRow extends StatelessWidget {
   final SubscriptionReviewItem item;
+  final VoidCallback? onOpen;
 
-  const _SubscriptionRow({required this.item});
+  const _SubscriptionRow({required this.item, this.onOpen});
 
   @override
   Widget build(BuildContext context) {
@@ -616,9 +693,12 @@ class _SubscriptionRow extends StatelessWidget {
             spacing: AppSpacing.xSmall,
             runSpacing: AppSpacing.xSmall,
             children: [
-              FilledButton.tonal(onPressed: () {}, child: const Text('اعتماد')),
-              OutlinedButton(onPressed: () {}, child: const Text('تعديل')),
-              TextButton(onPressed: () {}, child: const Text('إيقاف')),
+              FilledButton.tonal(
+                onPressed: onOpen,
+                child: const Text('اعتماد'),
+              ),
+              OutlinedButton(onPressed: onOpen, child: const Text('تعديل')),
+              TextButton(onPressed: onOpen, child: const Text('إيقاف')),
             ],
           ),
         ],
@@ -758,9 +838,14 @@ class _Section extends StatelessWidget {
 
 class _SectionCard extends StatelessWidget {
   final String title;
+  final String emptyTitle;
   final List<Widget> children;
 
-  const _SectionCard({required this.title, required this.children});
+  const _SectionCard({
+    required this.title,
+    required this.children,
+    this.emptyTitle = 'لا توجد عناصر للعرض',
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -768,17 +853,19 @@ class _SectionCard extends StatelessWidget {
       title: title,
       child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.medium),
-        child: Column(
-          children: children.indexed.map((entry) {
-            final (index, child) = entry;
-            return Column(
-              children: [
-                if (index > 0) const SizedBox(height: AppSpacing.small),
-                child,
-              ],
-            );
-          }).toList(),
-        ),
+        child: children.isEmpty
+            ? EmptyState(title: emptyTitle)
+            : Column(
+                children: children.indexed.map((entry) {
+                  final (index, child) = entry;
+                  return Column(
+                    children: [
+                      if (index > 0) const SizedBox(height: AppSpacing.small),
+                      child,
+                    ],
+                  );
+                }).toList(),
+              ),
       ),
     );
   }
@@ -812,6 +899,37 @@ Color _priorityColor(BuildContext context, OperationsPriority priority) {
     OperationsPriority.high => scheme.tertiary,
     OperationsPriority.normal => scheme.primary,
   };
+}
+
+String _priorityLabel(OperationsPriority priority) {
+  return switch (priority) {
+    OperationsPriority.urgent => 'عاجل',
+    OperationsPriority.high => 'أولوية عالية',
+    OperationsPriority.normal => 'متابعة',
+  };
+}
+
+IconData _moduleIcon(String route) {
+  return switch (route) {
+    DashboardRoutes.paymentVerification => Icons.fact_check_outlined,
+    DashboardRoutes.liveTrips => Icons.near_me_outlined,
+    DashboardRoutes.tickets => Icons.support_agent_outlined,
+    DashboardRoutes.subscriptions => Icons.workspace_premium_outlined,
+    DashboardRoutes.trips => Icons.route_outlined,
+    DashboardRoutes.vehicles => Icons.directions_bus_outlined,
+    DashboardRoutes.drivers => Icons.badge_outlined,
+    _ => Icons.open_in_new_rounded,
+  };
+}
+
+String _tripTargetRoute(TodayTripSummary trip) {
+  if (trip.status == 'متأخرة' ||
+      trip.status == 'في الطريق' ||
+      trip.status == 'وصلت أول نقطة') {
+    return DashboardRoutes.liveTrips;
+  }
+
+  return DashboardRoutes.trips;
 }
 
 Color _complaintColor(BuildContext context, String status) {

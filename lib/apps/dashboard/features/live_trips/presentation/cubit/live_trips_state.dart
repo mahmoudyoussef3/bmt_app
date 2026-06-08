@@ -20,11 +20,12 @@ class LiveTripsLoaded extends LiveTripsState {
 
   const LiveTripsLoaded({required this.trips, required this.selectedTripId});
 
-  LiveTrip get selectedTrip {
-    return trips.firstWhere(
-      (trip) => trip.id == selectedTripId,
-      orElse: () => trips.first,
-    );
+  LiveTrip? get selectedTrip {
+    if (trips.isEmpty) return null;
+    for (final trip in trips) {
+      if (trip.id == selectedTripId) return trip;
+    }
+    return trips.first;
   }
 
   int get urgentAlertsCount {

@@ -176,34 +176,71 @@ class _DashboardShellState extends State<DashboardShell> {
   @override
   Widget build(BuildContext context) {
     final visibleItems = _visibleItems;
-    if (!visibleItems.any((item) => item.route == _route)) {
-      _route = DashboardRoutes.home;
-    }
 
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: Scaffold(
-        body: SafeArea(
-          child: Row(
-            children: [
-              _DashboardSidebar(
-                items: visibleItems,
-                role: _role,
-                route: _route,
-                onRoleChanged: _setRole,
-                onRouteChanged: (route) => setState(() => _route = route),
-              ),
-              Expanded(
-                child: Column(
-                  children: [
-                    _DashboardTopBar(title: _activeTitle, role: _role),
-                    Expanded(child: _buildContent()),
-                  ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final useCompactNavigation = constraints.maxWidth < 920;
+
+          if (useCompactNavigation) {
+            return Scaffold(
+              drawer: Drawer(
+                child: SafeArea(
+                  child: _DashboardSidebar(
+                    items: visibleItems,
+                    role: _role,
+                    route: _route,
+                    onRoleChanged: _setRole,
+                    onRouteChanged: (route) {
+                      if (_openRoute(route)) {
+                        Navigator.of(context).maybePop();
+                      }
+                    },
+                  ),
                 ),
               ),
-            ],
-          ),
-        ),
+              body: SafeArea(
+                child: Builder(
+                  builder: (context) => Column(
+                    children: [
+                      _DashboardTopBar(
+                        title: _activeTitle,
+                        role: _role,
+                        onOpenMenu: () => Scaffold.of(context).openDrawer(),
+                      ),
+                      Expanded(child: _buildContent()),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }
+
+          return Scaffold(
+            body: SafeArea(
+              child: Row(
+                children: [
+                  _DashboardSidebar(
+                    items: visibleItems,
+                    role: _role,
+                    route: _route,
+                    onRoleChanged: _setRole,
+                    onRouteChanged: _openRoute,
+                  ),
+                  Expanded(
+                    child: Column(
+                      children: [
+                        _DashboardTopBar(title: _activeTitle, role: _role),
+                        Expanded(child: _buildContent()),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }
@@ -225,19 +262,39 @@ class _DashboardShellState extends State<DashboardShell> {
   void _setRole(DashboardRole role) {
     setState(() {
       _role = role;
-      if (!_visibleItems.any((item) => item.route == _route)) {
+      if (!_canOpenRoute(_route)) {
         _route = DashboardRoutes.home;
       }
     });
+  }
+
+  bool _openRoute(String route) {
+    if (!_canOpenRoute(route)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('هذه الصفحة غير متاحة للدور الحالي')),
+      );
+      return false;
+    }
+
+    setState(() => _route = route);
+    return true;
+  }
+
+  bool _canOpenRoute(String route) {
+    final item = _items.firstWhere(
+      (item) => item.route == route,
+      orElse: () => _items.first,
+    );
+    final permission = item.permission;
+    return permission == null ||
+        DashboardPermissions.canAccess(_role, permission);
   }
 
   Widget _buildContent() {
     return switch (_route) {
       DashboardRoutes.home => BlocProvider(
         create: (_) => dashboardDi<DashboardHomeCubit>()..load(),
-        child: DashboardHomeScreen(
-          onOpenModule: (route) => setState(() => _route = route),
-        ),
+        child: DashboardHomeScreen(onOpenModule: _openRoute),
       ),
       DashboardRoutes.bookings => BlocProvider(
         create: (_) => dashboardDi<BookingsCubit>()..load(),
@@ -341,44 +398,49 @@ class _DashboardSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Container(
+    return SizedBox(
       width: 280,
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(80),
-        border: Border(left: BorderSide(color: scheme.outline.withAlpha(80))),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.medium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Text('لوحة التشغيل', style: Theme.of(context).textTheme.titleLarge),
-            const SizedBox(height: AppSpacing.xSmall),
-            Text(
-              'نظام عمليات النقل',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: AppSpacing.medium),
-            _RoleSelector(role: role, onChanged: onRoleChanged),
-            const SizedBox(height: AppSpacing.large),
-            Expanded(
-              child: ListView.separated(
-                itemCount: items.length,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(height: AppSpacing.xSmall),
-                itemBuilder: (context, index) {
-                  final item = items[index];
-                  return _NavButton(
-                    item: item,
-                    selected: item.route == route,
-                    onTap: () => onRouteChanged(item.route),
-                  );
-                },
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest.withAlpha(80),
+          border: Border(left: BorderSide(color: scheme.outline.withAlpha(80))),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                'لوحة التشغيل',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            ),
-          ],
+              const SizedBox(height: AppSpacing.xSmall),
+              Text(
+                'نظام عمليات النقل',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              _RoleSelector(role: role, onChanged: onRoleChanged),
+              const SizedBox(height: AppSpacing.large),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: items.length,
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: AppSpacing.xSmall),
+                  itemBuilder: (context, index) {
+                    final item = items[index];
+                    return _NavButton(
+                      item: item,
+                      selected: item.route == route,
+                      onTap: () => onRouteChanged(item.route),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -388,8 +450,13 @@ class _DashboardSidebar extends StatelessWidget {
 class _DashboardTopBar extends StatelessWidget {
   final String title;
   final DashboardRole role;
+  final VoidCallback? onOpenMenu;
 
-  const _DashboardTopBar({required this.title, required this.role});
+  const _DashboardTopBar({
+    required this.title,
+    required this.role,
+    this.onOpenMenu,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -408,6 +475,14 @@ class _DashboardTopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
+          if (onOpenMenu != null) ...[
+            IconButton(
+              tooltip: 'القائمة',
+              onPressed: onOpenMenu,
+              icon: const Icon(Icons.menu_rounded),
+            ),
+            const SizedBox(width: AppSpacing.small),
+          ],
           Expanded(
             child: Text(title, style: Theme.of(context).textTheme.titleLarge),
           ),

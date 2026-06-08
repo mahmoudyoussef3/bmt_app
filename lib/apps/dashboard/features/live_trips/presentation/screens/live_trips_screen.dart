@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/empty_state.dart';
 
 import '../cubit/live_trips_cubit.dart';
 import '../cubit/live_trips_state.dart';
@@ -82,7 +83,15 @@ class _LiveTripsLoadedView extends StatelessWidget {
                   state: state,
                   onSelected: cubit.selectTrip,
                 );
-                final panel = LiveMonitoringPanel(trip: state.selectedTrip);
+                final panel = state.selectedTrip == null
+                    ? const AppCard(
+                        child: EmptyState(
+                          title: 'لا توجد رحلات مباشرة الآن',
+                          subtitle:
+                              'عند بدء الرحلات ستظهر هنا الخريطة والتنبيهات ومسار التنفيذ.',
+                        ),
+                      )
+                    : LiveMonitoringPanel(trip: state.selectedTrip!);
 
                 if (compact) {
                   return ListView(
@@ -123,18 +132,24 @@ class _ActiveTripsList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Active Trips', style: Theme.of(context).textTheme.titleLarge),
+          Text('الرحلات النشطة', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.medium),
-          ...state.trips.map(
-            (trip) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-              child: LiveTripCard(
-                trip: trip,
-                selected: trip.id == state.selectedTripId,
-                onTap: () => onSelected(trip.id),
+          if (state.trips.isEmpty)
+            const EmptyState(
+              title: 'لا توجد رحلات قيد التنفيذ',
+              subtitle: 'ابدأ رحلة من شاشة الرحلات لتظهر في المتابعة الحية.',
+            )
+          else
+            ...state.trips.map(
+              (trip) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+                child: LiveTripCard(
+                  trip: trip,
+                  selected: trip.id == state.selectedTripId,
+                  onTap: () => onSelected(trip.id),
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

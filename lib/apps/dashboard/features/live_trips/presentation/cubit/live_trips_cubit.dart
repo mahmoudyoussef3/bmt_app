@@ -12,7 +12,12 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     emit(const LiveTripsLoading());
     try {
       final trips = await _getLiveTrips();
-      emit(LiveTripsLoaded(trips: trips, selectedTripId: trips.first.id));
+      emit(
+        LiveTripsLoaded(
+          trips: trips,
+          selectedTripId: trips.isEmpty ? '' : trips.first.id,
+        ),
+      );
     } catch (error) {
       emit(LiveTripsError(error.toString()));
     }
