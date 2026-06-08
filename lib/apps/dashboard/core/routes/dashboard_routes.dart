@@ -12,7 +12,6 @@ class DashboardRoutes {
   static const routes = '/routes';
   static const users = '/users';
   static const subscriptions = '/subscriptions';
-  static const packages = '/packages';
   static const payments = '/payments';
   static const paymentVerification = '/payment-verification';
   static const tickets = '/tickets';

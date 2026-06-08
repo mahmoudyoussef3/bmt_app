@@ -1,0 +1,55 @@
+import '../../domain/entities/user_subscription.dart';
+
+class UserSubscriptionModel extends UserSubscription {
+  const UserSubscriptionModel({
+    required super.id,
+    required super.userId,
+    required super.userName,
+    required super.userPhone,
+    required super.tripId,
+    required super.routeId,
+    required super.routeName,
+    required super.fromPointId,
+    required super.fromPointName,
+    required super.toPointId,
+    required super.toPointName,
+    required super.type,
+    required super.price,
+    required super.currency,
+    required super.totalRides,
+    required super.usedRides,
+    required super.remainingRides,
+    required super.startDate,
+    required super.endDate,
+    required super.status,
+    required super.createdAt,
+    required super.updatedAt,
+  });
+
+  factory UserSubscriptionModel.fromEntity(UserSubscription subscription) {
+    return UserSubscriptionModel(
+      id: subscription.id,
+      userId: subscription.userId,
+      userName: subscription.userName,
+      userPhone: subscription.userPhone,
+      tripId: subscription.tripId,
+      routeId: subscription.routeId,
+      routeName: subscription.routeName,
+      fromPointId: subscription.fromPointId,
+      fromPointName: subscription.fromPointName,
+      toPointId: subscription.toPointId,
+      toPointName: subscription.toPointName,
+      type: subscription.type,
+      price: subscription.price,
+      currency: subscription.currency,
+      totalRides: subscription.totalRides,
+      usedRides: subscription.usedRides,
+      remainingRides: subscription.remainingRides,
+      startDate: subscription.startDate,
+      endDate: subscription.endDate,
+      status: subscription.status,
+      createdAt: subscription.createdAt,
+      updatedAt: subscription.updatedAt,
+    );
+  }
+}

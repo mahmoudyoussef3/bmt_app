@@ -9,6 +9,7 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 import '../../domain/entities/operation_trip.dart';
 import '../cubit/trips_cubit.dart';
 import '../cubit/trips_state.dart';
+import '../widgets/trip_pricing_tab.dart';
 
 class TripsScreen extends StatelessWidget {
   const TripsScreen({super.key});
@@ -469,34 +470,42 @@ class _TripWorkspace extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.small),
-          Row(
+          Wrap(
+            spacing: AppSpacing.small,
+            runSpacing: AppSpacing.small,
             children: TripWorkspaceTab.values.map((tab) {
               final label = switch (tab) {
-                TripWorkspaceTab.info => 'معلومات الرحلة',
+                TripWorkspaceTab.overview => 'نظرة عامة',
+                TripWorkspaceTab.route => 'المسار',
+                TripWorkspaceTab.vehicle => 'المركبة',
+                TripWorkspaceTab.driver => 'السائق',
+                TripWorkspaceTab.pricing => 'التسعير',
                 TripWorkspaceTab.passengers => 'الركاب',
                 TripWorkspaceTab.seats => 'المقاعد',
                 TripWorkspaceTab.history => 'السجل',
               };
               final selected = state.tab == tab;
-              return Padding(
-                padding: const EdgeInsetsDirectional.only(
-                  end: AppSpacing.small,
-                ),
-                child: selected
-                    ? FilledButton(
-                        onPressed: () => cubit.changeWorkspaceTab(tab),
-                        child: Text(label),
-                      )
-                    : OutlinedButton(
-                        onPressed: () => cubit.changeWorkspaceTab(tab),
-                        child: Text(label),
-                      ),
-              );
+              return selected
+                  ? FilledButton(
+                      onPressed: () => cubit.changeWorkspaceTab(tab),
+                      child: Text(label),
+                    )
+                  : OutlinedButton(
+                      onPressed: () => cubit.changeWorkspaceTab(tab),
+                      child: Text(label),
+                    );
             }).toList(),
           ),
           const SizedBox(height: AppSpacing.medium),
           switch (state.tab) {
-            TripWorkspaceTab.info => _InfoTab(trip: trip),
+            TripWorkspaceTab.overview => _InfoTab(trip: trip),
+            TripWorkspaceTab.route => _RouteTab(trip: trip),
+            TripWorkspaceTab.vehicle => _VehicleTab(trip: trip),
+            TripWorkspaceTab.driver => _DriverTab(trip: trip),
+            TripWorkspaceTab.pricing => TripPricingTab(
+              trip: trip,
+              state: state,
+            ),
             TripWorkspaceTab.passengers => _PassengersTab(trip: trip),
             TripWorkspaceTab.seats => _SeatsTab(trip: trip),
             TripWorkspaceTab.history => _HistoryTab(trip: trip),
@@ -536,6 +545,124 @@ class _WorkspaceFact extends StatelessWidget {
             ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
           Text(value, style: Theme.of(context).textTheme.titleSmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _RouteTab extends StatelessWidget {
+  final OperationTrip trip;
+
+  const _RouteTab({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(trip.route, style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: AppSpacing.small),
+        Text(
+          'نقاط المسار محملة من المسار ولا يتم إعادة إنشائها داخل الرحلة.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        ...trip.routePoints.map(
+          (point) => Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.small),
+            child: Row(
+              children: [
+                CircleAvatar(
+                  radius: 14,
+                  backgroundColor: scheme.primaryContainer,
+                  foregroundColor: scheme.onPrimaryContainer,
+                  child: Text('${point.order}'),
+                ),
+                const SizedBox(width: AppSpacing.small),
+                Text(point.name),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _VehicleTab extends StatelessWidget {
+  final OperationTrip trip;
+
+  const _VehicleTab({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    return _OperationalDetailsPanel(
+      title: 'بيانات المركبة',
+      rows: [
+        ('المركبة', trip.vehicle),
+        ('السعة', '${trip.capacity} مقعد'),
+        ('المقاعد المحجوزة', '${trip.bookedSeats}'),
+        ('المقاعد المتاحة', '${trip.availableSeats}'),
+      ],
+    );
+  }
+}
+
+class _DriverTab extends StatelessWidget {
+  final OperationTrip trip;
+
+  const _DriverTab({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    return _OperationalDetailsPanel(
+      title: 'بيانات السائق',
+      rows: [
+        ('السائق', trip.driver),
+        ('رقم الرحلة', trip.id),
+        ('وقت الانطلاق', trip.departure),
+        ('حالة الرحلة', trip.status.label),
+      ],
+    );
+  }
+}
+
+class _OperationalDetailsPanel extends StatelessWidget {
+  final String title;
+  final List<(String, String)> rows;
+
+  const _OperationalDetailsPanel({required this.title, required this.rows});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.medium),
+          ...rows.map(
+            (row) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.small),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 160,
+                    child: Text(
+                      row.$1,
+                      style: Theme.of(context).textTheme.labelLarge,
+                    ),
+                  ),
+                  Expanded(child: Text(row.$2)),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );

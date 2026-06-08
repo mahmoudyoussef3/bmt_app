@@ -25,7 +25,7 @@ enum TripSeatState {
 class OperationTrip {
   final String id;
   final String route;
-  final List<String> routeStops;
+  final List<TripRoutePoint> routePoints;
   final String driver;
   final String vehicle;
   final String date;
@@ -41,7 +41,7 @@ class OperationTrip {
   const OperationTrip({
     required this.id,
     required this.route,
-    required this.routeStops,
+    required this.routePoints,
     required this.driver,
     required this.vehicle,
     required this.date,
@@ -58,7 +58,7 @@ class OperationTrip {
   OperationTrip copyWith({
     String? id,
     String? route,
-    List<String>? routeStops,
+    List<TripRoutePoint>? routePoints,
     String? driver,
     String? vehicle,
     String? date,
@@ -74,7 +74,7 @@ class OperationTrip {
     return OperationTrip(
       id: id ?? this.id,
       route: route ?? this.route,
-      routeStops: routeStops ?? this.routeStops,
+      routePoints: routePoints ?? this.routePoints,
       driver: driver ?? this.driver,
       vehicle: vehicle ?? this.vehicle,
       date: date ?? this.date,
@@ -88,6 +88,9 @@ class OperationTrip {
       notes: notes ?? this.notes,
     );
   }
+
+  List<String> get routeStops =>
+      routePoints.map((point) => point.name).toList(growable: false);
 
   int get bookedSeats {
     return seats
@@ -106,6 +109,26 @@ class OperationTrip {
 
   int get blockedSeats {
     return seats.where((seat) => seat.state == TripSeatState.blocked).length;
+  }
+}
+
+class TripRoutePoint {
+  final String id;
+  final String name;
+  final int order;
+
+  const TripRoutePoint({
+    required this.id,
+    required this.name,
+    required this.order,
+  });
+
+  TripRoutePoint copyWith({String? id, String? name, int? order}) {
+    return TripRoutePoint(
+      id: id ?? this.id,
+      name: name ?? this.name,
+      order: order ?? this.order,
+    );
   }
 }
 

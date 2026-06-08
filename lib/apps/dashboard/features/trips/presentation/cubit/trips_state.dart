@@ -1,6 +1,16 @@
 import '../../domain/entities/operation_trip.dart';
+import '../../domain/entities/trip_pricing.dart';
 
-enum TripWorkspaceTab { info, passengers, seats, history }
+enum TripWorkspaceTab {
+  overview,
+  route,
+  vehicle,
+  driver,
+  pricing,
+  passengers,
+  seats,
+  history,
+}
 
 sealed class TripsState {
   const TripsState();
@@ -25,16 +35,22 @@ class TripsLoaded extends TripsState {
   final String routeFilter;
   final String driverFilter;
   final String dateFilter;
+  final List<TripPricing> selectedTripPricing;
+  final bool pricingLoading;
+  final String? pricingError;
 
   const TripsLoaded({
     required this.trips,
     this.selectedTrip,
-    this.tab = TripWorkspaceTab.info,
+    this.tab = TripWorkspaceTab.overview,
     this.searchQuery = '',
     this.statusFilter,
     this.routeFilter = 'الكل',
     this.driverFilter = 'الكل',
     this.dateFilter = 'الكل',
+    this.selectedTripPricing = const [],
+    this.pricingLoading = false,
+    this.pricingError,
   });
 
   List<OperationTrip> get filteredTrips {
@@ -96,6 +112,10 @@ class TripsLoaded extends TripsState {
     String? routeFilter,
     String? driverFilter,
     String? dateFilter,
+    List<TripPricing>? selectedTripPricing,
+    bool? pricingLoading,
+    String? pricingError,
+    bool clearPricingError = false,
   }) {
     return TripsLoaded(
       trips: trips ?? this.trips,
@@ -110,6 +130,11 @@ class TripsLoaded extends TripsState {
       routeFilter: routeFilter ?? this.routeFilter,
       driverFilter: driverFilter ?? this.driverFilter,
       dateFilter: dateFilter ?? this.dateFilter,
+      selectedTripPricing: selectedTripPricing ?? this.selectedTripPricing,
+      pricingLoading: pricingLoading ?? this.pricingLoading,
+      pricingError: clearPricingError
+          ? null
+          : pricingError ?? this.pricingError,
     );
   }
 }

@@ -45,11 +45,6 @@ import '../../features/live_trips/data/repositories/live_trips_repository_impl.d
 import '../../features/live_trips/domain/repositories/live_trips_repository.dart';
 import '../../features/live_trips/domain/usecases/get_live_trips_usecase.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
-import '../../features/packages/data/datasources/mock_packages_datasource.dart';
-import '../../features/packages/data/repositories/packages_repository_impl.dart';
-import '../../features/packages/domain/repositories/packages_repository.dart';
-import '../../features/packages/domain/usecases/packages_usecases.dart';
-import '../../features/packages/presentation/cubit/packages_cubit.dart';
 import '../../features/payments/data/datasources/mock_payments_datasource.dart';
 import '../../features/payments/data/repositories/payments_repository_impl.dart';
 import '../../features/payments/domain/repositories/payments_repository.dart';
@@ -77,10 +72,22 @@ import '../../features/routes/domain/usecases/reorder_route_stations_usecase.dar
 import '../../features/routes/domain/usecases/update_route_station_usecase.dart';
 import '../../features/routes/domain/usecases/update_route_usecase.dart';
 import '../../features/routes/presentation/cubit/routes_cubit.dart';
+import '../../features/subscriptions/data/datasources/mock_subscriptions_datasource.dart';
+import '../../features/subscriptions/data/repositories/subscriptions_repository_impl.dart';
+import '../../features/subscriptions/domain/repositories/subscriptions_repository.dart';
+import '../../features/subscriptions/domain/usecases/cancel_subscription_usecase.dart';
+import '../../features/subscriptions/domain/usecases/create_subscription_usecase.dart';
+import '../../features/subscriptions/domain/usecases/get_subscription_creation_options_usecase.dart';
+import '../../features/subscriptions/domain/usecases/get_subscription_details_usecase.dart';
+import '../../features/subscriptions/domain/usecases/get_subscriptions_usecase.dart';
+import '../../features/subscriptions/domain/usecases/mark_subscription_ride_used_usecase.dart';
+import '../../features/subscriptions/domain/usecases/renew_subscription_usecase.dart';
+import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
 import '../../features/trips/data/datasources/mock_trips_datasource.dart';
 import '../../features/trips/data/repositories/trips_repository_impl.dart';
 import '../../features/trips/domain/repositories/trips_repository.dart';
 import '../../features/trips/domain/usecases/get_operation_trips_usecase.dart';
+import '../../features/trips/domain/usecases/trip_pricing_usecases.dart';
 import '../../features/trips/domain/usecases/trip_operations_usecases.dart';
 import '../../features/trips/domain/usecases/update_trip_seat_state_usecase.dart';
 import '../../features/trips/domain/usecases/update_trip_status_usecase.dart';
@@ -162,97 +169,6 @@ void registerDashboardDependencies() {
     dashboardDi.registerFactory(
       () =>
           DashboardWorkspaceCubit(dashboardDi<GetDashboardWorkspaceUseCase>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<PackagesDatasource>()) {
-    dashboardDi.registerLazySingleton<PackagesDatasource>(
-      MockPackagesDatasource.new,
-    );
-  }
-
-  if (!dashboardDi.isRegistered<PackagesRepository>()) {
-    dashboardDi.registerLazySingleton<PackagesRepository>(
-      () => PackagesRepositoryImpl(dashboardDi<PackagesDatasource>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetPackagePlansUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetPackagePlansUseCase(dashboardDi<PackagesRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<CreatePackagePlanUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => CreatePackagePlanUseCase(dashboardDi<PackagesRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<UpdatePackagePlanUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => UpdatePackagePlanUseCase(dashboardDi<PackagesRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<TogglePackagePlanStatusUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => TogglePackagePlanStatusUseCase(dashboardDi<PackagesRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetPackageRoutesUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetPackageRoutesUseCase(dashboardDi<PackagesRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetRoutePackagePricesUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetRoutePackagePricesUseCase(dashboardDi<PackagesRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<AssignPackagePriceToRoutePointsUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => AssignPackagePriceToRoutePointsUseCase(
-        dashboardDi<PackagesRepository>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<UpdateRoutePackagePriceUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => UpdateRoutePackagePriceUseCase(dashboardDi<PackagesRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetTripPackagePricesUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetTripPackagePricesUseCase(dashboardDi<PackagesRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<AssignPackagePriceToTripUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => AssignPackagePriceToTripUseCase(dashboardDi<PackagesRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<PackagesCubit>()) {
-    dashboardDi.registerFactory(
-      () => PackagesCubit(
-        getPlans: dashboardDi<GetPackagePlansUseCase>(),
-        createPlan: dashboardDi<CreatePackagePlanUseCase>(),
-        updatePlan: dashboardDi<UpdatePackagePlanUseCase>(),
-        togglePlanStatus: dashboardDi<TogglePackagePlanStatusUseCase>(),
-        getRoutes: dashboardDi<GetPackageRoutesUseCase>(),
-        getRoutePrices: dashboardDi<GetRoutePackagePricesUseCase>(),
-        assignRoutePrice: dashboardDi<AssignPackagePriceToRoutePointsUseCase>(),
-        updateRoutePrice: dashboardDi<UpdateRoutePackagePriceUseCase>(),
-        getTripPrices: dashboardDi<GetTripPackagePricesUseCase>(),
-        assignTripPrice: dashboardDi<AssignPackagePriceToTripUseCase>(),
-      ),
     );
   }
 
@@ -702,6 +618,80 @@ void registerDashboardDependencies() {
     dashboardDi.registerLazySingleton<TripsDatasource>(MockTripsDatasource.new);
   }
 
+  if (!dashboardDi.isRegistered<SubscriptionsDatasource>()) {
+    dashboardDi.registerLazySingleton<SubscriptionsDatasource>(
+      MockSubscriptionsDatasource.new,
+    );
+  }
+
+  if (!dashboardDi.isRegistered<SubscriptionsRepository>()) {
+    dashboardDi.registerLazySingleton<SubscriptionsRepository>(
+      () => SubscriptionsRepositoryImpl(dashboardDi<SubscriptionsDatasource>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetSubscriptionsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetSubscriptionsUseCase(dashboardDi<SubscriptionsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetSubscriptionDetailsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () =>
+          GetSubscriptionDetailsUseCase(dashboardDi<SubscriptionsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CreateSubscriptionUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CreateSubscriptionUseCase(dashboardDi<SubscriptionsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CancelSubscriptionUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CancelSubscriptionUseCase(dashboardDi<SubscriptionsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<RenewSubscriptionUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => RenewSubscriptionUseCase(dashboardDi<SubscriptionsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<MarkSubscriptionRideUsedUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => MarkSubscriptionRideUsedUseCase(
+        dashboardDi<SubscriptionsRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetSubscriptionCreationOptionsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetSubscriptionCreationOptionsUseCase(
+        dashboardDi<SubscriptionsRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<SubscriptionsCubit>()) {
+    dashboardDi.registerFactory(
+      () => SubscriptionsCubit(
+        getSubscriptions: dashboardDi<GetSubscriptionsUseCase>(),
+        getDetails: dashboardDi<GetSubscriptionDetailsUseCase>(),
+        createSubscription: dashboardDi<CreateSubscriptionUseCase>(),
+        cancelSubscription: dashboardDi<CancelSubscriptionUseCase>(),
+        renewSubscription: dashboardDi<RenewSubscriptionUseCase>(),
+        markRideUsed: dashboardDi<MarkSubscriptionRideUsedUseCase>(),
+        getCreationOptions:
+            dashboardDi<GetSubscriptionCreationOptionsUseCase>(),
+      ),
+    );
+  }
+
   if (!dashboardDi.isRegistered<TripsRepository>()) {
     dashboardDi.registerLazySingleton<TripsRepository>(
       () => TripsRepositoryImpl(dashboardDi<TripsDatasource>()),
@@ -756,6 +746,31 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<ValidateTripPricingUseCase>()) {
+    dashboardDi.registerLazySingleton(ValidateTripPricingUseCase.new);
+  }
+
+  if (!dashboardDi.isRegistered<GetTripPricingUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetTripPricingUseCase(dashboardDi<TripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<SaveTripSegmentPricingUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => SaveTripSegmentPricingUseCase(
+        dashboardDi<TripsRepository>(),
+        dashboardDi<ValidateTripPricingUseCase>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ToggleTripSegmentPricingUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ToggleTripSegmentPricingUseCase(dashboardDi<TripsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<TripsCubit>()) {
     dashboardDi.registerFactory(
       () => TripsCubit(
@@ -767,6 +782,9 @@ void registerDashboardDependencies() {
         updatePassenger: dashboardDi<UpdateTripPassengerUseCase>(),
         cancelPassenger: dashboardDi<CancelTripPassengerUseCase>(),
         movePassenger: dashboardDi<MoveTripPassengerUseCase>(),
+        getTripPricing: dashboardDi<GetTripPricingUseCase>(),
+        saveTripPricing: dashboardDi<SaveTripSegmentPricingUseCase>(),
+        toggleTripPricing: dashboardDi<ToggleTripSegmentPricingUseCase>(),
       ),
     );
   }

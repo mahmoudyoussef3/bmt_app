@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/operation_trip.dart';
+import '../../domain/entities/trip_pricing.dart';
 import '../../domain/usecases/get_operation_trips_usecase.dart';
+import '../../domain/usecases/trip_pricing_usecases.dart';
 import '../../domain/usecases/trip_operations_usecases.dart';
 import '../../domain/usecases/update_trip_seat_state_usecase.dart';
 import '../../domain/usecases/update_trip_status_usecase.dart';
@@ -16,6 +18,9 @@ class TripsCubit extends Cubit<TripsState> {
   final UpdateTripPassengerUseCase _updatePassenger;
   final CancelTripPassengerUseCase _cancelPassenger;
   final MoveTripPassengerUseCase _movePassenger;
+  final GetTripPricingUseCase _getTripPricing;
+  final SaveTripSegmentPricingUseCase _saveTripPricing;
+  final ToggleTripSegmentPricingUseCase _toggleTripPricing;
 
   TripsCubit({
     required GetOperationTripsUseCase getTrips,
@@ -26,6 +31,9 @@ class TripsCubit extends Cubit<TripsState> {
     required UpdateTripPassengerUseCase updatePassenger,
     required CancelTripPassengerUseCase cancelPassenger,
     required MoveTripPassengerUseCase movePassenger,
+    required GetTripPricingUseCase getTripPricing,
+    required SaveTripSegmentPricingUseCase saveTripPricing,
+    required ToggleTripSegmentPricingUseCase toggleTripPricing,
   }) : _getTrips = getTrips,
        _updateTripStatus = updateTripStatus,
        _updateSeatState = updateSeatState,
@@ -34,6 +42,9 @@ class TripsCubit extends Cubit<TripsState> {
        _updatePassenger = updatePassenger,
        _cancelPassenger = cancelPassenger,
        _movePassenger = movePassenger,
+       _getTripPricing = getTripPricing,
+       _saveTripPricing = saveTripPricing,
+       _toggleTripPricing = toggleTripPricing,
        super(const TripsLoading());
 
   Future<void> load() async {
@@ -46,10 +57,18 @@ class TripsCubit extends Cubit<TripsState> {
     }
   }
 
-  void showDetails(OperationTrip trip) {
+  Future<void> showDetails(OperationTrip trip) async {
     final current = state;
     if (current is! TripsLoaded) return;
-    emit(current.copyWith(selectedTrip: trip));
+    emit(
+      current.copyWith(
+        selectedTrip: trip,
+        selectedTripPricing: const [],
+        pricingLoading: true,
+        clearPricingError: true,
+      ),
+    );
+    await loadTripPricing(trip.id);
   }
 
   void changeWorkspaceTab(TripWorkspaceTab tab) {
@@ -93,7 +112,94 @@ class TripsCubit extends Cubit<TripsState> {
   void closeDetails() {
     final current = state;
     if (current is! TripsLoaded) return;
-    emit(current.copyWith(clearSelectedTrip: true));
+    emit(
+      current.copyWith(
+        clearSelectedTrip: true,
+        selectedTripPricing: const [],
+        pricingLoading: false,
+        clearPricingError: true,
+      ),
+    );
+  }
+
+  Future<void> loadTripPricing(String tripId) async {
+    final current = state;
+    if (current is! TripsLoaded) return;
+    emit(current.copyWith(pricingLoading: true, clearPricingError: true));
+    try {
+      final pricing = await _getTripPricing(tripId);
+      final latest = state;
+      if (latest is! TripsLoaded) return;
+      emit(
+        latest.copyWith(
+          selectedTripPricing: pricing,
+          pricingLoading: false,
+          clearPricingError: true,
+        ),
+      );
+    } catch (error) {
+      final latest = state;
+      if (latest is! TripsLoaded) return;
+      emit(
+        latest.copyWith(pricingLoading: false, pricingError: error.toString()),
+      );
+    }
+  }
+
+  Future<String?> saveTripPricing(TripPricing pricing) async {
+    final current = state;
+    if (current is! TripsLoaded) return null;
+    try {
+      final saved = await _saveTripPricing(pricing);
+      final latest = state;
+      if (latest is! TripsLoaded) return null;
+      final pricingList =
+          [
+            saved,
+            ...latest.selectedTripPricing.where((item) => item.id != saved.id),
+          ]..sort((a, b) {
+            final fromOrder = a.fromPointOrder.compareTo(b.fromPointOrder);
+            if (fromOrder != 0) return fromOrder;
+            return a.toPointOrder.compareTo(b.toPointOrder);
+          });
+      emit(
+        latest.copyWith(
+          selectedTripPricing: pricingList,
+          pricingLoading: false,
+          clearPricingError: true,
+        ),
+      );
+      return null;
+    } catch (error) {
+      final latest = state;
+      if (latest is TripsLoaded) {
+        emit(latest.copyWith(pricingError: error.toString()));
+      }
+      return error.toString();
+    }
+  }
+
+  Future<void> toggleTripPricing(TripPricing pricing) async {
+    final current = state;
+    if (current is! TripsLoaded) return;
+    try {
+      final updated = await _toggleTripPricing(pricing.id, !pricing.isActive);
+      final latest = state;
+      if (latest is! TripsLoaded) return;
+      emit(
+        latest.copyWith(
+          selectedTripPricing: latest.selectedTripPricing
+              .map((item) => item.id == updated.id ? updated : item)
+              .toList(),
+          clearPricingError: true,
+        ),
+      );
+    } catch (error) {
+      final latest = state;
+      if (latest is TripsLoaded) {
+        emit(latest.copyWith(pricingError: error.toString()));
+      }
+    }
   }
 
   Future<void> moveTrip(OperationTrip trip, OperationTripStatus status) async {

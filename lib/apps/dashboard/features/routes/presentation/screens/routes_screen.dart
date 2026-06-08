@@ -87,7 +87,7 @@ class _RoutesToolbar extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xSmall),
                     Text(
-                      'مسارات ثابتة يتم استخدامها لاحقاً في الرحلات والباقات.',
+                      'مسارات ثابتة يتم استخدامها لاحقاً في إنشاء الرحلات.',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -261,7 +261,6 @@ class _RoutesTable extends StatelessWidget {
                   'المحطات',
                   'المدة',
                   'رحلات نشطة',
-                  'باقات نشطة',
                   'الحالة',
                   'إجراءات',
                 ],
@@ -358,7 +357,6 @@ class _RouteTableRow extends StatelessWidget {
           Expanded(child: Text('${route.stations.length}')),
           Expanded(child: Text(route.duration)),
           Expanded(child: Text('${route.tripsCount}')),
-          Expanded(child: Text('${route.activePackagesCount}')),
           Expanded(child: StatusChip(label: route.status.label)),
           Expanded(
             child: Wrap(
@@ -439,8 +437,6 @@ class _RouteDetailsView extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.large),
         _ActiveTripsPanel(route: route),
-        const SizedBox(height: AppSpacing.large),
-        _PackagesPanel(route: route),
       ],
     );
   }
@@ -850,31 +846,6 @@ class _ActiveTripsPanel extends StatelessWidget {
               trip.vehicle,
               '${trip.passengersCount}',
               trip.status,
-            ],
-          )
-          .toList(),
-    );
-  }
-}
-
-class _PackagesPanel extends StatelessWidget {
-  final OperationRoute route;
-
-  const _PackagesPanel({required this.route});
-
-  @override
-  Widget build(BuildContext context) {
-    return _SimpleTablePanel(
-      title: 'الباقات المرتبطة بالمسار',
-      headers: const ['اسم الباقة', 'النوع', 'السعر', 'المشتركين', 'الحالة'],
-      rows: route.packages
-          .map(
-            (package) => [
-              package.name,
-              package.type,
-              package.price,
-              '${package.subscribersCount}',
-              package.status,
             ],
           )
           .toList(),
@@ -1452,7 +1423,7 @@ void _confirmArchive(BuildContext context, OperationRoute route) {
       child: AlertDialog(
         title: const Text('تأكيد أرشفة المسار'),
         content: Text(
-          'سيتم تحويل "${route.name}" إلى مؤرشف، ولن يظهر ضمن فلتر المسارات النشطة. الرحلات والباقات المرتبطة ستبقى محفوظة للرجوع إليها.',
+          'سيتم تحويل "${route.name}" إلى مؤرشف، ولن يظهر ضمن فلتر المسارات النشطة. الرحلات المرتبطة ستبقى محفوظة للرجوع إليها.',
         ),
         actions: [
           TextButton(

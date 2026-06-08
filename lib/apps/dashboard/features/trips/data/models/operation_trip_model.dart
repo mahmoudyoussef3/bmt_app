@@ -4,7 +4,7 @@ class OperationTripModel extends OperationTrip {
   const OperationTripModel({
     required super.id,
     required super.route,
-    required super.routeStops,
+    required super.routePoints,
     required super.driver,
     required super.vehicle,
     required super.date,
@@ -22,7 +22,7 @@ class OperationTripModel extends OperationTrip {
     return OperationTripModel(
       id: trip.id,
       route: trip.route,
-      routeStops: trip.routeStops,
+      routePoints: trip.routePoints,
       driver: trip.driver,
       vehicle: trip.vehicle,
       date: trip.date,

@@ -1,4 +1,5 @@
 import '../entities/operation_trip.dart';
+import '../entities/trip_pricing.dart';
 
 abstract class TripsRepository {
   Future<List<OperationTrip>> getTrips();
@@ -20,4 +21,7 @@ abstract class TripsRepository {
     String passengerId,
     String seatLabel,
   );
+  Future<List<TripPricing>> getTripPricing(String tripId);
+  Future<TripPricing> upsertTripPricing(TripPricing pricing);
+  Future<TripPricing> toggleTripPricingStatus(String pricingId, bool isActive);
 }

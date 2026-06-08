@@ -1,5 +1,7 @@
 import '../../domain/entities/operation_trip.dart';
+import '../../domain/entities/trip_pricing.dart';
 import '../models/operation_trip_model.dart';
+import '../models/trip_pricing_model.dart';
 
 abstract class TripsDatasource {
   Future<List<OperationTripModel>> fetchTrips();
@@ -24,10 +26,17 @@ abstract class TripsDatasource {
     String passengerId,
     String seatLabel,
   );
+  Future<List<TripPricingModel>> fetchTripPricing(String tripId);
+  Future<TripPricingModel> upsertTripPricing(TripPricing pricing);
+  Future<TripPricingModel> toggleTripPricingStatus(
+    String pricingId,
+    bool isActive,
+  );
 }
 
 class MockTripsDatasource implements TripsDatasource {
   final List<OperationTripModel> _trips = _buildTrips();
+  late final List<TripPricingModel> _pricing = _buildTripPricing(_trips);
 
   @override
   Future<List<OperationTripModel>> fetchTrips() async {
@@ -42,11 +51,11 @@ class MockTripsDatasource implements TripsDatasource {
         input.capacity <= 0) {
       throw ArgumentError('Trip requires route, driver, vehicle, and capacity');
     }
-    final stops = _stopsFor(input.route);
+    final points = _pointsFor(input.route);
     final trip = OperationTripModel(
       id: 'TR-${1000 + _trips.length + 1}',
       route: input.route,
-      routeStops: stops,
+      routePoints: points,
       driver: input.driver,
       vehicle: input.vehicle,
       date: input.date,
@@ -75,7 +84,7 @@ class MockTripsDatasource implements TripsDatasource {
     _ensureValidTrip(trip);
     return _replace(
       trip.copyWith(
-        routeStops: _stopsFor(trip.route),
+        routePoints: _pointsFor(trip.route),
         events: [
           const TripEvent(
             title: 'تم تعديل معلومات الرحلة',
@@ -275,6 +284,55 @@ class MockTripsDatasource implements TripsDatasource {
     );
   }
 
+  @override
+  Future<List<TripPricingModel>> fetchTripPricing(String tripId) async {
+    _find(tripId);
+    return List<TripPricingModel>.unmodifiable(
+      _pricing.where((pricing) => pricing.tripId == tripId).toList()
+        ..sort((a, b) {
+          final fromOrder = a.fromPointOrder.compareTo(b.fromPointOrder);
+          if (fromOrder != 0) return fromOrder;
+          return a.toPointOrder.compareTo(b.toPointOrder);
+        }),
+    );
+  }
+
+  @override
+  Future<TripPricingModel> upsertTripPricing(TripPricing pricing) async {
+    _validatePricing(pricing);
+    final now = DateTime.now();
+    final index = _pricing.indexWhere((item) => item.id == pricing.id);
+    final model = TripPricingModel.fromEntity(
+      pricing.copyWith(
+        id: pricing.id.trim().isEmpty
+            ? 'price-${pricing.tripId}-${_pricing.length + 1}'
+            : pricing.id,
+        createdAt: index == -1 ? now : _pricing[index].createdAt,
+        updatedAt: now,
+      ),
+    );
+    if (index == -1) {
+      _pricing.add(model);
+    } else {
+      _pricing[index] = model;
+    }
+    return model;
+  }
+
+  @override
+  Future<TripPricingModel> toggleTripPricingStatus(
+    String pricingId,
+    bool isActive,
+  ) async {
+    final index = _pricing.indexWhere((item) => item.id == pricingId);
+    if (index == -1) throw ArgumentError('Trip pricing not found');
+    final updated = TripPricingModel.fromEntity(
+      _pricing[index].copyWith(isActive: isActive, updatedAt: DateTime.now()),
+    );
+    _pricing[index] = updated;
+    return updated;
+  }
+
   OperationTripModel _find(String tripId) {
     return _trips.firstWhere(
       (trip) => trip.id == tripId,
@@ -297,6 +355,21 @@ class MockTripsDatasource implements TripsDatasource {
         trip.vehicle.trim().isEmpty ||
         trip.capacity <= 0) {
       throw ArgumentError('Trip requires route, driver, vehicle, and capacity');
+    }
+  }
+
+  void _validatePricing(TripPricing pricing) {
+    _find(pricing.tripId);
+    if (pricing.tripId.trim().isEmpty ||
+        pricing.currency.trim().isEmpty ||
+        pricing.fromPointId == pricing.toPointId ||
+        pricing.fromPointOrder >= pricing.toPointOrder ||
+        pricing.oneTimePrice <= 0 ||
+        pricing.fiveDaysPrice <= 0 ||
+        pricing.tenDaysPrice <= 0 ||
+        pricing.monthlyPrice <= 0 ||
+        pricing.threeMonthsPrice <= 0) {
+      throw ArgumentError('Invalid trip pricing');
     }
   }
 }
@@ -330,7 +403,7 @@ List<OperationTripModel> _buildTrips() {
     return OperationTripModel(
       id: id,
       route: route,
-      routeStops: _stopsFor(route),
+      routePoints: _pointsFor(route),
       driver: drivers[index % drivers.length],
       vehicle: vehicles[index % vehicles.length],
       date: index < 20 ? '٨ يونيو ٢٠٢٦' : '${9 + (index % 12)} يونيو ٢٠٢٦',
@@ -448,6 +521,100 @@ String _arrivalFrom(String departure) => '$departure + ٧٥ دقيقة';
 
 List<String> _stopsFor(String route) {
   return _routeStops[route] ?? _routeStops.values.first;
+}
+
+List<TripRoutePoint> _pointsFor(String route) {
+  final stops = _stopsFor(route);
+  return stops.indexed.map((entry) {
+    final (index, stop) = entry;
+    return TripRoutePoint(
+      id: '${_routeSlug(route)}-point-${index + 1}',
+      name: stop,
+      order: index + 1,
+    );
+  }).toList();
+}
+
+String _routeSlug(String route) {
+  return 'route-${_routeStops.keys.toList().indexOf(route) + 1}';
+}
+
+List<TripPricingModel> _buildTripPricing(List<OperationTripModel> trips) {
+  return trips.take(12).expand((trip) {
+    final points = trip.routePoints;
+    final first = points.first;
+    final middle = points[points.length ~/ 2];
+    final beforeLast = points[points.length - 2];
+    final last = points.last;
+    return [
+      _pricing(
+        id: '${trip.id}-price-1',
+        tripId: trip.id,
+        from: first,
+        to: last,
+        oneTime: 120,
+        fiveDays: 550,
+        tenDays: 1000,
+        monthly: 1900,
+        threeMonths: 5200,
+      ),
+      _pricing(
+        id: '${trip.id}-price-2',
+        tripId: trip.id,
+        from: first,
+        to: middle,
+        oneTime: 60,
+        fiveDays: 280,
+        tenDays: 520,
+        monthly: 950,
+        threeMonths: 2600,
+      ),
+      _pricing(
+        id: '${trip.id}-price-3',
+        tripId: trip.id,
+        from: middle,
+        to: beforeLast.order > middle.order ? beforeLast : last,
+        oneTime: 35,
+        fiveDays: 170,
+        tenDays: 320,
+        monthly: 600,
+        threeMonths: 1700,
+      ),
+    ];
+  }).toList();
+}
+
+TripPricingModel _pricing({
+  required String id,
+  required String tripId,
+  required TripRoutePoint from,
+  required TripRoutePoint to,
+  required double oneTime,
+  required double fiveDays,
+  required double tenDays,
+  required double monthly,
+  required double threeMonths,
+}) {
+  final createdAt = DateTime(2026, 6, 1, 9);
+  return TripPricingModel(
+    id: id,
+    tripId: tripId,
+    fromPointId: from.id,
+    toPointId: to.id,
+    fromPointName: from.name,
+    toPointName: to.name,
+    fromPointOrder: from.order,
+    toPointOrder: to.order,
+    oneTimePrice: oneTime,
+    fiveDaysPrice: fiveDays,
+    tenDaysPrice: tenDays,
+    monthlyPrice: monthly,
+    threeMonthsPrice: threeMonths,
+    currency: 'ج.م',
+    isActive: true,
+    createdAt: createdAt,
+    updatedAt: createdAt,
+  );
 }
 
 const _routeStops = {

@@ -648,7 +648,7 @@ class MockDashboardOperationsDatasource
     'subscriptions': DashboardWorkspaceModel(
       id: 'subscriptions',
       title: 'الاشتراكات',
-      subtitle: 'متابعة الباقات والتجديدات للركاب.',
+      subtitle: 'متابعة الاشتراكات والتجديدات للركاب.',
       actions: [
         DashboardWorkspaceAction(
           label: 'تجديد اشتراك',
@@ -695,7 +695,7 @@ class MockDashboardOperationsDatasource
           title: 'متابعة الاشتراكات',
           items: [
             'هذه شاشة إدارية وليست ضمن صلاحيات خدمة العملاء.',
-            'راجع الباقات منخفضة الرصيد قبل ساعات الذروة.',
+            'راجع الاشتراكات منخفضة الرصيد قبل ساعات الذروة.',
           ],
         ),
       ],

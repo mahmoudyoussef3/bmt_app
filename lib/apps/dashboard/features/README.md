@@ -8,7 +8,7 @@ Future home for operations dashboard features:
 - Routes
 - Trips
 - Bookings
-- Packages
+- Trip Pricing
 - Payments
 - Refunds
 - Tickets
@@ -18,4 +18,3 @@ Future home for operations dashboard features:
 - System Settings
 
 Do not add client passenger flows or captain trip execution UI here.
-
