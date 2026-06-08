@@ -2,15 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/metric_tile.dart';
+import 'package:bmt_app/core/widgets/progress_bar.dart';
+import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/dashboard_home_data.dart';
 import '../cubit/dashboard_home_cubit.dart';
 import '../cubit/dashboard_home_state.dart';
 
 class DashboardHomeScreen extends StatelessWidget {
-  const DashboardHomeScreen({super.key});
+  final ValueChanged<String>? onOpenModule;
+
+  const DashboardHomeScreen({super.key, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +25,10 @@ class DashboardHomeScreen extends StatelessWidget {
             child: CircularProgressIndicator(),
           ),
           DashboardHomeError(:final message) => Center(child: Text(message)),
-          DashboardHomeLoaded(:final data) => _DashboardHomeContent(data: data),
+          DashboardHomeLoaded(:final data) => _DashboardHomeContent(
+            data: data,
+            onOpenModule: onOpenModule,
+          ),
         };
       },
     );
@@ -30,50 +37,36 @@ class DashboardHomeScreen extends StatelessWidget {
 
 class _DashboardHomeContent extends StatelessWidget {
   final DashboardHomeData data;
+  final ValueChanged<String>? onOpenModule;
 
-  const _DashboardHomeContent({required this.data});
+  const _DashboardHomeContent({required this.data, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
-        _PageTitle(
-          title: 'الرئيسية',
-          subtitle: 'مختصر سريع لليوم وما يحتاج تدخل من فريق التشغيل.',
+        const _PageTitle(),
+        const SizedBox(height: AppSpacing.large),
+        _ActionNowSection(items: data.actionItems, onOpenModule: onOpenModule),
+        const SizedBox(height: AppSpacing.large),
+        _TodayTripsSection(trips: data.todayTrips),
+        const SizedBox(height: AppSpacing.large),
+        _PaymentReviewSection(items: data.paymentReviews),
+        const SizedBox(height: AppSpacing.large),
+        _TwoColumnSection(
+          first: _ComplaintsSection(items: data.openComplaints),
+          second: _SubscriptionsSection(items: data.subscriptions),
         ),
         const SizedBox(height: AppSpacing.large),
-        _MetricGrid(metrics: data.metrics.take(4).toList()),
-        const SizedBox(height: AppSpacing.large),
-        _QueueSection(
-          title: 'يتطلب إجراء',
-          items: [
-            const DashboardQueueItem(
-              title: 'مدفوعات معلقة',
-              subtitle: '٥ عمليات تحتاج قبول أو رفض',
-              status: 'مراجعة',
-            ),
-            ...data.tripsNeedingAction,
-            ...data.openTickets.take(1),
-            const DashboardQueueItem(
-              title: 'طلبات اشتراك جديدة',
-              subtitle: '٦ طلبات تحتاج مراجعة الباقة',
-              status: 'جديد',
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.large),
-        _QueueSection(title: 'آخر العمليات', items: data.recentBookings),
+        _AlertsSection(items: data.alerts, onOpenModule: onOpenModule),
       ],
     );
   }
 }
 
 class _PageTitle extends StatelessWidget {
-  final String title;
-  final String subtitle;
-
-  const _PageTitle({required this.title, required this.subtitle});
+  const _PageTitle();
 
   @override
   Widget build(BuildContext context) {
@@ -82,10 +75,10 @@ class _PageTitle extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(title, style: Theme.of(context).textTheme.headlineSmall),
+        Text('مركز التشغيل', style: Theme.of(context).textTheme.headlineSmall),
         const SizedBox(height: AppSpacing.xSmall),
         Text(
-          subtitle,
+          'كل ما يحتاج تدخل فعلي من خدمة العملاء والتشغيل اليوم.',
           style: Theme.of(
             context,
           ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
@@ -95,94 +88,300 @@ class _PageTitle extends StatelessWidget {
   }
 }
 
-class _MetricGrid extends StatelessWidget {
-  final List<DashboardMetric> metrics;
+class _ActionNowSection extends StatelessWidget {
+  final List<OperationsActionItem> items;
+  final ValueChanged<String>? onOpenModule;
 
-  const _MetricGrid({required this.metrics});
+  const _ActionNowSection({required this.items, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 960
-            ? 4
-            : constraints.maxWidth >= 620
-            ? 2
-            : 1;
+    return _Section(
+      title: 'إجراءات تحتاج تدخل الآن',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth >= 1180
+              ? 4
+              : constraints.maxWidth >= 760
+              ? 2
+              : 1;
 
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: metrics.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            crossAxisSpacing: AppSpacing.medium,
-            mainAxisSpacing: AppSpacing.medium,
-            mainAxisExtent: 116,
-          ),
-          itemBuilder: (context, index) {
-            final metric = metrics[index];
-            return MetricTile(
-              label: metric.label,
-              value: metric.value,
-              trend: metric.note,
-            );
-          },
-        );
-      },
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: items.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: AppSpacing.medium,
+              mainAxisSpacing: AppSpacing.medium,
+              mainAxisExtent: 142,
+            ),
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return _ActionCard(
+                item: item,
+                onTap: () => onOpenModule?.call(item.targetModule),
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }
 
-class _QueueSection extends StatelessWidget {
-  final String title;
-  final List<DashboardQueueItem> items;
+class _ActionCard extends StatelessWidget {
+  final OperationsActionItem item;
+  final VoidCallback? onTap;
 
-  const _QueueSection({required this.title, required this.items});
+  const _ActionCard({required this.item, this.onTap});
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final priorityColor = _priorityColor(context, item.priority);
+
     return AppCard(
+      onTap: onTap,
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.small),
-          ...items.indexed.expand((entry) {
-            final (index, item) = entry;
-            return [
-              if (index > 0) const Divider(height: AppSpacing.medium),
-              _QueueRow(item: item),
-            ];
-          }),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: priorityColor.withAlpha(26),
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
+                ),
+                child: Text(
+                  item.count,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: priorityColor,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Text(
+                  item.title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            item.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
         ],
       ),
     );
   }
 }
 
-class _QueueRow extends StatelessWidget {
-  final DashboardQueueItem item;
+class _TodayTripsSection extends StatelessWidget {
+  final List<TodayTripSummary> trips;
 
-  const _QueueRow({required this.item});
+  const _TodayTripsSection({required this.trips});
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'رحلات اليوم',
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final columns = constraints.maxWidth >= 1060 ? 2 : 1;
+
+          return GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: trips.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: columns,
+              crossAxisSpacing: AppSpacing.medium,
+              mainAxisSpacing: AppSpacing.medium,
+              mainAxisExtent: 214,
+            ),
+            itemBuilder: (context, index) => _TripCard(trip: trips[index]),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _TripCard extends StatelessWidget {
+  final TodayTripSummary trip;
+
+  const _TripCard({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  trip.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ),
+              StatusChip(label: trip.status),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Text(
+            trip.route,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          Wrap(
+            spacing: AppSpacing.medium,
+            runSpacing: AppSpacing.xSmall,
+            children: [
+              _InlineFact(icon: Icons.badge_outlined, text: trip.driver),
+              _InlineFact(
+                icon: Icons.directions_bus_outlined,
+                text: trip.vehicle,
+              ),
+              _InlineFact(
+                icon: Icons.schedule_outlined,
+                text: trip.departureTime,
+              ),
+            ],
+          ),
+          const Spacer(),
+          Row(
+            children: [
+              Text('المقاعد', style: Theme.of(context).textTheme.labelLarge),
+              const Spacer(),
+              Text(
+                'السعة ${trip.capacity} | المحجوز ${trip.bookedSeats} | المتاح ${trip.availableSeats}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.small),
+          AppProgressBar(progress: trip.occupancyRate),
+        ],
+      ),
+    );
+  }
+}
+
+class _PaymentReviewSection extends StatelessWidget {
+  final List<PaymentReviewItem> items;
+
+  const _PaymentReviewSection({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'مراجعة المدفوعات',
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.medium),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final split = constraints.maxWidth >= 860;
+            final list = _PaymentList(items: items);
+            final receipt = _ReceiptPreview(item: items.first);
+            if (!split) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  list,
+                  const SizedBox(height: AppSpacing.medium),
+                  receipt,
+                ],
+              );
+            }
+
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(flex: 3, child: list),
+                const SizedBox(width: AppSpacing.medium),
+                Expanded(flex: 2, child: receipt),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentList extends StatelessWidget {
+  final List<PaymentReviewItem> items;
+
+  const _PaymentList({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: items.indexed.map((entry) {
+        final (index, item) = entry;
+        return Column(
+          children: [
+            if (index > 0) const Divider(height: AppSpacing.large),
+            _PaymentRow(item: item),
+          ],
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _PaymentRow extends StatelessWidget {
+  final PaymentReviewItem item;
+
+  const _PaymentRow({required this.item});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(item.title, style: Theme.of(context).textTheme.bodyLarge),
+              Text(
+                item.customerName,
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
               const SizedBox(height: AppSpacing.xSmall),
               Text(
-                item.subtitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                '${item.tripName} - ${item.method} - ${item.amount}',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -191,13 +390,435 @@ class _QueueRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.small),
-        Text(
-          item.status,
-          style: Theme.of(
-            context,
-          ).textTheme.labelLarge?.copyWith(color: scheme.primary),
+        Wrap(
+          spacing: AppSpacing.xSmall,
+          runSpacing: AppSpacing.xSmall,
+          children: [
+            FilledButton.tonal(onPressed: () {}, child: const Text('اعتماد')),
+            OutlinedButton(onPressed: () {}, child: const Text('رفض')),
+            TextButton(onPressed: () {}, child: const Text('فتح التفاصيل')),
+          ],
         ),
       ],
     );
   }
+}
+
+class _ReceiptPreview extends StatelessWidget {
+  final PaymentReviewItem item;
+
+  const _ReceiptPreview({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      constraints: const BoxConstraints(minHeight: 220),
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(90),
+        border: Border.all(color: scheme.outline.withAlpha(120)),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.receipt_long_outlined, color: scheme.primary),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Text(
+                  item.receiptTitle,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardColor,
+                border: Border.all(color: scheme.outline.withAlpha(120)),
+                borderRadius: BorderRadius.circular(AppTokens.radius),
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      Icons.image_outlined,
+                      size: 36,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(height: AppSpacing.xSmall),
+                    Text(
+                      'صورة الإيصال',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Text(
+            item.receiptMeta,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ComplaintsSection extends StatelessWidget {
+  final List<ComplaintTicket> items;
+
+  const _ComplaintsSection({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'الشكاوى المفتوحة',
+      children: items.map((item) => _ComplaintCard(item: item)).toList(),
+    );
+  }
+}
+
+class _ComplaintCard extends StatelessWidget {
+  final ComplaintTicket item;
+
+  const _ComplaintCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        border: Border(
+          right: BorderSide(
+            color: _complaintColor(context, item.status),
+            width: 4,
+          ),
+        ),
+        color: scheme.surfaceContainerHighest.withAlpha(56),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  item.customerName,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              StatusChip(label: item.status),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xSmall),
+          Text(
+            '${item.type} - ${item.tripName}',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Text(
+            '${item.lastUpdate} - المسؤول ${item.owner}',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Wrap(
+            spacing: AppSpacing.xSmall,
+            runSpacing: AppSpacing.xSmall,
+            children: [
+              FilledButton.tonal(onPressed: () {}, child: const Text('فتح')),
+              OutlinedButton(onPressed: () {}, child: const Text('تحويل')),
+              TextButton(onPressed: () {}, child: const Text('إغلاق')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _SubscriptionsSection extends StatelessWidget {
+  final List<SubscriptionReviewItem> items;
+
+  const _SubscriptionsSection({required this.items});
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'الاشتراكات',
+      children: items.map((item) => _SubscriptionRow(item: item)).toList(),
+    );
+  }
+}
+
+class _SubscriptionRow extends StatelessWidget {
+  final SubscriptionReviewItem item;
+
+  const _SubscriptionRow({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(56),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  item.customerName,
+                  style: Theme.of(context).textTheme.titleSmall,
+                ),
+              ),
+              StatusChip(label: item.status),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xSmall),
+          Text(
+            '${item.packageName} - ${item.route}',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Text(
+            'من ${item.startDate} إلى ${item.endDate} - متبقي ${item.remainingTrips} رحلة',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Wrap(
+            spacing: AppSpacing.xSmall,
+            runSpacing: AppSpacing.xSmall,
+            children: [
+              FilledButton.tonal(onPressed: () {}, child: const Text('اعتماد')),
+              OutlinedButton(onPressed: () {}, child: const Text('تعديل')),
+              TextButton(onPressed: () {}, child: const Text('إيقاف')),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _AlertsSection extends StatelessWidget {
+  final List<OperationsAlert> items;
+  final ValueChanged<String>? onOpenModule;
+
+  const _AlertsSection({required this.items, this.onOpenModule});
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: 'تنبيهات التشغيل',
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.medium),
+        child: Column(
+          children: items.indexed.map((entry) {
+            final (index, item) = entry;
+            return Column(
+              children: [
+                if (index > 0) const Divider(height: AppSpacing.large),
+                _AlertRow(
+                  item: item,
+                  onTap: () => onOpenModule?.call(item.targetModule),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _AlertRow extends StatelessWidget {
+  final OperationsAlert item;
+  final VoidCallback? onTap;
+
+  const _AlertRow({required this.item, this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = _priorityColor(context, item.priority);
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTokens.radius),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.small),
+        child: Row(
+          children: [
+            Icon(Icons.warning_amber_outlined, color: color),
+            const SizedBox(width: AppSpacing.small),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                  const SizedBox(height: AppSpacing.xSmall),
+                  Text(
+                    item.details,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_left_rounded, color: scheme.onSurfaceVariant),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TwoColumnSection extends StatelessWidget {
+  final Widget first;
+  final Widget second;
+
+  const _TwoColumnSection({required this.first, required this.second});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 980) {
+          return Column(
+            children: [
+              first,
+              const SizedBox(height: AppSpacing.large),
+              second,
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(child: first),
+            const SizedBox(width: AppSpacing.large),
+            Expanded(child: second),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _Section extends StatelessWidget {
+  final String title;
+  final Widget child;
+
+  const _Section({required this.title, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(title, style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: AppSpacing.medium),
+        child,
+      ],
+    );
+  }
+}
+
+class _SectionCard extends StatelessWidget {
+  final String title;
+  final List<Widget> children;
+
+  const _SectionCard({required this.title, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return _Section(
+      title: title,
+      child: AppCard(
+        padding: const EdgeInsets.all(AppSpacing.medium),
+        child: Column(
+          children: children.indexed.map((entry) {
+            final (index, child) = entry;
+            return Column(
+              children: [
+                if (index > 0) const SizedBox(height: AppSpacing.small),
+                child,
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineFact extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _InlineFact({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 18, color: scheme.onSurfaceVariant),
+        const SizedBox(width: AppSpacing.xSmall),
+        Text(text, style: Theme.of(context).textTheme.bodySmall),
+      ],
+    );
+  }
+}
+
+Color _priorityColor(BuildContext context, OperationsPriority priority) {
+  final scheme = Theme.of(context).colorScheme;
+  return switch (priority) {
+    OperationsPriority.urgent => scheme.error,
+    OperationsPriority.high => scheme.tertiary,
+    OperationsPriority.normal => scheme.primary,
+  };
+}
+
+Color _complaintColor(BuildContext context, String status) {
+  final scheme = Theme.of(context).colorScheme;
+  return switch (status) {
+    'مصعدة' => scheme.error,
+    'قيد المعالجة' => scheme.tertiary,
+    _ => scheme.primary,
+  };
 }

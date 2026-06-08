@@ -9,79 +9,202 @@ class MockDashboardHomeDatasource implements DashboardHomeDatasource {
   @override
   Future<DashboardHomeModel> fetchHomeData() async {
     return const DashboardHomeModel(
-      metrics: [
-        DashboardMetric(
-          label: 'الحجوزات اليوم',
-          value: '١٥٦',
-          note: '٢٣ حجز يحتاج متابعة',
+      actionItems: [
+        OperationsActionItem(
+          title: 'حجز بانتظار مراجعة الدفع',
+          count: '١٢',
+          description: 'إيصالات محولة تحتاج اعتماد أو رفض قبل تثبيت الكراسي',
+          targetModule: '/payment-verification',
+          priority: OperationsPriority.urgent,
         ),
-        DashboardMetric(
-          label: 'الرحلات الجارية',
-          value: '١٢',
-          note: '٣ رحلات تحتاج تدخل',
+        OperationsActionItem(
+          title: 'شكاوى مفتوحة',
+          count: '٤',
+          description: 'بلاغات عملاء تحتاج متابعة من خدمة العملاء',
+          targetModule: '/tickets',
+          priority: OperationsPriority.high,
         ),
-        DashboardMetric(
-          label: 'السائقين المتاحين',
-          value: '٢٦',
-          note: 'جاهزون للإسناد',
+        OperationsActionItem(
+          title: 'اشتراكات بانتظار الاعتماد',
+          count: '٣',
+          description: 'طلبات باقات شهرية على مسارات القاهرة الكبرى',
+          targetModule: '/subscriptions',
+          priority: OperationsPriority.high,
         ),
-        DashboardMetric(
-          label: 'الشكاوى المفتوحة',
-          value: '٨',
-          note: '٢ أولوية عالية',
+        OperationsActionItem(
+          title: 'رحلة متأخرة',
+          count: '٢',
+          description: 'تأخير فعلي في الانطلاق أو الوصول لنقطة التجمع',
+          targetModule: '/live-trips',
+          priority: OperationsPriority.urgent,
+        ),
+        OperationsActionItem(
+          title: 'رحلات لم يبدأ السائق فيها بعد',
+          count: '٥',
+          description: 'رحلات مكتملة البيانات والسائق لم يسجل بدء التنفيذ',
+          targetModule: '/trips',
+          priority: OperationsPriority.high,
+        ),
+        OperationsActionItem(
+          title: 'مستند مركبة منتهي',
+          count: '١',
+          description: 'رخصة سير تحتاج تجديد قبل تشغيل المركبة مرة أخرى',
+          targetModule: '/vehicles',
+          priority: OperationsPriority.urgent,
+        ),
+        OperationsActionItem(
+          title: 'رخصة سائق أوشكت على الانتهاء',
+          count: '٢',
+          description: 'متبقي أقل من ١٤ يوم على انتهاء الرخصة',
+          targetModule: '/drivers',
+          priority: OperationsPriority.normal,
         ),
       ],
-      recentBookings: [
-        DashboardQueueItem(
-          title: 'حجز ٩٨٧٢',
-          subtitle: 'سارة أحمد - بنها إلى القرية الذكية',
-          status: 'مؤكد',
+      todayTrips: [
+        TodayTripSummary(
+          name: 'رحلة صباحية ١٠٥',
+          route: 'بنها - شبرا - رمسيس - القرية الذكية',
+          driver: 'أحمد عبد الرازق',
+          vehicle: 'تويوتا كوستر ٣٣٤٥ ق ل',
+          departureTime: '٧:١٥ ص',
+          capacity: 28,
+          bookedSeats: 26,
+          status: 'لم تبدأ',
         ),
-        DashboardQueueItem(
-          title: 'حجز ٩٨٧٣',
-          subtitle: 'خالد محمود - بنها إلى مدينة نصر',
-          status: 'في الانتظار',
+        TodayTripSummary(
+          name: 'رحلة موظفين ٢١٨',
+          route: 'المعادي - التجمع الخامس - العاصمة الإدارية',
+          driver: 'مصطفى سمير',
+          vehicle: 'مرسيدس سبرنتر ٧٢١٨ م ن',
+          departureTime: '٨:٠٠ ص',
+          capacity: 19,
+          bookedSeats: 19,
+          status: 'في الطريق',
         ),
-        DashboardQueueItem(
-          title: 'حجز ٩٨٧٤',
-          subtitle: 'رنا يوسف - طلب تعديل موعد',
-          status: 'جديد',
+        TodayTripSummary(
+          name: 'رحلة جامعة ٣٣٢',
+          route: 'مدينة نصر - مصر الجديدة - الجامعة البريطانية',
+          driver: 'كريم فتحي',
+          vehicle: 'هيونداي H1 ٩٠٢١ ص ج',
+          departureTime: '٩:٣٠ ص',
+          capacity: 12,
+          bookedSeats: 8,
+          status: 'وصلت أول نقطة',
         ),
-      ],
-      tripsNeedingAction: [
-        DashboardQueueItem(
-          title: 'رحلة ٢٢٤',
-          subtitle: 'تحتاج إسناد مركبة قبل الانطلاق',
-          status: 'تدخل مطلوب',
-        ),
-        DashboardQueueItem(
-          title: 'رحلة ٢٢١',
-          subtitle: 'السائق تأخر عن نقطة التجمع',
+        TodayTripSummary(
+          name: 'رحلة عودة ٤٠٧',
+          route: 'القرية الذكية - رمسيس - شبرا - بنها',
+          driver: 'محمد سامي',
+          vehicle: 'تويوتا هايس ١٥٥٢ ج ب',
+          departureTime: '٥:٤٥ م',
+          capacity: 14,
+          bookedSeats: 11,
           status: 'متأخرة',
         ),
       ],
-      delayedDrivers: [
-        DashboardQueueItem(
-          title: 'محمد أحمد',
-          subtitle: 'آخر تحديث منذ ١٢ دقيقة',
-          status: 'في رحلة',
+      paymentReviews: [
+        PaymentReviewItem(
+          customerName: 'سارة محمود',
+          tripName: 'رحلة صباحية ١٠٥',
+          method: 'إنستاباي',
+          amount: '٣٢٠ ج.م',
+          receiptTitle: 'إيصال تحويل إنستاباي',
+          receiptMeta: 'مرجع: IPA-44291 - ٧:٤٨ ص',
         ),
-        DashboardQueueItem(
-          title: 'كريم حسن',
-          subtitle: 'ينتظر تأكيد الوصول',
-          status: 'متاح',
+        PaymentReviewItem(
+          customerName: 'خالد عادل',
+          tripName: 'رحلة موظفين ٢١٨',
+          method: 'فودافون كاش',
+          amount: '٤٥٠ ج.م',
+          receiptTitle: 'صورة محفظة إلكترونية',
+          receiptMeta: 'رقم العملية: 739104 - ٨:١٢ ص',
         ),
       ],
-      openTickets: [
-        DashboardQueueItem(
-          title: 'شكوى ١٠٠١',
-          subtitle: 'مشكلة دفع - خالد محمود',
-          status: 'عالية',
+      openComplaints: [
+        ComplaintTicket(
+          customerName: 'منى إبراهيم',
+          type: 'تأخير رحلة',
+          tripName: 'رحلة عودة ٤٠٧',
+          lastUpdate: 'منذ ١٠ دقائق',
+          owner: 'أ. ندى',
+          status: 'جديدة',
         ),
-        DashboardQueueItem(
-          title: 'شكوى ١٠٠٢',
-          subtitle: 'تغيير موعد - رنا يوسف',
-          status: 'متوسطة',
+        ComplaintTicket(
+          customerName: 'عمرو حسين',
+          type: 'مقعد غير مطابق',
+          tripName: 'رحلة صباحية ١٠٥',
+          lastUpdate: 'منذ ٣٢ دقيقة',
+          owner: 'أ. أحمد',
+          status: 'قيد المعالجة',
+        ),
+        ComplaintTicket(
+          customerName: 'ريم طارق',
+          type: 'سلوك قيادة',
+          tripName: 'رحلة موظفين ٢١٨',
+          lastUpdate: 'منذ ساعة',
+          owner: 'مشرف التشغيل',
+          status: 'مصعدة',
+        ),
+      ],
+      subscriptions: [
+        SubscriptionReviewItem(
+          customerName: 'نهى جمال',
+          packageName: 'باقة عمل شهرية',
+          route: 'بنها - القرية الذكية',
+          startDate: '١٠ يونيو ٢٠٢٦',
+          endDate: '٩ يوليو ٢٠٢٦',
+          remainingTrips: 22,
+          status: 'بانتظار الاعتماد',
+        ),
+        SubscriptionReviewItem(
+          customerName: 'أحمد هشام',
+          packageName: 'باقة جامعة',
+          route: 'مدينة نصر - الجامعة البريطانية',
+          startDate: '١ يونيو ٢٠٢٦',
+          endDate: '٣٠ يونيو ٢٠٢٦',
+          remainingTrips: 14,
+          status: 'نشط',
+        ),
+        SubscriptionReviewItem(
+          customerName: 'داليا شوقي',
+          packageName: 'باقة ١٢ رحلة',
+          route: 'المعادي - التجمع الخامس',
+          startDate: '٢٠ مايو ٢٠٢٦',
+          endDate: '١٢ يونيو ٢٠٢٦',
+          remainingTrips: 2,
+          status: 'قارب على الانتهاء',
+        ),
+      ],
+      alerts: [
+        OperationsAlert(
+          title: 'رحلة عودة ٤٠٧ متأخرة',
+          details: 'تأخير ١٨ دقيقة عند الخروج من القرية الذكية',
+          targetModule: '/live-trips',
+          priority: OperationsPriority.urgent,
+        ),
+        OperationsAlert(
+          title: 'مركبة تحتاج صيانة',
+          details: 'تويوتا هايس ١٥٥٢ ج ب - صيانة دورية خلال ٢٤ ساعة',
+          targetModule: '/vehicles',
+          priority: OperationsPriority.high,
+        ),
+        OperationsAlert(
+          title: 'مستند مركبة منتهي',
+          details: 'كوستر ٣٣٤٥ ق ل - تأمين المركبة انتهى اليوم',
+          targetModule: '/vehicles',
+          priority: OperationsPriority.urgent,
+        ),
+        OperationsAlert(
+          title: 'سائق لم يبدأ الرحلة',
+          details: 'رحلة صباحية ١٠٥ لم يتم بدء تنفيذها رغم اقتراب موعدها',
+          targetModule: '/trips',
+          priority: OperationsPriority.high,
+        ),
+        OperationsAlert(
+          title: 'رحلة ممتلئة بالكامل',
+          details: 'رحلة موظفين ٢١٨ لا يوجد بها مقاعد متاحة',
+          targetModule: '/trips',
+          priority: OperationsPriority.normal,
         ),
       ],
     );

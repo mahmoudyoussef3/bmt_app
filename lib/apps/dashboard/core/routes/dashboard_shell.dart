@@ -225,7 +225,9 @@ class _DashboardShellState extends State<DashboardShell> {
     return switch (_route) {
       DashboardRoutes.home => BlocProvider(
         create: (_) => dashboardDi<DashboardHomeCubit>()..load(),
-        child: const DashboardHomeScreen(),
+        child: DashboardHomeScreen(
+          onOpenModule: (route) => setState(() => _route = route),
+        ),
       ),
       DashboardRoutes.bookings => BlocProvider(
         create: (_) => dashboardDi<BookingsCubit>()..load(),
