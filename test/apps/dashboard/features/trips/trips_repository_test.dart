@@ -5,29 +5,33 @@ import 'package:bmt_app/apps/dashboard/features/trips/data/models/operation_trip
 import 'package:bmt_app/apps/dashboard/features/trips/data/repositories/trips_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/domain/usecases/get_operation_trips_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/domain/usecases/trip_operations_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/domain/usecases/update_trip_seat_state_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/domain/usecases/update_trip_status_usecase.dart';
 
 void main() {
   group('Trips clean architecture chain', () {
-    test('loads operation trips for Kanban board', () async {
+    test('loads complete operations trips data', () async {
       final repository = TripsRepositoryImpl(MockTripsDatasource());
       final getTrips = GetOperationTripsUseCase(repository);
 
       final trips = await getTrips();
 
-      expect(trips, isNotEmpty);
+      expect(trips, hasLength(50));
+      expect(trips.every((trip) => trip.driver.isNotEmpty), isTrue);
+      expect(trips.every((trip) => trip.vehicle.isNotEmpty), isTrue);
+      expect(trips.every((trip) => trip.routeStops.isNotEmpty), isTrue);
       expect(
         trips.map((trip) => trip.status),
         contains(OperationTripStatus.inProgress),
       );
       expect(
         trips.first.events.map((event) => event.title),
-        contains('Created'),
+        contains('تم إنشاء الرحلة'),
       );
       expect(trips.first.passengers, isNotEmpty);
       expect(trips.first.seats, isNotEmpty);
-      expect(trips.first.totalSeats, trips.first.seats.length);
+      expect(trips.first.capacity, trips.first.seats.length);
       expect(trips.first.availableSeats, greaterThan(0));
     });
 
@@ -45,6 +49,44 @@ void main() {
       expect(updated.status, OperationTripStatus.completed);
       expect(updated.events.first.description, contains('مكتملة'));
     });
+
+    test(
+      'creates trip only when route driver vehicle and capacity exist',
+      () async {
+        final repository = TripsRepositoryImpl(MockTripsDatasource());
+        final createTrip = CreateOperationTripUseCase(repository);
+
+        final created = await createTrip(
+          const CreateTripInput(
+            route: 'بنها - القرية الذكية',
+            driver: 'أحمد عبد الرازق',
+            vehicle: 'كوستر ٣٣٤٥ ق ل',
+            date: '٨ يونيو ٢٠٢٦',
+            departure: '٩:٠٠',
+            capacity: 14,
+          ),
+        );
+
+        expect(created.id, isNotEmpty);
+        expect(created.routeStops, isNotEmpty);
+        expect(created.driver, isNotEmpty);
+        expect(created.vehicle, isNotEmpty);
+
+        expect(
+          () => createTrip(
+            const CreateTripInput(
+              route: '',
+              driver: '',
+              vehicle: '',
+              date: '٨ يونيو ٢٠٢٦',
+              departure: '٩:٠٠',
+              capacity: 0,
+            ),
+          ),
+          throwsA(isA<Exception>()),
+        );
+      },
+    );
 
     test('updates a trip seat state locally', () async {
       final repository = TripsRepositoryImpl(MockTripsDatasource());
@@ -64,6 +106,46 @@ void main() {
       expect(updatedSeat.state, TripSeatState.blocked);
       expect(updated.events.first.description, contains(updatedSeat.label));
       expect(updated.blockedSeats, trip.blockedSeats + 1);
+    });
+
+    test('edits cancels and moves passengers inside trip workspace', () async {
+      final repository = TripsRepositoryImpl(MockTripsDatasource());
+      final getTrips = GetOperationTripsUseCase(repository);
+      final updatePassenger = UpdateTripPassengerUseCase(repository);
+      final cancelPassenger = CancelTripPassengerUseCase(repository);
+      final movePassenger = MoveTripPassengerUseCase(repository);
+
+      final trip = (await getTrips()).first;
+      final passenger = trip.passengers.first;
+      final edited = await updatePassenger(
+        trip.id,
+        passenger.copyWith(phone: '01000000000'),
+      );
+      expect(
+        edited.passengers.firstWhere((item) => item.id == passenger.id).phone,
+        '01000000000',
+      );
+
+      final targetSeat = edited.seats.firstWhere(
+        (seat) => seat.state == TripSeatState.available,
+      );
+      final moved = await movePassenger(
+        trip.id,
+        passenger.id,
+        targetSeat.label,
+      );
+      expect(
+        moved.passengers.firstWhere((item) => item.id == passenger.id).seat,
+        targetSeat.label,
+      );
+
+      final cancelled = await cancelPassenger(trip.id, passenger.id);
+      expect(
+        cancelled.passengers
+            .firstWhere((item) => item.id == passenger.id)
+            .status,
+        'ملغي',
+      );
     });
 
     test('maps datasource failures to Arabic repository error', () {
@@ -104,6 +186,41 @@ class _FailingTripsDatasource implements TripsDatasource {
     String seatId,
     TripSeatState state,
   ) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationTripModel> cancelPassenger(
+    String tripId,
+    String passengerId,
+  ) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationTripModel> createTrip(CreateTripInput input) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationTripModel> movePassenger(
+    String tripId,
+    String passengerId,
+    String seatLabel,
+  ) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationTripModel> updatePassenger(
+    String tripId,
+    TripPassenger passenger,
+  ) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationTripModel> updateTripInfo(OperationTrip trip) {
     throw StateError('failure');
   }
 }

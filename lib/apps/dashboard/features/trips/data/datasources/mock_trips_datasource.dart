@@ -12,12 +12,22 @@ abstract class TripsDatasource {
     String seatId,
     TripSeatState state,
   );
+  Future<OperationTripModel> createTrip(CreateTripInput input);
+  Future<OperationTripModel> updateTripInfo(OperationTrip trip);
+  Future<OperationTripModel> updatePassenger(
+    String tripId,
+    TripPassenger passenger,
+  );
+  Future<OperationTripModel> cancelPassenger(String tripId, String passengerId);
+  Future<OperationTripModel> movePassenger(
+    String tripId,
+    String passengerId,
+    String seatLabel,
+  );
 }
 
 class MockTripsDatasource implements TripsDatasource {
-  final List<OperationTripModel> _trips = List<OperationTripModel>.from(
-    _seedTrips,
-  );
+  final List<OperationTripModel> _trips = _buildTrips();
 
   @override
   Future<List<OperationTripModel>> fetchTrips() async {
@@ -25,24 +35,80 @@ class MockTripsDatasource implements TripsDatasource {
   }
 
   @override
+  Future<OperationTripModel> createTrip(CreateTripInput input) async {
+    if (input.route.trim().isEmpty ||
+        input.driver.trim().isEmpty ||
+        input.vehicle.trim().isEmpty ||
+        input.capacity <= 0) {
+      throw ArgumentError('Trip requires route, driver, vehicle, and capacity');
+    }
+    final stops = _stopsFor(input.route);
+    final trip = OperationTripModel(
+      id: 'TR-${1000 + _trips.length + 1}',
+      route: input.route,
+      routeStops: stops,
+      driver: input.driver,
+      vehicle: input.vehicle,
+      date: input.date,
+      departure: input.departure,
+      arrival: _arrivalFrom(input.departure),
+      status: OperationTripStatus.scheduled,
+      capacity: input.capacity,
+      seats: _seatMap(input.capacity, 0, 'TR-${1000 + _trips.length + 1}'),
+      passengers: const [],
+      events: const [
+        TripEvent(
+          title: 'تم إنشاء الرحلة',
+          time: 'الآن',
+          description: 'تم إنشاء الرحلة بعد اختيار المسار والسائق والمركبة.',
+          done: true,
+        ),
+      ],
+      notes: ['تم تحميل محطات المسار تلقائياً'],
+    );
+    _trips.insert(0, trip);
+    return trip;
+  }
+
+  @override
+  Future<OperationTripModel> updateTripInfo(OperationTrip trip) async {
+    _ensureValidTrip(trip);
+    return _replace(
+      trip.copyWith(
+        routeStops: _stopsFor(trip.route),
+        events: [
+          const TripEvent(
+            title: 'تم تعديل معلومات الرحلة',
+            time: 'الآن',
+            description: 'تم تحديث بيانات الرحلة من مساحة التشغيل.',
+            done: true,
+          ),
+          ...trip.events,
+        ],
+      ),
+    );
+  }
+
+  @override
   Future<OperationTripModel> updateTripStatus(
     String tripId,
     OperationTripStatus status,
   ) async {
-    final index = _trips.indexWhere((trip) => trip.id == tripId);
-    if (index == -1) throw ArgumentError('Trip not found');
-    final existing = _trips[index];
-    final event = TripEvent(
-      title: 'تحديث الحالة',
-      time: 'الآن',
-      description: 'تم نقل الرحلة إلى ${status.label}',
-      done: true,
+    final existing = _find(tripId);
+    return _replace(
+      existing.copyWith(
+        status: status,
+        events: [
+          TripEvent(
+            title: 'تم تحديث الحالة',
+            time: 'الآن',
+            description: 'تم نقل الرحلة إلى ${status.label}',
+            done: true,
+          ),
+          ...existing.events,
+        ],
+      ),
     );
-    final updated = OperationTripModel.fromEntity(
-      existing.copyWith(status: status, events: [event, ...existing.events]),
-    );
-    _trips[index] = updated;
-    return updated;
   }
 
   @override
@@ -51,297 +117,390 @@ class MockTripsDatasource implements TripsDatasource {
     String seatId,
     TripSeatState state,
   ) async {
-    final index = _trips.indexWhere((trip) => trip.id == tripId);
-    if (index == -1) throw ArgumentError('Trip not found');
-    final existing = _trips[index];
-    final seats = existing.seats.map((seat) {
+    final trip = _find(tripId);
+    final seats = trip.seats.map((seat) {
       if (seat.id != seatId) return seat;
-      final clearCustomer =
-          state == TripSeatState.available || state == TripSeatState.blocked;
       return seat.copyWith(
         state: state,
-        clearPassengerName: clearCustomer,
-        clearPickup: clearCustomer,
+        clearPassenger:
+            state == TripSeatState.available || state == TripSeatState.blocked,
         notes: state == TripSeatState.blocked
-            ? 'حظره فريق خدمة العملاء'
+            ? 'محظور بواسطة خدمة العملاء'
             : seat.notes,
       );
     }).toList();
     final updatedSeat = seats.firstWhere((seat) => seat.id == seatId);
-    final event = TripEvent(
-      title: 'Seat Updated',
-      time: 'الآن',
-      description:
-          'تم تغيير المقعد ${updatedSeat.label} إلى ${updatedSeat.state.label}',
-      done: true,
-    );
-    final updated = OperationTripModel.fromEntity(
-      existing.copyWith(
+    return _replace(
+      trip.copyWith(
         seats: seats,
-        passengers: _passengersFromSeats(seats),
-        events: [event, ...existing.events],
+        events: [
+          TripEvent(
+            title: 'تم تعديل مقعد',
+            time: 'الآن',
+            description:
+                'تم تحديث المقعد ${updatedSeat.label} إلى ${updatedSeat.state.label}.',
+            done: true,
+          ),
+          ...trip.events,
+        ],
       ),
     );
-    _trips[index] = updated;
-    return updated;
+  }
+
+  @override
+  Future<OperationTripModel> updatePassenger(
+    String tripId,
+    TripPassenger passenger,
+  ) async {
+    final trip = _find(tripId);
+    final passengers = trip.passengers
+        .map((item) => item.id == passenger.id ? passenger : item)
+        .toList();
+    final seats = trip.seats.map((seat) {
+      if (seat.passengerId != passenger.id) return seat;
+      return seat.copyWith(label: passenger.seat);
+    }).toList();
+    return _replace(
+      trip.copyWith(
+        passengers: passengers,
+        seats: seats,
+        events: [
+          TripEvent(
+            title: 'تم تعديل راكب',
+            time: 'الآن',
+            description: 'تم تعديل بيانات ${passenger.name}.',
+            done: true,
+          ),
+          ...trip.events,
+        ],
+      ),
+    );
+  }
+
+  @override
+  Future<OperationTripModel> cancelPassenger(
+    String tripId,
+    String passengerId,
+  ) async {
+    final trip = _find(tripId);
+    final passenger = trip.passengers.firstWhere(
+      (item) => item.id == passengerId,
+    );
+    final passengers = trip.passengers
+        .map(
+          (item) =>
+              item.id == passengerId ? item.copyWith(status: 'ملغي') : item,
+        )
+        .toList();
+    final seats = trip.seats
+        .map(
+          (seat) => seat.passengerId == passengerId
+              ? seat.copyWith(
+                  state: TripSeatState.available,
+                  clearPassenger: true,
+                )
+              : seat,
+        )
+        .toList();
+    return _replace(
+      trip.copyWith(
+        passengers: passengers,
+        seats: seats,
+        events: [
+          TripEvent(
+            title: 'تم إلغاء حجز',
+            time: 'الآن',
+            description: 'تم إلغاء حجز ${passenger.name}.',
+            done: true,
+          ),
+          ...trip.events,
+        ],
+      ),
+    );
+  }
+
+  @override
+  Future<OperationTripModel> movePassenger(
+    String tripId,
+    String passengerId,
+    String seatLabel,
+  ) async {
+    final trip = _find(tripId);
+    final target = trip.seats.firstWhere((seat) => seat.label == seatLabel);
+    if (target.state != TripSeatState.available) {
+      throw ArgumentError('Seat is not available');
+    }
+    final passenger = trip.passengers.firstWhere(
+      (item) => item.id == passengerId,
+    );
+    final oldSeat = passenger.seat;
+    final passengers = trip.passengers
+        .map(
+          (item) =>
+              item.id == passengerId ? item.copyWith(seat: seatLabel) : item,
+        )
+        .toList();
+    final seats = trip.seats.map((seat) {
+      if (seat.passengerId == passengerId) {
+        return seat.copyWith(
+          state: TripSeatState.available,
+          clearPassenger: true,
+        );
+      }
+      if (seat.label == seatLabel) {
+        return seat.copyWith(
+          state: passenger.status == 'اشتراك'
+              ? TripSeatState.subscription
+              : TripSeatState.reserved,
+          passengerId: passengerId,
+        );
+      }
+      return seat;
+    }).toList();
+    return _replace(
+      trip.copyWith(
+        passengers: passengers,
+        seats: seats,
+        events: [
+          TripEvent(
+            title: 'تم نقل راكب',
+            time: 'الآن',
+            description:
+                'تم نقل ${passenger.name} من مقعد $oldSeat إلى $seatLabel.',
+            done: true,
+          ),
+          ...trip.events,
+        ],
+      ),
+    );
+  }
+
+  OperationTripModel _find(String tripId) {
+    return _trips.firstWhere(
+      (trip) => trip.id == tripId,
+      orElse: () => throw ArgumentError('Trip not found'),
+    );
+  }
+
+  OperationTripModel _replace(OperationTrip trip) {
+    _ensureValidTrip(trip);
+    final index = _trips.indexWhere((item) => item.id == trip.id);
+    if (index == -1) throw ArgumentError('Trip not found');
+    final model = OperationTripModel.fromEntity(trip);
+    _trips[index] = model;
+    return model;
+  }
+
+  void _ensureValidTrip(OperationTrip trip) {
+    if (trip.route.trim().isEmpty ||
+        trip.driver.trim().isEmpty ||
+        trip.vehicle.trim().isEmpty ||
+        trip.capacity <= 0) {
+      throw ArgumentError('Trip requires route, driver, vehicle, and capacity');
+    }
   }
 }
 
-const _payments = [
-  TripPayment(
-    passengerName: 'سارة أحمد',
-    amount: '١٢٠ ج.م',
-    method: 'بطاقة',
-    status: 'مدفوع',
-  ),
-  TripPayment(
-    passengerName: 'خالد محمود',
-    amount: '١٢٠ ج.م',
-    method: 'تحويل',
-    status: 'قيد المراجعة',
-  ),
-];
-
-const _events = [
-  TripEvent(
-    title: 'Created',
-    time: '٧:١٠ صباحاً',
-    description: 'تم إنشاء الرحلة من جدول التشغيل.',
-    done: true,
-  ),
-  TripEvent(
-    title: 'Assigned Driver',
-    time: '٧:٢٠ صباحاً',
-    description: 'تم إسناد السائق والمركبة.',
-    done: true,
-  ),
-  TripEvent(
-    title: 'Started',
-    time: '٨:٣٠ صباحاً',
-    description: 'انطلاق الرحلة من نقطة البداية.',
-    done: true,
-  ),
-  TripEvent(
-    title: 'Arrived',
-    time: '٩:٤٠ صباحاً',
-    description: 'وصول متوقع أو فعلي حسب الحالة.',
-    done: false,
-  ),
-  TripEvent(
-    title: 'Completed',
-    time: '٩:٥٠ صباحاً',
-    description: 'إغلاق الرحلة بعد الوصول.',
-    done: false,
-  ),
-];
-
-List<TripSeat> _seatMap({
-  required int total,
-  required Set<int> reserved,
-  required Set<int> confirmed,
-  required Set<int> blocked,
-}) {
-  return List<TripSeat>.generate(total, (index) {
-    final number = index + 1;
-    final state = confirmed.contains(number)
-        ? TripSeatState.confirmed
-        : reserved.contains(number)
-        ? TripSeatState.reserved
-        : blocked.contains(number)
-        ? TripSeatState.blocked
-        : TripSeatState.available;
-    final hasPassenger =
-        state == TripSeatState.confirmed || state == TripSeatState.reserved;
-    return TripSeat(
-      id: 'seat-$number',
-      label: '$number',
-      row: index ~/ 4,
-      column: index % 4,
-      state: state,
-      passengerName: hasPassenger ? _customerName(number) : null,
-      pickup: hasPassenger ? _pickupName(number) : null,
-      notes: state == TripSeatState.blocked ? 'محظور للصيانة أو المشرف' : '',
+List<OperationTripModel> _buildTrips() {
+  final routes = _routeStops.keys.toList();
+  final drivers = [
+    'أحمد عبد الرازق',
+    'مصطفى سمير',
+    'كريم فتحي',
+    'محمد سامي',
+    'حسن عادل',
+    'طارق محمود',
+    'وليد نبيل',
+    'إسلام حسين',
+  ];
+  final vehicles = [
+    'كوستر ٣٣٤٥ ق ل',
+    'سبرنتر ٧٢١٨ م ن',
+    'هايس ١٥٥٢ ج ب',
+    'H1 ٩٠٢١ ص ج',
+    'روزا ٧١١٨ م ن',
+  ];
+  final statuses = OperationTripStatus.values;
+  return List.generate(50, (index) {
+    final route = routes[index % routes.length];
+    final capacity = [12, 14, 19, 28][index % 4];
+    final booked = (capacity * ([.35, .55, .75, .9][index % 4])).floor();
+    final id = 'TR-${1001 + index}';
+    final seats = _seatMap(capacity, booked, id);
+    return OperationTripModel(
+      id: id,
+      route: route,
+      routeStops: _stopsFor(route),
+      driver: drivers[index % drivers.length],
+      vehicle: vehicles[index % vehicles.length],
+      date: index < 20 ? '٨ يونيو ٢٠٢٦' : '${9 + (index % 12)} يونيو ٢٠٢٦',
+      departure: '${7 + (index % 10)}:${index.isEven ? '٠٠' : '٣٠'}',
+      arrival: '${8 + (index % 10)}:${index.isEven ? '١٥' : '٤٥'}',
+      status: statuses[index % statuses.length],
+      capacity: capacity,
+      seats: seats,
+      passengers: _passengersFromSeats(seats, route, id),
+      events: _events(index),
+      notes: [
+        'محطات المسار محملة تلقائياً',
+        'الرحلة مكتملة البيانات التشغيلية',
+      ],
     );
   });
 }
 
-List<TripPassenger> _passengersFromSeats(List<TripSeat> seats) {
-  return seats
-      .where(
-        (seat) =>
-            seat.state == TripSeatState.confirmed ||
-            seat.state == TripSeatState.reserved,
-      )
-      .map(
-        (seat) => TripPassenger(
-          name: seat.passengerName ?? 'عميل غير محدد',
-          seat: seat.label,
-          pickup: seat.pickup ?? 'غير محدد',
-          status: seat.state == TripSeatState.confirmed ? 'مؤكد' : 'محجوز',
-        ),
-      )
-      .toList();
+List<TripSeat> _seatMap(int total, int booked, String tripId) {
+  return List.generate(total, (index) {
+    final number = index + 1;
+    final state = number > booked
+        ? TripSeatState.available
+        : number % 9 == 0
+        ? TripSeatState.blocked
+        : number % 5 == 0
+        ? TripSeatState.subscription
+        : number % 3 == 0
+        ? TripSeatState.paid
+        : TripSeatState.reserved;
+    final occupied =
+        state == TripSeatState.reserved ||
+        state == TripSeatState.paid ||
+        state == TripSeatState.subscription;
+    return TripSeat(
+      id: '$tripId-seat-$number',
+      label: '$number',
+      row: index ~/ 4,
+      column: index % 4,
+      state: state,
+      passengerId: occupied ? '$tripId-passenger-$number' : null,
+      notes: state == TripSeatState.blocked ? 'مقعد محظور للتشغيل' : '',
+    );
+  });
 }
 
-String _customerName(int seatNumber) {
-  const names = [
-    'سارة أحمد',
-    'خالد محمود',
-    'رنا يوسف',
-    'محمود علي',
-    'ياسمين علي',
-    'محمد سمير',
-    'ندى هشام',
-    'أحمد سامي',
-    'هبة عادل',
-    'كريم عادل',
-    'منة طارق',
-    'عمر وليد',
+List<TripPassenger> _passengersFromSeats(
+  List<TripSeat> seats,
+  String route,
+  String tripId,
+) {
+  final stops = _stopsFor(route);
+  return seats.where((seat) => seat.passengerId != null).map((seat) {
+    final number = int.parse(seat.label);
+    return TripPassenger(
+      id: seat.passengerId!,
+      name: _names[number % _names.length],
+      phone: '010${22334455 + number * 713}',
+      seat: seat.label,
+      pickup: stops[number % (stops.length - 1)],
+      dropoff: stops.last,
+      paymentMethod: seat.state == TripSeatState.subscription
+          ? 'اشتراك'
+          : number.isEven
+          ? 'إنستاباي'
+          : 'فودافون كاش',
+      status: seat.state == TripSeatState.paid
+          ? 'مدفوع'
+          : seat.state == TripSeatState.subscription
+          ? 'اشتراك'
+          : 'محجوز',
+    );
+  }).toList();
+}
+
+List<TripEvent> _events(int index) {
+  return [
+    const TripEvent(
+      title: 'تم إنشاء الرحلة',
+      time: '٧:١٠',
+      description: 'تم إنشاء الرحلة من جدول التشغيل.',
+      done: true,
+    ),
+    const TripEvent(
+      title: 'تم تعيين السائق',
+      time: '٧:١٥',
+      description: 'تم ربط السائق والمركبة بالرحلة.',
+      done: true,
+    ),
+    if (index % 2 == 0)
+      const TripEvent(
+        title: 'تم إضافة راكب',
+        time: '٧:٤٠',
+        description: 'تم إضافة راكب من خدمة العملاء.',
+        done: true,
+      ),
+    if (index % 5 == 0)
+      const TripEvent(
+        title: 'تم إلغاء حجز',
+        time: '٨:٠٥',
+        description: 'تم إلغاء حجز بناءً على طلب العميل.',
+        done: true,
+      ),
+    if (index % 3 == 0)
+      const TripEvent(
+        title: 'تم بدء الرحلة',
+        time: '٨:٣٠',
+        description: 'السائق بدأ الرحلة من نقطة الانطلاق.',
+        done: true,
+      ),
   ];
-  return names[(seatNumber - 1) % names.length];
 }
 
-String _pickupName(int seatNumber) {
-  const pickups = [
-    'محطة بنها الرئيسية',
-    'موقف شبرا',
-    'بوابة الشيخ زايد',
-    'الدائري',
-  ];
-  return pickups[(seatNumber - 1) % pickups.length];
+String _arrivalFrom(String departure) => '$departure + ٧٥ دقيقة';
+
+List<String> _stopsFor(String route) {
+  return _routeStops[route] ?? _routeStops.values.first;
 }
 
-final _trip221Seats = _seatMap(
-  total: 12,
-  reserved: {2, 7, 11},
-  confirmed: {1, 3, 4, 6, 8},
-  blocked: {12},
-);
+const _routeStops = {
+  'بنها - القرية الذكية': [
+    'بنها',
+    'طوخ',
+    'شبرا',
+    'رمسيس',
+    'الشيخ زايد',
+    'القرية الذكية',
+  ],
+  'المنصورة - القاهرة الجديدة': [
+    'المنصورة',
+    'طلخا',
+    'ميت غمر',
+    'بنها',
+    'الرحاب',
+    'التجمع الخامس',
+  ],
+  'مدينة نصر - القرية الذكية': [
+    'عباس العقاد',
+    'مصر الجديدة',
+    'رمسيس',
+    'المحور',
+    'القرية الذكية',
+  ],
+  'المعادي - العاصمة الإدارية': [
+    'المعادي',
+    'زهراء المعادي',
+    'القطامية',
+    'التجمع الثالث',
+    'العاصمة الإدارية',
+  ],
+  'الشروق - التجمع الخامس': [
+    'الشروق',
+    'مدينتي',
+    'الرحاب',
+    'كايرو فيستيفال',
+    'التجمع الخامس',
+  ],
+};
 
-final _trip224Seats = _seatMap(
-  total: 14,
-  reserved: {5, 9},
-  confirmed: {1, 2, 3, 4, 6, 7, 8, 10},
-  blocked: {13, 14},
-);
-
-final _trip225Seats = _seatMap(
-  total: 8,
-  reserved: {3, 4, 6},
-  confirmed: {1, 2, 5},
-  blocked: {},
-);
-
-final _trip226Seats = _seatMap(
-  total: 14,
-  reserved: {1, 4, 9, 12},
-  confirmed: {2, 3, 5, 6, 7, 8, 10, 11},
-  blocked: {14},
-);
-
-final _trip220Seats = _seatMap(
-  total: 8,
-  reserved: {},
-  confirmed: {1, 2, 3, 4, 5, 6, 7},
-  blocked: {},
-);
-
-final _trip219Seats = _seatMap(
-  total: 11,
-  reserved: {},
-  confirmed: {},
-  blocked: {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11},
-);
-
-final _seedTrips = [
-  OperationTripModel(
-    id: 'trip-221',
-    route: 'بنها - مدينة نصر',
-    driver: 'كريم حسن',
-    vehicle: 'س د هـ ٧٨٩',
-    date: '٨ يونيو ٢٠٢٦',
-    departure: '٨:٣٠ صباحاً',
-    arrival: '٩:٣٥ صباحاً',
-    status: OperationTripStatus.inProgress,
-    seats: _trip221Seats,
-    passengers: _passengersFromSeats(_trip221Seats),
-    payments: _payments,
-    events: _events,
-    notes: ['متابعة الوصول عند الدائري', 'راكب واحد لم يؤكد الحضور'],
-  ),
-  OperationTripModel(
-    id: 'trip-224',
-    route: 'بنها - القرية الذكية',
-    driver: 'محمد أحمد',
-    vehicle: 'أ ب ج ٤٥٦',
-    date: '٨ يونيو ٢٠٢٦',
-    departure: '٧:٤٥ صباحاً',
-    arrival: '٩:٠٠ صباحاً',
-    status: OperationTripStatus.ready,
-    seats: _trip224Seats,
-    passengers: _passengersFromSeats(_trip224Seats),
-    payments: _payments,
-    events: _events,
-    notes: ['المركبة جاهزة', 'السائق أكد الحضور'],
-  ),
-  OperationTripModel(
-    id: 'trip-225',
-    route: 'بنها - المهندسين',
-    driver: 'بانتظار الإسناد',
-    vehicle: 'بانتظار المركبة',
-    date: '٨ يونيو ٢٠٢٦',
-    departure: '١٠:٠٠ صباحاً',
-    arrival: '١١:١٠ صباحاً',
-    status: OperationTripStatus.waiting,
-    seats: _trip225Seats,
-    passengers: _passengersFromSeats(_trip225Seats),
-    payments: _payments,
-    events: _events,
-    notes: ['تحتاج سائق قبل الانطلاق'],
-  ),
-  OperationTripModel(
-    id: 'trip-226',
-    route: 'بنها - القرية الذكية',
-    driver: 'هاني صلاح',
-    vehicle: 'م ن و ٣٣١',
-    date: '٨ يونيو ٢٠٢٦',
-    departure: '١٢:٠٠ ظهراً',
-    arrival: '١:١٥ ظهراً',
-    status: OperationTripStatus.scheduled,
-    seats: _trip226Seats,
-    passengers: _passengersFromSeats(_trip226Seats),
-    payments: _payments,
-    events: _events,
-    notes: ['رحلة منتصف اليوم'],
-  ),
-  OperationTripModel(
-    id: 'trip-220',
-    route: 'بنها - مدينة نصر',
-    driver: 'كريم حسن',
-    vehicle: 'س د هـ ٧٨٩',
-    date: '٧ يونيو ٢٠٢٦',
-    departure: '٦:٣٠ صباحاً',
-    arrival: '٧:٣٥ صباحاً',
-    status: OperationTripStatus.completed,
-    seats: _trip220Seats,
-    passengers: _passengersFromSeats(_trip220Seats),
-    payments: _payments,
-    events: _events,
-    notes: ['مكتملة بدون ملاحظات حرجة'],
-  ),
-  OperationTripModel(
-    id: 'trip-219',
-    route: 'بنها - المهندسين',
-    driver: 'مصطفى علي',
-    vehicle: 'ق ل م ٨٨٠',
-    date: '٧ يونيو ٢٠٢٦',
-    departure: '٥:٣٠ صباحاً',
-    arrival: '٦:٤٥ صباحاً',
-    status: OperationTripStatus.cancelled,
-    seats: _trip219Seats,
-    passengers: [],
-    payments: [],
-    events: _events,
-    notes: ['تم إلغاء الرحلة بسبب خروج المركبة من الخدمة'],
-  ),
+const _names = [
+  'سارة أحمد',
+  'خالد محمود',
+  'رنا يوسف',
+  'محمود علي',
+  'ياسمين علي',
+  'محمد سمير',
+  'ندى هشام',
+  'أحمد سامي',
+  'هبة عادل',
+  'كريم عادل',
+  'منة طارق',
+  'عمر وليد',
 ];

@@ -14,6 +14,8 @@ import '../../features/dashboard_home/presentation/screens/dashboard_home_screen
 import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
 import '../../features/drivers/presentation/cubit/drivers_cubit.dart';
 import '../../features/drivers/presentation/screens/drivers_screen.dart';
+import '../../features/fleet/presentation/cubit/fleet_cubit.dart';
+import '../../features/fleet/presentation/screens/fleet_screen.dart';
 import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/payments/presentation/cubit/payments_cubit.dart';
@@ -76,6 +78,13 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.near_me_outlined,
       selectedIcon: Icons.near_me_rounded,
       permission: DashboardPermission.liveTrips,
+    ),
+    const _DashboardNavItem(
+      label: 'إدارة الأسطول',
+      route: DashboardRoutes.fleet,
+      icon: Icons.local_shipping_outlined,
+      selectedIcon: Icons.local_shipping_rounded,
+      permission: DashboardPermission.fleet,
     ),
     const _DashboardNavItem(
       label: 'السائقين',
@@ -240,6 +249,10 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.liveTrips => BlocProvider(
         create: (_) => dashboardDi<LiveTripsCubit>()..load(),
         child: const LiveTripsScreen(),
+      ),
+      DashboardRoutes.fleet => BlocProvider(
+        create: (_) => dashboardDi<FleetCubit>()..load(),
+        child: const FleetScreen(),
       ),
       DashboardRoutes.drivers => BlocProvider(
         create: (_) => dashboardDi<DriversCubit>()..load(),

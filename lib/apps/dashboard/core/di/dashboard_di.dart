@@ -35,6 +35,11 @@ import '../../features/drivers/domain/usecases/get_drivers_usecase.dart';
 import '../../features/drivers/domain/usecases/update_driver_status_usecase.dart';
 import '../../features/drivers/domain/usecases/update_driver_usecase.dart';
 import '../../features/drivers/presentation/cubit/drivers_cubit.dart';
+import '../../features/fleet/data/datasources/mock_fleet_datasource.dart';
+import '../../features/fleet/data/repositories/fleet_repository_impl.dart';
+import '../../features/fleet/domain/repositories/fleet_repository.dart';
+import '../../features/fleet/domain/usecases/fleet_usecases.dart';
+import '../../features/fleet/presentation/cubit/fleet_cubit.dart';
 import '../../features/live_trips/data/datasources/mock_live_trips_datasource.dart';
 import '../../features/live_trips/data/repositories/live_trips_repository_impl.dart';
 import '../../features/live_trips/domain/repositories/live_trips_repository.dart';
@@ -71,6 +76,7 @@ import '../../features/trips/data/datasources/mock_trips_datasource.dart';
 import '../../features/trips/data/repositories/trips_repository_impl.dart';
 import '../../features/trips/domain/repositories/trips_repository.dart';
 import '../../features/trips/domain/usecases/get_operation_trips_usecase.dart';
+import '../../features/trips/domain/usecases/trip_operations_usecases.dart';
 import '../../features/trips/domain/usecases/update_trip_seat_state_usecase.dart';
 import '../../features/trips/domain/usecases/update_trip_status_usecase.dart';
 import '../../features/trips/presentation/cubit/trips_cubit.dart';
@@ -151,6 +157,93 @@ void registerDashboardDependencies() {
     dashboardDi.registerFactory(
       () =>
           DashboardWorkspaceCubit(dashboardDi<GetDashboardWorkspaceUseCase>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<FleetDatasource>()) {
+    dashboardDi.registerLazySingleton<FleetDatasource>(MockFleetDatasource.new);
+  }
+
+  if (!dashboardDi.isRegistered<FleetRepository>()) {
+    dashboardDi.registerLazySingleton<FleetRepository>(
+      () => FleetRepositoryImpl(dashboardDi<FleetDatasource>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetFleetWorkspaceUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetFleetWorkspaceUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CreateFleetDriverUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CreateFleetDriverUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdateFleetDriverUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateFleetDriverUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdateFleetDriverStatusUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateFleetDriverStatusUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CreateFleetVehicleUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CreateFleetVehicleUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdateFleetVehicleUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateFleetVehicleUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdateFleetVehicleStatusUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateFleetVehicleStatusUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<AssignFleetVehicleUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => AssignFleetVehicleUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ReassignFleetVehicleUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ReassignFleetVehicleUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<RemoveUnifiedFleetAssignmentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => RemoveUnifiedFleetAssignmentUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<FleetCubit>()) {
+    dashboardDi.registerFactory(
+      () => FleetCubit(
+        getWorkspace: dashboardDi<GetFleetWorkspaceUseCase>(),
+        createDriver: dashboardDi<CreateFleetDriverUseCase>(),
+        updateDriver: dashboardDi<UpdateFleetDriverUseCase>(),
+        updateDriverStatus: dashboardDi<UpdateFleetDriverStatusUseCase>(),
+        createVehicle: dashboardDi<CreateFleetVehicleUseCase>(),
+        updateVehicle: dashboardDi<UpdateFleetVehicleUseCase>(),
+        updateVehicleStatus: dashboardDi<UpdateFleetVehicleStatusUseCase>(),
+        assignVehicle: dashboardDi<AssignFleetVehicleUseCase>(),
+        reassignVehicle: dashboardDi<ReassignFleetVehicleUseCase>(),
+        removeAssignment: dashboardDi<RemoveUnifiedFleetAssignmentUseCase>(),
+      ),
     );
   }
 
@@ -537,12 +630,47 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<CreateOperationTripUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CreateOperationTripUseCase(dashboardDi<TripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdateTripInfoUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateTripInfoUseCase(dashboardDi<TripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdateTripPassengerUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateTripPassengerUseCase(dashboardDi<TripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CancelTripPassengerUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CancelTripPassengerUseCase(dashboardDi<TripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<MoveTripPassengerUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => MoveTripPassengerUseCase(dashboardDi<TripsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<TripsCubit>()) {
     dashboardDi.registerFactory(
       () => TripsCubit(
         getTrips: dashboardDi<GetOperationTripsUseCase>(),
         updateTripStatus: dashboardDi<UpdateTripStatusUseCase>(),
         updateSeatState: dashboardDi<UpdateTripSeatStateUseCase>(),
+        createTrip: dashboardDi<CreateOperationTripUseCase>(),
+        updateTripInfo: dashboardDi<UpdateTripInfoUseCase>(),
+        updatePassenger: dashboardDi<UpdateTripPassengerUseCase>(),
+        cancelPassenger: dashboardDi<CancelTripPassengerUseCase>(),
+        movePassenger: dashboardDi<MoveTripPassengerUseCase>(),
       ),
     );
   }

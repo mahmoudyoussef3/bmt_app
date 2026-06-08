@@ -40,4 +40,61 @@ class TripsRepositoryImpl implements TripsRepository {
       throw Exception('تعذر تحديث حالة المقعد');
     }
   }
+
+  @override
+  Future<OperationTrip> createTrip(CreateTripInput input) async {
+    try {
+      return await _datasource.createTrip(input);
+    } catch (_) {
+      throw Exception(
+        'تعذر إنشاء الرحلة. المسار والسائق والمركبة والسعة مطلوبة',
+      );
+    }
+  }
+
+  @override
+  Future<OperationTrip> updateTripInfo(OperationTrip trip) async {
+    try {
+      return await _datasource.updateTripInfo(trip);
+    } catch (_) {
+      throw Exception('تعذر تعديل بيانات الرحلة');
+    }
+  }
+
+  @override
+  Future<OperationTrip> updatePassenger(
+    String tripId,
+    TripPassenger passenger,
+  ) async {
+    try {
+      return await _datasource.updatePassenger(tripId, passenger);
+    } catch (_) {
+      throw Exception('تعذر تعديل بيانات الراكب');
+    }
+  }
+
+  @override
+  Future<OperationTrip> cancelPassenger(
+    String tripId,
+    String passengerId,
+  ) async {
+    try {
+      return await _datasource.cancelPassenger(tripId, passengerId);
+    } catch (_) {
+      throw Exception('تعذر إلغاء الحجز');
+    }
+  }
+
+  @override
+  Future<OperationTrip> movePassenger(
+    String tripId,
+    String passengerId,
+    String seatLabel,
+  ) async {
+    try {
+      return await _datasource.movePassenger(tripId, passengerId, seatLabel);
+    } catch (_) {
+      throw Exception('تعذر نقل الراكب. اختر مقعداً متاحاً');
+    }
+  }
 }

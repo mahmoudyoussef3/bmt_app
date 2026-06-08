@@ -5,6 +5,7 @@ class DashboardRoutes {
   static const bookings = '/bookings';
   static const trips = '/trips';
   static const liveTrips = '/live-trips';
+  static const fleet = '/fleet';
   static const drivers = '/drivers';
   static const assignments = '/assignments';
   static const vehicles = '/vehicles';

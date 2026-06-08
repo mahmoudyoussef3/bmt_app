@@ -3,6 +3,7 @@ import 'dashboard_role.dart';
 enum DashboardPermission {
   users,
   drivers,
+  fleet,
   assignments,
   vehicles,
   routes,
@@ -33,6 +34,7 @@ class DashboardPermissions {
         DashboardPermission.trips,
         DashboardPermission.liveTrips,
         DashboardPermission.drivers,
+        DashboardPermission.fleet,
         DashboardPermission.assignments,
         DashboardPermission.vehicles,
         DashboardPermission.routes,
