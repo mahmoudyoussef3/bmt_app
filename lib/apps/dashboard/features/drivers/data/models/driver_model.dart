@@ -23,6 +23,8 @@ class DriverModel extends Driver {
     required super.documents,
     required super.reviews,
     required super.complaints,
+    super.activeTrips,
+    super.assignmentHistory,
     required super.notes,
   });
 
@@ -49,6 +51,8 @@ class DriverModel extends Driver {
       documents: driver.documents,
       reviews: driver.reviews,
       complaints: driver.complaints,
+      activeTrips: driver.activeTrips,
+      assignmentHistory: driver.assignmentHistory,
       notes: driver.notes,
     );
   }

@@ -52,17 +52,35 @@ class StationsManager extends StatelessWidget {
             onReorder: onReorder,
             itemBuilder: (context, index) {
               final station = route.stations[index];
-              return ListTile(
+              return AppCard(
                 key: ValueKey(station.id),
-                leading: ReorderableDragStartListener(
-                  index: index,
-                  child: const Icon(Icons.drag_handle),
-                ),
-                title: Text(station.name),
-                subtitle: Text('${station.area} • ${station.arrivalOffset}'),
-                trailing: Wrap(
-                  spacing: AppSpacing.xSmall,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    ReorderableDragStartListener(
+                      index: index,
+                      child: const Icon(Icons.drag_handle),
+                    ),
+                    const SizedBox(width: AppSpacing.small),
+                    CircleAvatar(radius: 15, child: Text('${index + 1}')),
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            station.name,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.xSmall),
+                          Text('${station.area} • ${station.arrivalOffset}'),
+                          if (station.notes.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.xSmall),
+                            Text(station.notes),
+                          ],
+                        ],
+                      ),
+                    ),
                     IconButton(
                       tooltip: 'تعديل',
                       onPressed: () => onEditStation(station),

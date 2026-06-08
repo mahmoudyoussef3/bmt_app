@@ -22,6 +22,7 @@ class Vehicle {
   final String insuranceExpiry;
   final String inspectionExpiry;
   final String imageLabel;
+  final List<VehicleGalleryImage> gallery;
   final List<VehicleDocument> documents;
   final List<VehicleMaintenance> maintenance;
   final List<VehicleTrip> trips;
@@ -41,6 +42,7 @@ class Vehicle {
     required this.insuranceExpiry,
     required this.inspectionExpiry,
     required this.imageLabel,
+    this.gallery = const [],
     required this.documents,
     required this.maintenance,
     required this.trips,
@@ -61,6 +63,7 @@ class Vehicle {
     String? insuranceExpiry,
     String? inspectionExpiry,
     String? imageLabel,
+    List<VehicleGalleryImage>? gallery,
     List<VehicleDocument>? documents,
     List<VehicleMaintenance>? maintenance,
     List<VehicleTrip>? trips,
@@ -80,6 +83,7 @@ class Vehicle {
       insuranceExpiry: insuranceExpiry ?? this.insuranceExpiry,
       inspectionExpiry: inspectionExpiry ?? this.inspectionExpiry,
       imageLabel: imageLabel ?? this.imageLabel,
+      gallery: gallery ?? this.gallery,
       documents: documents ?? this.documents,
       maintenance: maintenance ?? this.maintenance,
       trips: trips ?? this.trips,
@@ -87,6 +91,18 @@ class Vehicle {
       notes: notes ?? this.notes,
     );
   }
+}
+
+class VehicleGalleryImage {
+  final String label;
+  final String angle;
+  final String condition;
+
+  const VehicleGalleryImage({
+    required this.label,
+    required this.angle,
+    required this.condition,
+  });
 }
 
 class VehicleDocument {

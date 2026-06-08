@@ -5,6 +5,8 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
+import '../../features/assignments/presentation/cubit/fleet_assignments_cubit.dart';
+import '../../features/assignments/presentation/screens/fleet_assignments_screen.dart';
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
 import '../../features/bookings/presentation/screens/bookings_screen.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
@@ -16,6 +18,8 @@ import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/payments/presentation/cubit/payments_cubit.dart';
 import '../../features/payments/presentation/screens/payments_screen.dart';
+import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
+import '../../features/payment_verification/presentation/screens/payment_verification_screen.dart';
 import '../../features/permissions/presentation/screens/permissions_screen.dart';
 import '../../features/reports/presentation/screens/reports_screen.dart';
 import '../../features/routes/presentation/cubit/routes_cubit.dart';
@@ -81,6 +85,13 @@ class _DashboardShellState extends State<DashboardShell> {
       permission: DashboardPermission.drivers,
     ),
     const _DashboardNavItem(
+      label: 'التعيينات',
+      route: DashboardRoutes.assignments,
+      icon: Icons.swap_horiz_outlined,
+      selectedIcon: Icons.swap_horiz_rounded,
+      permission: DashboardPermission.assignments,
+    ),
+    const _DashboardNavItem(
       label: 'المركبات',
       route: DashboardRoutes.vehicles,
       icon: Icons.directions_bus_outlined,
@@ -114,6 +125,13 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.payments_outlined,
       selectedIcon: Icons.payments_rounded,
       permission: DashboardPermission.payments,
+    ),
+    const _DashboardNavItem(
+      label: 'تحقق الدفع',
+      route: DashboardRoutes.paymentVerification,
+      icon: Icons.fact_check_outlined,
+      selectedIcon: Icons.fact_check_rounded,
+      permission: DashboardPermission.paymentVerification,
     ),
     const _DashboardNavItem(
       label: 'الشكاوى',
@@ -225,6 +243,10 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<DriversCubit>()..load(),
         child: const DriversScreen(),
       ),
+      DashboardRoutes.assignments => BlocProvider(
+        create: (_) => dashboardDi<FleetAssignmentsCubit>()..load(),
+        child: const FleetAssignmentsScreen(),
+      ),
       DashboardRoutes.vehicles => BlocProvider(
         create: (_) => dashboardDi<VehiclesCubit>()..load(),
         child: const VehiclesScreen(),
@@ -241,6 +263,10 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.payments => BlocProvider(
         create: (_) => dashboardDi<PaymentsCubit>()..load(),
         child: const PaymentsScreen(),
+      ),
+      DashboardRoutes.paymentVerification => BlocProvider(
+        create: (_) => dashboardDi<PaymentVerificationCubit>()..load(),
+        child: const PaymentVerificationScreen(),
       ),
       DashboardRoutes.tickets => _workspace('tickets', const TicketsScreen()),
       DashboardRoutes.reports => _workspace('reports', const ReportsScreen()),

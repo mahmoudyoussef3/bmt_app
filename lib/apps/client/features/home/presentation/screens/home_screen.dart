@@ -143,7 +143,7 @@ class _HomeContent extends StatelessWidget {
                     scheme: scheme,
                     onTap: () => onOpenRoute(ClientRoutes.support),
                   ),
-                  const SizedBox(height: 120),
+                  const SizedBox(height: 20),
                 ]),
               ),
             ),

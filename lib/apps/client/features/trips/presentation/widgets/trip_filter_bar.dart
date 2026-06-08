@@ -1,3 +1,4 @@
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 
@@ -32,8 +33,8 @@ class TripFilterBar extends StatelessWidget {
               ),
               selected: active,
               onSelected: (_) => onSelected(filter),
-              selectedColor: scheme.primary.withAlpha(55),
-              checkmarkColor: scheme.primary,
+              selectedColor: scheme.primary,
+              checkmarkColor: AppColors.accentForeground,
               side: BorderSide(
                 color: active ? scheme.primary : scheme.outline.withAlpha(120),
               ),

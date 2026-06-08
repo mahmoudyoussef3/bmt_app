@@ -147,6 +147,29 @@ const _maintenance = [
   ),
 ];
 
+const _gallery = [
+  VehicleGalleryImage(
+    label: 'الصورة الأمامية',
+    angle: 'واجهة المركبة',
+    condition: 'نظيفة وجاهزة',
+  ),
+  VehicleGalleryImage(
+    label: 'المقصورة',
+    angle: 'مقاعد الركاب',
+    condition: 'تعقيم مكتمل',
+  ),
+  VehicleGalleryImage(
+    label: 'الجانب الأيمن',
+    angle: 'فحص هيكل',
+    condition: 'لا توجد ملاحظات',
+  ),
+  VehicleGalleryImage(
+    label: 'لوحة العدادات',
+    angle: 'عدادات التشغيل',
+    condition: 'قراءات مستقرة',
+  ),
+];
+
 const _trips = [
   VehicleTrip(
     tripNumber: '٢٢١',
@@ -176,6 +199,7 @@ const _seedVehicles = [
     insuranceExpiry: '١٥ أكتوبر ٢٠٢٦',
     inspectionExpiry: '٢٨ يونيو ٢٠٢٦',
     imageLabel: 'مركبة تشغيل',
+    gallery: _gallery,
     documents: _documents,
     maintenance: _maintenance,
     trips: _trips,
@@ -195,6 +219,7 @@ const _seedVehicles = [
     insuranceExpiry: '٣٠ سبتمبر ٢٠٢٦',
     inspectionExpiry: '١٢ يوليو ٢٠٢٦',
     imageLabel: 'فان رحلات',
+    gallery: _gallery,
     documents: _documents,
     maintenance: _maintenance,
     trips: _trips,
@@ -214,6 +239,7 @@ const _seedVehicles = [
     insuranceExpiry: '١٨ أغسطس ٢٠٢٦',
     inspectionExpiry: 'قادم خلال أسبوع',
     imageLabel: 'صيانة',
+    gallery: _gallery,
     documents: _expiredDocuments,
     maintenance: _maintenance,
     trips: [],
@@ -233,6 +259,7 @@ const _seedVehicles = [
     insuranceExpiry: '١ يناير ٢٠٢٧',
     inspectionExpiry: '١ يناير ٢٠٢٧',
     imageLabel: 'مركبة جديدة',
+    gallery: _gallery,
     documents: _documents,
     maintenance: [],
     trips: [],
@@ -252,6 +279,7 @@ const _seedVehicles = [
     insuranceExpiry: 'منتهي',
     inspectionExpiry: 'منتهي',
     imageLabel: 'خارج الخدمة',
+    gallery: _gallery,
     documents: _expiredDocuments,
     maintenance: _maintenance,
     trips: [],

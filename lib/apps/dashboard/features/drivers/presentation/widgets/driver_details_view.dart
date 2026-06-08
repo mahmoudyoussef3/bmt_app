@@ -27,7 +27,7 @@ class DriverDetailsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 5,
+      length: 7,
       child: ListView(
         padding: const EdgeInsets.all(AppSpacing.large),
         children: [
@@ -49,6 +49,8 @@ class DriverDetailsView extends StatelessWidget {
                     Tab(text: 'البيانات الشخصية'),
                     Tab(text: 'المستندات'),
                     Tab(text: 'بيانات التشغيل'),
+                    Tab(text: 'الرحلات النشطة'),
+                    Tab(text: 'تاريخ التعيين'),
                     Tab(text: 'التقييمات'),
                     Tab(text: 'الشكاوى'),
                   ],
@@ -61,6 +63,8 @@ class DriverDetailsView extends StatelessWidget {
                       _PersonalSection(driver: driver),
                       _DocumentsSection(driver: driver),
                       _OperationsSection(driver: driver),
+                      _ActiveTripsSection(driver: driver),
+                      _AssignmentHistorySection(driver: driver),
                       _ReviewsSection(driver: driver),
                       _ComplaintsSection(driver: driver),
                     ],
@@ -255,6 +259,98 @@ class _ReviewsSection extends StatelessWidget {
           trailing: Text(review.rating.toStringAsFixed(1)),
         );
       },
+    );
+  }
+}
+
+class _ActiveTripsSection extends StatelessWidget {
+  final Driver driver;
+
+  const _ActiveTripsSection({required this.driver});
+
+  @override
+  Widget build(BuildContext context) {
+    if (driver.activeTrips.isEmpty) {
+      return const Center(child: Text('لا توجد رحلات نشطة لهذا السائق.'));
+    }
+
+    return ListView.separated(
+      itemCount: driver.activeTrips.length,
+      separatorBuilder: (context, index) => const Divider(),
+      itemBuilder: (context, index) {
+        final trip = driver.activeTrips[index];
+        return ListTile(
+          leading: const Icon(Icons.near_me_outlined),
+          title: Text('${trip.tripNumber} - ${trip.route}'),
+          subtitle: Text('${trip.vehicle} • ${trip.departureTime}'),
+          trailing: Text('${trip.passengers} ركاب • ${trip.status}'),
+        );
+      },
+    );
+  }
+}
+
+class _AssignmentHistorySection extends StatelessWidget {
+  final Driver driver;
+
+  const _AssignmentHistorySection({required this.driver});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    if (driver.assignmentHistory.isEmpty) {
+      return const Center(child: Text('لا يوجد تاريخ تعيين لهذا السائق.'));
+    }
+
+    return ListView(
+      children: driver.assignmentHistory.indexed.map((entry) {
+        final (index, item) = entry;
+        final last = index == driver.assignmentHistory.length - 1;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                CircleAvatar(
+                  radius: 13,
+                  backgroundColor: scheme.primaryContainer,
+                  child: Icon(
+                    Icons.swap_horiz_outlined,
+                    size: 15,
+                    color: scheme.onPrimaryContainer,
+                  ),
+                ),
+                if (!last)
+                  Container(
+                    width: 2,
+                    height: 58,
+                    color: scheme.outline.withAlpha(120),
+                  ),
+              ],
+            ),
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.vehicle,
+                      style: Theme.of(context).textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: AppSpacing.xSmall),
+                    Text('${item.route} • ${item.startedAt} - ${item.endedAt}'),
+                    const SizedBox(height: AppSpacing.xSmall),
+                    Text(item.reason),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        );
+      }).toList(),
     );
   }
 }

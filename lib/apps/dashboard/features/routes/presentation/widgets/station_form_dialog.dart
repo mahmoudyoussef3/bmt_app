@@ -18,6 +18,7 @@ class _StationFormDialogState extends State<StationFormDialog> {
   late final TextEditingController _name;
   late final TextEditingController _area;
   late final TextEditingController _offset;
+  late final TextEditingController _notes;
 
   @override
   void initState() {
@@ -25,6 +26,7 @@ class _StationFormDialogState extends State<StationFormDialog> {
     _name = TextEditingController(text: widget.station?.name ?? '');
     _area = TextEditingController(text: widget.station?.area ?? '');
     _offset = TextEditingController(text: widget.station?.arrivalOffset ?? '');
+    _notes = TextEditingController(text: widget.station?.notes ?? '');
   }
 
   @override
@@ -32,6 +34,7 @@ class _StationFormDialogState extends State<StationFormDialog> {
     _name.dispose();
     _area.dispose();
     _offset.dispose();
+    _notes.dispose();
     super.dispose();
   }
 
@@ -59,7 +62,17 @@ class _StationFormDialogState extends State<StationFormDialog> {
             TextField(
               controller: _offset,
               textDirection: TextDirection.rtl,
-              decoration: const InputDecoration(labelText: 'وقت الوصول'),
+              decoration: const InputDecoration(
+                labelText: 'وقت الوصول المتوقع',
+              ),
+            ),
+            const SizedBox(height: AppSpacing.medium),
+            TextField(
+              controller: _notes,
+              textDirection: TextDirection.rtl,
+              minLines: 2,
+              maxLines: 3,
+              decoration: const InputDecoration(labelText: 'ملاحظات المحطة'),
             ),
           ],
         ),
@@ -84,6 +97,7 @@ class _StationFormDialogState extends State<StationFormDialog> {
                 arrivalOffset: _offset.text.trim().isEmpty
                     ? 'غير محدد'
                     : _offset.text.trim(),
+                notes: _notes.text.trim(),
                 order: existing?.order ?? 0,
               ),
             );

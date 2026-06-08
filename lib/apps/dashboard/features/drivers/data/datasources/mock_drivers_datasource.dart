@@ -119,6 +119,42 @@ const _complaints = [
   ),
 ];
 
+const _activeTrips = [
+  DriverActiveTrip(
+    tripNumber: 'TR-٢٢١',
+    route: 'بنها - القرية الذكية',
+    vehicle: 'أ ب ج ٤٥٦',
+    departureTime: '٠٧:٣٠ صباحاً',
+    passengers: 11,
+    status: 'جارية',
+  ),
+  DriverActiveTrip(
+    tripNumber: 'TR-٢٣٤',
+    route: 'القرية الذكية - بنها',
+    vehicle: 'أ ب ج ٤٥٦',
+    departureTime: '٠٥:١٥ مساءً',
+    passengers: 9,
+    status: 'مجدولة اليوم',
+  ),
+];
+
+const _assignmentHistory = [
+  DriverAssignmentHistory(
+    vehicle: 'أ ب ج ٤٥٦',
+    route: 'بنها - القرية الذكية',
+    startedAt: '١ مايو ٢٠٢٦',
+    endedAt: 'حتى الآن',
+    reason: 'تعيين أساسي لمسار الصباح',
+  ),
+  DriverAssignmentHistory(
+    vehicle: 'ر ز ط ١٢٣',
+    route: 'بنها - مدينة نصر',
+    startedAt: '١٥ مارس ٢٠٢٦',
+    endedAt: '٣٠ أبريل ٢٠٢٦',
+    reason: 'تغيير المركبة بعد دخول مركبة جديدة',
+  ),
+];
+
 const _seedDrivers = [
   DriverModel(
     id: 'drv-1',
@@ -142,6 +178,8 @@ const _seedDrivers = [
     documents: _documents,
     reviews: _reviews,
     complaints: _complaints,
+    activeTrips: _activeTrips,
+    assignmentHistory: _assignmentHistory,
     notes: ['مناسب للرحلات الصباحية', 'يفضل مسار القرية الذكية'],
   ),
   DriverModel(
@@ -166,6 +204,17 @@ const _seedDrivers = [
     documents: _documents,
     reviews: _reviews,
     complaints: [],
+    activeTrips: [
+      DriverActiveTrip(
+        tripNumber: 'TR-٢٢٢',
+        route: 'بنها - مدينة نصر',
+        vehicle: 'س د هـ ٧٨٩',
+        departureTime: '٠٨:٠٠ صباحاً',
+        passengers: 7,
+        status: 'في الطريق',
+      ),
+    ],
+    assignmentHistory: _assignmentHistory,
     notes: ['ملتزم بالمسار', 'تقييمات مستقرة'],
   ),
   DriverModel(
@@ -190,6 +239,8 @@ const _seedDrivers = [
     documents: _documents,
     reviews: _reviews,
     complaints: _complaints,
+    activeTrips: [],
+    assignmentHistory: _assignmentHistory,
     notes: ['بانتظار مراجعة مستندات الرخصة'],
   ),
   DriverModel(
@@ -214,6 +265,8 @@ const _seedDrivers = [
     documents: _documents,
     reviews: _reviews,
     complaints: [],
+    activeTrips: [],
+    assignmentHistory: _assignmentHistory,
     notes: ['إجازة أسبوعية حتى الخميس'],
   ),
   DriverModel(
@@ -238,6 +291,8 @@ const _seedDrivers = [
     documents: _documents,
     reviews: _reviews,
     complaints: _complaints,
+    activeTrips: [],
+    assignmentHistory: _assignmentHistory,
     notes: ['موقوف مؤقتاً لحين مراجعة التشغيل'],
   ),
 ];

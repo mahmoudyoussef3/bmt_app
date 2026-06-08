@@ -56,6 +56,10 @@ class RouteTimeline extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.xSmall),
                         Text('${station.area} • ${station.arrivalOffset}'),
+                        if (station.notes.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.xSmall),
+                          Text(station.notes),
+                        ],
                       ],
                     ),
                   ),

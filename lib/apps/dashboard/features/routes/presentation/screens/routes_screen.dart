@@ -39,7 +39,8 @@ class _RoutesLoadedView extends StatelessWidget {
     final cubit = context.read<RoutesCubit>();
     return switch (state.view) {
       RoutesView.builder => RouteBuilderView(
-        onSubmit: cubit.createRoute,
+        route: state.editingRoute,
+        onSubmit: cubit.saveRoute,
         onCancel: cubit.showOperations,
       ),
       RoutesView.operations => _RoutesOperationsView(state: state),
@@ -101,6 +102,9 @@ class _RoutesOperationsView extends StatelessWidget {
             );
             final preview = _RoutePreview(
               route: selected,
+              onEditRoute: () => cubit.showEditRoute(selected),
+              onDuplicateRoute: () => cubit.duplicateRoute(selected),
+              onArchiveRoute: () => cubit.archiveRoute(selected),
               onReorder: cubit.reorderStations,
               onAddStation: () => _openStationDialog(context),
               onEditStation: (station) =>
@@ -146,13 +150,20 @@ class _RouteList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final activeRoutes = routes
+        .where((route) => route.status != OperationRouteStatus.archived)
+        .toList();
+    final archivedRoutes = routes
+        .where((route) => route.status == OperationRouteStatus.archived)
+        .toList();
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('قائمة المسارات', style: Theme.of(context).textTheme.titleLarge),
+          Text('رحلات التشغيل', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.medium),
-          ...routes.map(
+          ...activeRoutes.map(
             (route) => Padding(
               padding: const EdgeInsets.only(bottom: AppSpacing.medium),
               child: RouteCard(
@@ -162,6 +173,21 @@ class _RouteList extends StatelessWidget {
               ),
             ),
           ),
+          if (archivedRoutes.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.small),
+            Text('الأرشيف', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.medium),
+            ...archivedRoutes.map(
+              (route) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+                child: RouteCard(
+                  route: route,
+                  selected: route.id == selectedRouteId,
+                  onTap: () => onSelected(route.id),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -170,6 +196,9 @@ class _RouteList extends StatelessWidget {
 
 class _RoutePreview extends StatelessWidget {
   final OperationRoute route;
+  final VoidCallback onEditRoute;
+  final VoidCallback onDuplicateRoute;
+  final VoidCallback onArchiveRoute;
   final ReorderCallback onReorder;
   final VoidCallback onAddStation;
   final ValueChanged<RouteStation> onEditStation;
@@ -177,6 +206,9 @@ class _RoutePreview extends StatelessWidget {
 
   const _RoutePreview({
     required this.route,
+    required this.onEditRoute,
+    required this.onDuplicateRoute,
+    required this.onArchiveRoute,
     required this.onReorder,
     required this.onAddStation,
     required this.onEditStation,
@@ -187,7 +219,12 @@ class _RoutePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _JourneyMap(route: route),
+        _JourneyHeader(
+          route: route,
+          onEditRoute: onEditRoute,
+          onDuplicateRoute: onDuplicateRoute,
+          onArchiveRoute: onArchiveRoute,
+        ),
         const SizedBox(height: AppSpacing.medium),
         RouteTimeline(route: route),
         const SizedBox(height: AppSpacing.medium),
@@ -203,50 +240,116 @@ class _RoutePreview extends StatelessWidget {
   }
 }
 
-class _JourneyMap extends StatelessWidget {
+class _JourneyHeader extends StatelessWidget {
   final OperationRoute route;
+  final VoidCallback onEditRoute;
+  final VoidCallback onDuplicateRoute;
+  final VoidCallback onArchiveRoute;
 
-  const _JourneyMap({required this.route});
+  const _JourneyHeader({
+    required this.route,
+    required this.onEditRoute,
+    required this.onDuplicateRoute,
+    required this.onArchiveRoute,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
     return AppCard(
-      child: Container(
-        height: 220,
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Stack(
-          children: [
-            Positioned.fill(
-              child: Center(
-                child: Icon(
-                  Icons.map_outlined,
-                  size: 72,
-                  color: scheme.onSurfaceVariant,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      route.name,
+                      style: Theme.of(context).textTheme.headlineSmall,
+                    ),
+                    const SizedBox(height: AppSpacing.xSmall),
+                    Text(
+                      '${route.startCity} ← ${route.endCity} • ${route.duration} • ${route.distance}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
               ),
+              Wrap(
+                spacing: AppSpacing.small,
+                runSpacing: AppSpacing.small,
+                children: [
+                  AppButton(
+                    label: 'تعديل',
+                    height: 40,
+                    outline: true,
+                    onPressed: onEditRoute,
+                  ),
+                  AppButton(
+                    label: 'نسخ',
+                    height: 40,
+                    outline: true,
+                    onPressed: onDuplicateRoute,
+                  ),
+                  if (route.status != OperationRouteStatus.archived)
+                    AppButton(
+                      label: 'أرشفة',
+                      height: 40,
+                      outline: true,
+                      onPressed: onArchiveRoute,
+                    ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.large),
+          Container(
+            height: 190,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest,
+              borderRadius: BorderRadius.circular(12),
             ),
-            Positioned(
-              right: 28,
-              top: 28,
-              child: _MapPill(label: route.startCity),
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: Center(
+                    child: Icon(
+                      Icons.alt_route_outlined,
+                      size: 72,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  right: 28,
+                  top: 28,
+                  child: _MapPill(label: route.startCity),
+                ),
+                Positioned(
+                  left: 28,
+                  bottom: 28,
+                  child: _MapPill(label: route.endCity),
+                ),
+                Positioned(
+                  right: 120,
+                  bottom: 48,
+                  child: _MapPill(label: '${route.stations.length} محطات'),
+                ),
+              ],
             ),
-            Positioned(
-              left: 28,
-              bottom: 28,
-              child: _MapPill(label: route.endCity),
-            ),
-            Positioned(
-              right: 120,
-              bottom: 48,
-              child: _MapPill(label: '${route.stations.length} محطات'),
-            ),
+          ),
+          if (route.notes.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.medium),
+            Text(route.notes.join(' • ')),
           ],
-        ),
+        ],
       ),
     );
   }

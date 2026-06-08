@@ -1,7 +1,8 @@
 enum OperationRouteStatus {
   active('نشط'),
   paused('متوقف مؤقتاً'),
-  draft('مسودة');
+  draft('مسودة'),
+  archived('مؤرشف');
 
   final String label;
 
@@ -65,6 +66,7 @@ class RouteStation {
   final String name;
   final String area;
   final String arrivalOffset;
+  final String notes;
   final int order;
 
   const RouteStation({
@@ -72,6 +74,7 @@ class RouteStation {
     required this.name,
     required this.area,
     required this.arrivalOffset,
+    this.notes = '',
     required this.order,
   });
 
@@ -80,6 +83,7 @@ class RouteStation {
     String? name,
     String? area,
     String? arrivalOffset,
+    String? notes,
     int? order,
   }) {
     return RouteStation(
@@ -87,6 +91,7 @@ class RouteStation {
       name: name ?? this.name,
       area: area ?? this.area,
       arrivalOffset: arrivalOffset ?? this.arrivalOffset,
+      notes: notes ?? this.notes,
       order: order ?? this.order,
     );
   }

@@ -33,6 +33,8 @@ class _VehicleDetailsViewState extends State<VehicleDetailsView> {
 
   static const _sections = [
     'البيانات العامة',
+    'المعرض',
+    'الامتثال',
     'المستندات',
     'الصيانة',
     'الرحلات',
@@ -211,14 +213,98 @@ class _SectionContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (section) {
       0 => _GeneralSection(vehicle: vehicle),
-      1 => _DocumentsSection(
+      1 => _GallerySection(vehicle: vehicle),
+      2 => _ComplianceSection(vehicle: vehicle),
+      3 => _DocumentsSection(
         vehicle: vehicle,
         onRenewDocument: onRenewDocument,
       ),
-      2 => _MaintenanceSection(vehicle: vehicle),
-      3 => _TripsSection(vehicle: vehicle),
+      4 => _MaintenanceSection(vehicle: vehicle),
+      5 => _TripsSection(vehicle: vehicle),
       _ => _PreviousDriversSection(vehicle: vehicle),
     };
+  }
+}
+
+class _GallerySection extends StatelessWidget {
+  final Vehicle vehicle;
+
+  const _GallerySection({required this.vehicle});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('معرض المركبة', style: Theme.of(context).textTheme.titleLarge),
+          const SizedBox(height: AppSpacing.medium),
+          Wrap(
+            spacing: AppSpacing.medium,
+            runSpacing: AppSpacing.medium,
+            children: vehicle.gallery.map((image) {
+              return SizedBox(
+                width: 220,
+                child: AppCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: scheme.primaryContainer.withAlpha(120),
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radiusSmall,
+                          ),
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.directions_bus_filled_outlined,
+                            size: 44,
+                            color: scheme.onPrimaryContainer,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.medium),
+                      Text(
+                        image.label,
+                        style: Theme.of(context).textTheme.titleMedium,
+                      ),
+                      const SizedBox(height: AppSpacing.xSmall),
+                      Text(image.angle),
+                      const SizedBox(height: AppSpacing.xSmall),
+                      Text(image.condition),
+                    ],
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ComplianceSection extends StatelessWidget {
+  final Vehicle vehicle;
+
+  const _ComplianceSection({required this.vehicle});
+
+  @override
+  Widget build(BuildContext context) {
+    final fields = [
+      ('التسجيل', vehicle.licenseExpiry),
+      ('التأمين', vehicle.insuranceExpiry),
+      ('الفحص الفني', vehicle.inspectionExpiry),
+      ('السائق النشط', vehicle.currentDriver),
+      ('المسار النشط', vehicle.currentRoute),
+      ('حالة التشغيل', vehicle.status.label),
+    ];
+
+    return _FieldWrap(title: 'التسجيل والتأمين والفحص', fields: fields);
   }
 }
 

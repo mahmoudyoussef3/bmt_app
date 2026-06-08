@@ -27,4 +27,17 @@ class TripsRepositoryImpl implements TripsRepository {
       throw Exception('تعذر تحديث حالة الرحلة');
     }
   }
+
+  @override
+  Future<OperationTrip> updateSeatState(
+    String tripId,
+    String seatId,
+    TripSeatState state,
+  ) async {
+    try {
+      return await _datasource.updateSeatState(tripId, seatId, state);
+    } catch (_) {
+      throw Exception('تعذر تحديث حالة المقعد');
+    }
+  }
 }

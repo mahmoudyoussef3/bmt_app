@@ -57,13 +57,21 @@ class RoutesCubit extends Cubit<RoutesState> {
   void showBuilder() {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(current.copyWith(view: RoutesView.builder));
+    emit(current.copyWith(view: RoutesView.builder, clearEditingRoute: true));
+  }
+
+  void showEditRoute(OperationRoute route) {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    emit(current.copyWith(view: RoutesView.builder, editingRoute: route));
   }
 
   void showOperations() {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(current.copyWith(view: RoutesView.operations));
+    emit(
+      current.copyWith(view: RoutesView.operations, clearEditingRoute: true),
+    );
   }
 
   Future<void> createRoute(OperationRoute route) async {
@@ -88,6 +96,56 @@ class RoutesCubit extends Cubit<RoutesState> {
     if (current is! RoutesLoaded) return;
     try {
       final updated = await _updateRoute(route);
+      _emitUpdatedRoute(current, updated);
+    } catch (error) {
+      emit(RoutesError(error.toString()));
+    }
+  }
+
+  Future<void> saveRoute(OperationRoute route) async {
+    if (route.id.isEmpty) {
+      await createRoute(route);
+    } else {
+      await updateRoute(route);
+    }
+  }
+
+  Future<void> duplicateRoute(OperationRoute route) async {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    try {
+      final created = await _createRoute(
+        route.copyWith(
+          id: '',
+          name: '${route.name} - نسخة',
+          status: OperationRouteStatus.draft,
+          tripsCount: 0,
+          stations: route.stations
+              .map((station) => station.copyWith(id: ''))
+              .toList(),
+          notes: [...route.notes, 'تم إنشاء نسخة من ${route.name}.'],
+        ),
+      );
+      emit(
+        current.copyWith(
+          routes: [created, ...current.routes],
+          selectedRouteId: created.id,
+          view: RoutesView.operations,
+          clearEditingRoute: true,
+        ),
+      );
+    } catch (error) {
+      emit(RoutesError(error.toString()));
+    }
+  }
+
+  Future<void> archiveRoute(OperationRoute route) async {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    try {
+      final updated = await _updateRoute(
+        route.copyWith(status: OperationRouteStatus.archived),
+      );
       _emitUpdatedRoute(current, updated);
     } catch (error) {
       emit(RoutesError(error.toString()));

@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/create_ro
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/delete_route_station_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/get_operation_routes_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/reorder_route_stations_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/update_route_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/update_route_station_usecase.dart';
 
 void main() {
@@ -23,6 +24,7 @@ void main() {
       expect(routes.first.name, 'بنها - القرية الذكية');
       expect(routes.first.stations, hasLength(4));
       expect(routes.first.stations.first.name, 'محطة بنها الرئيسية');
+      expect(routes.first.stations.first.notes, isNotEmpty);
     });
 
     test('adds, edits, reorders, and deletes stations locally', () async {
@@ -41,10 +43,12 @@ void main() {
           name: 'محطة اختبار',
           area: 'منطقة اختبار',
           arrivalOffset: '٩٠ دقيقة',
+          notes: 'ملاحظة اختبار',
           order: 0,
         ),
       );
       expect(added.stations.last.name, 'محطة اختبار');
+      expect(added.stations.last.notes, 'ملاحظة اختبار');
 
       final editedStation = added.stations.last.copyWith(name: 'محطة معدلة');
       final edited = await updateStation(added.id, editedStation);
@@ -80,6 +84,37 @@ void main() {
         created.stations.map((station) => station.name),
         contains('Station 1'),
       );
+      expect(created.stations.first.id, isNotEmpty);
+    });
+
+    test('duplicates and archives route through use cases', () async {
+      final repository = RoutesRepositoryImpl(MockRoutesDatasource());
+      final getRoutes = GetOperationRoutesUseCase(repository);
+      final createRoute = CreateRouteUseCase(repository);
+      final updateRoute = UpdateRouteUseCase(repository);
+
+      final original = (await getRoutes()).first;
+      final duplicate = await createRoute(
+        original.copyWith(
+          id: '',
+          name: '${original.name} - نسخة',
+          status: OperationRouteStatus.draft,
+          tripsCount: 0,
+          stations: original.stations
+              .map((station) => station.copyWith(id: ''))
+              .toList(),
+        ),
+      );
+
+      expect(duplicate.id, isNot(original.id));
+      expect(duplicate.name, contains('نسخة'));
+      expect(duplicate.status, OperationRouteStatus.draft);
+      expect(duplicate.stations.first.id, isNotEmpty);
+
+      final archived = await updateRoute(
+        original.copyWith(status: OperationRouteStatus.archived),
+      );
+      expect(archived.status, OperationRouteStatus.archived);
     });
 
     test('maps datasource failures to Arabic repository error', () {
@@ -115,6 +150,7 @@ const _newRoute = OperationRoute(
       name: 'Station 1',
       area: 'بنها',
       arrivalOffset: '٠ دقيقة',
+      notes: 'محطة بداية اختبارية',
       order: 1,
     ),
   ],

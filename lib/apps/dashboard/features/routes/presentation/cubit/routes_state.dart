@@ -20,11 +20,13 @@ class RoutesLoaded extends RoutesState {
   final List<OperationRoute> routes;
   final String selectedRouteId;
   final RoutesView view;
+  final OperationRoute? editingRoute;
 
   const RoutesLoaded({
     required this.routes,
     required this.selectedRouteId,
     this.view = RoutesView.operations,
+    this.editingRoute,
   });
 
   OperationRoute get selectedRoute {
@@ -38,11 +40,16 @@ class RoutesLoaded extends RoutesState {
     List<OperationRoute>? routes,
     String? selectedRouteId,
     RoutesView? view,
+    OperationRoute? editingRoute,
+    bool clearEditingRoute = false,
   }) {
     return RoutesLoaded(
       routes: routes ?? this.routes,
       selectedRouteId: selectedRouteId ?? this.selectedRouteId,
       view: view ?? this.view,
+      editingRoute: clearEditingRoute
+          ? null
+          : editingRoute ?? this.editingRoute,
     );
   }
 }

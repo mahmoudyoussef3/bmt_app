@@ -71,6 +71,8 @@ class _TripsLoadedView extends StatelessWidget {
                   trip: selected,
                   onClose: cubit.closeDetails,
                   onStatusChanged: (status) => cubit.moveTrip(selected, status),
+                  onSeatStateChanged: (seat, state) =>
+                      cubit.updateSeatState(selected, seat, state),
                 ),
               ),
             ],
@@ -147,6 +149,8 @@ void _openDetailsSheet(BuildContext context, OperationTrip trip) {
             trip: trip,
             onClose: Navigator.of(context).pop,
             onStatusChanged: (status) => cubit.moveTrip(trip, status),
+            onSeatStateChanged: (seat, state) =>
+                cubit.updateSeatState(trip, seat, state),
           ),
         ),
       ),

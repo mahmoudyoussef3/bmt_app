@@ -31,6 +31,8 @@ class Driver {
   final List<DriverDocument> documents;
   final List<DriverReview> reviews;
   final List<DriverComplaint> complaints;
+  final List<DriverActiveTrip> activeTrips;
+  final List<DriverAssignmentHistory> assignmentHistory;
   final List<String> notes;
 
   const Driver({
@@ -55,6 +57,8 @@ class Driver {
     required this.documents,
     required this.reviews,
     required this.complaints,
+    this.activeTrips = const [],
+    this.assignmentHistory = const [],
     required this.notes,
   });
 
@@ -80,6 +84,8 @@ class Driver {
     List<DriverDocument>? documents,
     List<DriverReview>? reviews,
     List<DriverComplaint>? complaints,
+    List<DriverActiveTrip>? activeTrips,
+    List<DriverAssignmentHistory>? assignmentHistory,
     List<String>? notes,
   }) {
     return Driver(
@@ -104,6 +110,8 @@ class Driver {
       documents: documents ?? this.documents,
       reviews: reviews ?? this.reviews,
       complaints: complaints ?? this.complaints,
+      activeTrips: activeTrips ?? this.activeTrips,
+      assignmentHistory: assignmentHistory ?? this.assignmentHistory,
       notes: notes ?? this.notes,
     );
   }
@@ -146,5 +154,39 @@ class DriverComplaint {
     required this.passengerName,
     required this.status,
     required this.summary,
+  });
+}
+
+class DriverActiveTrip {
+  final String tripNumber;
+  final String route;
+  final String vehicle;
+  final String departureTime;
+  final int passengers;
+  final String status;
+
+  const DriverActiveTrip({
+    required this.tripNumber,
+    required this.route,
+    required this.vehicle,
+    required this.departureTime,
+    required this.passengers,
+    required this.status,
+  });
+}
+
+class DriverAssignmentHistory {
+  final String vehicle;
+  final String route;
+  final String startedAt;
+  final String endedAt;
+  final String reason;
+
+  const DriverAssignmentHistory({
+    required this.vehicle,
+    required this.route,
+    required this.startedAt,
+    required this.endedAt,
+    required this.reason,
   });
 }

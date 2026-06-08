@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/features/trips/data/models/operation_trip
 import 'package:bmt_app/apps/dashboard/features/trips/data/repositories/trips_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/domain/usecases/get_operation_trips_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/domain/usecases/update_trip_seat_state_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/domain/usecases/update_trip_status_usecase.dart';
 
 void main() {
@@ -25,6 +26,9 @@ void main() {
         contains('Created'),
       );
       expect(trips.first.passengers, isNotEmpty);
+      expect(trips.first.seats, isNotEmpty);
+      expect(trips.first.totalSeats, trips.first.seats.length);
+      expect(trips.first.availableSeats, greaterThan(0));
     });
 
     test('moves trip between statuses locally', () async {
@@ -40,6 +44,26 @@ void main() {
 
       expect(updated.status, OperationTripStatus.completed);
       expect(updated.events.first.description, contains('مكتملة'));
+    });
+
+    test('updates a trip seat state locally', () async {
+      final repository = TripsRepositoryImpl(MockTripsDatasource());
+      final getTrips = GetOperationTripsUseCase(repository);
+      final updateSeat = UpdateTripSeatStateUseCase(repository);
+
+      final trip = (await getTrips()).first;
+      final seat = trip.seats.firstWhere(
+        (item) => item.state == TripSeatState.available,
+      );
+
+      final updated = await updateSeat(trip.id, seat.id, TripSeatState.blocked);
+
+      final updatedSeat = updated.seats.firstWhere(
+        (item) => item.id == seat.id,
+      );
+      expect(updatedSeat.state, TripSeatState.blocked);
+      expect(updated.events.first.description, contains(updatedSeat.label));
+      expect(updated.blockedSeats, trip.blockedSeats + 1);
     });
 
     test('maps datasource failures to Arabic repository error', () {
@@ -70,6 +94,15 @@ class _FailingTripsDatasource implements TripsDatasource {
   Future<OperationTripModel> updateTripStatus(
     String tripId,
     OperationTripStatus status,
+  ) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationTripModel> updateSeatState(
+    String tripId,
+    String seatId,
+    TripSeatState state,
   ) {
     throw StateError('failure');
   }

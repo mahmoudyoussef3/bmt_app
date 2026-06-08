@@ -6,4 +6,9 @@ abstract class TripsRepository {
     String tripId,
     OperationTripStatus status,
   );
+  Future<OperationTrip> updateSeatState(
+    String tripId,
+    String seatId,
+    TripSeatState state,
+  );
 }

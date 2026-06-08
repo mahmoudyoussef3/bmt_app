@@ -1,5 +1,13 @@
 import 'package:get_it/get_it.dart';
 
+import '../../features/assignments/data/datasources/mock_fleet_assignments_datasource.dart';
+import '../../features/assignments/data/repositories/fleet_assignments_repository_impl.dart';
+import '../../features/assignments/domain/repositories/fleet_assignments_repository.dart';
+import '../../features/assignments/domain/usecases/assign_vehicle_to_driver_usecase.dart';
+import '../../features/assignments/domain/usecases/change_fleet_assignment_usecase.dart';
+import '../../features/assignments/domain/usecases/get_fleet_assignments_usecase.dart';
+import '../../features/assignments/domain/usecases/remove_fleet_assignment_usecase.dart';
+import '../../features/assignments/presentation/cubit/fleet_assignments_cubit.dart';
 import '../../features/bookings/data/datasources/mock_bookings_datasource.dart';
 import '../../features/bookings/data/repositories/bookings_repository_impl.dart';
 import '../../features/bookings/domain/repositories/bookings_repository.dart';
@@ -39,6 +47,15 @@ import '../../features/payments/domain/usecases/add_payment_note_usecase.dart';
 import '../../features/payments/domain/usecases/get_finance_payments_usecase.dart';
 import '../../features/payments/domain/usecases/update_payment_review_status_usecase.dart';
 import '../../features/payments/presentation/cubit/payments_cubit.dart';
+import '../../features/payment_verification/data/datasources/mock_booking_payment_verification_datasource.dart';
+import '../../features/payment_verification/data/repositories/booking_payment_verification_repository_impl.dart';
+import '../../features/payment_verification/domain/repositories/booking_payment_verification_repository.dart';
+import '../../features/payment_verification/domain/usecases/add_booking_payment_note_usecase.dart';
+import '../../features/payment_verification/domain/usecases/approve_booking_payment_usecase.dart';
+import '../../features/payment_verification/domain/usecases/get_booking_payment_verifications_usecase.dart';
+import '../../features/payment_verification/domain/usecases/reject_booking_payment_usecase.dart';
+import '../../features/payment_verification/domain/usecases/request_booking_payment_review_usecase.dart';
+import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
 import '../../features/routes/data/datasources/mock_routes_datasource.dart';
 import '../../features/routes/data/repositories/routes_repository_impl.dart';
 import '../../features/routes/domain/repositories/routes_repository.dart';
@@ -54,6 +71,7 @@ import '../../features/trips/data/datasources/mock_trips_datasource.dart';
 import '../../features/trips/data/repositories/trips_repository_impl.dart';
 import '../../features/trips/domain/repositories/trips_repository.dart';
 import '../../features/trips/domain/usecases/get_operation_trips_usecase.dart';
+import '../../features/trips/domain/usecases/update_trip_seat_state_usecase.dart';
 import '../../features/trips/domain/usecases/update_trip_status_usecase.dart';
 import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/vehicles/data/datasources/mock_vehicles_datasource.dart';
@@ -261,6 +279,62 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<FleetAssignmentsDatasource>()) {
+    dashboardDi.registerLazySingleton<FleetAssignmentsDatasource>(
+      MockFleetAssignmentsDatasource.new,
+    );
+  }
+
+  if (!dashboardDi.isRegistered<FleetAssignmentsRepository>()) {
+    dashboardDi.registerLazySingleton<FleetAssignmentsRepository>(
+      () => FleetAssignmentsRepositoryImpl(
+        dashboardDi<FleetAssignmentsDatasource>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetFleetAssignmentsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () =>
+          GetFleetAssignmentsUseCase(dashboardDi<FleetAssignmentsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<AssignVehicleToDriverUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => AssignVehicleToDriverUseCase(
+        dashboardDi<FleetAssignmentsRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ChangeFleetAssignmentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ChangeFleetAssignmentUseCase(
+        dashboardDi<FleetAssignmentsRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<RemoveFleetAssignmentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => RemoveFleetAssignmentUseCase(
+        dashboardDi<FleetAssignmentsRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<FleetAssignmentsCubit>()) {
+    dashboardDi.registerFactory(
+      () => FleetAssignmentsCubit(
+        getAssignments: dashboardDi<GetFleetAssignmentsUseCase>(),
+        assignVehicleToDriver: dashboardDi<AssignVehicleToDriverUseCase>(),
+        changeAssignment: dashboardDi<ChangeFleetAssignmentUseCase>(),
+        removeAssignment: dashboardDi<RemoveFleetAssignmentUseCase>(),
+      ),
+    );
+  }
+
   if (!dashboardDi.isRegistered<PaymentsDatasource>()) {
     dashboardDi.registerLazySingleton<PaymentsDatasource>(
       MockPaymentsDatasource.new,
@@ -297,6 +371,72 @@ void registerDashboardDependencies() {
         getPayments: dashboardDi<GetFinancePaymentsUseCase>(),
         updateStatus: dashboardDi<UpdatePaymentReviewStatusUseCase>(),
         addNote: dashboardDi<AddPaymentNoteUseCase>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<BookingPaymentVerificationDatasource>()) {
+    dashboardDi.registerLazySingleton<BookingPaymentVerificationDatasource>(
+      MockBookingPaymentVerificationDatasource.new,
+    );
+  }
+
+  if (!dashboardDi.isRegistered<BookingPaymentVerificationRepository>()) {
+    dashboardDi.registerLazySingleton<BookingPaymentVerificationRepository>(
+      () => BookingPaymentVerificationRepositoryImpl(
+        dashboardDi<BookingPaymentVerificationDatasource>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetBookingPaymentVerificationsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetBookingPaymentVerificationsUseCase(
+        dashboardDi<BookingPaymentVerificationRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ApproveBookingPaymentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ApproveBookingPaymentUseCase(
+        dashboardDi<BookingPaymentVerificationRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<RejectBookingPaymentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => RejectBookingPaymentUseCase(
+        dashboardDi<BookingPaymentVerificationRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<RequestBookingPaymentReviewUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => RequestBookingPaymentReviewUseCase(
+        dashboardDi<BookingPaymentVerificationRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<AddBookingPaymentNoteUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => AddBookingPaymentNoteUseCase(
+        dashboardDi<BookingPaymentVerificationRepository>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<PaymentVerificationCubit>()) {
+    dashboardDi.registerFactory(
+      () => PaymentVerificationCubit(
+        getQueue: dashboardDi<GetBookingPaymentVerificationsUseCase>(),
+        approve: dashboardDi<ApproveBookingPaymentUseCase>(),
+        reject: dashboardDi<RejectBookingPaymentUseCase>(),
+        requestReview: dashboardDi<RequestBookingPaymentReviewUseCase>(),
+        addNote: dashboardDi<AddBookingPaymentNoteUseCase>(),
       ),
     );
   }
@@ -391,11 +531,18 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<UpdateTripSeatStateUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateTripSeatStateUseCase(dashboardDi<TripsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<TripsCubit>()) {
     dashboardDi.registerFactory(
       () => TripsCubit(
         getTrips: dashboardDi<GetOperationTripsUseCase>(),
         updateTripStatus: dashboardDi<UpdateTripStatusUseCase>(),
+        updateSeatState: dashboardDi<UpdateTripSeatStateUseCase>(),
       ),
     );
   }

@@ -44,7 +44,10 @@ class MockRoutesDatasource implements RoutesDatasource {
   @override
   Future<OperationRouteModel> createRoute(OperationRoute route) async {
     final model = OperationRouteModel.fromEntity(
-      route.copyWith(id: 'route-${_routes.length + 10}'),
+      route.copyWith(
+        id: 'route-${_routes.length + 10}',
+        stations: _assignStationIds(route.stations),
+      ),
     );
     _routes.insert(0, model);
     return model;
@@ -119,6 +122,16 @@ class MockRoutesDatasource implements RoutesDatasource {
       return station.copyWith(order: index + 1);
     }).toList();
   }
+
+  List<RouteStation> _assignStationIds(List<RouteStation> stations) {
+    return stations.indexed.map((entry) {
+      final (index, station) = entry;
+      return station.copyWith(
+        id: station.id.isEmpty ? 'st-new-${index + 1}' : station.id,
+        order: index + 1,
+      );
+    }).toList();
+  }
 }
 
 const _seedRoutes = [
@@ -137,6 +150,7 @@ const _seedRoutes = [
         name: 'محطة بنها الرئيسية',
         area: 'بنها',
         arrivalOffset: '٠ دقيقة',
+        notes: 'نقطة تجمع رئيسية بجوار مدخل المحطة.',
         order: 1,
       ),
       RouteStation(
@@ -144,6 +158,7 @@ const _seedRoutes = [
         name: 'موقف شبرا',
         area: 'شبرا الخيمة',
         arrivalOffset: '٢٠ دقيقة',
+        notes: 'تأكيد الوقوف في الجانب الشرقي وقت الذروة.',
         order: 2,
       ),
       RouteStation(
@@ -151,6 +166,7 @@ const _seedRoutes = [
         name: 'بوابة الشيخ زايد',
         area: 'الشيخ زايد',
         arrivalOffset: '٦٠ دقيقة',
+        notes: 'محطة إنزال فقط في الرحلات الصباحية.',
         order: 3,
       ),
       RouteStation(
@@ -158,6 +174,7 @@ const _seedRoutes = [
         name: 'القرية الذكية',
         area: '٦ أكتوبر',
         arrivalOffset: '٧٥ دقيقة',
+        notes: 'نهاية المسار أمام البوابة الرئيسية.',
         order: 4,
       ),
     ],
@@ -178,6 +195,7 @@ const _seedRoutes = [
         name: 'بنها الجديدة',
         area: 'بنها',
         arrivalOffset: '٠ دقيقة',
+        notes: 'تجمع أمام الموقف الجديد.',
         order: 1,
       ),
       RouteStation(
@@ -185,6 +203,7 @@ const _seedRoutes = [
         name: 'الدائري',
         area: 'القاهرة',
         arrivalOffset: '٣٥ دقيقة',
+        notes: 'نقطة حساسة للزحام، راقب التأخير.',
         order: 2,
       ),
       RouteStation(
@@ -192,6 +211,7 @@ const _seedRoutes = [
         name: 'عباس العقاد',
         area: 'مدينة نصر',
         arrivalOffset: '٦٥ دقيقة',
+        notes: 'نقطة وصول بجوار الشارع الرئيسي.',
         order: 3,
       ),
     ],
@@ -212,6 +232,7 @@ const _seedRoutes = [
         name: 'بنها',
         area: 'القليوبية',
         arrivalOffset: '٠ دقيقة',
+        notes: 'تشغيل متوقف مؤقتاً.',
         order: 1,
       ),
       RouteStation(
@@ -219,6 +240,7 @@ const _seedRoutes = [
         name: 'المؤسسة',
         area: 'شبرا',
         arrivalOffset: '٢٥ دقيقة',
+        notes: 'مراجعة الطلب قبل إعادة التشغيل.',
         order: 2,
       ),
       RouteStation(
@@ -226,6 +248,7 @@ const _seedRoutes = [
         name: 'جامعة الدول',
         area: 'المهندسين',
         arrivalOffset: '٧٠ دقيقة',
+        notes: 'نهاية المسار المقترحة.',
         order: 3,
       ),
     ],
