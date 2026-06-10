@@ -66,12 +66,12 @@ class _DashboardShellState extends State<DashboardShell> {
       selectedIcon: Icons.event_seat_rounded,
       permission: DashboardPermission.bookings,
     ),
-     const _DashboardNavItem(
+    const _DashboardNavItem(
       label: 'الرحلات',
       route: DashboardRoutes.trips,
       icon: Icons.event_seat_outlined,
       selectedIcon: Icons.event_seat_rounded,
-      permission: DashboardPermission.bookings,
+      permission: DashboardPermission.trips,
     ),
 
     const _DashboardNavItem(
@@ -96,14 +96,14 @@ class _DashboardShellState extends State<DashboardShell> {
       selectedIcon: Icons.alt_route_rounded,
       permission: DashboardPermission.routes,
     ),
-     const _DashboardNavItem(
+    const _DashboardNavItem(
       label: 'الاشتراكات',
-      route: DashboardRoutes.trips,
+      route: DashboardRoutes.subscriptions,
       icon: Icons.event_seat_outlined,
-      selectedIcon: Icons.event_seat_rounded,
-      permission: DashboardPermission.payments,
+      selectedIcon: Icons.text_snippet,
+      permission: DashboardPermission.subscriptions,
     ),
-     const _DashboardNavItem(
+    const _DashboardNavItem(
       label: 'التحقق من الحجوزات',
       route: DashboardRoutes.paymentVerification,
       icon: Icons.event_seat_outlined,

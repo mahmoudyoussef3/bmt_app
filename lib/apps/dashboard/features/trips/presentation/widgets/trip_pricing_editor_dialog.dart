@@ -82,114 +82,119 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
       toPoint = availableToPoints.first;
     }
 
-    return AlertDialog(
-      title: Text(widget.pricing == null ? 'إضافة تسعير' : 'تعديل التسعير'),
-      content: SizedBox(
-        width: 620,
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: DropdownButtonFormField<TripRoutePoint>(
-                      initialValue: fromPoint,
-                      decoration: const InputDecoration(labelText: 'من نقطة'),
-                      items: widget.trip.routePoints
-                          .where(
-                            (point) =>
-                                point.order <
-                                widget.trip.routePoints.last.order,
-                          )
-                          .map(
-                            (point) => DropdownMenuItem(
-                              value: point,
-                              child: Text(point.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (next) {
-                        if (next == null) return;
-                        setState(() {
-                          fromPoint = next;
-                          final nextToPoints = widget.trip.routePoints
-                              .where((point) => point.order > fromPoint.order)
-                              .toList();
-                          toPoint = nextToPoints.first;
-                        });
-                      },
+    return SizedBox(
+      width: 620,
+      height: 500,
+      child: AlertDialog(
+        title: Text(widget.pricing == null ? 'إضافة تسعير' : 'تعديل التسعير'),
+        content: SizedBox(
+          width: 620,
+          height: 400,
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: DropdownButtonFormField<TripRoutePoint>(
+                        initialValue: fromPoint,
+                        decoration: const InputDecoration(labelText: 'من نقطة'),
+                        items: widget.trip.routePoints
+                            .where(
+                              (point) =>
+                                  point.order <
+                                  widget.trip.routePoints.last.order,
+                            )
+                            .map(
+                              (point) => DropdownMenuItem(
+                                value: point,
+                                child: Text(point.name),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (next) {
+                          if (next == null) return;
+                          setState(() {
+                            fromPoint = next;
+                            final nextToPoints = widget.trip.routePoints
+                                .where((point) => point.order > fromPoint.order)
+                                .toList();
+                            toPoint = nextToPoints.first;
+                          });
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  Expanded(
-                    child: DropdownButtonFormField<TripRoutePoint>(
-                      key: ValueKey(fromPoint.id),
-                      initialValue: toPoint,
-                      decoration: const InputDecoration(labelText: 'إلى نقطة'),
-                      items: availableToPoints
-                          .map(
-                            (point) => DropdownMenuItem(
-                              value: point,
-                              child: Text(point.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (next) =>
-                          setState(() => toPoint = next ?? toPoint),
+                    const SizedBox(width: AppSpacing.small),
+                    Expanded(
+                      child: DropdownButtonFormField<TripRoutePoint>(
+                        key: ValueKey(fromPoint.id),
+                        initialValue: toPoint,
+                        decoration: const InputDecoration(labelText: 'إلى نقطة'),
+                        items: availableToPoints
+                            .map(
+                              (point) => DropdownMenuItem(
+                                value: point,
+                                child: Text(point.name),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (next) =>
+                            setState(() => toPoint = next ?? toPoint),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.small),
-              _PriceFields(
-                oneTime: oneTime,
-                fiveDays: fiveDays,
-                tenDays: tenDays,
-                monthly: monthly,
-                threeMonths: threeMonths,
-              ),
-              const SizedBox(height: AppSpacing.small),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: currency,
-                      decoration: const InputDecoration(labelText: 'العملة'),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.medium),
-                  SwitchListTile(
-                    value: isActive,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(isActive ? 'نشط' : 'غير نشط'),
-                    onChanged: (value) => setState(() => isActive = value),
-                  ),
-                ],
-              ),
-              if (error.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.small),
-                Text(
-                  error,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: scheme.error),
+                  ],
                 ),
+                const SizedBox(height: AppSpacing.small),
+                _PriceFields(
+                  oneTime: oneTime,
+                  fiveDays: fiveDays,
+                  tenDays: tenDays,
+                  monthly: monthly,
+                  threeMonths: threeMonths,
+                ),
+                const SizedBox(height: AppSpacing.small),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: currency,
+                        decoration: const InputDecoration(labelText: 'العملة'),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.medium),
+                    SwitchListTile(
+                      value: isActive,
+                      contentPadding: EdgeInsets.zero,
+                      title: Text(isActive ? 'نشط' : 'غير نشط'),
+                      onChanged: (value) => setState(() => isActive = value),
+                    ),
+                  ],
+                ),
+                if (error.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.small),
+                  Text(
+                    error,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: scheme.error),
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
+        actions: [
+          TextButton(
+            onPressed: saving ? null : () => Navigator.of(context).pop(),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: saving ? null : _save,
+            child: Text(saving ? 'جار الحفظ' : 'حفظ'),
+          ),
+        ],
       ),
-      actions: [
-        TextButton(
-          onPressed: saving ? null : () => Navigator.of(context).pop(),
-          child: const Text('إلغاء'),
-        ),
-        FilledButton(
-          onPressed: saving ? null : _save,
-          child: Text(saving ? 'جار الحفظ' : 'حفظ'),
-        ),
-      ],
     );
   }
 
