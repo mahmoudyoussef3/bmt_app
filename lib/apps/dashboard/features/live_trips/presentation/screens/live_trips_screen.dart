@@ -91,7 +91,7 @@ class _LoadedView extends StatelessWidget {
             children: [
               _HeaderCard(state: state),
               const SizedBox(height: AppSpacing.medium),
-              _TripsList(state: state, onTap: cubit.selectTrip),
+              _TripsList(state: state, onTap: cubit.selectTrip, compact: true),
               const SizedBox(height: AppSpacing.medium),
               if (state.selectedTrip == null)
                 const _NoSelectedTrip()
@@ -112,11 +112,11 @@ class _LoadedView extends StatelessWidget {
               const SizedBox(height: AppSpacing.large),
               Expanded(
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     SizedBox(
                       width: 390,
-                      child: _TripsList(state: state, onTap: cubit.selectTrip),
+                      child: _TripsList(state: state, onTap: cubit.selectTrip, compact: false),
                     ),
                     const SizedBox(width: AppSpacing.medium),
                     Expanded(
@@ -265,10 +265,16 @@ class _MetricChip extends StatelessWidget {
 }
 
 class _TripsList extends StatefulWidget {
-  const _TripsList({super.key, required this.state, required this.onTap});
+  const _TripsList({
+    super.key,
+    required this.state,
+    required this.onTap,
+    required this.compact,
+  });
 
   final LiveTripsLoaded state;
   final ValueChanged<String> onTap;
+  final bool compact;
 
   @override
   State<_TripsList> createState() => _TripsListState();
@@ -303,6 +309,50 @@ class _TripsListState extends State<_TripsList> {
   Widget build(BuildContext context) {
     final cubit = context.read<LiveTripsCubit>();
     final filtered = widget.state.filteredTrips;
+
+    Widget listWidget;
+    if (widget.state.trips.isEmpty) {
+      listWidget = const EmptyState(
+        title: 'لا توجد رحلات مباشرة الآن',
+        subtitle: 'عند بدء الرحلات ستظهر هنا.',
+      );
+    } else if (filtered.isEmpty) {
+      listWidget = const EmptyState(
+        title: 'لا توجد نتائج مطابقة',
+        subtitle: 'جرب تغيير فلاتر البحث أو الكلمات المفتاحية.',
+      );
+    } else {
+      if (widget.compact) {
+        listWidget = Column(
+          children: filtered.map((trip) {
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+              child: LiveTripCard(
+                trip: trip,
+                selected: trip.id == widget.state.selectedTripId,
+                onTap: () => widget.onTap(trip.id),
+              ),
+            );
+          }).toList(),
+        );
+      } else {
+        listWidget = ListView.builder(
+          padding: const EdgeInsets.only(top: AppSpacing.small),
+          itemCount: filtered.length,
+          itemBuilder: (context, index) {
+            final trip = filtered[index];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+              child: LiveTripCard(
+                trip: trip,
+                selected: trip.id == widget.state.selectedTripId,
+                onTap: () => widget.onTap(trip.id),
+              ),
+            );
+          },
+        );
+      }
+    }
 
     return AppCard(
       child: Column(
@@ -429,27 +479,10 @@ class _TripsListState extends State<_TripsList> {
             ],
           ),
           const SizedBox(height: AppSpacing.medium),
-          if (widget.state.trips.isEmpty)
-            const EmptyState(
-              title: 'لا توجد رحلات مباشرة الآن',
-              subtitle: 'عند بدء الرحلات ستظهر هنا.',
-            )
-          else if (filtered.isEmpty)
-            const EmptyState(
-              title: 'لا توجد نتائج مطابقة',
-              subtitle: 'جرب تغيير فلاتر البحث أو الكلمات المفتاحية.',
-            )
+          if (widget.compact)
+            listWidget
           else
-            ...filtered.map(
-              (trip) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-                child: LiveTripCard(
-                  trip: trip,
-                  selected: trip.id == widget.state.selectedTripId,
-                  onTap: () => widget.onTap(trip.id),
-                ),
-              ),
-            ),
+            Expanded(child: listWidget),
         ],
       ),
     );
