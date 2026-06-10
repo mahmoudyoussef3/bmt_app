@@ -25,4 +25,5 @@ abstract class LiveTripsRepository {
 
   Future<String> callDriver(String driverPhone);
   Future<String> sendDriverMessage(String driverPhone, String message);
+  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId);
 }

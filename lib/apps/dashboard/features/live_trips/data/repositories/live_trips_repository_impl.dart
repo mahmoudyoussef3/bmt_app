@@ -135,4 +135,13 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
       throw Exception('تعذر إرسال الرسالة للسائق');
     }
   }
+
+  @override
+  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId) async {
+    try {
+      return await _datasource.togglePassengerCheckin(tripId, passengerId);
+    } catch (_) {
+      throw Exception('تعذر تسجيل حضور/غياب الراكب');
+    }
+  }
 }

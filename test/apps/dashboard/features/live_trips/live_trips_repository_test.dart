@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/features/live_trips/data/datasources/mock
 import 'package:bmt_app/apps/dashboard/features/live_trips/data/repositories/live_trips_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/entities/live_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/get_live_trips_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/toggle_passenger_checkin_usecase.dart';
 
 void main() {
   group('Live trips clean architecture chain', () {
@@ -45,6 +46,24 @@ void main() {
           ),
         ),
       );
+    });
+
+    test('toggles passenger checkin status and recalculates counts', () async {
+      final repository = LiveTripsRepositoryImpl(MockLiveTripsDatasource());
+      final getLiveTrips = GetLiveTripsUseCase(repository);
+
+      final trips = await getLiveTrips();
+      final targetTrip = trips.first;
+      final targetPassenger = targetTrip.passengers.firstWhere((p) => !p.checkedIn);
+      final initialCheckedInCountInList = targetTrip.passengers.where((p) => p.checkedIn).length;
+
+      final togglePassengerCheckin = TogglePassengerCheckinUseCase(repository);
+      final updatedTrip = await togglePassengerCheckin(targetTrip.id, targetPassenger.id);
+
+      final updatedPassenger = updatedTrip.passengers.firstWhere((p) => p.id == targetPassenger.id);
+      expect(updatedPassenger.checkedIn, true);
+      expect(updatedTrip.checkedInPassengersCount, initialCheckedInCountInList + 1);
+      expect(updatedTrip.missingPassengersCount, targetTrip.passengers.length - (initialCheckedInCountInList + 1));
     });
   });
 }
@@ -96,4 +115,7 @@ class _FailingLiveTripsDatasource implements LiveTripsDatasource {
 
   @override
   Future<String> sendDriverMessage(String driverPhone, String message) => throw UnimplementedError();
+
+  @override
+  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId) => throw UnimplementedError();
 }

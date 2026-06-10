@@ -25,6 +25,7 @@ abstract class LiveTripsDatasource {
 
   Future<String> callDriver(String driverPhone);
   Future<String> sendDriverMessage(String driverPhone, String message);
+  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId);
 }
 
 class MockLiveTripsDatasource implements LiveTripsDatasource {
@@ -234,9 +235,22 @@ class MockLiveTripsDatasource implements LiveTripsDatasource {
       resolved: false,
     );
 
+    DateTime? updatedExpectedArrival = trip.expectedArrivalTime;
+    if (type == LiveTripAlertType.delay) {
+      final reg = RegExp(r'\d+');
+      final match = reg.firstMatch(message);
+      int delayMins = 15; // default
+      if (match != null) {
+        delayMins = int.tryParse(match.group(0)!) ?? 15;
+      }
+      final currentExpected = trip.expectedArrivalTime ?? trip.scheduledStartTime.add(const Duration(hours: 1, minutes: 30));
+      updatedExpectedArrival = currentExpected.add(Duration(minutes: delayMins));
+    }
+
     return _replaceTrip(
       trip.copyWith(
         alerts: [alert, ...trip.alerts],
+        expectedArrivalTime: updatedExpectedArrival,
         health: severity == LiveTripAlertSeverity.critical
             ? LiveTripHealth.critical
             : LiveTripHealth.warning,
@@ -254,6 +268,32 @@ class MockLiveTripsDatasource implements LiveTripsDatasource {
   Future<String> sendDriverMessage(String driverPhone, String message) async {
     await Future<void>.delayed(const Duration(milliseconds: 120));
     return 'تم إرسال رسالة للسائق: $message';
+  }
+
+  @override
+  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId) async {
+    final trip = _findTrip(tripId);
+    final updatedPassengers = trip.passengers.map((p) {
+      if (p.id == passengerId) {
+        final nextCheckedIn = !p.checkedIn;
+        return p.copyWith(
+          checkedIn: nextCheckedIn,
+          checkedInAt: nextCheckedIn ? DateTime.now() : null,
+        );
+      }
+      return p;
+    }).toList();
+
+    final checkedInCount = updatedPassengers.where((p) => p.checkedIn).length;
+    final missingCount = updatedPassengers.where((p) => !p.checkedIn).length;
+
+    return _replaceTrip(
+      trip.copyWith(
+        passengers: updatedPassengers,
+        checkedInPassengersCount: checkedInCount,
+        missingPassengersCount: missingCount,
+      ),
+    );
   }
 
   LiveTrip _findTrip(String tripId) {

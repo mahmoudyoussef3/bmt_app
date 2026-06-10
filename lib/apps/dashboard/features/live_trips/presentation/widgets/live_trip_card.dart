@@ -20,6 +20,14 @@ class LiveTripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
+    final scheduledStartStr = '${trip.scheduledStartTime.hour.toString().padLeft(2, '0')}:${trip.scheduledStartTime.minute.toString().padLeft(2, '0')}';
+    final actualStartStr = trip.actualStartTime != null
+        ? '${trip.actualStartTime!.hour.toString().padLeft(2, '0')}:${trip.actualStartTime!.minute.toString().padLeft(2, '0')}'
+        : '-';
+    final expectedArrivalStr = trip.expectedArrivalTime != null
+        ? '${trip.expectedArrivalTime!.hour.toString().padLeft(2, '0')}:${trip.expectedArrivalTime!.minute.toString().padLeft(2, '0')}'
+        : '-';
+
     return AppCard(
       onTap: onTap,
       child: AnimatedContainer(
@@ -68,6 +76,15 @@ class LiveTripCard extends StatelessWidget {
             _Fact(
               icon: Icons.place_outlined,
               label: '${trip.currentPoint?.name ?? '-'} → ${trip.nextPoint?.name ?? 'نهاية الرحلة'}',
+            ),
+            const SizedBox(height: AppSpacing.small),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _TimeFact(label: 'البداية المخططة', value: scheduledStartStr),
+                _TimeFact(label: 'البداية الفعلية', value: actualStartStr),
+                _TimeFact(label: 'الوصول المتوقع', value: expectedArrivalStr),
+              ],
             ),
             const SizedBox(height: AppSpacing.medium),
             AppProgressBar(progress: trip.progressPercent / 100),
@@ -157,6 +174,37 @@ class _HealthChip extends StatelessWidget {
               fontWeight: FontWeight.w800,
             ),
       ),
+    );
+  }
+}
+
+class _TimeFact extends StatelessWidget {
+  const _TimeFact({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontSize: 10,
+                color: scheme.onSurfaceVariant,
+              ),
+        ),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: scheme.onSurface,
+              ),
+        ),
+      ],
     );
   }
 }

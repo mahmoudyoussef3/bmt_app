@@ -59,6 +59,7 @@ import '../../features/live_trips/domain/usecases/resolve_live_trip_alert_usecas
 import '../../features/live_trips/domain/usecases/report_live_trip_alert_usecase.dart';
 import '../../features/live_trips/domain/usecases/call_driver_usecase.dart';
 import '../../features/live_trips/domain/usecases/send_driver_message_usecase.dart';
+import '../../features/live_trips/domain/usecases/toggle_passenger_checkin_usecase.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/payments/data/datasources/mock_payments_datasource.dart';
 import '../../features/payments/data/repositories/payments_repository_impl.dart';
@@ -518,6 +519,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<TogglePassengerCheckinUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => TogglePassengerCheckinUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<LiveTripsCubit>()) {
     dashboardDi.registerFactory(
       () => LiveTripsCubit(
@@ -533,6 +540,7 @@ void registerDashboardDependencies() {
         reportAlert: dashboardDi<ReportLiveTripAlertUseCase>(),
         callDriver: dashboardDi<CallDriverUseCase>(),
         messageDriver: dashboardDi<SendDriverMessageUseCase>(),
+        togglePassengerCheckin: dashboardDi<TogglePassengerCheckinUseCase>(),
       ),
     );
   }

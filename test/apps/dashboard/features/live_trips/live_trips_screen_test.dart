@@ -16,6 +16,7 @@ import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/resol
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/report_live_trip_alert_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/call_driver_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/send_driver_message_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/toggle_passenger_checkin_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/presentation/screens/live_trips_screen.dart';
 
@@ -35,6 +36,7 @@ void main() {
       reportAlert: ReportLiveTripAlertUseCase(repository),
       callDriver: CallDriverUseCase(repository),
       messageDriver: SendDriverMessageUseCase(repository),
+      togglePassengerCheckin: TogglePassengerCheckinUseCase(repository),
     );
 
     await tester.pumpWidget(
@@ -108,4 +110,7 @@ class _EmptyLiveTripsRepository implements LiveTripsRepository {
 
   @override
   Future<String> sendDriverMessage(String driverPhone, String message) => throw UnimplementedError();
+
+  @override
+  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId) => throw UnimplementedError();
 }

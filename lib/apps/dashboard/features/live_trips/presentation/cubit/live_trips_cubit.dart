@@ -13,6 +13,7 @@ import '../../domain/usecases/resume_live_trip_usecase.dart';
 import '../../domain/usecases/send_driver_message_usecase.dart';
 import '../../domain/usecases/skip_route_point_usecase.dart';
 import '../../domain/usecases/start_live_trip_usecase.dart';
+import '../../domain/usecases/toggle_passenger_checkin_usecase.dart';
 import 'live_trips_state.dart';
 
 class LiveTripsCubit extends Cubit<LiveTripsState> {
@@ -28,6 +29,7 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
   final ReportLiveTripAlertUseCase _reportAlert;
   final CallDriverUseCase _callDriver;
   final SendDriverMessageUseCase _messageDriver;
+  final TogglePassengerCheckinUseCase _togglePassengerCheckin;
 
   LiveTripsCubit({
     required GetLiveTripsUseCase getLiveTrips,
@@ -42,6 +44,7 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     required ReportLiveTripAlertUseCase reportAlert,
     required CallDriverUseCase callDriver,
     required SendDriverMessageUseCase messageDriver,
+    required TogglePassengerCheckinUseCase togglePassengerCheckin,
   })  : _getLiveTrips = getLiveTrips,
         _startTrip = startTrip,
         _pauseTrip = pauseTrip,
@@ -54,6 +57,7 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
         _reportAlert = reportAlert,
         _callDriver = callDriver,
         _messageDriver = messageDriver,
+        _togglePassengerCheckin = togglePassengerCheckin,
         super(const LiveTripsLoading());
 
   Future<void> loadLiveTrips() async {
@@ -75,6 +79,27 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     final current = state;
     if (current is! LiveTripsLoaded) return;
     emit(current.copyWith(selectedTripId: tripId, clearMessage: true));
+  }
+
+  void setFilters({
+    LiveTripHealth? health,
+    LiveTripStatus? status,
+    String? query,
+    bool clearHealth = false,
+    bool clearStatus = false,
+  }) {
+    final current = state;
+    if (current is! LiveTripsLoaded) return;
+
+    emit(
+      current.copyWith(
+        filterHealth: health,
+        filterStatus: status,
+        searchQuery: query,
+        clearHealth: clearHealth,
+        clearStatus: clearStatus,
+      ),
+    );
   }
 
   Future<void> startSelectedTrip() {
@@ -105,35 +130,23 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     );
   }
 
-  Future<void> markCurrentPointArrived() {
+  Future<void> markPointArrived(String pointId) {
     return _runTripAction(
-      action: (trip) {
-        final point = trip.currentPoint;
-        if (point == null) throw Exception('لا توجد محطة حالية');
-        return _markPointArrived(trip.id, point.id);
-      },
+      action: (trip) => _markPointArrived(trip.id, pointId),
       successMessage: 'تم تسجيل الوصول للمحطة',
     );
   }
 
-  Future<void> markCurrentPointCompleted() {
+  Future<void> markPointCompleted(String pointId) {
     return _runTripAction(
-      action: (trip) {
-        final point = trip.currentPoint;
-        if (point == null) throw Exception('لا توجد محطة حالية');
-        return _markPointCompleted(trip.id, point.id);
-      },
+      action: (trip) => _markPointCompleted(trip.id, pointId),
       successMessage: 'تم إنهاء المحطة الحالية',
     );
   }
 
-  Future<void> skipCurrentPoint() {
+  Future<void> skipPoint(String pointId) {
     return _runTripAction(
-      action: (trip) {
-        final point = trip.currentPoint;
-        if (point == null) throw Exception('لا توجد محطة حالية');
-        return _skipPoint(trip.id, point.id);
-      },
+      action: (trip) => _skipPoint(trip.id, pointId),
       successMessage: 'تم تخطي المحطة الحالية',
     );
   }
@@ -145,27 +158,27 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     );
   }
 
-  Future<void> reportDelayAlert() {
+  Future<void> reportDelayAlert({required int minutes, required String reason}) {
     return _runTripAction(
       action: (trip) => _reportAlert(
         tripId: trip.id,
         type: LiveTripAlertType.delay,
         severity: LiveTripAlertSeverity.warning,
-        title: 'تأخير جديد',
-        message: 'تم تسجيل تأخير جديد على الرحلة.',
+        title: 'تأخير جديد $minutes دقيقة',
+        message: 'تأخير $minutes دقيقة: $reason',
       ),
       successMessage: 'تم إضافة تنبيه تأخير',
     );
   }
 
-  Future<void> reportEmergencyAlert() {
+  Future<void> reportEmergencyAlert({required LiveTripAlertType type, required String reason}) {
     return _runTripAction(
       action: (trip) => _reportAlert(
         tripId: trip.id,
-        type: LiveTripAlertType.emergency,
+        type: type,
         severity: LiveTripAlertSeverity.critical,
-        title: 'تنبيه طوارئ',
-        message: 'تم تسجيل تنبيه طوارئ يحتاج تدخل فوري.',
+        title: 'تنبيه طوارئ: ${type.label}',
+        message: reason,
       ),
       successMessage: 'تم إضافة تنبيه طوارئ',
     );
@@ -186,7 +199,7 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     }
   }
 
-  Future<void> messageSelectedDriver() async {
+  Future<void> messageSelectedDriver(String message) async {
     final current = state;
     if (current is! LiveTripsLoaded) return;
     final trip = current.selectedTrip;
@@ -194,14 +207,18 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
 
     emit(current.copyWith(actionLoading: true, clearMessage: true));
     try {
-      final message = await _messageDriver(
-        trip.driverPhone,
-        'برجاء تحديث حالتك الحالية على الرحلة.',
-      );
-      emit(current.copyWith(actionLoading: false, actionMessage: message));
+      final response = await _messageDriver(trip.driverPhone, message);
+      emit(current.copyWith(actionLoading: false, actionMessage: response));
     } catch (error) {
       emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
     }
+  }
+
+  Future<void> togglePassengerCheckin(String passengerId) {
+    return _runTripAction(
+      action: (trip) => _togglePassengerCheckin(trip.id, passengerId),
+      successMessage: 'تم تحديث حالة حضور الراكب',
+    );
   }
 
   void clearActionMessage() {

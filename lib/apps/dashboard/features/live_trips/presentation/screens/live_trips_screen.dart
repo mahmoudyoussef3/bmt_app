@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 
+import '../../domain/entities/live_trip.dart';
 import '../cubit/live_trips_cubit.dart';
 import '../cubit/live_trips_state.dart';
 import '../widgets/live_monitoring_panel.dart';
@@ -263,33 +264,189 @@ class _MetricChip extends StatelessWidget {
   }
 }
 
-class _TripsList extends StatelessWidget {
-  const _TripsList({required this.state, required this.onTap});
+class _TripsList extends StatefulWidget {
+  const _TripsList({super.key, required this.state, required this.onTap});
 
   final LiveTripsLoaded state;
   final ValueChanged<String> onTap;
 
   @override
+  State<_TripsList> createState() => _TripsListState();
+}
+
+class _TripsListState extends State<_TripsList> {
+  late final TextEditingController _searchController;
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController = TextEditingController(text: widget.state.searchQuery);
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didUpdateWidget(covariant _TripsList oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.state.searchQuery != widget.state.searchQuery) {
+      if (_searchController.text != widget.state.searchQuery) {
+        _searchController.text = widget.state.searchQuery;
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final cubit = context.read<LiveTripsCubit>();
+    final filtered = widget.state.filteredTrips;
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('الرحلات النشطة', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'الرحلات النشطة',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              if (widget.state.filterHealth != null ||
+                  widget.state.filterStatus != null ||
+                  widget.state.searchQuery.isNotEmpty)
+                TextButton(
+                  onPressed: () {
+                    _searchController.clear();
+                    cubit.setFilters(
+                      clearHealth: true,
+                      clearStatus: true,
+                      query: '',
+                    );
+                  },
+                  child: const Text('إعادة تعيين', style: TextStyle(fontSize: 12)),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.small),
+          TextField(
+            controller: _searchController,
+            onChanged: (val) {
+              cubit.setFilters(query: val);
+            },
+            decoration: InputDecoration(
+              hintText: 'ابحث برقم الرحلة، المسار، أو السائق...',
+              hintStyle: const TextStyle(fontSize: 12),
+              prefixIcon: const Icon(Icons.search_rounded, size: 20),
+              suffixIcon: _searchController.text.isNotEmpty
+                  ? IconButton(
+                      icon: const Icon(Icons.clear_rounded, size: 18),
+                      onPressed: () {
+                        setState(() {
+                          _searchController.clear();
+                        });
+                        cubit.setFilters(query: '');
+                      },
+                    )
+                  : null,
+              contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Row(
+            children: [
+              Expanded(
+                child: DropdownButtonFormField<LiveTripHealth?>(
+                  value: widget.state.filterHealth,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    labelText: 'الحالة الصحية',
+                    labelStyle: const TextStyle(fontSize: 11),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('الكل', style: TextStyle(fontSize: 11)),
+                    ),
+                    ...LiveTripHealth.values.map(
+                      (h) => DropdownMenuItem(
+                        value: h,
+                        child: Text(h.label, style: const TextStyle(fontSize: 11)),
+                      ),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    cubit.setFilters(
+                      health: val,
+                      clearHealth: val == null,
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: DropdownButtonFormField<LiveTripStatus?>(
+                  value: widget.state.filterStatus,
+                  decoration: InputDecoration(
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    labelText: 'حالة الرحلة',
+                    labelStyle: const TextStyle(fontSize: 11),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  items: [
+                    const DropdownMenuItem(
+                      value: null,
+                      child: Text('الكل', style: TextStyle(fontSize: 11)),
+                    ),
+                    ...LiveTripStatus.values.map(
+                      (s) => DropdownMenuItem(
+                        value: s,
+                        child: Text(s.label, style: const TextStyle(fontSize: 11)),
+                      ),
+                    ),
+                  ],
+                  onChanged: (val) {
+                    cubit.setFilters(
+                      status: val,
+                      clearStatus: val == null,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: AppSpacing.medium),
-          if (state.trips.isEmpty)
+          if (widget.state.trips.isEmpty)
             const EmptyState(
               title: 'لا توجد رحلات مباشرة الآن',
               subtitle: 'عند بدء الرحلات ستظهر هنا.',
             )
+          else if (filtered.isEmpty)
+            const EmptyState(
+              title: 'لا توجد نتائج مطابقة',
+              subtitle: 'جرب تغيير فلاتر البحث أو الكلمات المفتاحية.',
+            )
           else
-            ...state.trips.map(
+            ...filtered.map(
               (trip) => Padding(
                 padding: const EdgeInsets.only(bottom: AppSpacing.medium),
                 child: LiveTripCard(
                   trip: trip,
-                  selected: trip.id == state.selectedTripId,
-                  onTap: () => onTap(trip.id),
+                  selected: trip.id == widget.state.selectedTripId,
+                  onTap: () => widget.onTap(trip.id),
                 ),
               ),
             ),
