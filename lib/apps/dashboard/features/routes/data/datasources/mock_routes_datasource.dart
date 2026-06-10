@@ -46,20 +46,7 @@ class MockRoutesDatasource implements RoutesDatasource {
     final model = OperationRouteModel.fromEntity(
       route.copyWith(
         id: 'route-${_routes.length + 1}',
-        activePackagesCount: route.packages.length,
-        tripsCount: route.activeTrips.length,
         stations: _assignStationIds(route.id, route.stations),
-        statistics: route.statistics.tripsCount == 0
-            ? RouteStatistics(
-                tripsCount: route.activeTrips.length,
-                bookingsCount: 0,
-                averageOccupancy: '٠٪',
-                subscribersCount: route.packages.fold<int>(
-                  0,
-                  (total, package) => total + package.subscribersCount,
-                ),
-              )
-            : route.statistics,
       ),
     );
     _routes.insert(0, model);
@@ -99,7 +86,7 @@ class MockRoutesDatasource implements RoutesDatasource {
 
   @override
   Future<OperationRouteModel> updateRoute(OperationRoute route) async {
-    return _replace(route.copyWith(activePackagesCount: route.packages.length));
+    return _replace(route);
   }
 
   @override
@@ -158,8 +145,6 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'القرية الذكية',
     duration: '٧٥ دقيقة',
     distance: '٧٦ كم',
-    trips: 18,
-    packages: 4,
     status: OperationRouteStatus.active,
     areas: [
       'بنها',
@@ -170,9 +155,6 @@ final List<OperationRouteModel> _seedRoutes = [
       'الشيخ زايد',
       'القرية الذكية',
     ],
-    bookings: 1260,
-    occupancy: '٨٧٪',
-    subscribers: 214,
   ),
   _route(
     id: 'route-2',
@@ -181,8 +163,6 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'القاهرة الجديدة',
     duration: '١٥٥ دقيقة',
     distance: '١٤٣ كم',
-    trips: 10,
-    packages: 3,
     status: OperationRouteStatus.active,
     areas: [
       'المنصورة',
@@ -194,9 +174,6 @@ final List<OperationRouteModel> _seedRoutes = [
       'الرحاب',
       'التجمع الخامس',
     ],
-    bookings: 840,
-    occupancy: '٧٩٪',
-    subscribers: 132,
   ),
   _route(
     id: 'route-3',
@@ -205,8 +182,6 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'التجمع الخامس',
     duration: '٤٥ دقيقة',
     distance: '٣٢ كم',
-    trips: 16,
-    packages: 5,
     status: OperationRouteStatus.active,
     areas: [
       'مدينة الشروق',
@@ -216,9 +191,6 @@ final List<OperationRouteModel> _seedRoutes = [
       'كايرو فيستيفال',
       'التجمع الخامس',
     ],
-    bookings: 980,
-    occupancy: '٨٢٪',
-    subscribers: 176,
   ),
   _route(
     id: 'route-4',
@@ -227,8 +199,6 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'القرية الذكية',
     duration: '٩٠ دقيقة',
     distance: '٧٨ كم',
-    trips: 12,
-    packages: 4,
     status: OperationRouteStatus.active,
     areas: [
       'عباس العقاد',
@@ -239,9 +209,6 @@ final List<OperationRouteModel> _seedRoutes = [
       'الشيخ زايد',
       'القرية الذكية',
     ],
-    bookings: 1015,
-    occupancy: '٨٤٪',
-    subscribers: 188,
   ),
   _route(
     id: 'route-5',
@@ -250,8 +217,6 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'الشيخ زايد',
     duration: '١١٠ دقيقة',
     distance: '٩٢ كم',
-    trips: 8,
-    packages: 2,
     status: OperationRouteStatus.paused,
     areas: [
       'مدينة العبور',
@@ -262,9 +227,6 @@ final List<OperationRouteModel> _seedRoutes = [
       'هايبر وان',
       'الشيخ زايد',
     ],
-    bookings: 430,
-    occupancy: '٦٨٪',
-    subscribers: 72,
   ),
   _route(
     id: 'route-6',
@@ -273,8 +235,6 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'العاصمة الإدارية',
     duration: '٧٠ دقيقة',
     distance: '٦٨ كم',
-    trips: 14,
-    packages: 4,
     status: OperationRouteStatus.active,
     areas: [
       'كورنيش المعادي',
@@ -284,9 +244,6 @@ final List<OperationRouteModel> _seedRoutes = [
       'الطريق الإقليمي',
       'الحي الحكومي',
     ],
-    bookings: 1160,
-    occupancy: '٩١٪',
-    subscribers: 205,
   ),
   _route(
     id: 'route-7',
@@ -295,8 +252,6 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'وسط البلد',
     duration: '٦٠ دقيقة',
     distance: '٤٨ كم',
-    trips: 9,
-    packages: 3,
     status: OperationRouteStatus.active,
     areas: [
       'الحصري',
@@ -306,9 +261,6 @@ final List<OperationRouteModel> _seedRoutes = [
       'المهندسين',
       'التحرير',
     ],
-    bookings: 710,
-    occupancy: '٧٦٪',
-    subscribers: 119,
   ),
   _route(
     id: 'route-8',
@@ -317,8 +269,6 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'التجمع الخامس',
     duration: '٨٥ دقيقة',
     distance: '٦١ كم',
-    trips: 7,
-    packages: 2,
     status: OperationRouteStatus.paused,
     areas: [
       'حلوان',
@@ -328,9 +278,6 @@ final List<OperationRouteModel> _seedRoutes = [
       'شارع التسعين',
       'التجمع الخامس',
     ],
-    bookings: 390,
-    occupancy: '٦٤٪',
-    subscribers: 58,
   ),
   _route(
     id: 'route-9',
@@ -339,13 +286,8 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'مدينة نصر',
     duration: '١٣٥ دقيقة',
     distance: '١٢١ كم',
-    trips: 6,
-    packages: 2,
     status: OperationRouteStatus.active,
     areas: ['طنطا', 'قويسنا', 'بنها', 'شبرا الخيمة', 'الدائري', 'عباس العقاد'],
-    bookings: 520,
-    occupancy: '٧٣٪',
-    subscribers: 86,
   ),
   _route(
     id: 'route-10',
@@ -354,8 +296,6 @@ final List<OperationRouteModel> _seedRoutes = [
     end: 'القاهرة الجديدة',
     duration: '٢٠٥ دقيقة',
     distance: '٢٢٣ كم',
-    trips: 4,
-    packages: 1,
     status: OperationRouteStatus.archived,
     areas: [
       'سموحة',
@@ -366,9 +306,6 @@ final List<OperationRouteModel> _seedRoutes = [
       'الرحاب',
       'التجمع الخامس',
     ],
-    bookings: 280,
-    occupancy: '٥٨٪',
-    subscribers: 34,
   ),
 ];
 
@@ -379,13 +316,8 @@ OperationRouteModel _route({
   required String end,
   required String duration,
   required String distance,
-  required int trips,
-  required int packages,
   required OperationRouteStatus status,
   required List<String> areas,
-  required int bookings,
-  required String occupancy,
-  required int subscribers,
 }) {
   final stations = areas.indexed.map((entry) {
     final (index, area) = entry;
@@ -417,54 +349,11 @@ OperationRouteModel _route({
     endCity: end,
     duration: duration,
     distance: distance,
-    tripsCount: trips,
-    activePackagesCount: packages,
     status: status,
     stations: stations,
-    activeTrips: _trips(id, trips),
-    packages: _packages(packages, subscribers),
-    statistics: RouteStatistics(
-      tripsCount: trips,
-      bookingsCount: bookings,
-      averageOccupancy: occupancy,
-      subscribersCount: subscribers,
-    ),
-    notes: [
+    notes: const [
       'مسار ثابت قابل للاستخدام في إنشاء الرحلات',
       'آخر مراجعة تشغيلية تمت خلال يونيو ٢٠٢٦',
     ],
   );
-}
-
-List<RouteActiveTrip> _trips(String routeId, int count) {
-  final drivers = ['أحمد سامي', 'مصطفى عادل', 'كريم فتحي', 'محمد عبد الرازق'];
-  final vehicles = [
-    'كوستر ٣٣٤٥ ق ل',
-    'سبرنتر ٧٢١٨ م ن',
-    'هايس ١٥٥٢ ج ب',
-    'H1 ٩٠٢١ ص ج',
-  ];
-  final statuses = ['لم تبدأ', 'في الطريق', 'متأخرة', 'مكتملة'];
-  return List.generate(count.clamp(1, 4), (index) {
-    return RouteActiveTrip(
-      tripNumber: '${routeId.toUpperCase()}-${index + 101}',
-      driver: drivers[index % drivers.length],
-      vehicle: vehicles[index % vehicles.length],
-      passengersCount: 10 + (index * 4),
-      status: statuses[index % statuses.length],
-    );
-  });
-}
-
-List<RoutePackage> _packages(int count, int subscribers) {
-  final types = ['شهري', 'أسبوعي', 'نصف شهري', 'ربع سنوي'];
-  return List.generate(count.clamp(1, 4), (index) {
-    return RoutePackage(
-      name: 'باقة ${types[index]}',
-      type: types[index],
-      price: '${900 + (index * 450)} ج.م',
-      subscribersCount: (subscribers / count).round(),
-      status: 'نشطة',
-    );
-  });
 }

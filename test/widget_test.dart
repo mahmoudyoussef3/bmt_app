@@ -12,8 +12,9 @@ import 'package:bmt_app/features/component/presentation/component_demo_app.dart'
 void main() {
   testWidgets('renders the component demo shell', (tester) async {
     await tester.pumpWidget(const ComponentDemoApp());
+    await tester.pumpAndSettle();
 
-    expect(find.text('Good morning, Ahmed 👋'), findsOneWidget);
+    expect(find.text('Good morning, Ahmed'), findsOneWidget);
     expect(find.text('Ready for your commute today?'), findsOneWidget);
   });
 }

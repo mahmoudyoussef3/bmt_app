@@ -260,7 +260,6 @@ class _RoutesTable extends StatelessWidget {
                   'نقطة النهاية',
                   'المحطات',
                   'المدة',
-                  'رحلات نشطة',
                   'الحالة',
                   'إجراءات',
                 ],
@@ -356,7 +355,6 @@ class _RouteTableRow extends StatelessWidget {
           Expanded(child: Text(route.endCity)),
           Expanded(child: Text('${route.stations.length}')),
           Expanded(child: Text(route.duration)),
-          Expanded(child: Text('${route.tripsCount}')),
           Expanded(child: StatusChip(label: route.status.label)),
           Expanded(
             child: Wrap(
@@ -401,30 +399,7 @@ class _RouteDetailsView extends StatelessWidget {
       children: [
         _DetailsHeader(route: route),
         const SizedBox(height: AppSpacing.large),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final compact = constraints.maxWidth < 1040;
-            final info = _BasicInfoPanel(route: route);
-            final stats = _StatsPanel(route: route);
-            if (compact) {
-              return Column(
-                children: [
-                  info,
-                  const SizedBox(height: AppSpacing.medium),
-                  stats,
-                ],
-              );
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(flex: 3, child: info),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(flex: 2, child: stats),
-              ],
-            );
-          },
-        ),
+        _BasicInfoPanel(route: route),
         const SizedBox(height: AppSpacing.large),
         _StopsTimelinePanel(route: route),
         const SizedBox(height: AppSpacing.large),
@@ -435,8 +410,6 @@ class _RouteDetailsView extends StatelessWidget {
           onDelete: cubit.deleteStation,
           onReorder: cubit.reorderStations,
         ),
-        const SizedBox(height: AppSpacing.large),
-        _ActiveTripsPanel(route: route),
       ],
     );
   }
@@ -537,36 +510,7 @@ class _BasicInfoPanel extends StatelessWidget {
   }
 }
 
-class _StatsPanel extends StatelessWidget {
-  final OperationRoute route;
 
-  const _StatsPanel({required this.route});
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'إحصائيات التشغيل',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          _InfoGrid(
-            items: [
-              ('عدد الرحلات', '${route.statistics.tripsCount}'),
-              ('عدد الحجوزات', '${route.statistics.bookingsCount}'),
-              ('متوسط الإشغال', route.statistics.averageOccupancy),
-              ('إجمالي المشتركين', '${route.statistics.subscribersCount}'),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _InfoGrid extends StatelessWidget {
   final List<(String, String)> items;
@@ -822,36 +766,7 @@ class _StopManagementRow extends StatelessWidget {
   }
 }
 
-class _ActiveTripsPanel extends StatelessWidget {
-  final OperationRoute route;
 
-  const _ActiveTripsPanel({required this.route});
-
-  @override
-  Widget build(BuildContext context) {
-    return _SimpleTablePanel(
-      title: 'الرحلات النشطة على المسار',
-      headers: const [
-        'رقم الرحلة',
-        'السائق',
-        'المركبة',
-        'عدد الركاب',
-        'الحالة',
-      ],
-      rows: route.activeTrips
-          .map(
-            (trip) => [
-              trip.tripNumber,
-              trip.driver,
-              trip.vehicle,
-              '${trip.passengersCount}',
-              trip.status,
-            ],
-          )
-          .toList(),
-    );
-  }
-}
 
 class _SimpleTablePanel extends StatelessWidget {
   final String title;
@@ -1069,8 +984,6 @@ class _RouteFormViewState extends State<_RouteFormView> {
 
   OperationRoute _buildRoute() {
     final existing = widget.route;
-    final activeTrips = existing?.activeTrips ?? const <RouteActiveTrip>[];
-    final packages = existing?.packages ?? const <RoutePackage>[];
     return OperationRoute(
       id: existing?.id ?? '',
       name: _name.text.trim().isEmpty ? 'مسار جديد' : _name.text.trim(),
@@ -1082,20 +995,8 @@ class _RouteFormViewState extends State<_RouteFormView> {
       distance: _distance.text.trim().isEmpty
           ? 'غير محدد'
           : _distance.text.trim(),
-      tripsCount: existing?.tripsCount ?? activeTrips.length,
-      activePackagesCount: packages.length,
       status: _status,
       stations: _normalize(_stations),
-      activeTrips: activeTrips,
-      packages: packages,
-      statistics:
-          existing?.statistics ??
-          const RouteStatistics(
-            tripsCount: 0,
-            bookingsCount: 0,
-            averageOccupancy: '٠٪',
-            subscribersCount: 0,
-          ),
       notes: existing?.notes ?? const ['تم إنشاء المسار من مركز التشغيل'],
     );
   }

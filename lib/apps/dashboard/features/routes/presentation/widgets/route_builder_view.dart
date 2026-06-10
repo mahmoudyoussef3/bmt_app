@@ -287,7 +287,6 @@ class _RouteBuilderViewState extends State<RouteBuilderView> {
       distance: _distance.text.trim().isEmpty
           ? 'غير محدد'
           : _distance.text.trim(),
-      tripsCount: route?.tripsCount ?? 0,
       status: _status,
       stations: _normalize(_stations),
       notes: _routeNote.text.trim().isEmpty ? const [] : [_routeNote.text],

@@ -124,6 +124,7 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
                   const SizedBox(width: AppSpacing.small),
                   Expanded(
                     child: DropdownButtonFormField<TripRoutePoint>(
+                      key: ValueKey(fromPoint.id),
                       initialValue: toPoint,
                       decoration: const InputDecoration(labelText: 'إلى نقطة'),
                       items: availableToPoints

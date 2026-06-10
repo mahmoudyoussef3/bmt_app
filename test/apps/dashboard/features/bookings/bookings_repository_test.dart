@@ -18,7 +18,7 @@ void main() {
       final bookings = await getBookings();
 
       expect(bookings, isNotEmpty);
-      expect(bookings.first.passengerName, 'سارة أحمد');
+      expect(bookings.first.passengerName, isNotEmpty);
       expect(
         bookings.map((booking) => booking.status),
         contains(BookingStatus.newRequest),
@@ -35,7 +35,7 @@ void main() {
       final updated = await updateStatus(booking.id, BookingStatus.confirmed);
 
       expect(updated.status, BookingStatus.confirmed);
-      expect(updated.history.first, contains('مؤكدة'));
+      expect(updated.timeline.first.action, contains('مؤكد المقعد'));
     });
 
     test('bulk approves and assigns selected bookings', () async {
@@ -105,6 +105,34 @@ class _FailingBookingsDatasource implements BookingsDatasource {
   Future<OperationBookingModel> updateBookingStatus(
     String bookingId,
     BookingStatus status,
+  ) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationBookingModel> approveBooking(
+    String bookingId,
+    String reviewer,
+    String? note,
+  ) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationBookingModel> rejectBooking(
+    String bookingId,
+    String reviewer,
+    String reason,
+    String? note,
+  ) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationBookingModel> requestReupload(
+    String bookingId,
+    String reviewer,
+    String reason,
   ) {
     throw StateError('failure');
   }

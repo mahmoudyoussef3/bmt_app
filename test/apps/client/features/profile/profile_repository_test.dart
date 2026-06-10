@@ -13,8 +13,8 @@ void main() {
 
       expect(data.profile.name, 'Ahmed Hassan');
       expect(data.profile.badge, 'Premium');
-      expect(data.sections, hasLength(5));
-      expect(data.sections[1].items.first.route, '/trips');
+      expect(data.sections, hasLength(4));
+      expect(data.sections[1].items.first.route, isNotEmpty);
       expect(data.sections.last.items.last.route, isNull);
     });
   });

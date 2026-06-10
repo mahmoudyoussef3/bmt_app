@@ -54,7 +54,7 @@ class RouteCard extends StatelessWidget {
                 value: '${route.stations.length}',
               ),
               _RouteFact(label: 'مدة الرحلة', value: route.duration),
-              _RouteFact(label: 'عدد الرحلات', value: '${route.tripsCount}'),
+              _RouteFact(label: 'المسافة', value: route.distance),
             ],
           ),
         ),

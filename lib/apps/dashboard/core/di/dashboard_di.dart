@@ -938,6 +938,9 @@ void registerDashboardDependencies() {
         getTripPricing: dashboardDi<GetTripPricingUseCase>(),
         saveTripPricing: dashboardDi<SaveTripSegmentPricingUseCase>(),
         toggleTripPricing: dashboardDi<ToggleTripSegmentPricingUseCase>(),
+        getRoutes: dashboardDi<GetOperationRoutesUseCase>(),
+        getVehicles: dashboardDi<GetVehiclesUseCase>(),
+        getDrivers: dashboardDi<GetDriversUseCase>(),
       ),
     );
   }

@@ -178,7 +178,6 @@ class RoutesCubit extends Cubit<RoutesState> {
           id: '',
           name: '${route.name} - نسخة',
           status: OperationRouteStatus.draft,
-          tripsCount: 0,
           stations: route.stations
               .map((station) => station.copyWith(id: ''))
               .toList(),

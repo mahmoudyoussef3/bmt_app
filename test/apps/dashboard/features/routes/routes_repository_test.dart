@@ -26,10 +26,6 @@ void main() {
       expect(routes.first.stations.first.notes, isNotEmpty);
       expect(routes.first.stations.first.departureOffset, isNotEmpty);
       expect(routes.first.stations.first.locationDescription, isNotEmpty);
-      expect(routes.first.activeTrips, isNotEmpty);
-      expect(routes.first.packages, isNotEmpty);
-      expect(routes.first.statistics.bookingsCount, greaterThan(0));
-      expect(routes.first.activePackagesCount, routes.first.packages.length);
     });
 
     test('adds, edits, reorders, and deletes stations locally', () async {
@@ -104,7 +100,6 @@ void main() {
           id: '',
           name: '${original.name} - نسخة',
           status: OperationRouteStatus.draft,
-          tripsCount: 0,
           stations: original.stations
               .map((station) => station.copyWith(id: ''))
               .toList(),
@@ -169,7 +164,6 @@ const _newRoute = OperationRoute(
   endCity: 'القاهرة',
   duration: '٦٠ دقيقة',
   distance: '٥٥ كم',
-  tripsCount: 0,
   status: OperationRouteStatus.draft,
   stations: [
     RouteStation(
@@ -183,14 +177,6 @@ const _newRoute = OperationRoute(
       order: 1,
     ),
   ],
-  activeTrips: [],
-  packages: [],
-  statistics: RouteStatistics(
-    tripsCount: 0,
-    bookingsCount: 0,
-    averageOccupancy: '٠٪',
-    subscribersCount: 0,
-  ),
   notes: [],
 );
 

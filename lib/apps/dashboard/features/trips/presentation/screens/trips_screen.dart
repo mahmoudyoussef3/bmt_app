@@ -7,9 +7,12 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/operation_trip.dart';
+import '../../domain/entities/trip_pricing.dart';
 import '../cubit/trips_cubit.dart';
 import '../cubit/trips_state.dart';
-import '../widgets/trip_pricing_tab.dart';
+import '../widgets/trip_creation_wizard.dart';
+import '../widgets/trip_pricing_editor_dialog.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
 
 class TripsScreen extends StatelessWidget {
   const TripsScreen({super.key});
@@ -98,25 +101,45 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'الرحلات',
-                  style: Theme.of(context).textTheme.headlineSmall,
+                  'الرحلات التشغيلية',
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                 ),
                 const SizedBox(height: AppSpacing.xSmall),
                 Text(
-                  'مساحة تشغيل سريعة لفتح الرحلة وإدارة الركاب والمقاعد بدون مغادرة الشاشة.',
+                  'مركز التحكم وإدارة وجدولة الرحلات اليومية، السائقين، المركبات، الحجوزات والمدفوعات.',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                 ),
               ],
             ),
           ),
           FilledButton.icon(
-            onPressed: () => _openCreateTripPanel(context, state),
+            onPressed: () => _openCreateTripWizard(context, state),
             icon: const Icon(Icons.add_rounded),
-            label: const Text('إنشاء رحلة'),
+            label: const Text('إنشاء رحلة بالمعالج'),
           ),
         ],
+      ),
+    );
+  }
+
+  void _openCreateTripWizard(BuildContext context, TripsLoaded state) {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => BlocProvider.value(
+        value: context.read<TripsCubit>(),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: TripCreationWizard(
+            routes: state.routesList,
+            vehicles: state.vehiclesList,
+            drivers: state.driversList,
+          ),
+        ),
       ),
     );
   }
@@ -159,7 +182,9 @@ class _Kpis extends StatelessWidget {
                   Expanded(child: Text(label)),
                   Text(
                     '$value',
-                    style: Theme.of(context).textTheme.headlineSmall,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                        ),
                   ),
                 ],
               ),
@@ -189,7 +214,7 @@ class _FilterBar extends StatelessWidget {
             child: TextField(
               onChanged: cubit.search,
               decoration: const InputDecoration(
-                labelText: 'بحث',
+                labelText: 'بحث برقم الرحلة، السائق أو المركبة',
                 prefixIcon: Icon(Icons.search_rounded),
               ),
             ),
@@ -321,14 +346,14 @@ class _TripsTable extends StatelessWidget {
               children: [
                 Text(
                   'قائمة الرحلات',
-                  style: Theme.of(context).textTheme.titleMedium,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
                 const Spacer(),
                 Text(
                   '${state.filteredTrips.length} رحلة',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                 ),
               ],
             ),
@@ -350,8 +375,8 @@ class _TripsTable extends StatelessWidget {
                       child: Text(
                         'لا توجد رحلات مطابقة للفلاتر الحالية',
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                              color: scheme.onSurfaceVariant,
+                            ),
                       ),
                     )
                   else
@@ -444,14 +469,14 @@ class _TripWorkspace extends StatelessWidget {
                   children: [
                     Text(
                       'مساحة تشغيل ${trip.id}',
-                      style: Theme.of(context).textTheme.titleLarge,
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: AppSpacing.xSmall),
                     Text(
                       '${trip.route} • ${trip.departure} • ${trip.driver} • ${trip.vehicle}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                            color: scheme.onSurfaceVariant,
+                          ),
                     ),
                   ],
                 ),
@@ -476,12 +501,11 @@ class _TripWorkspace extends StatelessWidget {
             children: TripWorkspaceTab.values.map((tab) {
               final label = switch (tab) {
                 TripWorkspaceTab.overview => 'نظرة عامة',
-                TripWorkspaceTab.route => 'المسار',
-                TripWorkspaceTab.vehicle => 'المركبة',
-                TripWorkspaceTab.driver => 'السائق',
-                TripWorkspaceTab.pricing => 'التسعير',
                 TripWorkspaceTab.passengers => 'الركاب',
                 TripWorkspaceTab.seats => 'المقاعد',
+                TripWorkspaceTab.pricing => 'التسعير',
+                TripWorkspaceTab.packages => 'الباقات',
+                TripWorkspaceTab.payments => 'المدفوعات والتوثيق',
                 TripWorkspaceTab.history => 'السجل',
               };
               final selected = state.tab == tab;
@@ -498,16 +522,12 @@ class _TripWorkspace extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           switch (state.tab) {
-            TripWorkspaceTab.overview => _InfoTab(trip: trip),
-            TripWorkspaceTab.route => _RouteTab(trip: trip),
-            TripWorkspaceTab.vehicle => _VehicleTab(trip: trip),
-            TripWorkspaceTab.driver => _DriverTab(trip: trip),
-            TripWorkspaceTab.pricing => TripPricingTab(
-              trip: trip,
-              state: state,
-            ),
+            TripWorkspaceTab.overview => _OverviewTab(trip: trip),
             TripWorkspaceTab.passengers => _PassengersTab(trip: trip),
             TripWorkspaceTab.seats => _SeatsTab(trip: trip),
+            TripWorkspaceTab.pricing => _PricingTab(trip: trip, state: state),
+            TripWorkspaceTab.packages => _PackagesTab(trip: trip, state: state),
+            TripWorkspaceTab.payments => _PaymentsTab(trip: trip),
             TripWorkspaceTab.history => _HistoryTab(trip: trip),
           },
         ],
@@ -551,10 +571,11 @@ class _WorkspaceFact extends StatelessWidget {
   }
 }
 
-class _RouteTab extends StatelessWidget {
+// --- TAB 1: OVERVIEW TAB ---
+class _OverviewTab extends StatelessWidget {
   final OperationTrip trip;
 
-  const _RouteTab({required this.trip});
+  const _OverviewTab({required this.trip});
 
   @override
   Widget build(BuildContext context) {
@@ -562,30 +583,84 @@ class _RouteTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(trip.route, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: AppSpacing.small),
-        Text(
-          'نقاط المسار محملة من المسار ولا يتم إعادة إنشائها داخل الرحلة.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final compact = constraints.maxWidth < 700;
+            final cards = [
+              _InfoCard(
+                title: 'تفاصيل السائق والجدولة',
+                icon: Icons.person_outline_rounded,
+                items: [
+                  ('السائق', trip.driver),
+                  ('تاريخ الرحلة', trip.date),
+                  ('وقت الانطلاق', trip.departure),
+                  ('وقت الوصول المتوقع', trip.arrival),
+                ],
+              ),
+              _InfoCard(
+                title: 'تفاصيل المركبة والسعة',
+                icon: Icons.airport_shuttle_outlined,
+                items: [
+                  ('المركبة ولوحتها', trip.vehicle),
+                  ('السعة الكلية', '${trip.capacity} مقعد'),
+                  ('المقاعد المحجوزة', '${trip.bookedSeats} مقاعد'),
+                  ('المقاعد المتاحة', '${trip.availableSeats} مقاعد'),
+                ],
+              ),
+            ];
+            if (compact) {
+              return Column(children: cards);
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: cards.map((c) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4.0), child: c))).toList(),
+            );
+          },
         ),
         const SizedBox(height: AppSpacing.medium),
-        ...trip.routePoints.map(
-          (point) => Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.small),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 14,
-                  backgroundColor: scheme.primaryContainer,
-                  foregroundColor: scheme.onPrimaryContainer,
-                  child: Text('${point.order}'),
+        AppCard(
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('الجدول الزمني لمحطات الوقوف والانتظار المتوقع:', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+              const SizedBox(height: AppSpacing.medium),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: trip.routePoints.map((point) {
+                    final isLast = point == trip.routePoints.last;
+                    return Row(
+                      children: [
+                        Container(
+                          constraints: const BoxConstraints(minWidth: 120),
+                          padding: const EdgeInsets.all(AppSpacing.small),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest.withAlpha(60),
+                            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                            border: Border.all(color: scheme.outline.withAlpha(60)),
+                          ),
+                          child: Column(
+                            children: [
+                              Text('${point.order}', style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 2),
+                              Text(point.name, style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                              const SizedBox(height: 2),
+                              Text(point.order == 1 ? 'مغادرة ${trip.departure}' : 'وصول متوقع', style: Theme.of(context).textTheme.labelSmall),
+                            ],
+                          ),
+                        ),
+                        if (!isLast)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.small),
+                            child: Icon(Icons.arrow_back_rounded, color: scheme.onSurfaceVariant, size: 18),
+                          ),
+                      ],
+                    );
+                  }).toList(),
                 ),
-                const SizedBox(width: AppSpacing.small),
-                Text(point.name),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ],
@@ -593,204 +668,46 @@ class _RouteTab extends StatelessWidget {
   }
 }
 
-class _VehicleTab extends StatelessWidget {
-  final OperationTrip trip;
-
-  const _VehicleTab({required this.trip});
-
-  @override
-  Widget build(BuildContext context) {
-    return _OperationalDetailsPanel(
-      title: 'بيانات المركبة',
-      rows: [
-        ('المركبة', trip.vehicle),
-        ('السعة', '${trip.capacity} مقعد'),
-        ('المقاعد المحجوزة', '${trip.bookedSeats}'),
-        ('المقاعد المتاحة', '${trip.availableSeats}'),
-      ],
-    );
-  }
-}
-
-class _DriverTab extends StatelessWidget {
-  final OperationTrip trip;
-
-  const _DriverTab({required this.trip});
-
-  @override
-  Widget build(BuildContext context) {
-    return _OperationalDetailsPanel(
-      title: 'بيانات السائق',
-      rows: [
-        ('السائق', trip.driver),
-        ('رقم الرحلة', trip.id),
-        ('وقت الانطلاق', trip.departure),
-        ('حالة الرحلة', trip.status.label),
-      ],
-    );
-  }
-}
-
-class _OperationalDetailsPanel extends StatelessWidget {
+class _InfoCard extends StatelessWidget {
   final String title;
-  final List<(String, String)> rows;
+  final IconData icon;
+  final List<(String, String)> items;
 
-  const _OperationalDetailsPanel({required this.title, required this.rows});
+  const _InfoCard({required this.title, required this.icon, required this.items});
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.medium),
-          ...rows.map(
-            (row) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.small),
-              child: Row(
-                children: [
-                  SizedBox(
-                    width: 160,
-                    child: Text(
-                      row.$1,
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                  ),
-                  Expanded(child: Text(row.$2)),
-                ],
-              ),
-            ),
+          Row(
+            children: [
+              Icon(icon, color: scheme.primary, size: 20),
+              const SizedBox(width: AppSpacing.small),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            ],
           ),
+          const SizedBox(height: AppSpacing.medium),
+          ...items.map((it) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.small),
+                child: Row(
+                  children: [
+                    Text(it.$1, style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 13)),
+                    const Spacer(),
+                    Text(it.$2, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
+                  ],
+                ),
+              )),
         ],
       ),
     );
   }
 }
 
-class _InfoTab extends StatefulWidget {
-  final OperationTrip trip;
-
-  const _InfoTab({required this.trip});
-
-  @override
-  State<_InfoTab> createState() => _InfoTabState();
-}
-
-class _InfoTabState extends State<_InfoTab> {
-  late final TextEditingController route = TextEditingController(
-    text: widget.trip.route,
-  );
-  late final TextEditingController driver = TextEditingController(
-    text: widget.trip.driver,
-  );
-  late final TextEditingController vehicle = TextEditingController(
-    text: widget.trip.vehicle,
-  );
-  late final TextEditingController departure = TextEditingController(
-    text: widget.trip.departure,
-  );
-  late final TextEditingController arrival = TextEditingController(
-    text: widget.trip.arrival,
-  );
-  late OperationTripStatus status = widget.trip.status;
-
-  @override
-  void dispose() {
-    route.dispose();
-    driver.dispose();
-    vehicle.dispose();
-    departure.dispose();
-    arrival.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final trip = widget.trip;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _InfoGrid(
-          children: [
-            TextField(
-              controller: route,
-              decoration: const InputDecoration(labelText: 'المسار'),
-            ),
-            TextField(
-              controller: driver,
-              decoration: const InputDecoration(labelText: 'السائق'),
-            ),
-            TextField(
-              controller: vehicle,
-              decoration: const InputDecoration(labelText: 'المركبة'),
-            ),
-            TextField(
-              controller: departure,
-              decoration: const InputDecoration(labelText: 'وقت الانطلاق'),
-            ),
-            TextField(
-              controller: arrival,
-              decoration: const InputDecoration(labelText: 'وقت الوصول'),
-            ),
-            DropdownButtonFormField<OperationTripStatus>(
-              initialValue: status,
-              decoration: const InputDecoration(labelText: 'الحالة'),
-              items: OperationTripStatus.values
-                  .map((s) => DropdownMenuItem(value: s, child: Text(s.label)))
-                  .toList(),
-              onChanged: (next) => setState(() => status = next ?? status),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        Text(
-          'السعة: ${trip.capacity} | المحجوز: ${trip.bookedSeats} | المتاح: ${trip.availableSeats}',
-        ),
-        const SizedBox(height: AppSpacing.small),
-        Text('محطات المسار: ${trip.routeStops.join(' ← ')}'),
-        const SizedBox(height: AppSpacing.medium),
-        FilledButton(
-          onPressed: () => context.read<TripsCubit>().updateTripInfo(
-            trip.copyWith(
-              route: route.text,
-              driver: driver.text,
-              vehicle: vehicle.text,
-              departure: departure.text,
-              arrival: arrival.text,
-              status: status,
-            ),
-          ),
-          child: const Text('حفظ التعديل'),
-        ),
-      ],
-    );
-  }
-}
-
-class _InfoGrid extends StatelessWidget {
-  final List<Widget> children;
-
-  const _InfoGrid({required this.children});
-
-  @override
-  Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: children.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3,
-        crossAxisSpacing: AppSpacing.medium,
-        mainAxisSpacing: AppSpacing.medium,
-        mainAxisExtent: 72,
-      ),
-      itemBuilder: (context, index) => children[index],
-    );
-  }
-}
-
+// --- TAB 2: PASSENGERS MANIFEST ---
 class _PassengersTab extends StatelessWidget {
   final OperationTrip trip;
 
@@ -807,7 +724,7 @@ class _PassengersTab extends StatelessWidget {
       'نقطة النزول',
       'طريقة الدفع',
       'الحالة',
-      'إجراءات',
+      'إجراءات الحجز',
     ];
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -831,53 +748,54 @@ class _PassengersTab extends StatelessWidget {
                     .toList(),
               ),
             ),
-            ...trip.passengers.map(
-              (p) => Container(
-                padding: const EdgeInsets.all(AppSpacing.small),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: scheme.outline.withAlpha(90)),
+            if (trip.passengers.isEmpty)
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.large),
+                child: Text('لا يوجد ركاب مسجلين على هذه الرحلة حالياً', style: TextStyle(color: scheme.onSurfaceVariant)),
+              )
+            else
+              ...trip.passengers.map(
+                (p) => Container(
+                  padding: const EdgeInsets.all(AppSpacing.small),
+                  decoration: BoxDecoration(
+                    border: Border(
+                      top: BorderSide(color: scheme.outline.withAlpha(90)),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(child: Text(p.name, style: const TextStyle(fontWeight: FontWeight.bold))),
+                      Expanded(child: Text(p.phone)),
+                      Expanded(child: Text(p.seat)),
+                      Expanded(child: Text(p.pickup)),
+                      Expanded(child: Text(p.dropoff)),
+                      Expanded(child: Text(p.paymentMethod)),
+                      Expanded(child: Text(p.status)),
+                      Expanded(
+                        child: Wrap(
+                          spacing: AppSpacing.xSmall,
+                          children: [
+                            TextButton(
+                              onPressed: () => _openPassengerDialog(context, trip, p),
+                              child: const Text('تعديل'),
+                            ),
+                            TextButton(
+                              onPressed: () => context
+                                  .read<TripsCubit>()
+                                  .cancelPassenger(trip, p),
+                              child: const Text('إلغاء حجز'),
+                            ),
+                            TextButton(
+                              onPressed: () => _openMoveDialog(context, trip, p),
+                              child: const Text('نقل مقعد'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                child: Row(
-                  children: [
-                    Expanded(child: Text(p.name)),
-                    Expanded(child: Text(p.phone)),
-                    Expanded(child: Text(p.seat)),
-                    Expanded(child: Text(p.pickup)),
-                    Expanded(child: Text(p.dropoff)),
-                    Expanded(child: Text(p.paymentMethod)),
-                    Expanded(child: Text(p.status)),
-                    Expanded(
-                      child: Wrap(
-                        spacing: AppSpacing.xSmall,
-                        children: [
-                          TextButton(
-                            onPressed: () =>
-                                _openPassengerDialog(context, trip, p),
-                            child: const Text('تعديل'),
-                          ),
-                          TextButton(
-                            onPressed: () => context
-                                .read<TripsCubit>()
-                                .cancelPassenger(trip, p),
-                            child: const Text('إلغاء الحجز'),
-                          ),
-                          TextButton(
-                            onPressed: () => _openMoveDialog(context, trip, p),
-                            child: const Text('نقل لمقعد آخر'),
-                          ),
-                          TextButton(
-                            onPressed: () => _openMessageDialog(context, p),
-                            child: const Text('إرسال رسالة'),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
               ),
-            ),
           ],
         ),
       ),
@@ -885,6 +803,7 @@ class _PassengersTab extends StatelessWidget {
   }
 }
 
+// --- TAB 3: VISUAL SEAT MAP ---
 class _SeatsTab extends StatelessWidget {
   final OperationTrip trip;
 
@@ -893,6 +812,9 @@ class _SeatsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TripsCubit>();
+    final scheme = Theme.of(context).colorScheme;
+
+    // Mini bus visualization
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -910,37 +832,86 @@ class _SeatsTab extends StatelessWidget {
               .toList(),
         ),
         const SizedBox(height: AppSpacing.medium),
-        SizedBox(
-          width: 420,
-          child: GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: trip.seats.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 4,
-              crossAxisSpacing: AppSpacing.small,
-              mainAxisSpacing: AppSpacing.small,
-              mainAxisExtent: 62,
-            ),
-            itemBuilder: (context, index) {
-              final seat = trip.seats[index];
-              return InkWell(
-                onTap: () => _openSeatStateDialog(context, trip, seat, cubit),
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    color: _seatColor(context, seat.state).withAlpha(35),
-                    border: Border.all(color: _seatColor(context, seat.state)),
-                    borderRadius: BorderRadius.circular(AppTokens.radius),
-                  ),
-                  child: Center(
-                    child: Text(
-                      '${seat.label}\n${seat.state.label}',
-                      textAlign: TextAlign.center,
+        Text('مخطط توزيع مقاعد الأوتوبيس (انقر على مقعد لتغيير حالته):', style: Theme.of(context).textTheme.bodySmall),
+        const SizedBox(height: AppSpacing.medium),
+        Container(
+          width: 380,
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest.withAlpha(20),
+            border: Border.all(color: scheme.outline.withAlpha(40)),
+            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+          ),
+          child: Column(
+            children: [
+              // Dashboard / Driver Row
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    width: 65,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: scheme.outline.withAlpha(40),
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
+                    ),
+                    child: const Center(
+                      child: Text('مقعد\nالسائق', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                     ),
                   ),
+                  const Icon(Icons.directions_car_outlined, size: 28),
+                  const SizedBox(width: 65), // Corridor space
+                ],
+              ),
+              const SizedBox(height: AppSpacing.large),
+              const Divider(),
+              const SizedBox(height: AppSpacing.medium),
+              // Grid for Seats
+              GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: trip.seats.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 4,
+                  crossAxisSpacing: AppSpacing.small,
+                  mainAxisSpacing: AppSpacing.small,
+                  mainAxisExtent: 60,
                 ),
-              );
-            },
+                itemBuilder: (context, index) {
+                  final seat = trip.seats[index];
+                  return InkWell(
+                    onTap: () => _openSeatStateDialog(context, trip, seat, cubit),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: _seatColor(context, seat.state).withAlpha(35),
+                        border: Border.all(color: _seatColor(context, seat.state), width: 1.5),
+                        borderRadius: BorderRadius.circular(AppTokens.radius),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            seat.state == TripSeatState.available
+                                ? Icons.airline_seat_recline_normal
+                                : Icons.airline_seat_flat_rounded,
+                            size: 18,
+                            color: _seatColor(context, seat.state),
+                          ),
+                          Text(
+                            seat.label,
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: _seatColor(context, seat.state),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ],
@@ -948,6 +919,466 @@ class _SeatsTab extends StatelessWidget {
   }
 }
 
+// --- TAB 4: PRICING CONFIGURATIONS ---
+class _PricingTab extends StatelessWidget {
+  final OperationTrip trip;
+  final TripsLoaded state;
+
+  const _PricingTab({required this.trip, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text('تسعير شرائح المسار:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+            const Spacer(),
+            FilledButton.icon(
+              onPressed: () => _openPricingEditor(context),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('إضافة تسعير شريحة'),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        if (state.pricingLoading)
+          const Center(child: CircularProgressIndicator())
+        else if (state.pricingError != null)
+          Text(state.pricingError!, style: TextStyle(color: scheme.error))
+        else if (state.selectedTripPricing.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: Text('لا توجد تسعيرات مخصصة لهذه الرحلة بعد.', style: TextStyle(color: scheme.onSurfaceVariant)),
+          )
+        else
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: SizedBox(
+              width: 900,
+              child: Table(
+                columnWidths: const {
+                  0: FlexColumnWidth(2.5),
+                  1: FlexColumnWidth(1.5),
+                  2: FlexColumnWidth(1.2),
+                  3: FlexColumnWidth(1.2),
+                  4: FlexColumnWidth(1.2),
+                  5: FlexColumnWidth(1.2),
+                  6: FlexColumnWidth(1.5),
+                },
+                border: TableBorder.all(color: scheme.outline.withAlpha(50)),
+                children: [
+                  TableRow(
+                    decoration: BoxDecoration(color: scheme.surfaceContainerHighest.withAlpha(90)),
+                    children: const [
+                      Padding(padding: EdgeInsets.all(10), child: Text('الشريحة (من ← إلى)', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Padding(padding: EdgeInsets.all(10), child: Text('تذكرة فردية', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Padding(padding: EdgeInsets.all(10), child: Text('باقة 5 أيام', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Padding(padding: EdgeInsets.all(10), child: Text('باقة 10 أيام', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Padding(padding: EdgeInsets.all(10), child: Text('اشتراك شهري', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Padding(padding: EdgeInsets.all(10), child: Text('اشتراك 3 شهور', style: TextStyle(fontWeight: FontWeight.bold))),
+                      Padding(padding: EdgeInsets.all(10), child: Text('إجراءات', style: TextStyle(fontWeight: FontWeight.bold))),
+                    ],
+                  ),
+                  ...state.selectedTripPricing.map((pr) {
+                    return TableRow(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Text('${pr.fromPointName} ← ${pr.toPointName}', style: const TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        Padding(padding: const EdgeInsets.all(10), child: Text('${pr.oneTimePrice.toStringAsFixed(0)} ${pr.currency}')),
+                        Padding(padding: const EdgeInsets.all(10), child: Text('${pr.fiveDaysPrice.toStringAsFixed(0)} ${pr.currency}')),
+                        Padding(padding: const EdgeInsets.all(10), child: Text('${pr.tenDaysPrice.toStringAsFixed(0)} ${pr.currency}')),
+                        Padding(padding: const EdgeInsets.all(10), child: Text('${pr.monthlyPrice.toStringAsFixed(0)} ${pr.currency}')),
+                        Padding(padding: const EdgeInsets.all(10), child: Text('${pr.threeMonthsPrice.toStringAsFixed(0)} ${pr.currency}')),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                          child: Wrap(
+                            spacing: 4,
+                            children: [
+                              TextButton(
+                                onPressed: () => _openPricingEditor(context, pr),
+                                child: const Text('تعديل'),
+                              ),
+                              TextButton(
+                                onPressed: () => context.read<TripsCubit>().toggleTripPricing(pr),
+                                child: Text(pr.isActive ? 'تعطيل' : 'تفعيل'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _openPricingEditor(BuildContext context, [TripPricing? pricing]) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => BlocProvider.value(
+        value: context.read<TripsCubit>(),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: TripPricingEditorDialog(trip: trip, pricing: pricing),
+        ),
+      ),
+    );
+  }
+}
+
+// --- TAB 5: PACKAGES TAB ---
+class _PackagesTab extends StatelessWidget {
+  final OperationTrip trip;
+  final TripsLoaded state;
+
+  const _PackagesTab({required this.trip, required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('الباقات والاشتراكات النشطة للشريحة:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: AppSpacing.medium),
+        if (state.selectedTripPricing.isEmpty)
+          Padding(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: Text('يرجى إضافة تسعير شريحة أولاً لتفعيل الباقات.', style: TextStyle(color: scheme.onSurfaceVariant)),
+          )
+        else
+          ...state.selectedTripPricing.map((pr) {
+            final configs = [
+              (name: 'اشتراك أسبوع عمل كامل', days: 5, price: pr.fiveDaysPrice),
+              (name: 'اشتراك أسبوعين خلال الشهر', days: 10, price: pr.tenDaysPrice),
+              (name: 'اشتراك شهري كامل', days: 22, price: pr.monthlyPrice),
+              (name: 'اشتراك 3 شهور مميز', days: 66, price: pr.threeMonthsPrice),
+            ];
+            return Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+              child: AppCard(
+                padding: const EdgeInsets.all(AppSpacing.medium),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(Icons.card_membership_rounded, color: scheme.primary),
+                        const SizedBox(width: AppSpacing.small),
+                        Text(
+                          'الشريحة: ${pr.fromPointName} ← ${pr.toPointName}',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(width: AppSpacing.small),
+                        Text('(التذكرة الفردية: ${pr.oneTimePrice.toStringAsFixed(0)} ج.م)', style: Theme.of(context).textTheme.bodySmall),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.medium),
+                    Table(
+                      columnWidths: const {
+                        0: FlexColumnWidth(2.0),
+                        1: FlexColumnWidth(1.2),
+                        2: FlexColumnWidth(1.2),
+                        3: FlexColumnWidth(1.2),
+                        4: FlexColumnWidth(1.2),
+                      },
+                      border: TableBorder.all(color: scheme.outline.withAlpha(40)),
+                      children: [
+                        TableRow(
+                          decoration: BoxDecoration(color: scheme.surfaceContainerHighest.withAlpha(50)),
+                          children: const [
+                            Padding(padding: EdgeInsets.all(8), child: Text('اسم الباقة', style: TextStyle(fontWeight: FontWeight.bold))),
+                            Padding(padding: EdgeInsets.all(8), child: Text('السعر الأساسي', style: TextStyle(fontWeight: FontWeight.bold))),
+                            Padding(padding: EdgeInsets.all(8), child: Text('سعر الباقة', style: TextStyle(fontWeight: FontWeight.bold))),
+                            Padding(padding: EdgeInsets.all(8), child: Text('الخصم', style: TextStyle(fontWeight: FontWeight.bold))),
+                            Padding(padding: EdgeInsets.all(8), child: Text('الوفر', style: TextStyle(fontWeight: FontWeight.bold))),
+                          ],
+                        ),
+                        ...configs.map((conf) {
+                          final base = pr.oneTimePrice * conf.days;
+                          final disc = base > 0 ? ((base - conf.price) / base * 100) : 0.0;
+                          final savings = base - conf.price;
+                          return TableRow(
+                            children: [
+                              Padding(padding: const EdgeInsets.all(8), child: Text(conf.name)),
+                              Padding(padding: const EdgeInsets.all(8), child: Text('${base.toStringAsFixed(0)} ج.م')),
+                              Padding(padding: const EdgeInsets.all(8), child: Text('${conf.price.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold))),
+                              Padding(padding: const EdgeInsets.all(8), child: Text('${disc.toStringAsFixed(0)}%')),
+                              Padding(
+                                padding: const EdgeInsets.all(8),
+                                child: Text(
+                                  '${savings.toStringAsFixed(0)} ج.م',
+                                  style: TextStyle(color: savings > 0 ? scheme.primary : scheme.error, fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                            ],
+                          );
+                        }),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }),
+      ],
+    );
+  }
+}
+
+// --- TAB 6: PAYMENT VERIFICATION MANIFEST ---
+class _PaymentsTab extends StatefulWidget {
+  final OperationTrip trip;
+
+  const _PaymentsTab({required this.trip});
+
+  @override
+  State<_PaymentsTab> createState() => _PaymentsTabState();
+}
+
+class _PaymentsTabState extends State<_PaymentsTab> {
+  late List<OperationBooking> _tripBookings;
+
+  @override
+  void initState() {
+    super.initState();
+    _tripBookings = _generateMockBookings(widget.trip.id, widget.trip.route);
+  }
+
+  List<OperationBooking> _generateMockBookings(String tripId, String route) {
+    final now = DateTime.now();
+    return [
+      OperationBooking(
+        id: 'BKG-$tripId-101',
+        passengerName: 'هاني فريد',
+        phone: '01098234721',
+        route: route,
+        tripTime: '07:00 صباحاً',
+        date: '٨ يونيو ٢٠٢٦',
+        seat: '4',
+        paymentMethod: BookingPaymentMethod.instaPay,
+        status: BookingStatus.paymentUploaded,
+        priority: BookingPriority.normal,
+        assignedTrip: tripId,
+        createdAt: now.subtract(const Duration(minutes: 10)),
+        customerProfile: const BookingCustomerProfile(
+          name: 'هاني فريد',
+          phone: '01098234721',
+          email: 'h.farid@gmail.com',
+          tripsCount: '١٢',
+          accountStatus: 'نشط',
+        ),
+        tripDetails: BookingTripDetails(
+          route: route,
+          date: '٨ يونيو ٢٠٢٦',
+          time: '07:00 صباحاً',
+          vehicle: 'أ ب ج ٤٥٦',
+          driver: 'محمد أحمد',
+        ),
+        paymentDetails: const BookingPaymentDetails(
+          amount: '50',
+          method: BookingPaymentMethod.instaPay,
+          status: 'قيد المراجعة',
+          reference: 'INSTA-882348',
+          receiptReference: 'INSTA-882348',
+        ),
+        attachments: const ['receipt.jpg'],
+        notes: const [],
+        timeline: const [],
+      ),
+      OperationBooking(
+        id: 'BKG-$tripId-102',
+        passengerName: 'رنا سليمان',
+        phone: '01123487212',
+        route: route,
+        tripTime: '07:00 صباحاً',
+        date: '٨ يونيو ٢٠٢٦',
+        seat: '8',
+        paymentMethod: BookingPaymentMethod.vodafoneCash,
+        status: BookingStatus.underReview,
+        priority: BookingPriority.vip,
+        assignedTrip: tripId,
+        createdAt: now.subtract(const Duration(hours: 1)),
+        customerProfile: const BookingCustomerProfile(
+          name: 'رنا سليمان',
+          phone: '01123487212',
+          email: 'r.soliman@gmail.com',
+          tripsCount: '٥',
+          accountStatus: 'نشط',
+        ),
+        tripDetails: BookingTripDetails(
+          route: route,
+          date: '٨ يونيو ٢٠٢٦',
+          time: '07:00 صباحاً',
+          vehicle: 'أ ب ج ٤٥٦',
+          driver: 'محمد أحمد',
+        ),
+        paymentDetails: const BookingPaymentDetails(
+          amount: '50',
+          method: BookingPaymentMethod.vodafoneCash,
+          status: 'قيد المراجعة',
+          reference: 'VF-Cash-7723',
+          receiptReference: 'VF-Cash-7723',
+        ),
+        attachments: const ['receipt.jpg'],
+        notes: const [],
+        timeline: const [],
+      ),
+      OperationBooking(
+        id: 'BKG-$tripId-103',
+        passengerName: 'خالد مصطفى',
+        phone: '01229988223',
+        route: route,
+        tripTime: '07:00 صباحاً',
+        date: '٨ يونيو ٢٠٢٦',
+        seat: '11',
+        paymentMethod: BookingPaymentMethod.instaPay,
+        status: BookingStatus.approved,
+        priority: BookingPriority.urgent,
+        assignedTrip: tripId,
+        createdAt: now.subtract(const Duration(hours: 2)),
+        customerProfile: const BookingCustomerProfile(
+          name: 'خالد مصطفى',
+          phone: '01229988223',
+          email: 'k.mostafa@gmail.com',
+          tripsCount: '٢٤',
+          accountStatus: 'نشط',
+        ),
+        tripDetails: BookingTripDetails(
+          route: route,
+          date: '٨ يونيو ٢٠٢٦',
+          time: '07:00 صباحاً',
+          vehicle: 'أ ب ج ٤٥٦',
+          driver: 'محمد أحمد',
+        ),
+        paymentDetails: const BookingPaymentDetails(
+          amount: '40',
+          method: BookingPaymentMethod.instaPay,
+          status: 'مقبول',
+          reference: 'INSTA-110023',
+          receiptReference: 'INSTA-110023',
+        ),
+        attachments: const ['receipt.jpg'],
+        notes: const [],
+        timeline: const [],
+      ),
+    ];
+  }
+
+  void _updateStatus(String bookingId, BookingStatus newStatus) {
+    setState(() {
+      _tripBookings = _tripBookings.map((b) {
+        if (b.id != bookingId) return b;
+        return b.copyWith(status: newStatus);
+      }).toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('مراجعة وتوثيق مدفوعات الركاب للرحلة:', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+        const SizedBox(height: AppSpacing.medium),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: 1050,
+            child: Table(
+              columnWidths: const {
+                0: FlexColumnWidth(1.5),
+                1: FlexColumnWidth(1.8),
+                2: FlexColumnWidth(1.2),
+                3: FlexColumnWidth(1.5),
+                4: FlexColumnWidth(1.5),
+                5: FlexColumnWidth(1.5),
+                6: FlexColumnWidth(2.2),
+              },
+              border: TableBorder.all(color: scheme.outline.withAlpha(40)),
+              children: [
+                TableRow(
+                  decoration: BoxDecoration(color: scheme.surfaceContainerHighest.withAlpha(70)),
+                  children: const [
+                    Padding(padding: EdgeInsets.all(10), child: Text('رقم الحجز', style: TextStyle(fontWeight: FontWeight.bold))),
+                    Padding(padding: EdgeInsets.all(10), child: Text('العميل', style: TextStyle(fontWeight: FontWeight.bold))),
+                    Padding(padding: EdgeInsets.all(10), child: Text('المقعد', style: TextStyle(fontWeight: FontWeight.bold))),
+                    Padding(padding: EdgeInsets.all(10), child: Text('المبلغ', style: TextStyle(fontWeight: FontWeight.bold))),
+                    Padding(padding: EdgeInsets.all(10), child: Text('طريقة الدفع', style: TextStyle(fontWeight: FontWeight.bold))),
+                    Padding(padding: EdgeInsets.all(10), child: Text('حالة الحجز', style: TextStyle(fontWeight: FontWeight.bold))),
+                    Padding(padding: EdgeInsets.all(10), child: Text('مراجعة تشغيلية', style: TextStyle(fontWeight: FontWeight.bold))),
+                  ],
+                ),
+                ..._tripBookings.map((b) {
+                  final reqActions = b.status == BookingStatus.paymentUploaded || b.status == BookingStatus.underReview;
+                  return TableRow(
+                    children: [
+                      Padding(padding: const EdgeInsets.all(10), child: Text(b.id, style: const TextStyle(fontWeight: FontWeight.bold))),
+                      Padding(padding: const EdgeInsets.all(10), child: Text(b.passengerName)),
+                      Padding(padding: const EdgeInsets.all(10), child: Text(b.seat)),
+                      Padding(padding: const EdgeInsets.all(10), child: Text('${b.paymentDetails.amount} ج.م')),
+                      Padding(padding: const EdgeInsets.all(10), child: Text(b.paymentMethod.label)),
+                      Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: StatusChip(label: b.status.label),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+                        child: reqActions
+                            ? Wrap(
+                                spacing: 4,
+                                children: [
+                                  FilledButton.tonal(
+                                    onPressed: () => _updateStatus(b.id, BookingStatus.approved),
+                                    style: FilledButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    ),
+                                    child: const Text('قبول'),
+                                  ),
+                                  OutlinedButton(
+                                    onPressed: () => _updateStatus(b.id, BookingStatus.rejected),
+                                    style: OutlinedButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    ),
+                                    child: const Text('رفض'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () => _updateStatus(b.id, BookingStatus.requestReupload),
+                                    style: TextButton.styleFrom(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    ),
+                                    child: const Text('إعادة رفع'),
+                                  ),
+                                ],
+                              )
+                            : const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Text('تمت المراجعة والتوثيق', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey)),
+                              ),
+                      ),
+                    ],
+                  );
+                }),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// --- TAB 7: TRIP EVENTS HISTORY ---
 class _HistoryTab extends StatelessWidget {
   final OperationTrip trip;
 
@@ -978,7 +1409,7 @@ class _HistoryTab extends StatelessWidget {
                       children: [
                         Text(
                           event.title,
-                          style: Theme.of(context).textTheme.titleSmall,
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         Text('${event.time} - ${event.description}'),
                       ],
@@ -1013,164 +1444,6 @@ Color _seatColor(BuildContext context, TripSeatState state) {
     TripSeatState.subscription => scheme.primary,
     TripSeatState.blocked => scheme.error,
   };
-}
-
-void _openCreateTripPanel(BuildContext context, TripsLoaded state) {
-  final routes = state.routes.where((route) => route != 'الكل').toList();
-  final drivers = state.drivers.where((driver) => driver != 'الكل').toList();
-  final vehicles = state.trips.map((trip) => trip.vehicle).toSet().toList();
-  showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (_) => BlocProvider.value(
-      value: context.read<TripsCubit>(),
-      child: Directionality(
-        textDirection: TextDirection.rtl,
-        child: _CreateTripPanel(
-          routes: routes,
-          drivers: drivers,
-          vehicles: vehicles,
-        ),
-      ),
-    ),
-  );
-}
-
-class _CreateTripPanel extends StatefulWidget {
-  final List<String> routes;
-  final List<String> drivers;
-  final List<String> vehicles;
-
-  const _CreateTripPanel({
-    required this.routes,
-    required this.drivers,
-    required this.vehicles,
-  });
-
-  @override
-  State<_CreateTripPanel> createState() => _CreateTripPanelState();
-}
-
-class _CreateTripPanelState extends State<_CreateTripPanel> {
-  late String route = widget.routes.first;
-  late String driver = widget.drivers.first;
-  late String vehicle = widget.vehicles.first;
-  final date = TextEditingController(text: '٨ يونيو ٢٠٢٦');
-  final departure = TextEditingController(text: '٩:٠٠');
-  final capacity = TextEditingController(text: '14');
-  String error = '';
-
-  @override
-  void dispose() {
-    date.dispose();
-    departure.dispose();
-    capacity.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.large,
-        AppSpacing.medium,
-        AppSpacing.large,
-        MediaQuery.viewInsetsOf(context).bottom + AppSpacing.large,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('إنشاء رحلة', style: Theme.of(context).textTheme.headlineSmall),
-          const SizedBox(height: AppSpacing.medium),
-          DropdownButtonFormField<String>(
-            initialValue: route,
-            decoration: const InputDecoration(labelText: 'المسار'),
-            items: widget.routes
-                .map((v) => DropdownMenuItem(value: v, child: Text(v)))
-                .toList(),
-            onChanged: (v) => setState(() => route = v ?? route),
-          ),
-          const SizedBox(height: AppSpacing.small),
-          DropdownButtonFormField<String>(
-            initialValue: driver,
-            decoration: const InputDecoration(labelText: 'السائق'),
-            items: widget.drivers
-                .map((v) => DropdownMenuItem(value: v, child: Text(v)))
-                .toList(),
-            onChanged: (v) => setState(() => driver = v ?? driver),
-          ),
-          const SizedBox(height: AppSpacing.small),
-          DropdownButtonFormField<String>(
-            initialValue: vehicle,
-            decoration: const InputDecoration(labelText: 'المركبة'),
-            items: widget.vehicles
-                .map((v) => DropdownMenuItem(value: v, child: Text(v)))
-                .toList(),
-            onChanged: (v) => setState(() => vehicle = v ?? vehicle),
-          ),
-          const SizedBox(height: AppSpacing.small),
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: date,
-                  decoration: const InputDecoration(labelText: 'تاريخ الرحلة'),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.small),
-              Expanded(
-                child: TextField(
-                  controller: departure,
-                  decoration: const InputDecoration(labelText: 'وقت الانطلاق'),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.small),
-              Expanded(
-                child: TextField(
-                  controller: capacity,
-                  decoration: const InputDecoration(labelText: 'السعة'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.small),
-          Text('محطات المسار يتم تحميلها تلقائياً ولا يعاد إنشاؤها هنا.'),
-          if (error.isNotEmpty)
-            Text(
-              error,
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          const SizedBox(height: AppSpacing.medium),
-          FilledButton(onPressed: _save, child: const Text('إنشاء الرحلة')),
-        ],
-      ),
-    );
-  }
-
-  void _save() {
-    final cap = int.tryParse(capacity.text.trim());
-    if (route.isEmpty ||
-        driver.isEmpty ||
-        vehicle.isEmpty ||
-        cap == null ||
-        cap <= 0) {
-      setState(() => error = 'المسار والسائق والمركبة والسعة مطلوبة');
-      return;
-    }
-    context.read<TripsCubit>().createTrip(
-      CreateTripInput(
-        route: route,
-        driver: driver,
-        vehicle: vehicle,
-        date: date.text,
-        departure: departure.text,
-        capacity: cap,
-      ),
-    );
-    Navigator.of(context).pop();
-  }
 }
 
 void _openPassengerDialog(
@@ -1303,27 +1576,6 @@ void _openMoveDialog(
             ),
           ],
         ),
-      ),
-    ),
-  );
-}
-
-void _openMessageDialog(BuildContext context, TripPassenger passenger) {
-  showDialog<void>(
-    context: context,
-    builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
-      child: AlertDialog(
-        title: const Text('إرسال رسالة'),
-        content: Text(
-          'تم تجهيز رسالة تشغيل إلى ${passenger.name} على ${passenger.phone} ببيانات الرحلة والمقعد.',
-        ),
-        actions: [
-          FilledButton(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('تم'),
-          ),
-        ],
       ),
     ),
   );

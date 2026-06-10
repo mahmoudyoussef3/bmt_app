@@ -1,14 +1,16 @@
 import '../../domain/entities/operation_trip.dart';
 import '../../domain/entities/trip_pricing.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/entities/operation_route.dart';
+import 'package:bmt_app/apps/dashboard/features/vehicles/domain/entities/vehicle.dart';
+import 'package:bmt_app/apps/dashboard/features/drivers/domain/entities/driver.dart';
 
 enum TripWorkspaceTab {
   overview,
-  route,
-  vehicle,
-  driver,
-  pricing,
   passengers,
   seats,
+  pricing,
+  packages,
+  payments,
   history,
 }
 
@@ -39,6 +41,11 @@ class TripsLoaded extends TripsState {
   final bool pricingLoading;
   final String? pricingError;
 
+  // Wizard lists
+  final List<OperationRoute> routesList;
+  final List<Vehicle> vehiclesList;
+  final List<Driver> driversList;
+
   const TripsLoaded({
     required this.trips,
     this.selectedTrip,
@@ -51,6 +58,9 @@ class TripsLoaded extends TripsState {
     this.selectedTripPricing = const [],
     this.pricingLoading = false,
     this.pricingError,
+    this.routesList = const [],
+    this.vehiclesList = const [],
+    this.driversList = const [],
   });
 
   List<OperationTrip> get filteredTrips {
@@ -116,6 +126,9 @@ class TripsLoaded extends TripsState {
     bool? pricingLoading,
     String? pricingError,
     bool clearPricingError = false,
+    List<OperationRoute>? routesList,
+    List<Vehicle>? vehiclesList,
+    List<Driver>? driversList,
   }) {
     return TripsLoaded(
       trips: trips ?? this.trips,
@@ -135,6 +148,9 @@ class TripsLoaded extends TripsState {
       pricingError: clearPricingError
           ? null
           : pricingError ?? this.pricingError,
+      routesList: routesList ?? this.routesList,
+      vehiclesList: vehiclesList ?? this.vehiclesList,
+      driversList: driversList ?? this.driversList,
     );
   }
 }

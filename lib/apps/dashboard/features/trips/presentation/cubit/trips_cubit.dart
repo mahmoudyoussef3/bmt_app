@@ -7,6 +7,9 @@ import '../../domain/usecases/trip_pricing_usecases.dart';
 import '../../domain/usecases/trip_operations_usecases.dart';
 import '../../domain/usecases/update_trip_seat_state_usecase.dart';
 import '../../domain/usecases/update_trip_status_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/get_operation_routes_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/vehicles/domain/usecases/get_vehicles_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/drivers/domain/usecases/get_drivers_usecase.dart';
 import 'trips_state.dart';
 
 class TripsCubit extends Cubit<TripsState> {
@@ -22,6 +25,11 @@ class TripsCubit extends Cubit<TripsState> {
   final SaveTripSegmentPricingUseCase _saveTripPricing;
   final ToggleTripSegmentPricingUseCase _toggleTripPricing;
 
+  // New dependencies for wizard data
+  final GetOperationRoutesUseCase _getRoutes;
+  final GetVehiclesUseCase _getVehicles;
+  final GetDriversUseCase _getDrivers;
+
   TripsCubit({
     required GetOperationTripsUseCase getTrips,
     required UpdateTripStatusUseCase updateTripStatus,
@@ -34,6 +42,9 @@ class TripsCubit extends Cubit<TripsState> {
     required GetTripPricingUseCase getTripPricing,
     required SaveTripSegmentPricingUseCase saveTripPricing,
     required ToggleTripSegmentPricingUseCase toggleTripPricing,
+    required GetOperationRoutesUseCase getRoutes,
+    required GetVehiclesUseCase getVehicles,
+    required GetDriversUseCase getDrivers,
   }) : _getTrips = getTrips,
        _updateTripStatus = updateTripStatus,
        _updateSeatState = updateSeatState,
@@ -45,13 +56,24 @@ class TripsCubit extends Cubit<TripsState> {
        _getTripPricing = getTripPricing,
        _saveTripPricing = saveTripPricing,
        _toggleTripPricing = toggleTripPricing,
+       _getRoutes = getRoutes,
+       _getVehicles = getVehicles,
+       _getDrivers = getDrivers,
        super(const TripsLoading());
 
   Future<void> load() async {
     emit(const TripsLoading());
     try {
       final trips = await _getTrips();
-      emit(TripsLoaded(trips: trips));
+      final routesList = await _getRoutes();
+      final vehiclesList = await _getVehicles();
+      final driversList = await _getDrivers();
+      emit(TripsLoaded(
+        trips: trips,
+        routesList: routesList,
+        vehiclesList: vehiclesList,
+        driversList: driversList,
+      ));
     } catch (error) {
       emit(TripsError(error.toString()));
     }
@@ -66,6 +88,7 @@ class TripsCubit extends Cubit<TripsState> {
         selectedTripPricing: const [],
         pricingLoading: true,
         clearPricingError: true,
+        tab: TripWorkspaceTab.overview,
       ),
     );
     await loadTripPricing(trip.id);
@@ -236,6 +259,37 @@ class TripsCubit extends Cubit<TripsState> {
       );
     } catch (error) {
       emit(TripsError(error.toString()));
+    }
+  }
+
+  // Create Trip with Pricing segments configured in Wizard
+  Future<OperationTrip?> createTripWithPricing(
+    CreateTripInput input,
+    List<TripPricing> pricingList,
+  ) async {
+    final current = state;
+    if (current is! TripsLoaded) return null;
+    try {
+      final created = await _createTrip(input);
+      // Save all pricing
+      for (final pricing in pricingList) {
+        final withTripId = pricing.copyWith(tripId: created.id);
+        await _saveTripPricing(withTripId);
+      }
+      final updatedTrips = [created, ...current.trips];
+      emit(
+        current.copyWith(
+          trips: updatedTrips,
+          selectedTrip: created,
+          tab: TripWorkspaceTab.overview,
+        ),
+      );
+      // Load pricing for the created trip
+      await loadTripPricing(created.id);
+      return created;
+    } catch (error) {
+      emit(TripsError(error.toString()));
+      return null;
     }
   }
 
