@@ -14,4 +14,20 @@ abstract class BookingsRepository {
     List<String> bookingIds,
     String tripId,
   );
+  Future<OperationBooking> approveBooking(
+    String bookingId,
+    String reviewer,
+    String? note,
+  );
+  Future<OperationBooking> rejectBooking(
+    String bookingId,
+    String reviewer,
+    String reason,
+    String? note,
+  );
+  Future<OperationBooking> requestReupload(
+    String bookingId,
+    String reviewer,
+    String reason,
+  );
 }

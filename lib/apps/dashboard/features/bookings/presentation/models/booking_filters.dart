@@ -4,34 +4,34 @@ class BookingFilters {
   final String search;
   final String route;
   final String date;
-  final BookingStatus? status;
   final BookingPaymentMethod? paymentMethod;
+  final BookingPriority? priority;
 
   const BookingFilters({
     this.search = '',
     this.route = '',
     this.date = '',
-    this.status,
     this.paymentMethod,
+    this.priority,
   });
 
   BookingFilters copyWith({
     String? search,
     String? route,
     String? date,
-    BookingStatus? status,
     BookingPaymentMethod? paymentMethod,
-    bool clearStatus = false,
+    BookingPriority? priority,
     bool clearPaymentMethod = false,
+    bool clearPriority = false,
   }) {
     return BookingFilters(
       search: search ?? this.search,
       route: route ?? this.route,
       date: date ?? this.date,
-      status: clearStatus ? null : status ?? this.status,
       paymentMethod: clearPaymentMethod
           ? null
           : paymentMethod ?? this.paymentMethod,
+      priority: clearPriority ? null : priority ?? this.priority,
     );
   }
 }

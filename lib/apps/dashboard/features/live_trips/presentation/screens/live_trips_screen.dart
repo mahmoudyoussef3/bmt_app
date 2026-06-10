@@ -10,109 +10,190 @@ import '../cubit/live_trips_state.dart';
 import '../widgets/live_monitoring_panel.dart';
 import '../widgets/live_trip_card.dart';
 
-class LiveTripsScreen extends StatelessWidget {
+class LiveTripsScreen extends StatefulWidget {
   const LiveTripsScreen({super.key});
 
   @override
+  State<LiveTripsScreen> createState() => _LiveTripsScreenState();
+}
+
+class _LiveTripsScreenState extends State<LiveTripsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<LiveTripsCubit>().loadLiveTrips();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LiveTripsCubit, LiveTripsState>(
-      builder: (context, state) {
-        return switch (state) {
-          LiveTripsLoading() => const Center(
-            child: CircularProgressIndicator(),
+    return Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('المتابعة الحية'),
+          actions: [
+            IconButton(
+              tooltip: 'تحديث',
+              onPressed: () => context.read<LiveTripsCubit>().loadLiveTrips(),
+              icon: const Icon(Icons.refresh_rounded),
+            ),
+            IconButton(
+              tooltip: 'فلترة',
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('سيتم إضافة الفلاتر لاحقًا')),
+              ),
+              icon: const Icon(Icons.filter_list_rounded),
+            ),
+          ],
+        ),
+        body: BlocConsumer<LiveTripsCubit, LiveTripsState>(
+          listenWhen: (previous, current) {
+            return current is LiveTripsLoaded && current.actionMessage != null;
+          },
+          listener: (context, state) {
+            if (state is LiveTripsLoaded && state.actionMessage != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(state.actionMessage!)),
+              );
+              context.read<LiveTripsCubit>().clearActionMessage();
+            }
+          },
+          builder: (context, state) {
+            return switch (state) {
+              LiveTripsLoading() => const Center(child: CircularProgressIndicator()),
+              LiveTripsError(:final message) => _ErrorView(message: message),
+              LiveTripsLoaded() => _LoadedView(state: state),
+            };
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class _LoadedView extends StatelessWidget {
+  const _LoadedView({required this.state});
+
+  final LiveTripsLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<LiveTripsCubit>();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 850;
+
+        if (compact) {
+          return ListView(
+            padding: const EdgeInsets.all(AppSpacing.medium),
+            children: [
+              _HeaderCard(state: state),
+              const SizedBox(height: AppSpacing.medium),
+              _TripsList(state: state, onTap: cubit.selectTrip),
+              const SizedBox(height: AppSpacing.medium),
+              if (state.selectedTrip == null)
+                const _NoSelectedTrip()
+              else
+                LiveMonitoringPanel(
+                  trip: state.selectedTrip!,
+                  actionLoading: state.actionLoading,
+                ),
+            ],
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(AppSpacing.large),
+          child: Column(
+            children: [
+              _HeaderCard(state: state),
+              const SizedBox(height: AppSpacing.large),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 390,
+                      child: _TripsList(state: state, onTap: cubit.selectTrip),
+                    ),
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(
+                      child: state.selectedTrip == null
+                          ? const _NoSelectedTrip()
+                          : LiveMonitoringPanel(
+                              trip: state.selectedTrip!,
+                              actionLoading: state.actionLoading,
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          LiveTripsError(:final message) => Center(child: Text(message)),
-          LiveTripsLoaded() => _LiveTripsLoadedView(state: state),
-        };
+        );
       },
     );
   }
 }
 
-class _LiveTripsLoadedView extends StatelessWidget {
-  final LiveTripsLoaded state;
+class _HeaderCard extends StatelessWidget {
+  const _HeaderCard({required this.state});
 
-  const _LiveTripsLoadedView({required this.state});
+  final LiveTripsLoaded state;
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<LiveTripsCubit>();
     final scheme = Theme.of(context).colorScheme;
 
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      child: Column(
+    return AppCard(
+      child: Wrap(
+        spacing: AppSpacing.medium,
+        runSpacing: AppSpacing.medium,
+        crossAxisAlignment: WrapCrossAlignment.center,
         children: [
-          AppCard(
-            child: Row(
+          _HeaderIcon(scheme: scheme),
+          SizedBox(
+            width: 280,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.radar_outlined, size: 42),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'مركز مراقبة الرحلات المباشرة',
-                        style: Theme.of(context).textTheme.headlineSmall,
+                Text(
+                  'مركز التحكم في الرحلات المباشرة',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
                       ),
-                      const SizedBox(height: AppSpacing.xSmall),
-                      Text(
-                        'متابعة حية للرحلات النشطة والتنبيهات التشغيلية.',
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
-                Badge(
-                  label: Text('${state.urgentAlertsCount}'),
-                  isLabelVisible: state.urgentAlertsCount > 0,
-                  child: const Icon(Icons.warning_amber_outlined),
+                const SizedBox(height: 4),
+                Text(
+                  'تابع الرحلات، المحطات، الركاب، السائقين والتنبيهات من مكان واحد.',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: AppSpacing.large),
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final compact = constraints.maxWidth < 980;
-                final tripList = _ActiveTripsList(
-                  state: state,
-                  onSelected: cubit.selectTrip,
-                );
-                final panel = state.selectedTrip == null
-                    ? const AppCard(
-                        child: EmptyState(
-                          title: 'لا توجد رحلات مباشرة الآن',
-                          subtitle:
-                              'عند بدء الرحلات ستظهر هنا الخريطة والتنبيهات ومسار التنفيذ.',
-                        ),
-                      )
-                    : LiveMonitoringPanel(trip: state.selectedTrip!);
-
-                if (compact) {
-                  return ListView(
-                    children: [
-                      tripList,
-                      const SizedBox(height: AppSpacing.medium),
-                      SizedBox(height: 900, child: panel),
-                    ],
-                  );
-                }
-
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(width: 390, child: tripList),
-                    const SizedBox(width: AppSpacing.medium),
-                    Expanded(child: panel),
-                  ],
-                );
-              },
-            ),
+          _MetricChip(
+            label: 'رحلات نشطة',
+            value: '${state.trips.length}',
+            icon: Icons.directions_bus_rounded,
+          ),
+          _MetricChip(
+            label: 'تنبيهات',
+            value: '${state.unresolvedAlertsCount}',
+            icon: Icons.notifications_active_outlined,
+          ),
+          _MetricChip(
+            label: 'حرجة',
+            value: '${state.urgentAlertsCount}',
+            icon: Icons.warning_amber_rounded,
+            danger: state.urgentAlertsCount > 0,
           ),
         ],
       ),
@@ -120,11 +201,73 @@ class _LiveTripsLoadedView extends StatelessWidget {
   }
 }
 
-class _ActiveTripsList extends StatelessWidget {
-  final LiveTripsLoaded state;
-  final ValueChanged<String> onSelected;
+class _HeaderIcon extends StatelessWidget {
+  const _HeaderIcon({required this.scheme});
 
-  const _ActiveTripsList({required this.state, required this.onSelected});
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 54,
+      height: 54,
+      decoration: BoxDecoration(
+        color: scheme.primary.withAlpha(22),
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: Icon(Icons.radar_rounded, color: scheme.primary, size: 30),
+    );
+  }
+}
+
+class _MetricChip extends StatelessWidget {
+  const _MetricChip({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.danger = false,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+  final bool danger;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = danger ? scheme.error : scheme.primary;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withAlpha(16),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withAlpha(45)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: color, size: 18),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+              Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color, fontWeight: FontWeight.w700)),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TripsList extends StatelessWidget {
+  const _TripsList({required this.state, required this.onTap});
+
+  final LiveTripsLoaded state;
+  final ValueChanged<String> onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -132,12 +275,12 @@ class _ActiveTripsList extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('الرحلات النشطة', style: Theme.of(context).textTheme.titleLarge),
+          Text('الرحلات النشطة', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
           const SizedBox(height: AppSpacing.medium),
           if (state.trips.isEmpty)
             const EmptyState(
-              title: 'لا توجد رحلات قيد التنفيذ',
-              subtitle: 'ابدأ رحلة من شاشة الرحلات لتظهر في المتابعة الحية.',
+              title: 'لا توجد رحلات مباشرة الآن',
+              subtitle: 'عند بدء الرحلات ستظهر هنا.',
             )
           else
             ...state.trips.map(
@@ -146,11 +289,52 @@ class _ActiveTripsList extends StatelessWidget {
                 child: LiveTripCard(
                   trip: trip,
                   selected: trip.id == state.selectedTripId,
-                  onTap: () => onSelected(trip.id),
+                  onTap: () => onTap(trip.id),
                 ),
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _NoSelectedTrip extends StatelessWidget {
+  const _NoSelectedTrip();
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppCard(
+      child: EmptyState(
+        title: 'اختر رحلة لمتابعتها',
+        subtitle: 'ستظهر هنا كل بيانات الرحلة، السائق، المحطات، الركاب والتنبيهات.',
+      ),
+    );
+  }
+}
+
+class _ErrorView extends StatelessWidget {
+  const _ErrorView({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: AppCard(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline_rounded, size: 44),
+            const SizedBox(height: 12),
+            Text(message, textAlign: TextAlign.center),
+            const SizedBox(height: 12),
+            FilledButton(
+              onPressed: () => context.read<LiveTripsCubit>().loadLiveTrips(),
+              child: const Text('حاول مرة أخرى'),
+            ),
+          ],
+        ),
       ),
     );
   }

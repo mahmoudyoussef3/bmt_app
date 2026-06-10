@@ -11,9 +11,12 @@ import '../../features/assignments/presentation/cubit/fleet_assignments_cubit.da
 import '../../features/bookings/data/datasources/mock_bookings_datasource.dart';
 import '../../features/bookings/data/repositories/bookings_repository_impl.dart';
 import '../../features/bookings/domain/repositories/bookings_repository.dart';
+import '../../features/bookings/domain/usecases/approve_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/assign_bookings_to_trip_usecase.dart';
 import '../../features/bookings/domain/usecases/bulk_update_bookings_status_usecase.dart';
 import '../../features/bookings/domain/usecases/get_operation_bookings_usecase.dart';
+import '../../features/bookings/domain/usecases/reject_booking_usecase.dart';
+import '../../features/bookings/domain/usecases/request_reupload_usecase.dart';
 import '../../features/bookings/domain/usecases/update_booking_status_usecase.dart';
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
 import '../../features/dashboard_home/data/datasources/mock_dashboard_home_datasource.dart';
@@ -44,6 +47,18 @@ import '../../features/live_trips/data/datasources/mock_live_trips_datasource.da
 import '../../features/live_trips/data/repositories/live_trips_repository_impl.dart';
 import '../../features/live_trips/domain/repositories/live_trips_repository.dart';
 import '../../features/live_trips/domain/usecases/get_live_trips_usecase.dart';
+import '../../features/live_trips/domain/usecases/get_live_trip_details_usecase.dart';
+import '../../features/live_trips/domain/usecases/start_live_trip_usecase.dart';
+import '../../features/live_trips/domain/usecases/pause_live_trip_usecase.dart';
+import '../../features/live_trips/domain/usecases/resume_live_trip_usecase.dart';
+import '../../features/live_trips/domain/usecases/complete_live_trip_usecase.dart';
+import '../../features/live_trips/domain/usecases/mark_route_point_arrived_usecase.dart';
+import '../../features/live_trips/domain/usecases/mark_route_point_completed_usecase.dart';
+import '../../features/live_trips/domain/usecases/skip_route_point_usecase.dart';
+import '../../features/live_trips/domain/usecases/resolve_live_trip_alert_usecase.dart';
+import '../../features/live_trips/domain/usecases/report_live_trip_alert_usecase.dart';
+import '../../features/live_trips/domain/usecases/call_driver_usecase.dart';
+import '../../features/live_trips/domain/usecases/send_driver_message_usecase.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/payments/data/datasources/mock_payments_datasource.dart';
 import '../../features/payments/data/repositories/payments_repository_impl.dart';
@@ -101,6 +116,38 @@ import '../../features/vehicles/domain/usecases/renew_vehicle_document_usecase.d
 import '../../features/vehicles/domain/usecases/update_vehicle_status_usecase.dart';
 import '../../features/vehicles/domain/usecases/update_vehicle_usecase.dart';
 import '../../features/vehicles/presentation/cubit/vehicles_cubit.dart';
+import '../../features/tickets/data/datasources/tickets_datasource.dart';
+import '../../features/tickets/data/repositories/tickets_repository_impl.dart';
+import '../../features/tickets/domain/repositories/tickets_repository.dart';
+import '../../features/tickets/domain/usecases/assign_complaint_usecase.dart';
+import '../../features/tickets/domain/usecases/close_complaint_usecase.dart';
+import '../../features/tickets/domain/usecases/escalate_complaint_usecase.dart';
+import '../../features/tickets/domain/usecases/get_complaints_usecase.dart';
+import '../../features/tickets/domain/usecases/respond_to_complaint_usecase.dart';
+import '../../features/tickets/domain/usecases/update_complaint_status_usecase.dart';
+import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
+import '../../features/finance/data/datasources/mock_finance_datasource.dart';
+import '../../features/finance/data/repositories/finance_repository_impl.dart';
+import '../../features/finance/domain/repositories/finance_repository.dart';
+import '../../features/finance/domain/usecases/cancel_subscription_usecase.dart';
+import '../../features/finance/domain/usecases/get_payments_usecase.dart';
+import '../../features/finance/domain/usecases/get_receipt_reviews_usecase.dart';
+import '../../features/finance/domain/usecases/get_refund_requests_usecase.dart';
+import '../../features/finance/domain/usecases/get_revenue_metrics_usecase.dart';
+import '../../features/finance/domain/usecases/get_subscriptions_usecase.dart';
+import '../../features/finance/domain/usecases/process_refund_usecase.dart';
+import '../../features/finance/domain/usecases/review_receipt_usecase.dart';
+import '../../features/finance/presentation/cubit/finance_cubit.dart';
+import '../../features/reports/data/datasources/mock_reports_datasource.dart';
+import '../../features/reports/data/repositories/reports_repository_impl.dart';
+import '../../features/reports/domain/repositories/reports_repository.dart';
+import '../../features/reports/domain/usecases/export_report_usecase.dart';
+import '../../features/reports/domain/usecases/get_available_drivers_usecase.dart';
+import '../../features/reports/domain/usecases/get_available_packages_usecase.dart';
+import '../../features/reports/domain/usecases/get_available_routes_usecase.dart';
+import '../../features/reports/domain/usecases/get_available_vehicles_usecase.dart';
+import '../../features/reports/domain/usecases/get_report_data_usecase.dart';
+import '../../features/reports/presentation/cubit/reports_cubit.dart';
 import '../theme/dashboard_theme_cubit.dart';
 import '../theme/dashboard_theme_repository.dart';
 
@@ -295,6 +342,24 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<ApproveBookingUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ApproveBookingUseCase(dashboardDi<BookingsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<RejectBookingUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => RejectBookingUseCase(dashboardDi<BookingsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<RequestReuploadUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => RequestReuploadUseCase(dashboardDi<BookingsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<BookingsCubit>()) {
     dashboardDi.registerFactory(
       () => BookingsCubit(
@@ -302,6 +367,9 @@ void registerDashboardDependencies() {
         updateStatus: dashboardDi<UpdateBookingStatusUseCase>(),
         bulkUpdateStatus: dashboardDi<BulkUpdateBookingsStatusUseCase>(),
         assignToTrip: dashboardDi<AssignBookingsToTripUseCase>(),
+        approveBooking: dashboardDi<ApproveBookingUseCase>(),
+        rejectBooking: dashboardDi<RejectBookingUseCase>(),
+        requestReupload: dashboardDi<RequestReuploadUseCase>(),
       ),
     );
   }
@@ -378,9 +446,94 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<GetLiveTripDetailsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetLiveTripDetailsUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<StartLiveTripUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => StartLiveTripUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<PauseLiveTripUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => PauseLiveTripUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ResumeLiveTripUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ResumeLiveTripUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CompleteLiveTripUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CompleteLiveTripUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<MarkRoutePointArrivedUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => MarkRoutePointArrivedUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<MarkRoutePointCompletedUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => MarkRoutePointCompletedUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<SkipRoutePointUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => SkipRoutePointUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ResolveLiveTripAlertUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ResolveLiveTripAlertUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ReportLiveTripAlertUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ReportLiveTripAlertUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CallDriverUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CallDriverUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<SendDriverMessageUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => SendDriverMessageUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<LiveTripsCubit>()) {
     dashboardDi.registerFactory(
-      () => LiveTripsCubit(dashboardDi<GetLiveTripsUseCase>()),
+      () => LiveTripsCubit(
+        getLiveTrips: dashboardDi<GetLiveTripsUseCase>(),
+        startTrip: dashboardDi<StartLiveTripUseCase>(),
+        pauseTrip: dashboardDi<PauseLiveTripUseCase>(),
+        resumeTrip: dashboardDi<ResumeLiveTripUseCase>(),
+        completeTrip: dashboardDi<CompleteLiveTripUseCase>(),
+        markPointArrived: dashboardDi<MarkRoutePointArrivedUseCase>(),
+        markPointCompleted: dashboardDi<MarkRoutePointCompletedUseCase>(),
+        skipPoint: dashboardDi<SkipRoutePointUseCase>(),
+        resolveAlert: dashboardDi<ResolveLiveTripAlertUseCase>(),
+        reportAlert: dashboardDi<ReportLiveTripAlertUseCase>(),
+        callDriver: dashboardDi<CallDriverUseCase>(),
+        messageDriver: dashboardDi<SendDriverMessageUseCase>(),
+      ),
     );
   }
 
@@ -839,6 +992,205 @@ void registerDashboardDependencies() {
         updateVehicle: dashboardDi<UpdateVehicleUseCase>(),
         updateVehicleStatus: dashboardDi<UpdateVehicleStatusUseCase>(),
         renewDocument: dashboardDi<RenewVehicleDocumentUseCase>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<TicketsDatasource>()) {
+    dashboardDi.registerLazySingleton<TicketsDatasource>(
+      MockTicketsDatasource.new,
+    );
+  }
+
+  if (!dashboardDi.isRegistered<TicketsRepository>()) {
+    dashboardDi.registerLazySingleton<TicketsRepository>(
+      () => TicketsRepositoryImpl(dashboardDi<TicketsDatasource>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetComplaintsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetComplaintsUseCase(dashboardDi<TicketsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<AssignComplaintUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => AssignComplaintUseCase(dashboardDi<TicketsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<RespondToComplaintUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => RespondToComplaintUseCase(dashboardDi<TicketsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdateComplaintStatusUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateComplaintStatusUseCase(dashboardDi<TicketsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<EscalateComplaintUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => EscalateComplaintUseCase(dashboardDi<TicketsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CloseComplaintUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CloseComplaintUseCase(dashboardDi<TicketsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<TicketsCubit>()) {
+    dashboardDi.registerFactory(
+      () => TicketsCubit(
+        getComplaints: dashboardDi<GetComplaintsUseCase>(),
+        assignComplaint: dashboardDi<AssignComplaintUseCase>(),
+        respondToComplaint: dashboardDi<RespondToComplaintUseCase>(),
+        updateComplaintStatus: dashboardDi<UpdateComplaintStatusUseCase>(),
+        escalateComplaint: dashboardDi<EscalateComplaintUseCase>(),
+        closeComplaint: dashboardDi<CloseComplaintUseCase>(),
+      ),
+    );
+  }
+
+  // Finance Feature Registration
+  if (!dashboardDi.isRegistered<MockFinanceDatasource>()) {
+    dashboardDi.registerLazySingleton<MockFinanceDatasource>(
+      MockFinanceDatasource.new,
+    );
+  }
+
+  if (!dashboardDi.isRegistered<FinanceRepository>()) {
+    dashboardDi.registerLazySingleton<FinanceRepository>(
+      () => FinanceRepositoryImpl(dashboardDi<MockFinanceDatasource>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetPaymentsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetPaymentsUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetReceiptReviewsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetReceiptReviewsUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetRefundRequestsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetRefundRequestsUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetFinanceSubscriptionsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetFinanceSubscriptionsUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetRevenueMetricsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetRevenueMetricsUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ReviewReceiptUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ReviewReceiptUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ProcessRefundUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ProcessRefundUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<CancelFinanceSubscriptionUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CancelFinanceSubscriptionUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<FinanceCubit>()) {
+    dashboardDi.registerFactory(
+      () => FinanceCubit(
+        getPayments: dashboardDi<GetPaymentsUseCase>(),
+        getReceiptReviews: dashboardDi<GetReceiptReviewsUseCase>(),
+        getRefundRequests: dashboardDi<GetRefundRequestsUseCase>(),
+        getSubscriptions: dashboardDi<GetFinanceSubscriptionsUseCase>(),
+        getRevenueMetrics: dashboardDi<GetRevenueMetricsUseCase>(),
+        reviewReceipt: dashboardDi<ReviewReceiptUseCase>(),
+        processRefund: dashboardDi<ProcessRefundUseCase>(),
+        cancelSubscription: dashboardDi<CancelFinanceSubscriptionUseCase>(),
+      ),
+    );
+  }
+
+  // Reports Feature Registration
+  if (!dashboardDi.isRegistered<MockReportsDatasource>()) {
+    dashboardDi.registerLazySingleton<MockReportsDatasource>(
+      MockReportsDatasource.new,
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ReportsRepository>()) {
+    dashboardDi.registerLazySingleton<ReportsRepository>(
+      () => ReportsRepositoryImpl(dashboardDi<MockReportsDatasource>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetReportDataUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetReportDataUseCase(dashboardDi<ReportsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ExportReportUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ExportReportUseCase(dashboardDi<ReportsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetAvailableRoutesUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetAvailableRoutesUseCase(dashboardDi<ReportsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetAvailableDriversUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetAvailableDriversUseCase(dashboardDi<ReportsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetAvailableVehiclesUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetAvailableVehiclesUseCase(dashboardDi<ReportsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetAvailablePackagesUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetAvailablePackagesUseCase(dashboardDi<ReportsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ReportsCubit>()) {
+    dashboardDi.registerFactory(
+      () => ReportsCubit(
+        getReportData: dashboardDi<GetReportDataUseCase>(),
+        exportReport: dashboardDi<ExportReportUseCase>(),
+        getAvailableRoutes: dashboardDi<GetAvailableRoutesUseCase>(),
+        getAvailableDrivers: dashboardDi<GetAvailableDriversUseCase>(),
+        getAvailableVehicles: dashboardDi<GetAvailableVehiclesUseCase>(),
+        getAvailablePackages: dashboardDi<GetAvailablePackagesUseCase>(),
       ),
     );
   }

@@ -1,9 +1,12 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/operation_booking.dart';
+import '../../domain/usecases/approve_booking_usecase.dart';
 import '../../domain/usecases/assign_bookings_to_trip_usecase.dart';
 import '../../domain/usecases/bulk_update_bookings_status_usecase.dart';
 import '../../domain/usecases/get_operation_bookings_usecase.dart';
+import '../../domain/usecases/reject_booking_usecase.dart';
+import '../../domain/usecases/request_reupload_usecase.dart';
 import '../../domain/usecases/update_booking_status_usecase.dart';
 import '../models/booking_filters.dart';
 import 'bookings_state.dart';
@@ -13,16 +16,25 @@ class BookingsCubit extends Cubit<BookingsState> {
   final UpdateBookingStatusUseCase _updateStatus;
   final BulkUpdateBookingsStatusUseCase _bulkUpdateStatus;
   final AssignBookingsToTripUseCase _assignToTrip;
+  final ApproveBookingUseCase _approveBooking;
+  final RejectBookingUseCase _rejectBooking;
+  final RequestReuploadUseCase _requestReupload;
 
   BookingsCubit({
     required GetOperationBookingsUseCase getBookings,
     required UpdateBookingStatusUseCase updateStatus,
     required BulkUpdateBookingsStatusUseCase bulkUpdateStatus,
     required AssignBookingsToTripUseCase assignToTrip,
+    required ApproveBookingUseCase approveBooking,
+    required RejectBookingUseCase rejectBooking,
+    required RequestReuploadUseCase requestReupload,
   }) : _getBookings = getBookings,
        _updateStatus = updateStatus,
        _bulkUpdateStatus = bulkUpdateStatus,
        _assignToTrip = assignToTrip,
+       _approveBooking = approveBooking,
+       _rejectBooking = rejectBooking,
+       _requestReupload = requestReupload,
        super(const BookingsLoading());
 
   Future<void> load() async {
@@ -33,6 +45,12 @@ class BookingsCubit extends Cubit<BookingsState> {
     } catch (error) {
       emit(BookingsError(error.toString()));
     }
+  }
+
+  void switchTab(BookingStatus status) {
+    final current = state;
+    if (current is! BookingsLoaded) return;
+    emit(current.copyWith(activeTab: status, selectedIds: const {}));
   }
 
   void openBooking(OperationBooking booking) {
@@ -77,6 +95,52 @@ class BookingsCubit extends Cubit<BookingsState> {
     if (current is! BookingsLoaded) return;
     try {
       final updated = await _updateStatus(booking.id, status);
+      _emitUpdated(current, [updated]);
+    } catch (error) {
+      emit(BookingsError(error.toString()));
+    }
+  }
+
+  Future<void> approveBooking(String bookingId, String? note) async {
+    final current = state;
+    if (current is! BookingsLoaded) return;
+    try {
+      final updated = await _approveBooking(bookingId, 'خدمة العملاء', note);
+      _emitUpdated(current, [updated]);
+    } catch (error) {
+      emit(BookingsError(error.toString()));
+    }
+  }
+
+  Future<void> rejectBooking(
+    String bookingId,
+    String reason,
+    String? note,
+  ) async {
+    final current = state;
+    if (current is! BookingsLoaded) return;
+    try {
+      final updated = await _rejectBooking(
+        bookingId,
+        'خدمة العملاء',
+        reason,
+        note,
+      );
+      _emitUpdated(current, [updated]);
+    } catch (error) {
+      emit(BookingsError(error.toString()));
+    }
+  }
+
+  Future<void> requestReupload(String bookingId, String reason) async {
+    final current = state;
+    if (current is! BookingsLoaded) return;
+    try {
+      final updated = await _requestReupload(
+        bookingId,
+        'خدمة العملاء',
+        reason,
+      );
       _emitUpdated(current, [updated]);
     } catch (error) {
       emit(BookingsError(error.toString()));

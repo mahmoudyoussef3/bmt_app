@@ -1,8 +1,12 @@
 enum BookingStatus {
-  newRequest('طلبات جديدة'),
+  newRequest('طلب جديد'),
+  paymentUploaded('تم رفع الإيصال'),
   underReview('قيد المراجعة'),
-  confirmed('مؤكدة'),
-  cancelled('ملغاة');
+  approved('مقبول'),
+  rejected('مرفوض'),
+  requestReupload('طلب إعادة رفع'),
+  confirmed('مؤكد المقعد'),
+  cancelled('ملغى');
 
   final String label;
 
@@ -10,14 +14,39 @@ enum BookingStatus {
 }
 
 enum BookingPaymentMethod {
+  instaPay('انستا باي'),
+  vodafoneCash('فودافون كاش'),
+  cash('نقدي'),
   card('بطاقة'),
-  cash('كاش'),
-  wallet('محفظة'),
-  bankTransfer('تحويل');
+  bankTransfer('تحويل بنكي');
 
   final String label;
 
   const BookingPaymentMethod(this.label);
+}
+
+enum BookingPriority {
+  normal('عادي'),
+  urgent('مستعجل'),
+  vip('VIP');
+
+  final String label;
+
+  const BookingPriority(this.label);
+}
+
+class BookingTimelineEvent {
+  final DateTime timestamp;
+  final String action;
+  final String actor;
+  final String? note;
+
+  const BookingTimelineEvent({
+    required this.timestamp,
+    required this.action,
+    required this.actor,
+    this.note,
+  });
 }
 
 class OperationBooking {
@@ -30,13 +59,17 @@ class OperationBooking {
   final String seat;
   final BookingPaymentMethod paymentMethod;
   final BookingStatus status;
+  final BookingPriority priority;
   final String assignedTrip;
+  final String? reviewerName;
+  final String? rejectionReason;
+  final DateTime createdAt;
   final BookingCustomerProfile customerProfile;
   final BookingTripDetails tripDetails;
   final BookingPaymentDetails paymentDetails;
   final List<String> attachments;
   final List<String> notes;
-  final List<String> history;
+  final List<BookingTimelineEvent> timeline;
 
   const OperationBooking({
     required this.id,
@@ -48,19 +81,26 @@ class OperationBooking {
     required this.seat,
     required this.paymentMethod,
     required this.status,
+    required this.priority,
     required this.assignedTrip,
+    required this.createdAt,
     required this.customerProfile,
     required this.tripDetails,
     required this.paymentDetails,
     required this.attachments,
     required this.notes,
-    required this.history,
+    required this.timeline,
+    this.reviewerName,
+    this.rejectionReason,
   });
 
   OperationBooking copyWith({
     BookingStatus? status,
+    BookingPriority? priority,
     String? assignedTrip,
-    List<String>? history,
+    String? reviewerName,
+    String? rejectionReason,
+    List<BookingTimelineEvent>? timeline,
   }) {
     return OperationBooking(
       id: id,
@@ -72,13 +112,17 @@ class OperationBooking {
       seat: seat,
       paymentMethod: paymentMethod,
       status: status ?? this.status,
+      priority: priority ?? this.priority,
       assignedTrip: assignedTrip ?? this.assignedTrip,
+      createdAt: createdAt,
       customerProfile: customerProfile,
       tripDetails: tripDetails,
       paymentDetails: paymentDetails,
       attachments: attachments,
       notes: notes,
-      history: history ?? this.history,
+      timeline: timeline ?? this.timeline,
+      reviewerName: reviewerName ?? this.reviewerName,
+      rejectionReason: rejectionReason ?? this.rejectionReason,
     );
   }
 }
@@ -120,11 +164,15 @@ class BookingPaymentDetails {
   final BookingPaymentMethod method;
   final String status;
   final String reference;
+  final String? receiptReference;
+  final DateTime? receiptUploadedAt;
 
   const BookingPaymentDetails({
     required this.amount,
     required this.method,
     required this.status,
     required this.reference,
+    this.receiptReference,
+    this.receiptUploadedAt,
   });
 }

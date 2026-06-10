@@ -11,13 +11,17 @@ class OperationBookingModel extends OperationBooking {
     required super.seat,
     required super.paymentMethod,
     required super.status,
+    required super.priority,
     required super.assignedTrip,
+    required super.createdAt,
     required super.customerProfile,
     required super.tripDetails,
     required super.paymentDetails,
     required super.attachments,
     required super.notes,
-    required super.history,
+    required super.timeline,
+    super.reviewerName,
+    super.rejectionReason,
   });
 
   factory OperationBookingModel.fromEntity(OperationBooking booking) {
@@ -31,13 +35,17 @@ class OperationBookingModel extends OperationBooking {
       seat: booking.seat,
       paymentMethod: booking.paymentMethod,
       status: booking.status,
+      priority: booking.priority,
       assignedTrip: booking.assignedTrip,
+      createdAt: booking.createdAt,
       customerProfile: booking.customerProfile,
       tripDetails: booking.tripDetails,
       paymentDetails: booking.paymentDetails,
       attachments: booking.attachments,
       notes: booking.notes,
-      history: booking.history,
+      timeline: booking.timeline,
+      reviewerName: booking.reviewerName,
+      rejectionReason: booking.rejectionReason,
     );
   }
 }

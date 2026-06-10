@@ -18,18 +18,18 @@ import '../../features/fleet/presentation/cubit/fleet_cubit.dart';
 import '../../features/fleet/presentation/screens/fleet_screen.dart';
 import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
-import '../../features/payments/presentation/cubit/payments_cubit.dart';
-import '../../features/payments/presentation/screens/payments_screen.dart';
+import '../../features/finance/presentation/cubit/finance_cubit.dart';
+import '../../features/finance/presentation/screens/finance_screen.dart';
 import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
 import '../../features/payment_verification/presentation/screens/payment_verification_screen.dart';
 import '../../features/permissions/presentation/screens/permissions_screen.dart';
+import '../../features/reports/presentation/cubit/reports_cubit.dart';
 import '../../features/reports/presentation/screens/reports_screen.dart';
 import '../../features/routes/presentation/cubit/routes_cubit.dart';
 import '../../features/routes/presentation/screens/routes_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
-import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
-import '../../features/subscriptions/presentation/screens/subscriptions_screen.dart';
 import '../../features/tickets/presentation/screens/tickets_screen.dart';
+import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
 import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/trips/presentation/screens/trips_screen.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
@@ -66,13 +66,14 @@ class _DashboardShellState extends State<DashboardShell> {
       selectedIcon: Icons.event_seat_rounded,
       permission: DashboardPermission.bookings,
     ),
-    const _DashboardNavItem(
+     const _DashboardNavItem(
       label: 'الرحلات',
       route: DashboardRoutes.trips,
-      icon: Icons.route_outlined,
-      selectedIcon: Icons.route_rounded,
-      permission: DashboardPermission.trips,
+      icon: Icons.event_seat_outlined,
+      selectedIcon: Icons.event_seat_rounded,
+      permission: DashboardPermission.bookings,
     ),
+
     const _DashboardNavItem(
       label: 'الرحلات المباشرة',
       route: DashboardRoutes.liveTrips,
@@ -87,27 +88,7 @@ class _DashboardShellState extends State<DashboardShell> {
       selectedIcon: Icons.local_shipping_rounded,
       permission: DashboardPermission.fleet,
     ),
-    const _DashboardNavItem(
-      label: 'السائقين',
-      route: DashboardRoutes.drivers,
-      icon: Icons.badge_outlined,
-      selectedIcon: Icons.badge_rounded,
-      permission: DashboardPermission.drivers,
-    ),
-    const _DashboardNavItem(
-      label: 'التعيينات',
-      route: DashboardRoutes.assignments,
-      icon: Icons.swap_horiz_outlined,
-      selectedIcon: Icons.swap_horiz_rounded,
-      permission: DashboardPermission.assignments,
-    ),
-    const _DashboardNavItem(
-      label: 'المركبات',
-      route: DashboardRoutes.vehicles,
-      icon: Icons.directions_bus_outlined,
-      selectedIcon: Icons.directions_bus_rounded,
-      permission: DashboardPermission.vehicles,
-    ),
+
     const _DashboardNavItem(
       label: 'المسارات',
       route: DashboardRoutes.routes,
@@ -115,34 +96,31 @@ class _DashboardShellState extends State<DashboardShell> {
       selectedIcon: Icons.alt_route_rounded,
       permission: DashboardPermission.routes,
     ),
-    const _DashboardNavItem(
-      label: 'المستخدمين',
-      route: DashboardRoutes.users,
-      icon: Icons.groups_outlined,
-      selectedIcon: Icons.groups_rounded,
-      permission: DashboardPermission.users,
-    ),
-    const _DashboardNavItem(
+     const _DashboardNavItem(
       label: 'الاشتراكات',
-      route: DashboardRoutes.subscriptions,
-      icon: Icons.workspace_premium_outlined,
-      selectedIcon: Icons.workspace_premium_rounded,
-      permission: DashboardPermission.subscriptions,
-    ),
-    const _DashboardNavItem(
-      label: 'المدفوعات',
-      route: DashboardRoutes.payments,
-      icon: Icons.payments_outlined,
-      selectedIcon: Icons.payments_rounded,
+      route: DashboardRoutes.trips,
+      icon: Icons.event_seat_outlined,
+      selectedIcon: Icons.event_seat_rounded,
       permission: DashboardPermission.payments,
     ),
-    const _DashboardNavItem(
-      label: 'تحقق الدفع',
+     const _DashboardNavItem(
+      label: 'التحقق من الحجوزات',
       route: DashboardRoutes.paymentVerification,
-      icon: Icons.fact_check_outlined,
-      selectedIcon: Icons.fact_check_rounded,
+      icon: Icons.event_seat_outlined,
+      selectedIcon: Icons.event_seat_rounded,
       permission: DashboardPermission.paymentVerification,
     ),
+
+
+
+    const _DashboardNavItem(
+      label: 'المالية',
+      route: DashboardRoutes.payments,
+      icon: Icons.account_balance_wallet_outlined,
+      selectedIcon: Icons.account_balance_wallet_rounded,
+      permission: DashboardPermission.payments,
+    ),
+
     const _DashboardNavItem(
       label: 'الشكاوى',
       route: DashboardRoutes.tickets,
@@ -305,7 +283,7 @@ class _DashboardShellState extends State<DashboardShell> {
         child: const TripsScreen(),
       ),
       DashboardRoutes.liveTrips => BlocProvider(
-        create: (_) => dashboardDi<LiveTripsCubit>()..load(),
+        create: (_) => dashboardDi<LiveTripsCubit>()..loadLiveTrips(),
         child: const LiveTripsScreen(),
       ),
       DashboardRoutes.fleet => BlocProvider(
@@ -330,19 +308,25 @@ class _DashboardShellState extends State<DashboardShell> {
       ),
       DashboardRoutes.users => _workspace('users', const UsersScreen()),
       DashboardRoutes.subscriptions => BlocProvider(
-        create: (_) => dashboardDi<SubscriptionsCubit>()..load(),
-        child: const SubscriptionsScreen(),
+        create: (_) => dashboardDi<FinanceCubit>()..load()..selectSection(3),
+        child: const FinanceScreen(),
       ),
       DashboardRoutes.payments => BlocProvider(
-        create: (_) => dashboardDi<PaymentsCubit>()..load(),
-        child: const PaymentsScreen(),
+        create: (_) => dashboardDi<FinanceCubit>()..load(),
+        child: const FinanceScreen(),
       ),
       DashboardRoutes.paymentVerification => BlocProvider(
         create: (_) => dashboardDi<PaymentVerificationCubit>()..load(),
         child: const PaymentVerificationScreen(),
       ),
-      DashboardRoutes.tickets => _workspace('tickets', const TicketsScreen()),
-      DashboardRoutes.reports => _workspace('reports', const ReportsScreen()),
+      DashboardRoutes.tickets => BlocProvider(
+        create: (_) => dashboardDi<TicketsCubit>()..load(),
+        child: const TicketsScreen(),
+      ),
+      DashboardRoutes.reports => BlocProvider(
+        create: (_) => dashboardDi<ReportsCubit>()..load(),
+        child: const ReportsScreen(),
+      ),
       DashboardRoutes.settings => _workspace(
         'settings',
         const SettingsScreen(),

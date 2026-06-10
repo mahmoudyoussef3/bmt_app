@@ -31,7 +31,7 @@ class BookingFiltersBar extends StatelessWidget {
               decoration: const InputDecoration(
                 labelText: 'بحث',
                 prefixIcon: Icon(Icons.search),
-                hintText: 'اسم، هاتف، مقعد',
+                hintText: 'اسم، هاتف، رقم حجز',
               ),
               onChanged: (value) => onChanged(filters.copyWith(search: value)),
             ),
@@ -50,28 +50,6 @@ class BookingFiltersBar extends StatelessWidget {
               textDirection: TextDirection.rtl,
               decoration: const InputDecoration(labelText: 'التاريخ'),
               onChanged: (value) => onChanged(filters.copyWith(date: value)),
-            ),
-          ),
-          SizedBox(
-            width: 190,
-            child: DropdownButtonFormField<BookingStatus?>(
-              initialValue: filters.status,
-              decoration: const InputDecoration(labelText: 'الحالة'),
-              items: [
-                const DropdownMenuItem<BookingStatus?>(
-                  value: null,
-                  child: Text('كل الحالات'),
-                ),
-                ...BookingStatus.values.map(
-                  (status) => DropdownMenuItem(
-                    value: status,
-                    child: Text(status.label),
-                  ),
-                ),
-              ],
-              onChanged: (value) => onChanged(
-                filters.copyWith(status: value, clearStatus: value == null),
-              ),
             ),
           ),
           SizedBox(
@@ -95,6 +73,31 @@ class BookingFiltersBar extends StatelessWidget {
                 filters.copyWith(
                   paymentMethod: value,
                   clearPaymentMethod: value == null,
+                ),
+              ),
+            ),
+          ),
+          SizedBox(
+            width: 160,
+            child: DropdownButtonFormField<BookingPriority?>(
+              initialValue: filters.priority,
+              decoration: const InputDecoration(labelText: 'الأولوية'),
+              items: [
+                const DropdownMenuItem<BookingPriority?>(
+                  value: null,
+                  child: Text('الكل'),
+                ),
+                ...BookingPriority.values.map(
+                  (priority) => DropdownMenuItem(
+                    value: priority,
+                    child: Text(priority.label),
+                  ),
+                ),
+              ],
+              onChanged: (value) => onChanged(
+                filters.copyWith(
+                  priority: value,
+                  clearPriority: value == null,
                 ),
               ),
             ),

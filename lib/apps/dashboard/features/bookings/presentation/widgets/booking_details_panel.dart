@@ -40,7 +40,19 @@ class BookingDetailsPanel extends StatelessWidget {
                     const SizedBox(height: AppSpacing.xSmall),
                     Text(booking.phone),
                     const SizedBox(height: AppSpacing.small),
-                    StatusChip(label: booking.status.label),
+                    Row(
+                      children: [
+                        StatusChip(label: booking.status.label),
+                        const SizedBox(width: AppSpacing.small),
+                        StatusChip(
+                          label: booking.priority.label,
+                          color: _priorityColor(
+                            booking.priority,
+                            Theme.of(context).colorScheme,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -68,7 +80,7 @@ class BookingDetailsPanel extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.medium),
         _Section(
-          title: 'Customer Profile',
+          title: 'بيانات العميل',
           rows: [
             ('الاسم', booking.customerProfile.name),
             ('الهاتف', booking.customerProfile.phone),
@@ -78,7 +90,7 @@ class BookingDetailsPanel extends StatelessWidget {
           ],
         ),
         _Section(
-          title: 'Trip Details',
+          title: 'تفاصيل الرحلة',
           rows: [
             ('المسار', booking.tripDetails.route),
             ('التاريخ', booking.tripDetails.date),
@@ -89,19 +101,39 @@ class BookingDetailsPanel extends StatelessWidget {
           ],
         ),
         _Section(
-          title: 'Payment Details',
+          title: 'بيانات الدفع',
           rows: [
             ('المبلغ', booking.paymentDetails.amount),
             ('الطريقة', booking.paymentDetails.method.label),
             ('الحالة', booking.paymentDetails.status),
             ('المرجع', booking.paymentDetails.reference),
+            if (booking.paymentDetails.receiptReference != null)
+              ('رقم الإيصال', booking.paymentDetails.receiptReference!),
           ],
         ),
-        _ListSection(title: 'Attachments', items: booking.attachments),
-        _ListSection(title: 'Notes', items: booking.notes),
-        _ListSection(title: 'History', items: booking.history),
+        if (booking.rejectionReason != null)
+          _Section(
+            title: 'سبب الرفض',
+            rows: [('السبب', booking.rejectionReason!)],
+          ),
+        if (booking.reviewerName != null)
+          _Section(
+            title: 'المراجع',
+            rows: [('اسم المراجع', booking.reviewerName!)],
+          ),
+        _ListSection(title: 'المرفقات', items: booking.attachments),
+        _ListSection(title: 'ملاحظات', items: booking.notes),
+        _TimelineSection(events: booking.timeline),
       ],
     );
+  }
+
+  Color _priorityColor(BookingPriority priority, ColorScheme scheme) {
+    return switch (priority) {
+      BookingPriority.normal => scheme.primary.withAlpha(24),
+      BookingPriority.urgent => Colors.orange.withAlpha(30),
+      BookingPriority.vip => Colors.amber.withAlpha(30),
+    };
   }
 }
 
@@ -168,5 +200,96 @@ class _ListSection extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class _TimelineSection extends StatelessWidget {
+  final List<BookingTimelineEvent> events;
+
+  const _TimelineSection({required this.events});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+      child: AppCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('سجل العمليات',
+                style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: AppSpacing.medium),
+            if (events.isEmpty)
+              const Text('لا يوجد سجل.')
+            else
+              ...events.map(
+                (event) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.small),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Column(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: scheme.primary,
+                            ),
+                          ),
+                          if (event != events.last)
+                            Container(
+                              width: 2,
+                              height: 32,
+                              color: scheme.outline.withAlpha(60),
+                            ),
+                        ],
+                      ),
+                      const SizedBox(width: AppSpacing.small),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              event.action,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                            Text(
+                              '${event.actor} • ${_formatTime(event.timestamp)}',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodySmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
+                            ),
+                            if (event.note != null)
+                              Text(
+                                event.note!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(
+                                        color: scheme.onSurfaceVariant),
+                              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _formatTime(DateTime time) {
+    final hour = time.hour.toString().padLeft(2, '0');
+    final minute = time.minute.toString().padLeft(2, '0');
+    final day = time.day.toString().padLeft(2, '0');
+    final month = time.month.toString().padLeft(2, '0');
+    return '$day/$month $hour:$minute';
   }
 }

@@ -51,4 +51,44 @@ class BookingsRepositoryImpl implements BookingsRepository {
       throw Exception('تعذر تحديث حالة الحجز');
     }
   }
+
+  @override
+  Future<OperationBooking> approveBooking(
+    String bookingId,
+    String reviewer,
+    String? note,
+  ) async {
+    try {
+      return await _datasource.approveBooking(bookingId, reviewer, note);
+    } catch (_) {
+      throw Exception('تعذر قبول الحجز');
+    }
+  }
+
+  @override
+  Future<OperationBooking> rejectBooking(
+    String bookingId,
+    String reviewer,
+    String reason,
+    String? note,
+  ) async {
+    try {
+      return await _datasource.rejectBooking(bookingId, reviewer, reason, note);
+    } catch (_) {
+      throw Exception('تعذر رفض الحجز');
+    }
+  }
+
+  @override
+  Future<OperationBooking> requestReupload(
+    String bookingId,
+    String reviewer,
+    String reason,
+  ) async {
+    try {
+      return await _datasource.requestReupload(bookingId, reviewer, reason);
+    } catch (_) {
+      throw Exception('تعذر طلب إعادة رفع الإيصال');
+    }
+  }
 }
