@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/app_mode/app_mode.dart';
+import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 
 import '../../../../core/theme/dashboard_theme_cubit.dart';
 import '../../../../core/widgets/dashboard_operations_screen.dart';
@@ -50,6 +52,60 @@ class SettingsScreen extends StatelessWidget {
                       context.read<DashboardThemeCubit>().setThemeMode(
                         selection.first,
                       );
+                    },
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: AppSpacing.large),
+        AppCard(
+          child: BlocBuilder<AppModeCubit, AppModeState>(
+            builder: (context, state) {
+              final cubit = context.read<AppModeCubit>();
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'وضع التطبيق (للمطورين)',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: AppSpacing.small),
+                  Text(
+                    'التبديل بين إصدارات التطبيق المختلفة (العميل، السائق، لوحة التحكم)',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  SegmentedButton<AppMode>(
+                    segments: AppMode.values.map((m) {
+                      String label = m.displayLabel;
+                      switch (m) {
+                        case AppMode.client:
+                          label = 'العميل';
+                          break;
+                        case AppMode.driver:
+                          label = 'السائق';
+                          break;
+                        case AppMode.admin:
+                          label = 'المدير';
+                          break;
+                        case AppMode.ops:
+                          label = 'لوحة التحكم';
+                          break;
+                      }
+                      return ButtonSegment<AppMode>(
+                        value: m,
+                        label: Text(label),
+                      );
+                    }).toList(),
+                    selected: {state.mode},
+                    onSelectionChanged: (selection) {
+                      if (selection.first != state.mode) {
+                        cubit.changeMode(selection.first);
+                      }
                     },
                   ),
                 ],

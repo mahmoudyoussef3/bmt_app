@@ -1,167 +1,252 @@
 import 'dart:typed_data';
+
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../domain/entities/fleet_workspace.dart';
 import '../models/fleet_models.dart';
-import 'mock_fleet_datasource.dart';
+import 'fleet_datasource.dart';
 
+/// Real Supabase datasource only.
+///
+/// Important:
+/// - No fake data.
+/// - No local fallback.
+/// - Any Supabase/database error is thrown clearly so you can fix the real issue.
+/// - Payloads are filtered to match the current Supabase tables.
 class SupabaseFleetDatasource implements FleetDatasource {
+  SupabaseFleetDatasource(this._client);
+
   final SupabaseClient _client;
 
-  SupabaseFleetDatasource(this._client);
+  static const Set<String> _driverColumns = {
+    'employee_code',
+    'full_name',
+    'phone',
+    'emergency_phone',
+    'address',
+    'national_id',
+    'profile_image_url',
+    'license_number',
+    'license_expiry_date',
+    'hire_date',
+    'notes',
+    'status',
+    'updated_at',
+  };
+
+  static const Set<String> _vehicleColumns = {
+    'vehicle_code',
+    'plate_number',
+    'vehicle_type',
+    'brand',
+    'model',
+    'manufacture_year',
+    'color',
+    'capacity',
+    'seat_layout_type',
+    'image_url',
+    'notes',
+    'status',
+    'seat_configuration',
+    'updated_at',
+  };
 
   @override
   Future<FleetWorkspace> fetchWorkspace() async {
-    // 1. Fetch Drivers (not archived)
-    final driversData = await _client
-        .from('drivers')
-        .select()
-        .neq('status', 'archived')
-        .order('full_name');
+    try {
+      debugPrint('[SupabaseFleetDatasource] Loading real fleet workspace...');
 
-    // 2. Fetch Vehicles (not archived)
-    final vehiclesData = await _client
-        .from('vehicles')
-        .select()
-        .neq('status', 'archived')
-        .order('vehicle_code');
+      final driversData = await _client
+          .from('drivers')
+          .select()
+          .neq('status', 'archived')
+          .order('full_name');
 
-    // 3. Fetch Assignments
-    final assignmentsData = await _client
-        .from('assignments')
-        .select()
-        .order('assigned_at', ascending: false);
+      final vehiclesData = await _client
+          .from('vehicles')
+          .select()
+          .neq('status', 'archived')
+          .order('vehicle_code');
 
-    // 4. Fetch Driver Documents
-    final driverDocsData = await _client.from('driver_documents').select();
+      final assignmentsData = await _client
+          .from('assignments')
+          .select()
+          .order('assigned_at', ascending: false);
 
-    // 5. Fetch Vehicle Documents
-    final vehicleDocsData = await _client.from('vehicle_documents').select();
+      final driverDocsData = await _client.from('driver_documents').select();
 
-    // Parse Assignments
-    final List<FleetAssignment> assignments = assignmentsData
-        .map<FleetAssignment>((json) => FleetAssignmentModel.fromJson(json))
-        .toList();
+      final vehicleDocsData = await _client.from('vehicle_documents').select();
 
-    // Active Assignments Map (DriverId -> Assignment, VehicleId -> Assignment)
-    final Map<String, FleetAssignmentModel> activeDriverAssignments = {};
-    final Map<String, FleetAssignmentModel> activeVehicleAssignments = {};
+      final assignments = assignmentsData
+          .map<FleetAssignmentModel>(
+            (json) => FleetAssignmentModel.fromJson(json),
+          )
+          .toList();
 
-    for (final assignment in assignments) {
-      if (assignment.status == FleetAssignmentStatus.active) {
-        activeDriverAssignments[assignment.driverId] = assignment as FleetAssignmentModel;
-        activeVehicleAssignments[assignment.vehicleId] = assignment as FleetAssignmentModel;
+      final activeDriverAssignments = <String, FleetAssignmentModel>{};
+      final activeVehicleAssignments = <String, FleetAssignmentModel>{};
+
+      for (final assignment in assignments) {
+        if (assignment.status == FleetAssignmentStatus.active) {
+          activeDriverAssignments[assignment.driverId] = assignment;
+          activeVehicleAssignments[assignment.vehicleId] = assignment;
+        }
       }
-    }
 
-    // Driver Names Map for document owner names
-    final Map<String, String> driverNames = {};
-    for (final json in driversData) {
-      driverNames[json['id'] as String] = (json['full_name'] ?? '') as String;
-    }
+      final driverNames = <String, String>{};
+      for (final json in driversData) {
+        driverNames[json['id'] as String] = (json['full_name'] ?? '') as String;
+      }
 
-    // Vehicle Codes/Numbers Map for document owner names
-    final Map<String, String> vehicleCodes = {};
-    for (final json in vehiclesData) {
-      vehicleCodes[json['id'] as String] = (json['vehicle_code'] ?? '') as String;
-    }
+      final vehicleCodes = <String, String>{};
+      for (final json in vehiclesData) {
+        vehicleCodes[json['id'] as String] =
+            (json['vehicle_code'] ?? '') as String;
+      }
 
-    // Parse Driver Documents
-    final List<FleetDocumentModel> driverDocs = driverDocsData.map((json) {
-      final driverId = json['driver_id'] as String? ?? '';
-      return FleetDocumentModel.fromJson(json, ownerName: driverNames[driverId] ?? '');
-    }).toList();
+      final driverDocs = driverDocsData.map<FleetDocumentModel>((json) {
+        final driverId = json['driver_id'] as String? ?? '';
+        return FleetDocumentModel.fromJson(
+          json,
+          ownerName: driverNames[driverId] ?? '',
+        );
+      }).toList();
 
-    // Parse Vehicle Documents
-    final List<FleetDocumentModel> vehicleDocs = vehicleDocsData.map((json) {
-      final vehicleId = json['vehicle_id'] as String? ?? '';
-      return FleetDocumentModel.fromJson(json, ownerName: vehicleCodes[vehicleId] ?? '');
-    }).toList();
+      final vehicleDocs = vehicleDocsData.map<FleetDocumentModel>((json) {
+        final vehicleId = json['vehicle_id'] as String? ?? '';
+        return FleetDocumentModel.fromJson(
+          json,
+          ownerName: vehicleCodes[vehicleId] ?? '',
+        );
+      }).toList();
 
-    // Group documents by owner
-    final Map<String, List<FleetDocumentModel>> docsByDriverId = {};
-    for (final doc in driverDocs) {
-      docsByDriverId.putIfAbsent(doc.ownerId, () => []).add(doc);
-    }
+      final docsByDriverId = <String, List<FleetDocumentModel>>{};
+      for (final doc in driverDocs) {
+        docsByDriverId.putIfAbsent(doc.ownerId, () => []).add(doc);
+      }
 
-    final Map<String, List<FleetDocumentModel>> docsByVehicleId = {};
-    for (final doc in vehicleDocs) {
-      docsByVehicleId.putIfAbsent(doc.ownerId, () => []).add(doc);
-    }
+      final docsByVehicleId = <String, List<FleetDocumentModel>>{};
+      for (final doc in vehicleDocs) {
+        docsByVehicleId.putIfAbsent(doc.ownerId, () => []).add(doc);
+      }
 
-    // Parse Drivers
-    final List<FleetDriver> drivers = driversData.map<FleetDriver>((json) {
-      final driverId = json['id'] as String;
-      final activeAssign = activeDriverAssignments[driverId];
-      final currentVehicleId = activeAssign?.vehicleId ?? '';
-      return FleetDriverModel.fromJson(
-        json,
-        currentVehicleId: currentVehicleId,
-        documents: docsByDriverId[driverId] ?? [],
+      final drivers = driversData.map<FleetDriver>((json) {
+        final driverId = json['id'] as String;
+        final activeAssign = activeDriverAssignments[driverId];
+
+        return FleetDriverModel.fromJson(
+          json,
+          currentVehicleId: activeAssign?.vehicleId ?? '',
+          documents: docsByDriverId[driverId] ?? const [],
+        );
+      }).toList();
+
+      final vehicles = vehiclesData.map<FleetVehicle>((json) {
+        final vehicleId = json['id'] as String;
+        final activeAssign = activeVehicleAssignments[vehicleId];
+        final vehicleDocsList = docsByVehicleId[vehicleId] ?? const [];
+
+        final licenseExpiry = vehicleDocsList
+            .firstWhere(
+              (doc) => doc.type == FleetDocumentType.vehicleLicense,
+              orElse: FleetDocumentModel.empty,
+            )
+            .expiryDate;
+
+        final insuranceExpiry = vehicleDocsList
+            .firstWhere(
+              (doc) => doc.type == FleetDocumentType.insurance,
+              orElse: FleetDocumentModel.empty,
+            )
+            .expiryDate;
+
+        final inspectionExpiry = vehicleDocsList
+            .firstWhere(
+              (doc) => doc.type == FleetDocumentType.inspection,
+              orElse: FleetDocumentModel.empty,
+            )
+            .expiryDate;
+
+        return FleetVehicleModel.fromJson(
+          json,
+          currentDriverId: activeAssign?.driverId ?? '',
+          licenseExpiry: licenseExpiry,
+          insuranceExpiry: insuranceExpiry,
+          inspectionExpiry: inspectionExpiry,
+        );
+      }).toList();
+
+      debugPrint(
+        '[SupabaseFleetDatasource] Loaded: '
+        '${drivers.length} drivers, '
+        '${vehicles.length} vehicles, '
+        '${assignments.length} assignments.',
       );
-    }).toList();
 
-    // Parse Vehicles
-    final List<FleetVehicle> vehicles = vehiclesData.map<FleetVehicle>((json) {
-      final vehicleId = json['id'] as String;
-      final activeAssign = activeVehicleAssignments[vehicleId];
-      final currentDriverId = activeAssign?.driverId ?? '';
-
-      // Find expiry dates from documents
-      final vDocs = docsByVehicleId[vehicleId] ?? [];
-      final licExpiry = vDocs
-          .firstWhere((d) => d.type == FleetDocumentType.vehicleLicense,
-              orElse: () => FleetDocumentModel.empty())
-          .expiryDate;
-      final insExpiry = vDocs
-          .firstWhere((d) => d.type == FleetDocumentType.insurance,
-              orElse: () => FleetDocumentModel.empty())
-          .expiryDate;
-      final inspExpiry = vDocs
-          .firstWhere((d) => d.type == FleetDocumentType.inspection,
-              orElse: () => FleetDocumentModel.empty())
-          .expiryDate;
-
-      return FleetVehicleModel.fromJson(
-        json,
-        currentDriverId: currentDriverId,
-        licenseExpiry: licExpiry,
-        insuranceExpiry: insExpiry,
-        inspectionExpiry: inspExpiry,
+      return FleetWorkspace(
+        drivers: drivers,
+        vehicles: vehicles,
+        assignments: assignments,
+        documents: <FleetDocument>[...driverDocs, ...vehicleDocs],
       );
-    }).toList();
-
-    // Combine all documents
-    final List<FleetDocument> allDocuments = <FleetDocument>[...driverDocs, ...vehicleDocs];
-
-    return FleetWorkspace(
-      drivers: drivers,
-      vehicles: vehicles,
-      assignments: assignments,
-      documents: allDocuments,
-    );
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected Supabase fetch error: $e');
+    }
   }
 
   @override
   Future<FleetDriverModel> createDriver(FleetDriver driver) async {
-    final driverModel = FleetDriverModel.fromEntity(driver);
-    final response = await _client
-        .from('drivers')
-        .insert(driverModel.toJson())
-        .select()
-        .single();
-    return FleetDriverModel.fromJson(response);
+    try {
+      final payload = _driverPayload(driver);
+
+      final response = await _client
+          .from('drivers')
+          .insert(payload)
+          .select()
+          .single();
+
+      final created = FleetDriverModel.fromJson(response);
+
+      if (driver.currentVehicleId.isNotEmpty) {
+        await _handleVehicleAssignmentChange(
+          created.id,
+          driver.currentVehicleId,
+        );
+      }
+
+      return created;
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected create driver error: $e');
+    }
   }
 
   @override
   Future<FleetDriverModel> updateDriver(FleetDriver driver) async {
-    final driverModel = FleetDriverModel.fromEntity(driver);
-    final response = await _client
-        .from('drivers')
-        .update(driverModel.toJson())
-        .eq('id', driver.id)
-        .select()
-        .single();
-    return FleetDriverModel.fromJson(response);
+    try {
+      final payload = _driverPayload(driver);
+
+      final response = await _client
+          .from('drivers')
+          .update(payload)
+          .eq('id', driver.id)
+          .select()
+          .single();
+
+      final updated = FleetDriverModel.fromJson(response);
+
+      await _handleVehicleAssignmentChange(driver.id, driver.currentVehicleId);
+
+      return updated;
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected update driver error: $e');
+    }
   }
 
   @override
@@ -169,36 +254,80 @@ class SupabaseFleetDatasource implements FleetDatasource {
     String driverId,
     FleetDriverStatus status,
   ) async {
-    final response = await _client
-        .from('drivers')
-        .update({'status': status.name})
-        .eq('id', driverId)
-        .select()
-        .single();
-    return FleetDriverModel.fromJson(response);
+    try {
+      final response = await _client
+          .from('drivers')
+          .update({
+            'status': status.name,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', driverId)
+          .select()
+          .single();
+
+      if (status == FleetDriverStatus.archived ||
+          status == FleetDriverStatus.suspended) {
+        final active = await _activeAssignmentForDriver(driverId);
+        if (active != null) {
+          await removeAssignment(active['id'] as String);
+        }
+      }
+
+      return FleetDriverModel.fromJson(response);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected update driver status error: $e');
+    }
   }
 
   @override
   Future<FleetVehicleModel> createVehicle(FleetVehicle vehicle) async {
-    final vehicleModel = FleetVehicleModel.fromEntity(vehicle);
-    final response = await _client
-        .from('vehicles')
-        .insert(vehicleModel.toJson())
-        .select()
-        .single();
-    return FleetVehicleModel.fromJson(response);
+    try {
+      final payload = _vehiclePayload(vehicle);
+
+      final response = await _client
+          .from('vehicles')
+          .insert(payload)
+          .select()
+          .single();
+
+      final created = FleetVehicleModel.fromJson(response);
+
+      if (vehicle.currentDriverId.isNotEmpty) {
+        await _handleDriverAssignmentChange(created.id, vehicle.currentDriverId);
+      }
+
+      return created;
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected create vehicle error: $e');
+    }
   }
 
   @override
   Future<FleetVehicleModel> updateVehicle(FleetVehicle vehicle) async {
-    final vehicleModel = FleetVehicleModel.fromEntity(vehicle);
-    final response = await _client
-        .from('vehicles')
-        .update(vehicleModel.toJson())
-        .eq('id', vehicle.id)
-        .select()
-        .single();
-    return FleetVehicleModel.fromJson(response);
+    try {
+      final payload = _vehiclePayload(vehicle);
+
+      final response = await _client
+          .from('vehicles')
+          .update(payload)
+          .eq('id', vehicle.id)
+          .select()
+          .single();
+
+      final updated = FleetVehicleModel.fromJson(response);
+
+      await _handleDriverAssignmentChange(vehicle.id, vehicle.currentDriverId);
+
+      return updated;
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected update vehicle error: $e');
+    }
   }
 
   @override
@@ -206,13 +335,30 @@ class SupabaseFleetDatasource implements FleetDatasource {
     String vehicleId,
     FleetVehicleStatus status,
   ) async {
-    final response = await _client
-        .from('vehicles')
-        .update({'status': status.name})
-        .eq('id', vehicleId)
-        .select()
-        .single();
-    return FleetVehicleModel.fromJson(response);
+    try {
+      final response = await _client
+          .from('vehicles')
+          .update({
+            'status': status.name,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', vehicleId)
+          .select()
+          .single();
+
+      if (status != FleetVehicleStatus.active) {
+        final active = await _activeAssignmentForVehicle(vehicleId);
+        if (active != null) {
+          await removeAssignment(active['id'] as String);
+        }
+      }
+
+      return FleetVehicleModel.fromJson(response);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected update vehicle status error: $e');
+    }
   }
 
   @override
@@ -220,22 +366,31 @@ class SupabaseFleetDatasource implements FleetDatasource {
     String driverId,
     String vehicleId,
   ) async {
-    final assignment = {
-      'driver_id': driverId,
-      'vehicle_id': vehicleId,
-      'status': FleetAssignmentStatus.active.name,
-      'assigned_at': DateTime.now().toIso8601String(),
-      'history': [
-        {
-          'title': 'تم إنشاء التعيين',
-          'date': DateTime.now().toIso8601String().substring(0, 10),
-          'description': 'تم ربط السائق بالمركبة وحفظ السجل.',
-        }
-      ],
-    };
-    final response =
-        await _client.from('assignments').insert(assignment).select().single();
-    return FleetAssignmentModel.fromJson(response);
+    try {
+      final response = await _client
+          .from('assignments')
+          .insert({
+            'driver_id': driverId,
+            'vehicle_id': vehicleId,
+            'assigned_at': DateTime.now().toIso8601String(),
+            'status': FleetAssignmentStatus.active.name,
+            'history': [
+              {
+                'title': 'تم إنشاء التعيين',
+                'date': _today(),
+                'description': 'تم ربط السائق بالمركبة بعد مراجعة الوثائق.',
+              },
+            ],
+          })
+          .select()
+          .single();
+
+      return FleetAssignmentModel.fromJson(response);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected create assignment error: $e');
+    }
   }
 
   @override
@@ -243,58 +398,76 @@ class SupabaseFleetDatasource implements FleetDatasource {
     String assignmentId,
     String newVehicleId,
   ) async {
-    // 1. Fetch current assignment history
-    final current = await _client
-        .from('assignments')
-        .select()
-        .eq('id', assignmentId)
-        .single();
+    try {
+      final current = await _client
+          .from('assignments')
+          .select()
+          .eq('id', assignmentId)
+          .single();
 
-    final List<dynamic> history = current['history'] as List? ?? [];
-    history.add({
-      'title': 'تغيير المركبة',
-      'date': DateTime.now().toIso8601String().substring(0, 10),
-      'description': 'تم تغيير المركبة المرتبطة من ${current['vehicle_id']} إلى $newVehicleId.',
-    });
+      final driverId = current['driver_id'] as String;
+      final oldVehicleId = current['vehicle_id'] as String;
+      final history = List<dynamic>.from((current['history'] as List?) ?? []);
 
-    final response = await _client
-        .from('assignments')
-        .update({
-          'vehicle_id': newVehicleId,
-          'history': history,
-        })
-        .eq('id', assignmentId)
-        .select()
-        .single();
-    return FleetAssignmentModel.fromJson(response);
+      history.add({
+        'title': 'تغيير المركبة',
+        'date': _today(),
+        'description': 'تم فك المركبة القديمة $oldVehicleId.',
+      });
+
+      await _client
+          .from('assignments')
+          .update({
+            'status': FleetAssignmentStatus.ended.name,
+            'ended_at': DateTime.now().toIso8601String(),
+            'history': history,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', assignmentId);
+
+      return assignDriverToVehicle(driverId, newVehicleId);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected reassign vehicle error: $e');
+    }
   }
 
   @override
   Future<FleetAssignmentModel> removeAssignment(String assignmentId) async {
-    final current = await _client
-        .from('assignments')
-        .select()
-        .eq('id', assignmentId)
-        .single();
+    try {
+      final current = await _client
+          .from('assignments')
+          .select()
+          .eq('id', assignmentId)
+          .single();
 
-    final List<dynamic> history = current['history'] as List? ?? [];
-    history.add({
-      'title': 'فك التعيين',
-      'date': DateTime.now().toIso8601String().substring(0, 10),
-      'description': 'تم إنهاء تعيين المركبة وفك الارتباط.',
-    });
+      final history = List<dynamic>.from((current['history'] as List?) ?? []);
 
-    final response = await _client
-        .from('assignments')
-        .update({
-          'status': FleetAssignmentStatus.ended.name,
-          'ended_at': DateTime.now().toIso8601String(),
-          'history': history,
-        })
-        .eq('id', assignmentId)
-        .select()
-        .single();
-    return FleetAssignmentModel.fromJson(response);
+      history.add({
+        'title': 'فك التعيين',
+        'date': _today(),
+        'description': 'تم إنهاء التعيين وحفظ السجل التشغيلي.',
+      });
+
+      final response = await _client
+          .from('assignments')
+          .update({
+            'status': FleetAssignmentStatus.ended.name,
+            'ended_at': DateTime.now().toIso8601String(),
+            'history': history,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', assignmentId)
+          .select()
+          .single();
+
+      return FleetAssignmentModel.fromJson(response);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected remove assignment error: $e');
+    }
   }
 
   @override
@@ -306,16 +479,32 @@ class SupabaseFleetDatasource implements FleetDatasource {
     required String expiryDate,
     required FleetDocumentStatus status,
   }) async {
-    final body = {
-      isDriver ? 'driver_id' : 'vehicle_id': ownerId,
-      'type': documentTypeToDbString(type),
-      'file_url': fileUrl,
-      'expiry_date': expiryDate,
-      'status': documentStatusToDbString(status),
-    };
-    final tableName = isDriver ? 'driver_documents' : 'vehicle_documents';
-    final response = await _client.from(tableName).insert(body).select().single();
-    return FleetDocumentModel.fromJson(response);
+    try {
+      final tableName = isDriver ? 'driver_documents' : 'vehicle_documents';
+
+      final response = await _client
+          .from(tableName)
+          .insert({
+            if (isDriver) 'driver_id': ownerId else 'vehicle_id': ownerId,
+            'type': documentTypeToDbString(type),
+            'file_url': fileUrl,
+            'expiry_date': expiryDate,
+            'status': documentStatusToDbString(status),
+          })
+          .select()
+          .single();
+
+      final ownerName = await _getOwnerName(
+        ownerId: ownerId,
+        isDriver: isDriver,
+      );
+
+      return FleetDocumentModel.fromJson(response, ownerName: ownerName);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected create document error: $e');
+    }
   }
 
   @override
@@ -326,14 +515,36 @@ class SupabaseFleetDatasource implements FleetDatasource {
     required String expiryDate,
     required FleetDocumentStatus status,
   }) async {
-    final body = {
-      'file_url': fileUrl,
-      'expiry_date': expiryDate,
-      'status': documentStatusToDbString(status),
-    };
-    final tableName = isDriver ? 'driver_documents' : 'vehicle_documents';
-    final response = await _client.from(tableName).update(body).eq('id', documentId).select().single();
-    return FleetDocumentModel.fromJson(response);
+    try {
+      final tableName = isDriver ? 'driver_documents' : 'vehicle_documents';
+
+      final response = await _client
+          .from(tableName)
+          .update({
+            'file_url': fileUrl,
+            'expiry_date': expiryDate,
+            'status': documentStatusToDbString(status),
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('id', documentId)
+          .select()
+          .single();
+
+      final ownerId = isDriver
+          ? response['driver_id'] as String
+          : response['vehicle_id'] as String;
+
+      final ownerName = await _getOwnerName(
+        ownerId: ownerId,
+        isDriver: isDriver,
+      );
+
+      return FleetDocumentModel.fromJson(response, ownerName: ownerName);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected update document error: $e');
+    }
   }
 
   @override
@@ -341,17 +552,193 @@ class SupabaseFleetDatasource implements FleetDatasource {
     required String documentId,
     required bool isDriver,
   }) async {
-    final tableName = isDriver ? 'driver_documents' : 'vehicle_documents';
-    await _client.from(tableName).delete().eq('id', documentId);
+    try {
+      final tableName = isDriver ? 'driver_documents' : 'vehicle_documents';
+      await _client.from(tableName).delete().eq('id', documentId);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected delete document error: $e');
+    }
   }
 
-  // Storage bucket helper functions
   Future<String> uploadFile(String bucket, String path, Uint8List bytes) async {
-    await _client.storage.from(bucket).uploadBinary(path, bytes);
-    return _client.storage.from(bucket).getPublicUrl(path);
+    try {
+      await _client.storage.from(bucket).uploadBinary(
+            path,
+            bytes,
+            fileOptions: const FileOptions(upsert: true),
+          );
+
+      return _client.storage.from(bucket).getPublicUrl(path);
+    } on StorageException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception('Unexpected upload file error: $e');
+    }
   }
 
   Future<void> deleteFile(String bucket, String path) async {
-    await _client.storage.from(bucket).remove([path]);
+    try {
+      await _client.storage.from(bucket).remove([path]);
+    } on StorageException catch (e) {
+      throw Exception(e.message);
+    } catch (e) {
+      throw Exception('Unexpected delete file error: $e');
+    }
   }
+
+  Future<Map<String, dynamic>?> _activeAssignmentForDriver(
+    String driverId,
+  ) async {
+    final list = await _client
+        .from('assignments')
+        .select()
+        .eq('driver_id', driverId)
+        .eq('status', FleetAssignmentStatus.active.name);
+
+    if (list.isEmpty) return null;
+    return list.first;
+  }
+
+  Future<Map<String, dynamic>?> _activeAssignmentForVehicle(
+    String vehicleId,
+  ) async {
+    final list = await _client
+        .from('assignments')
+        .select()
+        .eq('vehicle_id', vehicleId)
+        .eq('status', FleetAssignmentStatus.active.name);
+
+    if (list.isEmpty) return null;
+    return list.first;
+  }
+
+  Future<void> _handleVehicleAssignmentChange(
+    String driverId,
+    String newVehicleId,
+  ) async {
+    final activeAssign = await _activeAssignmentForDriver(driverId);
+    final oldVehicleId = activeAssign?['vehicle_id'] as String? ?? '';
+
+    if (oldVehicleId == newVehicleId) return;
+
+    if (activeAssign != null) {
+      await removeAssignment(activeAssign['id'] as String);
+    }
+
+    if (newVehicleId.isNotEmpty) {
+      final activeAssignForNewVehicle =
+          await _activeAssignmentForVehicle(newVehicleId);
+
+      if (activeAssignForNewVehicle != null) {
+        await removeAssignment(activeAssignForNewVehicle['id'] as String);
+      }
+
+      await assignDriverToVehicle(driverId, newVehicleId);
+    }
+  }
+
+  Future<void> _handleDriverAssignmentChange(
+    String vehicleId,
+    String newDriverId,
+  ) async {
+    final activeAssign = await _activeAssignmentForVehicle(vehicleId);
+    final oldDriverId = activeAssign?['driver_id'] as String? ?? '';
+
+    if (oldDriverId == newDriverId) return;
+
+    if (activeAssign != null) {
+      await removeAssignment(activeAssign['id'] as String);
+    }
+
+    if (newDriverId.isNotEmpty) {
+      final activeAssignForNewDriver =
+          await _activeAssignmentForDriver(newDriverId);
+
+      if (activeAssignForNewDriver != null) {
+        await removeAssignment(activeAssignForNewDriver['id'] as String);
+      }
+
+      await assignDriverToVehicle(newDriverId, vehicleId);
+    }
+  }
+
+  Future<String> _getOwnerName({
+    required String ownerId,
+    required bool isDriver,
+  }) async {
+    if (isDriver) {
+      final owner = await _client
+          .from('drivers')
+          .select('full_name')
+          .eq('id', ownerId)
+          .single();
+
+      return owner['full_name'] as String? ?? '';
+    }
+
+    final owner = await _client
+        .from('vehicles')
+        .select('vehicle_code')
+        .eq('id', ownerId)
+        .single();
+
+    return owner['vehicle_code'] as String? ?? '';
+  }
+
+  Map<String, dynamic> _driverPayload(FleetDriver driver) {
+    final raw = FleetDriverModel.fromEntity(driver).toJson();
+    final payload = _onlyAllowed(raw, _driverColumns);
+
+    payload['updated_at'] = DateTime.now().toIso8601String();
+
+    return payload;
+  }
+
+  Map<String, dynamic> _vehiclePayload(FleetVehicle vehicle) {
+    final raw = FleetVehicleModel.fromEntity(vehicle).toJson();
+    final payload = _onlyAllowed(raw, _vehicleColumns);
+
+    payload['updated_at'] = DateTime.now().toIso8601String();
+
+    return payload;
+  }
+
+  Map<String, dynamic> _onlyAllowed(
+    Map<String, dynamic> raw,
+    Set<String> allowedKeys,
+  ) {
+    final payload = <String, dynamic>{};
+
+    for (final entry in raw.entries) {
+      if (allowedKeys.contains(entry.key)) {
+        payload[entry.key] = entry.value;
+      }
+    }
+
+    payload.removeWhere((key, value) => value == '');
+
+    return payload;
+  }
+
+  String _formatPostgrestError(PostgrestException e) {
+    final buffer = StringBuffer(e.message);
+
+    if (e.code != null && e.code!.isNotEmpty) {
+      buffer.write(' | code: ${e.code}');
+    }
+
+    if (e.details != null && e.details.toString().isNotEmpty) {
+      buffer.write(' | details: ${e.details}');
+    }
+
+    if (e.hint != null && e.hint.toString().isNotEmpty) {
+      buffer.write(' | hint: ${e.hint}');
+    }
+
+    return buffer.toString();
+  }
+
+  String _today() => DateTime.now().toIso8601String().split('T').first;
 }

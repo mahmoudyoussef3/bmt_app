@@ -129,41 +129,45 @@ class _DevVersionSwitcher extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<AppModeCubit>();
-    final current = cubit.state.mode;
+    return BlocBuilder<AppModeCubit, AppModeState>(
+      builder: (context, state) {
+        final cubit = context.read<AppModeCubit>();
+        final current = state.mode;
 
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Developer',
-            style: AppTypography.caption(
-              Theme.of(context).colorScheme,
-            ).copyWith(fontWeight: FontWeight.w700),
+        return AppCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Developer',
+                style: AppTypography.caption(
+                  Theme.of(context).colorScheme,
+                ).copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: AppLayout.spaceSm),
+              Text(
+                'Switch app mode (dev only)',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: AppLayout.spaceSm),
+              Wrap(
+                spacing: AppLayout.spaceSm,
+                runSpacing: AppLayout.spaceSm,
+                children: AppMode.values.map((m) {
+                  final active = m == current;
+                  return FilterChip(
+                    label: Text(m.displayLabel),
+                    selected: active,
+                    onSelected: (_) {
+                      if (!active) cubit.changeMode(m);
+                    },
+                  );
+                }).toList(),
+              ),
+            ],
           ),
-          const SizedBox(height: AppLayout.spaceSm),
-          Text(
-            'Switch app mode (dev only)',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-          const SizedBox(height: AppLayout.spaceSm),
-          Wrap(
-            spacing: AppLayout.spaceSm,
-            runSpacing: AppLayout.spaceSm,
-            children: AppMode.values.map((m) {
-              final active = m == current;
-              return FilterChip(
-                label: Text(m.displayLabel),
-                selected: active,
-                onSelected: (_) {
-                  if (!active) cubit.changeMode(m);
-                },
-              );
-            }).toList(),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

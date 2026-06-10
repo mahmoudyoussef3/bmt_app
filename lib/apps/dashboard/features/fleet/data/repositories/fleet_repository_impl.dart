@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 import '../../domain/entities/fleet_workspace.dart';
 import '../../domain/repositories/fleet_repository.dart';
-import '../datasources/mock_fleet_datasource.dart';
+import '../datasources/fleet_datasource.dart';
 import '../datasources/supabase_fleet_datasource.dart';
 
 class FleetRepositoryImpl implements FleetRepository {
@@ -350,8 +350,9 @@ class FleetRepositoryImpl implements FleetRepository {
   @override
   Future<String> uploadFile(String bucket, String path, List<int> bytes) async {
     try {
-      if (_datasource is SupabaseFleetDatasource) {
-        return await (_datasource as SupabaseFleetDatasource).uploadFile(bucket, path, Uint8List.fromList(bytes));
+      final datasource = _datasource;
+      if (datasource is SupabaseFleetDatasource) {
+        return await datasource.uploadFile(bucket, path, Uint8List.fromList(bytes));
       }
       return 'https://placeholder.com/mock-upload.jpg';
     } catch (_) {
@@ -362,8 +363,9 @@ class FleetRepositoryImpl implements FleetRepository {
   @override
   Future<void> deleteFile(String bucket, String path) async {
     try {
-      if (_datasource is SupabaseFleetDatasource) {
-        await (_datasource as SupabaseFleetDatasource).deleteFile(bucket, path);
+      final datasource = _datasource;
+      if (datasource is SupabaseFleetDatasource) {
+        await datasource.deleteFile(bucket, path);
       }
     } catch (_) {
       throw Exception('تعذر حذف الملف من مخزن البيانات');

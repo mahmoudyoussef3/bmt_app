@@ -1,0 +1,173 @@
+00:00 +0: loading /Users/mahmoud/bmt_app/test/widget_test.dart
+00:00 +0 -1: loading /Users/mahmoud/bmt_app/test/widget_test.dart [E]
+  Failed to load "/Users/mahmoud/bmt_app/test/widget_test.dart":
+  Compilation failed for testPath=/Users/mahmoud/bmt_app/test/widget_test.dart: lib/apps/dashboard/features/fleet/data/datasources/supabase_fleet_datasource.dart:19:38: Error: The getter 'supabaseUrl' isn't defined for the type 'SupabaseClient'.
+   - 'SupabaseClient' is from 'package:supabase/src/supabase_client.dart' ('../.pub-cache/hosted/pub.dev/supabase-2.12.2/lib/src/supabase_client.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'supabaseUrl'.
+    bool get _isPlaceholder => _client.supabaseUrl.contains('placeholder-project.supabase.co');
+                                       ^^^^^^^^^^^
+  .
+  Error: The Dart compiler exited unexpectedly.
+  package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+  package:flutter_tools/src/compile.dart 939:11    DefaultResidentCompiler._compile.<fn>
+  dart:async/zone_root.dart 48:47                  _rootRunUnary
+  dart:async/zone.dart 733:19                      _CustomZone.runUnary
+  dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+  dart:async/future_impl.dart 977:13               Future._propagateToListeners
+  dart:async/future_impl.dart 862:9                Future._propagateToListeners
+  dart:async/future_impl.dart 720:5                Future._completeWithValue
+  dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+  dart:async/zone_root.dart 35:13                  _rootRun
+  dart:async/zone.dart 726:19                      _CustomZone.run
+  dart:async/zone.dart 625:7                       _CustomZone.runGuarded
+  dart:async/zone.dart 666:23                      _CustomZone.bindCallbackGuarded.<fn>
+  dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+  dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+  dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+  dart:isolate-patch/isolate_patch.dart 194:5      _RawReceivePort._handleMessage
+  
+00:00 +0 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/dashboard_operations/dashboard_operations_repository_test.dart: Dashboard operations clean architecture chain returns bookings workspace through use case
+00:00 +1 -1: /Users/mahmoud/bmt_app/test/apps/captain/features/captain_feature_modules_test.dart: Captain clean feature modules assigned trips returns customer-service assigned trips
+00:00 +2 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/dashboard_operations/dashboard_operations_repository_test.dart: Dashboard operations clean architecture chain maps datasource failures to dashboard failure message
+00:00 +3 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/dashboard_operations/dashboard_operations_repository_test.dart: Dashboard operations clean architecture chain maps datasource failures to dashboard failure message
+00:00 +4 -1: /Users/mahmoud/bmt_app/test/apps/captain/features/captain_feature_modules_test.dart: Captain clean feature modules trip execution starts the assigned trip
+00:00 +5 -1: /Users/mahmoud/bmt_app/test/apps/captain/features/captain_feature_modules_test.dart: Captain clean feature modules live location starts sharing current trip location
+00:00 +6 -1: /Users/mahmoud/bmt_app/test/apps/captain/features/captain_feature_modules_test.dart: Captain clean feature modules communication supports broadcast and passenger messages
+00:00 +7 -1: /Users/mahmoud/bmt_app/test/apps/captain/features/captain_feature_modules_test.dart: Captain clean feature modules incidents submits captain report
+00:00 +8 -1: /Users/mahmoud/bmt_app/test/apps/captain/features/captain_feature_modules_test.dart: Captain clean feature modules check-in records boarding status
+00:00 +9 -1: /Users/mahmoud/bmt_app/test/apps/captain/features/captain_feature_modules_test.dart: Captain clean feature modules trip status updates notify current trip status
+00:00 +10 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/payments/payments_repository_test.dart: PaymentsRepositoryImpl loads dummy finance payments
+00:00 +11 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/payments/payments_repository_test.dart: PaymentsRepositoryImpl updates payment status and appends history
+00:00 +12 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/payments/payments_repository_test.dart: PaymentsRepositoryImpl adds note and records timeline action
+00:00 +13 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/payments/payments_repository_test.dart: PaymentsRepositoryImpl maps datasource load errors to Arabic message
+00:00 +14 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/tickets/tickets_cubit_test.dart: TicketsCubit tests initial state is TicketsLoading
+00:00 +15 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/tickets/tickets_cubit_test.dart: TicketsCubit tests load() success emits TicketsLoaded with complaints
+00:00 +16 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/tickets/tickets_cubit_test.dart: TicketsCubit tests selectComplaint() updates selected ID
+00:00 +17 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/tickets/tickets_cubit_test.dart: TicketsCubit tests assign() updates assignedTo field
+00:00 +18 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/tickets/tickets_cubit_test.dart: TicketsCubit tests respond() adds a message
+00:00 +19 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/tickets/tickets_cubit_test.dart: TicketsCubit tests updateStatus() updates status badge
+00:00 +20 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/tickets/tickets_cubit_test.dart: TicketsCubit tests escalate() sets priority to critical
+00:00 +21 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/tickets/tickets_cubit_test.dart: TicketsCubit tests closeComplaint() sets status to closed
+00:00 +22 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/assignments/fleet_assignments_repository_test.dart: Fleet assignments clean architecture chain loads dummy assignments with options and timeline
+00:00 +23 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/assignments/fleet_assignments_repository_test.dart: Fleet assignments clean architecture chain assigns, changes, and removes vehicle assignment locally
+00:00 +24 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/assignments/fleet_assignments_repository_test.dart: Fleet assignments clean architecture chain maps datasource failures to Arabic repository error
+00:00 +25 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/bookings/bookings_repository_test.dart: Bookings clean architecture chain loads booking queue dummy data
+00:00 +26 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/bookings/bookings_repository_test.dart: Bookings clean architecture chain updates booking status and appends history
+00:00 +27 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/bookings/bookings_repository_test.dart: Bookings clean architecture chain bulk approves and assigns selected bookings
+00:00 +28 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/bookings/bookings_repository_test.dart: Bookings clean architecture chain maps datasource failures to Arabic repository error
+00:00 +29 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/drivers/drivers_repository_test.dart: Drivers clean architecture chain loads realistic dummy drivers
+00:00 +30 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/drivers/drivers_repository_test.dart: Drivers clean architecture chain creates, updates status, edits, and deletes driver locally
+00:00 +31 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/drivers/drivers_repository_test.dart: Drivers clean architecture chain maps datasource failures to Arabic repository error
+00:00 +32 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain loads active trips with monitoring data
+00:00 +33 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_screen_test.dart: LiveTripsScreen renders empty live feed safely
+00:00 +34 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_screen_test.dart: LiveTripsScreen renders empty live feed safely
+00:00 +35 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_screen_test.dart: LiveTripsScreen renders empty live feed safely
+00:00 +36 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_screen_test.dart: LiveTripsScreen renders empty live feed safely
+00:00 +37 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_screen_test.dart: LiveTripsScreen renders empty live feed safely
+00:00 +38 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_screen_test.dart: LiveTripsScreen renders empty live feed safely
+00:00 +39 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_screen_test.dart: LiveTripsScreen renders empty live feed safely
+00:00 +40 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain includes required alert types in dummy data
+00:01 +41 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain includes required alert types in dummy data
+00:01 +42 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/dashboard_home/dashboard_home_screen_test.dart: DashboardHomeScreen opens delayed trips in live monitoring
+00:01 +43 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/dashboard_home/dashboard_home_screen_test.dart: DashboardHomeScreen opens delayed trips in live monitoring
+00:01 +44 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain toggles passenger checkin status and recalculates counts
+00:01 +45 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain toggles passenger checkin status and recalculates counts
+00:01 +46 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain toggles passenger checkin status and recalculates counts
+00:01 +47 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain toggles passenger checkin status and recalculates counts
+00:01 +48 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain toggles passenger checkin status and recalculates counts
+00:01 +49 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain toggles passenger checkin status and recalculates counts
+00:01 +50 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain toggles passenger checkin status and recalculates counts
+00:01 +51 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/live_trips/live_trips_repository_test.dart: Live trips clean architecture chain toggles passenger checkin status and recalculates counts
+00:01 +52 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/finance/finance_cubit_test.dart: FinanceCubit Tests initial state is FinanceLoading
+00:01 +53 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/finance/finance_cubit_test.dart: FinanceCubit Tests load() success emits FinanceLoaded with records
+00:01 +54 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/finance/finance_cubit_test.dart: FinanceCubit Tests selectSection() changes section index
+00:01 +55 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/finance/finance_cubit_test.dart: FinanceCubit Tests reviewReceipt() accepts receipt and updates payment status
+00:01 +56 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/finance/finance_cubit_test.dart: FinanceCubit Tests processRefund() approves refund request
+00:01 +57 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/finance/finance_cubit_test.dart: FinanceCubit Tests cancelSubscription() cancels active subscription
+00:01 +58 -1: /Users/mahmoud/bmt_app/test/apps/dashboard/features/payment_verification/payment_verification_screen_test.dart: PaymentVerificationScreen renders compact layout safely
+00:01 +58 -2: loading /Users/mahmoud/bmt_app/test/apps/dashboard/features/fleet/fleet_repository_test.dart [E]
+  Failed to load "/Users/mahmoud/bmt_app/test/apps/dashboard/features/fleet/fleet_repository_test.dart":
+  Compilation failed for testPath=/Users/mahmoud/bmt_app/test/apps/dashboard/features/fleet/fleet_repository_test.dart: lib/apps/dashboard/features/fleet/data/datasources/supabase_fleet_datasource.dart:19:38: Error: The getter 'supabaseUrl' isn't defined for the type 'SupabaseClient'.
+   - 'SupabaseClient' is from 'package:supabase/src/supabase_client.dart' ('../.pub-cache/hosted/pub.dev/supabase-2.12.2/lib/src/supabase_client.dart').
+  Try correcting the name to the name of an existing getter, or defining a getter or field named 'supabaseUrl'.
+    bool get _isPlaceholder => _client.supabaseUrl.contains('placeholder-project.supabase.co');
+                                       ^^^^^^^^^^^
+  .
+00:01 +58 -2: loading /Users/mahmoud/bmt_app/test/widget_test.dart [E]
+  Error: The Dart compiler exited unexpectedly.
+  package:flutter_tools/src/base/common.dart 34:3  throwToolExit
+  package:flutter_tools/src/compile.dart 939:11    DefaultResidentCompiler._compile.<fn>
+  dart:async/zone_root.dart 48:47                  _rootRunUnary
+  dart:async/zone.dart 733:19                      _CustomZone.runUnary
+  dart:async/future_impl.dart 948:45               Future._propagateToListeners.handleValueCallback
+  dart:async/future_impl.dart 977:13               Future._propagateToListeners
+  dart:async/future_impl.dart 862:9                Future._propagateToListeners
+  dart:async/future_impl.dart 720:5                Future._completeWithValue
+  dart:async/future_impl.dart 804:7                Future._asyncCompleteWithValue.<fn>
+  dart:async/zone_root.dart 35:13                  _rootRun
+  dart:async/zone.dart 726:19                      _CustomZone.run
+  dart:async/zone.dart 625:7                       _CustomZone.runGuarded
+  dart:async/zone.dart 666:23                      _CustomZone.bindCallbackGuarded.<fn>
+  dart:async/schedule_microtask.dart 40:35         _microtaskLoop
+  dart:async/schedule_microtask.dart 49:5          _startMicrotaskLoop
+  dart:isolate-patch/isolate_patch.dart 127:13     _runPendingImmediateCallback
+  dart:isolate-patch/isolate_patch.dart 194:5      _RawReceivePort._handleMessage
+  
+00:02 +59 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/reports/reports_cubit_test.dart: ReportsCubit Tests initial state is ReportsLoading
+00:02 +60 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain loads complete route operations data
+00:02 +61 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain loads complete route operations data
+00:02 +62 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain loads complete route operations data
+00:02 +63 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain loads complete route operations data
+00:02 +64 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain loads complete route operations data
+00:02 +65 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/reports/reports_cubit_test.dart: ReportsCubit Tests triggerExport() sets exporting format and exported file name
+00:02 +66 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain adds, edits, reorders, and deletes stations locally
+00:02 +67 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain adds, edits, reorders, and deletes stations locally
+00:02 +68 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain creates route through use case
+00:02 +69 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain duplicates and archives route through use cases
+00:02 +70 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain updates route status locally for pause and archive flows
+00:02 +71 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/routes/routes_repository_test.dart: Routes clean architecture chain maps datasource failures to Arabic repository error
+00:02 +72 -2: /Users/mahmoud/bmt_app/test/apps/client/features/settings/settings_repository_test.dart: Client settings repository returns settings seed data through use case
+00:02 +73 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/trips/trips_repository_test.dart: Trips clean architecture chain loads complete operations trips data
+00:02 +74 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/trips/trips_repository_test.dart: Trips clean architecture chain moves trip between statuses locally
+00:02 +75 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/trips/trips_repository_test.dart: Trips clean architecture chain creates trip only when route driver vehicle and capacity exist
+00:02 +76 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/trips/trips_repository_test.dart: Trips clean architecture chain updates a trip seat state locally
+00:02 +77 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/trips/trips_repository_test.dart: Trips clean architecture chain edits cancels and moves passengers inside trip workspace
+00:02 +78 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/trips/trips_repository_test.dart: Trips clean architecture chain loads and saves trip-scoped segment pricing
+00:02 +79 -2: /Users/mahmoud/bmt_app/test/apps/dashboard/features/trips/trips_repository_test.dart: Trips clean architecture chain rejects invalid trip pricing before repository save
+00:02 +80 -2: /Users/mahmoud/bmt_app/test/apps/client/features/payments/payment_repository_test.dart: Client payments returns supported payment methods
+00:02 +81 -2: /Users/mahmoud/bmt_app/test/apps/client/features/payments/payment_repository_test.dart: Client payments returns supported payment methods
+00:02 +82 -2: /Users/mahmoud/bmt_app/test/apps/client/features/payments/payment_repository_test.dart: Client payments applies known promo codes and rejects unknown codes
+00:02 +83 -2: /Users/mahmoud/bmt_app/test/apps/client/features/payments/payment_repository_test.dart: Client payments calculates checkout totals and wallet remainder
+00:02 +84 -2: /Users/mahmoud/bmt_app/test/apps/client/features/payments/payment_repository_test.dart: Client payments generates deterministic references when seeded
+00:02 +85 -2: /Users/mahmoud/bmt_app/test/apps/client/features/referrals/referral_rewards_repository_test.dart: Client referral rewards returns referral rewards dashboard data
+00:02 +86 -2: /Users/mahmoud/bmt_app/test/apps/client/features/referrals/referral_rewards_repository_test.dart: Client referral rewards updates invite, redeem, and voucher state through use cases
+00:02 +87 -2: /Users/mahmoud/bmt_app/test/apps/client/features/seat_release/seat_release_repository_test.dart: Client seat release repository returns seat release hub data through use case
+00:02 +88 -2: /Users/mahmoud/bmt_app/test/apps/client/features/booking/booking_repository_test.dart: Client booking repository returns booking hub summary through use case
+00:02 +89 -2: /Users/mahmoud/bmt_app/test/apps/client/features/loyalty/loyalty_repository_test.dart: Client loyalty returns loyalty dashboard data
+00:02 +90 -2: /Users/mahmoud/bmt_app/test/apps/client/features/loyalty/loyalty_repository_test.dart: Client loyalty returns loyalty dashboard data
+00:02 +91 -2: /Users/mahmoud/bmt_app/test/apps/client/features/loyalty/loyalty_repository_test.dart: Client loyalty returns loyalty dashboard data
+00:02 +92 -2: /Users/mahmoud/bmt_app/test/apps/client/features/booking/booking_repository_test.dart: Client booking repository returns map pins without presentation dependencies
+00:02 +93 -2: /Users/mahmoud/bmt_app/test/apps/client/features/loyalty/loyalty_repository_test.dart: Client loyalty redeems reward and recalculates tier
+00:02 +94 -2: /Users/mahmoud/bmt_app/test/apps/client/features/booking/booking_repository_test.dart: Client booking repository returns and sorts vehicles through use cases
+00:02 +95 -2: /Users/mahmoud/bmt_app/test/apps/client/features/booking/booking_repository_test.dart: Client booking repository returns selected vehicle details by id
+00:02 +96 -2: /Users/mahmoud/bmt_app/test/apps/client/features/profile/profile_repository_test.dart: Client profile returns profile identity and menu sections
+00:02 +97 -2: /Users/mahmoud/bmt_app/test/apps/client/features/tracking/tracking_repository_test.dart: Client tracking returns tracking route points and timeline data
+00:02 +98 -2: /Users/mahmoud/bmt_app/test/apps/client/features/tracking/tracking_repository_test.dart: Client tracking maps trip states to display titles
+00:02 +99 -2: /Users/mahmoud/bmt_app/test/apps/client/features/tracking/tracking_repository_test.dart: Client tracking updates tracking state and ratings through cubit
+00:03 +100 -2: /Users/mahmoud/bmt_app/test/apps/client/features/communication/communication_repository_test.dart: Client communication returns seeded conversations and message history
+00:03 +101 -2: /Users/mahmoud/bmt_app/test/apps/client/features/communication/communication_repository_test.dart: Client communication selects conversation and appends messages through cubit
+00:03 +102 -2: /Users/mahmoud/bmt_app/test/apps/client/features/trips/trips_repository_test.dart: Client trips repository returns the client trips from the mock data source
+00:03 +103 -2: /Users/mahmoud/bmt_app/test/apps/client/features/trips/trips_repository_test.dart: Client trips repository returns a selected trip by id
+00:03 +104 -2: /Users/mahmoud/bmt_app/test/apps/client/features/trips/trips_repository_test.dart: Client trips repository returns null when the selected trip does not exist
+00:03 +105 -2: /Users/mahmoud/bmt_app/test/apps/client/features/packages/packages_repository_test.dart: Client packages returns package selection data
+00:03 +106 -2: /Users/mahmoud/bmt_app/test/apps/client/features/packages/packages_repository_test.dart: Client packages filters package plans by category
+00:03 +107 -2: /Users/mahmoud/bmt_app/test/apps/client/features/packages/packages_repository_test.dart: Client packages calculates package pricing for selected seats and vehicle
+00:03 +108 -2: /Users/mahmoud/bmt_app/test/apps/client/features/routes/routes_hub_repository_test.dart: Client routes hub returns hub copy, actions, and booking flow steps
+00:03 +109 -2: /Users/mahmoud/bmt_app/test/apps/client/features/support/support_repository_test.dart: Client support returns support categories and user tickets
+00:03 +110 -2: /Users/mahmoud/bmt_app/test/apps/client/features/support/support_repository_test.dart: Client support returns support categories and user tickets
+00:03 +111 -2: /Users/mahmoud/bmt_app/test/apps/client/features/support/support_repository_test.dart: Client support creates deterministic support tickets when seeded
+00:03 +112 -2: /Users/mahmoud/bmt_app/test/apps/client/features/support/support_repository_test.dart: Client support adds user and agent messages through cubit
+00:03 +113 -2: /Users/mahmoud/bmt_app/test/apps/client/features/seat_selection/seat_selection_repository_test.dart: Client seat selection returns the seat map and trip summary data
+00:03 +114 -2: /Users/mahmoud/bmt_app/test/apps/client/features/seat_selection/seat_selection_repository_test.dart: Client seat selection selects and toggles an available seat
+00:03 +115 -2: /Users/mahmoud/bmt_app/test/apps/client/features/seat_selection/seat_selection_repository_test.dart: Client seat selection does not select a reserved seat
+00:03 +116 -2: Some tests failed.

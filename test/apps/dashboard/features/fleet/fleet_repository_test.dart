@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/apps/dashboard/features/fleet/data/datasources/mock_fleet_datasource.dart';
+import 'test_fleet_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/data/repositories/fleet_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/domain/usecases/fleet_usecases.dart';
@@ -96,6 +96,122 @@ void main() {
 
       final ended = await remove(changed.id);
       expect(ended.status, FleetAssignmentStatus.ended);
+    });
+
+    test('creates driver with vehicle assignment and auto-links them', () async {
+      final repository = FleetRepositoryImpl(MockFleetDatasource());
+      final getWorkspace = GetFleetWorkspaceUseCase(repository);
+      final createDriver = CreateFleetDriverUseCase(repository);
+      final createVehicle = CreateFleetVehicleUseCase(repository);
+
+      // Create a new vehicle (so it is free)
+      final freeVehicle = await createVehicle(
+        _vehicle.copyWith(vehicleCode: 'BUS-NEW-1', plateNumber: '١١١ ق ل'),
+      );
+
+      // Create driver with this vehicle's ID
+      final driverToCreate = _driver.copyWith(
+        employeeCode: 'EMP-UNIQUE-1',
+        nationalId: '29901011234577',
+        licenseNumber: 'د-رخصة-1',
+        currentVehicleId: freeVehicle.id,
+      );
+
+      final created = await createDriver(driverToCreate);
+      expect(created.currentVehicleId, freeVehicle.id);
+
+      // Verify assignment was created and vehicle's driver was updated
+      final updatedWorkspace = await getWorkspace();
+      final updatedVehicle = updatedWorkspace.vehicles.firstWhere((v) => v.id == freeVehicle.id);
+      expect(updatedVehicle.currentDriverId, created.id);
+
+      final hasActiveAssignment = updatedWorkspace.assignments.any(
+        (a) => a.driverId == created.id && a.vehicleId == freeVehicle.id && a.status == FleetAssignmentStatus.active,
+      );
+      expect(hasActiveAssignment, isTrue);
+    });
+
+    test('updates driver to change vehicle and updates assignment', () async {
+      final repository = FleetRepositoryImpl(MockFleetDatasource());
+      final getWorkspace = GetFleetWorkspaceUseCase(repository);
+      final createDriver = CreateFleetDriverUseCase(repository);
+      final updateDriver = UpdateFleetDriverUseCase(repository);
+      final createVehicle = CreateFleetVehicleUseCase(repository);
+
+      // Create two new vehicles
+      final vehicle1 = await createVehicle(
+        _vehicle.copyWith(vehicleCode: 'BUS-NEW-2', plateNumber: '٢٢٢ ق ل'),
+      );
+      final vehicle2 = await createVehicle(
+        _vehicle.copyWith(vehicleCode: 'BUS-NEW-3', plateNumber: '٣٣٣ ق ل'),
+      );
+
+      // Create driver with vehicle1
+      final created = await createDriver(
+        _driver.copyWith(
+          employeeCode: 'EMP-UNIQUE-2',
+          nationalId: '29901011234578',
+          licenseNumber: 'د-رخصة-2',
+          currentVehicleId: vehicle1.id,
+        ),
+      );
+
+      // Update driver to vehicle2
+      final updated = await updateDriver(created.copyWith(currentVehicleId: vehicle2.id));
+      expect(updated.currentVehicleId, vehicle2.id);
+
+      // Verify that assignment for vehicle1 is ended, and active assignment for vehicle2 is created
+      final updatedWorkspace = await getWorkspace();
+      
+      // vehicle1 should now be free
+      final updatedVehicle1 = updatedWorkspace.vehicles.firstWhere((v) => v.id == vehicle1.id);
+      expect(updatedVehicle1.currentDriverId, isEmpty);
+
+      // vehicle2 should be linked to driver
+      final updatedVehicle2 = updatedWorkspace.vehicles.firstWhere((v) => v.id == vehicle2.id);
+      expect(updatedVehicle2.currentDriverId, created.id);
+
+      final hasVehicle2Assignment = updatedWorkspace.assignments.any(
+        (a) => a.driverId == created.id && a.vehicleId == vehicle2.id && a.status == FleetAssignmentStatus.active,
+      );
+      expect(hasVehicle2Assignment, isTrue);
+    });
+
+    test('creates vehicle with driver assignment and auto-links them', () async {
+      final repository = FleetRepositoryImpl(MockFleetDatasource());
+      final getWorkspace = GetFleetWorkspaceUseCase(repository);
+      final createVehicle = CreateFleetVehicleUseCase(repository);
+      final createDriver = CreateFleetDriverUseCase(repository);
+
+      // Create a new driver (so they are free)
+      final freeDriver = await createDriver(
+        _driver.copyWith(
+          employeeCode: 'EMP-UNIQUE-3',
+          nationalId: '29901011234579',
+          licenseNumber: 'د-رخصة-3',
+          currentVehicleId: '',
+        ),
+      );
+
+      // Create vehicle with driver ID
+      final vehicleToCreate = _vehicle.copyWith(
+        vehicleCode: 'BUS-UNIQUE-4',
+        plateNumber: '٤٤٤ ق ل',
+        currentDriverId: freeDriver.id,
+      );
+
+      final created = await createVehicle(vehicleToCreate);
+      expect(created.currentDriverId, freeDriver.id);
+
+      // Verify assignment was created and driver's vehicle was updated
+      final updatedWorkspace = await getWorkspace();
+      final updatedDriver = updatedWorkspace.drivers.firstWhere((d) => d.id == freeDriver.id);
+      expect(updatedDriver.currentVehicleId, created.id);
+
+      final hasActiveAssignment = updatedWorkspace.assignments.any(
+        (a) => a.driverId == freeDriver.id && a.vehicleId == created.id && a.status == FleetAssignmentStatus.active,
+      );
+      expect(hasActiveAssignment, isTrue);
     });
   });
 }

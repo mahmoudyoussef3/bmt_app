@@ -47,6 +47,7 @@ dependencies:
   flutter_secure_storage: ^8.0.0
   supabase_flutter: ^2.6.0
   file_picker: ^8.0.0
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:

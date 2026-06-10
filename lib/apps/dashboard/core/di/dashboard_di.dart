@@ -1,6 +1,6 @@
+
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../features/fleet/data/datasources/supabase_fleet_datasource.dart';
 
 
 import '../../features/assignments/data/datasources/mock_fleet_assignments_datasource.dart';
@@ -41,7 +41,8 @@ import '../../features/drivers/domain/usecases/get_drivers_usecase.dart';
 import '../../features/drivers/domain/usecases/update_driver_status_usecase.dart';
 import '../../features/drivers/domain/usecases/update_driver_usecase.dart';
 import '../../features/drivers/presentation/cubit/drivers_cubit.dart';
-import '../../features/fleet/data/datasources/mock_fleet_datasource.dart';
+import '../../features/fleet/data/datasources/fleet_datasource.dart';
+import '../../features/fleet/data/datasources/supabase_fleet_datasource.dart';
 import '../../features/fleet/data/repositories/fleet_repository_impl.dart';
 import '../../features/fleet/domain/repositories/fleet_repository.dart';
 import '../../features/fleet/domain/usecases/fleet_usecases.dart';
@@ -158,19 +159,11 @@ import '../theme/dashboard_theme_repository.dart';
 final GetIt dashboardDi = GetIt.instance;
 
 void registerDashboardDependencies() {
-  if (!dashboardDi.isRegistered<SupabaseClient>()) {
-    const url = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://placeholder-project.supabase.co');
-    const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'placeholder-anon-key');
-    try {
-      Supabase.instance;
-    } catch (_) {
-      try {
-        Supabase.initialize(url: url, anonKey: anonKey);
-      } catch (_) {}
-    }
-    dashboardDi.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
-  }
-
+if (!dashboardDi.isRegistered<SupabaseClient>()) {
+  dashboardDi.registerLazySingleton<SupabaseClient>(
+    () => Supabase.instance.client,
+  );
+}
   if (!dashboardDi.isRegistered<DashboardThemeRepository>()) {
     dashboardDi.registerLazySingleton<DashboardThemeRepository>(
       DashboardThemeRepository.new,

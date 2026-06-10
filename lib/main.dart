@@ -1,7 +1,6 @@
 import 'package:bmt_app/apps/dashboard/main.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter/foundation.dart';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
 import 'package:bmt_app/features/component/presentation/component_demo_app.dart';
@@ -24,14 +23,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<AppModeCubit, AppModeState>(
       listener: (context, state) {
-        if (!kDebugMode) return;
         _navKey.currentState?.pushNamedAndRemoveUntil(
           state.mode.routePath,
           (_) => false,
         );
       },
       child: MaterialApp(
-        
         debugShowCheckedModeBanner: false,
         navigatorKey: _navKey,
         title: 'BMT App',
@@ -39,6 +36,7 @@ class MyApp extends StatelessWidget {
         routes: {
           '/': (_) => const ComponentDemoApp(),
           '/driver': (_) => const CaptainAppShell(),
+          '/admin': (_) => const DashboardWebApp(),
           '/ops-dashboard': (_) => const DashboardWebApp(),
         },
         initialRoute: '/',

@@ -1,55 +1,12 @@
-import '../../domain/entities/fleet_workspace.dart';
-import '../models/fleet_models.dart';
-
-abstract class FleetDatasource {
-  Future<FleetWorkspace> fetchWorkspace();
-  Future<FleetDriverModel> createDriver(FleetDriver driver);
-  Future<FleetDriverModel> updateDriver(FleetDriver driver);
-  Future<FleetDriverModel> updateDriverStatus(
-    String driverId,
-    FleetDriverStatus status,
-  );
-  Future<FleetVehicleModel> createVehicle(FleetVehicle vehicle);
-  Future<FleetVehicleModel> updateVehicle(FleetVehicle vehicle);
-  Future<FleetVehicleModel> updateVehicleStatus(
-    String vehicleId,
-    FleetVehicleStatus status,
-  );
-  Future<FleetAssignmentModel> assignDriverToVehicle(
-    String driverId,
-    String vehicleId,
-  );
-  Future<FleetAssignmentModel> reassignVehicle(
-    String assignmentId,
-    String newVehicleId,
-  );
-  Future<FleetAssignmentModel> removeAssignment(String assignmentId);
-
-  Future<FleetDocumentModel> createDocument({
-    required String ownerId,
-    required bool isDriver,
-    required FleetDocumentType type,
-    required String fileUrl,
-    required String expiryDate,
-    required FleetDocumentStatus status,
-  });
-  Future<FleetDocumentModel> updateDocument({
-    required String documentId,
-    required bool isDriver,
-    required String fileUrl,
-    required String expiryDate,
-    required FleetDocumentStatus status,
-  });
-  Future<void> deleteDocument({
-    required String documentId,
-    required bool isDriver,
-  });
-}
+import 'package:bmt_app/apps/dashboard/features/fleet/data/datasources/fleet_datasource.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/domain/entities/fleet_workspace.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/data/models/fleet_models.dart';
 
 class MockFleetDatasource implements FleetDatasource {
   final List<FleetDriverModel> _drivers = _buildDrivers();
   final List<FleetVehicleModel> _vehicles = _buildVehicles();
   final List<FleetAssignmentModel> _assignments = [];
+  final List<FleetDocumentModel> _customDocuments = [];
 
   MockFleetDatasource() {
     for (var index = 0; index < 15; index++) {
@@ -82,27 +39,42 @@ class MockFleetDatasource implements FleetDatasource {
 
   @override
   Future<FleetWorkspace> fetchWorkspace() async {
+    final builtDocs = _buildDocumentsFrom(_drivers, _vehicles);
+    final List<FleetDocument> mergedDocs = [...builtDocs];
+    for (final doc in _customDocuments) {
+      final idx = mergedDocs.indexWhere((d) => d.ownerId == doc.ownerId && d.type == doc.type);
+      if (idx != -1) {
+        mergedDocs[idx] = doc;
+      } else {
+        mergedDocs.add(doc);
+      }
+    }
     return FleetWorkspace(
       drivers: List<FleetDriver>.unmodifiable(_drivers),
       vehicles: List<FleetVehicle>.unmodifiable(_vehicles),
       assignments: List<FleetAssignment>.unmodifiable(_assignments),
-      documents: List<FleetDocument>.unmodifiable(
-        _buildDocumentsFrom(_drivers, _vehicles),
-      ),
+      documents: List<FleetDocument>.unmodifiable(mergedDocs),
     );
   }
 
   @override
   Future<FleetDriverModel> createDriver(FleetDriver driver) async {
     _validateDriver(driver);
+    final driverId = 'driver-${_drivers.length + 1}';
     final model = FleetDriverModel.fromEntity(
       driver.copyWith(
-        id: 'driver-${_drivers.length + 1}',
+        id: driverId,
         status: FleetDriverStatus.active,
+        currentVehicleId: '',
       ),
     );
     _drivers.insert(0, model);
-    return model;
+
+    if (driver.currentVehicleId.isNotEmpty) {
+      await _handleVehicleAssignmentChange(driverId, driver.currentVehicleId);
+    }
+
+    return _drivers.firstWhere((d) => d.id == driverId);
   }
 
   @override
@@ -110,7 +82,11 @@ class MockFleetDatasource implements FleetDatasource {
     _validateDriver(driver);
     final index = _drivers.indexWhere((item) => item.id == driver.id);
     if (index == -1) throw ArgumentError('Driver not found');
-    final model = FleetDriverModel.fromEntity(driver);
+    
+    await _handleVehicleAssignmentChange(driver.id, driver.currentVehicleId);
+    
+    final latestVehicleId = _drivers[index].currentVehicleId;
+    final model = FleetDriverModel.fromEntity(driver.copyWith(currentVehicleId: latestVehicleId));
     _drivers[index] = model;
     return model;
   }
@@ -135,17 +111,24 @@ class MockFleetDatasource implements FleetDatasource {
   @override
   Future<FleetVehicleModel> createVehicle(FleetVehicle vehicle) async {
     _validateVehicle(vehicle);
+    final vehicleId = 'vehicle-${_vehicles.length + 1}';
     final model = FleetVehicleModel.fromEntity(
       vehicle.copyWith(
-        id: 'vehicle-${_vehicles.length + 1}',
+        id: vehicleId,
         status: FleetVehicleStatus.active,
+        currentDriverId: '',
         images: vehicle.images.isEmpty
             ? _vehicleImages(vehicle.vehicleCode)
             : vehicle.images,
       ),
     );
     _vehicles.insert(0, model);
-    return model;
+
+    if (vehicle.currentDriverId.isNotEmpty) {
+      await _handleDriverAssignmentChange(vehicleId, vehicle.currentDriverId);
+    }
+
+    return _vehicles.firstWhere((v) => v.id == vehicleId);
   }
 
   @override
@@ -153,7 +136,11 @@ class MockFleetDatasource implements FleetDatasource {
     _validateVehicle(vehicle);
     final index = _vehicles.indexWhere((item) => item.id == vehicle.id);
     if (index == -1) throw ArgumentError('Vehicle not found');
-    final model = FleetVehicleModel.fromEntity(vehicle);
+    
+    await _handleDriverAssignmentChange(vehicle.id, vehicle.currentDriverId);
+    
+    final latestDriverId = _vehicles[index].currentDriverId;
+    final model = FleetVehicleModel.fromEntity(vehicle.copyWith(currentDriverId: latestDriverId));
     _vehicles[index] = model;
     return model;
   }
@@ -282,6 +269,34 @@ class MockFleetDatasource implements FleetDatasource {
           current.copyWith(documents: [...current.documents, doc]),
         );
       }
+    } else {
+      final index = _vehicles.indexWhere((v) => v.id == ownerId);
+      if (index != -1) {
+        final current = _vehicles[index];
+        _vehicles[index] = FleetVehicleModel.fromEntity(
+          current.copyWith(
+            licenseExpiry: type == FleetDocumentType.vehicleLicense ? expiryDate : current.licenseExpiry,
+            insuranceExpiry: type == FleetDocumentType.insurance ? expiryDate : current.insuranceExpiry,
+            inspectionExpiry: type == FleetDocumentType.inspection ? expiryDate : current.inspectionExpiry,
+          ),
+        );
+        final docWithReference = FleetDocumentModel(
+          id: doc.id,
+          type: doc.type,
+          ownerId: doc.ownerId,
+          ownerName: current.vehicleCode,
+          referenceNumber: current.plateNumber,
+          expiryDate: doc.expiryDate,
+          status: doc.status,
+          fileUrl: doc.fileUrl,
+        );
+        final existingIdx = _customDocuments.indexWhere((d) => d.ownerId == ownerId && d.type == type);
+        if (existingIdx != -1) {
+          _customDocuments[existingIdx] = docWithReference;
+        } else {
+          _customDocuments.add(docWithReference);
+        }
+      }
     }
     return doc;
   }
@@ -294,6 +309,75 @@ class MockFleetDatasource implements FleetDatasource {
     required String expiryDate,
     required FleetDocumentStatus status,
   }) async {
+    if (isDriver) {
+      for (var i = 0; i < _drivers.length; i++) {
+        final driver = _drivers[i];
+        final docIndex = driver.documents.indexWhere((d) => d.id == documentId);
+        if (docIndex != -1) {
+          final oldDoc = driver.documents[docIndex];
+          final updatedDoc = FleetDocumentModel(
+            id: documentId,
+            type: oldDoc.type,
+            ownerId: oldDoc.ownerId,
+            ownerName: oldDoc.ownerName,
+            referenceNumber: oldDoc.referenceNumber,
+            expiryDate: expiryDate,
+            status: status,
+            fileUrl: fileUrl,
+          );
+          final nextDocs = [...driver.documents];
+          nextDocs[docIndex] = updatedDoc;
+          _drivers[i] = FleetDriverModel.fromEntity(driver.copyWith(documents: nextDocs));
+          return updatedDoc;
+        }
+      }
+    } else {
+      // Find which vehicle and type
+      String vehicleId = '';
+      FleetDocumentType type = FleetDocumentType.other;
+      if (documentId.startsWith('doc-license-')) {
+        vehicleId = documentId.replaceFirst('doc-license-', '');
+        type = FleetDocumentType.vehicleLicense;
+      } else if (documentId.startsWith('doc-insurance-')) {
+        vehicleId = documentId.replaceFirst('doc-insurance-', '');
+        type = FleetDocumentType.insurance;
+      } else if (documentId.startsWith('doc-inspection-')) {
+        vehicleId = documentId.replaceFirst('doc-inspection-', '');
+        type = FleetDocumentType.inspection;
+      }
+
+      if (vehicleId.isNotEmpty) {
+        final index = _vehicles.indexWhere((v) => v.id == vehicleId);
+        if (index != -1) {
+          final current = _vehicles[index];
+          _vehicles[index] = FleetVehicleModel.fromEntity(
+            current.copyWith(
+              licenseExpiry: type == FleetDocumentType.vehicleLicense ? expiryDate : current.licenseExpiry,
+              insuranceExpiry: type == FleetDocumentType.insurance ? expiryDate : current.insuranceExpiry,
+              inspectionExpiry: type == FleetDocumentType.inspection ? expiryDate : current.inspectionExpiry,
+            ),
+          );
+          final updatedDoc = FleetDocumentModel(
+            id: documentId,
+            type: type,
+            ownerId: vehicleId,
+            ownerName: current.vehicleCode,
+            referenceNumber: current.plateNumber,
+            expiryDate: expiryDate,
+            status: status,
+            fileUrl: fileUrl,
+          );
+          final existingIdx = _customDocuments.indexWhere((d) => d.ownerId == vehicleId && d.type == type);
+          if (existingIdx != -1) {
+            _customDocuments[existingIdx] = updatedDoc;
+          } else {
+            _customDocuments.add(updatedDoc);
+          }
+          return updatedDoc;
+        }
+      }
+    }
+
     return FleetDocumentModel(
       id: documentId,
       type: FleetDocumentType.other,
@@ -310,7 +394,47 @@ class MockFleetDatasource implements FleetDatasource {
   Future<void> deleteDocument({
     required String documentId,
     required bool isDriver,
-  }) async {}
+  }) async {
+    if (isDriver) {
+      for (var i = 0; i < _drivers.length; i++) {
+        final driver = _drivers[i];
+        final docIndex = driver.documents.indexWhere((d) => d.id == documentId);
+        if (docIndex != -1) {
+          final nextDocs = [...driver.documents]..removeAt(docIndex);
+          _drivers[i] = FleetDriverModel.fromEntity(driver.copyWith(documents: nextDocs));
+          break;
+        }
+      }
+    } else {
+      String vehicleId = '';
+      FleetDocumentType type = FleetDocumentType.other;
+      if (documentId.startsWith('doc-license-')) {
+        vehicleId = documentId.replaceFirst('doc-license-', '');
+        type = FleetDocumentType.vehicleLicense;
+      } else if (documentId.startsWith('doc-insurance-')) {
+        vehicleId = documentId.replaceFirst('doc-insurance-', '');
+        type = FleetDocumentType.insurance;
+      } else if (documentId.startsWith('doc-inspection-')) {
+        vehicleId = documentId.replaceFirst('doc-inspection-', '');
+        type = FleetDocumentType.inspection;
+      }
+
+      if (vehicleId.isNotEmpty) {
+        final index = _vehicles.indexWhere((v) => v.id == vehicleId);
+        if (index != -1) {
+          final current = _vehicles[index];
+          _vehicles[index] = FleetVehicleModel.fromEntity(
+            current.copyWith(
+              licenseExpiry: type == FleetDocumentType.vehicleLicense ? '' : current.licenseExpiry,
+              insuranceExpiry: type == FleetDocumentType.insurance ? '' : current.insuranceExpiry,
+              inspectionExpiry: type == FleetDocumentType.inspection ? '' : current.inspectionExpiry,
+            ),
+          );
+          _customDocuments.removeWhere((d) => d.ownerId == vehicleId && d.type == type);
+        }
+      }
+    }
+  }
 
   void _ensureAssignable(String driverId, String vehicleId) {
     final driver = _drivers.firstWhere((item) => item.id == driverId);
@@ -372,6 +496,50 @@ class MockFleetDatasource implements FleetDatasource {
     _vehicles[index] = FleetVehicleModel.fromEntity(
       _vehicles[index].copyWith(clearCurrentDriver: true),
     );
+  }
+
+  Future<void> _handleVehicleAssignmentChange(String driverId, String newVehicleId) async {
+    final currentDriver = _drivers.firstWhere((d) => d.id == driverId);
+    final oldVehicleId = currentDriver.currentVehicleId;
+
+    if (oldVehicleId == newVehicleId) return;
+
+    if (oldVehicleId.isNotEmpty) {
+      final activeAssign = _activeAssignmentForDriver(driverId);
+      if (activeAssign != null) {
+        await removeAssignment(activeAssign.id);
+      }
+    }
+
+    if (newVehicleId.isNotEmpty) {
+      final activeAssignForNewVehicle = _activeAssignmentForVehicle(newVehicleId);
+      if (activeAssignForNewVehicle != null) {
+        await removeAssignment(activeAssignForNewVehicle.id);
+      }
+      await assignDriverToVehicle(driverId, newVehicleId);
+    }
+  }
+
+  Future<void> _handleDriverAssignmentChange(String vehicleId, String newDriverId) async {
+    final currentVehicle = _vehicles.firstWhere((v) => v.id == vehicleId);
+    final oldDriverId = currentVehicle.currentDriverId;
+
+    if (oldDriverId == newDriverId) return;
+
+    if (oldDriverId.isNotEmpty) {
+      final activeAssign = _activeAssignmentForVehicle(vehicleId);
+      if (activeAssign != null) {
+        await removeAssignment(activeAssign.id);
+      }
+    }
+
+    if (newDriverId.isNotEmpty) {
+      final activeAssignForNewDriver = _activeAssignmentForDriver(newDriverId);
+      if (activeAssignForNewDriver != null) {
+        await removeAssignment(activeAssignForNewDriver.id);
+      }
+      await assignDriverToVehicle(newDriverId, vehicleId);
+    }
   }
 
   void _validateDriver(FleetDriver driver) {
@@ -595,10 +763,7 @@ List<FleetHistoryItem> _history(String title, int count) {
   );
 }
 
-String _initials(String name) {
-  final parts = name.split(' ');
-  return parts.take(2).map((part) => part.substring(0, 1)).join();
-}
+
 
 String _monthName(int index) {
   const months = [

@@ -3,6 +3,8 @@ import 'package:bmt_app/apps/captain/features/trip_execution/presentation/pages/
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/app_mode/app_mode.dart';
+import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 
 import '../../domain/entities/assigned_trip.dart';
 import '../cubit/assigned_trips_cubit.dart';
@@ -21,6 +23,68 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
   void initState() {
     super.initState();
     context.read<AssignedTripsCubit>().load();
+  }
+
+  void _showDevModeSwitcher(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        final scheme = Theme.of(sheetContext).colorScheme;
+        return Container(
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+          ),
+          padding: const EdgeInsets.all(24),
+          child: BlocBuilder<AppModeCubit, AppModeState>(
+            builder: (context, state) {
+              final cubit = context.read<AppModeCubit>();
+              final current = state.mode;
+
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Developer Settings',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Switch application mode (development only)',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Wrap(
+                    spacing: 12,
+                    runSpacing: 12,
+                    children: AppMode.values.map((m) {
+                      final active = m == current;
+                      return FilterChip(
+                        label: Text(m.displayLabel),
+                        selected: active,
+                        onSelected: (_) {
+                          if (!active) {
+                            cubit.changeMode(m);
+                            Navigator.of(sheetContext).pop();
+                          }
+                        },
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+              );
+            },
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -59,7 +123,10 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                         ],
                       ),
                     ),
-                    const AppAvatar(initials: 'AM'),
+                    GestureDetector(
+                      onTap: () => _showDevModeSwitcher(context),
+                      child: const AppAvatar(initials: 'AM'),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 16),
