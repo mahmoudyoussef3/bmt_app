@@ -1,4 +1,4 @@
-import '../entities/fleet_workspace.dart';
+import '../../shared/domain/entities/fleet_workspace.dart';
 import '../repositories/fleet_repository.dart';
 
 class GetFleetWorkspaceUseCase {

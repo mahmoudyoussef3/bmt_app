@@ -14,8 +14,8 @@ import '../../features/dashboard_home/presentation/screens/dashboard_home_screen
 import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
 import '../../features/drivers/presentation/cubit/drivers_cubit.dart';
 import '../../features/drivers/presentation/screens/drivers_screen.dart';
-import '../../features/fleet/presentation/cubit/fleet_cubit.dart';
-import '../../features/fleet/presentation/screens/fleet_screen.dart';
+import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
+import '../../features/fleet/overview/presentation/screens/fleet_overview_screen.dart';
 import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
@@ -287,8 +287,8 @@ class _DashboardShellState extends State<DashboardShell> {
         child: const LiveTripsScreen(),
       ),
       DashboardRoutes.fleet => BlocProvider(
-        create: (_) => dashboardDi<FleetCubit>()..load(),
-        child: const FleetScreen(),
+        create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
+        child: const FleetOverviewScreen(),
       ),
       DashboardRoutes.drivers => BlocProvider(
         create: (_) => dashboardDi<DriversCubit>()..load(),

@@ -46,6 +46,7 @@ import '../../features/fleet/data/datasources/supabase_fleet_datasource.dart';
 import '../../features/fleet/data/repositories/fleet_repository_impl.dart';
 import '../../features/fleet/domain/repositories/fleet_repository.dart';
 import '../../features/fleet/domain/usecases/fleet_usecases.dart';
+import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import '../../features/fleet/presentation/cubit/fleet_cubit.dart';
 import '../../features/live_trips/data/datasources/mock_live_trips_datasource.dart';
 import '../../features/live_trips/data/repositories/live_trips_repository_impl.dart';
@@ -247,87 +248,84 @@ if (!dashboardDi.isRegistered<SupabaseClient>()) {
     );
   }
 
+  // ── Fleet Use Cases ──────────────────────────────────────────────────
   if (!dashboardDi.isRegistered<CreateFleetDriverUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => CreateFleetDriverUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<UpdateFleetDriverUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => UpdateFleetDriverUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<UpdateFleetDriverStatusUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => UpdateFleetDriverStatusUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<CreateFleetVehicleUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => CreateFleetVehicleUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<UpdateFleetVehicleUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => UpdateFleetVehicleUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<UpdateFleetVehicleStatusUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => UpdateFleetVehicleStatusUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<AssignFleetVehicleUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => AssignFleetVehicleUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<ReassignFleetVehicleUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => ReassignFleetVehicleUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<RemoveUnifiedFleetAssignmentUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => RemoveUnifiedFleetAssignmentUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<CreateFleetDocumentUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => CreateFleetDocumentUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<UpdateFleetDocumentUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => UpdateFleetDocumentUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<DeleteFleetDocumentUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => DeleteFleetDocumentUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<UploadFleetFileUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => UploadFleetFileUseCase(dashboardDi<FleetRepository>()),
     );
   }
-
   if (!dashboardDi.isRegistered<DeleteFleetFileUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => DeleteFleetFileUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  // ── Fleet Cubits ────────────────────────────────────────────────────
+  if (!dashboardDi.isRegistered<FleetOverviewCubit>()) {
+    dashboardDi.registerFactory(
+      () => FleetOverviewCubit(
+        getWorkspace: dashboardDi<GetFleetWorkspaceUseCase>(),
+      ),
     );
   }
 

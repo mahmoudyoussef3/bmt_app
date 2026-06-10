@@ -3,7 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../domain/entities/fleet_workspace.dart';
+import '../../shared/domain/entities/fleet_workspace.dart';
 import '../models/fleet_models.dart';
 import 'fleet_datasource.dart';
 

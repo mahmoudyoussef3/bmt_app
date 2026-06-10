@@ -1,5 +1,7 @@
 import 'dart:io' as io;
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'dart:typed_data';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -10,9 +12,10 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
-import '../../domain/entities/fleet_workspace.dart';
+
 import '../cubit/fleet_cubit.dart';
 import '../cubit/fleet_state.dart';
+import '../../data/models/fleet_models.dart';
 
 /// Local navigation state for the Fleet feature.
 enum _FleetViewState {
@@ -211,72 +214,154 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final cubit = context.read<FleetCubit>();
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        gradient: LinearGradient(
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
+          colors: [
+            scheme.primary,
+            scheme.secondary,
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.primary.withAlpha(35),
+            blurRadius: 24,
+            offset: const Offset(0, 14),
+          ),
+        ],
+      ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 600;
-          final widgets = [
-            Expanded(
-              flex: isCompact ? 0 : 1,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'إدارة الأسطول',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: AppSpacing.xSmall),
-                  Text(
-                    'إدارة السائقين والمركبات والتعيينات والوثائق اليومية.',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                  ),
-                ],
-              ),
-            ),
-            if (isCompact) const SizedBox(height: AppSpacing.medium),
-            Wrap(
-              spacing: AppSpacing.small,
-              runSpacing: AppSpacing.small,
-              alignment: WrapAlignment.end,
-              children: [
-                if (state.tab == FleetTab.drivers)
-                  FilledButton.icon(
-                    onPressed: onAddDriver,
-                    icon: const Icon(Icons.person_add_alt_1_rounded),
-                    label: const Text('إضافة سائق'),
-                  ),
-                if (state.tab == FleetTab.vehicles)
-                  FilledButton.icon(
-                    onPressed: onAddVehicle,
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('إضافة مركبة'),
-                  ),
-                if (state.tab == FleetTab.assignments)
-                  FilledButton.icon(
-                    onPressed: () => _openAssignDialog(context),
-                    icon: const Icon(Icons.link_rounded),
-                    label: const Text('تعيين سائق'),
-                  ),
-                OutlinedButton.icon(
-                  onPressed: cubit.load,
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: const Text('تحديث'),
-                ),
-              ],
-            ),
-          ];
+          final isCompact = constraints.maxWidth < 720;
 
-          return isCompact
-              ? Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: widgets,
-                )
-              : Row(
-                  children: widgets,
-                );
+          final title = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 7,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(34),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(color: Colors.white.withAlpha(50)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.verified_rounded, color: Colors.white, size: 16),
+                    SizedBox(width: 7),
+                    Text(
+                      'Production Fleet Control',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              Text(
+                'إدارة الأسطول',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      height: 1.1,
+                    ),
+              ),
+              const SizedBox(height: AppSpacing.xSmall),
+              Text(
+                'تحكم احترافي في السائقين، المركبات، التعيينات، الوثائق والصور من مكان واحد.',
+                maxLines: isCompact ? 3 : 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white.withAlpha(230),
+                      fontWeight: FontWeight.w600,
+                      height: 1.6,
+                    ),
+              ),
+            ],
+          );
+
+          final actions = Wrap(
+            spacing: AppSpacing.small,
+            runSpacing: AppSpacing.small,
+            alignment: isCompact ? WrapAlignment.start : WrapAlignment.end,
+            children: [
+              if (state.tab == FleetTab.drivers)
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: scheme.primary,
+                  ),
+                  onPressed: onAddDriver,
+                  icon: const Icon(Icons.person_add_alt_1_rounded),
+                  label: const Text('إضافة سائق'),
+                ),
+              if (state.tab == FleetTab.vehicles)
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: scheme.primary,
+                  ),
+                  onPressed: onAddVehicle,
+                  icon: const Icon(Icons.add_rounded),
+                  label: const Text('إضافة مركبة'),
+                ),
+              if (state.tab == FleetTab.assignments)
+                FilledButton.icon(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: scheme.primary,
+                  ),
+                  onPressed: () => _openAssignDialog(context),
+                  icon: const Icon(Icons.link_rounded),
+                  label: const Text('تعيين سائق'),
+                ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: BorderSide(color: Colors.white.withAlpha(130)),
+                ),
+                onPressed: () {
+                  debugPrint('[FleetScreen] Manual refresh clicked');
+                  cubit.load();
+                },
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('تحديث'),
+              ),
+            ],
+          );
+
+          if (isCompact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                title,
+                const SizedBox(height: AppSpacing.large),
+                actions,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(child: title),
+              const SizedBox(width: AppSpacing.large),
+              actions,
+            ],
+          );
         },
       ),
     );
@@ -290,31 +375,43 @@ class _Summary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final items = [
+      _SummaryItem(
+        title: 'السائقين',
+        value: '${summary.driversCount}',
+        subtitle: 'إجمالي المسجلين',
+        icon: Icons.badge_outlined,
+      ),
+      _SummaryItem(
+        title: 'المركبات',
+        value: '${summary.vehiclesCount}',
+        subtitle: 'جاهزة أو تحت المتابعة',
+        icon: Icons.directions_bus_outlined,
+      ),
+      _SummaryItem(
+        title: 'التعيينات',
+        value: '${summary.activeAssignmentsCount}',
+        subtitle: 'تعيينات نشطة الآن',
+        icon: Icons.link_rounded,
+      ),
+      _SummaryItem(
+        title: 'الوثائق',
+        value: '${summary.documentsNeedFollowUpCount}',
+        subtitle: 'تحتاج مراجعة',
+        icon: Icons.fact_check_outlined,
+        highlight: summary.documentsNeedFollowUpCount > 0,
+      ),
+    ];
+
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 980
+        final width = constraints.maxWidth;
+        final columns = width >= 1100
             ? 4
-            : constraints.maxWidth >= 600
+            : width >= 720
                 ? 2
                 : 1;
-        final items = [
-          ('عدد السائقين', '${summary.driversCount}', Icons.badge_outlined),
-          (
-            'عدد المركبات',
-            '${summary.vehiclesCount}',
-            Icons.directions_bus_outlined,
-          ),
-          (
-            'تعيينات نشطة',
-            '${summary.activeAssignmentsCount}',
-            Icons.link_rounded,
-          ),
-          (
-            'وثائق تحتاج متابعة',
-            '${summary.documentsNeedFollowUpCount}',
-            Icons.fact_check_outlined,
-          ),
-        ];
+
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
@@ -323,35 +420,91 @@ class _Summary extends StatelessWidget {
             crossAxisCount: columns,
             crossAxisSpacing: AppSpacing.medium,
             mainAxisSpacing: AppSpacing.medium,
-            mainAxisExtent: 96,
+            mainAxisExtent: 118,
           ),
-          itemBuilder: (context, index) {
-            final (label, value, icon) = items[index];
-            return AppCard(
-              padding: const EdgeInsets.all(AppSpacing.medium),
-              child: Row(
-                children: [
-                  Icon(icon, color: Theme.of(context).colorScheme.primary, size: 28),
-                  const SizedBox(width: AppSpacing.medium),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  Text(
-                    value,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                  ),
-                ],
-              ),
-            );
-          },
+          itemBuilder: (context, index) => _SummaryCard(item: items[index]),
         );
       },
+    );
+  }
+}
+
+class _SummaryItem {
+  const _SummaryItem({
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.icon,
+    this.highlight = false,
+  });
+
+  final String title;
+  final String value;
+  final String subtitle;
+  final IconData icon;
+  final bool highlight;
+}
+
+class _SummaryCard extends StatelessWidget {
+  const _SummaryCard({required this.item});
+
+  final _SummaryItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = item.highlight ? scheme.error : scheme.primary;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: color.withAlpha(18),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Icon(item.icon, color: color, size: 28),
+          ),
+          const SizedBox(width: AppSpacing.medium),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w700,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  item.subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.small),
+          Text(
+            item.value,
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -364,40 +517,102 @@ class _FleetTabs extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<FleetCubit>();
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isCompact = constraints.maxWidth < 600;
-        final items = FleetTab.values.map((tab) {
-          final selected = tab == active;
-          return Expanded(
-            flex: isCompact ? 0 : 1,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.xSmall),
-              child: selected
-                  ? FilledButton(
-                      onPressed: () => cubit.changeTab(tab),
-                      child: Text(tab.label),
-                    )
-                  : TextButton(
-                      onPressed: () => cubit.changeTab(tab),
-                      child: Text(tab.label),
-                    ),
-            ),
-          );
-        }).toList();
+    final tabs = FleetTab.values;
 
-        return AppCard(
-          padding: const EdgeInsets.all(AppSpacing.xSmall),
-          child: isCompact
-              ? SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: items.map((w) => SizedBox(width: 120, child: w)).toList(),
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.xSmall),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isCompact = constraints.maxWidth < 720;
+
+          final children = tabs.map((tab) {
+            final selected = tab == active;
+            return _DashboardTabButton(
+              label: tab.label,
+              selected: selected,
+              onTap: () {
+                debugPrint('[FleetScreen] Change tab => ${tab.name}');
+                cubit.changeTab(tab);
+              },
+            );
+          }).toList();
+
+          if (isCompact) {
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: children
+                    .map(
+                      (child) => Padding(
+                        padding: const EdgeInsetsDirectional.only(end: 8),
+                        child: SizedBox(width: 132, child: child),
+                      ),
+                    )
+                    .toList(),
+              ),
+            );
+          }
+
+          return Row(
+            children: children
+                .map(
+                  (child) => Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: child,
+                    ),
                   ),
                 )
-              : Row(children: items),
-        );
-      },
+                .toList(),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _DashboardTabButton extends StatelessWidget {
+  const _DashboardTabButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      decoration: BoxDecoration(
+        color: selected ? scheme.primary : Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.medium,
+            vertical: 12,
+          ),
+          child: Center(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: selected ? scheme.onPrimary : scheme.onSurface,
+                    fontWeight: FontWeight.w900,
+                  ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -525,7 +740,7 @@ class _DriversTable extends StatelessWidget {
             value: state.selectedIds.contains(driver.id),
             onChanged: (_) => cubit.toggleSelection(driver.id),
           ),
-          _Avatar(label: driver.imageLabel),
+          _Avatar(label: driver.imageLabel, profileImageUrl: driver.profileImageUrl),
           Text(driver.name, style: const TextStyle(fontWeight: FontWeight.bold)),
           Text(driver.phone),
           Text(driver.nationalId),
@@ -607,7 +822,7 @@ class _VehiclesTable extends StatelessWidget {
             value: state.selectedIds.contains(vehicle.id),
             onChanged: (_) => cubit.toggleSelection(vehicle.id),
           ),
-          _VehicleThumb(label: vehicle.imageLabel),
+          _VehicleThumb(label: vehicle.imageLabel, imageUrl: vehicle.imageUrl),
           Text(vehicle.vehicleNumber, style: const TextStyle(fontWeight: FontWeight.bold)),
           Text(vehicle.plateNumber),
           Text(vehicle.model),
@@ -835,8 +1050,9 @@ class _TableShell extends StatelessWidget {
 
 class _Avatar extends StatelessWidget {
   final String label;
+  final String profileImageUrl;
 
-  const _Avatar({required this.label});
+  const _Avatar({required this.label, this.profileImageUrl = ''});
 
   @override
   Widget build(BuildContext context) {
@@ -844,15 +1060,17 @@ class _Avatar extends StatelessWidget {
     return CircleAvatar(
       backgroundColor: scheme.primaryContainer,
       foregroundColor: scheme.onPrimaryContainer,
-      child: Text(label),
+      backgroundImage: profileImageUrl.isNotEmpty ? NetworkImage(profileImageUrl) : null,
+      child: profileImageUrl.isNotEmpty ? null : Text(label),
     );
   }
 }
 
 class _VehicleThumb extends StatelessWidget {
   final String label;
+  final String imageUrl;
 
-  const _VehicleThumb({required this.label});
+  const _VehicleThumb({required this.label, this.imageUrl = ''});
 
   @override
   Widget build(BuildContext context) {
@@ -865,10 +1083,300 @@ class _VehicleThumb extends StatelessWidget {
         color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         border: Border.all(color: scheme.outline.withAlpha(90)),
+        image: imageUrl.isNotEmpty
+            ? DecorationImage(
+                image: NetworkImage(imageUrl),
+                fit: BoxFit.cover,
+              )
+            : null,
       ),
-      child: Icon(Icons.directions_bus_rounded, color: scheme.primary),
+      child: imageUrl.isNotEmpty ? null : Icon(Icons.directions_bus_rounded, color: scheme.primary),
     );
   }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: BoxDecoration(
+            color: scheme.primary.withAlpha(18),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Icon(icon, color: scheme.primary),
+        ),
+        const SizedBox(width: AppSpacing.small),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      height: 1.5,
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FormHeroCard extends StatelessWidget {
+  const _FormHeroCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      child: Row(
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: scheme.primary.withAlpha(18),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(icon, color: scheme.primary, size: 30),
+          ),
+          const SizedBox(width: AppSpacing.medium),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        height: 1.5,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FormActionsBar extends StatelessWidget {
+  const _FormActionsBar({
+    required this.saving,
+    required this.onCancel,
+    required this.onSave,
+    required this.saveLabel,
+  });
+
+  final bool saving;
+  final VoidCallback onCancel;
+  final VoidCallback onSave;
+  final String saveLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              saving ? 'جاري الحفظ والرفع...' : 'راجع البيانات قبل الحفظ النهائي.',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.medium),
+          OutlinedButton(
+            onPressed: saving ? null : onCancel,
+            child: const Text('إلغاء'),
+          ),
+          const SizedBox(width: AppSpacing.small),
+          FilledButton.icon(
+            onPressed: saving ? null : onSave,
+            icon: saving
+                ? const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.save_rounded),
+            label: Text(saveLabel),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EmptyInlineState extends StatelessWidget {
+  const _EmptyInlineState({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.large),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(65),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outline.withAlpha(70)),
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: scheme.primary, size: 38),
+          const SizedBox(height: AppSpacing.small),
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+Future<List<int>?> _readPickedFileBytes(PlatformFile file) async {
+  if (file.bytes != null) return file.bytes;
+
+  if (!kIsWeb && file.path != null) {
+    return io.File(file.path!).readAsBytes();
+  }
+
+  return null;
+}
+
+String _safeStorageFileName(String input) {
+  final extension = input.contains('.') ? '.${input.split('.').last}' : '';
+  final nameWithoutExtension =
+      input.contains('.') ? input.substring(0, input.lastIndexOf('.')) : input;
+
+  final safeName = nameWithoutExtension
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[^a-z0-9_\-]+'), '-')
+      .replaceAll(RegExp(r'-+'), '-')
+      .replaceAll(RegExp(r'^-|-$'), '');
+
+  return '${safeName.isEmpty ? 'file' : safeName}$extension';
+}
+
+String? _storagePathFromPublicUrl(String url, {required String bucket}) {
+  final uri = Uri.tryParse(url);
+  if (uri == null) return null;
+
+  final segments = uri.pathSegments;
+  final bucketIndex = segments.indexOf(bucket);
+  if (bucketIndex == -1 || bucketIndex + 1 >= segments.length) return null;
+
+  return segments.skip(bucketIndex + 1).join('/');
+}
+
+Future<bool> _confirmDeleteDocument(
+  BuildContext context,
+  FleetDocument document,
+) async {
+  final result = await showDialog<bool>(
+    context: context,
+    builder: (_) => Directionality(
+      textDirection: TextDirection.rtl,
+      child: AlertDialog(
+        title: const Text('حذف الوثيقة'),
+        content: Text(
+          'هل تريد حذف "${document.type.label}"؟ سيتم حذف الملف من التخزين وسجل الوثيقة من قاعدة البيانات.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  return result ?? false;
 }
 
 class _FleetError extends StatelessWidget {
@@ -1278,7 +1786,7 @@ class _DriversCardList extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      _Avatar(label: driver.imageLabel),
+                      _Avatar(label: driver.imageLabel, profileImageUrl: driver.profileImageUrl),
                       const SizedBox(width: AppSpacing.medium),
                       Expanded(
                         child: Column(
@@ -1444,7 +1952,7 @@ class _VehiclesCardList extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      _VehicleThumb(label: vehicle.imageLabel),
+                      _VehicleThumb(label: vehicle.imageLabel, imageUrl: vehicle.imageUrl),
                       const SizedBox(width: AppSpacing.medium),
                       Expanded(
                         child: Column(
@@ -1604,10 +2112,14 @@ class _AssignmentsCardList extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        'تعيين #${assignment.id}',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      Flexible(
+                        child: Text(
+                          'تعيين #${assignment.id}',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                          overflow: TextOverflow.ellipsis,
+                        ),
                       ),
+                      const SizedBox(width: AppSpacing.small),
                       StatusChip(label: assignment.status.label),
                     ],
                   ),
@@ -1817,7 +2329,6 @@ class _DriverDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.medium),
               Expanded(
-                flex: isCompact ? 0 : 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1840,7 +2351,16 @@ class _DriverDetailsScreen extends StatelessWidget {
             return isCompact
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: headerWidgets,
+                    children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: headerWidgets[0],
+                      ),
+                      const SizedBox(height: AppSpacing.small),
+                      (headerWidgets[2] as Expanded).child,
+                      const SizedBox(height: AppSpacing.medium),
+                      headerWidgets.last,
+                    ],
                   )
                 : Row(
                     children: headerWidgets,
@@ -2095,7 +2615,6 @@ class _VehicleDetailsScreen extends StatelessWidget {
               ),
               const SizedBox(width: AppSpacing.medium),
               Expanded(
-                flex: isCompact ? 0 : 1,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2118,7 +2637,16 @@ class _VehicleDetailsScreen extends StatelessWidget {
             return isCompact
                 ? Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: headerWidgets,
+                    children: [
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: headerWidgets[0],
+                      ),
+                      const SizedBox(height: AppSpacing.small),
+                      (headerWidgets[2] as Expanded).child,
+                      const SizedBox(height: AppSpacing.medium),
+                      headerWidgets.last,
+                    ],
                   )
                 : Row(
                     children: headerWidgets,
@@ -2770,10 +3298,17 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
   late final TextEditingController brand;
   late final TextEditingController color;
   late final TextEditingController notes;
+
   String vehicleType = 'Coaster';
   String seatLayoutType = 'standard';
   String? selectedDriverId;
+
+  PlatformFile? _pickedVehicleImage;
+  List<int>? _pickedVehicleImageBytes;
+  String _vehicleImageUrl = '';
+
   String _globalError = '';
+  bool _saving = false;
 
   @override
   void initState() {
@@ -2787,25 +3322,36 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
     brand = TextEditingController(text: v?.brand ?? '');
     color = TextEditingController(text: v?.color ?? '');
     notes = TextEditingController(text: v?.notes ?? '');
+    _vehicleImageUrl = v?.imageUrl ?? '';
+
     if (v != null) {
       vehicleType = v.vehicleType.isEmpty ? 'Coaster' : v.vehicleType;
       seatLayoutType = v.seatLayoutType.isEmpty ? 'standard' : v.seatLayoutType;
     }
-    selectedDriverId = v?.currentDriverId.isNotEmpty == true ? v!.currentDriverId : null;
+
+    selectedDriverId = v?.currentDriverId.isNotEmpty == true
+        ? v!.currentDriverId
+        : null;
+
+    debugPrint('[FleetScreen] Open vehicle form. edit=${v != null}, id=${v?.id}');
   }
 
   List<FleetDriver> _getAvailableDrivers() {
     return widget.workspace.drivers.where((d) {
       if (d.status != FleetDriverStatus.active) return false;
-      
-      final hasExpiredDocs = d.documents.any((doc) => doc.status == FleetDocumentStatus.expired);
+
+      final hasExpiredDocs = d.documents.any(
+        (doc) => doc.status == FleetDocumentStatus.expired,
+      );
       if (hasExpiredDocs) return false;
-      
-      final isAssignedToOther = widget.workspace.assignments.any((a) => 
-          a.driverId == d.id && 
-          a.status == FleetAssignmentStatus.active && 
-          a.vehicleId != widget.vehicle?.id);
-          
+
+      final isAssignedToOther = widget.workspace.assignments.any(
+        (a) =>
+            a.driverId == d.id &&
+            a.status == FleetAssignmentStatus.active &&
+            a.vehicleId != widget.vehicle?.id,
+      );
+
       return !isAssignedToOther;
     }).toList();
   }
@@ -2826,6 +3372,7 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.vehicle != null;
+    final scheme = Theme.of(context).colorScheme;
 
     return Form(
       key: _formKey,
@@ -2834,159 +3381,244 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _Breadcrumbs(
-            currentLabel: isEdit ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}' : 'إضافة مركبة جديدة',
+            currentLabel: isEdit
+                ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}'
+                : 'إضافة مركبة جديدة',
             onBack: widget.onBack,
           ),
           const SizedBox(height: AppSpacing.large),
-          AppCard(
-            padding: const EdgeInsets.all(AppSpacing.large),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final isDesktop = constraints.maxWidth >= 720;
-                final colCount = isDesktop ? 2 : 1;
+          _FormHeroCard(
+            icon: Icons.directions_bus_filled_rounded,
+            title: isEdit ? 'تعديل بيانات المركبة' : 'إضافة مركبة جديدة',
+            subtitle:
+                'أدخل بيانات المركبة والصورة والسائق المرتبط بها. الصورة ترفع إلى Supabase Storage قبل الحفظ.',
+          ),
+          const SizedBox(height: AppSpacing.large),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth >= 980;
 
-                return Column(
+              if (isDesktop) {
+                return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'بيانات ترخيص ومواصفات المركبة',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                    Expanded(
+                      flex: 5,
+                      child: _VehicleMainInfoCard(
+                        child: _buildMainFields(columns: 2),
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.large),
-                    _responsiveGrid(
-                      colCount,
-                      [
-                        _textFormField(
-                          controller: code,
-                          label: 'كود المركبة الداخلي (مثال: مركبة 101)',
-                          icon: Icons.directions_bus_rounded,
-                          validator: _validateVehicleCode,
-                        ),
-                        _textFormField(
-                          controller: plate,
-                          label: 'رقم اللوحة المرورية (أرقام وحروف)',
-                          icon: Icons.confirmation_number_outlined,
-                          validator: _validatePlateNumber,
-                        ),
-                        _textFormField(
-                          controller: brand,
-                          label: 'الماركة المصنعة للمركبة (مثال: Toyota)',
-                          icon: Icons.branding_watermark_outlined,
-                          validator: (v) => (v == null || v.trim().isEmpty) ? 'اسم الماركة مطلوب' : null,
-                        ),
-                        _textFormField(
-                          controller: model,
-                          label: 'طراز الموديل (مثال: Coaster)',
-                          icon: Icons.model_training_rounded,
-                          validator: (v) => (v == null || v.trim().isEmpty) ? 'اسم طراز الموديل مطلوب' : null,
-                        ),
-                        _textFormField(
-                          controller: year,
-                          label: 'سنة صنع الموديل المعتمد',
-                          icon: Icons.calendar_today_rounded,
-                          keyboardType: TextInputType.number,
-                          validator: _validateManufactureYear,
-                        ),
-                        _textFormField(
-                          controller: seats,
-                          label: 'السعة الركابية (عدد المقاعد الفعلي)',
-                          icon: Icons.event_seat_rounded,
-                          keyboardType: TextInputType.number,
-                          validator: _validateCapacity,
-                        ),
-                        _textFormField(
-                          controller: color,
-                          label: 'لون هيكل المركبة الفعلي',
-                          icon: Icons.color_lens_outlined,
-                          validator: (v) => (v == null || v.trim().isEmpty) ? 'لون الهيكل مطلوب' : null,
-                        ),
-                        DropdownButtonFormField<String>(
-                          initialValue: vehicleType,
-                          decoration: const InputDecoration(
-                            labelText: 'فئة ونوع المركبة التشغيلية',
-                            prefixIcon: Icon(Icons.category_outlined),
-                            border: OutlineInputBorder(),
+                    const SizedBox(width: AppSpacing.large),
+                    Expanded(
+                      flex: 3,
+                      child: Column(
+                        children: [
+                          _VehicleImagePickerCard(
+                            imageUrl: _vehicleImageUrl,
+                            pickedFile: _pickedVehicleImage,
+                            pickedBytes: _pickedVehicleImageBytes,
+                            onPick: _pickVehicleImage,
+                            onRemove: _removeVehicleImage,
                           ),
-                          items: const [
-                            DropdownMenuItem(value: 'Coaster', child: Text('Coaster (ميني باص كوستر)')),
-                            DropdownMenuItem(value: 'Sprinter', child: Text('Sprinter (حافلة سبرنتر)')),
-                            DropdownMenuItem(value: 'Hiace', child: Text('Hiace (ميكروباص هايس)')),
-                            DropdownMenuItem(value: 'H1', child: Text('H1 (حافلة عائلية)')),
-                            DropdownMenuItem(value: 'Other', child: Text('فئة تشغيلية أخرى')),
-                          ],
-                          onChanged: (v) => setState(() => vehicleType = v ?? 'Coaster'),
-                        ),
-                        DropdownButtonFormField<String>(
-                          initialValue: seatLayoutType,
-                          decoration: const InputDecoration(
-                            labelText: 'توزيع وتخطيط المقاعد الداخلي',
-                            prefixIcon: Icon(Icons.grid_view_rounded),
-                            border: OutlineInputBorder(),
+                          const SizedBox(height: AppSpacing.medium),
+                          _VehicleDriverCard(
+                            selectedDriverId: selectedDriverId,
+                            drivers: _getAvailableDrivers(),
+                            onChanged: (val) {
+                              debugPrint('[FleetScreen] Vehicle driver changed => $val');
+                              setState(() => selectedDriverId = val);
+                            },
                           ),
-                          items: const [
-                            DropdownMenuItem(value: 'standard', child: Text('Standard (توزيع ركاب قياسي)')),
-                            DropdownMenuItem(value: 'VIP', child: Text('VIP (توزيع ركاب متميز)')),
-                          ],
-                          onChanged: (v) => setState(() => seatLayoutType = v ?? 'standard'),
-                        ),
-                        DropdownButtonFormField<String>(
-                          initialValue: selectedDriverId,
-                          decoration: const InputDecoration(
-                            labelText: 'السائق المعين (اختياري)',
-                            prefixIcon: Icon(Icons.person_rounded),
-                            border: OutlineInputBorder(),
-                          ),
-                          items: [
-                            const DropdownMenuItem<String>(
-                              value: null,
-                              child: Text('غير معين (بدون سائق)'),
-                            ),
-                            ..._getAvailableDrivers().map((d) => DropdownMenuItem<String>(
-                                  value: d.id,
-                                  child: Text('${d.name} (${d.employeeCode})'),
-                                )),
-                          ],
-                          onChanged: (val) {
-                            setState(() {
-                              selectedDriverId = val;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.medium),
-                    _textFormField(
-                      controller: notes,
-                      label: 'ملاحظات الصيانة الوقائية والتشغيلية',
-                      icon: Icons.edit_note_rounded,
-                      maxLines: 2,
+                        ],
+                      ),
                     ),
                   ],
                 );
-              },
-            ),
+              }
+
+              return Column(
+                children: [
+                  _VehicleImagePickerCard(
+                    imageUrl: _vehicleImageUrl,
+                    pickedFile: _pickedVehicleImage,
+                    pickedBytes: _pickedVehicleImageBytes,
+                    onPick: _pickVehicleImage,
+                    onRemove: _removeVehicleImage,
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  _VehicleMainInfoCard(child: _buildMainFields(columns: 1)),
+                  const SizedBox(height: AppSpacing.medium),
+                  _VehicleDriverCard(
+                    selectedDriverId: selectedDriverId,
+                    drivers: _getAvailableDrivers(),
+                    onChanged: (val) => setState(() => selectedDriverId = val),
+                  ),
+                ],
+              );
+            },
           ),
-          const SizedBox(height: AppSpacing.large),
           if (_globalError.isNotEmpty) ...[
-            Text(_globalError, style: TextStyle(color: Theme.of(context).colorScheme.error, fontWeight: FontWeight.bold)),
             const SizedBox(height: AppSpacing.medium),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(AppSpacing.medium),
+              decoration: BoxDecoration(
+                color: scheme.error.withAlpha(18),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: scheme.error.withAlpha(55)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.error_outline_rounded, color: scheme.error),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(
+                    child: Text(
+                      _globalError,
+                      style: TextStyle(
+                        color: scheme.error,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              OutlinedButton(
-                onPressed: widget.onBack,
-                child: const Text('إلغاء'),
-              ),
-              const SizedBox(width: AppSpacing.medium),
-              FilledButton(
-                onPressed: _onSave,
-                child: const Text('حفظ المركبة'),
-              ),
-            ],
+          const SizedBox(height: AppSpacing.large),
+          _FormActionsBar(
+            saving: _saving,
+            onCancel: widget.onBack,
+            onSave: _onSave,
+            saveLabel: isEdit ? 'حفظ التعديلات' : 'إضافة المركبة',
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMainFields({required int columns}) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _responsiveGrid(
+          columns,
+          [
+            _textFormField(
+              controller: code,
+              label: 'كود المركبة الداخلي',
+              hint: 'مثال: BUS-201',
+              icon: Icons.directions_bus_rounded,
+              validator: _validateVehicleCode,
+            ),
+            _textFormField(
+              controller: plate,
+              label: 'رقم اللوحة المرورية',
+              hint: 'مثال: ٣٣٠٠ ق ل',
+              icon: Icons.confirmation_number_outlined,
+              validator: _validatePlateNumber,
+            ),
+            _textFormField(
+              controller: brand,
+              label: 'الماركة',
+              hint: 'Toyota / Mercedes',
+              icon: Icons.branding_watermark_outlined,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'اسم الماركة مطلوب' : null,
+            ),
+            _textFormField(
+              controller: model,
+              label: 'الموديل',
+              hint: 'Coaster / Sprinter / Hiace',
+              icon: Icons.model_training_rounded,
+              validator: (v) => (v == null || v.trim().isEmpty)
+                  ? 'اسم طراز الموديل مطلوب'
+                  : null,
+            ),
+            _textFormField(
+              controller: year,
+              label: 'سنة الصنع',
+              hint: 'مثال: 2024',
+              icon: Icons.calendar_today_rounded,
+              keyboardType: TextInputType.number,
+              validator: _validateManufactureYear,
+            ),
+            _textFormField(
+              controller: seats,
+              label: 'السعة الركابية',
+              hint: 'عدد المقاعد الفعلي',
+              icon: Icons.event_seat_rounded,
+              keyboardType: TextInputType.number,
+              validator: _validateCapacity,
+            ),
+            _textFormField(
+              controller: color,
+              label: 'لون المركبة',
+              hint: 'أبيض / فضي / رمادي',
+              icon: Icons.color_lens_outlined,
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'لون الهيكل مطلوب' : null,
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: vehicleType,
+              decoration: const InputDecoration(
+                labelText: 'نوع المركبة',
+                prefixIcon: Icon(Icons.category_outlined),
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'Coaster',
+                  child: Text('Coaster - ميني باص'),
+                ),
+                DropdownMenuItem(
+                  value: 'Sprinter',
+                  child: Text('Sprinter - سبرنتر'),
+                ),
+                DropdownMenuItem(
+                  value: 'Hiace',
+                  child: Text('Hiace - هايس'),
+                ),
+                DropdownMenuItem(
+                  value: 'H1',
+                  child: Text('H1 - فان'),
+                ),
+                DropdownMenuItem(
+                  value: 'Other',
+                  child: Text('نوع آخر'),
+                ),
+              ],
+              onChanged: (v) => setState(() => vehicleType = v ?? 'Coaster'),
+            ),
+            DropdownButtonFormField<String>(
+              initialValue: seatLayoutType,
+              decoration: const InputDecoration(
+                labelText: 'تخطيط المقاعد',
+                prefixIcon: Icon(Icons.grid_view_rounded),
+                border: OutlineInputBorder(),
+              ),
+              items: const [
+                DropdownMenuItem(
+                  value: 'standard',
+                  child: Text('Standard - قياسي'),
+                ),
+                DropdownMenuItem(
+                  value: 'VIP',
+                  child: Text('VIP - مميز'),
+                ),
+              ],
+              onChanged: (v) => setState(() => seatLayoutType = v ?? 'standard'),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        _textFormField(
+          controller: notes,
+          label: 'ملاحظات التشغيل والصيانة',
+          hint: 'أي ملاحظات داخلية لخدمة العملاء أو التشغيل',
+          icon: Icons.edit_note_rounded,
+          maxLines: 3,
+        ),
+      ],
     );
   }
 
@@ -2994,22 +3626,35 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
     if (columns == 1) {
       return Column(
         children: children
-            .map((c) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-                  child: c,
-                ))
+            .map(
+              (child) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+                child: child,
+              ),
+            )
             .toList(),
       );
     }
-    return Wrap(
-      spacing: AppSpacing.medium,
-      runSpacing: AppSpacing.medium,
-      children: children
-          .map((c) => SizedBox(
-                width: (MediaQuery.of(context).size.width - 320 - 48 - 16) / 2,
-                child: c,
-              ))
-          .toList(),
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth =
+            (constraints.maxWidth - AppSpacing.medium * (columns - 1)) /
+                columns;
+
+        return Wrap(
+          spacing: AppSpacing.medium,
+          runSpacing: AppSpacing.medium,
+          children: children
+              .map(
+                (child) => SizedBox(
+                  width: itemWidth,
+                  child: child,
+                ),
+              )
+              .toList(),
+        );
+      },
     );
   }
 
@@ -3017,6 +3662,7 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
     required TextEditingController controller,
     required String label,
     required IconData icon,
+    String? hint,
     int maxLines = 1,
     TextInputType? keyboardType,
     String? Function(String?)? validator,
@@ -3025,6 +3671,7 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
+        hintText: hint,
         prefixIcon: Icon(icon),
         border: const OutlineInputBorder(),
       ),
@@ -3034,12 +3681,98 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
     );
   }
 
-  void _onSave() {
+  Future<void> _pickVehicleImage() async {
+    debugPrint('[FleetScreen] Pick vehicle image started');
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
+        allowMultiple: false,
+        withData: kIsWeb,
+      );
+
+      if (result == null || result.files.isEmpty) {
+        debugPrint('[FleetScreen] Pick vehicle image cancelled');
+        return;
+      }
+
+      final file = result.files.single;
+      final bytes = await _readPickedFileBytes(file);
+
+      if (bytes == null || bytes.isEmpty) {
+        setState(() => _globalError = 'تعذر قراءة صورة المركبة. جرّب صورة أخرى.');
+        return;
+      }
+
+      if (bytes.length > 5 * 1024 * 1024) {
+        setState(() => _globalError = 'حجم الصورة كبير. الحد الأقصى 5MB.');
+        return;
+      }
+
+      setState(() {
+        _pickedVehicleImage = file;
+        _pickedVehicleImageBytes = bytes;
+        _globalError = '';
+      });
+
+      debugPrint(
+        '[FleetScreen] Pick vehicle image success. name=${file.name}, size=${bytes.length}',
+      );
+    } catch (e, s) {
+      debugPrint('[FleetScreen] Pick vehicle image failed: $e');
+      debugPrintStack(stackTrace: s);
+      setState(() => _globalError = 'تعذر اختيار صورة المركبة: $e');
+    }
+  }
+
+  void _removeVehicleImage() {
+    debugPrint('[FleetScreen] Vehicle image removed locally');
+    setState(() {
+      _pickedVehicleImage = null;
+      _pickedVehicleImageBytes = null;
+      _vehicleImageUrl = '';
+    });
+  }
+
+  Future<void> _onSave() async {
     setState(() => _globalError = '');
-    if (_formKey.currentState!.validate()) {
+
+    if (!_formKey.currentState!.validate()) {
+      setState(() => _globalError = 'يرجى تصحيح الأخطاء في الحقول أولاً');
+      return;
+    }
+
+    setState(() => _saving = true);
+
+    try {
+      debugPrint('[FleetScreen] Vehicle save started');
+
       final seatsValue = int.parse(seats.text.trim());
       final yearValue = int.parse(year.text.trim());
       final existing = widget.vehicle;
+      var finalImageUrl = _vehicleImageUrl;
+
+      if (_pickedVehicleImage != null && _pickedVehicleImageBytes != null) {
+        final fileName = _safeStorageFileName(_pickedVehicleImage!.name);
+        final path =
+            'vehicles/${existing?.id.isNotEmpty == true ? existing!.id : 'new'}/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+
+        debugPrint('[FleetScreen] Uploading vehicle image. bucket=vehicle-images path=$path');
+
+        final url = await context.read<FleetCubit>().uploadDocumentFile(
+              'vehicle-images',
+              path,
+              _pickedVehicleImageBytes!,
+            );
+
+        if (url == null || url.isEmpty) {
+          throw Exception('تم الحفظ بدون صورة؟ لا، فشل رفع صورة المركبة إلى Supabase Storage.');
+        }
+
+        finalImageUrl = url;
+        debugPrint('[FleetScreen] Vehicle image uploaded: $finalImageUrl');
+      }
+
       final seatConfig = existing != null && existing.capacity == seatsValue
           ? existing.seatConfiguration
           : SeatConfiguration.generateDefault(seatsValue);
@@ -3055,7 +3788,7 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
         color: color.text.trim(),
         capacity: seatsValue,
         seatLayoutType: seatLayoutType,
-        imageUrl: existing?.imageUrl ?? '',
+        imageUrl: finalImageUrl,
         notes: notes.text.trim(),
         status: existing?.status ?? FleetVehicleStatus.active,
         currentDriverId: selectedDriverId ?? '',
@@ -3068,10 +3801,218 @@ class _VehicleFormScreenState extends State<_VehicleFormScreen> {
         tripHistory: existing?.tripHistory ?? const [],
         timeline: existing?.timeline ?? const [],
       );
+
+      debugPrint('[FleetScreen] Vehicle payload ready. code=${finalVehicle.vehicleCode}');
       widget.onSave(finalVehicle);
-    } else {
-      setState(() => _globalError = 'يرجى تصحيح الأخطاء في الحقول أولاً');
+    } catch (e, s) {
+      debugPrint('[FleetScreen] Vehicle save failed: $e');
+      debugPrintStack(stackTrace: s);
+      setState(() => _globalError = e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      if (mounted) setState(() => _saving = false);
     }
+  }
+}
+
+class _VehicleMainInfoCard extends StatelessWidget {
+  const _VehicleMainInfoCard({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle(
+            icon: Icons.fact_check_outlined,
+            title: 'بيانات المركبة',
+            subtitle: 'المعلومات التي تظهر في لوحة التشغيل والتعيينات.',
+          ),
+          const SizedBox(height: AppSpacing.large),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+class _VehicleImagePickerCard extends StatelessWidget {
+  const _VehicleImagePickerCard({
+    required this.imageUrl,
+    required this.pickedFile,
+    required this.pickedBytes,
+    required this.onPick,
+    required this.onRemove,
+  });
+
+  final String imageUrl;
+  final PlatformFile? pickedFile;
+  final List<int>? pickedBytes;
+  final VoidCallback onPick;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasImage =
+        (pickedBytes != null && pickedBytes!.isNotEmpty) || imageUrl.isNotEmpty;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle(
+            icon: Icons.image_rounded,
+            title: 'صورة المركبة',
+            subtitle: 'ارفع صورة واضحة للمركبة لتظهر في الكروت والتفاصيل.',
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(18),
+            child: Container(
+              height: 190,
+              width: double.infinity,
+              color: scheme.surfaceContainerHighest,
+              child: hasImage
+                  ? Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (pickedBytes != null && pickedBytes!.isNotEmpty)
+                          Image.memory(
+                            Uint8List.fromList(pickedBytes!),
+                            fit: BoxFit.cover,
+                          )
+                        else
+                          Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, _, _) => Center(
+                              child: Icon(
+                                Icons.broken_image_outlined,
+                                size: 44,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        PositionedDirectional(
+                          top: 10,
+                          end: 10,
+                          child: IconButton.filledTonal(
+                            tooltip: 'إزالة الصورة',
+                            onPressed: onRemove,
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ),
+                      ],
+                    )
+                  : Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.directions_bus_filled_outlined,
+                          size: 56,
+                          color: scheme.primary,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'لا توجد صورة للمركبة',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'PNG / JPG / WEBP بحد أقصى 5MB',
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                        ),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          if (pickedFile != null)
+            Text(
+              pickedFile!.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.primary,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          const SizedBox(height: AppSpacing.small),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onPick,
+              icon: const Icon(Icons.upload_file_rounded),
+              label: Text(hasImage ? 'تغيير الصورة' : 'اختيار صورة المركبة'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VehicleDriverCard extends StatelessWidget {
+  const _VehicleDriverCard({
+    required this.selectedDriverId,
+    required this.drivers,
+    required this.onChanged,
+  });
+
+  final String? selectedDriverId;
+  final List<FleetDriver> drivers;
+  final ValueChanged<String?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle(
+            icon: Icons.person_rounded,
+            title: 'السائق المعين',
+            subtitle: 'اختياري. لا يظهر إلا السائقين المتاحين والنشطين.',
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          DropdownButtonFormField<String>(
+            initialValue: selectedDriverId,
+            isExpanded: true,
+            decoration: const InputDecoration(
+              labelText: 'السائق',
+              prefixIcon: Icon(Icons.person_rounded),
+              border: OutlineInputBorder(),
+            ),
+            items: [
+              const DropdownMenuItem<String>(
+                value: null,
+                child: Text('بدون سائق الآن'),
+              ),
+              ...drivers.map(
+                (d) => DropdownMenuItem<String>(
+                  value: d.id,
+                  child: Text(
+                    '${d.name} (${d.employeeCode})',
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+            onChanged: onChanged,
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -3105,60 +4046,97 @@ class _DocumentManagerState extends State<_DocumentManager> {
   }
 
   Future<void> _pickFile() async {
+    debugPrint('[FleetScreen] Document pick started. isDriver=${widget.isDriver}');
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+        allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
+        allowMultiple: false,
+        withData: kIsWeb,
       );
-      if (result != null) {
-        final file = result.files.single;
-        List<int>? bytes = file.bytes;
-        if (bytes == null && file.path != null && !kIsWeb) {
-          bytes = await io.File(file.path!).readAsBytes();
-        }
-        if (bytes != null) {
-          setState(() {
-            pickedFile = file;
-            pickedFileBytes = bytes;
-            error = '';
-          });
-        } else {
-          setState(() => error = 'تعذر قراءة محتوى الملف');
-        }
+
+      if (result == null || result.files.isEmpty) {
+        debugPrint('[FleetScreen] Document pick cancelled');
+        return;
       }
-    } catch (_) {
-      setState(() => error = 'تعذر اختيار الملف');
+
+      final file = result.files.single;
+      final bytes = await _readPickedFileBytes(file);
+
+      if (bytes == null || bytes.isEmpty) {
+        setState(() => error = 'تعذر قراءة محتوى الملف. جرّب ملف آخر.');
+        return;
+      }
+
+      if (bytes.length > 10 * 1024 * 1024) {
+        setState(() => error = 'حجم الملف كبير. الحد الأقصى 10MB.');
+        return;
+      }
+
+      setState(() {
+        pickedFile = file;
+        pickedFileBytes = bytes;
+        error = '';
+      });
+
+      debugPrint(
+        '[FleetScreen] Document picked. name=${file.name}, size=${bytes.length}',
+      );
+    } catch (e, s) {
+      debugPrint('[FleetScreen] Document pick failed: $e');
+      debugPrintStack(stackTrace: s);
+      setState(() => error = 'تعذر اختيار الملف: $e');
     }
   }
 
   Future<void> _uploadAndSave() async {
     setState(() => error = '');
+
     if (selectedType == null) {
       setState(() => error = 'يرجى اختيار نوع الوثيقة');
       return;
     }
-    final dateErr = _validateDate(expiryController.text, 'تاريخ انتهاء الصلاحية');
+
+    final dateErr = _validateDate(
+      expiryController.text,
+      'تاريخ انتهاء الصلاحية',
+    );
     if (dateErr != null) {
       setState(() => error = dateErr);
       return;
     }
+
     if (pickedFile == null || pickedFileBytes == null) {
       setState(() => error = 'يرجى اختيار ملف الوثيقة');
       return;
     }
+
     setState(() {
       uploading = true;
       error = '';
     });
+
     try {
       final cubit = context.read<FleetCubit>();
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${pickedFile!.name}';
-      final path = 'documents/$fileName';
+      final ownerFolder = widget.isDriver ? 'drivers' : 'vehicles';
+      final typeFolder = documentTypeToDbString(selectedType!);
+      final fileName = _safeStorageFileName(pickedFile!.name);
+      final path =
+          '$ownerFolder/${widget.ownerId}/$typeFolder/${DateTime.now().millisecondsSinceEpoch}_$fileName';
 
-      final url = await cubit.uploadDocumentFile('documents', path, pickedFileBytes!);
+      debugPrint('[FleetScreen] Uploading document. bucket=documents path=$path');
+
+      final url = await cubit.uploadDocumentFile(
+        'documents',
+        path,
+        pickedFileBytes!,
+      );
+
       if (url == null || url.isEmpty) {
-        throw Exception('فشل رفع الملف إلى التخزين');
+        throw Exception('فشل رفع الملف إلى Supabase Storage. تأكد من وجود bucket باسم documents.');
       }
+
+      debugPrint('[FleetScreen] Document uploaded url=$url');
 
       final saveError = await cubit.saveDocument(
         ownerId: widget.ownerId,
@@ -3172,39 +4150,59 @@ class _DocumentManagerState extends State<_DocumentManager> {
         throw Exception(saveError);
       }
 
+      debugPrint('[FleetScreen] Document metadata saved');
+
       setState(() {
         pickedFile = null;
         pickedFileBytes = null;
         expiryController.clear();
         selectedType = null;
       });
-    } catch (e) {
+    } catch (e, s) {
+      debugPrint('[FleetScreen] Document upload/save failed: $e');
+      debugPrintStack(stackTrace: s);
       setState(() => error = e.toString().replaceAll('Exception: ', ''));
     } finally {
-      setState(() => uploading = false);
+      if (mounted) setState(() => uploading = false);
     }
   }
 
   Future<void> _deleteDoc(FleetDocument doc) async {
-    setState(() => uploading = true);
+    final confirmed = await _confirmDeleteDocument(context, doc);
+    if (!confirmed) return;
+
+    setState(() {
+      uploading = true;
+      error = '';
+    });
+
     try {
       final cubit = context.read<FleetCubit>();
-      final uri = Uri.tryParse(doc.fileUrl);
-      if (uri != null) {
-        final pathSegments = uri.pathSegments;
-        if (pathSegments.isNotEmpty) {
-          final path = pathSegments.skip(pathSegments.indexOf('documents') + 1).join('/');
-          if (path.isNotEmpty) {
-            await cubit.deleteFile('documents', 'documents/$path');
-          }
-        }
+      final storagePath = _storagePathFromPublicUrl(
+        doc.fileUrl,
+        bucket: 'documents',
+      );
+
+      debugPrint('[FleetScreen] Delete document requested. id=${doc.id} path=$storagePath');
+
+      if (storagePath != null && storagePath.isNotEmpty) {
+        await cubit.deleteFile('documents', storagePath);
       }
-      final delError = await cubit.deleteDocument(documentId: doc.id, isDriver: widget.isDriver);
+
+      final delError = await cubit.deleteDocument(
+        documentId: doc.id,
+        isDriver: widget.isDriver,
+      );
+
       if (delError != null) throw Exception(delError);
-    } catch (e) {
+
+      debugPrint('[FleetScreen] Document deleted. id=${doc.id}');
+    } catch (e, s) {
+      debugPrint('[FleetScreen] Document delete failed: $e');
+      debugPrintStack(stackTrace: s);
       setState(() => error = e.toString().replaceAll('Exception: ', ''));
     } finally {
-      setState(() => uploading = false);
+      if (mounted) setState(() => uploading = false);
     }
   }
 
@@ -3228,138 +4226,274 @@ class _DocumentManagerState extends State<_DocumentManager> {
           ];
 
     return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
+      padding: const EdgeInsets.all(AppSpacing.large),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('إدارة الوثائق والمستندات', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
+          _SectionTitle(
+            icon: Icons.folder_copy_outlined,
+            title: 'الوثائق والمستندات',
+            subtitle:
+                'ارفع ملفات PDF أو صور، وسيتم حفظ الرابط والبيانات في Supabase.',
+          ),
           const SizedBox(height: AppSpacing.medium),
           if (widget.documents.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: AppSpacing.medium),
-              child: Text('لا توجد وثائق مرفوعة حالياً.'),
+            _EmptyInlineState(
+              icon: Icons.description_outlined,
+              title: 'لا توجد وثائق محفوظة',
+              subtitle: 'أضف أول وثيقة من النموذج بالأسفل.',
             )
           else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: widget.documents.length,
-              itemBuilder: (context, index) {
-                final doc = widget.documents[index];
-                return Card(
-                  margin: const EdgeInsets.only(bottom: AppSpacing.small),
-                  child: ListTile(
-                    leading: Icon(
-                      doc.status == FleetDocumentStatus.expired ? Icons.warning_amber_rounded : Icons.description_rounded,
-                      color: doc.status == FleetDocumentStatus.expired ? scheme.error : scheme.primary,
-                    ),
-                    title: Text(doc.type.label, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text('تاريخ الانتهاء: ${doc.expiryDate} | الحالة: ${doc.status.label}'),
-                    trailing: Wrap(
-                      spacing: AppSpacing.xSmall,
-                      children: [
-                        IconButton(
-                          icon: const Icon(Icons.open_in_new_rounded),
-                          tooltip: 'عرض الملف',
-                          onPressed: doc.fileUrl.isNotEmpty
-                              ? () => launchUrl(Uri.parse(doc.fileUrl), mode: LaunchMode.externalApplication)
-                              : null,
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
-                          tooltip: 'حذف الوثيقة',
-                          onPressed: () => _deleteDoc(doc),
-                        ),
-                      ],
-                    ),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final useGrid = constraints.maxWidth >= 680;
+                if (!useGrid) {
+                  return Column(
+                    children: widget.documents
+                        .map((doc) => _DocumentCard(doc: doc, onDelete: () => _deleteDoc(doc)))
+                        .toList(),
+                  );
+                }
+
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: widget.documents.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: AppSpacing.medium,
+                    mainAxisSpacing: AppSpacing.medium,
+                    mainAxisExtent: 156,
                   ),
+                  itemBuilder: (context, index) {
+                    final doc = widget.documents[index];
+                    return _DocumentCard(doc: doc, onDelete: () => _deleteDoc(doc));
+                  },
                 );
               },
             ),
-          const SizedBox(height: AppSpacing.medium),
-          const Divider(),
-          const SizedBox(height: AppSpacing.medium),
-          Text('رفع وثيقة جديدة', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
-          const SizedBox(height: AppSpacing.small),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isCompact = constraints.maxWidth < 600;
-              final fields = [
-                Expanded(
-                  flex: isCompact ? 0 : 1,
-                  child: DropdownButtonFormField<FleetDocumentType>(
+          const SizedBox(height: AppSpacing.large),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.medium),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withAlpha(70),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: scheme.outline.withAlpha(70)),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 700;
+
+                final fields = [
+                  DropdownButtonFormField<FleetDocumentType>(
                     initialValue: selectedType,
                     decoration: const InputDecoration(
                       labelText: 'نوع الوثيقة',
+                      prefixIcon: Icon(Icons.category_outlined),
                       border: OutlineInputBorder(),
                     ),
-                    items: filteredTypes.map((t) => DropdownMenuItem(value: t, child: Text(t.label))).toList(),
+                    items: filteredTypes
+                        .map(
+                          (type) => DropdownMenuItem(
+                            value: type,
+                            child: Text(type.label),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (v) => setState(() => selectedType = v),
                   ),
-                ),
-                if (isCompact) const SizedBox(height: AppSpacing.small) else const SizedBox(width: AppSpacing.small),
-                Expanded(
-                  flex: isCompact ? 0 : 1,
-                  child: TextField(
+                  TextField(
                     controller: expiryController,
                     decoration: const InputDecoration(
-                      labelText: 'تاريخ الانتهاء (YYYY-MM-DD)',
-                      suffixIcon: Icon(Icons.calendar_today_rounded),
+                      labelText: 'تاريخ الانتهاء',
+                      hintText: 'YYYY-MM-DD',
+                      prefixIcon: Icon(Icons.calendar_today_rounded),
                       border: OutlineInputBorder(),
                     ),
                     readOnly: true,
-                    onTap: () async {
-                      final date = await showDatePicker(
-                        context: context,
-                        initialDate: DateTime.now().add(const Duration(days: 365)),
-                        firstDate: DateTime.now().subtract(const Duration(days: 365)),
-                        lastDate: DateTime.now().add(const Duration(days: 3650)),
-                      );
-                      if (date != null) {
-                        setState(() {
-                          expiryController.text = date.toIso8601String().substring(0, 10);
-                        });
-                      }
-                    },
+                    onTap: _pickExpiryDate,
                   ),
-                ),
-              ];
+                ];
 
-              return isCompact
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: fields,
-                    )
-                  : Row(children: fields);
-            },
+                final form = isCompact
+                    ? Column(
+                        children: fields
+                            .map(
+                              (field) => Padding(
+                                padding: const EdgeInsets.only(bottom: AppSpacing.small),
+                                child: field,
+                              ),
+                            )
+                            .toList(),
+                      )
+                    : Row(
+                        children: [
+                          Expanded(child: fields[0]),
+                          const SizedBox(width: AppSpacing.small),
+                          Expanded(child: fields[1]),
+                        ],
+                      );
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    form,
+                    const SizedBox(height: AppSpacing.medium),
+                    Wrap(
+                      spacing: AppSpacing.small,
+                      runSpacing: AppSpacing.small,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: uploading ? null : _pickFile,
+                          icon: const Icon(Icons.attach_file_rounded),
+                          label: Text(
+                            pickedFile != null
+                                ? 'تغيير الملف'
+                                : 'اختيار ملف الوثيقة',
+                          ),
+                        ),
+                        if (pickedFile != null)
+                          Chip(
+                            avatar: const Icon(Icons.description_outlined, size: 18),
+                            label: Text(
+                              pickedFile!.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        FilledButton.icon(
+                          onPressed: uploading ? null : _uploadAndSave,
+                          icon: uploading
+                              ? const SizedBox(
+                                  width: 18,
+                                  height: 18,
+                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                )
+                              : const Icon(Icons.cloud_upload_rounded),
+                          label: const Text('رفع وحفظ'),
+                        ),
+                      ],
+                    ),
+                    if (error.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.small),
+                      Text(
+                        error,
+                        style: TextStyle(
+                          color: scheme.error,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ],
+                );
+              },
+            ),
           ),
-          const SizedBox(height: AppSpacing.medium),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickExpiryDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 365)),
+      firstDate: DateTime.now().subtract(const Duration(days: 365)),
+      lastDate: DateTime.now().add(const Duration(days: 3650)),
+    );
+
+    if (date != null) {
+      setState(() {
+        expiryController.text = date.toIso8601String().substring(0, 10);
+      });
+    }
+  }
+}
+
+class _DocumentCard extends StatelessWidget {
+  const _DocumentCard({
+    required this.doc,
+    required this.onDelete,
+  });
+
+  final FleetDocument doc;
+  final VoidCallback onDelete;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = _documentColor(context, doc.status);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppSpacing.small),
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outline.withAlpha(70)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
           Row(
             children: [
-              ElevatedButton.icon(
-                onPressed: _pickFile,
-                icon: const Icon(Icons.attach_file_rounded),
-                label: Text(pickedFile != null ? 'تغيير الملف' : 'اختر ملف الوثيقة'),
+              CircleAvatar(
+                backgroundColor: color.withAlpha(18),
+                child: Icon(Icons.description_outlined, color: color),
               ),
-              if (pickedFile != null) ...[
-                const SizedBox(width: AppSpacing.small),
-                Expanded(child: Text(pickedFile!.name, overflow: TextOverflow.ellipsis)),
-              ],
-              const Spacer(),
-              if (uploading)
-                const CircularProgressIndicator()
-              else
-                FilledButton.icon(
-                  onPressed: _uploadAndSave,
-                  icon: const Icon(Icons.cloud_upload_rounded),
-                  label: const Text('رفع وحفظ الوثيقة'),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      doc.type.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                    Text(
+                      doc.expiryDate,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
                 ),
+              ),
+              StatusChip(
+                label: doc.status.label,
+                color: color.withAlpha(30),
+                textColor: color,
+              ),
             ],
           ),
-          if (error.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.small),
-            Text(error, style: TextStyle(color: scheme.error, fontWeight: FontWeight.bold)),
-          ],
+          const Spacer(),
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: doc.fileUrl.isEmpty
+                    ? null
+                    : () => launchUrl(
+                          Uri.parse(doc.fileUrl),
+                          mode: LaunchMode.externalApplication,
+                        ),
+                icon: const Icon(Icons.open_in_new_rounded, size: 16),
+                label: const Text('فتح'),
+              ),
+              const Spacer(),
+              IconButton(
+                tooltip: 'حذف الوثيقة',
+                onPressed: onDelete,
+                icon: Icon(Icons.delete_outline_rounded, color: scheme.error),
+              ),
+            ],
+          ),
         ],
       ),
     );

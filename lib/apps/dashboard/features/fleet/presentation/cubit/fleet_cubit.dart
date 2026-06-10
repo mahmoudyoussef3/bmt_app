@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/entities/fleet_workspace.dart';
+import '../../shared/domain/entities/fleet_workspace.dart';
 import '../../domain/usecases/fleet_usecases.dart';
 import 'fleet_state.dart';
 

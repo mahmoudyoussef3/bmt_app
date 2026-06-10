@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import '../../domain/entities/fleet_workspace.dart';
+import '../../shared/domain/entities/fleet_workspace.dart';
 import '../../domain/repositories/fleet_repository.dart';
 import '../datasources/fleet_datasource.dart';
 import '../datasources/supabase_fleet_datasource.dart';

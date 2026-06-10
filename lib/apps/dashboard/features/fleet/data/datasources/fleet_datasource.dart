@@ -1,4 +1,4 @@
-import '../../domain/entities/fleet_workspace.dart';
+import '../../shared/domain/entities/fleet_workspace.dart';
 import '../models/fleet_models.dart';
 
 abstract class FleetDatasource {

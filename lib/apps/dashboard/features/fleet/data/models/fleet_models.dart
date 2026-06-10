@@ -1,4 +1,4 @@
-import '../../domain/entities/fleet_workspace.dart';
+import '../../shared/domain/entities/fleet_workspace.dart';
 
 class FleetDriverModel extends FleetDriver {
   const FleetDriverModel({
