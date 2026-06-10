@@ -1,4 +1,7 @@
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../features/fleet/data/datasources/supabase_fleet_datasource.dart';
+
 
 import '../../features/assignments/data/datasources/mock_fleet_assignments_datasource.dart';
 import '../../features/assignments/data/repositories/fleet_assignments_repository_impl.dart';
@@ -155,6 +158,19 @@ import '../theme/dashboard_theme_repository.dart';
 final GetIt dashboardDi = GetIt.instance;
 
 void registerDashboardDependencies() {
+  if (!dashboardDi.isRegistered<SupabaseClient>()) {
+    const url = String.fromEnvironment('SUPABASE_URL', defaultValue: 'https://placeholder-project.supabase.co');
+    const anonKey = String.fromEnvironment('SUPABASE_ANON_KEY', defaultValue: 'placeholder-anon-key');
+    try {
+      Supabase.instance;
+    } catch (_) {
+      try {
+        Supabase.initialize(url: url, anonKey: anonKey);
+      } catch (_) {}
+    }
+    dashboardDi.registerLazySingleton<SupabaseClient>(() => Supabase.instance.client);
+  }
+
   if (!dashboardDi.isRegistered<DashboardThemeRepository>()) {
     dashboardDi.registerLazySingleton<DashboardThemeRepository>(
       DashboardThemeRepository.new,
@@ -221,7 +237,9 @@ void registerDashboardDependencies() {
   }
 
   if (!dashboardDi.isRegistered<FleetDatasource>()) {
-    dashboardDi.registerLazySingleton<FleetDatasource>(MockFleetDatasource.new);
+    dashboardDi.registerLazySingleton<FleetDatasource>(
+      () => SupabaseFleetDatasource(dashboardDi<SupabaseClient>()),
+    );
   }
 
   if (!dashboardDi.isRegistered<FleetRepository>()) {
@@ -290,6 +308,36 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<CreateFleetDocumentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CreateFleetDocumentUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UpdateFleetDocumentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateFleetDocumentUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<DeleteFleetDocumentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => DeleteFleetDocumentUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UploadFleetFileUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UploadFleetFileUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<DeleteFleetFileUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => DeleteFleetFileUseCase(dashboardDi<FleetRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<FleetCubit>()) {
     dashboardDi.registerFactory(
       () => FleetCubit(
@@ -303,6 +351,11 @@ void registerDashboardDependencies() {
         assignVehicle: dashboardDi<AssignFleetVehicleUseCase>(),
         reassignVehicle: dashboardDi<ReassignFleetVehicleUseCase>(),
         removeAssignment: dashboardDi<RemoveUnifiedFleetAssignmentUseCase>(),
+        createDocument: dashboardDi<CreateFleetDocumentUseCase>(),
+        updateDocument: dashboardDi<UpdateFleetDocumentUseCase>(),
+        deleteDocument: dashboardDi<DeleteFleetDocumentUseCase>(),
+        uploadFile: dashboardDi<UploadFleetFileUseCase>(),
+        deleteFile: dashboardDi<DeleteFleetFileUseCase>(),
       ),
     );
   }

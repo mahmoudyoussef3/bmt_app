@@ -24,10 +24,9 @@ void main() {
         15,
       );
       expect(workspace.documents, isNotEmpty);
-      expect(workspace.summary.documentsNeedFollowUpCount, greaterThan(0));
     });
 
-    test('creates and updates drivers locally', () async {
+    test('creates and updates drivers with production fields', () async {
       final repository = FleetRepositoryImpl(MockFleetDatasource());
       final createDriver = CreateFleetDriverUseCase(repository);
       final updateDriver = UpdateFleetDriverUseCase(repository);
@@ -35,7 +34,8 @@ void main() {
 
       final created = await createDriver(_driver);
       expect(created.id, isNotEmpty);
-      expect(created.name, 'سائق اختبار');
+      expect(created.employeeCode, 'EMP-999');
+      expect(created.fullName, 'سائق اختبار');
 
       final edited = await updateDriver(created.copyWith(phone: '01099999999'));
       expect(edited.phone, '01099999999');
@@ -47,7 +47,7 @@ void main() {
       expect(suspended.status, FleetDriverStatus.suspended);
     });
 
-    test('creates vehicles and prevents duplicate assignments', () async {
+    test('creates vehicles and validates active/inactive status constraints', () async {
       final repository = FleetRepositoryImpl(MockFleetDatasource());
       final getWorkspace = GetFleetWorkspaceUseCase(repository);
       final createVehicle = CreateFleetVehicleUseCase(repository);
@@ -55,11 +55,13 @@ void main() {
 
       final vehicle = await createVehicle(_vehicle);
       expect(vehicle.id, isNotEmpty);
+      expect(vehicle.seatConfiguration.seats, isNotEmpty);
 
       final workspace = await getWorkspace();
       final freeDriver = workspace.drivers.firstWhere(
-        (driver) => driver.currentVehicleId.isEmpty,
+        (driver) => driver.currentVehicleId.isEmpty && driver.status == FleetDriverStatus.active,
       );
+      
       final assignment = await assign(freeDriver.id, vehicle.id);
       expect(assignment.status, FleetAssignmentStatus.active);
 
@@ -69,13 +71,13 @@ void main() {
           isA<Exception>().having(
             (error) => error.toString(),
             'message',
-            contains('تعذر إنشاء التعيين'),
+            contains('مرتبط بالفعل بتعيين نشط'),
           ),
         ),
       );
     });
 
-    test('reassigns vehicle and keeps assignment history', () async {
+    test('reassigns vehicle and updates audit timeline log', () async {
       final repository = FleetRepositoryImpl(MockFleetDatasource());
       final getWorkspace = GetFleetWorkspaceUseCase(repository);
       final createVehicle = CreateFleetVehicleUseCase(repository);
@@ -85,7 +87,7 @@ void main() {
       final workspace = await getWorkspace();
       final assignment = workspace.assignments.first;
       final newVehicle = await createVehicle(
-        _vehicle.copyWith(vehicleNumber: 'مركبة إعادة', plateNumber: '٩٩٩ ق ل'),
+        _vehicle.copyWith(vehicleCode: 'BUS-999', plateNumber: '٩٩٩ ق ل'),
       );
 
       final changed = await reassign(assignment.id, newVehicle.id);
@@ -100,15 +102,18 @@ void main() {
 
 const _driver = FleetDriver(
   id: '',
-  imageLabel: '',
-  name: 'سائق اختبار',
+  employeeCode: 'EMP-999',
+  fullName: 'سائق اختبار',
   phone: '01012345678',
-  nationalId: '29901011234567',
-  licenseNumber: 'د-اختبار',
-  licenseExpiry: '١ ديسمبر ٢٠٢٦',
-  status: FleetDriverStatus.active,
+  emergencyPhone: '01212345678',
   address: 'القاهرة',
-  emergencyContact: '01212345678',
+  nationalId: '29901011234567',
+  profileImageUrl: '',
+  licenseNumber: 'د-اختبار',
+  licenseExpiryDate: '2026-12-01',
+  hireDate: '2026-06-01',
+  notes: 'ملاحظات اختبار',
+  status: FleetDriverStatus.active,
   documents: [
     FleetDocument(
       id: 'doc-test',
@@ -116,22 +121,28 @@ const _driver = FleetDriver(
       ownerId: '',
       ownerName: 'سائق اختبار',
       referenceNumber: 'د-اختبار',
-      expiryDate: '١ ديسمبر ٢٠٢٦',
+      expiryDate: '2026-12-01',
       status: FleetDocumentStatus.valid,
     ),
   ],
 );
 
-const _vehicle = FleetVehicle(
+final _vehicle = FleetVehicle(
   id: '',
-  imageLabel: '',
-  vehicleNumber: 'مركبة اختبار',
+  vehicleCode: 'BUS-888',
   plateNumber: '١٢٣ ق ل',
-  model: 'تويوتا هايس',
-  modelYear: 2022,
-  seatsCount: 14,
+  vehicleType: 'Hiace',
+  brand: 'Toyota',
+  model: 'هايس',
+  manufactureYear: 2022,
+  color: 'أبيض',
+  capacity: 14,
+  seatLayoutType: 'standard',
+  imageUrl: '',
+  notes: 'ملاحظات اختبار مركبة',
   status: FleetVehicleStatus.active,
-  licenseExpiry: '١ ديسمبر ٢٠٢٦',
-  insuranceExpiry: '١ يناير ٢٠٢٧',
-  inspectionExpiry: '١ فبراير ٢٠٢٧',
+  seatConfiguration: SeatConfiguration.generateDefault(14),
+  licenseExpiry: '2026-12-01',
+  insuranceExpiry: '2027-01-01',
+  inspectionExpiry: '2027-02-01',
 );

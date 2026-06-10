@@ -1,12 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/app_theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/di/dashboard_di.dart';
 import 'core/routes/dashboard_shell.dart';
 import 'core/theme/dashboard_theme_cubit.dart';
 
-void main() {
+void main() async {
   registerDashboardDependencies();
+  WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: 'https://nbwzourpbnmewwklewyr.supabase.co',
+    publishableKey: 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z',
+  );
+    registerDashboardDependencies();
 
   runApp(
     BlocProvider(

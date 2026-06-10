@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:file_picker/file_picker.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -852,15 +854,18 @@ String _driverName(FleetWorkspace workspace, String driverId) {
         (driver) => driver.id == driverId,
         orElse: () => const FleetDriver(
           id: '',
-          imageLabel: '',
-          name: '',
+          employeeCode: '',
+          fullName: '',
           phone: '',
-          nationalId: '',
-          licenseNumber: '',
-          licenseExpiry: '',
-          status: FleetDriverStatus.archived,
+          emergencyPhone: '',
           address: '',
-          emergencyContact: '',
+          nationalId: '',
+          profileImageUrl: '',
+          licenseNumber: '',
+          licenseExpiryDate: '',
+          hireDate: '',
+          notes: '',
+          status: FleetDriverStatus.archived,
         ),
       )
       .name;
@@ -873,13 +878,19 @@ String _vehicleName(FleetWorkspace workspace, String vehicleId) {
         (vehicle) => vehicle.id == vehicleId,
         orElse: () => const FleetVehicle(
           id: '',
-          imageLabel: '',
-          vehicleNumber: '',
+          vehicleCode: '',
           plateNumber: '',
+          vehicleType: '',
+          brand: '',
           model: '',
-          modelYear: 0,
-          seatsCount: 0,
+          manufactureYear: 0,
+          color: '',
+          capacity: 0,
+          seatLayoutType: '',
+          imageUrl: '',
+          notes: '',
           status: FleetVehicleStatus.archived,
+          seatConfiguration: SeatConfiguration(rows: 0, columns: 0, seats: []),
           licenseExpiry: '',
           insuranceExpiry: '',
           inspectionExpiry: '',
@@ -1020,68 +1031,82 @@ void _openDriverDetails(BuildContext context, FleetDriver driver) {
   final workspace = (context.read<FleetCubit>().state as FleetLoaded).workspace;
   showDialog<void>(
     context: context,
-    builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
-      child: AlertDialog(
-        title: Text(driver.name),
-        content: SizedBox(
-          width: 760,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _DetailsSection(
-                  title: 'البيانات الشخصية',
-                  rows: [
-                    ('الاسم', driver.name),
-                    ('الرقم القومي', driver.nationalId),
-                    ('العنوان', driver.address),
-                  ],
-                ),
-                _DetailsSection(
-                  title: 'بيانات التواصل',
-                  rows: [
-                    ('الهاتف', driver.phone),
-                    ('طوارئ', driver.emergencyContact),
-                  ],
-                ),
-                _DetailsSection(
-                  title: 'بيانات الرخصة',
-                  rows: [
-                    ('رقم الرخصة', driver.licenseNumber),
-                    ('انتهاء الرخصة', driver.licenseExpiry),
-                    ('الحالة', driver.status.label),
-                  ],
-                ),
-                _DetailsSection(
-                  title: 'المركبة الحالية',
-                  rows: [
-                    (
-                      'المركبة',
-                      _vehicleName(
-                        workspace,
-                        driver.currentVehicleId,
-                      ).ifEmpty('بدون مركبة'),
+    builder: (_) => BlocProvider.value(
+      value: context.read<FleetCubit>(),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: Text(driver.name),
+          content: SizedBox(
+            width: 760,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DetailsSection(
+                    title: 'البيانات الشخصية والمهنية',
+                    rows: [
+                      ('الاسم الكامل', driver.fullName),
+                      ('كود الموظف', driver.employeeCode),
+                      ('الرقم القومي', driver.nationalId),
+                      ('العنوان', driver.address),
+                      ('تاريخ التعيين', driver.hireDate),
+                    ],
+                  ),
+                  _DetailsSection(
+                    title: 'بيانات التواصل والطوارئ',
+                    rows: [
+                      ('الهاتف', driver.phone),
+                      ('رقم الطوارئ', driver.emergencyPhone),
+                    ],
+                  ),
+                  _DetailsSection(
+                    title: 'بيانات الرخصة والحالة',
+                    rows: [
+                      ('رقم الرخصة', driver.licenseNumber),
+                      ('انتهاء الرخصة', driver.licenseExpiryDate),
+                      ('الحالة', driver.status.label),
+                    ],
+                  ),
+                  if (driver.notes.isNotEmpty)
+                    _DetailsSection(
+                      title: 'ملاحظات الإدارة',
+                      rows: [('الملاحظات', driver.notes)],
                     ),
-                  ],
-                ),
-                _HistoryBlock(title: 'سجل الرحلات', items: driver.tripHistory),
-                _HistoryBlock(title: 'سجل المخالفات', items: driver.violations),
-                _DocumentsBlock(items: driver.documents),
-                _HistoryBlock(
-                  title: 'سجل النشاط',
-                  items: driver.activityTimeline,
-                ),
-              ],
+                  _DetailsSection(
+                    title: 'المركبة الحالية',
+                    rows: [
+                      (
+                        'المركبة',
+                        _vehicleName(
+                          workspace,
+                          driver.currentVehicleId,
+                        ).ifEmpty('بدون مركبة'),
+                      ),
+                    ],
+                  ),
+                  _DocumentManager(
+                    ownerId: driver.id,
+                    isDriver: true,
+                    documents: driver.documents,
+                  ),
+                  _HistoryBlock(title: 'سجل الرحلات', items: driver.tripHistory),
+                  _HistoryBlock(title: 'سجل المخالفات', items: driver.violations),
+                  _HistoryBlock(
+                    title: 'سجل النشاط',
+                    items: driver.activityTimeline,
+                  ),
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('إغلاق'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('إغلاق'),
-          ),
-        ],
       ),
     ),
   );
@@ -1089,69 +1114,77 @@ void _openDriverDetails(BuildContext context, FleetDriver driver) {
 
 void _openVehicleDetails(BuildContext context, FleetVehicle vehicle) {
   final workspace = (context.read<FleetCubit>().state as FleetLoaded).workspace;
+  final vehicleDocs = workspace.documents.where((d) => d.ownerId == vehicle.id).toList();
+
   showDialog<void>(
     context: context,
-    builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
-      child: AlertDialog(
-        title: Text(vehicle.vehicleNumber),
-        content: SizedBox(
-          width: 820,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _DetailsSection(
-                  title: 'البيانات الأساسية',
-                  rows: [
-                    ('رقم اللوحة', vehicle.plateNumber),
-                    ('الموديل', vehicle.model),
-                    ('السنة', '${vehicle.modelYear}'),
-                    ('عدد المقاعد', '${vehicle.seatsCount}'),
-                    ('الحالة', vehicle.status.label),
-                  ],
-                ),
-                _VehicleGallery(vehicle: vehicle),
-                _DetailsSection(
-                  title: 'الرخصة',
-                  rows: [('انتهاء الرخصة', vehicle.licenseExpiry)],
-                ),
-                _DetailsSection(
-                  title: 'التأمين',
-                  rows: [('انتهاء التأمين', vehicle.insuranceExpiry)],
-                ),
-                _DetailsSection(
-                  title: 'الفحص الفني',
-                  rows: [('انتهاء الفحص', vehicle.inspectionExpiry)],
-                ),
-                _DetailsSection(
-                  title: 'السائق الحالي',
-                  rows: [
-                    (
-                      'السائق',
-                      _driverName(
-                        workspace,
-                        vehicle.currentDriverId,
-                      ).ifEmpty('بدون سائق'),
+    builder: (_) => BlocProvider.value(
+      value: context.read<FleetCubit>(),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: AlertDialog(
+          title: Text('${vehicle.brand} ${vehicle.model} (${vehicle.vehicleCode})'),
+          content: SizedBox(
+            width: 820,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _DetailsSection(
+                    title: 'البيانات الأساسية للمركبة',
+                    rows: [
+                      ('كود المركبة', vehicle.vehicleCode),
+                      ('رقم اللوحة', vehicle.plateNumber),
+                      ('فئة المركبة', vehicle.vehicleType),
+                      ('الماركة', vehicle.brand),
+                      ('الموديل', vehicle.model),
+                      ('سنة الصنع', '${vehicle.manufactureYear}'),
+                      ('اللون', vehicle.color),
+                      ('السعة الركابية', '${vehicle.capacity} مقعد'),
+                      ('نوع التخطيط', vehicle.seatLayoutType),
+                      ('الحالة', vehicle.status.label),
+                    ],
+                  ),
+                  if (vehicle.notes.isNotEmpty)
+                    _DetailsSection(
+                      title: 'ملاحظات الصيانة والتشغيل',
+                      rows: [('ملاحظات', vehicle.notes)],
                     ),
-                  ],
-                ),
-                _HistoryBlock(
-                  title: 'سجل السائقين السابقين',
-                  items: vehicle.previousDrivers,
-                ),
-                _HistoryBlock(title: 'سجل الرحلات', items: vehicle.tripHistory),
-                _HistoryBlock(title: 'سجل النشاط', items: vehicle.timeline),
-              ],
+                  _SeatLayoutVisualizer(seatConfig: vehicle.seatConfiguration),
+                  _DocumentManager(
+                    ownerId: vehicle.id,
+                    isDriver: false,
+                    documents: vehicleDocs,
+                  ),
+                  _DetailsSection(
+                    title: 'السائق الحالي للمركبة',
+                    rows: [
+                      (
+                        'السائق',
+                        _driverName(
+                          workspace,
+                          vehicle.currentDriverId,
+                        ).ifEmpty('بدون سائق'),
+                      ),
+                    ],
+                  ),
+                  _HistoryBlock(
+                    title: 'سجل السائقين السابقين',
+                    items: vehicle.previousDrivers,
+                  ),
+                  _HistoryBlock(title: 'سجل الرحلات', items: vehicle.tripHistory),
+                  _HistoryBlock(title: 'سجل النشاط التشغيلي', items: vehicle.timeline),
+                ],
+              ),
             ),
           ),
+          actions: [
+            TextButton(
+              onPressed: Navigator.of(context).pop,
+              child: const Text('إغلاق'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('إغلاق'),
-          ),
-        ],
       ),
     ),
   );
@@ -1217,104 +1250,396 @@ class _HistoryBlock extends StatelessWidget {
   }
 }
 
-class _DocumentsBlock extends StatelessWidget {
-  final List<FleetDocument> items;
+class _DocumentManager extends StatefulWidget {
+  final String ownerId;
+  final bool isDriver;
+  final List<FleetDocument> documents;
 
-  const _DocumentsBlock({required this.items});
+  const _DocumentManager({
+    required this.ownerId,
+    required this.isDriver,
+    required this.documents,
+  });
 
   @override
-  Widget build(BuildContext context) {
-    return _DetailsSection(
-      title: 'الوثائق',
-      rows: items
-          .map(
-            (doc) => (
-              doc.type.label,
-              '${doc.referenceNumber} - ${doc.expiryDate} - ${doc.status.label}',
-            ),
-          )
-          .toList(),
-    );
-  }
+  State<_DocumentManager> createState() => _DocumentManagerState();
 }
 
-class _VehicleGallery extends StatelessWidget {
-  final FleetVehicle vehicle;
+class _DocumentManagerState extends State<_DocumentManager> {
+  FleetDocumentType? selectedType;
+  final expiryController = TextEditingController();
+  PlatformFile? pickedFile;
+  bool uploading = false;
+  String error = '';
 
-  const _VehicleGallery({required this.vehicle});
+  @override
+  void dispose() {
+    expiryController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf', 'png', 'jpg', 'jpeg'],
+      );
+      if (result != null && result.files.single.bytes != null) {
+        setState(() {
+          pickedFile = result.files.single;
+          error = '';
+        });
+      }
+    } catch (_) {
+      setState(() => error = 'تعذر اختيار الملف');
+    }
+  }
+
+  Future<void> _uploadAndSave() async {
+    if (selectedType == null || expiryController.text.isEmpty || pickedFile == null) {
+      setState(() => error = 'يرجى ملء جميع الحقول واختيار ملف');
+      return;
+    }
+    setState(() {
+      uploading = true;
+      error = '';
+    });
+    try {
+      final cubit = context.read<FleetCubit>();
+      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${pickedFile!.name}';
+      final path = 'documents/$fileName';
+      
+      final url = await cubit.uploadDocumentFile('documents', path, pickedFile!.bytes!);
+      if (url == null || url.isEmpty) {
+        throw Exception('فشل رفع الملف إلى التخزين');
+      }
+
+      final saveError = await cubit.saveDocument(
+        ownerId: widget.ownerId,
+        isDriver: widget.isDriver,
+        type: selectedType!,
+        fileUrl: url,
+        expiryDate: expiryController.text.trim(),
+      );
+
+      if (saveError != null) {
+        throw Exception(saveError);
+      }
+
+      setState(() {
+        pickedFile = null;
+        expiryController.clear();
+        selectedType = null;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('تم رفع الوثيقة بنجاح')),
+        );
+      }
+    } catch (e) {
+      setState(() => error = e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      setState(() => uploading = false);
+    }
+  }
+
+  Future<void> _deleteDoc(FleetDocument doc) async {
+    setState(() => uploading = true);
+    try {
+      final cubit = context.read<FleetCubit>();
+      final uri = Uri.tryParse(doc.fileUrl);
+      if (uri != null) {
+        final pathSegments = uri.pathSegments;
+        if (pathSegments.isNotEmpty) {
+          final path = pathSegments.skip(pathSegments.indexOf('documents') + 1).join('/');
+          if (path.isNotEmpty) {
+            await cubit.deleteFile('documents', 'documents/$path');
+          }
+        }
+      }
+      final delError = await cubit.deleteDocument(documentId: doc.id, isDriver: widget.isDriver);
+      if (delError != null) throw Exception(delError);
+    } catch (e) {
+      setState(() => error = e.toString().replaceAll('Exception: ', ''));
+    } finally {
+      setState(() => uploading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('صور المركبة', style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: AppSpacing.small),
-          Wrap(
-            spacing: AppSpacing.small,
-            runSpacing: AppSpacing.small,
-            children: vehicle.images.map((image) {
-              return InkWell(
-                onTap: () => _openImageViewer(context, image),
-                child: Container(
-                  width: 138,
-                  height: 96,
-                  decoration: BoxDecoration(
-                    color: scheme.surfaceContainerHighest,
-                    borderRadius: BorderRadius.circular(AppTokens.radius),
-                    border: Border.all(color: scheme.outline.withAlpha(90)),
+    final filteredTypes = widget.isDriver
+        ? [
+            FleetDocumentType.driverLicense,
+            FleetDocumentType.nationalIdFront,
+            FleetDocumentType.nationalIdBack,
+            FleetDocumentType.criminalRecord,
+            FleetDocumentType.employmentContract,
+            FleetDocumentType.other,
+          ]
+        : [
+            FleetDocumentType.vehicleLicense,
+            FleetDocumentType.insurance,
+            FleetDocumentType.inspection,
+            FleetDocumentType.other,
+          ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(),
+        const SizedBox(height: AppSpacing.small),
+        Text('إدارة الوثائق والمستندات', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: AppSpacing.small),
+        if (widget.documents.isEmpty)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: AppSpacing.medium),
+            child: Text('لا توجد وثائق مرفوعة حالياً.'),
+          )
+        else
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: widget.documents.length,
+            itemBuilder: (context, index) {
+              final doc = widget.documents[index];
+              return Card(
+                margin: const EdgeInsets.only(bottom: AppSpacing.small),
+                child: ListTile(
+                  leading: Icon(
+                    doc.status == FleetDocumentStatus.expired
+                        ? Icons.warning_amber_rounded
+                        : Icons.description_rounded,
+                    color: doc.status == FleetDocumentStatus.expired
+                        ? scheme.error
+                        : scheme.primary,
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  title: Text(doc.type.label),
+                  subtitle: Text('تاريخ الانتهاء: ${doc.expiryDate} | الحالة: ${doc.status.label}'),
+                  trailing: Wrap(
+                    spacing: AppSpacing.xSmall,
                     children: [
-                      Icon(Icons.directions_bus_rounded, color: scheme.primary),
-                      const SizedBox(height: AppSpacing.xSmall),
-                      Text(image.label),
+                      IconButton(
+                        icon: const Icon(Icons.open_in_new_rounded),
+                        tooltip: 'عرض الملف',
+                        onPressed: doc.fileUrl.isNotEmpty
+                            ? () => launchUrl(Uri.parse(doc.fileUrl), mode: LaunchMode.externalApplication)
+                            : null,
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
+                        tooltip: 'حذف الوثيقة',
+                        onPressed: () => _deleteDoc(doc),
+                      ),
                     ],
                   ),
                 ),
               );
-            }).toList(),
+            },
           ),
+        const SizedBox(height: AppSpacing.medium),
+        Text('رفع وثيقة جديدة', style: Theme.of(context).textTheme.titleSmall),
+        const SizedBox(height: AppSpacing.small),
+        Row(
+          children: [
+            Expanded(
+              child: DropdownButtonFormField<FleetDocumentType>(
+                value: selectedType,
+                decoration: const InputDecoration(labelText: 'نوع الوثيقة'),
+                items: filteredTypes
+                    .map((t) => DropdownMenuItem(value: t, child: Text(t.label)))
+                    .toList(),
+                onChanged: (v) => setState(() => selectedType = v),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.small),
+            Expanded(
+              child: TextField(
+                controller: expiryController,
+                decoration: const InputDecoration(
+                  labelText: 'تاريخ الانتهاء (YYYY-MM-DD)',
+                  suffixIcon: Icon(Icons.calendar_today_rounded),
+                ),
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now().add(const Duration(days: 365)),
+                    firstDate: DateTime.now().subtract(const Duration(days: 365)),
+                    lastDate: DateTime.now().add(const Duration(days: 3650)),
+                  );
+                  if (date != null) {
+                    setState(() {
+                      expiryController.text = date.toIso8601String().substring(0, 10);
+                    });
+                  }
+                },
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.small),
+        Row(
+          children: [
+            ElevatedButton.icon(
+              onPressed: _pickFile,
+              icon: const Icon(Icons.attach_file_rounded),
+              label: Text(pickedFile != null ? 'تغيير الملف' : 'اختر ملف'),
+            ),
+            if (pickedFile != null) ...[
+              const SizedBox(width: AppSpacing.small),
+              Expanded(child: Text(pickedFile!.name, overflow: TextOverflow.ellipsis)),
+            ],
+            const Spacer(),
+            if (uploading)
+              const CircularProgressIndicator()
+            else
+              FilledButton.icon(
+                onPressed: _uploadAndSave,
+                icon: const Icon(Icons.cloud_upload_rounded),
+                label: const Text('رفع وحفظ'),
+              ),
+          ],
+        ),
+        if (error.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.small),
+          Text(error, style: TextStyle(color: scheme.error)),
         ],
-      ),
+      ],
     );
   }
 }
 
-void _openImageViewer(BuildContext context, FleetVehicleImage image) {
-  showDialog<void>(
-    context: context,
-    builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
-      child: AlertDialog(
-        title: Text(image.label),
-        content: SizedBox(
-          width: 620,
-          height: 360,
-          child: Center(
+class _SeatLayoutVisualizer extends StatelessWidget {
+  final SeatConfiguration seatConfig;
+
+  const _SeatLayoutVisualizer({required this.seatConfig});
+
+  @override
+  Widget build(BuildContext context) {
+    if (seatConfig.seats.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: AppSpacing.medium),
+        child: Text('لا يوجد تخطيط مقاعد مدخل للمركبة.'),
+      );
+    }
+
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Divider(),
+        const SizedBox(height: AppSpacing.small),
+        Text('تخطيط المقاعد الداخلي', style: Theme.of(context).textTheme.titleMedium),
+        const SizedBox(height: AppSpacing.medium),
+        Center(
+          child: Container(
+            padding: const EdgeInsets.all(AppSpacing.medium),
+            constraints: const BoxConstraints(maxWidth: 320),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withAlpha(50),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
+              border: Border.all(color: scheme.outline.withAlpha(50)),
+            ),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.directions_bus_rounded, size: 96),
-                const SizedBox(height: AppSpacing.medium),
-                Text(image.description),
+                Container(
+                  padding: const EdgeInsets.symmetric(vertical: AppSpacing.xSmall),
+                  margin: const EdgeInsets.only(bottom: AppSpacing.medium),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: scheme.primaryContainer.withAlpha(100),
+                    borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                  ),
+                  child: const Text('مقدمة الحافلة (التابلوه)', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: seatConfig.rows,
+                  itemBuilder: (context, rIndex) {
+                    final row = rIndex + 1;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.small),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: List.generate(seatConfig.columns, (cIndex) {
+                          final col = cIndex + 1;
+                          final seat = seatConfig.seats.firstWhere(
+                            (s) => s.row == row && s.column == col,
+                            orElse: () => const SeatLayoutItem(seatNumber: '', seatType: 'empty', row: 0, column: 0),
+                          );
+
+                          if (seat.seatType == 'empty' || seat.row == 0) {
+                            return const SizedBox(width: 48, height: 48);
+                          }
+
+                          final isDriver = seat.seatType == 'driver';
+                          final isVip = seat.seatType == 'vip';
+
+                          return Container(
+                            width: 48,
+                            height: 48,
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: isDriver
+                                  ? scheme.secondaryContainer
+                                  : isVip
+                                      ? Colors.amber.shade100
+                                      : scheme.primaryContainer,
+                              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                              border: Border.all(
+                                color: isDriver
+                                    ? scheme.secondary
+                                    : isVip
+                                        ? Colors.amber.shade800
+                                        : scheme.primary,
+                              ),
+                            ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  isDriver
+                                      ? Icons.settings_accessibility_rounded
+                                      : isVip
+                                          ? Icons.star_rounded
+                                          : Icons.event_seat_rounded,
+                                  size: 18,
+                                  color: isDriver
+                                      ? scheme.onSecondaryContainer
+                                      : isVip
+                                          ? Colors.amber.shade900
+                                          : scheme.onPrimaryContainer,
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  seat.seatNumber,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: isDriver
+                                        ? scheme.onSecondaryContainer
+                                        : isVip
+                                            ? Colors.amber.shade900
+                                            : scheme.onPrimaryContainer,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+                      ),
+                    );
+                  },
+                ),
               ],
             ),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('إغلاق'),
-          ),
-        ],
-      ),
-    ),
-  );
+      ],
+    );
+  }
 }
 
 void _openDriverForm(BuildContext context, {FleetDriver? driver}) {
@@ -1347,6 +1672,10 @@ class _DriverFormDialogState extends State<_DriverFormDialog> {
   late final TextEditingController expiry;
   late final TextEditingController address;
   late final TextEditingController emergency;
+  late final TextEditingController employeeCode;
+  late final TextEditingController hireDate;
+  late final TextEditingController notes;
+
   int step = 0;
   String error = '';
   bool saved = false;
@@ -1355,13 +1684,16 @@ class _DriverFormDialogState extends State<_DriverFormDialog> {
   void initState() {
     super.initState();
     final driver = widget.driver;
-    name = TextEditingController(text: driver?.name ?? '');
+    name = TextEditingController(text: driver?.fullName ?? '');
     phone = TextEditingController(text: driver?.phone ?? '');
     nationalId = TextEditingController(text: driver?.nationalId ?? '');
     license = TextEditingController(text: driver?.licenseNumber ?? '');
-    expiry = TextEditingController(text: driver?.licenseExpiry ?? '');
+    expiry = TextEditingController(text: driver?.licenseExpiryDate ?? '');
     address = TextEditingController(text: driver?.address ?? '');
-    emergency = TextEditingController(text: driver?.emergencyContact ?? '');
+    emergency = TextEditingController(text: driver?.emergencyPhone ?? '');
+    employeeCode = TextEditingController(text: driver?.employeeCode ?? '');
+    hireDate = TextEditingController(text: driver?.hireDate ?? '');
+    notes = TextEditingController(text: driver?.notes ?? '');
   }
 
   @override
@@ -1373,6 +1705,9 @@ class _DriverFormDialogState extends State<_DriverFormDialog> {
     expiry.dispose();
     address.dispose();
     emergency.dispose();
+    employeeCode.dispose();
+    hireDate.dispose();
+    notes.dispose();
     super.dispose();
   }
 
@@ -1403,8 +1738,16 @@ class _DriverFormDialogState extends State<_DriverFormDialog> {
               onStepTapped: (value) => setState(() => step = value),
               steps: [
                 Step(
-                  title: const Text('بيانات شخصية'),
-                  content: _field(name, 'الاسم'),
+                  title: const Text('بيانات شخصية وبطاقة'),
+                  content: Column(
+                    children: [
+                      _field(name, 'الاسم الكامل'),
+                      _gap,
+                      _field(nationalId, 'الرقم القومي'),
+                      _gap,
+                      _field(employeeCode, 'كود الموظف'),
+                    ],
+                  ),
                 ),
                 Step(
                   title: const Text('بيانات التواصل'),
@@ -1414,37 +1757,41 @@ class _DriverFormDialogState extends State<_DriverFormDialog> {
                       _gap,
                       _field(address, 'العنوان'),
                       _gap,
-                      _field(emergency, 'طوارئ'),
+                      _field(emergency, 'رقم الطوارئ'),
                     ],
                   ),
                 ),
                 Step(
-                  title: const Text('بيانات الرخصة'),
+                  title: const Text('الرخصة وتاريخ التعيين'),
                   content: Column(
                     children: [
-                      _field(nationalId, 'الرقم القومي'),
-                      _gap,
                       _field(license, 'رقم الرخصة'),
                       _gap,
-                      _field(expiry, 'انتهاء الرخصة'),
+                      _field(expiry, 'انتهاء الرخصة (YYYY-MM-DD)'),
+                      _gap,
+                      _field(hireDate, 'تاريخ التعيين (YYYY-MM-DD)'),
+                    ],
+                  ),
+                ),
+                Step(
+                  title: const Text('ملاحظات إضافية'),
+                  content: Column(
+                    children: [
+                      _field(notes, 'ملاحظات وتفاصيل'),
                     ],
                   ),
                 ),
                 const Step(
                   title: Text('رفع الوثائق'),
                   content: Text(
-                    'تم إرفاق صورة الرخصة والرقم القومي داخل بيانات التشغيل المحلية.',
+                    'يمكنك رفع وإدارة المستندات الخاصة بالسائق (رخصة القيادة، الفيش، عقد العمل) بشكل كامل من صفحة تفاصيل السائق بعد حفظه.',
                   ),
                 ),
                 Step(
-                  title: const Text('مراجعة'),
+                  title: const Text('مراجعة وحفظ'),
                   content: Text(
-                    '${name.text} - ${phone.text} - ${license.text}',
+                    'الاسم: ${name.text}\nالهاتف: ${phone.text}\nكود الموظف: ${employeeCode.text}\nالرقم القومي: ${nationalId.text}',
                   ),
-                ),
-                const Step(
-                  title: Text('نجاح'),
-                  content: Text('اضغط حفظ لإتمام العملية.'),
                 ),
               ],
             ),
@@ -1481,6 +1828,8 @@ class _DriverFormDialogState extends State<_DriverFormDialog> {
       nationalId,
       license,
       expiry,
+      employeeCode,
+      hireDate,
     ].any((field) => field.text.trim().isEmpty)) {
       setState(() => error = 'كل البيانات الأساسية مطلوبة');
       return;
@@ -1489,29 +1838,22 @@ class _DriverFormDialogState extends State<_DriverFormDialog> {
     context.read<FleetCubit>().saveDriver(
       FleetDriver(
         id: existing?.id ?? '',
-        imageLabel: existing?.imageLabel ?? '',
-        name: name.text.trim(),
+        employeeCode: employeeCode.text.trim(),
+        fullName: name.text.trim(),
         phone: phone.text.trim(),
+        emergencyPhone: emergency.text.trim(),
+        address: address.text.trim(),
         nationalId: nationalId.text.trim(),
+        profileImageUrl: existing?.profileImageUrl ?? '',
         licenseNumber: license.text.trim(),
-        licenseExpiry: expiry.text.trim(),
+        licenseExpiryDate: expiry.text.trim(),
+        hireDate: hireDate.text.trim(),
+        notes: notes.text.trim(),
         status: existing?.status ?? FleetDriverStatus.active,
         currentVehicleId: existing?.currentVehicleId ?? '',
-        address: address.text.trim(),
-        emergencyContact: emergency.text.trim(),
         tripHistory: existing?.tripHistory ?? const [],
         violations: existing?.violations ?? const [],
-        documents: [
-          FleetDocument(
-            id: 'doc-form-${existing?.id ?? 'new'}',
-            type: FleetDocumentType.driverLicense,
-            ownerId: existing?.id ?? '',
-            ownerName: name.text.trim(),
-            referenceNumber: license.text.trim(),
-            expiryDate: expiry.text.trim(),
-            status: _documentStatus(expiry.text.trim()),
-          ),
-        ],
+        documents: existing?.documents ?? const [],
         activityTimeline: existing?.activityTimeline ?? const [],
       ),
     );
@@ -1542,44 +1884,50 @@ class _VehicleFormDialog extends StatefulWidget {
 }
 
 class _VehicleFormDialogState extends State<_VehicleFormDialog> {
-  late final TextEditingController number;
+  late final TextEditingController code;
   late final TextEditingController plate;
   late final TextEditingController model;
   late final TextEditingController year;
   late final TextEditingController seats;
-  late final TextEditingController license;
-  late final TextEditingController insurance;
-  late final TextEditingController inspection;
+  late final TextEditingController brand;
+  late final TextEditingController color;
+  late final TextEditingController notes;
+  String vehicleType = 'Coaster';
+  String seatLayoutType = 'standard';
   String error = '';
 
   @override
   void initState() {
     super.initState();
     final vehicle = widget.vehicle;
-    number = TextEditingController(text: vehicle?.vehicleNumber ?? '');
+    code = TextEditingController(text: vehicle?.vehicleCode ?? '');
     plate = TextEditingController(text: vehicle?.plateNumber ?? '');
     model = TextEditingController(text: vehicle?.model ?? '');
     year = TextEditingController(
-      text: vehicle == null ? '' : '${vehicle.modelYear}',
+      text: vehicle == null ? '' : '${vehicle.manufactureYear}',
     );
     seats = TextEditingController(
-      text: vehicle == null ? '' : '${vehicle.seatsCount}',
+      text: vehicle == null ? '' : '${vehicle.capacity}',
     );
-    license = TextEditingController(text: vehicle?.licenseExpiry ?? '');
-    insurance = TextEditingController(text: vehicle?.insuranceExpiry ?? '');
-    inspection = TextEditingController(text: vehicle?.inspectionExpiry ?? '');
+    brand = TextEditingController(text: vehicle?.brand ?? '');
+    color = TextEditingController(text: vehicle?.color ?? '');
+    notes = TextEditingController(text: vehicle?.notes ?? '');
+    if (vehicle != null) {
+      vehicleType = vehicle.vehicleType.isEmpty ? 'Coaster' : vehicle.vehicleType;
+      seatLayoutType = vehicle.seatLayoutType.isEmpty ? 'standard' : vehicle.seatLayoutType;
+    }
   }
 
   @override
   void dispose() {
-    number.dispose();
+    code.dispose();
     plate.dispose();
     model.dispose();
     year.dispose();
     seats.dispose();
-    license.dispose();
-    insurance.dispose();
-    inspection.dispose();
+    brand.dispose();
+    color.dispose();
+    notes.dispose();
     super.dispose();
   }
 
@@ -1589,44 +1937,81 @@ class _VehicleFormDialogState extends State<_VehicleFormDialog> {
       title: Text(widget.vehicle == null ? 'إضافة مركبة' : 'تعديل مركبة'),
       content: SizedBox(
         width: 680,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _field(number, 'رقم المركبة'),
-            _gap,
-            Row(
-              children: [
-                Expanded(child: _field(plate, 'رقم اللوحة')),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(child: _field(model, 'الموديل')),
-              ],
-            ),
-            _gap,
-            Row(
-              children: [
-                Expanded(child: _field(year, 'السنة')),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(child: _field(seats, 'عدد المقاعد')),
-              ],
-            ),
-            _gap,
-            Row(
-              children: [
-                Expanded(child: _field(license, 'الرخصة')),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(child: _field(insurance, 'التأمين')),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(child: _field(inspection, 'الفحص')),
-              ],
-            ),
-            if (error.isNotEmpty) ...[
-              _gap,
-              Text(
-                error,
-                style: TextStyle(color: Theme.of(context).colorScheme.error),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: _field(code, 'كود المركبة')),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(child: _field(plate, 'رقم اللوحة')),
+                ],
               ),
+              _gap,
+              Row(
+                children: [
+                  Expanded(child: _field(brand, 'الماركة (مثال: Toyota)')),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(child: _field(model, 'الموديل (مثال: كوستر)')),
+                ],
+              ),
+              _gap,
+              Row(
+                children: [
+                  Expanded(child: _field(year, 'سنة الصنع')),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(child: _field(seats, 'السعة الركابية (المقاعد)')),
+                ],
+              ),
+              _gap,
+              Row(
+                children: [
+                  Expanded(child: _field(color, 'اللون')),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: vehicleType,
+                      decoration: const InputDecoration(labelText: 'فئة المركبة'),
+                      items: const [
+                        DropdownMenuItem(value: 'Coaster', child: Text('Coaster')),
+                        DropdownMenuItem(value: 'Sprinter', child: Text('Sprinter')),
+                        DropdownMenuItem(value: 'Hiace', child: Text('Hiace')),
+                        DropdownMenuItem(value: 'H1', child: Text('H1')),
+                        DropdownMenuItem(value: 'Other', child: Text('فئة أخرى')),
+                      ],
+                      onChanged: (v) => setState(() => vehicleType = v ?? 'Coaster'),
+                    ),
+                  ),
+                ],
+              ),
+              _gap,
+              Row(
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: seatLayoutType,
+                      decoration: const InputDecoration(labelText: 'نوع تخطيط المقاعد'),
+                      items: const [
+                        DropdownMenuItem(value: 'standard', child: Text('Standard (عادي)')),
+                        DropdownMenuItem(value: 'VIP', child: Text('VIP (مميز)')),
+                      ],
+                      onChanged: (v) => setState(() => seatLayoutType = v ?? 'standard'),
+                    ),
+                  ),
+                ],
+              ),
+              _gap,
+              _field(notes, 'ملاحظات أو تفاصيل الصيانة'),
+              if (error.isNotEmpty) ...[
+                _gap,
+                Text(
+                  error,
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
       actions: [
@@ -1643,12 +2028,11 @@ class _VehicleFormDialogState extends State<_VehicleFormDialog> {
     final seatsValue = int.tryParse(seats.text.trim());
     final yearValue = int.tryParse(year.text.trim());
     if ([
-          number,
+          code,
           plate,
           model,
-          license,
-          insurance,
-          inspection,
+          brand,
+          color,
         ].any((field) => field.text.trim().isEmpty) ||
         seatsValue == null ||
         yearValue == null) {
@@ -1659,20 +2043,28 @@ class _VehicleFormDialogState extends State<_VehicleFormDialog> {
       return;
     }
     final existing = widget.vehicle;
+    final seatConfig = SeatConfiguration.generateDefault(seatsValue);
+
     context.read<FleetCubit>().saveVehicle(
       FleetVehicle(
         id: existing?.id ?? '',
-        imageLabel: existing?.imageLabel ?? number.text.trim(),
-        vehicleNumber: number.text.trim(),
+        vehicleCode: code.text.trim(),
         plateNumber: plate.text.trim(),
+        vehicleType: vehicleType,
+        brand: brand.text.trim(),
         model: model.text.trim(),
-        modelYear: yearValue,
-        seatsCount: seatsValue,
-        currentDriverId: existing?.currentDriverId ?? '',
+        manufactureYear: yearValue,
+        color: color.text.trim(),
+        capacity: seatsValue,
+        seatLayoutType: seatLayoutType,
+        imageUrl: existing?.imageUrl ?? '',
+        notes: notes.text.trim(),
         status: existing?.status ?? FleetVehicleStatus.active,
-        licenseExpiry: license.text.trim(),
-        insuranceExpiry: insurance.text.trim(),
-        inspectionExpiry: inspection.text.trim(),
+        currentDriverId: existing?.currentDriverId ?? '',
+        seatConfiguration: seatConfig,
+        licenseExpiry: existing?.licenseExpiry ?? '',
+        insuranceExpiry: existing?.insuranceExpiry ?? '',
+        inspectionExpiry: existing?.inspectionExpiry ?? '',
         images: existing?.images ?? const [],
         previousDrivers: existing?.previousDrivers ?? const [],
         tripHistory: existing?.tripHistory ?? const [],

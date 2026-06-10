@@ -16,6 +16,13 @@ class FleetCubit extends Cubit<FleetState> {
   final ReassignFleetVehicleUseCase _reassignVehicle;
   final RemoveUnifiedFleetAssignmentUseCase _removeAssignment;
 
+  // Document & File use cases
+  final CreateFleetDocumentUseCase _createDocument;
+  final UpdateFleetDocumentUseCase _updateDocument;
+  final DeleteFleetDocumentUseCase _deleteDocument;
+  final UploadFleetFileUseCase _uploadFile;
+  final DeleteFleetFileUseCase _deleteFile;
+
   FleetCubit({
     required GetFleetWorkspaceUseCase getWorkspace,
     required CreateFleetDriverUseCase createDriver,
@@ -27,24 +34,34 @@ class FleetCubit extends Cubit<FleetState> {
     required AssignFleetVehicleUseCase assignVehicle,
     required ReassignFleetVehicleUseCase reassignVehicle,
     required RemoveUnifiedFleetAssignmentUseCase removeAssignment,
-  }) : _getWorkspace = getWorkspace,
-       _createDriver = createDriver,
-       _updateDriver = updateDriver,
-       _updateDriverStatus = updateDriverStatus,
-       _createVehicle = createVehicle,
-       _updateVehicle = updateVehicle,
-       _updateVehicleStatus = updateVehicleStatus,
-       _assignVehicle = assignVehicle,
-       _reassignVehicle = reassignVehicle,
-       _removeAssignment = removeAssignment,
-       super(const FleetLoading());
+    required CreateFleetDocumentUseCase createDocument,
+    required UpdateFleetDocumentUseCase updateDocument,
+    required DeleteFleetDocumentUseCase deleteDocument,
+    required UploadFleetFileUseCase uploadFile,
+    required DeleteFleetFileUseCase deleteFile,
+  })  : _getWorkspace = getWorkspace,
+        _createDriver = createDriver,
+        _updateDriver = updateDriver,
+        _updateDriverStatus = updateDriverStatus,
+        _createVehicle = createVehicle,
+        _updateVehicle = updateVehicle,
+        _updateVehicleStatus = updateVehicleStatus,
+        _assignVehicle = assignVehicle,
+        _reassignVehicle = reassignVehicle,
+        _removeAssignment = removeAssignment,
+        _createDocument = createDocument,
+        _updateDocument = updateDocument,
+        _deleteDocument = deleteDocument,
+        _uploadFile = uploadFile,
+        _deleteFile = deleteFile,
+        super(const FleetLoading());
 
   Future<void> load() async {
     emit(const FleetLoading());
     try {
       emit(FleetLoaded(workspace: await _getWorkspace()));
     } catch (error) {
-      emit(FleetError(error.toString()));
+      emit(FleetError(error.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -116,7 +133,7 @@ class FleetCubit extends Cubit<FleetState> {
       }
       await _reloadKeepingState();
     } catch (error) {
-      emit(FleetError(error.toString()));
+      emit(FleetError(error.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -128,7 +145,7 @@ class FleetCubit extends Cubit<FleetState> {
       await _updateDriverStatus(driverId, status);
       await _reloadKeepingState();
     } catch (error) {
-      emit(FleetError(error.toString()));
+      emit(FleetError(error.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -141,7 +158,7 @@ class FleetCubit extends Cubit<FleetState> {
       }
       await _reloadKeepingState();
     } catch (error) {
-      emit(FleetError(error.toString()));
+      emit(FleetError(error.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -153,7 +170,7 @@ class FleetCubit extends Cubit<FleetState> {
       await _updateVehicleStatus(vehicleId, status);
       await _reloadKeepingState();
     } catch (error) {
-      emit(FleetError(error.toString()));
+      emit(FleetError(error.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -163,7 +180,7 @@ class FleetCubit extends Cubit<FleetState> {
       await _reloadKeepingState();
       return null;
     } catch (error) {
-      return error.toString();
+      return error.toString().replaceAll('Exception: ', '');
     }
   }
 
@@ -173,7 +190,7 @@ class FleetCubit extends Cubit<FleetState> {
       await _reloadKeepingState();
       return null;
     } catch (error) {
-      return error.toString();
+      return error.toString().replaceAll('Exception: ', '');
     }
   }
 
@@ -182,7 +199,7 @@ class FleetCubit extends Cubit<FleetState> {
       await _removeAssignment(assignmentId);
       await _reloadKeepingState();
     } catch (error) {
-      emit(FleetError(error.toString()));
+      emit(FleetError(error.toString().replaceAll('Exception: ', '')));
     }
   }
 
@@ -204,18 +221,107 @@ class FleetCubit extends Cubit<FleetState> {
     await _reloadKeepingState(clearSelection: true);
   }
 
+  // Document & Storage Workflows
+  Future<String?> uploadDocumentFile(
+    String bucket,
+    String path,
+    List<int> bytes,
+  ) async {
+    try {
+      final url = await _uploadFile(bucket, path, bytes);
+      return url;
+    } catch (error) {
+      emit(FleetError(error.toString().replaceAll('Exception: ', '')));
+      return null;
+    }
+  }
+
+  Future<String?> saveDocument({
+    required String ownerId,
+    required bool isDriver,
+    required FleetDocumentType type,
+    required String fileUrl,
+    required String expiryDate,
+    String? documentId,
+  }) async {
+    try {
+      final status = _calculateDocumentStatus(expiryDate);
+      if (documentId == null || documentId.isEmpty) {
+        await _createDocument(
+          ownerId: ownerId,
+          isDriver: isDriver,
+          type: type,
+          fileUrl: fileUrl,
+          expiryDate: expiryDate,
+          status: status,
+        );
+      } else {
+        await _updateDocument(
+          documentId: documentId,
+          isDriver: isDriver,
+          fileUrl: fileUrl,
+          expiryDate: expiryDate,
+          status: status,
+        );
+      }
+      await _reloadKeepingState();
+      return null;
+    } catch (error) {
+      return error.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  Future<String?> deleteDocument({
+    required String documentId,
+    required bool isDriver,
+  }) async {
+    try {
+      await _deleteDocument(documentId: documentId, isDriver: isDriver);
+      await _reloadKeepingState();
+      return null;
+    } catch (error) {
+      return error.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  Future<String?> deleteFile(String bucket, String path) async {
+    try {
+      await _deleteFile(bucket, path);
+      return null;
+    } catch (error) {
+      return error.toString().replaceAll('Exception: ', '');
+    }
+  }
+
+  FleetDocumentStatus _calculateDocumentStatus(String expiryDate) {
+    try {
+      final date = DateTime.tryParse(expiryDate);
+      if (date != null) {
+        final difference = date.difference(DateTime.now()).inDays;
+        if (difference < 0) return FleetDocumentStatus.expired;
+        if (difference <= 30) return FleetDocumentStatus.expiringSoon;
+        return FleetDocumentStatus.valid;
+      }
+    } catch (_) {}
+    return FleetDocumentStatus.valid;
+  }
+
   Future<void> _reloadKeepingState({bool clearSelection = false}) async {
     final current = state;
-    final workspace = await _getWorkspace();
-    if (current is FleetLoaded) {
-      emit(
-        current.copyWith(
-          workspace: workspace,
-          selectedIds: clearSelection ? {} : current.selectedIds,
-        ),
-      );
-    } else {
-      emit(FleetLoaded(workspace: workspace));
+    try {
+      final workspace = await _getWorkspace();
+      if (current is FleetLoaded) {
+        emit(
+          current.copyWith(
+            workspace: workspace,
+            selectedIds: clearSelection ? {} : current.selectedIds,
+          ),
+        );
+      } else {
+        emit(FleetLoaded(workspace: workspace));
+      }
+    } catch (error) {
+      emit(FleetError(error.toString().replaceAll('Exception: ', '')));
     }
   }
 

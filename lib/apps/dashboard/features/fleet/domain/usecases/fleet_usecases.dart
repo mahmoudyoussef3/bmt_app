@@ -98,3 +98,82 @@ class RemoveUnifiedFleetAssignmentUseCase {
     return _repository.removeAssignment(assignmentId);
   }
 }
+
+class CreateFleetDocumentUseCase {
+  final FleetRepository _repository;
+
+  const CreateFleetDocumentUseCase(this._repository);
+
+  Future<FleetDocument> call({
+    required String ownerId,
+    required bool isDriver,
+    required FleetDocumentType type,
+    required String fileUrl,
+    required String expiryDate,
+    required FleetDocumentStatus status,
+  }) {
+    return _repository.createDocument(
+      ownerId: ownerId,
+      isDriver: isDriver,
+      type: type,
+      fileUrl: fileUrl,
+      expiryDate: expiryDate,
+      status: status,
+    );
+  }
+}
+
+class UpdateFleetDocumentUseCase {
+  final FleetRepository _repository;
+
+  const UpdateFleetDocumentUseCase(this._repository);
+
+  Future<FleetDocument> call({
+    required String documentId,
+    required bool isDriver,
+    required String fileUrl,
+    required String expiryDate,
+    required FleetDocumentStatus status,
+  }) {
+    return _repository.updateDocument(
+      documentId: documentId,
+      isDriver: isDriver,
+      fileUrl: fileUrl,
+      expiryDate: expiryDate,
+      status: status,
+    );
+  }
+}
+
+class DeleteFleetDocumentUseCase {
+  final FleetRepository _repository;
+
+  const DeleteFleetDocumentUseCase(this._repository);
+
+  Future<void> call({required String documentId, required bool isDriver}) {
+    return _repository.deleteDocument(
+      documentId: documentId,
+      isDriver: isDriver,
+    );
+  }
+}
+
+class UploadFleetFileUseCase {
+  final FleetRepository _repository;
+
+  const UploadFleetFileUseCase(this._repository);
+
+  Future<String> call(String bucket, String path, List<int> bytes) {
+    return _repository.uploadFile(bucket, path, bytes);
+  }
+}
+
+class DeleteFleetFileUseCase {
+  final FleetRepository _repository;
+
+  const DeleteFleetFileUseCase(this._repository);
+
+  Future<void> call(String bucket, String path) {
+    return _repository.deleteFile(bucket, path);
+  }
+}

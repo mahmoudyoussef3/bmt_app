@@ -24,6 +24,26 @@ abstract class FleetDatasource {
     String newVehicleId,
   );
   Future<FleetAssignmentModel> removeAssignment(String assignmentId);
+
+  Future<FleetDocumentModel> createDocument({
+    required String ownerId,
+    required bool isDriver,
+    required FleetDocumentType type,
+    required String fileUrl,
+    required String expiryDate,
+    required FleetDocumentStatus status,
+  });
+  Future<FleetDocumentModel> updateDocument({
+    required String documentId,
+    required bool isDriver,
+    required String fileUrl,
+    required String expiryDate,
+    required FleetDocumentStatus status,
+  });
+  Future<void> deleteDocument({
+    required String documentId,
+    required bool isDriver,
+  });
 }
 
 class MockFleetDatasource implements FleetDatasource {
@@ -78,9 +98,6 @@ class MockFleetDatasource implements FleetDatasource {
     final model = FleetDriverModel.fromEntity(
       driver.copyWith(
         id: 'driver-${_drivers.length + 1}',
-        imageLabel: driver.imageLabel.isEmpty
-            ? _initials(driver.name)
-            : driver.imageLabel,
         status: FleetDriverStatus.active,
       ),
     );
@@ -121,12 +138,9 @@ class MockFleetDatasource implements FleetDatasource {
     final model = FleetVehicleModel.fromEntity(
       vehicle.copyWith(
         id: 'vehicle-${_vehicles.length + 1}',
-        imageLabel: vehicle.imageLabel.isEmpty
-            ? vehicle.vehicleNumber
-            : vehicle.imageLabel,
         status: FleetVehicleStatus.active,
         images: vehicle.images.isEmpty
-            ? _vehicleImages(vehicle.vehicleNumber)
+            ? _vehicleImages(vehicle.vehicleCode)
             : vehicle.images,
       ),
     );
@@ -241,6 +255,63 @@ class MockFleetDatasource implements FleetDatasource {
     return updated;
   }
 
+  @override
+  Future<FleetDocumentModel> createDocument({
+    required String ownerId,
+    required bool isDriver,
+    required FleetDocumentType type,
+    required String fileUrl,
+    required String expiryDate,
+    required FleetDocumentStatus status,
+  }) async {
+    final doc = FleetDocumentModel(
+      id: 'doc-${DateTime.now().millisecondsSinceEpoch}',
+      type: type,
+      ownerId: ownerId,
+      ownerName: isDriver ? 'سائق' : 'مركبة',
+      referenceNumber: 'REF-MOCK',
+      expiryDate: expiryDate,
+      status: status,
+      fileUrl: fileUrl,
+    );
+    if (isDriver) {
+      final index = _drivers.indexWhere((d) => d.id == ownerId);
+      if (index != -1) {
+        final current = _drivers[index];
+        _drivers[index] = FleetDriverModel.fromEntity(
+          current.copyWith(documents: [...current.documents, doc]),
+        );
+      }
+    }
+    return doc;
+  }
+
+  @override
+  Future<FleetDocumentModel> updateDocument({
+    required String documentId,
+    required bool isDriver,
+    required String fileUrl,
+    required String expiryDate,
+    required FleetDocumentStatus status,
+  }) async {
+    return FleetDocumentModel(
+      id: documentId,
+      type: FleetDocumentType.other,
+      ownerId: '',
+      ownerName: 'معدل',
+      referenceNumber: 'REF-MOCK',
+      expiryDate: expiryDate,
+      status: status,
+      fileUrl: fileUrl,
+    );
+  }
+
+  @override
+  Future<void> deleteDocument({
+    required String documentId,
+    required bool isDriver,
+  }) async {}
+
   void _ensureAssignable(String driverId, String vehicleId) {
     final driver = _drivers.firstWhere((item) => item.id == driverId);
     final vehicle = _vehicles.firstWhere((item) => item.id == vehicleId);
@@ -304,7 +375,7 @@ class MockFleetDatasource implements FleetDatasource {
   }
 
   void _validateDriver(FleetDriver driver) {
-    if (driver.name.trim().isEmpty ||
+    if (driver.fullName.trim().isEmpty ||
         driver.phone.trim().isEmpty ||
         driver.nationalId.trim().isEmpty ||
         driver.licenseNumber.trim().isEmpty) {
@@ -313,10 +384,10 @@ class MockFleetDatasource implements FleetDatasource {
   }
 
   void _validateVehicle(FleetVehicle vehicle) {
-    if (vehicle.vehicleNumber.trim().isEmpty ||
+    if (vehicle.vehicleCode.trim().isEmpty ||
         vehicle.plateNumber.trim().isEmpty ||
         vehicle.model.trim().isEmpty ||
-        vehicle.seatsCount <= 0) {
+        vehicle.capacity <= 0) {
       throw ArgumentError('Vehicle data is incomplete');
     }
   }
@@ -354,23 +425,27 @@ List<FleetDriverModel> _buildDrivers() {
     final (index, name) = entry;
     final expiring = index % 7 == 0;
     final expired = index % 13 == 0;
+    final licExpiry = expired
+        ? '١ مايو ٢٠٢٦'
+        : expiring
+        ? '١٨ يونيو ٢٠٢٦'
+        : '${10 + index % 18} ديسمبر ٢٠٢٦';
     return FleetDriverModel(
       id: 'driver-${index + 1}',
-      imageLabel: _initials(name),
-      name: name,
+      employeeCode: 'EMP-${1000 + index}',
+      fullName: name,
       phone: '010${(22334455 + index * 731).toString()}',
+      emergencyPhone: '012${(44770000 + index * 421).toString()}',
+      address: 'شارع ${index + 12}، القاهرة الكبرى',
       nationalId: '29${800000000000 + index * 91017}',
+      profileImageUrl: '',
       licenseNumber: 'د-${(60000 + index * 137)}',
-      licenseExpiry: expired
-          ? '١ مايو ٢٠٢٦'
-          : expiring
-          ? '١٨ يونيو ٢٠٢٦'
-          : '${10 + index % 18} ديسمبر ٢٠٢٦',
+      licenseExpiryDate: licExpiry,
+      hireDate: '2024-01-01',
+      notes: '',
       status: index == 18
           ? FleetDriverStatus.suspended
           : FleetDriverStatus.active,
-      address: 'شارع ${index + 12}، القاهرة الكبرى',
-      emergencyContact: '012${(44770000 + index * 421).toString()}',
       tripHistory: _history('رحلة مكتملة', 4),
       violations: index % 6 == 0 ? _history('مخالفة سرعة', 1) : const [],
       documents: [
@@ -380,11 +455,7 @@ List<FleetDriverModel> _buildDrivers() {
           ownerId: 'driver-${index + 1}',
           ownerName: name,
           referenceNumber: 'د-${(60000 + index * 137)}',
-          expiryDate: expired
-              ? '١ مايو ٢٠٢٦'
-              : expiring
-              ? '١٨ يونيو ٢٠٢٦'
-              : '${10 + index % 18} ديسمبر ٢٠٢٦',
+          expiryDate: licExpiry,
           status: expired
               ? FleetDocumentStatus.expired
               : expiring
@@ -409,24 +480,36 @@ List<FleetVehicleModel> _buildVehicles() {
     final vehicleNumber = 'مركبة ${index + 101}';
     final expiring = index % 5 == 0;
     final expired = index % 11 == 0;
+    final capacityVal = [12, 14, 19, 28][index % 4];
+    final modelName = models[index % models.length];
+    final brandVal = modelName.split(' ')[0];
+    final licExpiry = expired
+        ? '٣٠ أبريل ٢٠٢٦'
+        : expiring
+        ? '٢٠ يونيو ٢٠٢٦'
+        : '${8 + index} نوفمبر ٢٠٢٦';
+    final insExpiry = expiring ? '٢٢ يونيو ٢٠٢٦' : '${9 + index} يناير ٢٠٢٧';
+    final inspExpiry = expired ? '٢٨ أبريل ٢٠٢٦' : '${5 + index} فبراير ٢٠٢٧';
     return FleetVehicleModel(
       id: 'vehicle-${index + 1}',
-      imageLabel: vehicleNumber,
-      vehicleNumber: vehicleNumber,
+      vehicleCode: vehicleNumber,
       plateNumber: '${3300 + index * 17} ق ل',
-      model: models[index % models.length],
-      modelYear: 2018 + (index % 7),
-      seatsCount: [12, 14, 19, 28][index % 4],
+      vehicleType: 'ميني باص',
+      brand: brandVal,
+      model: modelName,
+      manufactureYear: 2018 + (index % 7),
+      color: 'أبيض',
+      capacity: capacityVal,
+      seatLayoutType: 'standard',
+      imageUrl: '',
+      notes: '',
       status: index == 12
           ? FleetVehicleStatus.maintenance
           : FleetVehicleStatus.active,
-      licenseExpiry: expired
-          ? '٣٠ أبريل ٢٠٢٦'
-          : expiring
-          ? '٢٠ يونيو ٢٠٢٦'
-          : '${8 + index} نوفمبر ٢٠٢٦',
-      insuranceExpiry: expiring ? '٢٢ يونيو ٢٠٢٦' : '${9 + index} يناير ٢٠٢٧',
-      inspectionExpiry: expired ? '٢٨ أبريل ٢٠٢٦' : '${5 + index} فبراير ٢٠٢٧',
+      seatConfiguration: SeatConfiguration.generateDefault(capacityVal),
+      licenseExpiry: licExpiry,
+      insuranceExpiry: insExpiry,
+      inspectionExpiry: inspExpiry,
       images: _vehicleImages(vehicleNumber),
       previousDrivers: _history('سائق سابق', 3),
       tripHistory: _history('رحلة تشغيل', 4),
@@ -446,7 +529,7 @@ List<FleetDocument> _buildDocumentsFrom(
         id: 'doc-license-${vehicle.id}',
         type: FleetDocumentType.vehicleLicense,
         ownerId: vehicle.id,
-        ownerName: vehicle.vehicleNumber,
+        ownerName: vehicle.vehicleCode,
         referenceNumber: vehicle.plateNumber,
         expiryDate: vehicle.licenseExpiry,
         status: _documentStatus(vehicle.licenseExpiry),
@@ -455,7 +538,7 @@ List<FleetDocument> _buildDocumentsFrom(
         id: 'doc-insurance-${vehicle.id}',
         type: FleetDocumentType.insurance,
         ownerId: vehicle.id,
-        ownerName: vehicle.vehicleNumber,
+        ownerName: vehicle.vehicleCode,
         referenceNumber: 'تأمين-${vehicle.plateNumber}',
         expiryDate: vehicle.insuranceExpiry,
         status: _documentStatus(vehicle.insuranceExpiry),
@@ -464,7 +547,7 @@ List<FleetDocument> _buildDocumentsFrom(
         id: 'doc-inspection-${vehicle.id}',
         type: FleetDocumentType.inspection,
         ownerId: vehicle.id,
-        ownerName: vehicle.vehicleNumber,
+        ownerName: vehicle.vehicleCode,
         referenceNumber: 'فحص-${vehicle.plateNumber}',
         expiryDate: vehicle.inspectionExpiry,
         status: _documentStatus(vehicle.inspectionExpiry),
