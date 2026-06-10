@@ -38,8 +38,8 @@ class SupabaseFleetDatasource implements FleetDatasource {
     final vehicleDocsData = await _client.from('vehicle_documents').select();
 
     // Parse Assignments
-    final List<FleetAssignmentModel> assignments = assignmentsData
-        .map((json) => FleetAssignmentModel.fromJson(json))
+    final List<FleetAssignment> assignments = assignmentsData
+        .map<FleetAssignment>((json) => FleetAssignmentModel.fromJson(json))
         .toList();
 
     // Active Assignments Map (DriverId -> Assignment, VehicleId -> Assignment)
@@ -48,8 +48,8 @@ class SupabaseFleetDatasource implements FleetDatasource {
 
     for (final assignment in assignments) {
       if (assignment.status == FleetAssignmentStatus.active) {
-        activeDriverAssignments[assignment.driverId] = assignment;
-        activeVehicleAssignments[assignment.vehicleId] = assignment;
+        activeDriverAssignments[assignment.driverId] = assignment as FleetAssignmentModel;
+        activeVehicleAssignments[assignment.vehicleId] = assignment as FleetAssignmentModel;
       }
     }
 
@@ -89,7 +89,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
     }
 
     // Parse Drivers
-    final List<FleetDriver> drivers = driversData.map((json) {
+    final List<FleetDriver> drivers = driversData.map<FleetDriver>((json) {
       final driverId = json['id'] as String;
       final activeAssign = activeDriverAssignments[driverId];
       final currentVehicleId = activeAssign?.vehicleId ?? '';
@@ -101,7 +101,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
     }).toList();
 
     // Parse Vehicles
-    final List<FleetVehicle> vehicles = vehiclesData.map((json) {
+    final List<FleetVehicle> vehicles = vehiclesData.map<FleetVehicle>((json) {
       final vehicleId = json['id'] as String;
       final activeAssign = activeVehicleAssignments[vehicleId];
       final currentDriverId = activeAssign?.driverId ?? '';
@@ -131,7 +131,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
     }).toList();
 
     // Combine all documents
-    final List<FleetDocument> allDocuments = [...driverDocs, ...vehicleDocs];
+    final List<FleetDocument> allDocuments = <FleetDocument>[...driverDocs, ...vehicleDocs];
 
     return FleetWorkspace(
       drivers: drivers,

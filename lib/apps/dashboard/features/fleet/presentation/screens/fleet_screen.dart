@@ -1296,8 +1296,18 @@ class _DocumentManagerState extends State<_DocumentManager> {
   }
 
   Future<void> _uploadAndSave() async {
-    if (selectedType == null || expiryController.text.isEmpty || pickedFile == null) {
-      setState(() => error = 'يرجى ملء جميع الحقول واختيار ملف');
+    setState(() => error = '');
+    if (selectedType == null) {
+      setState(() => error = 'يرجى اختيار نوع الوثيقة');
+      return;
+    }
+    final dateErr = _validateDate(expiryController.text, 'تاريخ انتهاء الصلاحية');
+    if (dateErr != null) {
+      setState(() => error = dateErr);
+      return;
+    }
+    if (pickedFile == null) {
+      setState(() => error = 'يرجى اختيار ملف الوثيقة');
       return;
     }
     setState(() {
@@ -1814,24 +1824,62 @@ class _DriverFormDialogState extends State<_DriverFormDialog> {
             child: const Text('السابق'),
           ),
         FilledButton(
-          onPressed: step == 5 ? _save : () => setState(() => step += 1),
+          onPressed: step == 5 ? _save : _nextStep,
           child: Text(step == 5 ? 'حفظ' : 'التالي'),
         ),
       ],
     );
   }
 
+  void _nextStep() {
+    setState(() => error = '');
+    String? err;
+    if (step == 0) {
+      err = _validateName(name.text);
+      if (err == null) err = _validateNationalId(nationalId.text);
+      if (err == null) err = _validateEmployeeCode(employeeCode.text);
+    } else if (step == 1) {
+      err = _validatePhone(phone.text, 'الهاتف');
+      if (err == null) err = _validatePhone(emergency.text, 'رقم الطوارئ');
+      if (err == null && phone.text.trim() == emergency.text.trim()) {
+        err = 'رقم هاتف الطوارئ لا يمكن أن يكون هو نفسه رقم الهاتف الأساسي';
+      }
+      if (err == null && address.text.trim().isEmpty) {
+        err = 'العنوان مطلوب';
+      }
+    } else if (step == 2) {
+      err = _validateLicenseNumber(license.text);
+      if (err == null) err = _validateDate(expiry.text, 'تاريخ انتهاء الرخصة');
+      if (err == null) err = _validateDate(hireDate.text, 'تاريخ التعيين');
+    }
+
+    if (err != null) {
+      setState(() => error = err!);
+      return;
+    }
+    setState(() => step += 1);
+  }
+
   void _save() {
-    if ([
-      name,
-      phone,
-      nationalId,
-      license,
-      expiry,
-      employeeCode,
-      hireDate,
-    ].any((field) => field.text.trim().isEmpty)) {
-      setState(() => error = 'كل البيانات الأساسية مطلوبة');
+    setState(() => error = '');
+    String? err;
+    err = _validateName(name.text);
+    if (err == null) err = _validateNationalId(nationalId.text);
+    if (err == null) err = _validateEmployeeCode(employeeCode.text);
+    if (err == null) err = _validatePhone(phone.text, 'الهاتف');
+    if (err == null) err = _validatePhone(emergency.text, 'رقم الطوارئ');
+    if (err == null && phone.text.trim() == emergency.text.trim()) {
+      err = 'رقم هاتف الطوارئ لا يمكن أن يكون هو نفسه رقم الهاتف الأساسي';
+    }
+    if (err == null && address.text.trim().isEmpty) {
+      err = 'العنوان مطلوب';
+    }
+    if (err == null) err = _validateLicenseNumber(license.text);
+    if (err == null) err = _validateDate(expiry.text, 'تاريخ انتهاء الرخصة');
+    if (err == null) err = _validateDate(hireDate.text, 'تاريخ التعيين');
+
+    if (err != null) {
+      setState(() => error = err!);
       return;
     }
     final existing = widget.driver;
@@ -2025,23 +2073,28 @@ class _VehicleFormDialogState extends State<_VehicleFormDialog> {
   }
 
   void _save() {
-    final seatsValue = int.tryParse(seats.text.trim());
-    final yearValue = int.tryParse(year.text.trim());
-    if ([
-          code,
-          plate,
-          model,
-          brand,
-          color,
-        ].any((field) => field.text.trim().isEmpty) ||
-        seatsValue == null ||
-        yearValue == null) {
-      setState(
-        () =>
-            error = 'كل البيانات مطلوبة ويجب إدخال أرقام صحيحة للسنة والمقاعد',
-      );
+    setState(() => error = '');
+    String? err;
+    err = _validateVehicleCode(code.text);
+    if (err == null) err = _validatePlateNumber(plate.text);
+    if (err == null) {
+      if (brand.text.trim().isEmpty) err = 'الماركة مطلوبة';
+    }
+    if (err == null) {
+      if (model.text.trim().isEmpty) err = 'الموديل مطلوب';
+    }
+    if (err == null) err = _validateManufactureYear(year.text);
+    if (err == null) err = _validateCapacity(seats.text);
+    if (err == null) {
+      if (color.text.trim().isEmpty) err = 'اللون مطلوب';
+    }
+
+    if (err != null) {
+      setState(() => error = err!);
       return;
     }
+    final seatsValue = int.parse(seats.text.trim());
+    final yearValue = int.parse(year.text.trim());
     final existing = widget.vehicle;
     final seatConfig = SeatConfiguration.generateDefault(seatsValue);
 
@@ -2248,3 +2301,105 @@ Widget _field(TextEditingController controller, String label) {
 }
 
 const _gap = SizedBox(height: AppSpacing.small);
+
+// ==========================================
+// Fleet Input Validation Helpers (Arabic)
+// ==========================================
+
+String? _validateName(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return 'الاسم الكامل مطلوب';
+  final words = trimmed.split(RegExp(r'\s+'));
+  if (words.length < 2) return 'يرجى إدخال الاسم ثنائياً على الأقل';
+  return null;
+}
+
+String? _validateNationalId(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return 'الرقم القومي مطلوب';
+  if (trimmed.length != 14 || !RegExp(r'^\d{14}$').hasMatch(trimmed)) {
+    return 'الرقم القومي يجب أن يتكون من 14 رقماً فقط';
+  }
+  return null;
+}
+
+String? _validatePhone(String value, String fieldLabel) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return '$fieldLabel مطلوب';
+  if (trimmed.length != 11 || !RegExp(r'^\d{11}$').hasMatch(trimmed)) {
+    return '$fieldLabel يجب أن يتكون من 11 رقماً';
+  }
+  if (!RegExp(r'^(010|011|012|015)').hasMatch(trimmed)) {
+    return '$fieldLabel يجب أن يبدأ برقم هاتف مصري صحيح (010, 011, 012, 015)';
+  }
+  return null;
+}
+
+String? _validateDate(String value, String fieldLabel) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return '$fieldLabel مطلوب';
+  final dateRegExp = RegExp(r'^\d{4}-\d{2}-\d{2}$');
+  if (!dateRegExp.hasMatch(trimmed)) {
+    return '$fieldLabel يجب أن يكون بالتنسيق YYYY-MM-DD (مثال: 2026-06-18)';
+  }
+  final date = DateTime.tryParse(trimmed);
+  if (date == null) {
+    return 'التاريخ المدخل غير صحيح';
+  }
+  return null;
+}
+
+String? _validateEmployeeCode(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return 'كود الموظف مطلوب';
+  if (trimmed.length < 3) return 'كود الموظف يجب أن يتكون من 3 رموز على الأقل';
+  return null;
+}
+
+String? _validateLicenseNumber(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return 'رقم الرخصة مطلوب';
+  if (trimmed.length < 4) return 'رقم الرخصة قصير جداً';
+  return null;
+}
+
+String? _validateVehicleCode(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return 'كود المركبة مطلوب';
+  if (trimmed.length < 3) return 'كود المركبة يجب أن يتكون من 3 رموز على الأقل';
+  return null;
+}
+
+String? _validatePlateNumber(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return 'رقم اللوحة مطلوب';
+  final hasDigits = RegExp(r'\d').hasMatch(trimmed);
+  final hasLetters = RegExp(r'[\u0600-\u06FFa-zA-Z]').hasMatch(trimmed);
+  if (!hasDigits || !hasLetters) {
+    return 'رقم اللوحة يجب أن يحتوي على أرقام وحروف معاً (مثال: 123 أ ب ج)';
+  }
+  return null;
+}
+
+String? _validateManufactureYear(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return 'سنة الصنع مطلوبة';
+  final year = int.tryParse(trimmed);
+  if (year == null) return 'سنة الصنع يجب أن تكون رقماً صحيحاً';
+  final currentYear = DateTime.now().year;
+  if (year < 1990 || year > currentYear + 1) {
+    return 'سنة الصنع يجب أن تكون بين 1990 و ${currentYear + 1}';
+  }
+  return null;
+}
+
+String? _validateCapacity(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return 'السعة الركابية مطلوبة';
+  final capacity = int.tryParse(trimmed);
+  if (capacity == null) return 'السعة الركابية يجب أن تكون رقماً صحيحاً';
+  if (capacity < 2 || capacity > 100) {
+    return 'السعة الركابية يجب أن تكون بين 2 و 100 مقعد';
+  }
+  return null;
+}

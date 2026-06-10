@@ -147,8 +147,8 @@ class FleetRepositoryImpl implements FleetRepository {
   Future<FleetWorkspace> getWorkspace() async {
     try {
       return await _datasource.fetchWorkspace();
-    } catch (_) {
-      throw Exception('تعذر تحميل إدارة الأسطول');
+    } catch (e) {
+      throw Exception('تعذر تحميل إدارة الأسطول: $e');
     }
   }
 
