@@ -7,16 +7,16 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../../routes/domain/entities/operation_route.dart';
-import '../../../vehicles/domain/entities/vehicle.dart';
-import '../../../drivers/domain/entities/driver.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_driver.dart';
 import '../../domain/entities/operation_trip.dart';
 import '../../domain/entities/trip_pricing.dart';
 import '../cubit/trips_cubit.dart';
 
 class TripCreationWizard extends StatefulWidget {
   final List<OperationRoute> routes;
-  final List<Vehicle> vehicles;
-  final List<Driver> drivers;
+  final List<FleetVehicle> vehicles;
+  final List<FleetDriver> drivers;
 
   const TripCreationWizard({
     super.key,
@@ -34,8 +34,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 
   // Selected values
   OperationRoute? _selectedRoute;
-  Vehicle? _selectedVehicle;
-  Driver? _selectedDriver;
+  FleetVehicle? _selectedVehicle;
+  FleetDriver? _selectedDriver;
 
   // Schedule values
   final _dateController = TextEditingController(text: '٨ يونيو ٢٠٢٦');
@@ -396,7 +396,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   Widget _buildStep3DriverSelection() {
     final scheme = Theme.of(context).colorScheme;
     final availableDrivers = widget.drivers
-        .where((d) => d.status == DriverStatus.active)
+        .where((d) => d.status == FleetDriverStatus.active)
         .toList();
 
     return Column(

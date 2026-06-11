@@ -5,17 +5,14 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
-import '../../features/assignments/presentation/cubit/fleet_assignments_cubit.dart';
-import '../../features/assignments/presentation/screens/fleet_assignments_screen.dart';
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
 import '../../features/bookings/presentation/screens/bookings_screen.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
 import '../../features/dashboard_home/presentation/screens/dashboard_home_screen.dart';
 import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
-import '../../features/drivers/presentation/cubit/drivers_cubit.dart';
-import '../../features/drivers/presentation/screens/drivers_screen.dart';
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import '../../features/fleet/overview/presentation/screens/fleet_overview_screen.dart';
+import '../../features/fleet/shared/domain/entities/fleet_common.dart';
 import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
@@ -33,8 +30,6 @@ import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
 import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/trips/presentation/screens/trips_screen.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
-import '../../features/vehicles/presentation/cubit/vehicles_cubit.dart';
-import '../../features/vehicles/presentation/screens/vehicles_screen.dart';
 import '../di/dashboard_di.dart';
 import '../permissions/dashboard_permission.dart';
 import '../permissions/dashboard_role.dart';
@@ -291,16 +286,16 @@ class _DashboardShellState extends State<DashboardShell> {
         child: const FleetOverviewScreen(),
       ),
       DashboardRoutes.drivers => BlocProvider(
-        create: (_) => dashboardDi<DriversCubit>()..load(),
-        child: const DriversScreen(),
+        create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
+        child: const FleetOverviewScreen(initialTab: FleetTab.drivers),
       ),
       DashboardRoutes.assignments => BlocProvider(
-        create: (_) => dashboardDi<FleetAssignmentsCubit>()..load(),
-        child: const FleetAssignmentsScreen(),
+        create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
+        child: const FleetOverviewScreen(initialTab: FleetTab.assignments),
       ),
       DashboardRoutes.vehicles => BlocProvider(
-        create: (_) => dashboardDi<VehiclesCubit>()..load(),
-        child: const VehiclesScreen(),
+        create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
+        child: const FleetOverviewScreen(initialTab: FleetTab.vehicles),
       ),
       DashboardRoutes.routes => BlocProvider(
         create: (_) => dashboardDi<RoutesCubit>()..load(),

@@ -1,8 +1,8 @@
 import '../../domain/entities/operation_trip.dart';
 import '../../domain/entities/trip_pricing.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/entities/operation_route.dart';
-import 'package:bmt_app/apps/dashboard/features/vehicles/domain/entities/vehicle.dart';
-import 'package:bmt_app/apps/dashboard/features/drivers/domain/entities/driver.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_driver.dart';
 
 enum TripWorkspaceTab {
   overview,
@@ -43,8 +43,8 @@ class TripsLoaded extends TripsState {
 
   // Wizard lists
   final List<OperationRoute> routesList;
-  final List<Vehicle> vehiclesList;
-  final List<Driver> driversList;
+  final List<FleetVehicle> vehiclesList;
+  final List<FleetDriver> driversList;
 
   const TripsLoaded({
     required this.trips,
@@ -127,8 +127,8 @@ class TripsLoaded extends TripsState {
     String? pricingError,
     bool clearPricingError = false,
     List<OperationRoute>? routesList,
-    List<Vehicle>? vehiclesList,
-    List<Driver>? driversList,
+    List<FleetVehicle>? vehiclesList,
+    List<FleetDriver>? driversList,
   }) {
     return TripsLoaded(
       trips: trips ?? this.trips,

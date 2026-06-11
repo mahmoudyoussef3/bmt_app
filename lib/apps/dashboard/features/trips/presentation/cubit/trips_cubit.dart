@@ -8,8 +8,8 @@ import '../../domain/usecases/trip_operations_usecases.dart';
 import '../../domain/usecases/update_trip_seat_state_usecase.dart';
 import '../../domain/usecases/update_trip_status_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/get_operation_routes_usecase.dart';
-import 'package:bmt_app/apps/dashboard/features/vehicles/domain/usecases/get_vehicles_usecase.dart';
-import 'package:bmt_app/apps/dashboard/features/drivers/domain/usecases/get_drivers_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/domain/usecases/fleet_vehicles_usecases.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/domain/usecases/fleet_drivers_usecases.dart';
 import 'trips_state.dart';
 
 class TripsCubit extends Cubit<TripsState> {
@@ -27,8 +27,8 @@ class TripsCubit extends Cubit<TripsState> {
 
   // New dependencies for wizard data
   final GetOperationRoutesUseCase _getRoutes;
-  final GetVehiclesUseCase _getVehicles;
-  final GetDriversUseCase _getDrivers;
+  final GetFleetVehiclesUseCase _getVehicles;
+  final GetFleetDriversUseCase _getDrivers;
 
   TripsCubit({
     required GetOperationTripsUseCase getTrips,
@@ -43,8 +43,8 @@ class TripsCubit extends Cubit<TripsState> {
     required SaveTripSegmentPricingUseCase saveTripPricing,
     required ToggleTripSegmentPricingUseCase toggleTripPricing,
     required GetOperationRoutesUseCase getRoutes,
-    required GetVehiclesUseCase getVehicles,
-    required GetDriversUseCase getDrivers,
+    required GetFleetVehiclesUseCase getVehicles,
+    required GetFleetDriversUseCase getDrivers,
   }) : _getTrips = getTrips,
        _updateTripStatus = updateTripStatus,
        _updateSeatState = updateSeatState,
