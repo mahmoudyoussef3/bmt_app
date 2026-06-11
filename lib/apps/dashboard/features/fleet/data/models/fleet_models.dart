@@ -161,6 +161,11 @@ class FleetVehicleModel extends FleetVehicle {
     String insuranceExpiry = '',
     String inspectionExpiry = '',
   }) {
+    final imgUrl = json['image_url'] as String? ?? json['image_label'] as String? ?? '';
+    final List<FleetVehicleImage> parsedImages = imgUrl.isNotEmpty
+        ? imgUrl.split(',').map((url) => FleetVehicleImage(url: url)).toList()
+        : const [];
+
     return FleetVehicleModel(
       id: json['id'] as String,
       vehicleCode: json['vehicle_code'] as String? ?? json['vehicle_number'] as String? ?? '',
@@ -172,7 +177,7 @@ class FleetVehicleModel extends FleetVehicle {
       color: json['color'] as String? ?? '',
       capacity: json['capacity'] as int? ?? json['seats_count'] as int? ?? 0,
       seatLayoutType: json['seat_layout_type'] as String? ?? '',
-      imageUrl: json['image_url'] as String? ?? json['image_label'] as String? ?? '',
+      imageUrl: imgUrl,
       notes: json['notes'] as String? ?? '',
       status: FleetVehicleStatus.values.firstWhere(
         (e) => e.name == json['status'],
@@ -187,6 +192,7 @@ class FleetVehicleModel extends FleetVehicle {
       licenseExpiry: licenseExpiry,
       insuranceExpiry: insuranceExpiry,
       inspectionExpiry: inspectionExpiry,
+      images: parsedImages,
     );
   }
 
@@ -202,7 +208,7 @@ class FleetVehicleModel extends FleetVehicle {
       'color': color,
       'capacity': capacity,
       'seat_layout_type': seatLayoutType,
-      'image_url': imageUrl,
+      'image_url': images.isNotEmpty ? images.map((i) => i.url).join(',') : imageUrl,
       'notes': notes,
       'status': status.name,
       'seat_configuration': seatConfiguration.toJson(),

@@ -82,14 +82,28 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                   child: KeyedSubtree(
                     key: ValueKey('tab-$_activeTab-list-$_isListMode'),
                     child: switch (_activeTab) {
-                      FleetTab.drivers => BlocProvider<FleetDriversCubit>(
-                          create: (_) => dashboardDi<FleetDriversCubit>()..load(),
+                      FleetTab.drivers => MultiBlocProvider(
+                          providers: [
+                            BlocProvider<FleetDriversCubit>(
+                              create: (_) => dashboardDi<FleetDriversCubit>()..load(),
+                            ),
+                            BlocProvider<FleetDocumentsCubit>(
+                              create: (_) => dashboardDi<FleetDocumentsCubit>()..load(),
+                            ),
+                          ],
                           child: FleetDriversScreen(
                             onViewStateChanged: (isList) => setState(() => _isListMode = isList),
                           ),
                         ),
-                      FleetTab.vehicles => BlocProvider<FleetVehiclesCubit>(
-                          create: (_) => dashboardDi<FleetVehiclesCubit>()..load(),
+                      FleetTab.vehicles => MultiBlocProvider(
+                          providers: [
+                            BlocProvider<FleetVehiclesCubit>(
+                              create: (_) => dashboardDi<FleetVehiclesCubit>()..load(),
+                            ),
+                            BlocProvider<FleetDocumentsCubit>(
+                              create: (_) => dashboardDi<FleetDocumentsCubit>()..load(),
+                            ),
+                          ],
                           child: FleetVehiclesScreen(
                             onViewStateChanged: (isList) => setState(() => _isListMode = isList),
                           ),

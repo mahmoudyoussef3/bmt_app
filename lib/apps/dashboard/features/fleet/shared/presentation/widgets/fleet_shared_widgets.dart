@@ -38,6 +38,7 @@ class FleetVehicleThumb extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final displayUrl = imageUrl.contains(',') ? imageUrl.split(',').first.trim() : imageUrl;
     return Container(
       width: 54,
       height: 38,
@@ -46,14 +47,14 @@ class FleetVehicleThumb extends StatelessWidget {
         color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         border: Border.all(color: scheme.outline.withAlpha(90)),
-        image: imageUrl.isNotEmpty
+        image: displayUrl.isNotEmpty
             ? DecorationImage(
-                image: NetworkImage(imageUrl),
+                image: NetworkImage(displayUrl),
                 fit: BoxFit.cover,
               )
             : null,
       ),
-      child: imageUrl.isNotEmpty ? null : Icon(Icons.directions_bus_rounded, color: scheme.primary),
+      child: displayUrl.isNotEmpty ? null : Icon(Icons.directions_bus_rounded, color: scheme.primary),
     );
   }
 }

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io' as io;
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_common.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_driver.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
@@ -48,9 +49,9 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
   String seatLayoutType = 'standard';
   String? selectedDriverId;
 
-  PlatformFile? _pickedVehicleImage;
-  List<int>? _pickedVehicleImageBytes;
-  String _vehicleImageUrl = '';
+  List<String> _existingImageUrls = [];
+  List<PlatformFile> _newPickedFiles = [];
+  List<List<int>> _newPickedBytes = [];
 
   String _globalError = '';
   bool _saving = false;
@@ -67,7 +68,11 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     brand = TextEditingController(text: v?.brand ?? '');
     color = TextEditingController(text: v?.color ?? '');
     notes = TextEditingController(text: v?.notes ?? '');
-    _vehicleImageUrl = v?.imageUrl ?? '';
+    if (v != null && v.imageUrl.isNotEmpty) {
+      _existingImageUrls = v.imageUrl.split(',').map((url) => url.trim()).where((url) => url.isNotEmpty).toList();
+    } else {
+      _existingImageUrls = [];
+    }
 
     if (v != null) {
       vehicleType = v.vehicleType.isEmpty ? 'Coaster' : v.vehicleType;
@@ -175,11 +180,12 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
                       child: Column(
                         children: [
                           _VehicleImagePickerCard(
-                            imageUrl: _vehicleImageUrl,
-                            pickedFile: _pickedVehicleImage,
-                            pickedBytes: _pickedVehicleImageBytes,
-                            onPick: _pickVehicleImage,
-                            onRemove: _removeVehicleImage,
+                            existingUrls: _existingImageUrls,
+                            newFiles: _newPickedFiles,
+                            newBytes: _newPickedBytes,
+                            onPick: _pickVehicleImages,
+                            onRemoveExisting: _removeExistingImage,
+                            onRemoveNew: _removeNewImage,
                           ),
                           const SizedBox(height: AppSpacing.medium),
                           _VehicleDriverCard(
@@ -199,11 +205,12 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
               return Column(
                 children: [
                   _VehicleImagePickerCard(
-                    imageUrl: _vehicleImageUrl,
-                    pickedFile: _pickedVehicleImage,
-                    pickedBytes: _pickedVehicleImageBytes,
-                    onPick: _pickVehicleImage,
-                    onRemove: _removeVehicleImage,
+                    existingUrls: _existingImageUrls,
+                    newFiles: _newPickedFiles,
+                    newBytes: _newPickedBytes,
+                    onPick: _pickVehicleImages,
+                    onRemoveExisting: _removeExistingImage,
+                    onRemoveNew: _removeNewImage,
                   ),
                   const SizedBox(height: AppSpacing.medium),
                   _VehicleMainInfoCard(child: _buildMainFields(columns: 1)),
@@ -414,45 +421,52 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     );
   }
 
-  Future<void> _pickVehicleImage() async {
+  Future<void> _pickVehicleImages() async {
     try {
       final result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
-        allowMultiple: false,
+        allowMultiple: true,
         withData: kIsWeb,
       );
 
       if (result == null || result.files.isEmpty) return;
 
-      final file = result.files.single;
-      final bytes = await _readPickedFileBytes(file);
+      final List<PlatformFile> validFiles = [];
+      final List<List<int>> validBytes = [];
 
-      if (bytes == null || bytes.isEmpty) {
-        setState(() => _globalError = 'تعذر قراءة صورة المركبة. جرّب صورة أخرى.');
-        return;
-      }
-
-      if (bytes.length > 5 * 1024 * 1024) {
-        setState(() => _globalError = 'حجم الصورة كبير. الحد الأقصى 5MB.');
-        return;
+      for (final file in result.files) {
+        final bytes = await _readPickedFileBytes(file);
+        if (bytes == null || bytes.isEmpty) {
+          continue;
+        }
+        if (bytes.length > 5 * 1024 * 1024) {
+          setState(() => _globalError = 'بعض الصور تتجاوز الحجم الأقصى 5MB وسجلنا بعضها الآخر.');
+          continue;
+        }
+        validFiles.add(file);
+        validBytes.add(bytes);
       }
 
       setState(() {
-        _pickedVehicleImage = file;
-        _pickedVehicleImageBytes = bytes;
-        _globalError = '';
+        _newPickedFiles.addAll(validFiles);
+        _newPickedBytes.addAll(validBytes);
       });
     } catch (e) {
-      setState(() => _globalError = 'تعذر اختيار صورة المركبة: $e');
+      setState(() => _globalError = 'تعذر اختيار الصور: $e');
     }
   }
 
-  void _removeVehicleImage() {
+  void _removeExistingImage(int index) {
     setState(() {
-      _pickedVehicleImage = null;
-      _pickedVehicleImageBytes = null;
-      _vehicleImageUrl = '';
+      _existingImageUrls.removeAt(index);
+    });
+  }
+
+  void _removeNewImage(int index) {
+    setState(() {
+      _newPickedFiles.removeAt(index);
+      _newPickedBytes.removeAt(index);
     });
   }
 
@@ -470,23 +484,26 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
       final seatsValue = int.parse(seats.text.trim());
       final yearValue = int.parse(year.text.trim());
       final existing = widget.vehicle;
-      var finalImageUrl = _vehicleImageUrl;
+      final List<String> finalUrls = [..._existingImageUrls];
 
-      if (_pickedVehicleImage != null && _pickedVehicleImageBytes != null) {
-        final fileName = _safeStorageFileName(_pickedVehicleImage!.name);
+      for (int i = 0; i < _newPickedFiles.length; i++) {
+        final file = _newPickedFiles[i];
+        final bytes = _newPickedBytes[i];
+
+        final fileName = _safeStorageFileName(file.name);
         final path =
-            'vehicles/${existing?.id.isNotEmpty == true ? existing!.id : 'new'}/${DateTime.now().millisecondsSinceEpoch}_$fileName';
+            'vehicles/${existing?.id.isNotEmpty == true ? existing!.id : 'new'}/${DateTime.now().millisecondsSinceEpoch}_${i}_$fileName';
 
         final url = await context.read<FleetVehiclesCubit>().uploadVehicleFile(
               'vehicle-images',
               path,
-              _pickedVehicleImageBytes!,
+              bytes,
             );
 
         if (url == null || url.isEmpty) {
-          throw Exception('تم الحفظ بدون صورة؟ لا، فشل رفع صورة المركبة إلى Supabase Storage.');
+          throw Exception('فشل رفع إحدى صور المركبة إلى Supabase Storage.');
         }
-        finalImageUrl = url;
+        finalUrls.add(url);
       }
 
       final seatConfig = existing != null && existing.capacity == seatsValue
@@ -504,7 +521,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         color: color.text.trim(),
         capacity: seatsValue,
         seatLayoutType: seatLayoutType,
-        imageUrl: finalImageUrl,
+        imageUrl: finalUrls.join(','),
         notes: notes.text.trim(),
         status: existing?.status ?? FleetVehicleStatus.active,
         currentDriverId: selectedDriverId ?? '',
@@ -512,7 +529,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         licenseExpiry: existing?.licenseExpiry ?? '',
         insuranceExpiry: existing?.insuranceExpiry ?? '',
         inspectionExpiry: existing?.inspectionExpiry ?? '',
-        images: existing?.images ?? const [],
+        images: finalUrls.map((url) => FleetVehicleImage(url: url)).toList(),
         previousDrivers: existing?.previousDrivers ?? const [],
         tripHistory: existing?.tripHistory ?? const [],
         timeline: existing?.timeline ?? const [],
@@ -554,23 +571,25 @@ class _VehicleMainInfoCard extends StatelessWidget {
 
 class _VehicleImagePickerCard extends StatelessWidget {
   const _VehicleImagePickerCard({
-    required this.imageUrl,
-    required this.pickedFile,
-    required this.pickedBytes,
+    required this.existingUrls,
+    required this.newFiles,
+    required this.newBytes,
     required this.onPick,
-    required this.onRemove,
+    required this.onRemoveExisting,
+    required this.onRemoveNew,
   });
 
-  final String imageUrl;
-  final PlatformFile? pickedFile;
-  final List<int>? pickedBytes;
+  final List<String> existingUrls;
+  final List<PlatformFile> newFiles;
+  final List<List<int>> newBytes;
   final VoidCallback onPick;
-  final VoidCallback onRemove;
+  final ValueChanged<int> onRemoveExisting;
+  final ValueChanged<int> onRemoveNew;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final hasImage = (pickedBytes != null && pickedBytes!.isNotEmpty) || imageUrl.isNotEmpty;
+    final totalImages = existingUrls.length + newFiles.length;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.large),
@@ -579,96 +598,184 @@ class _VehicleImagePickerCard extends StatelessWidget {
         children: [
           const FleetSectionTitle(
             icon: Icons.image_rounded,
-            title: 'صورة المركبة',
-            subtitle: 'ارفع صورة واضحة للمركبة لتظهر في الكروت والتفاصيل.',
+            title: 'صور المركبة',
+            subtitle: 'ارفع صورة أو أكثر للمركبة. الصورة الأولى ستعتبر الصورة الأساسية.',
           ),
           const SizedBox(height: AppSpacing.medium),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              height: 190,
-              width: double.infinity,
-              color: scheme.surfaceContainerHighest,
-              child: hasImage
-                  ? Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        if (pickedBytes != null && pickedBytes!.isNotEmpty)
-                          Image.memory(
-                            Uint8List.fromList(pickedBytes!),
-                            fit: BoxFit.cover,
-                          )
-                        else
-                          Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, _, _) => Center(
-                              child: Icon(
-                                Icons.broken_image_outlined,
-                                size: 44,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ),
-                        PositionedDirectional(
-                          top: 10,
-                          end: 10,
-                          child: IconButton.filledTonal(
-                            tooltip: 'إزالة الصورة',
-                            onPressed: onRemove,
-                            icon: const Icon(Icons.close_rounded),
-                          ),
-                        ),
-                      ],
-                    )
-                  : Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.directions_bus_filled_outlined,
-                          size: 56,
-                          color: scheme.primary,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'لا توجد صورة للمركبة',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'PNG / JPG / WEBP بحد أقصى 5MB',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                              ),
-                        ),
-                      ],
-                    ),
-            ),
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          if (pickedFile != null)
-            Text(
-              pickedFile!.name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w800,
+          if (totalImages == 0)
+            GestureDetector(
+              onTap: onPick,
+              child: Container(
+                height: 140,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest.withAlpha(80),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(
+                    color: scheme.outline.withAlpha(80),
+                    style: BorderStyle.solid,
                   ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.add_photo_alternate_outlined,
+                      size: 48,
+                      color: scheme.primary,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'اضغط لاختيار صور المركبة',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'PNG / JPG / WEBP بحد أقصى 5MB للواحدة',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurfaceVariant,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            )
+          else
+            Wrap(
+              spacing: AppSpacing.small,
+              runSpacing: AppSpacing.small,
+              crossAxisAlignment: WrapCrossAlignment.start,
+              children: [
+                ...List.generate(existingUrls.length, (index) {
+                  final url = existingUrls[index];
+                  return _ImageThumbnail(
+                    isFirst: index == 0,
+                    child: Image.network(
+                      url,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Icon(
+                        Icons.broken_image_outlined,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    onRemove: () => onRemoveExisting(index),
+                  );
+                }),
+                ...List.generate(newFiles.length, (index) {
+                  final bytes = newBytes[index];
+                  final isFirst = existingUrls.isEmpty && index == 0;
+                  return _ImageThumbnail(
+                    isFirst: isFirst,
+                    child: Image.memory(
+                      Uint8List.fromList(bytes),
+                      fit: BoxFit.cover,
+                    ),
+                    onRemove: () => onRemoveNew(index),
+                  );
+                }),
+                GestureDetector(
+                  onTap: onPick,
+                  child: Container(
+                    width: 90,
+                    height: 90,
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest.withAlpha(50),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: scheme.outline.withAlpha(90),
+                        style: BorderStyle.solid,
+                      ),
+                    ),
+                    child: Icon(
+                      Icons.add_a_photo_outlined,
+                      color: scheme.primary,
+                      size: 28,
+                    ),
+                  ),
+                ),
+              ],
             ),
-          const SizedBox(height: AppSpacing.small),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: onPick,
-              icon: const Icon(Icons.upload_file_rounded),
-              label: Text(hasImage ? 'تغيير الصورة' : 'اختيار صورة المركبة'),
-            ),
-          ),
         ],
       ),
+    );
+  }
+}
+
+class _ImageThumbnail extends StatelessWidget {
+  const _ImageThumbnail({
+    required this.child,
+    required this.onRemove,
+    this.isFirst = false,
+  });
+
+  final Widget child;
+  final VoidCallback onRemove;
+  final bool isFirst;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Stack(
+      children: [
+        Container(
+          width: 90,
+          height: 90,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isFirst ? scheme.primary : scheme.outline.withAlpha(60),
+              width: isFirst ? 2 : 1,
+            ),
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: child,
+          ),
+        ),
+        if (isFirst)
+          Positioned(
+            bottom: 4,
+            left: 4,
+            right: 4,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 2),
+              decoration: BoxDecoration(
+                color: scheme.primary.withAlpha(200),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              alignment: Alignment.center,
+              child: const Text(
+                'الأساسية',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 9,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        Positioned(
+          top: 2,
+          right: 2,
+          child: InkWell(
+            onTap: onRemove,
+            child: Container(
+              padding: const EdgeInsets.all(2),
+              decoration: const BoxDecoration(
+                color: Colors.black54,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.close_rounded,
+                size: 14,
+                color: Colors.white,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

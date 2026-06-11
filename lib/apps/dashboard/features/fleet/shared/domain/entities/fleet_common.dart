@@ -29,10 +29,15 @@ class FleetHistoryItem {
 
 /// Image metadata for a vehicle.
 class FleetVehicleImage {
+  final String url;
   final String label;
   final String description;
 
-  const FleetVehicleImage({required this.label, required this.description});
+  const FleetVehicleImage({
+    required this.url,
+    this.label = '',
+    this.description = '',
+  });
 }
 
 /// Tabs for fleet overview navigation.

@@ -111,6 +111,8 @@ class FleetVehicleDetailsView extends StatelessWidget {
                     flex: 4,
                     child: Column(
                       children: [
+                        _VehicleImageGallery(vehicle: vehicle),
+                        const SizedBox(height: AppSpacing.medium),
                         _infoCard(context, vehicle, driverName),
                         const SizedBox(height: AppSpacing.medium),
                         FleetSeatLayoutVisualizer(seatConfig: vehicle.seatConfiguration),
@@ -153,6 +155,8 @@ class FleetVehicleDetailsView extends StatelessWidget {
             } else {
               return Column(
                 children: [
+                  _VehicleImageGallery(vehicle: vehicle),
+                  const SizedBox(height: AppSpacing.medium),
                   _infoCard(context, vehicle, driverName),
                   const SizedBox(height: AppSpacing.medium),
                   FleetSeatLayoutVisualizer(seatConfig: vehicle.seatConfiguration),
@@ -336,6 +340,149 @@ class _HistoryTimeline extends StatelessWidget {
                 );
               },
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VehicleImageGallery extends StatefulWidget {
+  const _VehicleImageGallery({required this.vehicle});
+
+  final FleetVehicle vehicle;
+
+  @override
+  State<_VehicleImageGallery> createState() => _VehicleImageGalleryState();
+}
+
+class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
+  int _selectedIndex = 0;
+
+  @override
+  void didUpdateWidget(covariant _VehicleImageGallery oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.vehicle.images.length <= _selectedIndex) {
+      _selectedIndex = 0;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final images = widget.vehicle.images;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'معرض صور المركبة',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          if (images.isEmpty)
+            Container(
+              height: 180,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withAlpha(50),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: scheme.outline.withAlpha(60)),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.add_photo_alternate_outlined,
+                    size: 44,
+                    color: scheme.primary.withAlpha(140),
+                  ),
+                  const SizedBox(height: AppSpacing.small),
+                  const Text(
+                    'لا توجد صور للمركبة حالياً',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'اضغط على زر "تعديل البيانات" لإضافة صور للأسطول.',
+                    style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                  ),
+                ],
+              ),
+            )
+          else ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: Container(
+                height: 260,
+                width: double.infinity,
+                color: scheme.surfaceContainerHighest,
+                child: AnimatedSwitcher(
+                  duration: const Duration(milliseconds: 300),
+                  transitionBuilder: (Widget child, Animation<double> animation) {
+                    return FadeTransition(opacity: animation, child: child);
+                  },
+                  child: Image.network(
+                    images[_selectedIndex].url,
+                    key: ValueKey<int>(_selectedIndex),
+                    fit: BoxFit.cover,
+                    width: double.infinity,
+                    height: double.infinity,
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        size: 48,
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            if (images.length > 1) ...[
+              const SizedBox(height: AppSpacing.medium),
+              SizedBox(
+                height: 60,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: images.length,
+                  itemBuilder: (context, index) {
+                    final isSelected = index == _selectedIndex;
+                    return Padding(
+                      padding: const EdgeInsets.only(left: AppSpacing.small),
+                      child: GestureDetector(
+                        onTap: () => setState(() => _selectedIndex = index),
+                        child: Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: isSelected ? scheme.primary : scheme.outline.withAlpha(60),
+                              width: isSelected ? 2 : 1,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(6),
+                            child: Image.network(
+                              images[index].url,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Icon(
+                                Icons.broken_image_outlined,
+                                size: 20,
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ],
         ],
       ),
     );
