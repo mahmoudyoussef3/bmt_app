@@ -40,7 +40,8 @@ class RoutesCubit extends Cubit<RoutesState> {
     emit(const RoutesLoading());
     try {
       final routes = await _getRoutes();
-      emit(RoutesLoaded(routes: routes, selectedRouteId: routes.first.id));
+      final selectedRouteId = routes.isNotEmpty ? routes.first.id : '';
+      emit(RoutesLoaded(routes: routes, selectedRouteId: selectedRouteId));
     } catch (error) {
       emit(RoutesError(error.toString()));
     }

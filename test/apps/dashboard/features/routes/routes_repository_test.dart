@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/apps/dashboard/features/routes/data/datasources/mock_routes_datasource.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/data/datasources/routes_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/data/models/operation_route_model.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/data/repositories/routes_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/entities/operation_route.dart';
@@ -11,11 +11,12 @@ import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/get_opera
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/reorder_route_stations_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/update_route_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/update_route_station_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/presentation/cubit/routes_state.dart';
 
 void main() {
   group('Routes clean architecture chain', () {
     test('loads complete route operations data', () async {
-      final repository = RoutesRepositoryImpl(MockRoutesDatasource());
+      final repository = RoutesRepositoryImpl(_MockRoutesDatasource());
       final getRoutes = GetOperationRoutesUseCase(repository);
 
       final routes = await getRoutes();
@@ -29,7 +30,7 @@ void main() {
     });
 
     test('adds, edits, reorders, and deletes stations locally', () async {
-      final repository = RoutesRepositoryImpl(MockRoutesDatasource());
+      final repository = RoutesRepositoryImpl(_MockRoutesDatasource());
       final getRoutes = GetOperationRoutesUseCase(repository);
       final addStation = AddRouteStationUseCase(repository);
       final updateStation = UpdateRouteStationUseCase(repository);
@@ -74,7 +75,7 @@ void main() {
     });
 
     test('creates route through use case', () async {
-      final repository = RoutesRepositoryImpl(MockRoutesDatasource());
+      final repository = RoutesRepositoryImpl(_MockRoutesDatasource());
       final createRoute = CreateRouteUseCase(repository);
 
       final created = await createRoute(_newRoute);
@@ -89,7 +90,7 @@ void main() {
     });
 
     test('duplicates and archives route through use cases', () async {
-      final repository = RoutesRepositoryImpl(MockRoutesDatasource());
+      final repository = RoutesRepositoryImpl(_MockRoutesDatasource());
       final getRoutes = GetOperationRoutesUseCase(repository);
       final createRoute = CreateRouteUseCase(repository);
       final updateRoute = UpdateRouteUseCase(repository);
@@ -118,7 +119,7 @@ void main() {
     });
 
     test('updates route status locally for pause and archive flows', () async {
-      final repository = RoutesRepositoryImpl(MockRoutesDatasource());
+      final repository = RoutesRepositoryImpl(_MockRoutesDatasource());
       final getRoutes = GetOperationRoutesUseCase(repository);
       final updateRoute = UpdateRouteUseCase(repository);
 
@@ -153,6 +154,17 @@ void main() {
           ),
         ),
       );
+    });
+
+    test('handles empty routes list without throwing exceptions', () {
+      const state = RoutesLoaded(
+        routes: [],
+        selectedRouteId: '',
+      );
+
+      expect(state.selectedRoute, isNotNull);
+      expect(state.selectedRoute.id, isEmpty);
+      expect(state.cityOptions, contains('الكل'));
     });
   });
 }
@@ -221,5 +233,218 @@ class _FailingRoutesDatasource implements RoutesDatasource {
     RouteStation station,
   ) {
     throw StateError('failure');
+  }
+}
+
+class _MockRoutesDatasource implements RoutesDatasource {
+  final List<OperationRouteModel> _routes = [];
+
+  _MockRoutesDatasource() {
+    // Seed 10 routes
+    _routes.add(
+      OperationRouteModel(
+        id: 'route-1',
+        name: 'بنها - القرية الذكية',
+        startCity: 'بنها',
+        endCity: 'القرية الذكية',
+        duration: '٧٥ دقيقة',
+        distance: '٧٦ كم',
+        status: OperationRouteStatus.active,
+        notes: const ['ملاحظة ١'],
+        stations: List.generate(
+          6,
+          (index) => RouteStation(
+            id: 'station-1-$index',
+            name: 'محطة ${index + 1}',
+            area: 'منطقة ${index + 1}',
+            arrivalOffset: '${index * 15} دقيقة',
+            departureOffset: '${index * 15 + 3} دقيقة',
+            locationDescription: 'وصف الموقع ${index + 1}',
+            notes: 'ملاحظة المحطة ${index + 1}',
+            order: index + 1,
+          ),
+        ),
+      ),
+    );
+
+    for (int i = 2; i <= 10; i++) {
+      _routes.add(
+        OperationRouteModel(
+          id: 'route-$i',
+          name: 'مسار $i',
+          startCity: 'مدينة البداية $i',
+          endCity: 'مدينة النهاية $i',
+          duration: '٦٠ دقيقة',
+          distance: '٥٠ كم',
+          status: OperationRouteStatus.active,
+          notes: const [],
+          stations: [
+            RouteStation(
+              id: 'station-$i-1',
+              name: 'محطة البداية',
+              area: 'المنطقة',
+              arrivalOffset: '٠ دقيقة',
+              departureOffset: '٣ دقائق',
+              locationDescription: 'وصف',
+              notes: 'ملاحظات',
+              order: 1,
+            ),
+          ],
+        ),
+      );
+    }
+  }
+
+  @override
+  Future<List<OperationRouteModel>> fetchRoutes() async {
+    return List.from(_routes);
+  }
+
+  @override
+  Future<OperationRouteModel> createRoute(OperationRoute route) async {
+    final newRoute = OperationRouteModel(
+      id: route.id.isEmpty ? 'route-new-${DateTime.now().millisecondsSinceEpoch}' : route.id,
+      name: route.name,
+      startCity: route.startCity,
+      endCity: route.endCity,
+      duration: route.duration,
+      distance: route.distance,
+      status: route.status,
+      notes: route.notes,
+      stations: route.stations.map((s) => RouteStation(
+        id: s.id.isEmpty ? 'station-new-${DateTime.now().millisecondsSinceEpoch}' : s.id,
+        name: s.name,
+        area: s.area,
+        arrivalOffset: s.arrivalOffset,
+        departureOffset: s.departureOffset,
+        locationDescription: s.locationDescription,
+        notes: s.notes,
+        order: s.order,
+      )).toList(),
+    );
+    _routes.add(newRoute);
+    return newRoute;
+  }
+
+  @override
+  Future<OperationRouteModel> updateRoute(OperationRoute route) async {
+    final index = _routes.indexWhere((r) => r.id == route.id);
+    if (index == -1) {
+      throw StateError('Route not found');
+    }
+    final updated = OperationRouteModel.fromEntity(route);
+    _routes[index] = updated;
+    return updated;
+  }
+
+  @override
+  Future<OperationRouteModel> addStation(String routeId, RouteStation station) async {
+    final index = _routes.indexWhere((r) => r.id == routeId);
+    if (index == -1) {
+      throw StateError('Route not found');
+    }
+    final route = _routes[index];
+    final newStation = RouteStation(
+      id: 'station-added-${DateTime.now().millisecondsSinceEpoch}',
+      name: station.name,
+      area: station.area,
+      arrivalOffset: station.arrivalOffset,
+      departureOffset: station.departureOffset,
+      locationDescription: station.locationDescription,
+      notes: station.notes,
+      order: route.stations.length + 1,
+    );
+    final updatedStations = List<RouteStation>.from(route.stations)..add(newStation);
+    final updated = OperationRouteModel(
+      id: route.id,
+      name: route.name,
+      startCity: route.startCity,
+      endCity: route.endCity,
+      duration: route.duration,
+      distance: route.distance,
+      status: route.status,
+      notes: route.notes,
+      stations: updatedStations,
+    );
+    _routes[index] = updated;
+    return updated;
+  }
+
+  @override
+  Future<OperationRouteModel> updateStation(String routeId, RouteStation station) async {
+    final index = _routes.indexWhere((r) => r.id == routeId);
+    if (index == -1) {
+      throw StateError('Route not found');
+    }
+    final route = _routes[index];
+    final updatedStations = route.stations.map((s) => s.id == station.id ? station : s).toList();
+    final updated = OperationRouteModel(
+      id: route.id,
+      name: route.name,
+      startCity: route.startCity,
+      endCity: route.endCity,
+      duration: route.duration,
+      distance: route.distance,
+      status: route.status,
+      notes: route.notes,
+      stations: updatedStations,
+    );
+    _routes[index] = updated;
+    return updated;
+  }
+
+  @override
+  Future<OperationRouteModel> deleteStation(String routeId, String stationId) async {
+    final index = _routes.indexWhere((r) => r.id == routeId);
+    if (index == -1) {
+      throw StateError('Route not found');
+    }
+    final route = _routes[index];
+    final updatedStations = route.stations.where((s) => s.id != stationId).toList();
+    final updated = OperationRouteModel(
+      id: route.id,
+      name: route.name,
+      startCity: route.startCity,
+      endCity: route.endCity,
+      duration: route.duration,
+      distance: route.distance,
+      status: route.status,
+      notes: route.notes,
+      stations: updatedStations,
+    );
+    _routes[index] = updated;
+    return updated;
+  }
+
+  @override
+  Future<OperationRouteModel> reorderStations(String routeId, int oldIndex, int newIndex) async {
+    final index = _routes.indexWhere((r) => r.id == routeId);
+    if (index == -1) {
+      throw StateError('Route not found');
+    }
+    final route = _routes[index];
+    final stations = List<RouteStation>.from(route.stations);
+    final item = stations.removeAt(oldIndex);
+    stations.insert(newIndex, item);
+
+    // Update orders
+    final reordered = <RouteStation>[];
+    for (int i = 0; i < stations.length; i++) {
+      reordered.add(stations[i].copyWith(order: i + 1));
+    }
+
+    final updated = OperationRouteModel(
+      id: route.id,
+      name: route.name,
+      startCity: route.startCity,
+      endCity: route.endCity,
+      duration: route.duration,
+      distance: route.distance,
+      status: route.status,
+      notes: route.notes,
+      stations: reordered,
+    );
+    _routes[index] = updated;
+    return updated;
   }
 }

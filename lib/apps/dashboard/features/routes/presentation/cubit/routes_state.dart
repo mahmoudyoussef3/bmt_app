@@ -50,10 +50,22 @@ class RoutesLoaded extends RoutesState {
   });
 
   OperationRoute get selectedRoute {
-    return routes.firstWhere(
-      (route) => route.id == selectedRouteId,
-      orElse: () => routes.first,
-    );
+    if (routes.isEmpty) {
+      return const OperationRoute(
+        id: '',
+        name: '',
+        startCity: '',
+        endCity: '',
+        duration: '',
+        distance: '',
+        status: OperationRouteStatus.draft,
+        stations: [],
+        notes: [],
+      );
+    }
+    final match = routes.where((route) => route.id == selectedRouteId);
+    if (match.isEmpty) return routes.first;
+    return match.first;
   }
 
   List<String> get cityOptions {

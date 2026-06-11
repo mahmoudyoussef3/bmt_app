@@ -86,7 +86,8 @@ import '../../features/payment_verification/domain/usecases/get_booking_payment_
 import '../../features/payment_verification/domain/usecases/reject_booking_payment_usecase.dart';
 import '../../features/payment_verification/domain/usecases/request_booking_payment_review_usecase.dart';
 import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
-import '../../features/routes/data/datasources/mock_routes_datasource.dart';
+import '../../features/routes/data/datasources/routes_datasource.dart';
+import '../../features/routes/data/datasources/supabase_routes_datasource.dart';
 import '../../features/routes/data/repositories/routes_repository_impl.dart';
 import '../../features/routes/domain/repositories/routes_repository.dart';
 import '../../features/routes/domain/usecases/add_route_station_usecase.dart';
@@ -745,7 +746,7 @@ if (!dashboardDi.isRegistered<SupabaseClient>()) {
 
   if (!dashboardDi.isRegistered<RoutesDatasource>()) {
     dashboardDi.registerLazySingleton<RoutesDatasource>(
-      MockRoutesDatasource.new,
+      () => SupabaseRoutesDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 

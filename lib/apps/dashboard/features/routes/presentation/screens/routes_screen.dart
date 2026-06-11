@@ -70,6 +70,26 @@ class _RoutesToolbar extends StatelessWidget {
     final cubit = context.read<RoutesCubit>();
     final scheme = Theme.of(context).colorScheme;
 
+    final width = MediaQuery.of(context).size.width;
+    final compact = width < 1260;
+    final search = TextField(
+      onChanged: cubit.updateSearch,
+      textDirection: TextDirection.rtl,
+      decoration: const InputDecoration(
+        labelText: 'بحث',
+        prefixIcon: Icon(Icons.search_rounded),
+      ),
+    );
+    final filters = Wrap(
+      spacing: AppSpacing.small,
+      runSpacing: AppSpacing.small,
+      children: [
+        _StatusFilter(state: state),
+        _CityFilter(state: state),
+        _StopsFilter(state: state),
+      ],
+    );
+
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
@@ -103,47 +123,19 @@ class _RoutesToolbar extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.medium),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 980;
-              final search = TextField(
-                onChanged: cubit.updateSearch,
-                textDirection: TextDirection.rtl,
-                decoration: const InputDecoration(
-                  labelText: 'بحث',
-                  prefixIcon: Icon(Icons.search_rounded),
-                ),
-              );
-              final filters = Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: [
-                  _StatusFilter(state: state),
-                  _CityFilter(state: state),
-                  _StopsFilter(state: state),
-                ],
-              );
-
-              if (compact) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    search,
-                    const SizedBox(height: AppSpacing.small),
-                    filters,
-                  ],
-                );
-              }
-
-              return Row(
-                children: [
-                  Expanded(flex: 2, child: search),
-                  const SizedBox(width: AppSpacing.medium),
-                  Expanded(flex: 3, child: filters),
-                ],
-              );
-            },
-          ),
+          if (compact) ...[
+            search,
+            const SizedBox(height: AppSpacing.small),
+            filters,
+          ] else ...[
+            Row(
+              children: [
+                Expanded(flex: 2, child: search),
+                const SizedBox(width: AppSpacing.medium),
+                Expanded(flex: 3, child: filters),
+              ],
+            ),
+          ],
         ],
       ),
     );
@@ -520,44 +512,41 @@ class _InfoGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 520 ? 2 : 1;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: items.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            crossAxisSpacing: AppSpacing.medium,
-            mainAxisSpacing: AppSpacing.medium,
-            mainAxisExtent: 64,
+    final width = MediaQuery.of(context).size.width;
+    final columns = width >= 800 ? 2 : 1;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: items.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        crossAxisSpacing: AppSpacing.medium,
+        mainAxisSpacing: AppSpacing.medium,
+        mainAxisExtent: 64,
+      ),
+      itemBuilder: (context, index) {
+        final (label, value) = items[index];
+        return DecoratedBox(
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest.withAlpha(70),
+            borderRadius: BorderRadius.circular(AppTokens.radius),
           ),
-          itemBuilder: (context, index) {
-            final (label, value) = items[index];
-            return DecoratedBox(
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest.withAlpha(70),
-                borderRadius: BorderRadius.circular(AppTokens.radius),
-              ),
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.small),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(value, style: Theme.of(context).textTheme.titleSmall),
-                  ],
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.small),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
-              ),
-            );
-          },
+                const Spacer(),
+                Text(value, style: Theme.of(context).textTheme.titleSmall),
+              ],
+            ),
+          ),
         );
       },
     );
@@ -751,12 +740,10 @@ class _StopManagementRow extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'تعديل',
             onPressed: onEdit,
             icon: const Icon(Icons.edit_outlined),
           ),
           IconButton(
-            tooltip: 'حذف',
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline),
           ),
@@ -768,73 +755,6 @@ class _StopManagementRow extends StatelessWidget {
 
 
 
-class _SimpleTablePanel extends StatelessWidget {
-  final String title;
-  final List<String> headers;
-  final List<List<String>> rows;
-
-  const _SimpleTablePanel({
-    required this.title,
-    required this.headers,
-    required this.rows,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.medium),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: 920,
-              child: Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.small),
-                    color: scheme.surfaceContainerHighest.withAlpha(90),
-                    child: Row(
-                      children: headers
-                          .map(
-                            (header) => Expanded(
-                              child: Text(
-                                header,
-                                style: Theme.of(context).textTheme.labelLarge,
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ),
-                  ...rows.map(
-                    (row) => Container(
-                      padding: const EdgeInsets.all(AppSpacing.small),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          top: BorderSide(color: scheme.outline.withAlpha(90)),
-                        ),
-                      ),
-                      child: Row(
-                        children: row
-                            .map((cell) => Expanded(child: Text(cell)))
-                            .toList(),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _RouteFormView extends StatefulWidget {
   final OperationRoute? route;
@@ -846,6 +766,7 @@ class _RouteFormView extends StatefulWidget {
 }
 
 class _RouteFormViewState extends State<_RouteFormView> {
+  final _formKey = GlobalKey<FormState>();
   late final TextEditingController _name;
   late final TextEditingController _start;
   late final TextEditingController _end;
@@ -915,20 +836,29 @@ class _RouteFormViewState extends State<_RouteFormView> {
           padding: const EdgeInsets.all(AppSpacing.medium),
           child: Stepper(
             currentStep: _step,
-            onStepTapped: (step) => setState(() => _step = step),
+            onStepTapped: (step) {
+              if (step > _step) {
+                if (_step == 0 && _formKey.currentState?.validate() != true) return;
+                if (_step == 1 && _stations.length < 2) return;
+              }
+              setState(() => _step = step);
+            },
             controlsBuilder: (context, details) => const SizedBox.shrink(),
             steps: [
               Step(
                 title: const Text('البيانات الأساسية'),
                 isActive: _step == 0,
-                content: _BasicInfoForm(
-                  name: _name,
-                  start: _start,
-                  end: _end,
-                  duration: _duration,
-                  distance: _distance,
-                  status: _status,
-                  onStatusChanged: (status) => setState(() => _status = status),
+                content: Form(
+                  key: _formKey,
+                  child: _BasicInfoForm(
+                    name: _name,
+                    start: _start,
+                    end: _end,
+                    duration: _duration,
+                    distance: _distance,
+                    status: _status,
+                    onStatusChanged: (status) => setState(() => _status = status),
+                  ),
                 ),
               ),
               Step(
@@ -967,9 +897,17 @@ class _RouteFormViewState extends State<_RouteFormView> {
               ),
             const SizedBox(width: AppSpacing.small),
             FilledButton(
-              onPressed: _step == 3
-                  ? () => cubit.saveRoute(_buildRoute())
-                  : () => setState(() => _step += 1),
+              onPressed: (_step == 1 && _stations.length < 2)
+                  ? null
+                  : () {
+                      if (_step == 0 && _formKey.currentState?.validate() != true) return;
+
+                      if (_step == 3) {
+                        cubit.saveRoute(_buildRoute());
+                      } else {
+                        setState(() => _step += 1);
+                      }
+                    },
               child: Text(
                 _step == 3
                     ? (_isEditing ? 'حفظ التعديل' : 'إنشاء المسار')
@@ -986,15 +924,11 @@ class _RouteFormViewState extends State<_RouteFormView> {
     final existing = widget.route;
     return OperationRoute(
       id: existing?.id ?? '',
-      name: _name.text.trim().isEmpty ? 'مسار جديد' : _name.text.trim(),
-      startCity: _start.text.trim().isEmpty ? 'نقطة بداية' : _start.text.trim(),
-      endCity: _end.text.trim().isEmpty ? 'نقطة نهاية' : _end.text.trim(),
-      duration: _duration.text.trim().isEmpty
-          ? 'غير محدد'
-          : _duration.text.trim(),
-      distance: _distance.text.trim().isEmpty
-          ? 'غير محدد'
-          : _distance.text.trim(),
+      name: _name.text.trim(),
+      startCity: _start.text.trim(),
+      endCity: _end.text.trim(),
+      duration: _duration.text.trim(),
+      distance: _distance.text.trim(),
       status: _status,
       stations: _normalize(_stations),
       notes: existing?.notes ?? const ['تم إنشاء المسار من مركز التشغيل'],
@@ -1053,28 +987,38 @@ class _BasicInfoForm extends StatelessWidget {
   Widget build(BuildContext context) {
     return _FormGrid(
       children: [
-        TextField(
+        TextFormField(
           controller: name,
           decoration: const InputDecoration(labelText: 'اسم المسار'),
+          validator: (value) =>
+              value == null || value.trim().isEmpty ? 'يرجى إدخال اسم المسار' : null,
         ),
-        TextField(
+        TextFormField(
           controller: start,
           decoration: const InputDecoration(labelText: 'نقطة البداية'),
+          validator: (value) =>
+              value == null || value.trim().isEmpty ? 'يرجى إدخال نقطة البداية' : null,
         ),
-        TextField(
+        TextFormField(
           controller: end,
           decoration: const InputDecoration(labelText: 'نقطة النهاية'),
+          validator: (value) =>
+              value == null || value.trim().isEmpty ? 'يرجى إدخال نقطة النهاية' : null,
         ),
-        TextField(
+        TextFormField(
           controller: duration,
-          decoration: const InputDecoration(labelText: 'المدة'),
+          decoration: const InputDecoration(labelText: 'المدة (مثال: ٧٥ دقيقة)'),
+          validator: (value) =>
+              value == null || value.trim().isEmpty ? 'يرجى إدخال مدة المسار' : null,
         ),
-        TextField(
+        TextFormField(
           controller: distance,
-          decoration: const InputDecoration(labelText: 'المسافة'),
+          decoration: const InputDecoration(labelText: 'المسافة (مثال: ٧٦ كم)'),
+          validator: (value) =>
+              value == null || value.trim().isEmpty ? 'يرجى إدخال المسافة' : null,
         ),
         DropdownButtonFormField<OperationRouteStatus>(
-          initialValue: status,
+          value: status,
           decoration: const InputDecoration(labelText: 'الحالة'),
           items: const [
             DropdownMenuItem(
@@ -1101,22 +1045,19 @@ class _FormGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 760 ? 2 : 1;
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: children.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            crossAxisSpacing: AppSpacing.medium,
-            mainAxisSpacing: AppSpacing.medium,
-            mainAxisExtent: 72,
-          ),
-          itemBuilder: (context, index) => children[index],
-        );
-      },
+    final width = MediaQuery.of(context).size.width;
+    final columns = width >= 1040 ? 2 : 1;
+    return GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: children.length,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: columns,
+        crossAxisSpacing: AppSpacing.medium,
+        mainAxisSpacing: AppSpacing.medium,
+        mainAxisExtent: 72,
+      ),
+      itemBuilder: (context, index) => children[index],
     );
   }
 }
@@ -1149,43 +1090,67 @@ class _StopsFormEditor extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.medium),
-        ReorderableListView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          buildDefaultDragHandles: false,
-          itemCount: stations.length,
-          onReorder: (oldIndex, newIndex) {
-            final adjusted = newIndex > oldIndex ? newIndex - 1 : newIndex;
-            final next = [...stations];
-            final station = next.removeAt(oldIndex);
-            next.insert(adjusted, station);
-            onChanged(_normalize(next));
-          },
-          itemBuilder: (context, index) {
-            final station = stations[index];
-            return _StopManagementRow(
-              key: ValueKey(station.id),
-              station: station,
-              index: index,
-              onEdit: () => _openStopDialog(
-                context,
+        if (stations.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
+            child: Center(
+              child: Text(
+                'لم يتم إضافة أي محطات بعد. يرجى إضافة محطتين على الأقل (البداية والنهاية).',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+              ),
+            ),
+          )
+        else ...[
+          ReorderableListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            buildDefaultDragHandles: false,
+            itemCount: stations.length,
+            onReorder: (oldIndex, newIndex) {
+              final adjusted = newIndex > oldIndex ? newIndex - 1 : newIndex;
+              final next = [...stations];
+              final station = next.removeAt(oldIndex);
+              next.insert(adjusted, station);
+              onChanged(_normalize(next));
+            },
+            itemBuilder: (context, index) {
+              final station = stations[index];
+              return _StopManagementRow(
+                key: ValueKey(station.id),
                 station: station,
-                onSubmit: (updated) => onChanged(
-                  _normalize(
-                    stations
-                        .map((item) => item.id == station.id ? updated : item)
-                        .toList(),
+                index: index,
+                onEdit: () => _openStopDialog(
+                  context,
+                  station: station,
+                  onSubmit: (updated) => onChanged(
+                    _normalize(
+                      stations
+                          .map((item) => item.id == station.id ? updated : item)
+                          .toList(),
+                    ),
                   ),
                 ),
-              ),
-              onDelete: () => onChanged(
-                _normalize(
-                  stations.where((item) => item.id != station.id).toList(),
+                onDelete: () => onChanged(
+                  _normalize(
+                    stations.where((item) => item.id != station.id).toList(),
+                  ),
                 ),
-              ),
-            );
-          },
-        ),
+              );
+            },
+          ),
+        ],
+        if (stations.isNotEmpty && stations.length < 2)
+          Padding(
+            padding: const EdgeInsets.only(top: AppSpacing.medium),
+            child: Text(
+              'تنبيه: يجب إضافة محطتين على الأقل (البداية والنهاية) للمسار.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+            ),
+          ),
       ],
     );
   }
@@ -1369,6 +1334,7 @@ class _StopDialog extends StatefulWidget {
 }
 
 class _StopDialogState extends State<_StopDialog> {
+  final _dialogFormKey = GlobalKey<FormState>();
   late final TextEditingController _name;
   late final TextEditingController _area;
   late final TextEditingController _arrival;
@@ -1402,48 +1368,59 @@ class _StopDialogState extends State<_StopDialog> {
       title: Text(widget.station == null ? 'إضافة محطة' : 'تعديل محطة'),
       content: SizedBox(
         width: 560,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _name,
-              decoration: const InputDecoration(labelText: 'اسم المحطة'),
-            ),
-            const SizedBox(height: AppSpacing.small),
-            TextField(
-              controller: _area,
-              decoration: const InputDecoration(
-                labelText: 'ترتيب / منطقة المحطة',
+        child: Form(
+          key: _dialogFormKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _name,
+                decoration: const InputDecoration(labelText: 'اسم المحطة'),
+                validator: (value) =>
+                    value == null || value.trim().isEmpty ? 'يرجى إدخال اسم المحطة' : null,
               ),
-            ),
-            const SizedBox(height: AppSpacing.small),
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _arrival,
-                    decoration: const InputDecoration(labelText: 'وقت الوصول'),
-                  ),
+              const SizedBox(height: AppSpacing.small),
+              TextFormField(
+                controller: _area,
+                decoration: const InputDecoration(
+                  labelText: 'ترتيب / منطقة المحطة',
                 ),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(
-                  child: TextField(
-                    controller: _departure,
-                    decoration: const InputDecoration(
-                      labelText: 'وقت المغادرة',
+                validator: (value) =>
+                    value == null || value.trim().isEmpty ? 'يرجى إدخال منطقة المحطة' : null,
+              ),
+              const SizedBox(height: AppSpacing.small),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _arrival,
+                      decoration: const InputDecoration(labelText: 'وقت الوصول (مثال: ١٥ دقيقة)'),
+                      validator: (value) =>
+                          value == null || value.trim().isEmpty ? 'يرجى إدخال وقت الوصول' : null,
                     ),
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.small),
-            TextField(
-              controller: _location,
-              minLines: 2,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'وصف الموقع'),
-            ),
-          ],
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _departure,
+                      decoration: const InputDecoration(
+                        labelText: 'وقت المغادرة (مثال: ١٨ دقيقة)',
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.small),
+              TextFormField(
+                controller: _location,
+                minLines: 2,
+                maxLines: 3,
+                decoration: const InputDecoration(labelText: 'وصف الموقع'),
+                validator: (value) =>
+                    value == null || value.trim().isEmpty ? 'يرجى إدخال وصف الموقع' : null,
+              ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -1453,25 +1430,18 @@ class _StopDialogState extends State<_StopDialog> {
         ),
         FilledButton(
           onPressed: () {
+            if (_dialogFormKey.currentState?.validate() != true) return;
             final existing = widget.station;
             widget.onSubmit(
               RouteStation(
                 id: existing?.id ?? '',
-                name: _name.text.trim().isEmpty
-                    ? 'محطة جديدة'
-                    : _name.text.trim(),
-                area: _area.text.trim().isEmpty
-                    ? 'غير محدد'
-                    : _area.text.trim(),
-                arrivalOffset: _arrival.text.trim().isEmpty
-                    ? 'غير محدد'
-                    : _arrival.text.trim(),
+                name: _name.text.trim(),
+                area: _area.text.trim(),
+                arrivalOffset: _arrival.text.trim(),
                 departureOffset: _departure.text.trim().isEmpty
                     ? _arrival.text.trim()
                     : _departure.text.trim(),
-                locationDescription: _location.text.trim().isEmpty
-                    ? 'وصف موقع غير محدد'
-                    : _location.text.trim(),
+                locationDescription: _location.text.trim(),
                 notes: existing?.notes ?? '',
                 order: existing?.order ?? 0,
               ),
