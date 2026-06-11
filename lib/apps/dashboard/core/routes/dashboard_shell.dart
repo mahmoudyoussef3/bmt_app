@@ -27,7 +27,6 @@ import '../../features/routes/presentation/screens/routes_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/tickets/presentation/screens/tickets_screen.dart';
 import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
-import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/trips/presentation/screens/trips_screen.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
 import '../di/dashboard_di.dart';
@@ -273,10 +272,7 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<BookingsCubit>()..load(),
         child: const BookingsScreen(),
       ),
-      DashboardRoutes.trips => BlocProvider(
-        create: (_) => dashboardDi<TripsCubit>()..load(),
-        child: const TripsScreen(),
-      ),
+      DashboardRoutes.trips => const TripsScreen(),
       DashboardRoutes.liveTrips => BlocProvider(
         create: (_) => dashboardDi<LiveTripsCubit>()..loadLiveTrips(),
         child: const LiveTripsScreen(),

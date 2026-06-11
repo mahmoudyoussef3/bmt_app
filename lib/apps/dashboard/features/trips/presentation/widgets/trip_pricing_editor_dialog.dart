@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 
-import '../../domain/entities/operation_trip.dart';
-import '../../domain/entities/trip_pricing.dart';
-import '../cubit/trips_cubit.dart';
+import '../../shared/domain/entities/operation_trip.dart';
+import '../../shared/domain/entities/trip_pricing.dart';
+import '../../trip_pricing/presentation/cubit/trip_pricing_cubit.dart';
 
 class TripPricingEditorDialog extends StatefulWidget {
   final OperationTrip trip;
@@ -218,7 +218,7 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
     });
     final now = DateTime.now();
     final existing = widget.pricing;
-    final result = await context.read<TripsCubit>().saveTripPricing(
+    final result = await context.read<TripPricingCubit>().savePricing(
       TripPricing(
         id: existing?.id ?? '',
         tripId: widget.trip.id,

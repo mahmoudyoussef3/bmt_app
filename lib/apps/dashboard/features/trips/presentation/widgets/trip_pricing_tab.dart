@@ -6,17 +6,26 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
-import '../../domain/entities/operation_trip.dart';
-import '../../domain/entities/trip_pricing.dart';
-import '../cubit/trips_cubit.dart';
-import '../cubit/trips_state.dart';
+import '../../shared/domain/entities/operation_trip.dart';
+import '../../shared/domain/entities/trip_pricing.dart';
+import '../../trip_pricing/presentation/cubit/trip_pricing_cubit.dart';
 import 'trip_pricing_editor_dialog.dart';
 
-class TripPricingTab extends StatelessWidget {
+class TripPricingTab extends StatefulWidget {
   final OperationTrip trip;
-  final TripsLoaded state;
 
-  const TripPricingTab({super.key, required this.trip, required this.state});
+  const TripPricingTab({super.key, required this.trip});
+
+  @override
+  State<TripPricingTab> createState() => _TripPricingTabState();
+}
+
+class _TripPricingTabState extends State<TripPricingTab> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<TripPricingCubit>().loadPricing(widget.trip.id);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,15 +42,15 @@ class TripPricingTab extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${trip.routePoints.first.name} ← ${trip.routePoints.last.name}',
+                      '${widget.trip.routePoints.first.name} ← ${widget.trip.routePoints.last.name}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: AppSpacing.xSmall),
                     Text(
-                      '${trip.id} • ${trip.date} • ${trip.departure}',
+                      '${widget.trip.id} • ${widget.trip.date} • ${widget.trip.departure}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                            color: scheme.onSurfaceVariant,
+                          ),
                     ),
                   ],
                 ),
@@ -55,33 +64,44 @@ class TripPricingTab extends StatelessWidget {
           ),
         ),
         const SizedBox(height: AppSpacing.medium),
-        _RouteTimeline(points: trip.routePoints),
+        _RouteTimeline(points: widget.trip.routePoints),
         const SizedBox(height: AppSpacing.medium),
-        if (state.pricingLoading)
-          const Center(child: CircularProgressIndicator())
-        else if (state.pricingError != null)
-          Text(
-            state.pricingError!,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(color: scheme.error),
-          )
-        else if (state.selectedTripPricing.isEmpty)
-          AppCard(
-            padding: const EdgeInsets.all(AppSpacing.large),
-            child: Text(
-              'لم يتم إعداد تسعير لهذه الرحلة بعد',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          )
-        else
-          _PricingCards(
-            pricing: state.selectedTripPricing,
-            onEdit: (pricing) => _openEditor(context, pricing),
-            onToggle: context.read<TripsCubit>().toggleTripPricing,
-          ),
+        BlocBuilder<TripPricingCubit, TripPricingState>(
+          builder: (context, state) {
+            if (state is TripPricingLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is TripPricingError) {
+              return Text(
+                state.message,
+                style: Theme.of(context)
+                    .textTheme
+                    .bodyMedium
+                    ?.copyWith(color: scheme.error),
+              );
+            } else if (state is TripPricingLoaded) {
+              if (state.pricing.isEmpty) {
+                return AppCard(
+                  padding: const EdgeInsets.all(AppSpacing.large),
+                  child: Text(
+                    'لم يتم إعداد تسعير لهذه الرحلة بعد',
+                    style: Theme.of(context)
+                        .textTheme
+                        .bodyMedium
+                        ?.copyWith(color: scheme.onSurfaceVariant),
+                  ),
+                );
+              }
+              return _PricingCards(
+                pricing: state.pricing,
+                onEdit: (pricing) => _openEditor(context, pricing),
+                onToggle: (pricing) => context
+                    .read<TripPricingCubit>()
+                    .togglePricingStatus(pricing),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
       ],
     );
   }
@@ -90,10 +110,10 @@ class TripPricingTab extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (_) => BlocProvider.value(
-        value: context.read<TripsCubit>(),
+        value: context.read<TripPricingCubit>(),
         child: Directionality(
           textDirection: TextDirection.rtl,
-          child: TripPricingEditorDialog(trip: trip, pricing: pricing),
+          child: TripPricingEditorDialog(trip: widget.trip, pricing: pricing),
         ),
       ),
     );

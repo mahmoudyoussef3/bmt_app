@@ -109,15 +109,7 @@ import '../../features/subscriptions/domain/usecases/get_subscriptions_usecase.d
 import '../../features/subscriptions/domain/usecases/mark_subscription_ride_used_usecase.dart';
 import '../../features/subscriptions/domain/usecases/renew_subscription_usecase.dart';
 import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
-import '../../features/trips/data/datasources/mock_trips_datasource.dart';
-import '../../features/trips/data/repositories/trips_repository_impl.dart';
-import '../../features/trips/domain/repositories/trips_repository.dart';
-import '../../features/trips/domain/usecases/get_operation_trips_usecase.dart';
-import '../../features/trips/domain/usecases/trip_pricing_usecases.dart';
-import '../../features/trips/domain/usecases/trip_operations_usecases.dart';
-import '../../features/trips/domain/usecases/update_trip_seat_state_usecase.dart';
-import '../../features/trips/domain/usecases/update_trip_status_usecase.dart';
-import '../../features/trips/presentation/cubit/trips_cubit.dart';
+import '../../features/trips/trips_di.dart';
 // Mock vehicles removed
 import '../../features/tickets/data/datasources/tickets_datasource.dart';
 import '../../features/tickets/data/repositories/tickets_repository_impl.dart';
@@ -812,9 +804,6 @@ if (!dashboardDi.isRegistered<SupabaseClient>()) {
     );
   }
 
-  if (!dashboardDi.isRegistered<TripsDatasource>()) {
-    dashboardDi.registerLazySingleton<TripsDatasource>(MockTripsDatasource.new);
-  }
 
   if (!dashboardDi.isRegistered<SubscriptionsDatasource>()) {
     dashboardDi.registerLazySingleton<SubscriptionsDatasource>(
@@ -890,105 +879,7 @@ if (!dashboardDi.isRegistered<SupabaseClient>()) {
     );
   }
 
-  if (!dashboardDi.isRegistered<TripsRepository>()) {
-    dashboardDi.registerLazySingleton<TripsRepository>(
-      () => TripsRepositoryImpl(dashboardDi<TripsDatasource>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetOperationTripsUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetOperationTripsUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<UpdateTripStatusUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => UpdateTripStatusUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<UpdateTripSeatStateUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => UpdateTripSeatStateUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<CreateOperationTripUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => CreateOperationTripUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<UpdateTripInfoUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => UpdateTripInfoUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<UpdateTripPassengerUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => UpdateTripPassengerUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<CancelTripPassengerUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => CancelTripPassengerUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<MoveTripPassengerUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => MoveTripPassengerUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<ValidateTripPricingUseCase>()) {
-    dashboardDi.registerLazySingleton(ValidateTripPricingUseCase.new);
-  }
-
-  if (!dashboardDi.isRegistered<GetTripPricingUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetTripPricingUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<SaveTripSegmentPricingUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => SaveTripSegmentPricingUseCase(
-        dashboardDi<TripsRepository>(),
-        dashboardDi<ValidateTripPricingUseCase>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<ToggleTripSegmentPricingUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => ToggleTripSegmentPricingUseCase(dashboardDi<TripsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<TripsCubit>()) {
-    dashboardDi.registerFactory(
-      () => TripsCubit(
-        getTrips: dashboardDi<GetOperationTripsUseCase>(),
-        updateTripStatus: dashboardDi<UpdateTripStatusUseCase>(),
-        updateSeatState: dashboardDi<UpdateTripSeatStateUseCase>(),
-        createTrip: dashboardDi<CreateOperationTripUseCase>(),
-        updateTripInfo: dashboardDi<UpdateTripInfoUseCase>(),
-        updatePassenger: dashboardDi<UpdateTripPassengerUseCase>(),
-        cancelPassenger: dashboardDi<CancelTripPassengerUseCase>(),
-        movePassenger: dashboardDi<MoveTripPassengerUseCase>(),
-        getTripPricing: dashboardDi<GetTripPricingUseCase>(),
-        saveTripPricing: dashboardDi<SaveTripSegmentPricingUseCase>(),
-        toggleTripPricing: dashboardDi<ToggleTripSegmentPricingUseCase>(),
-        getRoutes: dashboardDi<GetOperationRoutesUseCase>(),
-        getVehicles: dashboardDi<GetFleetVehiclesUseCase>(),
-        getDrivers: dashboardDi<GetFleetDriversUseCase>(),
-      ),
-    );
-  }
+  registerTripsDependencies(dashboardDi);
 
 // Mock vehicles registrations removed
 

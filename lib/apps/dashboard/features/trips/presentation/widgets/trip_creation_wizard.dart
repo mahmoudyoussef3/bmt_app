@@ -9,9 +9,141 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 import '../../../routes/domain/entities/operation_route.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_driver.dart';
-import '../../domain/entities/operation_trip.dart';
-import '../../domain/entities/trip_pricing.dart';
-import '../cubit/trips_cubit.dart';
+import '../../shared/domain/entities/operation_trip.dart';
+import '../../shared/domain/entities/trip_pricing.dart';
+import '../../trip_creation/presentation/cubit/trip_creation_cubit.dart';
+
+class TripCreationWizardDialog extends StatelessWidget {
+  const TripCreationWizardDialog({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TripCreationCubit, TripCreationState>(
+      builder: (context, state) {
+        if (state is TripCreationLoading) {
+          return const Dialog(
+            child: SizedBox(
+              height: 200,
+              child: Center(
+                child: CircularProgressIndicator(),
+              ),
+            ),
+          );
+        }
+
+        if (state is TripCreationError) {
+          return Dialog(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.large),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'خطأ في التحميل',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  Text(state.message),
+                  const SizedBox(height: AppSpacing.large),
+                  ElevatedButton(
+                    onPressed: () =>
+                        context.read<TripCreationCubit>().loadWizardData(),
+                    child: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }
+
+        if (state is TripCreationWizardDataLoaded) {
+          final parsedRoutes = state.routes.map(_parseRoute).toList();
+          final parsedVehicles = state.vehicles.map(_parseVehicle).toList();
+          final parsedDrivers = state.drivers.map(_parseDriver).toList();
+
+          return TripCreationWizard(
+            routes: parsedRoutes,
+            vehicles: parsedVehicles,
+            drivers: parsedDrivers,
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
+    );
+  }
+
+  OperationRoute _parseRoute(Map<String, dynamic> map) {
+    final stationsList = (map['route_stations'] as List? ?? [])
+        .map((st) => RouteStation(
+              id: st['id'] as String,
+              name: st['name'] as String? ?? '',
+              area: st['area'] as String? ?? '',
+              arrivalOffset: st['arrival_offset'] as String? ?? '',
+              departureOffset: st['departure_offset'] as String? ?? '',
+              locationDescription: st['location_description'] as String? ?? '',
+              notes: st['notes'] as String? ?? '',
+              order: st['sort_order'] as int? ?? 0,
+            ))
+        .toList()
+      ..sort((a, b) => a.order.compareTo(b.order));
+
+    return OperationRoute(
+      id: map['id'] as String,
+      name: map['name'] as String? ?? '',
+      startCity: map['start_city'] as String? ?? '',
+      endCity: map['end_city'] as String? ?? '',
+      duration: map['duration'] as String? ?? '',
+      distance: map['distance'] as String? ?? '',
+      status: OperationRouteStatus.active,
+      stations: stationsList,
+      notes: const [],
+    );
+  }
+
+  FleetVehicle _parseVehicle(Map<String, dynamic> map) {
+    return FleetVehicle(
+      id: map['id'] as String,
+      vehicleCode: map['vehicle_code'] as String? ?? '',
+      plateNumber: map['plate_number'] as String? ?? '',
+      vehicleType: map['vehicle_type'] as String? ?? 'ميكروباص',
+      brand: map['brand'] as String? ?? '',
+      model: map['model'] as String? ?? map['vehicle_code'] as String? ?? 'مركبة',
+      manufactureYear: 2024,
+      color: '',
+      capacity: map['capacity'] as int? ?? 14,
+      seatLayoutType: '',
+      imageUrl: '',
+      notes: '',
+      status: FleetVehicleStatus.active,
+      seatConfiguration: SeatConfiguration.empty(),
+      licenseExpiry: '',
+      insuranceExpiry: '',
+      inspectionExpiry: '',
+    );
+  }
+
+  FleetDriver _parseDriver(Map<String, dynamic> map) {
+    return FleetDriver(
+      id: map['id'] as String,
+      employeeCode: '',
+      fullName: map['full_name'] as String? ?? 'سائق',
+      phone: map['phone'] as String? ?? '',
+      emergencyPhone: '',
+      address: '',
+      nationalId: '',
+      profileImageUrl: '',
+      licenseNumber: '',
+      licenseExpiryDate: '',
+      hireDate: '',
+      notes: '',
+      status: FleetDriverStatus.active,
+      currentVehicleId: '',
+    );
+  }
+}
 
 class TripCreationWizard extends StatefulWidget {
   final List<OperationRoute> routes;
@@ -1072,8 +1204,11 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 
   void _onSubmitTrip() async {
     final input = CreateTripInput(
+      routeId: _selectedRoute!.id,
       route: _selectedRoute!.name,
+      driverId: _selectedDriver!.id,
       driver: _selectedDriver!.name,
+      vehicleId: _selectedVehicle!.id,
       vehicle: _selectedVehicle!.plateNumber,
       date: _dateController.text,
       departure: _timeController.text,
@@ -1108,8 +1243,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       ));
     });
 
-    final cubit = context.read<TripsCubit>();
-    final created = await cubit.createTripWithPricing(input, pricingList);
+    final cubit = context.read<TripCreationCubit>();
+    final created = await cubit.submitTrip(input, pricingList);
 
     if (mounted && created != null) {
       Navigator.of(context).pop(); // Close wizard dialog
