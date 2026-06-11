@@ -1,4 +1,6 @@
 import 'package:bmt_app/apps/dashboard/main.dart';
+import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
@@ -9,8 +11,21 @@ import 'package:bmt_app/core/app_mode/app_mode.dart';
 
 final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  try {
+    await Supabase.initialize(
+      url: 'https://nbwzourpbnmewwklewyr.supabase.co',
+      anonKey: 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z',
+    );
+  } catch (_) {
+    // Avoid crashing in environments where Supabase is already initialized or connection is mock
+  }
+
   registerCaptainDependencies();
+  registerDashboardDependencies();
+
   runApp(
     BlocProvider(create: (_) => AppModeCubit()..load(), child: const MyApp()),
   );
