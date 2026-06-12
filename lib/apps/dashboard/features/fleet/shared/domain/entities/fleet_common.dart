@@ -1,4 +1,5 @@
 /// Common types shared across all fleet modules.
+library;
 
 /// Represents a historical event in a fleet entity's timeline.
 class FleetHistoryItem {

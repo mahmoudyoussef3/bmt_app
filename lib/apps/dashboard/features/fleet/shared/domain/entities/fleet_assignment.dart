@@ -1,4 +1,5 @@
 /// Fleet assignment entity and status enum.
+library;
 
 import 'fleet_common.dart';
 

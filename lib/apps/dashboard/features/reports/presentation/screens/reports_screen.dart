@@ -6,8 +6,8 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import '../cubit/reports_cubit.dart';
 import '../cubit/reports_state.dart';
 
-import 'widgets/report_sidebar_selector.dart';
-import 'widgets/report_workspace.dart';
+import '../widgets/report_sidebar_selector.dart';
+import '../widgets/report_workspace.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -40,17 +40,17 @@ class _ReportsScreenState extends State<ReportsScreen> {
         ),
         body: BlocConsumer<ReportsCubit, ReportsState>(
           listenWhen: (previous, current) {
-            return current is ReportsLoaded && current.actionMessage != null;
+            return current is ReportsLoaded && current.exportedFileName != null;
           },
           listener: (context, state) {
-            if (state is ReportsLoaded && state.actionMessage != null) {
+            if (state is ReportsLoaded && state.exportedFileName != null) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text(state.actionMessage!),
+                  content: Text('تم تصدير التقرير بنجاح: ${state.exportedFileName}'),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
-              context.read<ReportsCubit>().clearActionMessage();
+              context.read<ReportsCubit>().clearExport();
             }
           },
           builder: (context, state) {
@@ -111,7 +111,7 @@ class _LoadedView extends StatelessWidget {
                 height: 120,
                 child: ReportSidebarSelector(
                   selectedType: state.activeReportType,
-                  onSelect: (type) => context.read<ReportsCubit>().changeReportType(type),
+                  onSelect: (type) => context.read<ReportsCubit>().switchReportType(type),
                 ),
               ),
               Expanded(child: ReportWorkspace(state: state)),
@@ -126,11 +126,13 @@ class _LoadedView extends StatelessWidget {
             // 20% Sidebar for Report Categories
             SizedBox(
               width: 240,
-              child: AppCard(
-                margin: const EdgeInsets.only(right: AppSpacing.medium, top: AppSpacing.medium, bottom: AppSpacing.medium),
-                child: ReportSidebarSelector(
-                  selectedType: state.activeReportType,
-                  onSelect: (type) => context.read<ReportsCubit>().changeReportType(type),
+              child: Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.medium, top: AppSpacing.medium, bottom: AppSpacing.medium),
+                child: AppCard(
+                  child: ReportSidebarSelector(
+                    selectedType: state.activeReportType,
+                    onSelect: (type) => context.read<ReportsCubit>().switchReportType(type),
+                  ),
                 ),
               ),
             ),

@@ -62,6 +62,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<OperationTripModel> createTrip(CreateTripInput input) async {
     try {
       // 1. Fetch route stations to snapshot
@@ -171,6 +172,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<OperationTripModel> updateTripInfo(OperationTrip trip) async {
     try {
       await _client.from('operation_trips').update({
@@ -194,6 +196,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<OperationTripModel> updateTripStatus(
     String tripId,
     OperationTripStatus status,
@@ -215,6 +218,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<OperationTripModel> updateSeatState(
     String tripId,
     String seatId,
@@ -248,6 +252,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<OperationTripModel> updatePassenger(
     String tripId,
     TripPassenger passenger,
@@ -271,6 +276,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<OperationTripModel> cancelPassenger(
     String tripId,
     String passengerId,
@@ -311,6 +317,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<OperationTripModel> movePassenger(
     String tripId,
     String passengerId,
@@ -378,6 +385,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
   // Pricing Operations
   // ============================================================
 
+  @override
   Future<List<TripPricingModel>> fetchTripPricing(String tripId) async {
     try {
       final response = await _client
@@ -394,6 +402,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<TripPricingModel> upsertTripPricing(TripPricing pricing) async {
     try {
       final data = TripPricingModel.fromEntity(pricing).toJson();
@@ -425,6 +434,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<TripPricingModel> toggleTripPricingStatus(
     String pricingId,
     bool isActive,
@@ -455,6 +465,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
   // Events Log Helpers
   // ============================================================
 
+  @override
   Future<List<TripEventModel>> fetchTripEvents(String tripId) async {
     try {
       final response = await _client
@@ -487,6 +498,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
   }
 
   // Helper for driver and vehicle validation in wizard
+  @override
   Future<List<Map<String, dynamic>>> fetchActiveDrivers() async {
     try {
       final response = await _client
@@ -499,6 +511,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<List<Map<String, dynamic>>> fetchActiveVehicles() async {
     try {
       final response = await _client
@@ -511,6 +524,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<List<Map<String, dynamic>>> fetchActiveRoutes() async {
     try {
       final response = await _client
@@ -523,6 +537,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<bool> checkDuplicateTrip(String vehicleId, String date, String departureTime) async {
     try {
       final response = await _client
@@ -537,6 +552,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<String> getDriverStatus(String driverId) async {
     try {
       final response = await _client
@@ -550,6 +566,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<String> getVehicleStatus(String vehicleId) async {
     try {
       final response = await _client
@@ -563,6 +580,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  @override
   Future<String> getRouteStatus(String routeId) async {
     try {
       final response = await _client

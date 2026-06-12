@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
-import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/app_button.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 

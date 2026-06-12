@@ -95,6 +95,7 @@ class OperationBooking {
   });
 
   OperationBooking copyWith({
+    String? id,
     BookingStatus? status,
     BookingPriority? priority,
     String? assignedTrip,
@@ -103,7 +104,7 @@ class OperationBooking {
     List<BookingTimelineEvent>? timeline,
   }) {
     return OperationBooking(
-      id: id,
+      id: id ?? this.id,
       passengerName: passengerName,
       phone: phone,
       route: route,

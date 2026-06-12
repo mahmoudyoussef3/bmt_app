@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
-import '../../../domain/entities/complaint.dart';
+import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_state.dart';
 import 'complaint_tabs.dart';
 import 'tickets_shared_widgets.dart';

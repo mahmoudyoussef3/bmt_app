@@ -3,7 +3,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 
-import '../../../domain/entities/report_entities.dart';
+import '../../domain/entities/report_entities.dart';
 import '../cubit/reports_state.dart';
 
 class ReportDataTable extends StatelessWidget {

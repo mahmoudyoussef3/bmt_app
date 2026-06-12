@@ -1018,7 +1018,7 @@ class _BasicInfoForm extends StatelessWidget {
               value == null || value.trim().isEmpty ? 'يرجى إدخال المسافة' : null,
         ),
         DropdownButtonFormField<OperationRouteStatus>(
-          value: status,
+          initialValue: status,
           decoration: const InputDecoration(labelText: 'الحالة'),
           items: const [
             DropdownMenuItem(

@@ -1,4 +1,5 @@
 /// Fleet driver entity and status enum.
+library;
 
 import 'fleet_common.dart';
 import 'fleet_document.dart';

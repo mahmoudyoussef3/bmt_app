@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
-import '../../../domain/entities/complaint.dart';
+import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 import 'tickets_shared_widgets.dart';

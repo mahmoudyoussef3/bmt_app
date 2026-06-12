@@ -1,4 +1,5 @@
 /// Fleet vehicle entity, status enum, and seat configuration.
+library;
 
 import 'fleet_common.dart';
 

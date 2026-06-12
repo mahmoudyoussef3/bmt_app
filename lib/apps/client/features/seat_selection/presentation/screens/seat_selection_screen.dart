@@ -9,8 +9,6 @@ import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/passenger_info_bottom_sheet.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_booking_summary_panel.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_legend.dart';
-import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_passenger_preview_card.dart';
-import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_selection_vehicle_card.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 class SeatSelectionScreen extends StatefulWidget {

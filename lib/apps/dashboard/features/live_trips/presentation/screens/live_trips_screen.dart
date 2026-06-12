@@ -266,7 +266,6 @@ class _MetricChip extends StatelessWidget {
 
 class _TripsList extends StatefulWidget {
   const _TripsList({
-    super.key,
     required this.state,
     required this.onTap,
     required this.compact,
@@ -413,7 +412,7 @@ class _TripsListState extends State<_TripsList> {
             children: [
               Expanded(
                 child: DropdownButtonFormField<LiveTripHealth?>(
-                  value: widget.state.filterHealth,
+                  initialValue: widget.state.filterHealth,
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     labelText: 'الحالة الصحية',
@@ -446,7 +445,7 @@ class _TripsListState extends State<_TripsList> {
               const SizedBox(width: AppSpacing.small),
               Expanded(
                 child: DropdownButtonFormField<LiveTripStatus?>(
-                  value: widget.state.filterStatus,
+                  initialValue: widget.state.filterStatus,
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                     labelText: 'حالة الرحلة',

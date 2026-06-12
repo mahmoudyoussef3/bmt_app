@@ -360,7 +360,7 @@ class _StatusFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<OperationTripStatus?>(
-      value: state.statusFilter,
+      initialValue: state.statusFilter,
       decoration: const InputDecoration(labelText: 'الحالة'),
       items: [
         const DropdownMenuItem(value: null, child: Text('الكل')),
@@ -392,7 +392,7 @@ class _StringFilter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<String>(
-      value: value.isEmpty ? null : value,
+      initialValue: value.isEmpty ? null : value,
       decoration: InputDecoration(labelText: label),
       items: [
         const DropdownMenuItem(value: '', child: Text('الكل')),
@@ -452,12 +452,12 @@ class _TripsTable extends StatelessWidget {
                         ),
                       )
                     : DataTable(
-                        headingRowColor: MaterialStateProperty.all(
+                        headingRowColor: WidgetStateProperty.all(
                           scheme.surfaceContainerHighest.withAlpha(90),
                         ),
-                        dataRowColor: MaterialStateProperty.resolveWith(
+                        dataRowColor: WidgetStateProperty.resolveWith(
                           (states) {
-                            if (states.contains(MaterialState.hovered)) {
+                            if (states.contains(WidgetState.hovered)) {
                               return scheme.primary.withAlpha(10);
                             }
                             return Colors.transparent;
@@ -871,7 +871,7 @@ class _PassengersTab extends StatelessWidget {
         child: ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 1120),
             child: DataTable(
-              headingRowColor: MaterialStateProperty.all(
+              headingRowColor: WidgetStateProperty.all(
                 scheme.surfaceContainerHighest.withAlpha(90),
               ),
               columns: headers

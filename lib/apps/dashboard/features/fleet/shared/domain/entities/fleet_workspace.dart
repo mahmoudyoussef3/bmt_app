@@ -2,6 +2,7 @@
 ///
 /// Import this single file to access all fleet types.
 /// Individual files can also be imported directly for narrower scope.
+library;
 
 export 'fleet_common.dart';
 export 'fleet_driver.dart';

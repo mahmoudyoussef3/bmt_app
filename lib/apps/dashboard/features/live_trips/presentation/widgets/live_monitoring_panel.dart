@@ -1081,7 +1081,7 @@ class _ReportEmergencyDialogState extends State<_ReportEmergencyDialog> {
             const Text('نوع الطوارئ:'),
             const SizedBox(height: AppSpacing.small),
             DropdownButtonFormField<LiveTripAlertType>(
-              value: _selectedType,
+              initialValue: _selectedType,
               items: const [
                 DropdownMenuItem(value: LiveTripAlertType.emergency, child: Text('حالة طوارئ عامة')),
                 DropdownMenuItem(value: LiveTripAlertType.vehicleIssue, child: Text('عطل فني في الأتوبيس')),

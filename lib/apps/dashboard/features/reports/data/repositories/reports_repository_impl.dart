@@ -1,6 +1,8 @@
+import 'package:file_saver/file_saver.dart';
 import '../../domain/entities/report_entities.dart';
 import '../../domain/repositories/reports_repository.dart';
 import '../datasources/reports_datasource.dart';
+import '../services/report_export_service.dart';
 
 class ReportsRepositoryImpl implements ReportsRepository {
   final ReportsDatasource _datasource;
@@ -14,11 +16,38 @@ class ReportsRepositoryImpl implements ReportsRepository {
 
   @override
   Future<String> exportReport(ReportType type, ReportFilter filter, String format) async {
-    // Mock export generation: delay slightly to simulate building the file
-    await Future.delayed(const Duration(milliseconds: 600));
+    // 1. Get real data
+    final data = await _datasource.getReportData(type, filter);
+
+    // 2. Generate file bytes
+    final service = ReportExportService();
+    final bytes = await service.generateExportBytes(data, type, format);
+
+    // 3. Define file name and mime type
     final dateStr = DateTime.now().toString().substring(0, 10);
     final ext = format.toLowerCase();
-    return 'تقرير_${type.label}_$dateStr.$ext';
+    final fileName = 'تقرير_${type.label}_$dateStr';
+
+    MimeType mimeType;
+    if (ext == 'csv') {
+      mimeType = MimeType.csv;
+    } else if (ext == 'excel') {
+      mimeType = MimeType.microsoftExcel;
+    } else if (ext == 'pdf') {
+      mimeType = MimeType.pdf;
+    } else {
+      mimeType = MimeType.other;
+    }
+
+    // 4. Save file
+    await FileSaver.instance.saveFile(
+      name: fileName,
+      bytes: bytes,
+      fileExtension: ext == 'excel' ? 'xlsx' : ext,
+      mimeType: mimeType,
+    );
+
+    return '$fileName.${ext == 'excel' ? 'xlsx' : ext}';
   }
 
   @override

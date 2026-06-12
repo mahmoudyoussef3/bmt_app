@@ -1,7 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_driver.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
@@ -313,7 +310,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                   validator: (v) => FleetValidators.validateDate(v ?? '', 'تاريخ التعيين'),
                 ),
                 DropdownButtonFormField<String>(
-                  value: selectedVehicleId,
+                  initialValue: selectedVehicleId,
                   decoration: const InputDecoration(
                     labelText: 'المركبة المعينة (اختياري)',
                     prefixIcon: Icon(Icons.directions_car_rounded),

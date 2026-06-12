@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_common.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/widgets/fleet_seat_layout_visualizer.dart';
@@ -259,19 +257,17 @@ class _HistoryTimeline extends StatelessWidget {
   final String title;
   final List<FleetHistoryItem> items;
   final IconData icon;
-  final Color? color;
 
   const _HistoryTimeline({
     required this.title,
     required this.items,
     required this.icon,
-    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final iconColor = color ?? scheme.primary;
+    final iconColor = scheme.primary;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
@@ -429,7 +425,7 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                     fit: BoxFit.cover,
                     width: double.infinity,
                     height: double.infinity,
-                    errorBuilder: (_, __, ___) => Center(
+                    errorBuilder: (_, _, _) => Center(
                       child: Icon(
                         Icons.broken_image_outlined,
                         size: 48,
@@ -468,7 +464,7 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                             child: Image.network(
                               images[index].url,
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Icon(
+                              errorBuilder: (_, _, _) => Icon(
                                 Icons.broken_image_outlined,
                                 size: 20,
                                 color: scheme.onSurfaceVariant,

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import '../../../domain/entities/complaint.dart';
+import '../../domain/entities/complaint.dart';
 
 class StatusBadge extends StatelessWidget {
   final ComplaintStatus status;

@@ -27,25 +27,11 @@ class ReportWorkspace extends StatelessWidget {
           ReportFiltersBar(state: state),
           const SizedBox(height: AppSpacing.medium),
 
-          if (state.reportLoading)
-            const Expanded(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 16),
-                    Text('جاري استخراج وتحليل بيانات التقرير...'),
-                  ],
-                ),
-              ),
-            )
-          else
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
                     // 3. KPIs
                     ReportKpiGrid(state: state),
                     const SizedBox(height: AppSpacing.medium),

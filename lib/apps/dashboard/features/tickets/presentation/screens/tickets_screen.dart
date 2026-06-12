@@ -8,9 +8,9 @@ import 'package:bmt_app/core/widgets/empty_state.dart';
 import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 
-import 'widgets/tickets_summary.dart';
-import 'widgets/tickets_table.dart';
-import 'widgets/complaint_workspace.dart';
+import '../widgets/tickets_summary.dart';
+import '../widgets/tickets_table.dart';
+import '../widgets/complaint_workspace.dart';
 
 class TicketsScreen extends StatefulWidget {
   const TicketsScreen({super.key});

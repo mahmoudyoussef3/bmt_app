@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import '../../../domain/entities/report_entities.dart';
+import '../../domain/entities/report_entities.dart';
 
 class ReportSidebarSelector extends StatelessWidget {
   final ReportType selectedType;

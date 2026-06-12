@@ -1,4 +1,5 @@
 /// Fleet document entity and related enums.
+library;
 
 enum FleetDocumentStatus {
   expired('منتهي'),

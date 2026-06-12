@@ -337,7 +337,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
 
                 final fields = [
                   DropdownButtonFormField<FleetDocumentType>(
-                    value: selectedType,
+                    initialValue: selectedType,
                     decoration: const InputDecoration(
                       labelText: 'نوع الوثيقة',
                       prefixIcon: Icon(Icons.category_outlined),

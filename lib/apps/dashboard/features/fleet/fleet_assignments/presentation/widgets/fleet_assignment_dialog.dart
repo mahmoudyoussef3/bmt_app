@@ -46,7 +46,7 @@ class _FleetAssignmentDialogState extends State<FleetAssignmentDialog> {
           children: [
             if (!reassign)
               DropdownButtonFormField<String>(
-                value: driverId.isEmpty ? null : driverId,
+                initialValue: driverId.isEmpty ? null : driverId,
                 decoration: const InputDecoration(
                   labelText: 'السائق',
                   border: OutlineInputBorder(),
@@ -63,7 +63,7 @@ class _FleetAssignmentDialogState extends State<FleetAssignmentDialog> {
               ),
             if (!reassign) const SizedBox(height: AppSpacing.small),
             DropdownButtonFormField<String>(
-              value: vehicleId.isEmpty ? null : vehicleId,
+              initialValue: vehicleId.isEmpty ? null : vehicleId,
               decoration: const InputDecoration(
                 labelText: 'المركبة',
                 border: OutlineInputBorder(),

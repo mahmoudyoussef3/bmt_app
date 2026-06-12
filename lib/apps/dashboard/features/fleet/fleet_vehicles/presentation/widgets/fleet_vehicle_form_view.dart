@@ -4,10 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io' as io;
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_common.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_driver.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
@@ -50,8 +46,8 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
   String? selectedDriverId;
 
   List<String> _existingImageUrls = [];
-  List<PlatformFile> _newPickedFiles = [];
-  List<List<int>> _newPickedBytes = [];
+  final List<PlatformFile> _newPickedFiles = [];
+  final List<List<int>> _newPickedBytes = [];
 
   String _globalError = '';
   bool _saving = false;
@@ -322,7 +318,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
               validator: (v) => (v == null || v.trim().isEmpty) ? 'لون الهيكل مطلوب' : null,
             ),
             DropdownButtonFormField<String>(
-              value: vehicleType,
+              initialValue: vehicleType,
               decoration: const InputDecoration(
                 labelText: 'نوع المركبة',
                 prefixIcon: Icon(Icons.category_outlined),
@@ -338,7 +334,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
               onChanged: (v) => setState(() => vehicleType = v ?? 'Coaster'),
             ),
             DropdownButtonFormField<String>(
-              value: seatLayoutType,
+              initialValue: seatLayoutType,
               decoration: const InputDecoration(
                 labelText: 'تخطيط المقاعد',
                 prefixIcon: Icon(Icons.grid_view_rounded),
@@ -655,7 +651,7 @@ class _VehicleImagePickerCard extends StatelessWidget {
                     child: Image.network(
                       url,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Icon(
+                      errorBuilder: (_, _, _) => Icon(
                         Icons.broken_image_outlined,
                         color: scheme.onSurfaceVariant,
                       ),
@@ -805,7 +801,7 @@ class _VehicleDriverCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           DropdownButtonFormField<String>(
-            value: selectedDriverId,
+            initialValue: selectedDriverId,
             isExpanded: true,
             decoration: const InputDecoration(
               labelText: 'السائق',
