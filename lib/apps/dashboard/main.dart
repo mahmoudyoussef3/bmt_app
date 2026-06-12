@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'core/di/dashboard_di.dart';
 import 'core/routes/dashboard_shell.dart';
 import 'core/theme/dashboard_theme_cubit.dart';

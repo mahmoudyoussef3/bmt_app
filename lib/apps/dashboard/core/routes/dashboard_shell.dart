@@ -98,16 +98,6 @@ class _DashboardShellState extends State<DashboardShell> {
       permission: DashboardPermission.subscriptions,
     ),
     const _DashboardNavItem(
-      label: 'التحقق من الحجوزات',
-      route: DashboardRoutes.paymentVerification,
-      icon: Icons.event_seat_outlined,
-      selectedIcon: Icons.event_seat_rounded,
-      permission: DashboardPermission.paymentVerification,
-    ),
-
-
-
-    const _DashboardNavItem(
       label: 'المالية',
       route: DashboardRoutes.payments,
       icon: Icons.account_balance_wallet_outlined,
