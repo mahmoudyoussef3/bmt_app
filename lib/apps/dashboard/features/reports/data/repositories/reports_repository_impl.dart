@@ -1,9 +1,9 @@
 import '../../domain/entities/report_entities.dart';
 import '../../domain/repositories/reports_repository.dart';
-import '../datasources/mock_reports_datasource.dart';
+import '../datasources/reports_datasource.dart';
 
 class ReportsRepositoryImpl implements ReportsRepository {
-  final MockReportsDatasource _datasource;
+  final ReportsDatasource _datasource;
 
   const ReportsRepositoryImpl(this._datasource);
 

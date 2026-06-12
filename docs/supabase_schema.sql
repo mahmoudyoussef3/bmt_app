@@ -138,3 +138,104 @@ CREATE TABLE IF NOT EXISTS operation_bookings (
   notes JSONB NOT NULL DEFAULT '[]'::jsonb,
   timeline JSONB NOT NULL DEFAULT '[]'::jsonb
 );
+
+-- ==========================================
+-- Supabase Schema for Complaints & Reports
+-- ==========================================
+
+-- 7. Create Operation Trips Table (Stub for reports)
+CREATE TABLE IF NOT EXISTS operation_trips (
+  id VARCHAR PRIMARY KEY,
+  route_code VARCHAR NOT NULL,
+  driver_id UUID REFERENCES drivers(id),
+  vehicle_id UUID REFERENCES vehicles(id),
+  trip_date DATE NOT NULL,
+  status VARCHAR NOT NULL DEFAULT 'scheduled',
+  revenue NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  passenger_count INT NOT NULL DEFAULT 0,
+  occupancy_rate NUMERIC(3, 2) NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 8. Create Operation Complaints Table
+CREATE TABLE IF NOT EXISTS operation_complaints (
+  id VARCHAR PRIMARY KEY,
+  client_name VARCHAR NOT NULL,
+  client_phone VARCHAR NOT NULL,
+  category VARCHAR NOT NULL,
+  trip_code VARCHAR NOT NULL,
+  assigned_to VARCHAR,
+  status VARCHAR NOT NULL DEFAULT 'newlyCreated',
+  priority VARCHAR NOT NULL DEFAULT 'low',
+  description TEXT NOT NULL,
+  conversation JSONB NOT NULL DEFAULT '[]'::jsonb,
+  attachments JSONB NOT NULL DEFAULT '[]'::jsonb,
+  history JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- 9. Create Subscriptions Table (Stub for reports)
+CREATE TABLE IF NOT EXISTS subscriptions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  package_name VARCHAR NOT NULL,
+  active_users INT NOT NULL DEFAULT 0,
+  expired_users INT NOT NULL DEFAULT 0,
+  total_revenue NUMERIC(10, 2) NOT NULL DEFAULT 0,
+  renewals_count INT NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ==========================================
+-- Analytics SQL Views for Reports
+-- ==========================================
+
+-- A. Revenue Daily View
+CREATE OR REPLACE VIEW revenue_daily_view AS
+SELECT 
+  DATE(created_at) as report_date,
+  SUM(CAST(payment_details->>'amount' AS NUMERIC)) as total_bookings_revenue,
+  COUNT(*) as total_bookings
+FROM operation_bookings
+WHERE status != 'rejected'
+GROUP BY DATE(created_at);
+
+-- B. Drivers Performance View
+CREATE OR REPLACE VIEW drivers_performance_view AS
+SELECT 
+  d.id as driver_id,
+  d.full_name as name,
+  d.status,
+  COUNT(t.id) as completed_trips,
+  SUM(t.revenue) as total_revenue,
+  -- Stubbing hours and rating for now as they require timesheets and reviews tables
+  80 as total_working_hours, 
+  4.5 as rating
+FROM drivers d
+LEFT JOIN operation_trips t ON t.driver_id = d.id AND t.status = 'completed'
+GROUP BY d.id, d.full_name, d.status;
+
+-- C. Vehicles Efficiency View
+CREATE OR REPLACE VIEW vehicles_efficiency_view AS
+SELECT 
+  v.id as vehicle_id,
+  v.plate_number,
+  v.model,
+  v.status,
+  COUNT(t.id) as completed_trips,
+  12.5 as fuel_consumption, -- Stub
+  CASE WHEN v.status = 'maintenance' THEN 'تحتاج صيانة' ELSE 'جاهزة' END as maintenance_status
+FROM vehicles v
+LEFT JOIN operation_trips t ON t.vehicle_id = v.id AND t.status = 'completed'
+GROUP BY v.id, v.plate_number, v.model, v.status;
+
+-- D. Complaints Summary View
+CREATE OR REPLACE VIEW complaints_summary_view AS
+SELECT 
+  category,
+  COUNT(id) as total_complaints,
+  SUM(CASE WHEN status = 'resolved' OR status = 'closed' THEN 1 ELSE 0 END) as resolved_complaints,
+  SUM(CASE WHEN status != 'resolved' AND status != 'closed' THEN 1 ELSE 0 END) as pending_complaints,
+  24.0 as avg_resolution_time -- Stub
+FROM operation_complaints
+GROUP BY category;

@@ -112,6 +112,7 @@ import '../../features/subscriptions/domain/usecases/renew_subscription_usecase.
 import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
 import '../../features/trips/trips_di.dart';
 // Mock vehicles removed
+import '../../features/tickets/data/datasources/supabase_tickets_datasource.dart';
 import '../../features/tickets/data/datasources/tickets_datasource.dart';
 import '../../features/tickets/data/repositories/tickets_repository_impl.dart';
 import '../../features/tickets/domain/repositories/tickets_repository.dart';
@@ -134,7 +135,8 @@ import '../../features/finance/domain/usecases/get_subscriptions_usecase.dart';
 import '../../features/finance/domain/usecases/process_refund_usecase.dart';
 import '../../features/finance/domain/usecases/review_receipt_usecase.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
-import '../../features/reports/data/datasources/mock_reports_datasource.dart';
+import '../../features/reports/data/datasources/reports_datasource.dart';
+import '../../features/reports/data/datasources/supabase_reports_datasource.dart';
 import '../../features/reports/data/repositories/reports_repository_impl.dart';
 import '../../features/reports/domain/repositories/reports_repository.dart';
 import '../../features/reports/domain/usecases/export_report_usecase.dart';
@@ -886,7 +888,7 @@ if (!dashboardDi.isRegistered<SupabaseClient>()) {
 
   if (!dashboardDi.isRegistered<TicketsDatasource>()) {
     dashboardDi.registerLazySingleton<TicketsDatasource>(
-      MockTicketsDatasource.new,
+      () => SupabaseTicketsDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
@@ -1022,15 +1024,15 @@ if (!dashboardDi.isRegistered<SupabaseClient>()) {
   }
 
   // Reports Feature Registration
-  if (!dashboardDi.isRegistered<MockReportsDatasource>()) {
-    dashboardDi.registerLazySingleton<MockReportsDatasource>(
-      MockReportsDatasource.new,
+  if (!dashboardDi.isRegistered<ReportsDatasource>()) {
+    dashboardDi.registerLazySingleton<ReportsDatasource>(
+      () => SupabaseReportsDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
   if (!dashboardDi.isRegistered<ReportsRepository>()) {
     dashboardDi.registerLazySingleton<ReportsRepository>(
-      () => ReportsRepositoryImpl(dashboardDi<MockReportsDatasource>()),
+      () => ReportsRepositoryImpl(dashboardDi<ReportsDatasource>()),
     );
   }
 

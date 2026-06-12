@@ -12,21 +12,23 @@ class ComplaintMessageModel extends ComplaintMessage {
 
   factory ComplaintMessageModel.fromJson(Map<String, dynamic> json) {
     return ComplaintMessageModel(
-      id: json['id'].toString(),
-      senderName: json['senderName'].toString(),
-      senderType: json['senderType'].toString(),
-      content: json['content'].toString(),
-      timestamp: DateTime.parse(json['timestamp'].toString()),
+      id: json['id']?.toString() ?? '',
+      senderName: json['sender_name']?.toString() ?? '',
+      senderType: json['sender_type']?.toString() ?? '',
+      content: json['content']?.toString() ?? '',
+      timestamp: json['timestamp'] != null 
+          ? DateTime.parse(json['timestamp'].toString()).toLocal() 
+          : DateTime.now(),
       attachments: List<String>.from(json['attachments'] as List? ?? []),
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'senderName': senderName,
-        'senderType': senderType,
+        'sender_name': senderName,
+        'sender_type': senderType,
         'content': content,
-        'timestamp': timestamp.toIso8601String(),
+        'timestamp': timestamp.toUtc().toIso8601String(),
         'attachments': attachments,
       };
 
@@ -52,17 +54,19 @@ class ComplaintLogModel extends ComplaintLog {
 
   factory ComplaintLogModel.fromJson(Map<String, dynamic> json) {
     return ComplaintLogModel(
-      id: json['id'].toString(),
-      action: json['action'].toString(),
-      timestamp: DateTime.parse(json['timestamp'].toString()),
-      actor: json['actor'].toString(),
+      id: json['id']?.toString() ?? '',
+      action: json['action']?.toString() ?? '',
+      timestamp: json['timestamp'] != null 
+          ? DateTime.parse(json['timestamp'].toString()).toLocal() 
+          : DateTime.now(),
+      actor: json['actor']?.toString() ?? '',
     );
   }
 
   Map<String, dynamic> toJson() => {
         'id': id,
         'action': action,
-        'timestamp': timestamp.toIso8601String(),
+        'timestamp': timestamp.toUtc().toIso8601String(),
         'actor': actor,
       };
 
@@ -94,17 +98,37 @@ class ComplaintModel extends Complaint {
   });
 
   factory ComplaintModel.fromJson(Map<String, dynamic> json) {
+    final catStr = json['category']?.toString() ?? 'other';
+    final category = ComplaintCategory.values.firstWhere(
+      (e) => e.name == catStr,
+      orElse: () => ComplaintCategory.other,
+    );
+
+    final statusStr = json['status']?.toString() ?? 'newlyCreated';
+    final status = ComplaintStatus.values.firstWhere(
+      (e) => e.name == statusStr,
+      orElse: () => ComplaintStatus.newlyCreated,
+    );
+
+    final prioStr = json['priority']?.toString() ?? 'low';
+    final priority = ComplaintPriority.values.firstWhere(
+      (e) => e.name == prioStr,
+      orElse: () => ComplaintPriority.low,
+    );
+
     return ComplaintModel(
-      id: json['id'].toString(),
-      clientName: json['clientName'].toString(),
-      clientPhone: json['clientPhone'].toString(),
-      category: ComplaintCategory.values.byName(json['category'].toString()),
-      tripCode: json['tripCode'].toString(),
-      createdAt: DateTime.parse(json['createdAt'].toString()),
-      assignedTo: json['assignedTo']?.toString(),
-      status: ComplaintStatus.values.byName(json['status'].toString()),
-      priority: ComplaintPriority.values.byName(json['priority'].toString()),
-      description: json['description'].toString(),
+      id: json['id']?.toString() ?? '',
+      clientName: json['client_name']?.toString() ?? '',
+      clientPhone: json['client_phone']?.toString() ?? '',
+      category: category,
+      tripCode: json['trip_code']?.toString() ?? '',
+      createdAt: json['created_at'] != null 
+          ? DateTime.parse(json['created_at'].toString()).toLocal() 
+          : DateTime.now(),
+      assignedTo: json['assigned_to']?.toString(),
+      status: status,
+      priority: priority,
+      description: json['description']?.toString() ?? '',
       conversation: (json['conversation'] as List? ?? [])
           .map((e) => ComplaintMessageModel.fromJson(e as Map<String, dynamic>))
           .toList(),
@@ -117,12 +141,12 @@ class ComplaintModel extends Complaint {
 
   Map<String, dynamic> toJson() => {
         'id': id,
-        'clientName': clientName,
-        'clientPhone': clientPhone,
+        'client_name': clientName,
+        'client_phone': clientPhone,
         'category': category.name,
-        'tripCode': tripCode,
-        'createdAt': createdAt.toIso8601String(),
-        'assignedTo': assignedTo,
+        'trip_code': tripCode,
+        'created_at': createdAt.toUtc().toIso8601String(),
+        'assigned_to': assignedTo,
         'status': status.name,
         'priority': priority.name,
         'description': description,
