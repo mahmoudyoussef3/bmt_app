@@ -110,3 +110,31 @@ INSERT INTO driver_documents (driver_id, type, file_url, expiry_date, status) VA
 INSERT INTO vehicle_documents (vehicle_id, type, file_url, expiry_date, status) VALUES
 ('v1111111-1111-1111-1111-111111111111', 'vehicle_license', 'https://placeholder.com/vlicense1.jpg', '2026-12-10', 'valid'),
 ('v1111111-1111-1111-1111-111111111111', 'insurance', 'https://placeholder.com/ins1.jpg', '2027-01-15', 'valid');
+
+-- ==========================================
+-- Supabase Schema for Bookings Management
+-- ==========================================
+
+-- 6. Create Operation Bookings Table
+CREATE TABLE IF NOT EXISTS operation_bookings (
+  id VARCHAR PRIMARY KEY,
+  passenger_name VARCHAR NOT NULL,
+  phone VARCHAR NOT NULL,
+  route VARCHAR NOT NULL,
+  trip_time VARCHAR NOT NULL,
+  trip_date VARCHAR NOT NULL,
+  seat VARCHAR NOT NULL,
+  payment_method VARCHAR NOT NULL,
+  status VARCHAR NOT NULL DEFAULT 'newRequest',
+  priority VARCHAR NOT NULL DEFAULT 'normal',
+  assigned_trip VARCHAR NOT NULL DEFAULT 'غير مسند',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  reviewer_name VARCHAR,
+  rejection_reason VARCHAR,
+  customer_profile JSONB NOT NULL DEFAULT '{}'::jsonb,
+  trip_details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  payment_details JSONB NOT NULL DEFAULT '{}'::jsonb,
+  attachments JSONB NOT NULL DEFAULT '[]'::jsonb,
+  notes JSONB NOT NULL DEFAULT '[]'::jsonb,
+  timeline JSONB NOT NULL DEFAULT '[]'::jsonb
+);

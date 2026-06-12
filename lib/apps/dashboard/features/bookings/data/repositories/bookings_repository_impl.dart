@@ -1,6 +1,6 @@
 import '../../domain/entities/operation_booking.dart';
 import '../../domain/repositories/bookings_repository.dart';
-import '../datasources/mock_bookings_datasource.dart';
+import '../datasources/bookings_datasource.dart';
 
 class BookingsRepositoryImpl implements BookingsRepository {
   final BookingsDatasource _datasource;

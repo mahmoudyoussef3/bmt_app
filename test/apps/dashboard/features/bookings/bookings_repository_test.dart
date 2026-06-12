@@ -1,6 +1,6 @@
+import 'package:bmt_app/apps/dashboard/features/bookings/data/datasources/bookings_datasource.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/apps/dashboard/features/bookings/data/datasources/mock_bookings_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/data/models/operation_booking_model.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/data/repositories/bookings_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
@@ -12,7 +12,7 @@ import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/update_
 void main() {
   group('Bookings clean architecture chain', () {
     test('loads booking queue dummy data', () async {
-      final repository = BookingsRepositoryImpl(MockBookingsDatasource());
+      final repository = BookingsRepositoryImpl(_DummyBookingsDatasource());
       final getBookings = GetOperationBookingsUseCase(repository);
 
       final bookings = await getBookings();
@@ -27,7 +27,7 @@ void main() {
     });
 
     test('updates booking status and appends history', () async {
-      final repository = BookingsRepositoryImpl(MockBookingsDatasource());
+      final repository = BookingsRepositoryImpl(_DummyBookingsDatasource());
       final getBookings = GetOperationBookingsUseCase(repository);
       final updateStatus = UpdateBookingStatusUseCase(repository);
 
@@ -39,7 +39,7 @@ void main() {
     });
 
     test('bulk approves and assigns selected bookings', () async {
-      final repository = BookingsRepositoryImpl(MockBookingsDatasource());
+      final repository = BookingsRepositoryImpl(_DummyBookingsDatasource());
       final getBookings = GetOperationBookingsUseCase(repository);
       final bulkUpdate = BulkUpdateBookingsStatusUseCase(repository);
       final assign = AssignBookingsToTripUseCase(repository);
@@ -77,6 +77,128 @@ void main() {
       );
     });
   });
+}
+
+class _DummyBookingsDatasource implements BookingsDatasource {
+  final _dummyBooking = OperationBookingModel(
+    id: 'B-1001',
+    passengerName: 'Test Passenger',
+    phone: '01000000000',
+    route: 'Route 1',
+    tripTime: '10:00',
+    date: 'Today',
+    seat: '1',
+    paymentMethod: BookingPaymentMethod.cash,
+    status: BookingStatus.newRequest,
+    priority: BookingPriority.normal,
+    assignedTrip: 'TR-100',
+    createdAt: DateTime.now(),
+    customerProfile: const BookingCustomerProfileModel(
+      name: 'Test Passenger',
+      phone: '01000000000',
+      email: 'test@example.com',
+      tripsCount: '1',
+      accountStatus: 'Active',
+    ),
+    tripDetails: const BookingTripDetailsModel(
+      route: 'Route 1',
+      date: 'Today',
+      time: '10:00',
+      vehicle: 'Car 1',
+      driver: 'Driver 1',
+    ),
+    paymentDetails: const BookingPaymentDetailsModel(
+      amount: '100',
+      method: BookingPaymentMethod.cash,
+      status: 'Paid',
+      reference: 'REF-1',
+    ),
+    attachments: const ['receipt.jpg'],
+    notes: const [],
+    timeline: [
+      BookingTimelineEventModel(
+        timestamp: DateTime.now(),
+        action: 'Created',
+        actor: 'System',
+      )
+    ],
+  );
+
+  @override
+  Future<List<OperationBookingModel>> assignToTrip(
+    List<String> bookingIds,
+    String tripId,
+  ) async {
+    return bookingIds.map((id) => OperationBookingModel.fromEntity(_dummyBooking.copyWith(
+      id: id,
+      assignedTrip: tripId,
+    ))).toList();
+  }
+
+  @override
+  Future<List<OperationBookingModel>> bulkUpdateStatus(
+    List<String> bookingIds,
+    BookingStatus status,
+  ) async {
+    return bookingIds.map((id) => OperationBookingModel.fromEntity(_dummyBooking.copyWith(
+      id: id,
+      status: status,
+    ))).toList();
+  }
+
+  @override
+  Future<List<OperationBookingModel>> fetchBookings() async {
+    return [
+      _dummyBooking,
+      OperationBookingModel.fromEntity(_dummyBooking.copyWith(id: 'B-1002')),
+    ];
+  }
+
+  @override
+  Future<OperationBookingModel> updateBookingStatus(
+    String bookingId,
+    BookingStatus status,
+  ) async {
+    return OperationBookingModel.fromEntity(_dummyBooking.copyWith(
+      id: bookingId,
+      status: status,
+      timeline: [
+        BookingTimelineEventModel(
+          timestamp: DateTime.now(),
+          action: 'مؤكد المقعد',
+          actor: 'النظام',
+        )
+      ],
+    ));
+  }
+
+  @override
+  Future<OperationBookingModel> approveBooking(
+    String bookingId,
+    String reviewer,
+    String? note,
+  ) async {
+    return _dummyBooking;
+  }
+
+  @override
+  Future<OperationBookingModel> rejectBooking(
+    String bookingId,
+    String reviewer,
+    String reason,
+    String? note,
+  ) async {
+    return _dummyBooking;
+  }
+
+  @override
+  Future<OperationBookingModel> requestReupload(
+    String bookingId,
+    String reviewer,
+    String reason,
+  ) async {
+    return _dummyBooking;
+  }
 }
 
 class _FailingBookingsDatasource implements BookingsDatasource {

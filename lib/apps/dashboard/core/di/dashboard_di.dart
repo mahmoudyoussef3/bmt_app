@@ -1,9 +1,10 @@
 
+import 'package:bmt_app/apps/dashboard/features/bookings/data/datasources/bookings_datasource.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 
-import '../../features/bookings/data/datasources/mock_bookings_datasource.dart';
+import '../../features/bookings/data/datasources/supabase_bookings_datasource.dart';
 import '../../features/bookings/data/repositories/bookings_repository_impl.dart';
 import '../../features/bookings/domain/repositories/bookings_repository.dart';
 import '../../features/bookings/domain/usecases/approve_booking_usecase.dart';
@@ -444,7 +445,7 @@ if (!dashboardDi.isRegistered<SupabaseClient>()) {
 
   if (!dashboardDi.isRegistered<BookingsDatasource>()) {
     dashboardDi.registerLazySingleton<BookingsDatasource>(
-      MockBookingsDatasource.new,
+      () => SupabaseBookingsDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
