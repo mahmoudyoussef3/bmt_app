@@ -18,7 +18,18 @@ class TripCreationWizardDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TripCreationCubit, TripCreationState>(
+    return BlocConsumer<TripCreationCubit, TripCreationState>(
+      listener: (context, state) {
+        if (state is TripCreationError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(state.message),
+              backgroundColor: Theme.of(context).colorScheme.error,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+      },
       builder: (context, state) {
         if (state is TripCreationLoading) {
           return const Dialog(
@@ -170,8 +181,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   FleetDriver? _selectedDriver;
 
   // Schedule values
-  final _dateController = TextEditingController(text: '٨ يونيو ٢٠٢٦');
-  final _timeController = TextEditingController(text: '٠٧:٠٠');
+  final _dateController = TextEditingController();
+  final _timeController = TextEditingController();
   Map<String, int> _stopWaits = {}; // stationId -> wait minutes
 
   // Pricing values
@@ -658,9 +669,23 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             Expanded(
               child: TextField(
                 controller: _dateController,
+                readOnly: true,
+                onTap: () async {
+                  final date = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime.now(),
+                    lastDate: DateTime.now().add(const Duration(days: 365)),
+                  );
+                  if (date != null) {
+                    _dateController.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                    setState(() {});
+                  }
+                },
                 decoration: const InputDecoration(
                   labelText: 'تاريخ الرحلة',
-                  prefixIcon: Icon(Icons.date_range_outlined),
+                  hintText: 'YYYY-MM-DD',
+                  prefixIcon: Icon(Icons.calendar_today_rounded),
                 ),
               ),
             ),
@@ -668,11 +693,22 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             Expanded(
               child: TextField(
                 controller: _timeController,
+                readOnly: true,
+                onTap: () async {
+                  final time = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                  );
+                  if (time != null) {
+                    _timeController.text = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
+                    setState(() {});
+                  }
+                },
                 decoration: const InputDecoration(
-                  labelText: 'وقت الانطلاق الأساسي',
+                  labelText: 'وقت الانطلاق',
+                  hintText: 'HH:MM:SS',
                   prefixIcon: Icon(Icons.access_time_rounded),
                 ),
-                onChanged: (val) => setState(() {}),
               ),
             ),
           ],

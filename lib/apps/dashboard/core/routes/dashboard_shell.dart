@@ -491,7 +491,11 @@ class _RoleSelector extends StatelessWidget {
           .map(
             (role) => ButtonSegment<DashboardRole>(
               value: role,
-              label: Text(role.label),
+              label: Text(
+                role.label,
+                softWrap: false,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
           )
           .toList(),
