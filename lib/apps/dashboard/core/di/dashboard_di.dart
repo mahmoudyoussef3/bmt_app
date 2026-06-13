@@ -1,4 +1,4 @@
-
+import '../../../../core/network/network_di.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/data/datasources/bookings_datasource.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -157,6 +157,8 @@ if (!dashboardDi.isRegistered<SupabaseClient>()) {
     () => Supabase.instance.client,
   );
 }
+
+registerNetworkDependencies(dashboardDi);
   if (!dashboardDi.isRegistered<DashboardThemeRepository>()) {
     dashboardDi.registerLazySingleton<DashboardThemeRepository>(
       DashboardThemeRepository.new,

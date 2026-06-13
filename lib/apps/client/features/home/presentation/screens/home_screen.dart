@@ -12,6 +12,7 @@ import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/spinner.dart';
+import 'package:bmt_app/core/widgets/app_dialogs.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -41,7 +42,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<HomeCubit, HomeState>(
+    return BlocConsumer<HomeCubit, HomeState>(
+      listener: (context, state) {
+        if (state is HomeError) {
+          AppDialogs.showErrorDialog(
+            context,
+            title: 'Unable to Load Data',
+            message: state.message,
+            onRetry: () => context.read<HomeCubit>().load(),
+          );
+        }
+      },
       builder: (context, state) {
         return switch (state) {
           HomeLoaded(:final data) => _HomeContent(

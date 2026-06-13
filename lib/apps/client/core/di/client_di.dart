@@ -120,11 +120,16 @@ import '../../features/tracking/domain/repositories/tracking_repository.dart';
 import '../../features/tracking/domain/usecases/get_tracking_title_usecase.dart';
 import '../../features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
 import '../../features/tracking/presentation/cubit/tracking_cubit.dart';
+import '../../../../core/network/network_di.dart';
 
 final GetIt clientGetIt = GetIt.instance;
 
 void registerClientDependencies() {
   _registerAuthDependencies();
+  // Register Core Networking (Dio, Retrofit ApiService)
+  registerNetworkDependencies(clientGetIt);
+
+  // Register Core dependencies();
   _registerHomeDependencies();
   _registerTripsDependencies();
   _registerBookingDependencies();

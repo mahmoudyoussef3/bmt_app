@@ -1,448 +1,352 @@
-# Codex Instructions — Flutter Clean Architecture & Operations Dashboard
+# AGENTS.md — Flutter Clean Architecture & Production Transportation Platform
 
 ## Read First
 
 Before making any change:
 
 1. Read AGENTS.md completely.
-2. Read related files before editing.
-3. Understand existing architecture.
+2. Read all related files before editing.
+3. Understand the current architecture and business flow.
 4. Reuse existing implementations whenever possible.
-5. Make the smallest correct change.
+5. Fix root causes instead of symptoms.
+6. Preserve existing functionality unless explicitly requested.
+7. Prefer production-ready implementations over temporary solutions.
 
 ---
 
-# IMPORTANT IMPLEMENTATION RULES
+# PROJECT GOAL
 
-This is NOT a UI prototype.
+This project is a real transportation platform.
 
-This is NOT a wireframe.
+It contains:
 
-This is NOT a demo.
+* Client Application
+* Operations Dashboard
+* Customer Service Dashboard
+* Fleet Management
+* Routes Management
+* Trips Management
+* Bookings Management
+* Payments
+* Complaints
+* Packages & Subscriptions
+* Notifications
+* Authentication
+* Reporting
 
-Build features as if they are already being used by a real transportation operations team.
+Build everything as production software.
 
-Every screen should feel production-ready even when powered by mock data.
+Never build demo software.
+
+Never build prototype software.
 
 ---
 
-## NO PLACEHOLDERS
+# DATA SOURCE POLICY
+
+Production data is preferred.
+
+Priority order:
+
+1. Supabase
+2. Existing backend APIs
+3. Local persistence
+4. Mock data (only when explicitly requested)
+
+Mock data is NOT the default.
+
+When implementing new features:
+
+* Prefer real Supabase integration.
+* Prefer real CRUD operations.
+* Prefer real persistence.
+* Avoid temporary mock implementations.
+
+---
+
+# PRODUCTION-FIRST IMPLEMENTATION
+
+Every feature should support:
+
+* Create
+* Read
+* Update
+* Delete
+
+When applicable.
+
+All operations must persist data.
+
+Changes must survive refreshes.
+
+Do not implement temporary memory-only storage unless explicitly requested.
+
+---
+
+# NO PLACEHOLDERS
 
 Do NOT leave:
 
 * TODO
 * Coming Soon
-* Placeholder widgets
-* Empty screens
-* Future implementation notes
-* Temporary buttons
-* Fake actions
+* Placeholder Widgets
+* Empty Screens
+* Temporary Buttons
+* Stub Services
+* Fake APIs
 
-Everything must be fully implemented.
-
----
-
-## NO SNACKBAR IMPLEMENTATIONS
-
-The following pattern is forbidden:
-
-Button
-→ Snackbar
-→ Finished
-
-Examples:
-
-❌ Add Driver → Snackbar
-
-❌ Create Trip → Snackbar
-
-❌ Assign Vehicle → Snackbar
-
-❌ Approve Payment → Snackbar
-
-❌ Create Package → Snackbar
-
-Instead:
-
-✅ Open Create Screen
-
-✅ Open Edit Screen
-
-✅ Open Details Screen
-
-✅ Open Confirmation Dialog
-
-✅ Update Mock Repository
-
-✅ Refresh State
-
-✅ Reflect Changes In UI
+Every feature should be fully functional.
 
 ---
 
-## EVERY BUTTON MUST WORK
+# UX REQUIREMENTS
 
-Every clickable element must perform a complete workflow.
+This is operations software.
 
-Examples:
+Optimize for:
 
-* Create
-* Edit
-* Delete
-* Archive
-* Activate
-* Deactivate
-* Assign
-* Reassign
-* Approve
-* Reject
-* Renew
-* Suspend
-* Publish
-* Review
+* Fast workflows
+* Minimal clicks
+* Clear information hierarchy
+* Real-world transportation operations
 
-All actions must execute a complete flow.
+Users should always know:
 
-No dead buttons.
-
-No fake interactions.
-
----
-
-## REAL CRUD
-
-Use mock repositories only.
-
-When user creates data:
-
-* Persist inside mock datasource
-* Update repository
-* Refresh Cubit state
-* Reflect in UI
-
-When user edits data:
-
-* Update details page
-* Update lists
-* Update related entities
-
-When user deletes data:
-
-* Remove it everywhere
-
-When user assigns relationships:
-
-* Update all related records
-
-Mock data must behave like a real backend.
-
----
-
-## DETAILS PAGES REQUIRED
-
-Every major entity must have:
-
-List Screen
-↓
-Details Screen
-
-Examples:
-
-* Driver
-* Vehicle
-* Route
-* Trip
-* Booking
-* Package
-* Payment
-* Complaint
-* User
-
-Do NOT replace large workflows with dialogs.
-
-Complex workflows require dedicated screens.
-
----
-
-## NO DEAD ENDS
-
-User should never reach a screen where they cannot continue working.
-
-Every workflow should naturally continue.
-
-Correct Example:
-
-Create Trip
-↓
-Trip Created
-↓
-Open Trip Details
-
-Wrong Example:
-
-Create Trip
-↓
-Snackbar
-↓
-Stay On Same Page
-
----
-
-## OPERATIONS-FIRST UX
-
-Do NOT build database-management screens.
-
-Do NOT build generic admin CRUD screens.
-
-Build transportation operations software.
-
-The system should optimize:
-
-* Daily customer service work
-* Trip planning
-* Fleet management
-* Payment review
-* Passenger operations
-
-The user should always know:
-
-* What needs attention
-* What action comes next
-* What information matters
-
----
-
-## RESPONSIVE LAYOUT
-
-Verify:
-
-* Desktop layouts
-* Large screens
-* Small screens
-* Responsive tables
-* Long Arabic text
-* RTL support
-* Scroll behavior
-* Dialog sizing
+* Current status
+* Required actions
+* Next steps
 
 Avoid:
 
-* Overflow errors
-* Clipped widgets
-* Broken RTL layouts
-* Misaligned cards
-* Excessive whitespace
-* Crowded screens
+* Dead ends
+* Empty flows
+* Unclear actions
 
 ---
 
-## SPACING & VISUAL QUALITY
+# RESPONSIVE DESIGN
 
-UI quality is mandatory.
+Must support:
+
+* Mobile
+* Tablet
+* Desktop
+* Web
 
 Verify:
 
+* RTL
+* Arabic text
+* Large tables
+* Dialog sizing
+* Scroll behavior
+* Adaptive layouts
+
+No overflow errors.
+
+No clipping.
+
+No broken layouts.
+
+---
+
+# UI QUALITY
+
+UI must feel production-ready.
+
+Requirements:
+
 * Consistent spacing
-* Consistent padding
-* Consistent margins
-* Consistent section hierarchy
-* Proper visual grouping
-* Proper empty states
+* Consistent typography
+* Consistent color usage
+* Consistent card hierarchy
+* Consistent table layouts
+* Professional forms
+* Professional dialogs
 
 Avoid:
 
 * Crowded layouts
-* Dense tables
+* Excessive nesting
+* Dense screens
 * Tiny click targets
-* Excessive scrolling
-* Unnecessary cards
-
-The dashboard should feel calm, readable, and operational.
 
 ---
 
-## BUG PREVENTION
-
-Verify:
-
-* No overflow
-* No render exceptions
-* No duplicate keys
-* No broken navigation
-* No invalid state transitions
-* No missing loading states
-* No missing error states
-* No inaccessible actions
-
-Every workflow must be testable from start to finish.
-
----
-
-## MOCK DATA QUALITY
-
-Do NOT generate generic fake data.
-
-Use realistic Egyptian transportation company data.
-
-Examples:
-
-Drivers
-
-Vehicles
-
-Routes
-
-Trips
-
-Bookings
-
-Packages
-
-Payments
-
-Complaints
-
-Users
-
-Subscriptions
-
-All data should appear believable and internally consistent.
-
-Relationships between entities must make sense.
-
----
-
-## ARCHITECTURE (STRICT)
+# CLEAN ARCHITECTURE (STRICT)
 
 Follow:
 
-Presentation → Domain → Data
+Presentation
+↓
+Domain
+↓
+Data
 
 Rules:
 
-* Presentation = UI, Cubit/Bloc, state observation only
-* Domain = pure business logic and use cases
-* Data = APIs, local storage, external sources
-* Never bypass layers
-* Never mix responsibilities
+Presentation:
+
+* Screens
+* Widgets
+* Cubits
+* State classes
+
+Domain:
+
+* Entities
+* Repository contracts
+* Use cases
+* Failures
+
+Data:
+
+* Models
+* Datasources
+* Repositories
+* APIs
+* Supabase
+* Local Storage
+
+Never bypass layers.
 
 ---
 
-## FEATURE STRUCTURE
+# FEATURE STRUCTURE
 
 features/
 feature_name/
 data/
+datasources/
+models/
+repositories/
+
+```
 domain/
+  entities/
+  repositories/
+  usecases/
+
 presentation/
+  cubit/
+  screens/
+  widgets/
+```
 
-Shared reusable code belongs in:
+Large features must be divided into modules.
 
-core/
+Example:
 
-Before creating:
+trips/
+trip_management/
+trip_creation/
+trip_pricing/
+trip_passengers/
+trip_seats/
+shared/
 
-* utilities
-* extensions
-* helpers
-* widgets
-* services
+fleet/
+drivers/
+vehicles/
+assignments/
+documents/
+shared/
 
-Check existing implementations first.
+routes/
+route_management/
+stations/
+route_templates/
+shared/
 
 ---
 
-## STATE MANAGEMENT
+# STATE MANAGEMENT
 
-Use Bloc/Cubit only.
+Use Cubit/Bloc.
 
 Rules:
-
-* Cubits depend only on UseCases
-* Cubits never access repositories directly
-* setState allowed only for local UI state
-
-Flow:
 
 Cubit
 → UseCase
 → Repository
 → DataSource
 
-No shortcuts.
+Never:
 
-No direct UI mutations.
+Cubit
+→ Repository
 
----
+Never:
 
-## DOMAIN RULES
+Cubit
+→ Supabase
 
-Domain must remain pure Dart.
+Never:
 
-Never import:
-
-* flutter/*
-* material.dart
-* cupertino.dart
-
-Allowed:
-
-* entities
-* repository contracts
-* use cases
-* failures
-* ApiResult
+Widget
+→ Repository
 
 ---
 
-## ERROR HANDLING
+# DEPENDENCY INJECTION
 
-Catch exceptions only in Data layer.
+Use GetIt.
 
-Flow:
+All registrations must live in:
+
+core/di
+
+No manual dependency creation inside UI.
+
+---
+
+# NETWORKING
+
+Preferred stack:
+
+* Dio
+* Interceptors
+* Pretty Logger
+* Centralized API Service
+
+If project already uses another solution:
+
+* Improve existing implementation first.
+* Do not replace working architecture unnecessarily.
+
+Requirements:
+
+* Request logging
+* Response logging
+* Error logging
+* Timeout handling
+* Failure mapping
+
+No sensitive logging.
+
+Mask tokens.
+
+---
+
+# ERROR HANDLING
 
 Exception
-→ Failure
-→ ApiResult<T>
-→ Cubit State
+↓
+Failure
+↓
+Result
+↓
+Cubit State
 
-Handle:
+Never expose raw exceptions to UI.
 
-* loading
-* success
-* error
-* null
-* empty
-
-Never swallow exceptions.
+Always return user-friendly messages.
 
 ---
 
-## DEPENDENCY INJECTION
+# SHARED CODE
 
-Use get_it.
-
-Rules:
-
-* Registrations live in core/di
-* No repository creation inside UI
-* No use case creation inside UI
-
----
-
-## BUILD METHOD RULES
-
-* Use const whenever possible
-* Keep build lightweight
-* Dispose controllers properly
-* Do not create controllers inside build()
-* Minimize BlocBuilder rebuild scope
-
----
-
-## SHARED CODE
-
-If logic is reused in two or more places:
+If code is reused twice or more:
 
 Move it to:
 
@@ -452,102 +356,61 @@ Avoid duplication.
 
 ---
 
-## DEPENDENCIES
+# SECURITY
 
-Do not add packages unless necessary.
+Never commit:
 
-New packages must be:
+* Secrets
+* API Keys
+* Tokens
+* Passwords
 
-* maintained
-* stable
-* production-ready
+Use environment configuration.
 
-Explain why a dependency is required before adding it.
-
----
-
-## SECURITY
-
-* No hardcoded secrets
-* No hardcoded tokens
-* No sensitive logging
-* Validate external input
-* Flag security risks immediately
+Validate all external input.
 
 ---
 
-## CHANGE DISCIPLINE
+# TESTING
 
-When modifying code:
+Required:
 
-* Read related files first
-* Fix root cause
-* Avoid unrelated refactors
-* Preserve existing behavior unless instructed
+* Domain tests
+* Data layer tests
 
----
+Bug fixes should include:
 
-## TESTING
-
-Write tests for:
-
-* Domain layer
-* Data layer
-
-Bug fixes must include:
-
-* Reproduction test
-* Verification test
-
-Rules:
-
-* Deterministic tests
-* One behavior per test
+* Reproduction
+* Verification
 
 ---
 
-## CODE GENERATION
+# CHANGE DISCIPLINE
 
-Do NOT introduce:
+Before modifying code:
 
-* Freezed
-* build_runner
-
-Prefer:
-
-* Dart 3 sealed classes
-* Pattern matching
-* Switch expressions
+1. Read related files.
+2. Understand business flow.
+3. Check existing implementation.
+4. Fix root cause.
+5. Minimize unrelated changes.
 
 ---
 
-## FINAL VALIDATION CHECKLIST
+# FINAL VALIDATION
 
 Before finishing:
 
-1. Verify clean architecture boundaries.
-2. Verify Cubits depend only on UseCases.
-3. Verify no duplicated logic exists.
-4. Verify Failures are mapped correctly.
-5. Verify DI registrations.
-6. Verify tests are updated.
-7. Verify no unnecessary dependencies.
-8. Verify every button works.
-9. Verify every workflow is complete.
-10. Verify every navigation path works.
-11. Verify responsive layout.
-12. Verify Arabic RTL layouts.
-13. Verify no snackbar-only implementations.
-14. Verify no placeholders remain.
-15. Verify the feature feels production-ready.
+* Architecture respected.
+* No layer violations.
+* No duplicated logic.
+* No dead buttons.
+* No placeholder content.
+* Responsive layout verified.
+* RTL verified.
+* CRUD verified.
+* DI verified.
+* Error handling verified.
+* Production-ready UX verified.
 
----
-
-## Agent Recommendations
-
-When applicable:
-
-* @debugger → runtime issues
-* @test-writer → missing tests
-* @code-reviewer → final review
-* @git-expert → commits, branches, PR workflow
+The final result should feel like software already used daily by a transportation company.

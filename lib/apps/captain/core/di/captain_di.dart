@@ -1,3 +1,4 @@
+import '../../../../core/network/network_di.dart';
 import 'package:get_it/get_it.dart';
 
 import '../../features/assigned_trips/data/datasources/captain_trip_remote_datasource.dart';
@@ -48,6 +49,9 @@ import '../../features/trip_status_updates/presentation/cubit/trip_status_update
 final GetIt captainGetIt = GetIt.instance;
 
 void registerCaptainDependencies() {
+  // Register Core Networking (Dio, Retrofit ApiService)
+  registerNetworkDependencies(captainGetIt);
+
   _registerAssignedTripsDependencies();
   _registerPassengerManifestDependencies();
   _registerTripExecutionDependencies();

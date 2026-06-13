@@ -1,5 +1,9 @@
+import 'package:json_annotation/json_annotation.dart';
 import '../../domain/entities/home_data.dart';
 
+part 'home_data_model.g.dart';
+
+@JsonSerializable()
 class HomeDataModel {
   const HomeDataModel({
     required this.popularRoutes,
@@ -11,12 +15,28 @@ class HomeDataModel {
     this.currentTrip,
   });
 
+  factory HomeDataModel.fromJson(Map<String, dynamic> json) => _$HomeDataModelFromJson(json);
+  Map<String, dynamic> toJson() => _$HomeDataModelToJson(this);
+
+  @JsonKey(name: 'popular_routes')
   final List<PopularRouteModel> popularRoutes;
+  
+  @JsonKey(name: 'nearby_trips')
   final List<NearbyTripModel> nearbyTrips;
+  
+  @JsonKey(name: 'package_plans')
   final List<PackagePlanModel> packagePlans;
+  
+  @JsonKey(name: 'pickup_suggestions')
   final List<String> pickupSuggestions;
+  
+  @JsonKey(name: 'destination_suggestions')
   final List<String> destinationSuggestions;
+  
+  @JsonKey(name: 'time_suggestions')
   final List<String> timeSuggestions;
+  
+  @JsonKey(name: 'current_trip')
   final HomeCurrentTripModel? currentTrip;
 
   HomeData toEntity() {
@@ -32,6 +52,7 @@ class HomeDataModel {
   }
 }
 
+@JsonSerializable()
 class PopularRouteModel {
   const PopularRouteModel({
     required this.pickup,
@@ -40,9 +61,13 @@ class PopularRouteModel {
     required this.startingPrice,
   });
 
+  factory PopularRouteModel.fromJson(Map<String, dynamic> json) => _$PopularRouteModelFromJson(json);
+  Map<String, dynamic> toJson() => _$PopularRouteModelToJson(this);
+
   final String pickup;
   final String destination;
   final String duration;
+  @JsonKey(name: 'starting_price')
   final String startingPrice;
 
   PopularRouteData toEntity() {
@@ -55,6 +80,7 @@ class PopularRouteModel {
   }
 }
 
+@JsonSerializable()
 class NearbyTripModel {
   const NearbyTripModel({
     required this.pickup,
@@ -64,10 +90,16 @@ class NearbyTripModel {
     required this.isLive,
   });
 
+  factory NearbyTripModel.fromJson(Map<String, dynamic> json) => _$NearbyTripModelFromJson(json);
+  Map<String, dynamic> toJson() => _$NearbyTripModelToJson(this);
+
   final String pickup;
   final String destination;
+  @JsonKey(name: 'departure_time')
   final String departureTime;
+  @JsonKey(name: 'seats_left')
   final int seatsLeft;
+  @JsonKey(name: 'is_live')
   final bool isLive;
 
   NearbyTripData toEntity() {
@@ -81,6 +113,7 @@ class NearbyTripModel {
   }
 }
 
+@JsonSerializable()
 class PackagePlanModel {
   const PackagePlanModel({
     required this.title,
@@ -90,10 +123,14 @@ class PackagePlanModel {
     required this.iconKey,
   });
 
+  factory PackagePlanModel.fromJson(Map<String, dynamic> json) => _$PackagePlanModelFromJson(json);
+  Map<String, dynamic> toJson() => _$PackagePlanModelToJson(this);
+
   final String title;
   final String subtitle;
   final String price;
   final String badge;
+  @JsonKey(name: 'icon_key')
   final String iconKey;
 
   PackagePlanData toEntity() {
@@ -107,6 +144,7 @@ class PackagePlanModel {
   }
 }
 
+@JsonSerializable()
 class HomeCurrentTripModel {
   const HomeCurrentTripModel({
     required this.pickup,
@@ -116,10 +154,15 @@ class HomeCurrentTripModel {
     this.driverLine,
   });
 
+  factory HomeCurrentTripModel.fromJson(Map<String, dynamic> json) => _$HomeCurrentTripModelFromJson(json);
+  Map<String, dynamic> toJson() => _$HomeCurrentTripModelToJson(this);
+
   final String pickup;
   final String destination;
   final String schedule;
+  @JsonKey(name: 'status_label')
   final String statusLabel;
+  @JsonKey(name: 'driver_line')
   final String? driverLine;
 
   HomeCurrentTripData toEntity() {

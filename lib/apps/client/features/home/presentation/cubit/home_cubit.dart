@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/usecases/get_home_data_usecase.dart';
 import 'home_state.dart';
 
+import 'package:bmt_app/core/network/api_error_handler.dart';
+
 class HomeCubit extends Cubit<HomeState> {
   HomeCubit(this._getHomeData) : super(const HomeLoading());
 
@@ -14,7 +16,8 @@ class HomeCubit extends Cubit<HomeState> {
       final data = await _getHomeData();
       emit(HomeLoaded(data));
     } catch (error) {
-      emit(HomeError(error.toString()));
+      final failure = ApiErrorHandler.handle(error);
+      emit(HomeError(failure.message));
     }
   }
 }
