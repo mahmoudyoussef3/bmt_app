@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_image_strip.dart';
 import 'package:bmt_app/core/theme/text_themes.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Full vehicle profile for informed booking decisions.
 class VehicleDetailsScreen extends StatefulWidget {
@@ -96,22 +97,22 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                         const SizedBox(height: 20),
                     
                         _DetailSection(
-                          title: 'الراحة والتجهيزات',
-                          subtitle: 'راجع مستوى الراحة قبل اختيار المقعد',
+                          title: AppLocalizations.of(context)!.booking_comfortAndAmenities,
+                          subtitle: AppLocalizations.of(context)!.booking_comfortDesc,
                           icon: Icons.airline_seat_recline_extra_rounded,
                           child: _ComfortCard(vehicle: vehicle),
                         ),
                         const SizedBox(height: 20),
                         _DetailSection(
-                          title: 'السائق',
-                          subtitle: 'بيانات الكابتن وتقييمه',
+                          title: AppLocalizations.of(context)!.booking_driver,
+                          subtitle: AppLocalizations.of(context)!.booking_driverDesc,
                           icon: Icons.person_pin_circle_rounded,
                           child: _DriverCard(vehicle: vehicle),
                         ),
                         const SizedBox(height: 20),
                         _DetailSection(
-                          title: 'السعر والتوافر',
-                          subtitle: 'التكلفة وعدد المقاعد المتاحة',
+                          title: AppLocalizations.of(context)!.booking_priceAndAvailability,
+                          subtitle: AppLocalizations.of(context)!.booking_priceDesc,
                           icon: Icons.payments_rounded,
                           child: _PricingAvailabilityCard(vehicle: vehicle),
                         ),
@@ -152,7 +153,7 @@ class _VehicleGalleryAppBar extends StatelessWidget {
       expandedHeight: 310,
       pinned: true,
       stretch: true,
-      title: const Text('تفاصيل العربية'),
+      title: Text(AppLocalizations.of(context)!.booking_vehicleDetails),
       flexibleSpace: FlexibleSpaceBar(
         stretchModes: const [StretchMode.zoomBackground],
         background: Stack(
@@ -185,9 +186,9 @@ class _VehicleGalleryAppBar extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (vehicle.isRecommended) ...[
-                    const _WhitePill(
+                    _WhitePill(
                       icon: Icons.auto_awesome_rounded,
-                      label: 'موصى بها لك',
+                      label: AppLocalizations.of(context)!.booking_recommendedForYou,
                     ),
                     const SizedBox(height: 10),
                   ],
@@ -333,7 +334,7 @@ class _QuickStatsCard extends StatelessWidget {
           Expanded(
             child: _QuickStat(
               icon: Icons.payments_rounded,
-              label: 'السعر',
+              label: AppLocalizations.of(context)!.booking_tripPrice,
               value: vehicle.price,
             ),
           ),
@@ -341,7 +342,7 @@ class _QuickStatsCard extends StatelessWidget {
           Expanded(
             child: _QuickStat(
               icon: Icons.event_seat_rounded,
-              label: 'المقاعد',
+              label: AppLocalizations.of(context)!.booking_availableSeats,
               value: '${vehicle.availableSeats}',
             ),
           ),
@@ -349,7 +350,7 @@ class _QuickStatsCard extends StatelessWidget {
           Expanded(
             child: _QuickStat(
               icon: Icons.star_rounded,
-              label: 'التقييم',
+              label: AppLocalizations.of(context)!.booking_sortRating,
               value: vehicle.driverRating.toStringAsFixed(1),
             ),
           ),
@@ -527,26 +528,26 @@ class _ComfortCard extends StatelessWidget {
         children: [
           _ComfortTile(
             icon: Icons.ac_unit_rounded,
-            label: 'تكييف',
-            value: vehicle.hasAirConditioning ? 'متاح' : 'غير متاح',
+            label: AppLocalizations.of(context)!.booking_ac,
+            value: vehicle.hasAirConditioning ? AppLocalizations.of(context)!.booking_available : AppLocalizations.of(context)!.booking_unavailable,
             positive: vehicle.hasAirConditioning,
           ),
           _ComfortTile(
             icon: Icons.chair_rounded,
-            label: 'نوع المقاعد',
+            label: AppLocalizations.of(context)!.booking_seatType,
             value: vehicle.seatType,
             positive: true,
           ),
           _ComfortTile(
             icon: Icons.airline_seat_recline_normal_rounded,
-            label: 'مقاعد قابلة للإمالة',
-            value: vehicle.hasRecliningSeats ? 'نعم' : 'لا',
+            label: AppLocalizations.of(context)!.booking_recliningSeats,
+            value: vehicle.hasRecliningSeats ? AppLocalizations.of(context)!.common_yes : AppLocalizations.of(context)!.common_no,
             positive: vehicle.hasRecliningSeats,
           ),
           _LegRoomTile(rating: vehicle.legRoomRating),
           _ComfortTile(
             icon: Icons.build_circle_outlined,
-            label: 'حالة العربية',
+            label: AppLocalizations.of(context)!.booking_vehicleCondition,
             value: _vehicleConditionLabel(vehicle.vehicleCondition),
             positive: vehicle.vehicleCondition == 'Excellent',
           ),
@@ -557,9 +558,9 @@ class _ComfortCard extends StatelessWidget {
 
   String _vehicleConditionLabel(String condition) {
     return switch (condition) {
-      'Excellent' => 'ممتازة',
-      'Very good' => 'جيدة جدًا',
-      'Good' => 'جيدة',
+      'Excellent' => AppLocalizations.of(context)!.booking_ratingExcellent,
+      'Very good' => AppLocalizations.of(context)!.booking_ratingVeryGood,
+      'Good' => AppLocalizations.of(context)!.booking_ratingGood,
       _ => condition,
     };
   }
@@ -630,12 +631,12 @@ class _LegRoomTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final label = rating >= 4.5
-        ? 'ممتازة'
+        ? AppLocalizations.of(context)!.booking_ratingExcellent
         : rating >= 3.5
-            ? 'جيدة جدًا'
+            ? AppLocalizations.of(context)!.booking_ratingVeryGood
             : rating >= 2.5
-                ? 'جيدة'
-                : 'عادية';
+                ? AppLocalizations.of(context)!.booking_ratingGood
+                : AppLocalizations.of(context)!.booking_ratingNormal;
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -652,7 +653,7 @@ class _LegRoomTile extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'مساحة القدم',
+                  AppLocalizations.of(context)!.booking_legRoom,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -732,7 +733,7 @@ class _DriverCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${vehicle.completedTrips} رحلة مكتملة · ${vehicle.yearsExperience} سنوات خبرة',
+                      '${vehicle.completedTrips} ${AppLocalizations.of(context)!.booking_completedTrips} · ${vehicle.yearsExperience} ${AppLocalizations.of(context)!.booking_yearsExperience}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: scheme.onSurface.withAlpha(170),
                             fontWeight: FontWeight.w600,
@@ -741,7 +742,7 @@ class _DriverCard extends StatelessWidget {
                   ],
                 ),
               ),
-              StatusChip(label: 'معتمد'),
+              StatusChip(label: AppLocalizations.of(context)!.booking_certified),
             ],
           ),
         ],
@@ -765,7 +766,7 @@ class _PricingAvailabilityCard extends StatelessWidget {
         children: [
           Expanded(
             child: _PriceSeatColumn(
-              label: 'سعر الرحلة',
+              label: AppLocalizations.of(context)!.booking_tripPrice,
               value: vehicle.price,
               icon: Icons.payments_rounded,
               color: scheme.primary,
@@ -774,8 +775,8 @@ class _PricingAvailabilityCard extends StatelessWidget {
           const _VerticalDivider(),
           Expanded(
             child: _PriceSeatColumn(
-              label: 'المقاعد المتاحة',
-              value: '${vehicle.availableSeats} متبقي',
+              label: AppLocalizations.of(context)!.booking_availableSeats,
+              value: '${vehicle.availableSeats} ${AppLocalizations.of(context)!.booking_remaining}',
               icon: Icons.event_seat_rounded,
               color: scheme.secondary,
             ),

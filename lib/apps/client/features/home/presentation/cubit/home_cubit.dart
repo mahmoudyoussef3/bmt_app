@@ -17,7 +17,7 @@ class HomeCubit extends Cubit<HomeState> {
       emit(HomeLoaded(data));
     } catch (error) {
       final failure = ApiErrorHandler.handle(error);
-      emit(HomeError(failure.message));
+      emit(HomeError(failure));
     }
   }
 }

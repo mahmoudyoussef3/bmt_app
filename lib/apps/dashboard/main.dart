@@ -7,6 +7,8 @@ import 'package:bmt_app/core/network/supabase_dio_adapter.dart';
 import 'core/di/dashboard_di.dart';
 import 'core/routes/dashboard_shell.dart';
 import 'core/theme/dashboard_theme_cubit.dart';
+import 'package:bmt_app/core/localization/locale_cubit.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,17 +29,31 @@ class DashboardWebApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<DashboardThemeCubit>(
-      create: (_) => dashboardDi<DashboardThemeCubit>()..load(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<DashboardThemeCubit>(
+          create: (_) => dashboardDi<DashboardThemeCubit>()..load(),
+        ),
+        BlocProvider<LocaleCubit>(
+          create: (_) => LocaleCubit()..load(),
+        ),
+      ],
       child: BlocBuilder<DashboardThemeCubit, DashboardThemeState>(
         builder: (context, state) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'لوحة خدمة العملاء',
-            theme: AppTheme.lightTheme(),
-            darkTheme: AppTheme.darkTheme(),
-            themeMode: state.themeMode,
-            home: const DashboardShell(),
+          return BlocBuilder<LocaleCubit, Locale>(
+            builder: (context, locale) {
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                title: 'لوحة خدمة العملاء',
+                localizationsDelegates: AppLocalizations.localizationsDelegates,
+                supportedLocales: AppLocalizations.supportedLocales,
+                locale: locale,
+                theme: AppTheme.lightTheme(),
+                darkTheme: AppTheme.darkTheme(),
+                themeMode: state.themeMode,
+                home: const DashboardShell(),
+              );
+            },
           );
         },
       ),

@@ -13,6 +13,8 @@ import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_rou
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/trip_details_screen.dart';
 import 'package:bmt_app/core/theme/app_theme.dart';
+import 'package:bmt_app/core/localization/locale_cubit.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_cubit.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_checkout_screen.dart';
@@ -82,9 +84,14 @@ class _ClientAppState extends State<ClientApp> {
     return ClientAppTheme(
       themeMode: _themeMode,
       setThemeMode: _setThemeMode,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        title: 'Mega Transportation',
+      child: BlocBuilder<LocaleCubit, Locale>(
+        builder: (context, locale) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: 'Mega Transportation',
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: locale,
 
         theme: AppTheme.lightTheme(),
         darkTheme: AppTheme.darkTheme(),
@@ -238,6 +245,8 @@ class _ClientAppState extends State<ClientApp> {
           // Other Versions
           '/driver': (_) => const CaptainAppShell(),
           '/admin': (_) => const DashboardWebApp(),
+        },
+      );
         },
       ),
     );

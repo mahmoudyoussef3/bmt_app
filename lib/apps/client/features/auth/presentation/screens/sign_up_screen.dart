@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../routes/auth_routes.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -52,7 +53,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         } else if (state.signUpStatus == AuthSubmissionStatus.failure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.signUpError ?? 'Registration failed.'),
+              content: Text(state.signUpError ?? AppLocalizations.of(context)!.auth_registrationFailed),
               backgroundColor: Colors.red,
             ),
           );
@@ -77,7 +78,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Create Account',
+                    AppLocalizations.of(context)!.auth_createAccountTitle,
                     style: theme.textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
@@ -85,7 +86,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Join BMT to book and track your trips',
+                    AppLocalizations.of(context)!.auth_signUpSubtitle,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: isDark ? Colors.white54 : Colors.black54,
                     ),
@@ -97,7 +98,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     controller: _nameController,
                     keyboardType: TextInputType.name,
                     decoration: InputDecoration(
-                      labelText: 'Full Name',
+                      labelText: AppLocalizations.of(context)!.auth_fullName,
                       prefixIcon: const Icon(Icons.person_outline),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -106,7 +107,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
                     ),
                     validator: (value) {
-                      if (value == null || value.trim().length < 2) return 'Enter your full name';
+                      if (value == null || value.trim().length < 2) return AppLocalizations.of(context)!.auth_invalidFullName;
                       return null;
                     },
                   ),
@@ -117,7 +118,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     controller: _phoneController,
                     keyboardType: TextInputType.phone,
                     decoration: InputDecoration(
-                      labelText: 'Phone Number',
+                      labelText: AppLocalizations.of(context)!.auth_phoneNumber,
                       prefixIcon: const Icon(Icons.phone_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -126,7 +127,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
                     ),
                     validator: (value) {
-                      if (value == null || value.trim().length < 8) return 'Enter a valid phone number';
+                      if (value == null || value.trim().length < 8) return AppLocalizations.of(context)!.auth_invalidPhone;
                       return null;
                     },
                   ),
@@ -137,7 +138,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Email Address',
+                      labelText: AppLocalizations.of(context)!.auth_email,
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -146,8 +147,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      if (!value.contains('@')) return 'Enter a valid email';
+                      if (value == null || value.isEmpty) return AppLocalizations.of(context)!.auth_required;
+                      if (!value.contains('@')) return AppLocalizations.of(context)!.auth_invalidEmail;
                       return null;
                     },
                   ),
@@ -158,7 +159,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: AppLocalizations.of(context)!.auth_password,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -177,7 +178,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
                     ),
                     validator: (value) {
-                      if (value == null || value.length < 6) return 'Password must be at least 6 characters';
+                      if (value == null || value.length < 6) return AppLocalizations.of(context)!.auth_invalidPassword;
                       return null;
                     },
                   ),
@@ -204,8 +205,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Create Account',
+                            : Text(
+                                AppLocalizations.of(context)!.auth_createAccount,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -221,7 +222,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        AppLocalizations.of(context)!.auth_alreadyHaveAccount,
                         style: TextStyle(
                           color: isDark ? Colors.white54 : Colors.black54,
                         ),
@@ -231,7 +232,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           Navigator.of(context).pushReplacementNamed(AuthRoutes.signIn);
                         },
                         child: Text(
-                          'Sign In',
+                          AppLocalizations.of(context)!.auth_signIn,
                           style: TextStyle(
                             color: theme.primaryColor,
                             fontWeight: FontWeight.bold,

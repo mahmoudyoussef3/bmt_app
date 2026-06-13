@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/app_button.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class AppDialogs {
   const AppDialogs._();
@@ -9,10 +10,12 @@ class AppDialogs {
   static Future<void> showErrorDialog(
     BuildContext context, {
     required String message,
-    String title = 'Something went wrong',
+    String? title,
     VoidCallback? onRetry,
   }) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final displayTitle = title ?? l10n.common_error;
 
     return showDialog<void>(
       context: context,
@@ -65,7 +68,7 @@ class AppDialogs {
                   const SizedBox(height: AppLayout.spaceLg),
 
                   Text(
-                    title,
+                    displayTitle,
                     textAlign: TextAlign.center,
                     style: AppTypography.heading3(
                       scheme,
@@ -92,7 +95,7 @@ class AppDialogs {
                     children: [
                       Expanded(
                         child: AppButton.secondary(
-                          text: 'Dismiss',
+                          text: l10n.common_dismiss,
                           onPressed: () {
                             Navigator.of(dialogContext).pop();
                           },
@@ -106,7 +109,7 @@ class AppDialogs {
 
                         Expanded(
                           child: AppButton.primary(
-                            text: 'Retry',
+                            text: l10n.common_retry,
                             icon: const Icon(Icons.refresh_rounded),
                             onPressed: () {
                               Navigator.of(dialogContext).pop();
@@ -130,10 +133,11 @@ class AppDialogs {
     BuildContext context, {
     required String title,
     required String message,
-    String confirmText = 'Confirm',
-    String cancelText = 'Cancel',
+    String? confirmText,
+    String? cancelText,
   }) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return showDialog<bool>(
       context: context,
@@ -187,7 +191,7 @@ class AppDialogs {
                   children: [
                     Expanded(
                       child: AppButton.secondary(
-                        text: cancelText,
+                        text: cancelText ?? l10n.common_cancel,
                         onPressed: () {
                           Navigator.of(dialogContext).pop(false);
                         },
@@ -200,7 +204,7 @@ class AppDialogs {
 
                     Expanded(
                       child: AppButton.primary(
-                        text: confirmText,
+                        text: confirmText ?? l10n.common_confirm,
                         onPressed: () {
                           Navigator.of(dialogContext).pop(true);
                         },

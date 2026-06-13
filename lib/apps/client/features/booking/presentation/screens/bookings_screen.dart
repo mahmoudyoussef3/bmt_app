@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/booking_hub_data.dart';
 import '../cubit/booking_cubit.dart';
 import '../cubit/booking_state.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key, required this.onOpenRoute});
@@ -73,10 +74,10 @@ class _BookingHubContent extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Bookings', style: Theme.of(context).textTheme.displayLarge),
+              Text(AppLocalizations.of(context)!.booking_title, style: Theme.of(context).textTheme.displayLarge),
               const SizedBox(height: 6),
               Text(
-                'Choose how you want to book your commute',
+                AppLocalizations.of(context)!.booking_subtitle,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: scheme.onSurface.withAlpha(175),
                 ),
@@ -86,13 +87,13 @@ class _BookingHubContent extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _BookingChip(
-                      label: 'Today',
+                      label: AppLocalizations.of(context)!.booking_today,
                       value: data.todayRoutes,
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _BookingChip(label: 'Month', value: data.monthPlans),
+                    child: _BookingChip(label: AppLocalizations.of(context)!.booking_month, value: data.monthPlans),
                   ),
                 ],
               ),
@@ -122,12 +123,12 @@ class _BookingHubContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Daily Booking',
+                      AppLocalizations.of(context)!.booking_dailyBooking,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Book a trip step by step for today',
+                      AppLocalizations.of(context)!.booking_dailyBookingDesc,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: scheme.onSurface.withAlpha(165),
                       ),
@@ -162,12 +163,12 @@ class _BookingHubContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Monthly Subscription',
+                      AppLocalizations.of(context)!.booking_monthlySubscription,
                       style: Theme.of(context).textTheme.bodyMedium,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Reserve your permanent route and seat',
+                      AppLocalizations.of(context)!.booking_monthlySubscriptionDesc,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: scheme.onSurface.withAlpha(165),
                       ),
@@ -180,21 +181,21 @@ class _BookingHubContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 20),
-        Text('Summary', style: Theme.of(context).textTheme.displaySmall),
+        Text(AppLocalizations.of(context)!.booking_summary, style: Theme.of(context).textTheme.displaySmall),
         const SizedBox(height: 12),
         AppCard(
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _BookingMetric(label: 'Active trips', value: data.activeTrips),
+              _BookingMetric(label: AppLocalizations.of(context)!.booking_activeTrips, value: data.activeTrips),
               const SizedBox(height: 12),
               _BookingMetric(
-                label: 'Upcoming bookings',
+                label: AppLocalizations.of(context)!.booking_upcomingBookings,
                 value: data.upcomingBookings,
               ),
               const SizedBox(height: 12),
               _BookingMetric(
-                label: 'Reserved seats',
+                label: AppLocalizations.of(context)!.booking_reservedSeats,
                 value: data.reservedSeats,
               ),
             ],

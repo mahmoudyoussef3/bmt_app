@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/packages/domain/entities/package_pl
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_state.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({super.key});
@@ -81,7 +82,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           backgroundColor: scheme.surfaceContainerHighest,
           appBar: AppBar(
             title: Text(
-              isProcessing ? 'Processing' : _getStepTitle(),
+              isProcessing ? AppLocalizations.of(context)!.packages_processing : _getStepTitle(context),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             leading: IconButton(
@@ -139,20 +140,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           );
   }
 
-  String _getStepTitle() {
+  String _getStepTitle(BuildContext context) {
     switch (_currentStep) {
       case 1:
-        return 'Commute Packages';
+        return AppLocalizations.of(context)!.packages_commutePackages;
       case 2:
-        return 'Package Details';
+        return AppLocalizations.of(context)!.packages_packageDetails;
       case 3:
-        return 'Configure Travel';
+        return AppLocalizations.of(context)!.packages_configureTravel;
       case 4:
-        return 'Review Summary';
+        return AppLocalizations.of(context)!.packages_reviewSummary;
       case 5:
-        return 'Subscribed!';
+        return AppLocalizations.of(context)!.packages_subscribed;
       default:
-        return 'Subscribe Plan';
+        return AppLocalizations.of(context)!.packages_subscribePlan;
     }
   }
 
@@ -185,10 +186,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildFilterTab('All', loaded, scheme),
-              _buildFilterTab('Weekly', loaded, scheme),
-              _buildFilterTab('Monthly', loaded, scheme),
-              _buildFilterTab('Quarterly', loaded, scheme),
+              _buildFilterTab(AppLocalizations.of(context)!.packages_all, loaded, scheme),
+              _buildFilterTab(AppLocalizations.of(context)!.packages_weekly, loaded, scheme),
+              _buildFilterTab(AppLocalizations.of(context)!.packages_monthly, loaded, scheme),
+              _buildFilterTab(AppLocalizations.of(context)!.packages_quarterly, loaded, scheme),
             ],
           ),
         ),
@@ -290,7 +291,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Save ${package.discountPercent}%',
+                          AppLocalizations.of(context)!.packages_savePercent(package.discountPercent.toInt()),
                           style: TextStyle(
                             fontSize: 11,
                             color: scheme.primary,
@@ -305,14 +306,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildMiniDetailColumn('Duration', package.durationLabel),
+                      _buildMiniDetailColumn(AppLocalizations.of(context)!.packages_duration, package.durationLabel),
                       _buildMiniDetailColumn(
-                        'Total Trips',
-                        '${package.tripsCount} Rides',
+                        AppLocalizations.of(context)!.packages_totalTrips,
+                        AppLocalizations.of(context)!.packages_ridesCount(package.tripsCount),
                       ),
                       _buildMiniDetailColumn(
-                        'Total Savings',
-                        'EGP ${package.savingsAmount}',
+                        AppLocalizations.of(context)!.packages_totalSavings,
+                        AppLocalizations.of(context)!.packages_egpAmount(package.savingsAmount.toString()),
                         isHighlight: true,
                         color: scheme.secondary,
                       ),
@@ -329,7 +330,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Original: EGP ${package.basePrice}',
+                            AppLocalizations.of(context)!.packages_originalPrice(package.basePrice.toString()),
                             style: const TextStyle(
                               fontSize: 10,
                               decoration: TextDecoration.lineThrough,
@@ -341,7 +342,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                             textBaseline: TextBaseline.alphabetic,
                             children: [
                               Text(
-                                'EGP ${package.startingPrice}',
+                                AppLocalizations.of(context)!.packages_egpAmount(package.startingPrice.toString()),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w900,
@@ -350,7 +351,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                               ),
                               const SizedBox(width: 4),
                               const Text(
-                                'starting',
+                                AppLocalizations.of(context)!.packages_startingPrice,
                                 style: TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey,
@@ -424,8 +425,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 18),
 
               // Benefits
-              const Text(
-                'What is Included',
+              Text(
+                AppLocalizations.of(context)!.packages_whatIsIncluded,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -435,27 +436,27 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 10),
               _buildBenefitRow(
                 Icons.event_seat_rounded,
-                'Reserved Seat Guaranteed',
-                'Your preferred seat is locked for every daily shuttle ride.',
+                AppLocalizations.of(context)!.packages_reservedSeatGuaranteed,
+                AppLocalizations.of(context)!.packages_reservedSeatDesc,
                 scheme,
               ),
               _buildBenefitRow(
                 Icons.schedule_rounded,
-                'Flexible Ride Timing',
-                'Adjust your ride booking times anytime without cancellation fees.',
+                AppLocalizations.of(context)!.packages_flexibleTiming,
+                AppLocalizations.of(context)!.packages_flexibleTimingDesc,
                 scheme,
               ),
               _buildBenefitRow(
                 Icons.card_membership_rounded,
-                'Priority VIP Boarding',
-                'First access onboarding and customer concierge helpline.',
+                AppLocalizations.of(context)!.packages_vipBoarding,
+                AppLocalizations.of(context)!.packages_vipBoardingDesc,
                 scheme,
               ),
               const SizedBox(height: 20),
 
               // Route details card
-              const Text(
-                'Route & Booking Limits',
+              Text(
+                AppLocalizations.of(context)!.packages_routeLimits,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -468,18 +469,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 child: Column(
                   children: [
                     _buildRowDetailText(
-                      'Route Scope',
-                      'Fixed designated route selected upon checkout.',
+                      AppLocalizations.of(context)!.packages_routeScope,
+                      AppLocalizations.of(context)!.packages_routeScopeDesc,
                     ),
                     const SizedBox(height: 8),
                     _buildRowDetailText(
-                      'Included Rides',
-                      '${package.tripsCount} single shuttle trips.',
+                      AppLocalizations.of(context)!.packages_includedRides,
+                      AppLocalizations.of(context)!.packages_singleTripsDesc(package.tripsCount),
                     ),
                     const SizedBox(height: 8),
                     _buildRowDetailText(
-                      'Validity Period',
-                      '${package.days} consecutive calendar days.',
+                      AppLocalizations.of(context)!.packages_validityPeriod,
+                      AppLocalizations.of(context)!.packages_consecutiveDaysDesc(package.days),
                     ),
                   ],
                 ),
@@ -487,8 +488,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 20),
 
               // Terms Conditions
-              const Text(
-                'Terms & Cancellation',
+              Text(
+                AppLocalizations.of(context)!.packages_termsCancellation,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -499,9 +500,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               AppCard(
                 padding: const EdgeInsets.all(16),
                 child: Text(
-                  '1. Packages cannot be refunded once activated.\n'
-                  '2. Seats must be confirmed at least 2 hours before trip.\n'
-                  '3. Package holds up to ${package.tripsCount} reservations for the selected route.',
+                  '${AppLocalizations.of(context)!.packages_termsText1}\n'
+                  '${AppLocalizations.of(context)!.packages_termsText2}\n'
+                  '${AppLocalizations.of(context)!.packages_termsText3(package.tripsCount)}',
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.4,
@@ -515,7 +516,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         ),
         // Bottom sticky button
         _buildStickyCTA(
-          label: 'Choose Route & Configure',
+          label: AppLocalizations.of(context)!.packages_chooseRouteConfig,
           onPressed: () {
             setState(() {
               _currentStep = 3;
@@ -574,12 +575,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Base Price',
+                  Text(
+                    AppLocalizations.of(context)!.packages_basePrice,
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                   Text(
-                    'EGP ${package.basePrice}',
+                    AppLocalizations.of(context)!.packages_egpAmount(package.basePrice.toString()),
                     style: const TextStyle(
                       fontSize: 13,
                       decoration: TextDecoration.lineThrough,
@@ -591,12 +592,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Package Discount',
+                  Text(
+                    AppLocalizations.of(context)!.packages_packageDiscount,
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                   Text(
-                    '${package.discountPercent}% Off',
+                    AppLocalizations.of(context)!.packages_percentOff(package.discountPercent.toInt()),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -608,12 +609,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
-                    'Subscription Cost',
+                  Text(
+                    AppLocalizations.of(context)!.packages_subscriptionCost,
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                   Text(
-                    'EGP ${package.startingPrice}',
+                    AppLocalizations.of(context)!.packages_egpAmount(package.startingPrice.toString()),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
@@ -704,8 +705,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             padding: const EdgeInsets.all(20),
             children: [
               // Route Selection Dropdown
-              const Text(
-                'Select Target Route',
+              Text(
+                AppLocalizations.of(context)!.packages_selectTargetRoute,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -731,8 +732,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Pickup Point',
+                        Text(
+                          AppLocalizations.of(context)!.packages_pickupPoint,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -757,8 +758,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Destination',
+                        Text(
+                          AppLocalizations.of(context)!.packages_destination,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -785,8 +786,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 20),
 
               // Vehicle Type Selector
-              const Text(
-                'Select Vehicle Category',
+              Text(
+                AppLocalizations.of(context)!.packages_selectVehicleCategory,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1123,7 +1124,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     Row(
                       children: [
                         Text(
-                          'Cost: EGP ${loaded.pricing.rawSubtotal}',
+                          'Cost: ${AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.rawSubtotal.toString())}',
                           style: const TextStyle(
                             fontSize: 11,
                             color: Colors.grey,
@@ -1131,7 +1132,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Savings: EGP ${loaded.pricing.totalSavings}',
+                          'Savings: ${AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.totalSavings.toString())}',
                           style: TextStyle(
                             fontSize: 11,
                             color: scheme.secondary,
@@ -1143,7 +1144,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   ],
                 ),
                 Text(
-                  'EGP ${loaded.pricing.finalPrice}',
+                  AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.finalPrice.toString()),
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -1205,8 +1206,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Booking Summary',
+                        Text(
+                          AppLocalizations.of(context)!.packages_reviewSummary,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -1267,8 +1268,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 20),
 
               // Final pricing card
-              const Text(
-                'Pricing Details',
+              Text(
+                AppLocalizations.of(context)!.packages_billingDetails,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1281,34 +1282,34 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 child: Column(
                   children: [
                     _buildPricingRow(
-                      'Base Package Cost',
-                      'EGP ${loaded.pricing.rawSubtotal}',
+                      AppLocalizations.of(context)!.packages_basePrice,
+                      AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.rawSubtotal.toString()),
                     ),
                     const SizedBox(height: 8),
                     _buildPricingRow(
-                      'Plan Discount Value',
-                      '-EGP ${loaded.pricing.discountValue}',
+                      AppLocalizations.of(context)!.packages_packageDiscount,
+                      '-${AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.discountValue.toString())}',
                       color: scheme.primary,
                     ),
                     const SizedBox(height: 8),
                     _buildPricingRow(
-                      'Effective Savings',
-                      'EGP ${loaded.pricing.totalSavings}',
+                      AppLocalizations.of(context)!.packages_totalSavings,
+                      AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.totalSavings.toString()),
                       color: scheme.secondary,
                     ),
                     const Divider(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Final Price',
+                        Text(
+                          AppLocalizations.of(context)!.packages_subscriptionCost,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
                         ),
                         Text(
-                          'EGP ${loaded.pricing.finalPrice}',
+                          AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.finalPrice.toString()),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,

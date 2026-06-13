@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/core/widgets/app_button.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Home hero card.
 ///
@@ -162,7 +163,7 @@ class _TripHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isTrackingAvailable ? 'رحلتك بدأت' : 'رحلتك القادمة',
+                isTrackingAvailable ? AppLocalizations.of(context)!.home_tripStarted : AppLocalizations.of(context)!.home_upcomingTrip,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                       fontSize: 16,
@@ -171,8 +172,8 @@ class _TripHeader extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 isTrackingAvailable
-                    ? 'تابع مسار العربية والمحطة الحالية'
-                    : 'راجع تفاصيل الرحلة قبل موعد التحرك',
+                    ? AppLocalizations.of(context)!.home_trackBus
+                    : AppLocalizations.of(context)!.home_reviewTrip,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: scheme.onSurface.withAlpha(145),
                       fontWeight: FontWeight.w600,
@@ -236,7 +237,7 @@ class _TripRouteTimeline extends StatelessWidget {
           if (points.length > visiblePoints.length) ...[
             const SizedBox(height: 8),
             Text(
-              'يوجد ${points.length - visiblePoints.length} محطات أخرى في تفاصيل الرحلة',
+              AppLocalizations.of(context)!.home_moreStations(points.length - visiblePoints.length),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: scheme.onSurface.withAlpha(130),
                     fontWeight: FontWeight.w600,
@@ -307,7 +308,7 @@ class _RouteTitle extends StatelessWidget {
     return Row(
       children: [
         Text(
-          'مسار الرحلة',
+          AppLocalizations.of(context)!.home_tripRoute,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w900,
               ),
@@ -320,7 +321,7 @@ class _RouteTitle extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            hasCurrentPoint ? 'تتبع مباشر' : '$pointsCount محطات',
+            hasCurrentPoint ? AppLocalizations.of(context)!.home_liveTracking : AppLocalizations.of(context)!.home_stationsCount(pointsCount),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: scheme.primary,
                   fontWeight: FontWeight.w800,
@@ -397,7 +398,7 @@ class _TripPointTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  _label,
+                  _getLabel(context),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: isCurrent
                             ? scheme.primary
@@ -431,12 +432,12 @@ class _TripPointTile extends StatelessWidget {
     return Icons.circle_rounded;
   }
 
-  String get _label {
-    if (isPassed) return 'تم المرور';
-    if (isCurrent) return 'العربية هنا الآن';
-    if (isFirst) return 'نقطة البداية';
-    if (isLast) return 'نقطة الوصول';
-    return 'محطة مرور';
+  String _getLabel(BuildContext context) {
+    if (isPassed) return AppLocalizations.of(context)!.home_pointPassed;
+    if (isCurrent) return AppLocalizations.of(context)!.home_pointCurrent;
+    if (isFirst) return AppLocalizations.of(context)!.home_pointStart;
+    if (isLast) return AppLocalizations.of(context)!.home_pointEnd;
+    return AppLocalizations.of(context)!.home_pointStation;
   }
 }
 
@@ -492,7 +493,7 @@ class _ActionButtons extends StatelessWidget {
         if (onTrackTrip != null) ...[
           Expanded(
             child: AppButton(
-              label: 'تتبع الرحلة',
+              label: AppLocalizations.of(context)!.home_trackTrip,
               onPressed: onTrackTrip!,
               height: 46,
             ),
@@ -501,7 +502,7 @@ class _ActionButtons extends StatelessWidget {
         ],
         Expanded(
           child: AppButton(
-            label: 'التفاصيل',
+            label: AppLocalizations.of(context)!.home_tripDetails,
             onPressed: onViewTrip,
             outline: true,
             height: 46,
@@ -539,7 +540,7 @@ class _NoTripPanel extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'إلى أين تريد الذهاب؟',
+              AppLocalizations.of(context)!.home_whereTo,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     fontSize: 16.5,
@@ -563,7 +564,7 @@ class _NoTripPanel extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'ابحث عن وجهتك...',
+                        AppLocalizations.of(context)!.home_searchDestination,
                         style: TextStyle(
                           color: scheme.onSurface.withAlpha(120),
                           fontSize: 14.5,
@@ -590,7 +591,7 @@ class _NoTripPanel extends StatelessWidget {
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'وجهات سريعة',
+                  AppLocalizations.of(context)!.home_quickDestinations,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: scheme.onSurface.withAlpha(120),
                         fontWeight: FontWeight.w700,

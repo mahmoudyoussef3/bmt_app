@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_pack
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/widgets/badge.dart';
 import 'package:bmt_app/core/widgets/section_header.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class HomePackagesSection extends StatelessWidget {
   const HomePackagesSection({
@@ -34,11 +35,11 @@ class HomePackagesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionHeader(
-          title: 'Packages',
-          subtitle: 'Built for daily commuters',
+          title: AppLocalizations.of(context)!.home_packagesTitle,
+          subtitle: AppLocalizations.of(context)!.home_packagesSubtitle,
           action: TextButton(
             onPressed: onOpenSubscription,
-            child: const Text('See all'),
+            child: Text(AppLocalizations.of(context)!.home_seeAll),
           ),
         ),
         const SizedBox(height: AppLayout.spaceMd),

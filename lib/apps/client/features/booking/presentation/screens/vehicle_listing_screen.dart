@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_compare_card.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// شاشة اختيار العربية.
 ///
@@ -71,7 +72,7 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
               : <VehicleDetailData>[];
 
           return BookingFlowScaffold(
-            title: 'اختيار العربية',
+            title: AppLocalizations.of(context)!.booking_selectVehicle,
             query: _query,
             body: _VehicleListingBody(
               state: state,
@@ -194,14 +195,14 @@ class _CompactHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'العربيات المتاحة',
+                  AppLocalizations.of(context)!.booking_availableVehicles,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '$vehiclesCount اختيارات متاحة الآن',
+                  AppLocalizations.of(context)!.booking_availableOptions(vehiclesCount),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: scheme.onSurface.withAlpha(150),
                         fontWeight: FontWeight.w600,
@@ -224,10 +225,10 @@ class _SortBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const options = [
-      (VehicleSortOption.recommended, 'الأفضل', Icons.auto_awesome_rounded),
-      (VehicleSortOption.priceLow, 'السعر', Icons.payments_rounded),
-      (VehicleSortOption.rating, 'التقييم', Icons.star_rounded),
+    final options = [
+      (VehicleSortOption.recommended, AppLocalizations.of(context)!.booking_sortRecommended, Icons.auto_awesome_rounded),
+      (VehicleSortOption.priceLow, AppLocalizations.of(context)!.booking_sortPriceLow, Icons.payments_rounded),
+      (VehicleSortOption.rating, AppLocalizations.of(context)!.booking_sortRating, Icons.star_rounded),
     ];
 
     return SingleChildScrollView(
@@ -342,7 +343,7 @@ class _BookingLoadingState extends StatelessWidget {
             const CircularProgressIndicator(),
             const SizedBox(height: 14),
             Text(
-              'جاري البحث عن أفضل الخيارات...',
+              AppLocalizations.of(context)!.booking_searchingBestOptions,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w700,
@@ -376,7 +377,7 @@ class _BookingErrorState extends StatelessWidget {
               Icon(Icons.error_outline_rounded, color: scheme.error, size: 44),
               const SizedBox(height: 12),
               Text(
-                'لم نتمكن من تحميل العربيات',
+                AppLocalizations.of(context)!.booking_errorLoadingVehicles,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -394,7 +395,7 @@ class _BookingErrorState extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('حاول مرة أخرى'),
+                label: Text(AppLocalizations.of(context)!.common_tryAgain),
               ),
             ],
           ),
@@ -428,7 +429,7 @@ class _BookingEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'لا توجد عربيات متاحة',
+                AppLocalizations.of(context)!.booking_noVehiclesAvailable,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w900,
                     ),
@@ -436,7 +437,7 @@ class _BookingEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'لا توجد عربيات مناسبة لهذا الوقت. جرّب وقت وصول مختلف أو أعد البحث.',
+                AppLocalizations.of(context)!.booking_noVehiclesDesc,
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       height: 1.6,
@@ -446,7 +447,7 @@ class _BookingEmptyState extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('إعادة البحث'),
+                label: Text(AppLocalizations.of(context)!.booking_searchAgain),
               ),
             ],
           ),

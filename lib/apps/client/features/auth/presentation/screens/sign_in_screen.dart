@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../routes/auth_routes.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -46,7 +47,7 @@ class _SignInScreenState extends State<SignInScreen> {
         } else if (state.signInStatus == AuthSubmissionStatus.failure) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text(state.signInError ?? 'Sign in failed.'),
+              content: Text(state.signInError ?? AppLocalizations.of(context)!.auth_signInFailed),
               backgroundColor: Colors.red,
             ),
           );
@@ -72,7 +73,7 @@ class _SignInScreenState extends State<SignInScreen> {
                 children: [
                   const SizedBox(height: 20),
                   Text(
-                    'Welcome Back',
+                    AppLocalizations.of(context)!.auth_welcomeBack,
                     style: theme.textTheme.headlineLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                       color: isDark ? Colors.white : Colors.black87,
@@ -80,7 +81,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Sign in to book your next trip',
+                    AppLocalizations.of(context)!.auth_signInSubtitle,
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: isDark ? Colors.white54 : Colors.black54,
                     ),
@@ -92,7 +93,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     decoration: InputDecoration(
-                      labelText: 'Email Address',
+                      labelText: AppLocalizations.of(context)!.auth_email,
                       prefixIcon: const Icon(Icons.email_outlined),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
@@ -101,8 +102,8 @@ class _SignInScreenState extends State<SignInScreen> {
                       fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
-                      if (!value.contains('@')) return 'Enter a valid email';
+                      if (value == null || value.isEmpty) return AppLocalizations.of(context)!.auth_required;
+                      if (!value.contains('@')) return AppLocalizations.of(context)!.auth_invalidEmail;
                       return null;
                     },
                   ),
@@ -113,7 +114,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     controller: _passwordController,
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
-                      labelText: 'Password',
+                      labelText: AppLocalizations.of(context)!.auth_password,
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
@@ -132,7 +133,7 @@ class _SignInScreenState extends State<SignInScreen> {
                       fillColor: isDark ? Colors.white.withOpacity(0.05) : Colors.grey.shade50,
                     ),
                     validator: (value) {
-                      if (value == null || value.isEmpty) return 'Required';
+                      if (value == null || value.isEmpty) return AppLocalizations.of(context)!.auth_required;
                       return null;
                     },
                   ),
@@ -142,7 +143,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: TextButton(
                       onPressed: () {},
                       child: Text(
-                        'Forgot Password?',
+                        AppLocalizations.of(context)!.auth_forgotPassword,
                         style: TextStyle(
                           color: theme.primaryColor,
                           fontWeight: FontWeight.w600,
@@ -173,8 +174,8 @@ class _SignInScreenState extends State<SignInScreen> {
                                   color: Colors.white,
                                 ),
                               )
-                            : const Text(
-                                'Sign In',
+                            : Text(
+                                AppLocalizations.of(context)!.auth_signIn,
                                 style: TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -190,7 +191,7 @@ class _SignInScreenState extends State<SignInScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        AppLocalizations.of(context)!.auth_noAccount,
                         style: TextStyle(
                           color: isDark ? Colors.white54 : Colors.black54,
                         ),
@@ -200,7 +201,7 @@ class _SignInScreenState extends State<SignInScreen> {
                           Navigator.of(context).pushReplacementNamed(AuthRoutes.signUp);
                         },
                         child: Text(
-                          'Sign Up',
+                          AppLocalizations.of(context)!.auth_signUp,
                           style: TextStyle(
                             color: theme.primaryColor,
                             fontWeight: FontWeight.bold,

@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Map-based pickup and destination selection (static UI, no map SDK).
 class MapRouteSelectionScreen extends StatefulWidget {
@@ -72,8 +73,8 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
   void _continue() {
     if (_pickup == null || _destination == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Select pickup and destination on the map'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.booking_selectPickupDestMap),
         ),
       );
       return;
@@ -93,13 +94,13 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
       builder: (context, state) {
         if (state is BookingLoading) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Select on Map')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.booking_selectOnMap)),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
         if (state is BookingError) {
           return Scaffold(
-            appBar: AppBar(title: const Text('Select on Map')),
+            appBar: AppBar(title: Text(AppLocalizations.of(context)!.booking_selectOnMap)),
             body: Center(child: Text(state.message)),
           );
         }
@@ -114,7 +115,7 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Select on Map'),
+            title: Text(AppLocalizations.of(context)!.booking_selectOnMap),
             actions: [
               TextButton(
                 onPressed: () {
@@ -124,7 +125,7 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                     arguments: _query.toArguments(),
                   );
                 },
-                child: const Text('Popular'),
+                child: Text(AppLocalizations.of(context)!.booking_popular),
               ),
             ],
           ),
@@ -136,7 +137,7 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                   children: [
                     Expanded(
                       child: _ModeToggle(
-                        label: 'Pickup',
+                        label: AppLocalizations.of(context)!.booking_pickup,
                         icon: Icons.trip_origin_rounded,
                         color: scheme.secondary,
                         selected: _mode == MapSelectionMode.pickup,
@@ -147,7 +148,7 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _ModeToggle(
-                        label: 'Destination',
+                        label: AppLocalizations.of(context)!.booking_destination,
                         icon: Icons.location_on_rounded,
                         color: scheme.error,
                         selected: _mode == MapSelectionMode.destination,
@@ -192,7 +193,7 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'Tap the map to cycle ${_mode == MapSelectionMode.pickup ? 'pickup' : 'destination'} points',
+                      _mode == MapSelectionMode.pickup ? AppLocalizations.of(context)!.booking_tapMapPickup : AppLocalizations.of(context)!.booking_tapMapDest,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: scheme.onSurface.withAlpha(160),
                       ),
@@ -200,20 +201,20 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                     const SizedBox(height: 12),
                     _LocationRow(
                       color: scheme.secondary,
-                      label: 'Pickup Point',
-                      value: _pickup?.label ?? 'Not set',
+                      label: AppLocalizations.of(context)!.booking_pickupPoint,
+                      value: _pickup?.label ?? AppLocalizations.of(context)!.booking_notSet,
                       subtitle: _pickup?.subtitle ?? '',
                     ),
                     const SizedBox(height: 10),
                     _LocationRow(
                       color: scheme.error,
-                      label: 'Destination Point',
-                      value: _destination?.label ?? 'Not set',
+                      label: AppLocalizations.of(context)!.booking_destinationPoint,
+                      value: _destination?.label ?? AppLocalizations.of(context)!.booking_notSet,
                       subtitle: _destination?.subtitle ?? '',
                     ),
                     const SizedBox(height: 16),
                     AppButton(
-                      label: 'Confirm Route',
+                      label: AppLocalizations.of(context)!.booking_confirmRoute,
                       height: 50,
                       onPressed: _continue,
                     ),

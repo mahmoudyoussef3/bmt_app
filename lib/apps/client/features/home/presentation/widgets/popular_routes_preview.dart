@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/popular_route_card.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/widgets/section_header.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Horizontal popular routes strip with responsive card sizing.
 class PopularRoutesPreview extends StatelessWidget {
@@ -37,11 +38,11 @@ class PopularRoutesPreview extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionHeader(
-          title: 'Popular routes',
-          subtitle: 'Frequent commutes from your area',
+          title: AppLocalizations.of(context)!.home_popularRoutesTitle,
+          subtitle: AppLocalizations.of(context)!.home_popularRoutesSubtitle,
           action: TextButton(
             onPressed: () => onOpenRoute(ClientRoutes.bookingPopularRoutes),
-            child: const Text('View all'),
+            child: Text(AppLocalizations.of(context)!.home_viewAll),
           ),
         ),
         const SizedBox(height: AppLayout.spaceMd),

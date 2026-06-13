@@ -13,6 +13,8 @@ import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/spinner.dart';
 import 'package:bmt_app/core/widgets/app_dialogs.dart';
+import 'package:bmt_app/core/localization/failure_l10n_ext.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -48,7 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
           AppDialogs.showErrorDialog(
             context,
             title: 'Unable to Load Data',
-            message: state.message,
+            message: state.failure.localizedMessage(context),
             onRetry: () => context.read<HomeCubit>().load(),
           );
         }
@@ -61,9 +63,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onOpenNotifications: widget.onOpenNotifications,
             onOpenSearch: _openSearch,
           ),
-          HomeError(:final message) => EmptyState(
+          HomeError(:final failure) => EmptyState(
             title: 'Home is unavailable',
-            subtitle: message,
+            subtitle: failure.localizedMessage(context),
           ),
           HomeLoading() => const Center(child: Spinner()),
         };
@@ -181,7 +183,7 @@ class _HomeHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Good morning, Ahmed',
+                AppLocalizations.of(context)!.home_goodMorning('Ahmed'),
                 style: AppTypography.display(scheme).copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
@@ -190,7 +192,7 @@ class _HomeHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'Ready for your commute today?',
+                AppLocalizations.of(context)!.home_readyForCommute,
                 style: AppTypography.caption(scheme).copyWith(
                   color: scheme.onSurface.withAlpha(150),
                   fontSize: 13.5,
@@ -266,7 +268,7 @@ class _SupportLink extends StatelessWidget {
             ),
             const SizedBox(width: AppLayout.spaceSm),
             Text(
-              'Need help? Contact support',
+              AppLocalizations.of(context)!.home_contactSupport,
               style: AppTypography.caption(
                 scheme,
               ).copyWith(color: scheme.onSurface.withAlpha(150)),

@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_option_card.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Lists available route options for the current search.
 class RouteSelectionScreen extends StatefulWidget {
@@ -48,13 +49,13 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
         _selectedRouteId ??= routes.isEmpty ? null : routes.first.id;
 
         return BookingFlowScaffold(
-          title: 'Select Route',
+          title: AppLocalizations.of(context)!.booking_selectRoute,
           query: _query,
           bottomBar: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: AppButton(
-                label: 'Compare Vehicles',
+                label: AppLocalizations.of(context)!.booking_compareVehicles,
                 height: 52,
                 onPressed: _selectedRouteId == null ? () {} : _continueToTrips,
               ),
@@ -113,9 +114,9 @@ class _RouteSelectionBody extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
       children: [
         SectionHeader(
-          title: 'Available routes',
-          subtitle: '${routes.length} options for your search',
-          action: TextButton(onPressed: onMap, child: const Text('Map')),
+          title: AppLocalizations.of(context)!.booking_availableRoutes,
+          subtitle: AppLocalizations.of(context)!.booking_optionsForSearch(routes.length),
+          action: TextButton(onPressed: onMap, child: Text(AppLocalizations.of(context)!.booking_map)),
         ),
         const SizedBox(height: 12),
         ...routes.map((route) {
@@ -149,7 +150,7 @@ class _BookingErrorState extends StatelessWidget {
           children: [
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 12),
-            FilledButton(onPressed: onRetry, child: const Text('Try again')),
+            FilledButton(onPressed: onRetry, child: Text(AppLocalizations.of(context)!.common_tryAgain)),
           ],
         ),
       ),

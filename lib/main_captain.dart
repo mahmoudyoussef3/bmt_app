@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
+import 'package:bmt_app/core/localization/locale_cubit.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,8 +21,11 @@ Future<void> main() async {
   registerCaptainDependencies();
 
   runApp(
-    BlocProvider(
-      create: (_) => AppModeCubit()..load(),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => AppModeCubit()..load()),
+        BlocProvider(create: (_) => LocaleCubit()..load()),
+      ],
       child: const captain.CaptainApp(),
     ),
   );

@@ -9,7 +9,9 @@ import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
 import 'package:bmt_app/apps/client/client_app.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
+import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/core/app_mode/app_mode.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 final GlobalKey<NavigatorState> _navKey = GlobalKey<NavigatorState>();
 
@@ -30,7 +32,13 @@ Future<void> main() async {
   registerDashboardDependencies();
 
   runApp(
-    BlocProvider(create: (_) => AppModeCubit()..load(), child: const MyApp()),
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => AppModeCubit()..load()),
+        BlocProvider(create: (_) => LocaleCubit()..load()),
+      ],
+      child: const MyApp(),
+    ),
   );
 }
 
@@ -46,18 +54,25 @@ class MyApp extends StatelessWidget {
           (_) => false,
         );
       },
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        navigatorKey: _navKey,
-        title: 'BMT App',
-        theme: ThemeData(primarySwatch: Colors.blue),
-        routes: {
-          '/': (_) => const ClientApp(),
-          '/driver': (_) => const CaptainAppShell(),
-          '/admin': (_) => const DashboardWebApp(),
-          '/ops-dashboard': (_) => const DashboardWebApp(),
+      child: BlocBuilder<LocaleCubit, Locale>(
+        builder: (context, locale) {
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            navigatorKey: _navKey,
+            title: 'BMT App',
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: locale,
+            theme: ThemeData(primarySwatch: Colors.blue),
+            routes: {
+              '/': (_) => const ClientApp(),
+              '/driver': (_) => const CaptainAppShell(),
+              '/admin': (_) => const DashboardWebApp(),
+              '/ops-dashboard': (_) => const DashboardWebApp(),
+            },
+            initialRoute: '/',
+          );
         },
-        initialRoute: '/',
       ),
     );
   }

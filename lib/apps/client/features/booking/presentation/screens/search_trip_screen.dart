@@ -3,7 +3,9 @@ import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/search_trip_card.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 const _pickupSuggestions = [
   'Banha Center',
@@ -69,8 +71,8 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
   void _search() {
     if (!_query.isComplete) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Select pickup and destination to continue'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.booking_selectPickupDestination),
         ),
       );
       return;
@@ -87,7 +89,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return BookingFlowScaffold(
-      title: 'Search Trip',
+      title: AppLocalizations.of(context)!.booking_searchTrip,
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
         children: [
@@ -97,19 +99,19 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             date: _query.date,
             time: _query.time,
             onPickupTap: () => _pickLocation(
-              title: 'Pickup location',
+              title: AppLocalizations.of(context)!.booking_pickupLocation,
               options: _pickupSuggestions,
               field: 'pickup',
             ),
             onDestinationTap: () => _pickLocation(
-              title: 'Destination',
+              title: AppLocalizations.of(context)!.booking_destination,
               options: _destinationSuggestions,
               field: 'destination',
             ),
             onDateTap: () async {
               final value = await showHomePickerSheet(
                 context: context,
-                title: 'Select date',
+                title: AppLocalizations.of(context)!.booking_selectDate,
                 options: const [
                   'Today, Jun 3',
                   'Tomorrow, Jun 4',
@@ -124,7 +126,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             onTimeTap: () async {
               final value = await showHomePickerSheet(
                 context: context,
-                title: 'Select time',
+                title: AppLocalizations.of(context)!.booking_selectTime,
                 options: _timeSuggestions,
                 selected: _query.time.isEmpty ? null : _query.time,
               );
@@ -136,8 +138,8 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
           ),
           const SizedBox(height: 20),
           SectionHeader(
-            title: 'Other ways to search',
-            subtitle: 'Browse or pick on map',
+            title: AppLocalizations.of(context)!.booking_otherWaysToSearch,
+            subtitle: AppLocalizations.of(context)!.booking_browseOrPickMap,
           ),
           const SizedBox(height: 12),
           AppSurface(
@@ -151,8 +153,8 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             },
             child: ListTile(
               leading: Icon(Icons.trending_up_rounded, color: scheme.primary),
-              title: const Text('Popular Routes'),
-              subtitle: const Text('Most used commutes in your network'),
+              title: Text(AppLocalizations.of(context)!.booking_popularRoutes),
+              subtitle: Text(AppLocalizations.of(context)!.booking_popularRoutesSubtitle),
               trailing: const Icon(Icons.chevron_right_rounded),
             ),
           ),
@@ -168,8 +170,8 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             },
             child: ListTile(
               leading: Icon(Icons.map_rounded, color: scheme.secondary),
-              title: const Text('Select on Map'),
-              subtitle: const Text('Google Maps style picker (demo UI)'),
+              title: Text(AppLocalizations.of(context)!.booking_selectOnMap),
+              subtitle: Text(AppLocalizations.of(context)!.booking_selectOnMapSubtitle),
               trailing: const Icon(Icons.chevron_right_rounded),
             ),
           ),

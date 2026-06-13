@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../routes/auth_routes.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
@@ -38,7 +39,7 @@ class WelcomeScreen extends StatelessWidget {
               
               // Welcome Text
               Text(
-                'Welcome to BMT',
+                AppLocalizations.of(context)!.auth_welcomeTitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.w800,
@@ -48,7 +49,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               Text(
-                'Your premium daily commute and transportation manager.',
+                AppLocalizations.of(context)!.auth_welcomeSubtitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyLarge?.copyWith(
                   color: isDark ? Colors.white54 : Colors.black54,
@@ -68,8 +69,8 @@ class WelcomeScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text(
-                  'Log In',
+                child: Text(
+                  AppLocalizations.of(context)!.auth_login,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -92,7 +93,7 @@ class WelcomeScreen extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'Create an Account',
+                  AppLocalizations.of(context)!.auth_createAccount,
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -104,7 +105,7 @@ class WelcomeScreen extends StatelessWidget {
 
               // Terms and Conditions
               Text(
-                'By continuing, you agree to our Terms of Service\nand Privacy Policy.',
+                AppLocalizations.of(context)!.auth_termsAndPrivacy,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: isDark ? Colors.white38 : Colors.black38,

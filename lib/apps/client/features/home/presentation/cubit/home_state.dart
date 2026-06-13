@@ -1,4 +1,5 @@
 import '../../domain/entities/home_data.dart';
+import 'package:bmt_app/core/network/api_result.dart';
 
 sealed class HomeState {
   const HomeState();
@@ -15,7 +16,7 @@ class HomeLoaded extends HomeState {
 }
 
 class HomeError extends HomeState {
-  const HomeError(this.message);
+  const HomeError(this.failure);
 
-  final String message;
+  final Failure failure;
 }

@@ -9,6 +9,7 @@ import '../widgets/booking_summary_card.dart';
 import '../widgets/route_selection_tile.dart';
 import '../widgets/time_selection_chip.dart';
 import '../widgets/vehicle_card.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class DailyBookingFlowScreen extends StatefulWidget {
   const DailyBookingFlowScreen({super.key});
@@ -109,7 +110,7 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
     switch (_step) {
       case 1:
         return _selectionList(
-          title: 'Select Pickup Point',
+          title: AppLocalizations.of(context)!.booking_selectPickupPoint,
           items: data.pickupPoints,
           activeColor: Theme.of(context).colorScheme.primary,
           onSelect: (value) => setState(() {
@@ -119,7 +120,7 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
         );
       case 2:
         return _selectionList(
-          title: 'Select Destination',
+          title: AppLocalizations.of(context)!.booking_selectDestination,
           items: data.destinations,
           activeColor: Theme.of(context).colorScheme.secondary,
           onSelect: (value) => setState(() {
@@ -177,12 +178,12 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Available Vehicles',
+                          AppLocalizations.of(context)!.booking_availableVehicles,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          'Pick the best shuttle for your trip',
+                          AppLocalizations.of(context)!.booking_pickBestShuttle,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -272,11 +273,11 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Book Your Ride',
+                AppLocalizations.of(context)!.booking_bookYourRide,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               Text(
-                'Step $_step of 4',
+                AppLocalizations.of(context)!.booking_stepOf4(_step),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],

@@ -1,0 +1,345 @@
+{
+  "@@locale": "en",
+  "common_retry": "Retry",
+  "common_dismiss": "Dismiss",
+  "common_confirm": "Confirm",
+  "common_cancel": "Cancel",
+  "common_save": "Save",
+  "common_delete": "Delete",
+  "common_error": "Something went wrong",
+  "home_goodMorning": "Good morning, {name}",
+  "@home_goodMorning": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "home_readyForCommute": "Ready for your commute today?",
+  "home_tripStarted": "Your trip has started",
+  "home_upcomingTrip": "Your upcoming trip",
+  "home_trackBus": "Track the bus and current stop",
+  "home_reviewTrip": "Review trip details before departure",
+  "home_tripRoute": "Trip Route",
+  "home_liveTracking": "Live tracking",
+  "home_stationsCount": "{count} stations",
+  "@home_stationsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "home_moreStations": "There are {count} more stations in trip details",
+  "@home_moreStations": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "home_pointPassed": "Passed",
+  "home_pointCurrent": "Bus is here",
+  "home_pointStart": "Start Point",
+  "home_pointEnd": "End Point",
+  "home_pointStation": "Station",
+  "home_trackTrip": "Track Trip",
+  "home_tripDetails": "Details",
+  "home_whereTo": "Where to?",
+  "home_searchDestination": "Search destination...",
+  "home_quickDestinations": "Quick destinations",
+  "home_packagesTitle": "Packages",
+  "home_packagesSubtitle": "Built for daily commuters",
+  "home_seeAll": "See all",
+  "home_popularRoutesTitle": "Popular routes",
+  "home_popularRoutesSubtitle": "Frequent commutes from your area",
+  "home_viewAll": "View all",
+  "home_contactSupport": "Need help? Contact support",
+  "auth_welcomeTitle": "Welcome to BMT",
+  "auth_welcomeSubtitle": "Your premium daily commute and transportation manager.",
+  "auth_login": "Log In",
+  "auth_createAccount": "Create an Account",
+  "auth_termsAndPrivacy": "By continuing, you agree to our Terms of Service\nand Privacy Policy.",
+  "auth_signInFailed": "Sign in failed.",
+  "auth_welcomeBack": "Welcome Back",
+  "auth_signInSubtitle": "Sign in to book your next trip",
+  "auth_email": "Email Address",
+  "auth_required": "Required",
+  "auth_invalidEmail": "Enter a valid email",
+  "auth_password": "Password",
+  "auth_forgotPassword": "Forgot Password?",
+  "auth_signIn": "Sign In",
+  "auth_noAccount": "Don't have an account? ",
+  "auth_signUp": "Sign Up",
+  "auth_registrationFailed": "Registration failed.",
+  "auth_createAccountTitle": "Create Account",
+  "auth_signUpSubtitle": "Join BMT to book and track your trips",
+  "auth_fullName": "Full Name",
+  "auth_invalidFullName": "Enter your full name",
+  "auth_phoneNumber": "Phone Number",
+  "auth_invalidPhone": "Enter a valid phone number",
+  "auth_invalidPassword": "Password must be at least 6 characters",
+  "auth_alreadyHaveAccount": "Already have an account? ",
+  "booking_title": "Bookings",
+  "booking_subtitle": "Choose how you want to book your commute",
+  "booking_today": "Today",
+  "booking_month": "Month",
+  "booking_dailyBooking": "Daily Booking",
+  "booking_dailyBookingDesc": "Book a trip step by step for today",
+  "booking_monthlySubscription": "Monthly Subscription",
+  "booking_monthlySubscriptionDesc": "Reserve your permanent route and seat",
+  "booking_summary": "Summary",
+  "booking_activeTrips": "Active trips",
+  "booking_upcomingBookings": "Upcoming bookings",
+  "booking_reservedSeats": "Reserved seats",
+  "booking_selectPickupDestination": "Select pickup and destination to continue",
+  "booking_searchTrip": "Search Trip",
+  "booking_pickupLocation": "Pickup location",
+  "booking_destination": "Destination",
+  "booking_selectDate": "Select date",
+  "booking_selectTime": "Select time",
+  "booking_otherWaysToSearch": "Other ways to search",
+  "booking_browseOrPickMap": "Browse or pick on map",
+  "booking_popularRoutes": "Popular Routes",
+  "booking_popularRoutesSubtitle": "Most used commutes in your network",
+  "booking_selectOnMap": "Select on Map",
+  "booking_selectOnMapSubtitle": "Google Maps style picker",
+  "booking_selectPickupPoint": "Select Pickup Point",
+  "booking_selectDestination": "Select Destination",
+  "booking_availableVehicles": "Available Vehicles",
+  "booking_pickBestShuttle": "Pick the best shuttle for your trip",
+  "booking_bookYourRide": "Book Your Ride",
+  "booking_stepOf4": "Step {step} of 4",
+  "@booking_stepOf4": {
+    "placeholders": {
+      "step": {
+        "type": "int"
+      }
+    }
+  },
+  "booking_selectVehicle": "Select Vehicle",
+  "booking_availableOptions": "{count} options available now",
+  "@booking_availableOptions": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "booking_sortRecommended": "Recommended",
+  "booking_sortPriceLow": "Price Low",
+  "booking_sortRating": "Rating",
+  "booking_searchingBestOptions": "Searching for best options...",
+  "booking_errorLoadingVehicles": "Could not load vehicles",
+  "common_tryAgain": "Try again",
+  "booking_noVehiclesAvailable": "No vehicles available",
+  "booking_noVehiclesDesc": "No vehicles available for this time. Try a different arrival time or search again.",
+  "booking_searchAgain": "Search Again",
+  "booking_selectRoute": "Select Route",
+  "booking_compareVehicles": "Compare Vehicles",
+  "booking_availableRoutes": "Available routes",
+  "booking_optionsForSearch": "{count} options for your search",
+  "@booking_optionsForSearch": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "booking_map": "Map",
+  "booking_vehicleDetails": "Vehicle Details",
+  "booking_recommendedForYou": "Recommended for you",
+  "booking_comfortAndAmenities": "Comfort & Amenities",
+  "booking_comfortDesc": "Check comfort level before selecting your seat",
+  "booking_driver": "Driver",
+  "booking_driverDesc": "Captain details and rating",
+  "booking_priceAndAvailability": "Price & Availability",
+  "booking_priceDesc": "Cost and number of available seats",
+  "booking_ac": "AC",
+  "booking_available": "Available",
+  "booking_unavailable": "Unavailable",
+  "booking_seatType": "Seat Type",
+  "booking_recliningSeats": "Reclining Seats",
+  "common_yes": "Yes",
+  "common_no": "No",
+  "booking_vehicleCondition": "Vehicle Condition",
+  "booking_legRoom": "Leg Room",
+  "booking_ratingExcellent": "Excellent",
+  "booking_ratingVeryGood": "Very Good",
+  "booking_ratingGood": "Good",
+  "booking_ratingNormal": "Normal",
+  "booking_certified": "Certified",
+  "booking_completedTrips": "completed trips",
+  "booking_yearsExperience": "years exp",
+  "booking_tripPrice": "Trip Price",
+  "booking_remaining": "remaining",
+  "booking_selectPickupDestMap": "Select pickup and destination on the map",
+  "booking_popular": "Popular",
+  "booking_pickup": "Pickup",
+  "booking_tapMapPickup": "Tap the map to cycle pickup points",
+  "booking_tapMapDest": "Tap the map to cycle destination points",
+  "booking_pickupPoint": "Pickup Point",
+  "booking_notSet": "Not set",
+  "booking_destinationPoint": "Destination Point",
+  "booking_confirmRoute": "Confirm Route",
+  "booking_availableSeats": "Available Seats",
+  "packages_commutePackages": "Commute Packages",
+  "packages_packageDetails": "Package Details",
+  "packages_configureTravel": "Configure Travel",
+  "packages_reviewSummary": "Review Summary",
+  "packages_subscribed": "Subscribed!",
+  "packages_subscribePlan": "Subscribe Plan",
+  "packages_all": "All",
+  "packages_weekly": "Weekly",
+  "packages_monthly": "Monthly",
+  "packages_quarterly": "Quarterly",
+  "packages_savePercent": "Save {percent}%",
+  "@packages_savePercent": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "packages_duration": "Duration",
+  "packages_totalTrips": "Total Trips",
+  "packages_ridesCount": "{count} Rides",
+  "@packages_ridesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "packages_totalSavings": "Total Savings",
+  "packages_egpAmount": "EGP {amount}",
+  "@packages_egpAmount": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "packages_originalPrice": "Original: EGP {price}",
+  "@packages_originalPrice": {
+    "placeholders": {
+      "price": {
+        "type": "String"
+      }
+    }
+  },
+  "packages_startingPrice": "starting",
+  "packages_whatIsIncluded": "What is Included",
+  "packages_reservedSeatGuaranteed": "Reserved Seat Guaranteed",
+  "packages_reservedSeatDesc": "Your preferred seat is locked for every daily shuttle ride.",
+  "packages_flexibleTiming": "Flexible Ride Timing",
+  "packages_flexibleTimingDesc": "Adjust your ride booking times anytime without cancellation fees.",
+  "packages_vipBoarding": "Priority VIP Boarding",
+  "packages_vipBoardingDesc": "First access onboarding and customer concierge helpline.",
+  "packages_routeLimits": "Route & Booking Limits",
+  "packages_routeScope": "Route Scope",
+  "packages_routeScopeDesc": "Fixed designated route selected upon checkout.",
+  "packages_includedRides": "Included Rides",
+  "packages_singleTripsDesc": "{count} single shuttle trips.",
+  "@packages_singleTripsDesc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "packages_validityPeriod": "Validity Period",
+  "packages_consecutiveDaysDesc": "{days} consecutive calendar days.",
+  "@packages_consecutiveDaysDesc": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "packages_termsCancellation": "Terms & Cancellation",
+  "packages_termsText1": "1. Packages cannot be refunded once activated.",
+  "packages_termsText2": "2. Seats must be confirmed at least 2 hours before trip.",
+  "packages_termsText3": "3. Package holds up to {count} reservations for the selected route.",
+  "@packages_termsText3": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "packages_chooseRouteConfig": "Choose Route & Configure",
+  "packages_basePrice": "Base Price",
+  "packages_packageDiscount": "Package Discount",
+  "packages_percentOff": "{percent}% Off",
+  "@packages_percentOff": {
+    "placeholders": {
+      "percent": {
+        "type": "int"
+      }
+    }
+  },
+  "packages_subscriptionCost": "Subscription Cost",
+  "packages_selectTargetRoute": "Select Target Route",
+  "packages_pickupPoint": "Pickup Point",
+  "packages_destination": "Destination",
+  "packages_selectVehicleCategory": "Select Vehicle Category",
+  "packages_reviewActivation": "Review & Activation",
+  "packages_selectedPackage": "Selected Package",
+  "packages_route": "Route",
+  "packages_vehicle": "Vehicle",
+  "packages_billingDetails": "Billing Details",
+  "packages_paymentMethod": "Payment Method",
+  "packages_walletBalance": "Wallet Balance",
+  "packages_currentBalance": "Current Balance: EGP {balance}",
+  "@packages_currentBalance": {
+    "placeholders": {
+      "balance": {
+        "type": "String"
+      }
+    }
+  },
+  "packages_sufficient": "Sufficient",
+  "packages_payActivate": "Pay & Activate",
+  "packages_processing": "Processing",
+  "packages_subscriptionActive": "Subscription Active!",
+  "packages_subId": "Subscription ID: {id}",
+  "@packages_subId": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "packages_successDesc": "Your commute package is now active. You can start booking rides immediately from your dashboard.",
+  "packages_returnHome": "Return to Home",
+  "packages_bookFirstRide": "Book First Ride",
+  "error_timeout": "Connection timed out. Please try again.",
+  "error_cancelled": "Request was cancelled.",
+  "error_noInternet": "No internet connection.",
+  "error_badRequest": "Invalid request.",
+  "error_unauthorized": "Unauthorized access.",
+  "error_forbidden": "You do not have permission to access this resource.",
+  "error_notFound": "Resource not found.",
+  "error_validation": "Invalid data provided.",
+  "error_server": "Server error. Please try again later.",
+  "error_unknown": "An unknown error occurred.",
+  "dashboard_home": "Home",
+  "dashboard_bookings": "Bookings",
+  "dashboard_trips": "Trips",
+  "dashboard_liveTrips": "Live Trips",
+  "dashboard_fleet": "Fleet Management",
+  "dashboard_routes": "Routes",
+  "dashboard_subscriptions": "Subscriptions",
+  "dashboard_payments": "Finance",
+  "dashboard_tickets": "Tickets",
+  "dashboard_reports": "Reports",
+  "dashboard_settings": "Settings",
+  "dashboard_permissions": "Permissions",
+  "dashboard_panel": "Operation Panel",
+  "dashboard_system": "Transportation Ops System",
+  "dashboard_menu": "Menu",
+  "dashboard_lightMode": "Light Mode",
+  "dashboard_darkMode": "Dark Mode",
+  "dashboard_unauthorized": "This page is not available for the current role"
+}

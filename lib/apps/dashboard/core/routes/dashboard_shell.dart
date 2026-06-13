@@ -34,6 +34,7 @@ import '../permissions/dashboard_permission.dart';
 import '../permissions/dashboard_role.dart';
 import '../theme/dashboard_theme_cubit.dart';
 import 'dashboard_routes.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 class DashboardShell extends StatefulWidget {
   const DashboardShell({super.key});
@@ -47,87 +48,84 @@ class _DashboardShellState extends State<DashboardShell> {
   String _route = DashboardRoutes.home;
 
   late final List<_DashboardNavItem> _items = [
-    const _DashboardNavItem(
-      label: 'الرئيسية',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_home,
       route: DashboardRoutes.home,
       icon: Icons.home_outlined,
       selectedIcon: Icons.home_rounded,
     ),
-    const _DashboardNavItem(
-      label: 'الحجوزات',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_bookings,
       route: DashboardRoutes.bookings,
       icon: Icons.event_seat_outlined,
       selectedIcon: Icons.event_seat_rounded,
       permission: DashboardPermission.bookings,
     ),
-    const _DashboardNavItem(
-      label: 'الرحلات',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_trips,
       route: DashboardRoutes.trips,
       icon: Icons.event_seat_outlined,
       selectedIcon: Icons.event_seat_rounded,
       permission: DashboardPermission.trips,
     ),
-
-    const _DashboardNavItem(
-      label: 'الرحلات المباشرة',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_liveTrips,
       route: DashboardRoutes.liveTrips,
       icon: Icons.near_me_outlined,
       selectedIcon: Icons.near_me_rounded,
       permission: DashboardPermission.liveTrips,
     ),
-    const _DashboardNavItem(
-      label: 'إدارة الأسطول',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_fleet,
       route: DashboardRoutes.fleet,
       icon: Icons.local_shipping_outlined,
       selectedIcon: Icons.local_shipping_rounded,
       permission: DashboardPermission.fleet,
     ),
-
-    const _DashboardNavItem(
-      label: 'المسارات',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_routes,
       route: DashboardRoutes.routes,
       icon: Icons.alt_route_outlined,
       selectedIcon: Icons.alt_route_rounded,
       permission: DashboardPermission.routes,
     ),
-    const _DashboardNavItem(
-      label: 'الاشتراكات',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_subscriptions,
       route: DashboardRoutes.subscriptions,
       icon: Icons.event_seat_outlined,
       selectedIcon: Icons.text_snippet,
       permission: DashboardPermission.subscriptions,
     ),
-    const _DashboardNavItem(
-      label: 'المالية',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_payments,
       route: DashboardRoutes.payments,
       icon: Icons.account_balance_wallet_outlined,
       selectedIcon: Icons.account_balance_wallet_rounded,
       permission: DashboardPermission.payments,
     ),
-
-    const _DashboardNavItem(
-      label: 'الشكاوى',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_tickets,
       route: DashboardRoutes.tickets,
       icon: Icons.support_agent_outlined,
       selectedIcon: Icons.support_agent_rounded,
       permission: DashboardPermission.tickets,
     ),
-    const _DashboardNavItem(
-      label: 'التقارير',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_reports,
       route: DashboardRoutes.reports,
       icon: Icons.description_outlined,
       selectedIcon: Icons.description_rounded,
       permission: DashboardPermission.reports,
     ),
-    const _DashboardNavItem(
-      label: 'الإعدادات',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_settings,
       route: DashboardRoutes.settings,
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings_rounded,
       permission: DashboardPermission.settings,
     ),
-    const _DashboardNavItem(
-      label: 'الصلاحيات',
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_permissions,
       route: DashboardRoutes.permissions,
       icon: Icons.admin_panel_settings_outlined,
       selectedIcon: Icons.admin_panel_settings_rounded,
@@ -140,7 +138,7 @@ class _DashboardShellState extends State<DashboardShell> {
     final visibleItems = _visibleItems;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: Directionality.of(context),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final useCompactNavigation = constraints.maxWidth < 920;
@@ -233,7 +231,7 @@ class _DashboardShellState extends State<DashboardShell> {
   bool _openRoute(String route) {
     if (!_canOpenRoute(route)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('هذه الصفحة غير متاحة للدور الحالي')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.dashboard_unauthorized)),
       );
       return false;
     }
@@ -376,12 +374,12 @@ class _DashboardSidebar extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'لوحة التشغيل',
+                AppLocalizations.of(context)!.dashboard_panel,
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: AppSpacing.xSmall),
               Text(
-                'نظام عمليات النقل',
+                AppLocalizations.of(context)!.dashboard_system,
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -442,7 +440,7 @@ class _DashboardTopBar extends StatelessWidget {
         children: [
           if (onOpenMenu != null) ...[
             IconButton(
-              tooltip: 'القائمة',
+              tooltip: AppLocalizations.of(context)!.dashboard_menu,
               onPressed: onOpenMenu,
               icon: const Icon(Icons.menu_rounded),
             ),
@@ -452,7 +450,7 @@ class _DashboardTopBar extends StatelessWidget {
             child: Text(title, style: Theme.of(context).textTheme.titleLarge),
           ),
           IconButton(
-            tooltip: isDark ? 'الوضع الفاتح' : 'الوضع الداكن',
+            tooltip: isDark ? AppLocalizations.of(context)!.dashboard_lightMode : AppLocalizations.of(context)!.dashboard_darkMode,
             onPressed: () {
               context.read<DashboardThemeCubit>().setThemeMode(
                 isDark ? ThemeMode.light : ThemeMode.dark,
