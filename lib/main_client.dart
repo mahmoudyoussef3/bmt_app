@@ -3,6 +3,9 @@ import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -13,5 +16,10 @@ Future<void> main() async {
 
   registerClientDependencies();
 
-  runApp(const ClientApp());
+  runApp(
+    BlocProvider(
+      create: (_) => AppModeCubit()..load(),
+      child: const ClientApp(),
+    ),
+  );
 }
