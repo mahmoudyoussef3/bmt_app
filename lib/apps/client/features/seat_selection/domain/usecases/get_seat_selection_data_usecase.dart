@@ -6,7 +6,7 @@ class GetSeatSelectionDataUseCase {
 
   final SeatSelectionRepository _repository;
 
-  Future<SeatSelectionData> call() {
-    return _repository.getSeatSelectionData();
+  Future<SeatSelectionData> call(String tripId) async {
+    return _repository.getSeatSelectionData(tripId);
   }
 }

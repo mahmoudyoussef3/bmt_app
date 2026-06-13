@@ -19,10 +19,18 @@ class SeatSelectionScreen extends StatefulWidget {
 }
 
 class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
+  bool _didInit = false;
+
   @override
-  void initState() {
-    super.initState();
-    context.read<SeatSelectionCubit>().loadSeatSelection();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_didInit) return;
+    _didInit = true;
+    
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+    final tripId = args['tripId'] as String? ?? '';
+    
+    context.read<SeatSelectionCubit>().loadSeatSelection(tripId);
   }
 
   @override

@@ -87,7 +87,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
   }
 
   // Action methods
-  void _submitNewTicket() {
+  void _submitNewTicket() async {
     final title = _ticketTitleController.text.trim();
     final desc = _ticketDescController.text.trim();
 
@@ -98,7 +98,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
       return;
     }
 
-    final newTicket = context.read<SupportCubit>().createTicket(
+    final newTicket = await context.read<SupportCubit>().createTicket(
       category: _selectedCreateCategory,
       title: title,
       description: desc,
@@ -106,6 +106,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
       imageAttached: _ticketImageAttached,
     );
 
+    if (!mounted) return;
     if (newTicket == null) return;
 
     setState(() {
@@ -152,6 +153,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
       context.read<SupportCubit>().addAgentReply(ticketId);
     });
   }
+
 
   @override
   Widget build(BuildContext context) {

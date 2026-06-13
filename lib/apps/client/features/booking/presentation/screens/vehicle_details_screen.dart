@@ -919,7 +919,7 @@ class _VehicleBottomBar extends StatelessWidget {
               child: AppButton(
                 label: 'اختيار المقعد',
                 height: 52,
-                onPressed: () => Navigator.pushNamed(context, '/seat-selection'),
+                onPressed: () => Navigator.pushNamed(context, '/seat-selection', arguments: {'tripId': vehicle.id}),
               ),
             ),
           ],

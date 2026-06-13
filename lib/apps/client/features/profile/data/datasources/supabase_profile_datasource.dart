@@ -1,29 +1,47 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/client_profile_model.dart';
+import 'profile_datasource.dart';
 
-class MockProfileDatasource {
-  const MockProfileDatasource();
+class SupabaseProfileDatasource implements ProfileDatasource {
+  final SupabaseClient _supabase;
 
+  const SupabaseProfileDatasource(this._supabase);
+
+  String _getInitials(String name) {
+    if (name.isEmpty) return 'U';
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.length > 1) {
+      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
+    }
+    return parts[0][0].toUpperCase();
+  }
+
+  @override
   Future<ClientProfileDataModel> getProfileData() async {
-    return const ClientProfileDataModel(
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('User is not authenticated');
+    }
+
+    final response = await _supabase
+        .from('clients')
+        .select()
+        .eq('id', user.id)
+        .limit(1)
+        .maybeSingle();
+
+    final name = response?['full_name']?.toString() ?? 'Unknown User';
+    final email = response?['email']?.toString() ?? user.email ?? 'No email';
+    final initials = _getInitials(name);
+
+    return ClientProfileDataModel(
       profile: ClientProfileModel(
-        initials: 'AH',
-        name: 'Ahmed Hassan',
-        email: 'ahmed.hassan@company.com',
-        badge: 'Premium',
+        initials: initials,
+        name: name,
+        email: email,
+        badge: 'Premium', // You can load this from subscriptions later
       ),
-      sections: [
-        /*
-        ProfileMenuSectionModel(
-          title: 'Account',
-          items: [
-            ProfileMenuItemModel(
-              iconKey: 'person',
-              title: 'Account details',
-              subtitle: 'Employee ID · Operations',
-            ),
-          ],
-        ),
-        */
+      sections: const [
         ProfileMenuSectionModel(
           title: 'Travel',
           items: [
@@ -33,23 +51,6 @@ class MockProfileDatasource {
               subtitle: 'Upcoming, active & history',
               route: '/trips',
             ),
-            /*
-            ProfileMenuItemModel(
-              iconKey: 'packages',
-              title: 'Packages',
-              subtitle: 'Monthly & weekly plans',
-              route: '/subscription',
-            ),
-
-
-            ProfileMenuItemModel(
-              iconKey: 'search',
-              title: 'Book a route',
-              subtitle: 'Search trips & vehicles',
-              route: '/booking/search',
-            ),
-
-            */
           ],
         ),
         ProfileMenuSectionModel(

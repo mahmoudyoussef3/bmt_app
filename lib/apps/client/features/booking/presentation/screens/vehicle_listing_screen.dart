@@ -51,7 +51,7 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
 
   void _selectVehicle(VehicleDetailData vehicle) {
     setState(() => _selectedVehicleId = vehicle.id);
-    Navigator.pushNamed(context, '/seat-selection');
+    Navigator.pushNamed(context, '/seat-selection', arguments: {'tripId': vehicle.id});
   }
 
   void _selectSort(VehicleSortOption option) {

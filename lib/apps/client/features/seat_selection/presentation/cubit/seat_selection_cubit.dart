@@ -15,10 +15,10 @@ class SeatSelectionCubit extends Cubit<SeatSelectionState> {
   final GetSeatSelectionDataUseCase _getSeatSelectionData;
   final SelectSeatUseCase _selectSeat;
 
-  Future<void> loadSeatSelection() async {
+  Future<void> loadSeatSelection(String tripId) async {
     emit(const SeatSelectionLoading());
     try {
-      final data = await _getSeatSelectionData();
+      final data = await _getSeatSelectionData(tripId);
       emit(SeatSelectionLoaded(data: data));
     } catch (error) {
       emit(SeatSelectionError(error.toString()));

@@ -1,15 +1,20 @@
 import 'package:get_it/get_it.dart';
 
-import '../../features/auth/data/datasources/mock_client_auth_datasource.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../features/auth/data/datasources/client_auth_datasource.dart';
+import '../../features/auth/data/datasources/supabase_client_auth_datasource.dart';
 import '../../features/auth/data/repositories/client_auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/client_auth_repository.dart';
 import '../../features/auth/domain/usecases/register_client_usecase.dart';
 import '../../features/auth/domain/usecases/request_otp_usecase.dart';
 import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
-import '../../features/booking/data/datasources/mock_booking_search_datasource.dart';
-import '../../features/booking/data/datasources/mock_daily_booking_datasource.dart';
-import '../../features/booking/data/datasources/mock_vehicle_booking_datasource.dart';
+import '../../features/booking/data/datasources/booking_search_datasource.dart';
+import '../../features/booking/data/datasources/daily_booking_datasource.dart';
+import '../../features/booking/data/datasources/supabase_booking_search_datasource.dart';
+import '../../features/booking/data/datasources/supabase_daily_booking_datasource.dart';
+import '../../features/booking/data/datasources/supabase_vehicle_booking_datasource.dart';
+import '../../features/booking/data/datasources/vehicle_booking_datasource.dart';
 import '../../features/booking/data/repositories/booking_repository_impl.dart';
 import '../../features/booking/domain/repositories/booking_repository.dart';
 import '../../features/booking/domain/usecases/get_available_trips_usecase.dart';
@@ -28,12 +33,14 @@ import '../../features/communication/domain/repositories/communication_repositor
 import '../../features/communication/domain/usecases/add_conversation_message_usecase.dart';
 import '../../features/communication/domain/usecases/get_conversations_usecase.dart';
 import '../../features/communication/presentation/cubit/communication_cubit.dart';
-import '../../features/home/data/datasources/mock_home_datasource.dart';
+import '../../features/home/data/datasources/home_datasource.dart';
+import '../../features/home/data/datasources/supabase_home_datasource.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/usecases/get_home_data_usecase.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
-import '../../features/loyalty/data/datasources/mock_loyalty_datasource.dart';
+import '../../features/loyalty/data/datasources/loyalty_datasource.dart';
+import '../../features/loyalty/data/datasources/supabase_loyalty_datasource.dart';
 import '../../features/loyalty/data/repositories/loyalty_repository_impl.dart';
 import '../../features/loyalty/domain/repositories/loyalty_repository.dart';
 import '../../features/loyalty/domain/usecases/get_loyalty_data_usecase.dart';
@@ -44,20 +51,23 @@ import '../../features/notifications/data/repositories/notifications_repository_
 import '../../features/notifications/domain/repositories/notifications_repository.dart';
 import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
 import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
-import '../../features/payments/data/datasources/mock_payment_datasource.dart';
+import '../../features/payments/data/datasources/payment_datasource.dart';
+import '../../features/payments/data/datasources/static_payment_datasource.dart';
 import '../../features/payments/data/repositories/payment_repository_impl.dart';
 import '../../features/payments/domain/repositories/payment_repository.dart';
 import '../../features/payments/domain/usecases/apply_promo_code_usecase.dart';
 import '../../features/payments/domain/usecases/get_payment_methods_usecase.dart';
 import '../../features/payments/presentation/cubit/payment_cubit.dart';
-import '../../features/packages/data/datasources/mock_packages_datasource.dart';
+import '../../features/packages/data/datasources/packages_datasource.dart';
+import '../../features/packages/data/datasources/supabase_packages_datasource.dart';
 import '../../features/packages/data/repositories/packages_repository_impl.dart';
 import '../../features/packages/domain/repositories/packages_repository.dart';
 import '../../features/packages/domain/usecases/calculate_package_pricing_usecase.dart';
 import '../../features/packages/domain/usecases/filter_packages_usecase.dart';
 import '../../features/packages/domain/usecases/get_package_selection_data_usecase.dart';
 import '../../features/packages/presentation/cubit/packages_cubit.dart';
-import '../../features/profile/data/datasources/mock_profile_datasource.dart';
+import '../../features/profile/data/datasources/profile_datasource.dart';
+import '../../features/profile/data/datasources/supabase_profile_datasource.dart';
 import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/get_profile_data_usecase.dart';
@@ -73,7 +83,8 @@ import '../../features/referrals/domain/repositories/referral_rewards_repository
 import '../../features/referrals/domain/usecases/get_referral_rewards_data_usecase.dart';
 import '../../features/referrals/domain/usecases/update_referral_rewards_usecase.dart';
 import '../../features/referrals/presentation/cubit/referral_rewards_cubit.dart';
-import '../../features/seat_selection/data/datasources/mock_seat_selection_datasource.dart';
+import '../../features/seat_selection/data/datasources/seat_selection_datasource.dart';
+import '../../features/seat_selection/data/datasources/supabase_seat_selection_datasource.dart';
 import '../../features/seat_selection/data/repositories/seat_selection_repository_impl.dart';
 import '../../features/seat_selection/domain/repositories/seat_selection_repository.dart';
 import '../../features/seat_selection/domain/usecases/get_seat_selection_data_usecase.dart';
@@ -89,14 +100,16 @@ import '../../features/settings/data/repositories/settings_repository_impl.dart'
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/get_settings_data_usecase.dart';
 import '../../features/settings/presentation/cubit/settings_cubit.dart';
-import '../../features/support/data/datasources/mock_support_datasource.dart';
+import '../../features/support/data/datasources/supabase_support_datasource.dart';
+import '../../features/support/data/datasources/support_datasource.dart';
 import '../../features/support/data/repositories/support_repository_impl.dart';
 import '../../features/support/domain/repositories/support_repository.dart';
 import '../../features/support/domain/usecases/add_support_message_usecase.dart';
 import '../../features/support/domain/usecases/create_support_ticket_usecase.dart';
 import '../../features/support/domain/usecases/get_support_data_usecase.dart';
 import '../../features/support/presentation/cubit/support_cubit.dart';
-import '../../features/trips/data/datasources/mock_trips_datasource.dart';
+import '../../features/trips/data/datasources/supabase_trips_datasource.dart';
+import '../../features/trips/data/datasources/trips_datasource.dart';
 import '../../features/trips/data/repositories/trips_repository_impl.dart';
 import '../../features/trips/domain/repositories/trips_repository.dart';
 import '../../features/trips/domain/usecases/get_trip_details_usecase.dart';
@@ -132,15 +145,15 @@ void registerClientDependencies() {
 }
 
 void _registerAuthDependencies() {
-  if (!clientGetIt.isRegistered<MockClientAuthDatasource>()) {
-    clientGetIt.registerLazySingleton<MockClientAuthDatasource>(
-      () => const MockClientAuthDatasource(),
+  if (!clientGetIt.isRegistered<ClientAuthDatasource>()) {
+    clientGetIt.registerLazySingleton<ClientAuthDatasource>(
+      () => SupabaseClientAuthDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<ClientAuthRepository>()) {
     clientGetIt.registerLazySingleton<ClientAuthRepository>(
-      () => ClientAuthRepositoryImpl(clientGetIt<MockClientAuthDatasource>()),
+      () => ClientAuthRepositoryImpl(clientGetIt<ClientAuthDatasource>()),
     );
   }
 
@@ -174,15 +187,15 @@ void _registerAuthDependencies() {
 }
 
 void _registerHomeDependencies() {
-  if (!clientGetIt.isRegistered<MockHomeDatasource>()) {
-    clientGetIt.registerLazySingleton<MockHomeDatasource>(
-      () => const MockHomeDatasource(),
+  if (!clientGetIt.isRegistered<HomeDatasource>()) {
+    clientGetIt.registerLazySingleton<HomeDatasource>(
+      () => SupabaseHomeDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<HomeRepository>()) {
     clientGetIt.registerLazySingleton<HomeRepository>(
-      () => HomeRepositoryImpl(clientGetIt<MockHomeDatasource>()),
+      () => HomeRepositoryImpl(clientGetIt<HomeDatasource>()),
     );
   }
 
@@ -200,15 +213,15 @@ void _registerHomeDependencies() {
 }
 
 void _registerTripsDependencies() {
-  if (!clientGetIt.isRegistered<MockTripsDatasource>()) {
-    clientGetIt.registerLazySingleton<MockTripsDatasource>(
-      () => const MockTripsDatasource(),
+  if (!clientGetIt.isRegistered<TripsDatasource>()) {
+    clientGetIt.registerLazySingleton<TripsDatasource>(
+      () => SupabaseTripsDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<TripsRepository>()) {
     clientGetIt.registerLazySingleton<TripsRepository>(
-      () => TripsRepositoryImpl(clientGetIt<MockTripsDatasource>()),
+      () => TripsRepositoryImpl(clientGetIt<TripsDatasource>()),
     );
   }
 
@@ -235,30 +248,30 @@ void _registerTripsDependencies() {
 }
 
 void _registerBookingDependencies() {
-  if (!clientGetIt.isRegistered<MockBookingSearchDatasource>()) {
-    clientGetIt.registerLazySingleton<MockBookingSearchDatasource>(
-      () => const MockBookingSearchDatasource(),
+  if (!clientGetIt.isRegistered<BookingSearchDatasource>()) {
+    clientGetIt.registerLazySingleton<BookingSearchDatasource>(
+      () => SupabaseBookingSearchDatasource(Supabase.instance.client),
     );
   }
 
-  if (!clientGetIt.isRegistered<MockVehicleBookingDatasource>()) {
-    clientGetIt.registerLazySingleton<MockVehicleBookingDatasource>(
-      () => const MockVehicleBookingDatasource(),
+  if (!clientGetIt.isRegistered<DailyBookingDatasource>()) {
+    clientGetIt.registerLazySingleton<DailyBookingDatasource>(
+      () => SupabaseDailyBookingDatasource(Supabase.instance.client),
     );
   }
 
-  if (!clientGetIt.isRegistered<MockDailyBookingDatasource>()) {
-    clientGetIt.registerLazySingleton<MockDailyBookingDatasource>(
-      () => const MockDailyBookingDatasource(),
+  if (!clientGetIt.isRegistered<VehicleBookingDatasource>()) {
+    clientGetIt.registerLazySingleton<VehicleBookingDatasource>(
+      () => SupabaseVehicleBookingDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<BookingRepository>()) {
     clientGetIt.registerLazySingleton<BookingRepository>(
       () => BookingRepositoryImpl(
-        searchDatasource: clientGetIt<MockBookingSearchDatasource>(),
-        dailyBookingDatasource: clientGetIt<MockDailyBookingDatasource>(),
-        vehicleDatasource: clientGetIt<MockVehicleBookingDatasource>(),
+        searchDatasource: clientGetIt<BookingSearchDatasource>(),
+        dailyBookingDatasource: clientGetIt<DailyBookingDatasource>(),
+        vehicleDatasource: clientGetIt<VehicleBookingDatasource>(),
       ),
     );
   }
@@ -334,17 +347,15 @@ void _registerBookingDependencies() {
 }
 
 void _registerSeatSelectionDependencies() {
-  if (!clientGetIt.isRegistered<MockSeatSelectionDatasource>()) {
-    clientGetIt.registerLazySingleton<MockSeatSelectionDatasource>(
-      () => const MockSeatSelectionDatasource(),
+  if (!clientGetIt.isRegistered<SeatSelectionDatasource>()) {
+    clientGetIt.registerLazySingleton<SeatSelectionDatasource>(
+      () => SupabaseSeatSelectionDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<SeatSelectionRepository>()) {
     clientGetIt.registerLazySingleton<SeatSelectionRepository>(
-      () => SeatSelectionRepositoryImpl(
-        clientGetIt<MockSeatSelectionDatasource>(),
-      ),
+      () => SeatSelectionRepositoryImpl(clientGetIt<SeatSelectionDatasource>()),
     );
   }
 
@@ -397,15 +408,15 @@ void _registerSeatReleaseDependencies() {
 }
 
 void _registerPaymentDependencies() {
-  if (!clientGetIt.isRegistered<MockPaymentDatasource>()) {
-    clientGetIt.registerLazySingleton<MockPaymentDatasource>(
-      () => const MockPaymentDatasource(),
+  if (!clientGetIt.isRegistered<PaymentDatasource>()) {
+    clientGetIt.registerLazySingleton<PaymentDatasource>(
+      () => const StaticPaymentDatasource(),
     );
   }
 
   if (!clientGetIt.isRegistered<PaymentRepository>()) {
     clientGetIt.registerLazySingleton<PaymentRepository>(
-      () => PaymentRepositoryImpl(clientGetIt<MockPaymentDatasource>()),
+      () => PaymentRepositoryImpl(clientGetIt<PaymentDatasource>()),
     );
   }
 
@@ -458,15 +469,15 @@ void _registerSettingsDependencies() {
 }
 
 void _registerPackagesDependencies() {
-  if (!clientGetIt.isRegistered<MockPackagesDatasource>()) {
-    clientGetIt.registerLazySingleton<MockPackagesDatasource>(
-      () => const MockPackagesDatasource(),
+  if (!clientGetIt.isRegistered<PackagesDatasource>()) {
+    clientGetIt.registerLazySingleton<PackagesDatasource>(
+      () => SupabasePackagesDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<PackagesRepository>()) {
     clientGetIt.registerLazySingleton<PackagesRepository>(
-      () => PackagesRepositoryImpl(clientGetIt<MockPackagesDatasource>()),
+      () => PackagesRepositoryImpl(clientGetIt<PackagesDatasource>()),
     );
   }
 
@@ -535,15 +546,15 @@ void _registerTrackingDependencies() {
 }
 
 void _registerSupportDependencies() {
-  if (!clientGetIt.isRegistered<MockSupportDatasource>()) {
-    clientGetIt.registerLazySingleton<MockSupportDatasource>(
-      () => const MockSupportDatasource(),
+  if (!clientGetIt.isRegistered<SupportDatasource>()) {
+    clientGetIt.registerLazySingleton<SupportDatasource>(
+      () => SupabaseSupportDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<SupportRepository>()) {
     clientGetIt.registerLazySingleton<SupportRepository>(
-      () => SupportRepositoryImpl(clientGetIt<MockSupportDatasource>()),
+      () => SupportRepositoryImpl(clientGetIt<SupportDatasource>()),
     );
   }
 
@@ -555,13 +566,13 @@ void _registerSupportDependencies() {
 
   if (!clientGetIt.isRegistered<CreateSupportTicketUseCase>()) {
     clientGetIt.registerLazySingleton<CreateSupportTicketUseCase>(
-      () => CreateSupportTicketUseCase(),
+      () => CreateSupportTicketUseCase(clientGetIt<SupportRepository>()),
     );
   }
 
   if (!clientGetIt.isRegistered<AddSupportMessageUseCase>()) {
     clientGetIt.registerLazySingleton<AddSupportMessageUseCase>(
-      () => const AddSupportMessageUseCase(),
+      () => AddSupportMessageUseCase(clientGetIt<SupportRepository>()),
     );
   }
 
@@ -605,15 +616,15 @@ void _registerNotificationsDependencies() {
 }
 
 void _registerProfileDependencies() {
-  if (!clientGetIt.isRegistered<MockProfileDatasource>()) {
-    clientGetIt.registerLazySingleton<MockProfileDatasource>(
-      () => const MockProfileDatasource(),
+  if (!clientGetIt.isRegistered<ProfileDatasource>()) {
+    clientGetIt.registerLazySingleton<ProfileDatasource>(
+      () => SupabaseProfileDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<ProfileRepository>()) {
     clientGetIt.registerLazySingleton<ProfileRepository>(
-      () => ProfileRepositoryImpl(clientGetIt<MockProfileDatasource>()),
+      () => ProfileRepositoryImpl(clientGetIt<ProfileDatasource>()),
     );
   }
 
@@ -747,15 +758,15 @@ void _registerReferralRewardsDependencies() {
 }
 
 void _registerLoyaltyDependencies() {
-  if (!clientGetIt.isRegistered<MockLoyaltyDatasource>()) {
-    clientGetIt.registerLazySingleton<MockLoyaltyDatasource>(
-      () => const MockLoyaltyDatasource(),
+  if (!clientGetIt.isRegistered<LoyaltyDatasource>()) {
+    clientGetIt.registerLazySingleton<LoyaltyDatasource>(
+      () => SupabaseLoyaltyDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<LoyaltyRepository>()) {
     clientGetIt.registerLazySingleton<LoyaltyRepository>(
-      () => LoyaltyRepositoryImpl(clientGetIt<MockLoyaltyDatasource>()),
+      () => LoyaltyRepositoryImpl(clientGetIt<LoyaltyDatasource>()),
     );
   }
 

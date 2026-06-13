@@ -202,7 +202,7 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
                 onBook: () => Navigator.of(context).pushNamed(
                   '/seat-selection',
                   arguments: {
-                    'vehicleId': vehicle.id,
+                    'tripId': vehicle.id,
                     'driverName': vehicle.driver,
                     'departureTime': vehicle.time,
                     'pickupPoint': _pickup,

@@ -1,12 +1,12 @@
 import '../../domain/entities/client_registration.dart';
 import '../../domain/entities/otp_request.dart';
 import '../../domain/repositories/client_auth_repository.dart';
-import '../datasources/mock_client_auth_datasource.dart';
+import '../datasources/client_auth_datasource.dart';
 
 class ClientAuthRepositoryImpl implements ClientAuthRepository {
   const ClientAuthRepositoryImpl(this._datasource);
 
-  final MockClientAuthDatasource _datasource;
+  final ClientAuthDatasource _datasource;
 
   @override
   Future<OtpRequest> requestOtp({

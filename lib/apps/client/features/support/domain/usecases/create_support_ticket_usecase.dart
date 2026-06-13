@@ -1,33 +1,24 @@
-import 'dart:math';
-
 import '../entities/support_ticket.dart';
+import '../repositories/support_repository.dart';
 
 class CreateSupportTicketUseCase {
-  CreateSupportTicketUseCase({Random? random}) : _random = random ?? Random();
+  const CreateSupportTicketUseCase(this._repository);
 
-  final Random _random;
+  final SupportRepository _repository;
 
-  SupportTicket call({
+  Future<SupportTicket> call({
     required String category,
     required String title,
     required String description,
     required String priority,
     required bool imageAttached,
-  }) {
-    return SupportTicket(
-      id: '#TK-${_random.nextInt(9000) + 1000}',
-      category: category,
-      title: title,
-      description: description,
-      priority: priority,
-      status: TicketStatus.open,
-      dateCreated: 'Today, Jun 3',
-      attachedImages: imageAttached
-          ? const ['uploaded_issue_photo.png']
-          : const [],
-      conversation: [
-        {'sender': 'user', 'text': description, 'time': 'Just now'},
-      ],
-    );
+  }) async {
+    return _repository.createTicket({
+      'category': category,
+      'title': title,
+      'description': description,
+      'priority': priority,
+      'imageAttached': imageAttached,
+    });
   }
 }

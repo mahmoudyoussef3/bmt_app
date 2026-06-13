@@ -1,11 +1,11 @@
 import '../../domain/entities/home_data.dart';
 import '../../domain/repositories/home_repository.dart';
-import '../datasources/mock_home_datasource.dart';
+import '../datasources/home_datasource.dart';
 
 class HomeRepositoryImpl implements HomeRepository {
   const HomeRepositoryImpl(this._datasource);
 
-  final MockHomeDatasource _datasource;
+  final HomeDatasource _datasource;
 
   @override
   Future<HomeData> getHomeData() async {

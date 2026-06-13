@@ -4,22 +4,22 @@ import '../../domain/entities/booking_search_query.dart';
 import '../../domain/entities/daily_booking_data.dart';
 import '../../domain/entities/vehicle_detail.dart';
 import '../../domain/repositories/booking_repository.dart';
-import '../datasources/mock_booking_search_datasource.dart';
-import '../datasources/mock_daily_booking_datasource.dart';
-import '../datasources/mock_vehicle_booking_datasource.dart';
+import '../datasources/booking_search_datasource.dart';
+import '../datasources/daily_booking_datasource.dart';
+import '../datasources/vehicle_booking_datasource.dart';
 
 class BookingRepositoryImpl implements BookingRepository {
   const BookingRepositoryImpl({
-    required MockBookingSearchDatasource searchDatasource,
-    required MockDailyBookingDatasource dailyBookingDatasource,
-    required MockVehicleBookingDatasource vehicleDatasource,
+    required BookingSearchDatasource searchDatasource,
+    required DailyBookingDatasource dailyBookingDatasource,
+    required VehicleBookingDatasource vehicleDatasource,
   }) : _searchDatasource = searchDatasource,
        _dailyBookingDatasource = dailyBookingDatasource,
        _vehicleDatasource = vehicleDatasource;
 
-  final MockBookingSearchDatasource _searchDatasource;
-  final MockDailyBookingDatasource _dailyBookingDatasource;
-  final MockVehicleBookingDatasource _vehicleDatasource;
+  final BookingSearchDatasource _searchDatasource;
+  final DailyBookingDatasource _dailyBookingDatasource;
+  final VehicleBookingDatasource _vehicleDatasource;
 
   @override
   Future<BookingHubData> getBookingHubData() {

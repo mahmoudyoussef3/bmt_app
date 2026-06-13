@@ -1,13 +1,56 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/loyalty_data.dart';
+import 'loyalty_datasource.dart';
 
-class MockLoyaltyDatasource {
-  const MockLoyaltyDatasource();
+class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
+  final SupabaseClient _supabase;
 
+  const SupabaseLoyaltyDatasource(this._supabase);
+
+  String _calculateTier(int points) {
+    if (points >= 3000) return 'Platinum';
+    if (points >= 2000) return 'Gold';
+    if (points >= 1000) return 'Silver';
+    return 'Bronze';
+  }
+
+  @override
   Future<LoyaltyData> getLoyaltyData() async {
-    return const LoyaltyData(
-      currentPoints: 2450,
-      currentTierName: 'Gold',
-      tiers: [
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('User is not authenticated');
+    }
+
+    // 1. Fetch points and wallet balance
+    final accountResponse = await _supabase
+        .from('loyalty_accounts')
+        .select()
+        .eq('client_id', user.id)
+        .maybeSingle();
+
+    final currentPoints = accountResponse?['points'] as int? ?? 0;
+    // double walletBalance = double.tryParse(accountResponse?['wallet_balance']?.toString() ?? '0') ?? 0.0;
+
+    // 2. Fetch point transactions
+    final txResponse = await _supabase
+        .from('loyalty_transactions')
+        .select()
+        .eq('client_id', user.id)
+        .order('created_at', ascending: false);
+
+    final transactions = txResponse.map((tx) {
+      return PointsTransaction(
+        title: tx['title']?.toString() ?? 'Transaction',
+        date: tx['created_at'] != null ? tx['created_at'].toString().split('T')[0] : 'Unknown',
+        points: tx['points'] as int? ?? 0,
+        isEarned: tx['is_earned'] as bool? ?? true,
+      );
+    }).toList();
+
+    return LoyaltyData(
+      currentPoints: currentPoints,
+      currentTierName: _calculateTier(currentPoints),
+      tiers: const [
         LoyaltyTier(
           name: 'Bronze',
           pointsRequired: '0 pts',
@@ -55,46 +98,8 @@ class MockLoyaltyDatasource {
           ],
         ),
       ],
-      transactions: [
-        PointsTransaction(
-          title: 'Trip to Smart Village (Luxury Coach)',
-          date: 'Jun 2, 2026',
-          points: 150,
-          isEarned: true,
-        ),
-        PointsTransaction(
-          title: 'Redeemed EGP 50 Trip Coupon',
-          date: 'May 30, 2026',
-          points: 500,
-          isEarned: false,
-        ),
-        PointsTransaction(
-          title: 'Trip to Banha Station (Comfort Van)',
-          date: 'May 28, 2026',
-          points: 120,
-          isEarned: true,
-        ),
-        PointsTransaction(
-          title: 'Welcome Points Bonus',
-          date: 'May 24, 2026',
-          points: 500,
-          isEarned: true,
-        ),
-        PointsTransaction(
-          title: 'Referral Bonus: Invited Ahmed',
-          date: 'May 20, 2026',
-          points: 300,
-          isEarned: true,
-        ),
-        PointsTransaction(
-          title: 'Loyalty Monthly Tier Boost',
-          date: 'May 01, 2026',
-          points: 200,
-          isEarned: true,
-          expirationDate: 'Jun 30, 2026',
-        ),
-      ],
-      rewards: [
+      transactions: transactions,
+      rewards: const [
         RedeemableReward(
           id: 'r1',
           title: 'EGP 30 Off Shuttle Ride',
@@ -125,8 +130,7 @@ class MockLoyaltyDatasource {
         RedeemableReward(
           id: 'r4',
           title: 'EGP 100 Cashback',
-          description:
-              'Claim EGP 100 directly to your main BMT account wallet.',
+          description: 'Claim EGP 100 directly to your main BMT account wallet.',
           pointsCost: 1500,
           valueLabel: 'EGP 100 CASH',
           category: 'Cashback',
@@ -135,8 +139,7 @@ class MockLoyaltyDatasource {
         RedeemableReward(
           id: 'r5',
           title: 'EGP 200 Package Discount',
-          description:
-              'Get EGP 200 off your next weekly/monthly subscription bundle.',
+          description: 'Get EGP 200 off your next weekly/monthly subscription bundle.',
           pointsCost: 2000,
           valueLabel: 'EGP 200 OFF',
           category: 'Package',
@@ -145,8 +148,7 @@ class MockLoyaltyDatasource {
         RedeemableReward(
           id: 'r6',
           title: 'Free Month Upgrade',
-          description:
-              'Upgrade your weekly package to VIP comfort tier package.',
+          description: 'Upgrade your weekly package to VIP comfort tier package.',
           pointsCost: 2800,
           valueLabel: 'FREE UPGRADE',
           category: 'Package',

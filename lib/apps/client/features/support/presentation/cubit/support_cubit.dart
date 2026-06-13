@@ -30,24 +30,31 @@ class SupportCubit extends Cubit<SupportState> {
     }
   }
 
-  SupportTicket? createTicket({
+  Future<SupportTicket?> createTicket({
     required String category,
     required String title,
     required String description,
     required String priority,
     required bool imageAttached,
-  }) {
+  }) async {
     final current = state;
     if (current is! SupportLoaded) return null;
-    final ticket = _createTicket(
-      category: category,
-      title: title,
-      description: description,
-      priority: priority,
-      imageAttached: imageAttached,
-    );
-    emit(current.copyWith(tickets: [ticket, ...current.tickets]));
-    return ticket;
+    
+    emit(const SupportLoading()); // Optional, but good practice
+    try {
+      final ticket = await _createTicket(
+        category: category,
+        title: title,
+        description: description,
+        priority: priority,
+        imageAttached: imageAttached,
+      );
+      emit(current.copyWith(tickets: [ticket, ...current.tickets]));
+      return ticket;
+    } catch (e) {
+      emit(current); // Revert on failure
+      return null;
+    }
   }
 
   void openTicket(SupportTicket ticket) {
@@ -56,31 +63,41 @@ class SupportCubit extends Cubit<SupportState> {
     emit(current.copyWith(activeTicketId: ticket.id));
   }
 
-  void addUserMessage(String text) {
+  Future<void> addUserMessage(String text) async {
     final current = state;
     if (current is! SupportLoaded || current.activeTicket == null) return;
-    final updated = _addMessage(
-      ticket: current.activeTicket!,
-      sender: 'user',
-      text: text,
-      time: 'Just now',
-    );
-    _replaceTicket(current, updated);
+    
+    try {
+      final updated = await _addMessage(
+        ticket: current.activeTicket!,
+        sender: 'user',
+        text: text,
+        time: 'Just now',
+      );
+      _replaceTicket(current, updated);
+    } catch (e) {
+      // Handle error
+    }
   }
 
-  void addAgentReply(String ticketId) {
+  Future<void> addAgentReply(String ticketId) async {
     final current = state;
     if (current is! SupportLoaded || current.activeTicket?.id != ticketId) {
       return;
     }
-    final updated = _addMessage(
-      ticket: current.activeTicket!,
-      sender: 'agent',
-      text:
-          'Thank you for updating the ticket. An agent has been notified and is checking this.',
-      time: '1 min ago',
-    );
-    _replaceTicket(current, updated);
+    
+    try {
+      final updated = await _addMessage(
+        ticket: current.activeTicket!,
+        sender: 'agent',
+        text:
+            'Thank you for updating the ticket. An agent has been notified and is checking this.',
+        time: '1 min ago',
+      );
+      _replaceTicket(current, updated);
+    } catch (e) {
+      // Handle error
+    }
   }
 
   void _replaceTicket(SupportLoaded current, SupportTicket updated) {

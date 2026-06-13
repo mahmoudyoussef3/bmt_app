@@ -1,5 +1,5 @@
 import '../entities/seat_option.dart';
 
 abstract class SeatSelectionRepository {
-  Future<SeatSelectionData> getSeatSelectionData();
+  Future<SeatSelectionData> getSeatSelectionData(String tripId);
 }
