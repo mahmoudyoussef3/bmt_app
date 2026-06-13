@@ -1,5 +1,3 @@
-import '../../domain/entities/client_registration.dart';
-import '../../domain/entities/otp_request.dart';
 import '../../domain/repositories/client_auth_repository.dart';
 import '../datasources/client_auth_datasource.dart';
 
@@ -9,42 +7,42 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
   final ClientAuthDatasource _datasource;
 
   @override
-  Future<OtpRequest> requestOtp({
-    required String dialCode,
-    required String phone,
+  Future<void> signInWithEmail({
+    required String email,
+    required String password,
   }) async {
     try {
-      final result = await _datasource.requestOtp(
-        dialCode: dialCode,
+      await _datasource.signInWithEmail(email: email, password: password);
+    } on FormatException {
+      rethrow;
+    } catch (error) {
+      throw Exception('Sign in failed: $error');
+    }
+  }
+
+  @override
+  Future<void> signUpWithEmail({
+    required String fullName,
+    required String phone,
+    required String email,
+    required String password,
+  }) async {
+    try {
+      await _datasource.signUpWithEmail(
+        fullName: fullName,
         phone: phone,
+        email: email,
+        password: password,
       );
-      return result.toEntity();
     } on FormatException {
       rethrow;
     } catch (error) {
-      throw Exception('Unable to send code: $error');
+      throw Exception('Sign up failed: $error');
     }
   }
 
   @override
-  Future<void> verifyOtp({required String phone, required String code}) async {
-    try {
-      await _datasource.verifyOtp(phone: phone, code: code);
-    } on FormatException {
-      rethrow;
-    } catch (error) {
-      throw Exception('Unable to verify code: $error');
-    }
-  }
-
-  @override
-  Future<void> register(ClientRegistration registration) async {
-    try {
-      await _datasource.register(registration);
-    } on FormatException {
-      rethrow;
-    } catch (error) {
-      throw Exception('Unable to complete registration: $error');
-    }
+  Future<void> signOut() async {
+    await _datasource.signOut();
   }
 }

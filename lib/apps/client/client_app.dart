@@ -1,5 +1,6 @@
 import 'package:bmt_app/apps/dashboard/main.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
@@ -38,9 +39,8 @@ import 'package:bmt_app/apps/client/features/settings/presentation/cubit/setting
 import 'package:bmt_app/apps/client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/auth_success_screen.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/screens/otp_verification_screen.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/screens/phone_number_screen.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/screens/registration_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_in_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
@@ -58,14 +58,14 @@ import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/sea
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
 
-class ComponentDemoApp extends StatefulWidget {
-  const ComponentDemoApp({super.key});
+class ClientApp extends StatefulWidget {
+  const ClientApp({super.key});
 
   @override
-  State<ComponentDemoApp> createState() => _ComponentDemoAppState();
+  State<ClientApp> createState() => _ClientAppState();
 }
 
-class _ComponentDemoAppState extends State<ComponentDemoApp> {
+class _ClientAppState extends State<ClientApp> {
   ThemeMode _themeMode = ThemeMode.system;
 
   void _setThemeMode(ThemeMode mode) => setState(() => _themeMode = mode);
@@ -90,38 +90,25 @@ class _ComponentDemoAppState extends State<ComponentDemoApp> {
         darkTheme: AppTheme.darkTheme(),
         themeMode: _themeMode,
 
-        // Skip Authentication during UI development
-        home: _buildClientShell(),
+        home: StreamBuilder<AuthState>(
+          stream: Supabase.instance.client.auth.onAuthStateChange,
+          builder: (context, snapshot) {
+            // Also check currentSession as initial state might not emit immediately
+            final session = snapshot.data?.session ?? Supabase.instance.client.auth.currentSession;
+            if (session != null) {
+              return _buildClientShell();
+            }
+            return _buildAuthScope(const WelcomeScreen());
+          },
+        ),
 
         routes: {
           '/home': (_) => _buildClientShell(),
 
           // Authentication Screens
           AuthRoutes.welcome: (_) => _buildAuthScope(const WelcomeScreen()),
-          AuthRoutes.phone: (_) => _buildAuthScope(const PhoneNumberScreen()),
-
-          AuthRoutes.otp: (context) {
-            final phone = ModalRoute.of(context)?.settings.arguments as String?;
-            return _buildAuthScope(OtpVerificationScreen(phoneNumber: phone));
-          },
-
-          AuthRoutes.registration: (context) {
-            final args = ModalRoute.of(context)?.settings.arguments;
-            String? phone;
-            String? via;
-
-            if (args is Map<String, dynamic>) {
-              phone = args['phone'] as String?;
-              via = args['via'] as String?;
-            } else if (args is Map) {
-              phone = args['phone']?.toString();
-              via = args['via']?.toString();
-            }
-
-            return _buildAuthScope(
-              RegistrationScreen(prefilledPhone: phone, viaSocial: via),
-            );
-          },
+          AuthRoutes.signIn: (_) => _buildAuthScope(const SignInScreen()),
+          AuthRoutes.signUp: (_) => _buildAuthScope(const SignUpScreen()),
 
           AuthRoutes.success: (_) => _buildAuthScope(const AuthSuccessScreen()),
 

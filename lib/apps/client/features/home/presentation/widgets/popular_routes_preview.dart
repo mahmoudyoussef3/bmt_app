@@ -29,6 +29,8 @@ class PopularRoutesPreview extends StatelessWidget {
       272.0,
       340.0,
     );
+    if (routes.isEmpty) return const SizedBox.shrink();
+    
     final count = previewCount.clamp(1, routes.length);
 
     return Column(

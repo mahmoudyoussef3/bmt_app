@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
-import 'package:bmt_app/features/component/presentation/component_demo_app.dart';
+import 'package:bmt_app/apps/client/client_app.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 import 'package:bmt_app/core/app_mode/app_mode.dart';
 
@@ -49,7 +49,7 @@ class MyApp extends StatelessWidget {
         title: 'BMT App',
         theme: ThemeData(primarySwatch: Colors.blue),
         routes: {
-          '/': (_) => const ComponentDemoApp(),
+          '/': (_) => const ClientApp(),
           '/driver': (_) => const CaptainAppShell(),
           '/admin': (_) => const DashboardWebApp(),
           '/ops-dashboard': (_) => const DashboardWebApp(),

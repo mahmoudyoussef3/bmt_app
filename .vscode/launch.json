@@ -1,25 +1,29 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
-        {
-            "name": "bmt_app",
-            "request": "launch",
-            "type": "dart"
-        },
-        {
-            "name": "bmt_app (profile mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "profile"
-        },
-        {
-            "name": "bmt_app (release mode)",
-            "request": "launch",
-            "type": "dart",
-            "flutterMode": "release"
-        }
-    ]
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "BMT Client App",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_client.dart"
+    },
+    {
+      "name": "BMT Ops Dashboard",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_dashboard.dart"
+    },
+    {
+      "name": "BMT Captain App",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main_captain.dart"
+    },
+    {
+      "name": "BMT Legacy App Router",
+      "request": "launch",
+      "type": "dart",
+      "program": "lib/main.dart"
+    }
+  ]
 }

@@ -5,9 +5,8 @@ import '../../features/auth/data/datasources/client_auth_datasource.dart';
 import '../../features/auth/data/datasources/supabase_client_auth_datasource.dart';
 import '../../features/auth/data/repositories/client_auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/client_auth_repository.dart';
-import '../../features/auth/domain/usecases/register_client_usecase.dart';
-import '../../features/auth/domain/usecases/request_otp_usecase.dart';
-import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
+import '../../features/auth/domain/usecases/sign_in_with_email_usecase.dart';
+import '../../features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/booking/data/datasources/booking_search_datasource.dart';
 import '../../features/booking/data/datasources/daily_booking_datasource.dart';
@@ -157,30 +156,23 @@ void _registerAuthDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<RequestOtpUseCase>()) {
-    clientGetIt.registerLazySingleton<RequestOtpUseCase>(
-      () => RequestOtpUseCase(clientGetIt<ClientAuthRepository>()),
+  if (!clientGetIt.isRegistered<SignInWithEmailUseCase>()) {
+    clientGetIt.registerLazySingleton<SignInWithEmailUseCase>(
+      () => SignInWithEmailUseCase(clientGetIt<ClientAuthRepository>()),
     );
   }
 
-  if (!clientGetIt.isRegistered<VerifyOtpUseCase>()) {
-    clientGetIt.registerLazySingleton<VerifyOtpUseCase>(
-      () => VerifyOtpUseCase(clientGetIt<ClientAuthRepository>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<RegisterClientUseCase>()) {
-    clientGetIt.registerLazySingleton<RegisterClientUseCase>(
-      () => RegisterClientUseCase(clientGetIt<ClientAuthRepository>()),
+  if (!clientGetIt.isRegistered<SignUpWithEmailUseCase>()) {
+    clientGetIt.registerLazySingleton<SignUpWithEmailUseCase>(
+      () => SignUpWithEmailUseCase(clientGetIt<ClientAuthRepository>()),
     );
   }
 
   if (!clientGetIt.isRegistered<ClientAuthCubit>()) {
     clientGetIt.registerFactory<ClientAuthCubit>(
       () => ClientAuthCubit(
-        requestOtp: clientGetIt<RequestOtpUseCase>(),
-        verifyOtp: clientGetIt<VerifyOtpUseCase>(),
-        registerClient: clientGetIt<RegisterClientUseCase>(),
+        signInWithEmail: clientGetIt<SignInWithEmailUseCase>(),
+        signUpWithEmail: clientGetIt<SignUpWithEmailUseCase>(),
       ),
     );
   }

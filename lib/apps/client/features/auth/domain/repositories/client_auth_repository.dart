@@ -1,13 +1,15 @@
-import '../entities/client_registration.dart';
-import '../entities/otp_request.dart';
-
 abstract class ClientAuthRepository {
-  Future<OtpRequest> requestOtp({
-    required String dialCode,
-    required String phone,
+  Future<void> signInWithEmail({
+    required String email,
+    required String password,
   });
 
-  Future<void> verifyOtp({required String phone, required String code});
+  Future<void> signUpWithEmail({
+    required String fullName,
+    required String phone,
+    required String email,
+    required String password,
+  });
 
-  Future<void> register(ClientRegistration registration);
+  Future<void> signOut();
 }
