@@ -59,6 +59,7 @@ import 'package:bmt_app/apps/client/features/seat_selection/presentation/screens
 import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/seat_release_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
+import 'package:bmt_app/core/widgets/bmt_splash_screen.dart';
 
 class ClientApp extends StatefulWidget {
   const ClientApp({super.key});
@@ -69,6 +70,7 @@ class ClientApp extends StatefulWidget {
 
 class _ClientAppState extends State<ClientApp> {
   ThemeMode _themeMode = ThemeMode.system;
+  bool _showSplash = true;
 
   void _setThemeMode(ThemeMode mode) => setState(() => _themeMode = mode);
 
@@ -104,7 +106,15 @@ class _ClientAppState extends State<ClientApp> {
         darkTheme: AppTheme.darkTheme(),
         themeMode: _themeMode,
 
-        home: StreamBuilder<AuthState>(
+        home: _showSplash 
+            ? BmtSplashScreen(
+                onInitializationComplete: () {
+                  if (mounted) {
+                    setState(() => _showSplash = false);
+                  }
+                },
+              )
+            : StreamBuilder<AuthState>(
           stream: Supabase.instance.client.auth.onAuthStateChange,
           builder: (context, snapshot) {
             // Also check currentSession as initial state might not emit immediately
