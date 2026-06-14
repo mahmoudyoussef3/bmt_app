@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:intl/intl.dart';
 
 class LocaleCubit extends Cubit<Locale> {
   static const _storageKey = 'app_language';
@@ -14,18 +15,21 @@ class LocaleCubit extends Cubit<Locale> {
     try {
       final savedCode = await _storage.read(key: _storageKey);
       if (savedCode != null) {
+        Intl.defaultLocale = savedCode;
         emit(Locale(savedCode));
       } else {
-        // Default to English if not set
+        Intl.defaultLocale = 'en';
         emit(const Locale('en'));
       }
     } catch (_) {
+      Intl.defaultLocale = 'en';
       emit(const Locale('en'));
     }
   }
 
   Future<void> changeLocale(String languageCode) async {
     final newLocale = Locale(languageCode);
+    Intl.defaultLocale = languageCode;
     emit(newLocale);
     try {
       await _storage.write(key: _storageKey, value: languageCode);

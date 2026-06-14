@@ -350,9 +350,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                 ),
                               ),
                               const SizedBox(width: 4),
-                              const Text(
+                              Text(
                                 AppLocalizations.of(context)!.packages_startingPrice,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey,
                                 ),

@@ -63,6 +63,14 @@ class MyApp extends StatelessWidget {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             locale: locale,
+            localeResolutionCallback: (deviceLocale, supportedLocales) {
+              for (var supportedLocale in supportedLocales) {
+                if (supportedLocale.languageCode == locale.languageCode) {
+                  return supportedLocale;
+                }
+              }
+              return supportedLocales.first;
+            },
             theme: ThemeData(primarySwatch: Colors.blue),
             routes: {
               '/': (_) => const ClientApp(),

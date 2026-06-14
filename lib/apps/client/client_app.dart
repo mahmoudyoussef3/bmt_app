@@ -92,7 +92,14 @@ class _ClientAppState extends State<ClientApp> {
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
             locale: locale,
-
+            localeResolutionCallback: (deviceLocale, supportedLocales) {
+              for (var supportedLocale in supportedLocales) {
+                if (supportedLocale.languageCode == locale.languageCode) {
+                  return supportedLocale;
+                }
+              }
+              return supportedLocales.first;
+            },
         theme: AppTheme.lightTheme(),
         darkTheme: AppTheme.darkTheme(),
         themeMode: _themeMode,

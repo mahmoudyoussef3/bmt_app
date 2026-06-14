@@ -548,7 +548,7 @@ class _ComfortCard extends StatelessWidget {
           _ComfortTile(
             icon: Icons.build_circle_outlined,
             label: AppLocalizations.of(context)!.booking_vehicleCondition,
-            value: _vehicleConditionLabel(vehicle.vehicleCondition),
+            value: _vehicleConditionLabel(context, vehicle.vehicleCondition),
             positive: vehicle.vehicleCondition == 'Excellent',
           ),
         ],
@@ -556,7 +556,7 @@ class _ComfortCard extends StatelessWidget {
     );
   }
 
-  String _vehicleConditionLabel(String condition) {
+  String _vehicleConditionLabel(BuildContext context, String condition) {
     return switch (condition) {
       'Excellent' => AppLocalizations.of(context)!.booking_ratingExcellent,
       'Very good' => AppLocalizations.of(context)!.booking_ratingVeryGood,
