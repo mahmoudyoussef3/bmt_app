@@ -36,10 +36,10 @@ class TicketsLoaded extends TicketsState {
 
   Complaint? get selectedComplaint {
     if (selectedComplaintId == null || complaints.isEmpty) return null;
-    return complaints.firstWhere(
-      (c) => c.id == selectedComplaintId,
-      orElse: () => complaints.first,
-    );
+    for (final c in complaints) {
+      if (c.id == selectedComplaintId) return c;
+    }
+    return complaints.first;
   }
 
   List<Complaint> get filteredComplaints {
