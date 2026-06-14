@@ -12,4 +12,6 @@ abstract class ClientAuthRepository {
   });
 
   Future<void> signOut();
+
+  Future<void> sendPasswordResetEmail(String email);
 }

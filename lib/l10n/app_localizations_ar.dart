@@ -196,7 +196,43 @@ class AppLocalizationsAr extends AppLocalizations {
   String get auth_invalidPhone => 'أدخل رقم هاتف صحيح';
 
   @override
-  String get auth_invalidPassword => 'يجب أن تكون كلمة المرور 6 أحرف على الأقل';
+  String get auth_invalidPassword =>
+      'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل';
+
+  @override
+  String get auth_forgotPasswordTitle => 'هل نسيت كلمة المرور؟';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'لا تقلق. أدخل بريدك الإلكتروني وسنرسل لك رابطاً آمناً لإعادة تعيين كلمة المرور الخاصة بك.';
+
+  @override
+  String get auth_sendResetLink => 'إرسال رابط التعيين';
+
+  @override
+  String get auth_backToLogin => 'العودة لتسجيل الدخول';
+
+  @override
+  String get auth_checkEmailTitle => 'تحقق من بريدك الإلكتروني';
+
+  @override
+  String auth_checkEmailMessage(String email) {
+    return 'أرسلنا رابطاً آمناً إلى $email. افتحه لإنشاء كلمة مرور جديدة.';
+  }
+
+  @override
+  String get auth_resendLink => 'إعادة إرسال الرابط';
+
+  @override
+  String auth_resendIn(int seconds) {
+    return 'إعادة إرسال الرابط خلال $seconds ثانية';
+  }
+
+  @override
+  String get auth_rateLimited => 'من فضلك انتظر قليلًا قبل طلب رابط جديد.';
+
+  @override
+  String get auth_unknownError => 'حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.';
 
   @override
   String get auth_alreadyHaveAccount => 'لديك حساب بالفعل؟ ';

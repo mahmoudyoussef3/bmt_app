@@ -464,6 +464,66 @@ abstract class AppLocalizations {
   /// **'Password must be at least 6 characters'**
   String get auth_invalidPassword;
 
+  /// No description provided for @auth_forgotPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot your password?'**
+  String get auth_forgotPasswordTitle;
+
+  /// No description provided for @auth_forgotPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No worries. Enter your email and we’ll send you a secure link to reset your password.'**
+  String get auth_forgotPasswordSubtitle;
+
+  /// No description provided for @auth_sendResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get auth_sendResetLink;
+
+  /// No description provided for @auth_backToLogin.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to Login'**
+  String get auth_backToLogin;
+
+  /// No description provided for @auth_checkEmailTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Check your email'**
+  String get auth_checkEmailTitle;
+
+  /// No description provided for @auth_checkEmailMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a secure reset link to {email}. Open it to create a new password.'**
+  String auth_checkEmailMessage(String email);
+
+  /// No description provided for @auth_resendLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend link'**
+  String get auth_resendLink;
+
+  /// No description provided for @auth_resendIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend link in {seconds}s'**
+  String auth_resendIn(int seconds);
+
+  /// No description provided for @auth_rateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Please wait before requesting another reset link.'**
+  String get auth_rateLimited;
+
+  /// No description provided for @auth_unknownError.
+  ///
+  /// In en, this message translates to:
+  /// **'An unexpected error occurred. Please try again later.'**
+  String get auth_unknownError;
+
   /// No description provided for @auth_alreadyHaveAccount.
   ///
   /// In en, this message translates to:

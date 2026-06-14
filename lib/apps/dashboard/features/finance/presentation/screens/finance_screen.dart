@@ -50,7 +50,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
                 SnackBar(
                   content: Text(
                     state.actionMessage!,
-                    style: const TextStyle(fontFamily: 'Inter', fontWeight: FontWeight.w500),
+                    style: const TextStyle(fontWeight: FontWeight.w500),
                   ),
                   backgroundColor: Theme.of(context).colorScheme.primary,
                   behavior: SnackBarBehavior.floating,

@@ -60,7 +60,33 @@
   "auth_invalidFullName": "أدخل اسمك الكامل",
   "auth_phoneNumber": "رقم الهاتف",
   "auth_invalidPhone": "أدخل رقم هاتف صحيح",
-  "auth_invalidPassword": "يجب أن تكون كلمة المرور 6 أحرف على الأقل",
+  "auth_invalidPassword": "يجب أن تتكون كلمة المرور من 6 أحرف على الأقل",
+  "auth_forgotPasswordTitle": "هل نسيت كلمة المرور؟",
+  "auth_forgotPasswordSubtitle": "لا تقلق. أدخل بريدك الإلكتروني وسنرسل لك رابطاً آمناً لإعادة تعيين كلمة المرور الخاصة بك.",
+  "auth_sendResetLink": "إرسال رابط التعيين",
+  "auth_backToLogin": "العودة لتسجيل الدخول",
+  "auth_checkEmailTitle": "تحقق من بريدك الإلكتروني",
+  "auth_checkEmailMessage": "أرسلنا رابطاً آمناً إلى {email}. افتحه لإنشاء كلمة مرور جديدة.",
+  "@auth_checkEmailMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "user@example.com"
+      }
+    }
+  },
+  "auth_resendLink": "إعادة إرسال الرابط",
+  "auth_resendIn": "إعادة إرسال الرابط خلال {seconds} ثانية",
+  "@auth_resendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "example": "60"
+      }
+    }
+  },
+  "auth_rateLimited": "من فضلك انتظر قليلًا قبل طلب رابط جديد.",
+  "auth_unknownError": "حدث خطأ غير متوقع. يرجى المحاولة لاحقاً.",
   "auth_alreadyHaveAccount": "لديك حساب بالفعل؟ ",
   "booking_title": "الحجوزات",
   "booking_subtitle": "اختر كيف تريد حجز رحلتك",

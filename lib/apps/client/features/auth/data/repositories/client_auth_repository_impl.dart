@@ -45,4 +45,18 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
   Future<void> signOut() async {
     await _datasource.signOut();
   }
+
+  @override
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _datasource.sendPasswordResetEmail(email);
+    } on FormatException {
+      rethrow;
+    } catch (error) {
+      if (error.toString().contains('RateLimit')) {
+        throw Exception('RateLimit');
+      }
+      throw Exception('Failed to send reset email: $error');
+    }
+  }
 }

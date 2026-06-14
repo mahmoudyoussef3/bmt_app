@@ -2,20 +2,30 @@ import 'package:flutter/material.dart';
 
 class PremiumAuthTextField extends StatefulWidget {
   final TextEditingController controller;
+  final FocusNode? focusNode;
   final String labelText;
   final IconData prefixIcon;
   final TextInputType keyboardType;
+  final TextInputAction? textInputAction;
   final bool isPassword;
+  final Iterable<String>? autofillHints;
   final String? Function(String?)? validator;
+  final void Function(String)? onChanged;
+  final void Function(String)? onFieldSubmitted;
 
   const PremiumAuthTextField({
     super.key,
     required this.controller,
     required this.labelText,
     required this.prefixIcon,
+    this.focusNode,
     this.keyboardType = TextInputType.text,
+    this.textInputAction,
     this.isPassword = false,
+    this.autofillHints,
     this.validator,
+    this.onChanged,
+    this.onFieldSubmitted,
   });
 
   @override
@@ -23,74 +33,116 @@ class PremiumAuthTextField extends StatefulWidget {
 }
 
 class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
+  late final FocusNode _focusNode;
+  late final bool _useExternalFocusNode;
+
   bool _obscureText = true;
-  final FocusNode _focusNode = FocusNode();
   bool _isFocused = false;
 
   @override
   void initState() {
     super.initState();
+
+    _useExternalFocusNode = widget.focusNode != null;
+    _focusNode = widget.focusNode ?? FocusNode();
     _obscureText = widget.isPassword;
-    _focusNode.addListener(() {
-      setState(() {
-        _isFocused = _focusNode.hasFocus;
-      });
+
+    _focusNode.addListener(_handleFocusChange);
+  }
+
+  void _handleFocusChange() {
+    if (!mounted) return;
+    setState(() {
+      _isFocused = _focusNode.hasFocus;
     });
   }
 
   @override
   void dispose() {
-    _focusNode.dispose();
+    _focusNode.removeListener(_handleFocusChange);
+
+    if (!_useExternalFocusNode) {
+      _focusNode.dispose();
+    }
+
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final isDark = theme.brightness == Brightness.dark;
 
-    final defaultFillColor = isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
-    final focusedFillColor = isDark ? const Color(0xFF0F172A) : Colors.white;
+    final fillColor = _isFocused
+        ? isDark
+            ? const Color(0xFF0F172A)
+            : Colors.white
+        : isDark
+            ? const Color(0xFF1E293B)
+            : const Color(0xFFF8FAFC);
 
     return AnimatedContainer(
-      duration: const Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
       decoration: BoxDecoration(
-        color: _isFocused ? focusedFillColor : defaultFillColor,
+        color: fillColor,
         borderRadius: BorderRadius.circular(16),
         boxShadow: _isFocused
             ? [
                 BoxShadow(
-                  color: theme.primaryColor.withOpacity(0.15),
-                  blurRadius: 16,
-                  offset: const Offset(0, 4),
-                )
+                  color: scheme.primary.withOpacity(0.16),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
               ]
-            : [],
+            : [
+                BoxShadow(
+                  color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
       ),
       child: TextFormField(
         controller: widget.controller,
         focusNode: _focusNode,
         keyboardType: widget.keyboardType,
+        textInputAction: widget.textInputAction,
+        autofillHints: widget.autofillHints,
         obscureText: widget.isPassword ? _obscureText : false,
+        validator: widget.validator,
+        onChanged: widget.onChanged,
+        onFieldSubmitted: widget.onFieldSubmitted,
+        cursorColor: scheme.primary,
         style: TextStyle(
-          fontWeight: FontWeight.w500,
-          color: theme.colorScheme.onSurface,
+          fontWeight: FontWeight.w700,
+          color: scheme.onSurface,
         ),
         decoration: InputDecoration(
           labelText: widget.labelText,
           labelStyle: TextStyle(
-            color: _isFocused ? theme.primaryColor : theme.colorScheme.onSurfaceVariant.withOpacity(0.7),
-            fontWeight: _isFocused ? FontWeight.w600 : FontWeight.normal,
+            color: _isFocused
+                ? scheme.primary
+                : scheme.onSurfaceVariant.withOpacity(0.75),
+            fontWeight: _isFocused ? FontWeight.w800 : FontWeight.w600,
           ),
           prefixIcon: Icon(
             widget.prefixIcon,
-            color: _isFocused ? theme.primaryColor : theme.iconTheme.color?.withOpacity(0.5),
+            color: _isFocused
+                ? scheme.primary
+                : scheme.onSurfaceVariant.withOpacity(0.65),
           ),
           suffixIcon: widget.isPassword
               ? IconButton(
+                  splashRadius: 22,
                   icon: Icon(
-                    _obscureText ? Icons.visibility_outlined : Icons.visibility_off_outlined,
-                    color: _isFocused ? theme.primaryColor : theme.iconTheme.color?.withOpacity(0.5),
+                    _obscureText
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: _isFocused
+                        ? scheme.primary
+                        : scheme.onSurfaceVariant.withOpacity(0.65),
                   ),
                   onPressed: () {
                     setState(() {
@@ -99,29 +151,30 @@ class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
                   },
                 )
               : null,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: Colors.transparent),
+          filled: true,
+          fillColor: Colors.transparent,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 18,
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: isDark ? Colors.white10 : Colors.black.withOpacity(0.05)),
+          border: _border(Colors.transparent),
+          enabledBorder: _border(
+            isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: theme.primaryColor, width: 2),
-          ),
-          errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: theme.colorScheme.error, width: 1),
-          ),
-          focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(16),
-            borderSide: BorderSide(color: theme.colorScheme.error, width: 2),
-          ),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          focusedBorder: _border(scheme.primary, width: 2),
+          errorBorder: _border(scheme.error),
+          focusedErrorBorder: _border(scheme.error, width: 2),
         ),
-        validator: widget.validator,
+      ),
+    );
+  }
+
+  OutlineInputBorder _border(Color color, {double width = 1}) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(
+        color: color,
+        width: width,
       ),
     );
   }

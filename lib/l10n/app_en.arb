@@ -82,6 +82,32 @@
   "auth_phoneNumber": "Phone Number",
   "auth_invalidPhone": "Enter a valid phone number",
   "auth_invalidPassword": "Password must be at least 6 characters",
+  "auth_forgotPasswordTitle": "Forgot your password?",
+  "auth_forgotPasswordSubtitle": "No worries. Enter your email and we’ll send you a secure link to reset your password.",
+  "auth_sendResetLink": "Send reset link",
+  "auth_backToLogin": "Back to Login",
+  "auth_checkEmailTitle": "Check your email",
+  "auth_checkEmailMessage": "We sent a secure reset link to {email}. Open it to create a new password.",
+  "@auth_checkEmailMessage": {
+    "placeholders": {
+      "email": {
+        "type": "String",
+        "example": "user@example.com"
+      }
+    }
+  },
+  "auth_resendLink": "Resend link",
+  "auth_resendIn": "Resend link in {seconds}s",
+  "@auth_resendIn": {
+    "placeholders": {
+      "seconds": {
+        "type": "int",
+        "example": "60"
+      }
+    }
+  },
+  "auth_rateLimited": "Please wait before requesting another reset link.",
+  "auth_unknownError": "An unexpected error occurred. Please try again later.",
   "auth_alreadyHaveAccount": "Already have an account? ",
   "booking_title": "Bookings",
   "booking_subtitle": "Choose how you want to book your commute",

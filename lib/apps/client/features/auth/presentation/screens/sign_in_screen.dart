@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:bmt_app/core/widgets/app_dialogs.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
+
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../routes/auth_routes.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
-
+import '../widgets/premium_auth_button.dart';
 import '../widgets/premium_auth_scaffold.dart';
 import '../widgets/premium_auth_text_field.dart';
-import '../widgets/premium_auth_button.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -18,152 +20,332 @@ class SignInScreen extends StatefulWidget {
 
 class _SignInScreenState extends State<SignInScreen> {
   final _formKey = GlobalKey<FormState>();
+
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  final _emailFocus = FocusNode();
+  final _passwordFocus = FocusNode();
 
   @override
   void dispose() {
     _emailController.dispose();
     _passwordController.dispose();
+    _emailFocus.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
   void _submit() {
-    if (_formKey.currentState?.validate() ?? false) {
-      context.read<ClientAuthCubit>().signIn(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-          );
-    }
+    FocusScope.of(context).unfocus();
+
+    final valid = _formKey.currentState?.validate() ?? false;
+    if (!valid) return;
+
+    context.read<ClientAuthCubit>().signIn(
+          email: _emailController.text.trim().toLowerCase(),
+          password: _passwordController.text,
+        );
+  }
+
+  void _goToForgotPassword() {
+    Navigator.of(context).pushNamed(AuthRoutes.forgotPassword);
+  }
+
+  void _goToSignUp() {
+    Navigator.of(context).pushReplacementNamed(AuthRoutes.signUp);
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
-    return BlocListener<ClientAuthCubit, ClientAuthState>(
-      listenWhen: (previous, current) => previous.signInStatus != current.signInStatus,
-      listener: (context, state) {
-        if (state.signInStatus == AuthSubmissionStatus.success) {
-          Navigator.of(context).pushReplacementNamed(AuthRoutes.success);
-        } else if (state.signInStatus == AuthSubmissionStatus.failure) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(state.signInError ?? AppLocalizations.of(context)!.auth_signInFailed),
-              backgroundColor: theme.colorScheme.error,
-              behavior: SnackBarBehavior.floating,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-            ),
-          );
-        }
-      },
-      child: PremiumAuthScaffold(
-        logo: Row(
-          children: [
-            Image.asset(
-              'assets/images/app_icon.png',
-              width: 42,
-              height: 42,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'EasyWay',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: theme.primaryColor,
-                letterSpacing: -0.5,
-              ),
-            ),
-          ],
-        ),
-        title: AppLocalizations.of(context)!.auth_welcomeBack,
-        subtitle: AppLocalizations.of(context)!.auth_signInSubtitle,
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Email Field
-              PremiumAuthTextField(
-                controller: _emailController,
-                labelText: AppLocalizations.of(context)!.auth_email,
-                prefixIcon: Icons.email_outlined,
-                keyboardType: TextInputType.emailAddress,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return AppLocalizations.of(context)!.auth_required;
-                  if (!value.contains('@')) return AppLocalizations.of(context)!.auth_invalidEmail;
-                  return null;
-                },
-              ),
-              const SizedBox(height: 24),
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: BlocListener<ClientAuthCubit, ClientAuthState>(
+        listenWhen: (previous, current) =>
+            previous.signInStatus != current.signInStatus,
+        listener: (context, state) {
+          if (state.signInStatus == AuthSubmissionStatus.success) {
+            Navigator.of(context).pushReplacementNamed(AuthRoutes.success);
+            return;
+          }
 
-              // Password Field
-              PremiumAuthTextField(
-                controller: _passwordController,
-                labelText: AppLocalizations.of(context)!.auth_password,
-                prefixIcon: Icons.lock_outline,
-                isPassword: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) return AppLocalizations.of(context)!.auth_required;
-                  return null;
-                },
-              ),
-              const SizedBox(height: 16),
-              
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () {},
-                  style: TextButton.styleFrom(
-                    foregroundColor: theme.primaryColor,
-                    textStyle: const TextStyle(fontWeight: FontWeight.w700),
+          if (state.signInStatus == AuthSubmissionStatus.failure) {
+            AppDialogs.showErrorDialog(
+              context,
+              title: 'Sign in failed',
+              message: state.signInError ?? l10n.auth_signInFailed,
+              onRetry: _submit,
+            );
+          }
+        },
+        child: PremiumAuthScaffold(
+          logo: _AuthLogo(scheme: scheme),
+          title: 'Welcome Back',
+          subtitle:
+              'Log in to track your trips, manage subscriptions, and track buses in real-time.',
+          child: BlocBuilder<ClientAuthCubit, ClientAuthState>(
+            buildWhen: (previous, current) =>
+                previous.signInStatus != current.signInStatus,
+            builder: (context, state) {
+              final isLoading =
+                  state.signInStatus == AuthSubmissionStatus.loading;
+
+              return AbsorbPointer(
+                absorbing: isLoading,
+                child: Form(
+                  key: _formKey,
+                  child: AutofillGroup(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _WelcomeBackCard(scheme: scheme),
+                        const SizedBox(height: 18),
+
+                        PremiumAuthTextField(
+                          controller: _emailController,
+                          focusNode: _emailFocus,
+                          labelText: l10n.auth_email,
+                          prefixIcon: Icons.email_outlined,
+                          keyboardType: TextInputType.emailAddress,
+                          textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.email],
+                          onFieldSubmitted: (_) {
+                            _passwordFocus.requestFocus();
+                          },
+                          validator: (value) {
+                            final email = value?.trim() ?? '';
+                            if (email.isEmpty) return l10n.auth_required;
+
+                            final validEmail = RegExp(
+                              r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                            ).hasMatch(email);
+
+                            if (!validEmail) {
+                              return l10n.auth_invalidEmail;
+                            }
+
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        PremiumAuthTextField(
+                          controller: _passwordController,
+                          focusNode: _passwordFocus,
+                          labelText: l10n.auth_password,
+                          prefixIcon: Icons.lock_outline,
+                          isPassword: true,
+                          textInputAction: TextInputAction.done,
+                          autofillHints: const [AutofillHints.password],
+                          onFieldSubmitted: (_) => _submit(),
+                          validator: (value) {
+                            final password = value ?? '';
+                            if (password.isEmpty) {
+                              return l10n.auth_required;
+                            }
+                            return null;
+                          },
+                        ),
+
+                        const SizedBox(height: 10),
+
+                        Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: TextButton.icon(
+                            onPressed:
+                                isLoading ? null : _goToForgotPassword,
+                            icon: const Icon(
+                              Icons.help_outline_rounded,
+                              size: 18,
+                            ),
+                            label: Text(l10n.auth_forgotPassword),
+                            style: TextButton.styleFrom(
+                              textStyle: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(height: 24),
+
+                        PremiumAuthButton(
+                          text: isLoading
+                              ? 'Signing in...'
+                              : l10n.auth_signIn,
+                          onPressed: isLoading ? null : _submit,
+                          isLoading: isLoading,
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        _CreateAccountLink(
+                          scheme: scheme,
+                          text: l10n.auth_noAccount,
+                          actionText: l10n.auth_signUp,
+                          onTap: isLoading ? null : _goToSignUp,
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        _SecurityNote(scheme: scheme),
+                      ],
+                    ),
                   ),
-                  child: Text(AppLocalizations.of(context)!.auth_forgotPassword),
                 ),
-              ),
-              const SizedBox(height: 40),
-
-              // Submit Button
-              BlocBuilder<ClientAuthCubit, ClientAuthState>(
-                builder: (context, state) {
-                  final isLoading = state.signInStatus == AuthSubmissionStatus.loading;
-                  return PremiumAuthButton(
-                    text: AppLocalizations.of(context)!.auth_signIn,
-                    onPressed: _submit,
-                    isLoading: isLoading,
-                  );
-                },
-              ),
-              const SizedBox(height: 32),
-
-              // Sign Up Link
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.auth_noAccount,
-                    style: TextStyle(
-                      color: isDark ? Colors.white54 : Colors.black54,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pushReplacementNamed(AuthRoutes.signUp);
-                    },
-                    style: TextButton.styleFrom(
-                      foregroundColor: theme.primaryColor,
-                      textStyle: const TextStyle(fontWeight: FontWeight.w800),
-                    ),
-                    child: Text(AppLocalizations.of(context)!.auth_signUp),
-                  ),
-                ],
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+}
+
+class _AuthLogo extends StatelessWidget {
+  const _AuthLogo({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          height: 46,
+          width: 46,
+          padding: const EdgeInsets.all(9),
+          decoration: BoxDecoration(
+            color: scheme.primary.withAlpha(18),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: scheme.primary.withAlpha(45)),
+          ),
+          child: Image.asset(
+            'assets/images/app_icon.png',
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Icon(
+              Icons.directions_bus_rounded,
+              color: scheme.primary,
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          'EasyWay',
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: scheme.primary,
+                letterSpacing: -0.3,
+              ),
+        ),
+      ],
+    );
+  }
+}
+
+class _WelcomeBackCard extends StatelessWidget {
+  const _WelcomeBackCard({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: scheme.primary.withAlpha(14),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.primary.withAlpha(38)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            height: 38,
+            width: 38,
+            decoration: BoxDecoration(
+              color: scheme.primary.withAlpha(22),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Icon(
+              Icons.route_rounded,
+              color: scheme.primary,
+              size: 21,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'All your trips and bookings in one place — log in and follow your day easily.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    height: 1.55,
+                    color: scheme.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CreateAccountLink extends StatelessWidget {
+  const _CreateAccountLink({
+    required this.scheme,
+    required this.text,
+    required this.actionText,
+    required this.onTap,
+  });
+
+  final ColorScheme scheme;
+  final String text;
+  final String actionText;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          text,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+        TextButton(
+          onPressed: onTap,
+          child: Text(
+            actionText,
+            style: const TextStyle(fontWeight: FontWeight.w900),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _SecurityNote extends StatelessWidget {
+  const _SecurityNote({required this.scheme});
+
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'Make sure to use the email associated with your account to access your bookings and subscriptions.',
+      textAlign: TextAlign.center,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            height: 1.55,
+            color: scheme.onSurfaceVariant.withAlpha(190),
+            fontWeight: FontWeight.w500,
+          ),
     );
   }
 }

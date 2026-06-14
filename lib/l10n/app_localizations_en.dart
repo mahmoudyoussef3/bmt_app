@@ -199,6 +199,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_invalidPassword => 'Password must be at least 6 characters';
 
   @override
+  String get auth_forgotPasswordTitle => 'Forgot your password?';
+
+  @override
+  String get auth_forgotPasswordSubtitle =>
+      'No worries. Enter your email and we’ll send you a secure link to reset your password.';
+
+  @override
+  String get auth_sendResetLink => 'Send reset link';
+
+  @override
+  String get auth_backToLogin => 'Back to Login';
+
+  @override
+  String get auth_checkEmailTitle => 'Check your email';
+
+  @override
+  String auth_checkEmailMessage(String email) {
+    return 'We sent a secure reset link to $email. Open it to create a new password.';
+  }
+
+  @override
+  String get auth_resendLink => 'Resend link';
+
+  @override
+  String auth_resendIn(int seconds) {
+    return 'Resend link in ${seconds}s';
+  }
+
+  @override
+  String get auth_rateLimited =>
+      'Please wait before requesting another reset link.';
+
+  @override
+  String get auth_unknownError =>
+      'An unexpected error occurred. Please try again later.';
+
+  @override
   String get auth_alreadyHaveAccount => 'Already have an account? ';
 
   @override

@@ -60,6 +60,7 @@ dependencies:
   http: ^1.6.0
   flutter_localizations:
     sdk: flutter
+  google_fonts: ^8.1.0
 
 dev_dependencies:
   flutter_test:
@@ -104,27 +105,3 @@ flutter:
   # in this "flutter" section. Each entry in this list should have a
   # "family" key with the font family name, and a "fonts" key with a
   # list giving the asset and other descriptors for the font. For
-  # example:
-  fonts:
-    - family: IBMPlexSansArabic
-      fonts:
-        - asset: assets/fonts/ibm_plex_sans_arabic/IBMPlexSansArabic-Regular.ttf
-          weight: 400
-
-        - asset: assets/fonts/ibm_plex_sans_arabic/IBMPlexSansArabic-Medium.ttf
-          weight: 500
-
-        - asset: assets/fonts/ibm_plex_sans_arabic/IBMPlexSansArabic-SemiBold.ttf
-          weight: 600
-
-        - asset: assets/fonts/ibm_plex_sans_arabic/IBMPlexSansArabic-Bold.ttf
-          weight: 700
-
-        - asset: assets/fonts/ibm_plex_sans_arabic/IBMPlexSansArabic-Light.ttf
-          weight: 300
-
-        - asset: assets/fonts/ibm_plex_sans_arabic/IBMPlexSansArabic-ExtraLight.ttf
-          weight: 200
-
-        - asset: assets/fonts/ibm_plex_sans_arabic/IBMPlexSansArabic-Thin.ttf
-          weight: 100

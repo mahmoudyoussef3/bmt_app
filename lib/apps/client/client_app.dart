@@ -40,10 +40,11 @@ import 'package:bmt_app/apps/client/features/loyalty/presentation/screens/loyalt
 import 'package:bmt_app/apps/client/features/settings/presentation/cubit/settings_cubit.dart';
 import 'package:bmt_app/apps/client/features/settings/presentation/screens/settings_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/screens/auth_success_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/forgot_password_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/available_trips_screen.dart';
@@ -145,9 +146,9 @@ class _ClientAppState extends State<ClientApp> {
               AuthRoutes.welcome: (_) => _buildAuthScope(const WelcomeScreen()),
               AuthRoutes.signIn: (_) => _buildAuthScope(const SignInScreen()),
               AuthRoutes.signUp: (_) => _buildAuthScope(const SignUpScreen()),
+              AuthRoutes.forgotPassword: (_) => _buildForgotPasswordScope(const ForgotPasswordScreen()),
 
-              AuthRoutes.success: (_) =>
-                  _buildAuthScope(const AuthSuccessScreen()),
+              AuthRoutes.success: (_) => _buildClientShell(),
 
               // Booking
               BookingRoutes.search: (context) => _buildBookingScope(
@@ -315,6 +316,13 @@ class _ClientAppState extends State<ClientApp> {
   Widget _buildAuthScope(Widget child) {
     return BlocProvider<ClientAuthCubit>(
       create: (_) => clientGetIt<ClientAuthCubit>(),
+      child: child,
+    );
+  }
+
+  Widget _buildForgotPasswordScope(Widget child) {
+    return BlocProvider<ForgotPasswordCubit>(
+      create: (_) => clientGetIt<ForgotPasswordCubit>(),
       child: child,
     );
   }
