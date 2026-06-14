@@ -1,6 +1,14 @@
 import 'package:get_it/get_it.dart';
-
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../features/onboarding/data/datasources/onboarding_local_datasource.dart';
+import '../../features/onboarding/data/repositories/onboarding_repository_impl.dart';
+import '../../features/onboarding/domain/repositories/onboarding_repository.dart';
+import '../../features/onboarding/domain/usecases/check_onboarding_status_usecase.dart';
+import '../../features/onboarding/domain/usecases/complete_onboarding_usecase.dart';
+import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import '../../../../core/security/secure_storage.dart';
+
 import '../../features/auth/data/datasources/client_auth_datasource.dart';
 import '../../features/auth/data/datasources/supabase_client_auth_datasource.dart';
 import '../../features/auth/data/repositories/client_auth_repository_impl.dart';
@@ -130,6 +138,7 @@ void registerClientDependencies() {
   registerNetworkDependencies(clientGetIt);
 
   // Register Core dependencies();
+  _registerOnboardingDependencies();
   _registerHomeDependencies();
   _registerTripsDependencies();
   _registerBookingDependencies();
@@ -146,6 +155,41 @@ void registerClientDependencies() {
   _registerReferralRewardsDependencies();
   _registerLoyaltyDependencies();
   _registerSettingsDependencies();
+}
+
+void _registerOnboardingDependencies() {
+  if (!clientGetIt.isRegistered<OnboardingLocalDataSource>()) {
+    clientGetIt.registerLazySingleton<OnboardingLocalDataSource>(
+      () => OnboardingLocalDataSourceImpl(SecureStorage()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<OnboardingRepository>()) {
+    clientGetIt.registerLazySingleton<OnboardingRepository>(
+      () => OnboardingRepositoryImpl(clientGetIt<OnboardingLocalDataSource>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<CheckOnboardingStatusUseCase>()) {
+    clientGetIt.registerLazySingleton<CheckOnboardingStatusUseCase>(
+      () => CheckOnboardingStatusUseCase(clientGetIt<OnboardingRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<CompleteOnboardingUseCase>()) {
+    clientGetIt.registerLazySingleton<CompleteOnboardingUseCase>(
+      () => CompleteOnboardingUseCase(clientGetIt<OnboardingRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<OnboardingCubit>()) {
+    clientGetIt.registerFactory<OnboardingCubit>(
+      () => OnboardingCubit(
+        clientGetIt<CheckOnboardingStatusUseCase>(),
+        clientGetIt<CompleteOnboardingUseCase>(),
+      ),
+    );
+  }
 }
 
 void _registerAuthDependencies() {

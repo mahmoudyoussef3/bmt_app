@@ -59,6 +59,9 @@ import 'package:bmt_app/apps/client/features/seat_selection/presentation/screens
 import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/seat_release_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
+import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_state.dart';
+import 'package:bmt_app/apps/client/features/onboarding/presentation/screens/onboarding_screen.dart';
 
 class ClientApp extends StatefulWidget {
   const ClientApp({super.key});
@@ -86,37 +89,54 @@ class _ClientAppState extends State<ClientApp> {
       setThemeMode: _setThemeMode,
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {
-          return MaterialApp(
-            debugShowCheckedModeBanner: false,
-            title: 'Mega Transportation',
-            localizationsDelegates: AppLocalizations.localizationsDelegates,
-            supportedLocales: AppLocalizations.supportedLocales,
-            locale: locale,
-            localeResolutionCallback: (deviceLocale, supportedLocales) {
-              for (var supportedLocale in supportedLocales) {
-                if (supportedLocale.languageCode == locale.languageCode) {
-                  return supportedLocale;
+          return BlocProvider<OnboardingCubit>(
+            create: (_) => clientGetIt<OnboardingCubit>()..checkStatus(),
+            child: MaterialApp(
+              debugShowCheckedModeBanner: false,
+              title: 'Mega Transportation',
+              localizationsDelegates: AppLocalizations.localizationsDelegates,
+              supportedLocales: AppLocalizations.supportedLocales,
+              locale: locale,
+              localeResolutionCallback: (deviceLocale, supportedLocales) {
+                for (var supportedLocale in supportedLocales) {
+                  if (supportedLocale.languageCode == locale.languageCode) {
+                    return supportedLocale;
+                  }
                 }
-              }
-              return supportedLocales.first;
-            },
-            theme: AppTheme.lightTheme(),
-            darkTheme: AppTheme.darkTheme(),
-            themeMode: _themeMode,
-
-            home: StreamBuilder<AuthState>(
-              stream: Supabase.instance.client.auth.onAuthStateChange,
-              builder: (context, snapshot) {
-                // Also check currentSession as initial state might not emit immediately
-                final session =
-                    snapshot.data?.session ??
-                    Supabase.instance.client.auth.currentSession;
-                if (session != null) {
-                  return _buildClientShell();
-                }
-                return _buildAuthScope(const WelcomeScreen());
+                return supportedLocales.first;
               },
-            ),
+              theme: AppTheme.lightTheme(),
+              darkTheme: AppTheme.darkTheme(),
+              themeMode: _themeMode,
+
+              home: BlocBuilder<OnboardingCubit, OnboardingState>(
+                builder: (context, onboardingState) {
+                  if (onboardingState is OnboardingLoading || onboardingState is OnboardingInitial) {
+                    return Scaffold(
+                      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                      body: const Center(child: CircularProgressIndicator()),
+                    );
+                  }
+
+                  if (onboardingState is OnboardingLoaded && !onboardingState.hasSeenOnboarding) {
+                    return const OnboardingScreen();
+                  }
+
+                  return StreamBuilder<AuthState>(
+                    stream: Supabase.instance.client.auth.onAuthStateChange,
+                    builder: (context, snapshot) {
+                      // Also check currentSession as initial state might not emit immediately
+                      final session =
+                          snapshot.data?.session ??
+                          Supabase.instance.client.auth.currentSession;
+                      if (session != null) {
+                        return _buildClientShell();
+                      }
+                      return _buildAuthScope(const WelcomeScreen());
+                    },
+                  );
+                },
+              ),
 
             routes: {
               '/home': (_) => _buildClientShell(),
@@ -262,8 +282,9 @@ class _ClientAppState extends State<ClientApp> {
               '/driver': (_) => const CaptainAppShell(),
               '/admin': (_) => const DashboardWebApp(),
             },
-          );
-        },
+          ),
+        );
+      },
       ),
     );
   }
