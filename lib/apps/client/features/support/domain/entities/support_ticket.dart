@@ -1,73 +1,70 @@
 enum TicketStatus { open, underReview, inProgress, resolved, closed }
-
-class SupportMessage {
-  const SupportMessage({
-    required this.sender,
-    required this.text,
-    required this.time,
-  });
-
-  final String sender;
-  final String text;
-  final String time;
-
-  Map<String, String> toMap() {
-    return {'sender': sender, 'text': text, 'time': time};
-  }
-}
+enum TicketPriority { low, medium, high, urgent }
 
 class SupportTicket {
   const SupportTicket({
     required this.id,
+    required this.ticketNumber,
     required this.category,
     required this.title,
     required this.description,
     required this.priority,
     required this.status,
-    required this.dateCreated,
-    this.attachedImages = const [],
-    this.conversation = const [],
+    this.assignedAgentName,
+    this.relatedBookingId,
+    this.relatedTripId,
+    required this.createdAt,
+    required this.updatedAt,
+    this.resolvedAt,
+    this.closedAt,
   });
 
   final String id;
+  final String ticketNumber;
   final String category;
   final String title;
   final String description;
-  final String priority;
+  final TicketPriority priority;
   final TicketStatus status;
-  final String dateCreated;
-  final List<String> attachedImages;
-  final List<Map<String, String>> conversation;
-
-  String get statusLabel => switch (status) {
-    TicketStatus.open => 'Open',
-    TicketStatus.underReview => 'Under Review',
-    TicketStatus.inProgress => 'In Progress',
-    TicketStatus.resolved => 'Resolved',
-    TicketStatus.closed => 'Closed',
-  };
+  final String? assignedAgentName;
+  final String? relatedBookingId;
+  final String? relatedTripId;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  final DateTime? resolvedAt;
+  final DateTime? closedAt;
 
   SupportTicket copyWith({
     String? id,
+    String? ticketNumber,
     String? category,
     String? title,
     String? description,
-    String? priority,
+    TicketPriority? priority,
     TicketStatus? status,
-    String? dateCreated,
-    List<String>? attachedImages,
-    List<Map<String, String>>? conversation,
+    String? assignedAgentName,
+    String? relatedBookingId,
+    String? relatedTripId,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+    DateTime? resolvedAt,
+    DateTime? closedAt,
   }) {
     return SupportTicket(
       id: id ?? this.id,
+      ticketNumber: ticketNumber ?? this.ticketNumber,
       category: category ?? this.category,
       title: title ?? this.title,
       description: description ?? this.description,
       priority: priority ?? this.priority,
       status: status ?? this.status,
-      dateCreated: dateCreated ?? this.dateCreated,
-      attachedImages: attachedImages ?? this.attachedImages,
-      conversation: conversation ?? this.conversation,
+      assignedAgentName: assignedAgentName ?? this.assignedAgentName,
+      relatedBookingId: relatedBookingId ?? this.relatedBookingId,
+      relatedTripId: relatedTripId ?? this.relatedTripId,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      resolvedAt: resolvedAt ?? this.resolvedAt,
+      closedAt: closedAt ?? this.closedAt,
     );
   }
 }

@@ -8,4 +8,7 @@ class ClientRoutes {
   static const tracking = '/tracking';
   static const subscription = '/subscription';
   static const support = '/support';
+  static const createTicket = '/create_ticket';
+  static const ticketDetails = '/ticket_details';
+  static const createRefund = '/create_refund';
 }
