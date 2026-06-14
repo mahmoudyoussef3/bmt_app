@@ -11,8 +11,10 @@ class TicketsRepositoryImpl implements TicketsRepository {
   Future<List<Complaint>> getComplaints() async {
     try {
       return await _datasource.getComplaints();
-    } catch (_) {
-      throw Exception('تعذر تحميل الشكاوى');
+    } catch (e, stack) {
+      print('Error loading complaints: $e');
+      print(stack);
+      throw Exception('تعذر تحميل الشكاوى: $e');
     }
   }
 
@@ -70,6 +72,15 @@ class TicketsRepositoryImpl implements TicketsRepository {
       return await _datasource.closeComplaint(id);
     } catch (_) {
       throw Exception('تعذر إغلاق الشكوى');
+    }
+  }
+
+  @override
+  Future<void> deleteComplaint(String id) async {
+    try {
+      await _datasource.deleteComplaint(id);
+    } catch (_) {
+      throw Exception('تعذر حذف الشكوى');
     }
   }
 }

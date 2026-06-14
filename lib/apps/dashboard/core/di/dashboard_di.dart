@@ -118,6 +118,7 @@ import '../../features/tickets/data/repositories/tickets_repository_impl.dart';
 import '../../features/tickets/domain/repositories/tickets_repository.dart';
 import '../../features/tickets/domain/usecases/assign_complaint_usecase.dart';
 import '../../features/tickets/domain/usecases/close_complaint_usecase.dart';
+import '../../features/tickets/domain/usecases/delete_complaint_usecase.dart';
 import '../../features/tickets/domain/usecases/escalate_complaint_usecase.dart';
 import '../../features/tickets/domain/usecases/get_complaints_usecase.dart';
 import '../../features/tickets/domain/usecases/respond_to_complaint_usecase.dart';
@@ -931,8 +932,13 @@ registerNetworkDependencies(dashboardDi);
   }
 
   if (!dashboardDi.isRegistered<CloseComplaintUseCase>()) {
-    dashboardDi.registerLazySingleton(
+    dashboardDi.registerLazySingleton<CloseComplaintUseCase>(
       () => CloseComplaintUseCase(dashboardDi<TicketsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<DeleteComplaintUseCase>()) {
+    dashboardDi.registerLazySingleton<DeleteComplaintUseCase>(
+      () => DeleteComplaintUseCase(dashboardDi<TicketsRepository>()),
     );
   }
 
@@ -945,6 +951,7 @@ registerNetworkDependencies(dashboardDi);
         updateComplaintStatus: dashboardDi<UpdateComplaintStatusUseCase>(),
         escalateComplaint: dashboardDi<EscalateComplaintUseCase>(),
         closeComplaint: dashboardDi<CloseComplaintUseCase>(),
+        deleteComplaint: dashboardDi<DeleteComplaintUseCase>(),
       ),
     );
   }

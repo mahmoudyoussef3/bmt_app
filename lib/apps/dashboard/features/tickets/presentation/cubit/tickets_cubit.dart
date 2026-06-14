@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/complaint.dart';
 import '../../domain/usecases/assign_complaint_usecase.dart';
 import '../../domain/usecases/close_complaint_usecase.dart';
+import '../../domain/usecases/delete_complaint_usecase.dart';
 import '../../domain/usecases/escalate_complaint_usecase.dart';
 import '../../domain/usecases/get_complaints_usecase.dart';
 import '../../domain/usecases/respond_to_complaint_usecase.dart';
@@ -16,6 +17,7 @@ class TicketsCubit extends Cubit<TicketsState> {
   final UpdateComplaintStatusUseCase _updateComplaintStatus;
   final EscalateComplaintUseCase _escalateComplaint;
   final CloseComplaintUseCase _closeComplaint;
+  final DeleteComplaintUseCase _deleteComplaint;
 
   TicketsCubit({
     required GetComplaintsUseCase getComplaints,
@@ -24,12 +26,14 @@ class TicketsCubit extends Cubit<TicketsState> {
     required UpdateComplaintStatusUseCase updateComplaintStatus,
     required EscalateComplaintUseCase escalateComplaint,
     required CloseComplaintUseCase closeComplaint,
+    required DeleteComplaintUseCase deleteComplaint,
   })  : _getComplaints = getComplaints,
         _assignComplaint = assignComplaint,
         _respondToComplaint = respondToComplaint,
         _updateComplaintStatus = updateComplaintStatus,
         _escalateComplaint = escalateComplaint,
         _closeComplaint = closeComplaint,
+        _deleteComplaint = deleteComplaint,
         super(const TicketsLoading());
 
   Future<void> load() async {
@@ -168,6 +172,30 @@ class TicketsCubit extends Cubit<TicketsState> {
     try {
       final updated = await _closeComplaint(selectedId);
       _emitUpdated(current, updated, 'تم إغلاق الشكوى نهائياً');
+    } catch (error) {
+      emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
+    }
+  }
+
+  Future<void> deleteComplaint() async {
+    final current = state;
+    if (current is! TicketsLoaded) return;
+    final selectedId = current.selectedComplaintId;
+    if (selectedId == null) return;
+
+    emit(current.copyWith(actionLoading: true, clearMessage: true));
+    try {
+      await _deleteComplaint(selectedId);
+      
+      final list = current.complaints.where((c) => c.id != selectedId).toList();
+      emit(
+        current.copyWith(
+          complaints: list,
+          selectedComplaintId: list.isEmpty ? null : list.first.id,
+          actionLoading: false,
+          actionMessage: 'تم حذف الشكوى بنجاح',
+        ),
+      );
     } catch (error) {
       emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
     }

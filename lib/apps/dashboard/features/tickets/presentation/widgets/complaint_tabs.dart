@@ -379,7 +379,43 @@ class ActionsTab extends StatelessWidget {
                     side: const BorderSide(color: Colors.grey),
                   ),
                 ),
+                
+              const Spacer(),
+
+              // Delete Ticket Button
+              OutlinedButton.icon(
+                onPressed: () => _showDeleteConfirmation(context, cubit),
+                icon: const Icon(Icons.delete_forever_rounded, color: Colors.red),
+                label: const Text('حذف الشكوى', style: TextStyle(color: Colors.red)),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Colors.red),
+                ),
+              ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, TicketsCubit cubit) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد حذف الشكوى'),
+        content: const Text('هل أنت متأكد من رغبتك في حذف هذه الشكوى نهائياً؟ سيتم حذف جميع الرسائل والسجلات المرتبطة بها ولا يمكن التراجع عن هذا الإجراء.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(ctx);
+              cubit.deleteComplaint();
+            },
+            style: FilledButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('حذف نهائي'),
           ),
         ],
       ),

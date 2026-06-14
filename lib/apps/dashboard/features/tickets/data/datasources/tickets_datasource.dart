@@ -13,4 +13,5 @@ abstract class TicketsDatasource {
   Future<Complaint> updateComplaintStatus(String id, ComplaintStatus status);
   Future<Complaint> escalateComplaint(String id);
   Future<Complaint> closeComplaint(String id);
+  Future<void> deleteComplaint(String id);
 }
