@@ -93,7 +93,7 @@ class _ClientAppState extends State<ClientApp> {
             create: (_) => clientGetIt<OnboardingCubit>()..checkStatus(),
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
-              title: 'Mega Transportation',
+              title: 'EasyWay',
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               locale: locale,

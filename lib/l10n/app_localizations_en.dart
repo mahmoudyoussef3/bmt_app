@@ -117,7 +117,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_contactSupport => 'Need help? Contact support';
 
   @override
-  String get auth_welcomeTitle => 'Welcome to BMT';
+  String get auth_welcomeTitle => 'Welcome to EasyWay';
 
   @override
   String get auth_welcomeSubtitle =>
@@ -173,7 +173,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_createAccountTitle => 'Create Account';
 
   @override
-  String get auth_signUpSubtitle => 'Join BMT to book and track your trips';
+  String get auth_signUpSubtitle => 'Join EasyWay to book and track your trips';
 
   @override
   String get auth_fullName => 'Full Name';

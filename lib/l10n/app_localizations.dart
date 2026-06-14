@@ -305,7 +305,7 @@ abstract class AppLocalizations {
   /// No description provided for @auth_welcomeTitle.
   ///
   /// In en, this message translates to:
-  /// **'Welcome to BMT'**
+  /// **'Welcome to EasyWay'**
   String get auth_welcomeTitle;
 
   /// No description provided for @auth_welcomeSubtitle.
@@ -413,7 +413,7 @@ abstract class AppLocalizations {
   /// No description provided for @auth_signUpSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Join BMT to book and track your trips'**
+  /// **'Join EasyWay to book and track your trips'**
   String get auth_signUpSubtitle;
 
   /// No description provided for @auth_fullName.
