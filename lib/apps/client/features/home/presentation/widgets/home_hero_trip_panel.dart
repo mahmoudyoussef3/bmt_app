@@ -37,7 +37,7 @@ class HomeHeroTripPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: trip == null
           ? _NoTripPanel(scheme: scheme, onBookTrip: onBookTrip)
           : _ActiveTripPanel(

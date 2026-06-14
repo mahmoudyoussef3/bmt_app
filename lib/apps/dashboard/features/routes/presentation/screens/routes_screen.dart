@@ -74,7 +74,7 @@ class _RoutesToolbar extends StatelessWidget {
     final compact = width < 1260;
     final search = TextField(
       onChanged: cubit.updateSearch,
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       decoration: const InputDecoration(
         labelText: 'بحث',
         prefixIcon: Icon(Icons.search_rounded),
@@ -1285,7 +1285,7 @@ void _confirmArchive(BuildContext context, OperationRoute route) {
   showDialog<void>(
     context: context,
     builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: AlertDialog(
         title: const Text('تأكيد أرشفة المسار'),
         content: Text(
@@ -1317,7 +1317,7 @@ void _openStopDialog(
   showDialog<void>(
     context: context,
     builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: _StopDialog(station: station, onSubmit: onSubmit),
     ),
   );

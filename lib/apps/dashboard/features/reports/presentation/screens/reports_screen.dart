@@ -26,7 +26,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('التقارير التحليلية والإحصائيات'),

@@ -18,7 +18,7 @@ class BookingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: BlocBuilder<BookingsCubit, BookingsState>(
         builder: (context, state) {
           return switch (state) {
@@ -395,7 +395,7 @@ class _BookingFiltersBar extends StatelessWidget {
             SizedBox(
               width: compact ? full : 280,
               child: TextField(
-                textDirection: TextDirection.rtl,
+                textDirection: TextDirection.ltr,
                 decoration: const InputDecoration(
                   labelText: 'بحث سريع',
                   prefixIcon: Icon(Icons.search_rounded),
@@ -407,7 +407,7 @@ class _BookingFiltersBar extends StatelessWidget {
             SizedBox(
               width: compact ? full : 220,
               child: TextField(
-                textDirection: TextDirection.rtl,
+                textDirection: TextDirection.ltr,
                 decoration: const InputDecoration(
                   labelText: 'المسار',
                   prefixIcon: Icon(Icons.route_rounded),
@@ -418,7 +418,7 @@ class _BookingFiltersBar extends StatelessWidget {
             SizedBox(
               width: compact ? full : 170,
               child: TextField(
-                textDirection: TextDirection.rtl,
+                textDirection: TextDirection.ltr,
                 decoration: const InputDecoration(
                   labelText: 'التاريخ',
                   prefixIcon: Icon(Icons.calendar_today_rounded),
@@ -554,7 +554,7 @@ class _BookingBulkActions extends StatelessWidget {
     showDialog<void>(
       context: context,
       builder: (context) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: TextDirection.ltr,
         child: AlertDialog(
           title: const Text('إسناد الطلبات إلى رحلة'),
           content: const Text(
@@ -1668,7 +1668,7 @@ class _ActionDialogShell extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: AlertDialog(
         title: Text(title),
         content: SizedBox(

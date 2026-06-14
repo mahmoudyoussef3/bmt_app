@@ -78,7 +78,7 @@ class _TripsViewState extends State<_TripsView> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: MultiBlocListener(
         listeners: [
           // Propagate seat updates back into details and list
@@ -219,7 +219,7 @@ class _Header extends StatelessWidget {
       builder: (_) => BlocProvider(
         create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
         child: const Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: TextDirection.ltr,
           child: TripCreationWizardDialog(),
         ),
       ),
@@ -1373,7 +1373,7 @@ void _openPassengerDialog(
   showDialog<void>(
     context: context,
     builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: AlertDialog(
         title: const Text('تعديل راكب'),
         content: SizedBox(
@@ -1443,7 +1443,7 @@ void _openMoveDialog(
     context: context,
     builder: (_) => StatefulBuilder(
       builder: (context, setState) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: TextDirection.ltr,
         child: AlertDialog(
           title: const Text('نقل لمقعد آخر'),
           content: Column(
@@ -1509,7 +1509,7 @@ void _openSeatStateDialog(
   showDialog<void>(
     context: context,
     builder: (dialogContext) => Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: AlertDialog(
         title: Text('المقعد ${seat.label}'),
         content: Wrap(

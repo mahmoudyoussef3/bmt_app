@@ -22,7 +22,7 @@ class RouteOptionCard extends StatelessWidget {
     final points = _extractRoutePoints(route);
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: AppCard(
         onTap: onTap,
         padding: const EdgeInsets.all(16),

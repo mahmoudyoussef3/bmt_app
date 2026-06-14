@@ -27,7 +27,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('المركز المالي وعمليات الدفع'),

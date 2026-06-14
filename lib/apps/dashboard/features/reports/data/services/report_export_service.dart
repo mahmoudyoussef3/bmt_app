@@ -57,7 +57,7 @@ class ReportExportService {
 
     doc.addPage(
       pw.MultiPage(
-        textDirection: pw.TextDirection.rtl,
+        textDirection: pw.TextDirection.ltr,
         theme: pw.ThemeData.withFont(base: arabicFont),
         build: (context) => [
           pw.Header(level: 0, child: pw.Text(title, style: const pw.TextStyle(fontSize: 24))),

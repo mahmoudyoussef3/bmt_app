@@ -24,7 +24,7 @@ class LiveMonitoringPanel extends StatelessWidget {
       builder: (_) => BlocProvider.value(
         value: context.read<LiveTripsCubit>(),
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: TextDirection.ltr,
           child: _SimulatedCallDialog(trip: trip),
         ),
       ),
@@ -37,7 +37,7 @@ class LiveMonitoringPanel extends StatelessWidget {
       builder: (_) => BlocProvider.value(
         value: context.read<LiveTripsCubit>(),
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: TextDirection.ltr,
           child: _SimulatedChatDialog(trip: trip),
         ),
       ),
@@ -50,7 +50,7 @@ class LiveMonitoringPanel extends StatelessWidget {
       builder: (_) => BlocProvider.value(
         value: context.read<LiveTripsCubit>(),
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: TextDirection.ltr,
           child: _ReportDelayDialog(trip: trip),
         ),
       ),
@@ -63,7 +63,7 @@ class LiveMonitoringPanel extends StatelessWidget {
       builder: (_) => BlocProvider.value(
         value: context.read<LiveTripsCubit>(),
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: TextDirection.ltr,
           child: _ReportEmergencyDialog(trip: trip),
         ),
       ),

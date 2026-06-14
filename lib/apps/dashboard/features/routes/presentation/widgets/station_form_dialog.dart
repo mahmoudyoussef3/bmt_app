@@ -49,19 +49,19 @@ class _StationFormDialogState extends State<StationFormDialog> {
           children: [
             TextField(
               controller: _name,
-              textDirection: TextDirection.rtl,
+              textDirection: TextDirection.ltr,
               decoration: const InputDecoration(labelText: 'اسم المحطة'),
             ),
             const SizedBox(height: AppSpacing.medium),
             TextField(
               controller: _area,
-              textDirection: TextDirection.rtl,
+              textDirection: TextDirection.ltr,
               decoration: const InputDecoration(labelText: 'المنطقة'),
             ),
             const SizedBox(height: AppSpacing.medium),
             TextField(
               controller: _offset,
-              textDirection: TextDirection.rtl,
+              textDirection: TextDirection.ltr,
               decoration: const InputDecoration(
                 labelText: 'وقت الوصول المتوقع',
               ),
@@ -69,7 +69,7 @@ class _StationFormDialogState extends State<StationFormDialog> {
             const SizedBox(height: AppSpacing.medium),
             TextField(
               controller: _notes,
-              textDirection: TextDirection.rtl,
+              textDirection: TextDirection.ltr,
               minLines: 2,
               maxLines: 3,
               decoration: const InputDecoration(labelText: 'ملاحظات المحطة'),

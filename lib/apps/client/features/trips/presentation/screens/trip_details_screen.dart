@@ -80,7 +80,7 @@ class _TripDetailsView extends StatelessWidget {
         trip.status == TripStatus.upcoming || trip.status == TripStatus.inProgress;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         extendBody: true,
         appBar: AppBar(
@@ -182,7 +182,7 @@ class _TripLoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         appBar: _StaticAppBar(title: 'تفاصيل الرحلة'),
         body: Center(child: CircularProgressIndicator()),
@@ -199,7 +199,7 @@ class _TripErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         appBar: const _StaticAppBar(title: 'تفاصيل الرحلة'),
         body: Center(
@@ -245,7 +245,7 @@ class _TripEmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         appBar: _StaticAppBar(title: 'تفاصيل الرحلة'),
         body: Center(child: Text('لم يتم العثور على الرحلة')),

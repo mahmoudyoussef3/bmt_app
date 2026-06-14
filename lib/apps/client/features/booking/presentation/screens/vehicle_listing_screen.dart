@@ -64,7 +64,7 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: BlocBuilder<BookingCubit, BookingState>(
         builder: (context, state) {
           final vehicles = state is VehiclesLoaded

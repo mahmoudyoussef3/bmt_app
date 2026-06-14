@@ -36,7 +36,7 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
     showDialog<void>(
       context: context,
       builder: (_) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: TextDirection.ltr,
         child: AlertDialog(
           title: Text(title),
           content: SizedBox(
@@ -105,7 +105,7 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
       builder: (_) => BlocProvider.value(
         value: cubit,
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: TextDirection.ltr,
           child: FleetAssignmentDialog(
             assignment: assignment,
             drivers: drivers,

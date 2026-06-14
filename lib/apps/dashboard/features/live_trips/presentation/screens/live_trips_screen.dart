@@ -28,7 +28,7 @@ class _LiveTripsScreenState extends State<LiveTripsScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('المتابعة الحية'),

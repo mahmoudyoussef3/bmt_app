@@ -81,7 +81,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: TextDirection.ltr,
         child: AlertDialog(
           title: const Text('حذف الوثيقة'),
           content: Text(

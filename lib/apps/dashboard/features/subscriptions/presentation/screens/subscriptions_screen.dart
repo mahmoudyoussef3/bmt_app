@@ -16,7 +16,7 @@ class SubscriptionsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('الاشتراكات'),
@@ -445,7 +445,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
   Widget build(BuildContext context) {
     final points = _trip?.points ?? const <SubscriptionPointOption>[];
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         appBar: AppBar(title: const Text('إنشاء اشتراك')),
         body: BlocListener<SubscriptionsCubit, SubscriptionsState>(

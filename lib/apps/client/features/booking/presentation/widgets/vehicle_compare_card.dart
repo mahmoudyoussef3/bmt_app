@@ -27,7 +27,7 @@ class VehicleCompareCard extends StatelessWidget {
     final lowSeats = vehicle.availableSeats <= 4;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: AppCard(
         padding: EdgeInsets.zero,
         child: Column(

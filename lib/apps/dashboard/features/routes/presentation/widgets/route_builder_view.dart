@@ -421,7 +421,7 @@ class _TextInput extends StatelessWidget {
       width: 260,
       child: TextField(
         controller: controller,
-        textDirection: TextDirection.rtl,
+        textDirection: TextDirection.ltr,
         maxLines: maxLines,
         decoration: InputDecoration(labelText: label),
       ),
