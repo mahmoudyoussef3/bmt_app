@@ -5,11 +5,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   registerCaptainDependencies();
-  runApp(const CaptainApp());
+  runApp(
+    MultiBlocProvider(
+      providers: [
+        BlocProvider(create: (_) => AppModeCubit()..load()),
+        BlocProvider(create: (_) => LocaleCubit()..load()),
+      ],
+      child: const CaptainApp(),
+    ),
+  );
 }
 
 class CaptainApp extends StatelessWidget {
