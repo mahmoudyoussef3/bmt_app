@@ -1,9 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import '../routes/auth_routes.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
-class WelcomeScreen extends StatelessWidget {
+class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
+
+  @override
+  State<WelcomeScreen> createState() => _WelcomeScreenState();
+}
+
+class _WelcomeScreenState extends State<WelcomeScreen> {
+  late final TapGestureRecognizer _termsRecognizer;
+  late final TapGestureRecognizer _privacyRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()..onTap = () {
+      // Handle terms of service click
+    };
+    _privacyRecognizer = TapGestureRecognizer()..onTap = () {
+      // Handle privacy policy click
+    };
+  }
+
+  @override
+  void dispose() {
+    _termsRecognizer.dispose();
+    _privacyRecognizer.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -167,12 +194,35 @@ class WelcomeScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      Text(
-                        AppLocalizations.of(context)!.auth_termsAndPrivacy,
+                      RichText(
                         textAlign: TextAlign.center,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
-                          height: 1.6,
+                        text: TextSpan(
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: theme.colorScheme.onSurfaceVariant.withOpacity(0.8),
+                            height: 1.6,
+                          ),
+                          children: [
+                            TextSpan(text: AppLocalizations.of(context)!.auth_termsPrefix),
+                            TextSpan(
+                              text: AppLocalizations.of(context)!.auth_termsOfService,
+                              style: TextStyle(
+                                color: theme.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: _termsRecognizer,
+                            ),
+                            TextSpan(text: AppLocalizations.of(context)!.auth_termsAnd),
+                            TextSpan(
+                              text: AppLocalizations.of(context)!.auth_privacyPolicy,
+                              style: TextStyle(
+                                color: theme.primaryColor,
+                                fontWeight: FontWeight.bold,
+                                decoration: TextDecoration.underline,
+                              ),
+                              recognizer: _privacyRecognizer,
+                            ),
+                          ],
                         ),
                       ),
                     ],

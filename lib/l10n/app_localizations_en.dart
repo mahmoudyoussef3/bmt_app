@@ -130,8 +130,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_createAccount => 'Create an Account';
 
   @override
-  String get auth_termsAndPrivacy =>
-      'By continuing, you agree to our Terms of Service\nand Privacy Policy.';
+  String get auth_termsPrefix => 'By continuing, you agree to our ';
+
+  @override
+  String get auth_termsOfService => 'Terms of Service';
+
+  @override
+  String get auth_termsAnd => ' and ';
+
+  @override
+  String get auth_privacyPolicy => 'Privacy Policy';
 
   @override
   String get auth_signInFailed => 'Sign in failed.';

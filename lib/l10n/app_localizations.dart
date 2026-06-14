@@ -326,11 +326,29 @@ abstract class AppLocalizations {
   /// **'Create an Account'**
   String get auth_createAccount;
 
-  /// No description provided for @auth_termsAndPrivacy.
+  /// No description provided for @auth_termsPrefix.
   ///
   /// In en, this message translates to:
-  /// **'By continuing, you agree to our Terms of Service\nand Privacy Policy.'**
-  String get auth_termsAndPrivacy;
+  /// **'By continuing, you agree to our '**
+  String get auth_termsPrefix;
+
+  /// No description provided for @auth_termsOfService.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms of Service'**
+  String get auth_termsOfService;
+
+  /// No description provided for @auth_termsAnd.
+  ///
+  /// In en, this message translates to:
+  /// **' and '**
+  String get auth_termsAnd;
+
+  /// No description provided for @auth_privacyPolicy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy Policy'**
+  String get auth_privacyPolicy;
 
   /// No description provided for @auth_signInFailed.
   ///

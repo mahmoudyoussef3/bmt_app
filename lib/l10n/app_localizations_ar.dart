@@ -130,8 +130,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get auth_createAccount => 'إنشاء حساب';
 
   @override
-  String get auth_termsAndPrivacy =>
-      'بالمتابعة، فإنك توافق على شروط الخدمة\nوسياسة الخصوصية الخاصة بنا.';
+  String get auth_termsPrefix => 'بالمتابعة، فإنك توافق على ';
+
+  @override
+  String get auth_termsOfService => 'شروط الخدمة';
+
+  @override
+  String get auth_termsAnd => ' و ';
+
+  @override
+  String get auth_privacyPolicy => 'سياسة الخصوصية';
 
   @override
   String get auth_signInFailed => 'فشل تسجيل الدخول.';
