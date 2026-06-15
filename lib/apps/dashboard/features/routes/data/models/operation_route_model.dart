@@ -133,7 +133,7 @@ class RouteStationModel extends RouteStation {
 
   Map<String, dynamic> toJson({String? routeId}) {
     return {
-      'route_id': ?routeId,
+      if (routeId != null) 'route_id': routeId,
       'name': name,
       'area': area,
       'arrival_offset': arrivalOffset,
@@ -144,9 +144,9 @@ class RouteStationModel extends RouteStation {
       'longitude': longitude,
       'pickup_allowed': pickupAllowed,
       'dropoff_allowed': dropoffAllowed,
-      'estimated_arrival_time': estimatedArrivalTime.isEmpty
-          ? null
-          : estimatedArrivalTime,
+      'estimated_arrival_time': RegExp(r'^\d{2}:\d{2}(:\d{2})?$').hasMatch(estimatedArrivalTime)
+          ? estimatedArrivalTime
+          : null,
       'sort_order': order,
       'updated_at': DateTime.now().toIso8601String(),
     };

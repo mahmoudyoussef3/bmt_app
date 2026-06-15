@@ -34,19 +34,19 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
   TripRoutePoint get _initialFromPoint {
     final existing = widget.pricing;
     if (existing == null) return widget.trip.routePoints.first;
-    return widget.trip.routePoints.firstWhere(
+    final matches = widget.trip.routePoints.where(
       (point) => point.id == existing.fromPointId,
-      orElse: () => widget.trip.routePoints.first,
     );
+    return matches.isNotEmpty ? matches.first : widget.trip.routePoints.first;
   }
 
   TripRoutePoint get _initialToPoint {
     final existing = widget.pricing;
     if (existing == null) return widget.trip.routePoints[1];
-    return widget.trip.routePoints.firstWhere(
+    final matches = widget.trip.routePoints.where(
       (point) => point.id == existing.toPointId,
-      orElse: () => widget.trip.routePoints[1],
     );
+    return matches.isNotEmpty ? matches.first : widget.trip.routePoints[1];
   }
 
   @override

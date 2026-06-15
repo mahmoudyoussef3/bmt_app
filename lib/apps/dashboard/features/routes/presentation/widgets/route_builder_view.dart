@@ -188,7 +188,7 @@ class _RouteBuilderViewState extends State<RouteBuilderView> {
       name: _stationName.text.trim(),
       area: _stationArea.text.trim(),
       arrivalOffset: _stationArrival.text.trim(),
-      estimatedArrivalTime: _stationArrival.text.trim(),
+      estimatedArrivalTime: existing?.estimatedArrivalTime ?? '',
       notes: _stationNotes.text.trim(),
       pickupAllowed: existing?.pickupAllowed ?? true,
       dropoffAllowed: existing?.dropoffAllowed ?? true,

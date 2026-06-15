@@ -28,6 +28,15 @@ class TripCreationWizardDialog extends StatelessWidget {
               duration: const Duration(seconds: 4),
             ),
           );
+        } else if (state is TripCreationSuccess) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('تم إنشاء الرحلة بنجاح'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 4),
+            ),
+          );
         }
       },
       builder: (context, state) {
@@ -924,6 +933,20 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     }
 
     final stations = _selectedRoute!.stations;
+    if (stations.length < 2) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32.0),
+          child: Text(
+            'عفواً، هذا المسار لا يحتوي على نقاط وقوف كافية (يجب أن يحتوي على محطتين على الأقل) لإعداد التسعير. يرجى تعديل المسار أو اختيار مسار آخر.',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              color: scheme.error,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
