@@ -211,6 +211,7 @@ class _Header extends StatelessWidget {
   }
 
   void _openCreateTripWizard(BuildContext context) {
+    final tripsCubit = context.read<TripsListCubit>();
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -223,7 +224,7 @@ class _Header extends StatelessWidget {
       ),
     ).then((_) {
       // Reload the trips list after the wizard completes
-      context.read<TripsListCubit>().load();
+      tripsCubit.load();
     });
   }
 }

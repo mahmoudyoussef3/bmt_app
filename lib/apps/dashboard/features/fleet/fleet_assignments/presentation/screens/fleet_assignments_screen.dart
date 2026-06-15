@@ -86,7 +86,7 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
     final activeDrivers = workspace.drivers
         .where(
           (driver) =>
-              driver.status == FleetDriverStatus.active &&
+              driver.status != FleetDriverStatus.archived &&
               driver.currentVehicleId.isEmpty,
         )
         .toList();
@@ -102,6 +102,7 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
     _openPairingDialog(
       context,
       cubit,
+      workspace: workspace,
       drivers: activeDrivers,
       vehicles: activeVehicles,
     );
@@ -124,6 +125,7 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
     _openPairingDialog(
       context,
       cubit,
+      workspace: workspace,
       assignment: assignment,
       vehicles: activeVehicles,
     );
@@ -132,10 +134,12 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
   void _openPairingDialog(
     BuildContext context,
     FleetAssignmentsCubit cubit, {
+    required FleetWorkspace workspace,
     FleetAssignment? assignment,
     List<FleetDriver> drivers = const [],
     required List<FleetVehicle> vehicles,
   }) {
+    final overviewCubit = context.read<FleetOverviewCubit>();
     showDialog<void>(
       context: context,
       builder: (_) => BlocProvider.value(
@@ -144,6 +148,7 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
           textDirection: TextDirection.ltr,
           child: FleetAssignmentDialog(
             assignment: assignment,
+            workspace: workspace,
             drivers: drivers,
             vehicles: vehicles,
           ),
@@ -151,7 +156,8 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
       ),
     ).then((_) async {
       // Reload parent workspace state when assignment dialog is closed to reflect new assignments
-      await context.read<FleetOverviewCubit>().loadWorkspace();
+      if (!mounted) return;
+      await overviewCubit.loadWorkspace();
     });
   }
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -1088,7 +1089,11 @@ class _BasicInfoForm extends StatelessWidget {
         ),
         TextFormField(
           controller: code,
-          decoration: const InputDecoration(labelText: 'كود المسار'),
+          textCapitalization: TextCapitalization.characters,
+          decoration: const InputDecoration(
+            labelText: 'كود المسار',
+            helperText: 'كود فريد يظهر للتشغيل والبحث',
+          ),
           validator: (value) => value == null || value.trim().isEmpty
               ? 'يرجى إدخال كود المسار'
               : null,
@@ -1553,16 +1558,36 @@ class _StopDialogState extends State<_StopDialog> {
                   Expanded(
                     child: TextFormField(
                       controller: _latitude,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: FleetInputFormatters.signedDecimal,
                       decoration: const InputDecoration(labelText: 'خط العرض'),
+                      validator: (value) => _coordinateValidator(
+                        value,
+                        label: 'خط العرض',
+                        min: -90,
+                        max: 90,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.small),
                   Expanded(
                     child: TextFormField(
                       controller: _longitude,
-                      keyboardType: TextInputType.number,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                        signed: true,
+                      ),
+                      inputFormatters: FleetInputFormatters.signedDecimal,
                       decoration: const InputDecoration(labelText: 'خط الطول'),
+                      validator: (value) => _coordinateValidator(
+                        value,
+                        label: 'خط الطول',
+                        min: -180,
+                        max: 180,
+                      ),
                     ),
                   ),
                 ],
@@ -1584,6 +1609,11 @@ class _StopDialogState extends State<_StopDialog> {
                 title: const Text('يسمح بالنزول في هذه المحطة'),
                 controlAffinity: ListTileControlAffinity.leading,
               ),
+              if (!_pickupAllowed && !_dropoffAllowed)
+                Text(
+                  'يجب أن تكون المحطة صعوداً أو نزولاً على الأقل.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
             ],
           ),
         ),
@@ -1596,6 +1626,7 @@ class _StopDialogState extends State<_StopDialog> {
         FilledButton(
           onPressed: () {
             if (_dialogFormKey.currentState?.validate() != true) return;
+            if (!_pickupAllowed && !_dropoffAllowed) return;
             final existing = widget.station;
             widget.onSubmit(
               RouteStation(
@@ -1622,6 +1653,22 @@ class _StopDialogState extends State<_StopDialog> {
         ),
       ],
     );
+  }
+
+  String? _coordinateValidator(
+    String? value, {
+    required String label,
+    required double min,
+    required double max,
+  }) {
+    final trimmed = value?.trim() ?? '';
+    if (trimmed.isEmpty) return null;
+    final parsed = double.tryParse(trimmed);
+    if (parsed == null) return '$label يجب أن يكون رقماً صحيحاً';
+    if (parsed < min || parsed > max) {
+      return '$label يجب أن يكون بين $min و $max';
+    }
+    return null;
   }
 }
 

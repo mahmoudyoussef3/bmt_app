@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/driver_operations.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_table_shell.dart';
@@ -36,6 +37,15 @@ class FleetDriversTable extends StatelessWidget {
     return match.first.vehicleNumber;
   }
 
+  Color _healthColor(BuildContext context, DriverHealthLevel health) {
+    final scheme = Theme.of(context).colorScheme;
+    return switch (health) {
+      DriverHealthLevel.healthy => scheme.primary,
+      DriverHealthLevel.warning => scheme.tertiary,
+      DriverHealthLevel.critical => scheme.error,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<FleetDriversCubit>();
@@ -48,14 +58,11 @@ class FleetDriversTable extends StatelessWidget {
     return FleetTableShell(
       headers: const [
         'تحديد',
-        'الصورة',
-        'الاسم',
-        'رقم الهاتف',
-        'الرقم القومي',
-        'رقم الرخصة',
-        'انتهاء الرخصة',
-        'الحالة',
-        'المركبة الحالية',
+        'السائق',
+        'الصحة',
+        'التوفر',
+        'المركبة',
+        'الرخصة',
         'إجراءات',
       ],
       total: drivers.length,
@@ -64,60 +71,96 @@ class FleetDriversTable extends StatelessWidget {
       onPageChanged: onPageChanged,
       rows: paged.map((driver) {
         final vehicle = _vehicleName(driver.currentVehicleId);
+        final snapshot = DriverOperations.snapshot(driver, workspace);
+        final healthColor = _healthColor(context, snapshot.health);
         return [
           Checkbox(
             value: selectedIds.contains(driver.id),
             onChanged: (_) => cubit.toggleSelection(driver.id),
           ),
-          FleetAvatar(
-            label: driver.imageLabel,
-            profileImageUrl: driver.profileImageUrl,
+          Row(
+            children: [
+              FleetAvatar(
+                label: driver.imageLabel,
+                profileImageUrl: driver.profileImageUrl,
+              ),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      driver.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      driver.phone,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-          Text(
-            driver.name,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+          Tooltip(
+            message: snapshot.primaryReason,
+            child: StatusChip(
+              label: snapshot.health.label,
+              color: healthColor.withAlpha(24),
+              textColor: healthColor,
+            ),
           ),
-          Text(driver.phone),
-          Text(driver.nationalId),
-          Text(driver.licenseNumber),
-          Text(driver.licenseExpiry),
-          StatusChip(label: driver.status.label),
+          StatusChip(label: snapshot.status.label),
           Text(vehicle.isEmpty ? 'بدون مركبة' : vehicle),
+          Text(
+            driver.licenseExpiry,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           Wrap(
             spacing: AppSpacing.xSmall,
             children: [
-              TextButton(
+              IconButton(
+                tooltip: 'عرض جاهزية السائق',
                 onPressed: () => onView(driver),
-                child: const Text('عرض'),
+                icon: const Icon(Icons.visibility_outlined),
               ),
-              TextButton(
+              IconButton(
+                tooltip: 'تعديل بيانات السائق',
                 onPressed: () => onEdit(driver),
-                child: const Text('تعديل'),
+                icon: const Icon(Icons.edit_outlined),
               ),
-              TextButton(
+              IconButton(
+                tooltip: 'إيقاف السائق',
                 onPressed: driver.status == FleetDriverStatus.active
                     ? () => cubit.updateDriverStatus(
                         driver.id,
                         FleetDriverStatus.suspended,
                       )
                     : null,
-                child: const Text('إيقاف'),
+                icon: const Icon(Icons.pause_circle_outline_rounded),
               ),
-              TextButton(
+              IconButton(
+                tooltip: 'تفعيل السائق',
                 onPressed: driver.status == FleetDriverStatus.suspended
                     ? () => cubit.updateDriverStatus(
                         driver.id,
                         FleetDriverStatus.active,
                       )
                     : null,
-                child: const Text('تفعيل'),
+                icon: const Icon(Icons.play_circle_outline_rounded),
               ),
-              TextButton(
+              IconButton(
+                tooltip: 'أرشفة السائق',
                 onPressed: () => cubit.updateDriverStatus(
                   driver.id,
                   FleetDriverStatus.archived,
                 ),
-                child: const Text('أرشفة'),
+                icon: const Icon(Icons.archive_outlined),
               ),
             ],
           ),

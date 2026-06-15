@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/driver_operations.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/widgets/fleet_document_manager.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/status_chip.dart';
 
 class FleetDriverDetailsView extends StatelessWidget {
   final FleetDriver driver;
@@ -30,6 +32,7 @@ class FleetDriverDetailsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final vehicle = _vehicleName(driver.currentVehicleId);
+    final snapshot = DriverOperations.snapshot(driver, workspace);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -37,6 +40,13 @@ class FleetDriverDetailsView extends StatelessWidget {
         FleetBreadcrumbs(
           currentLabel: 'تفاصيل السائق: ${driver.name}',
           onBack: onBack,
+        ),
+        const SizedBox(height: AppSpacing.large),
+        _ReadinessPanel(
+          driver: driver,
+          snapshot: snapshot,
+          vehicleLabel: vehicle,
+          onEdit: onEdit,
         ),
         const SizedBox(height: AppSpacing.large),
         LayoutBuilder(
@@ -75,7 +85,7 @@ class FleetDriverDetailsView extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_rounded),
-                label: const Text('تعديل البيانات'),
+                label: const Text('تعديل بيانات السائق'),
               ),
             ];
 
@@ -252,6 +262,196 @@ class FleetDriverDetailsView extends StatelessWidget {
             child: Text(
               value,
               style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _ReadinessPanel extends StatelessWidget {
+  const _ReadinessPanel({
+    required this.driver,
+    required this.snapshot,
+    required this.vehicleLabel,
+    required this.onEdit,
+  });
+
+  final FleetDriver driver;
+  final DriverOperationsSnapshot snapshot;
+  final String vehicleLabel;
+  final VoidCallback onEdit;
+
+  Color _healthColor(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return switch (snapshot.health) {
+      DriverHealthLevel.healthy => scheme.primary,
+      DriverHealthLevel.warning => scheme.tertiary,
+      DriverHealthLevel.critical => scheme.error,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final healthColor = _healthColor(context);
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 820;
+          final verdict = snapshot.canAssign
+              ? 'يمكن تعيين هذا السائق الآن'
+              : 'لا تعين هذا السائق قبل معالجة التنبيهات';
+
+          final summary = [
+            _ReadinessMetric(
+              icon: Icons.verified_user_outlined,
+              label: 'قرار التشغيل',
+              value: verdict,
+              color: snapshot.canAssign ? scheme.primary : healthColor,
+            ),
+            _ReadinessMetric(
+              icon: Icons.directions_bus_filled_outlined,
+              label: 'المركبة',
+              value: vehicleLabel.isEmpty ? 'بدون مركبة' : vehicleLabel,
+              color: vehicleLabel.isEmpty ? scheme.tertiary : scheme.primary,
+            ),
+            _ReadinessMetric(
+              icon: Icons.badge_outlined,
+              label: 'الرخصة',
+              value: driver.licenseExpiryDate,
+              color: healthColor,
+            ),
+          ];
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'جاهزية السائق للتشغيل',
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          snapshot.primaryReason,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: healthColor,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  StatusChip(
+                    label: snapshot.health.label,
+                    color: healthColor.withAlpha(24),
+                    textColor: healthColor,
+                  ),
+                  const SizedBox(width: AppSpacing.small),
+                  StatusChip(label: snapshot.status.label),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              Wrap(
+                spacing: AppSpacing.small,
+                runSpacing: AppSpacing.small,
+                children: summary
+                    .map(
+                      (metric) => SizedBox(
+                        width: compact
+                            ? constraints.maxWidth
+                            : (constraints.maxWidth - AppSpacing.small * 2) / 3,
+                        child: metric,
+                      ),
+                    )
+                    .toList(),
+              ),
+              if (snapshot.attentionReasons.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.medium),
+                Wrap(
+                  spacing: AppSpacing.small,
+                  runSpacing: AppSpacing.small,
+                  children: snapshot.attentionReasons
+                      .map(
+                        (reason) => StatusChip(
+                          label: reason,
+                          color: healthColor.withAlpha(18),
+                          textColor: healthColor,
+                        ),
+                      )
+                      .toList(),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.medium),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: FilledButton.icon(
+                  onPressed: onEdit,
+                  icon: const Icon(Icons.edit_rounded),
+                  label: const Text('تعديل بيانات الجاهزية'),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _ReadinessMetric extends StatelessWidget {
+  const _ReadinessMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(70),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outline.withAlpha(70)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 2),
+                Text(
+                  value.isEmpty ? 'غير محدد' : value,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              ],
             ),
           ),
         ],

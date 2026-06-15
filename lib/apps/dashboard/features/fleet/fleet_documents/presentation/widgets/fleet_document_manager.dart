@@ -214,6 +214,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
   }
 
   Future<void> _deleteDoc(FleetDocument doc) async {
+    final cubit = context.read<FleetDocumentsCubit>();
     final confirmed = await _confirmDelete(context, doc);
     if (!confirmed) return;
 
@@ -223,7 +224,6 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
     });
 
     try {
-      final cubit = context.read<FleetDocumentsCubit>();
       final storagePath = _storagePathFromPublicUrl(
         doc.fileUrl,
         bucket: 'documents',

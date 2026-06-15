@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -275,6 +277,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                 label: 'الرقم القومي (14 رقماً مصرياً)',
                 icon: Icons.badge_outlined,
                 keyboardType: TextInputType.number,
+                inputFormatters: FleetInputFormatters.nationalId,
                 validator: FleetValidators.validateNationalId,
               ),
               _textFormField(
@@ -291,6 +294,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                 label: 'رقم الهاتف الأساسي',
                 icon: Icons.phone_android_rounded,
                 keyboardType: TextInputType.phone,
+                inputFormatters: FleetInputFormatters.egyptianPhone,
                 validator: (v) =>
                     FleetValidators.validatePhone(v ?? '', 'رقم الهاتف'),
               ),
@@ -299,6 +303,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                 label: 'رقم هاتف الطوارئ البديل',
                 icon: Icons.contact_phone_outlined,
                 keyboardType: TextInputType.phone,
+                inputFormatters: FleetInputFormatters.egyptianPhone,
                 validator: (v) {
                   final err = FleetValidators.validatePhone(
                     v ?? '',
@@ -431,17 +436,19 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
             .toList(),
       );
     }
-    return Wrap(
-      spacing: AppSpacing.medium,
-      runSpacing: AppSpacing.medium,
-      children: children
-          .map(
-            (c) => SizedBox(
-              width: (MediaQuery.of(context).size.width - 320 - 48 - 16) / 2,
-              child: c,
-            ),
-          )
-          .toList(),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth =
+            (constraints.maxWidth - AppSpacing.medium * (columns - 1)) /
+            columns;
+        return Wrap(
+          spacing: AppSpacing.medium,
+          runSpacing: AppSpacing.medium,
+          children: children
+              .map((child) => SizedBox(width: itemWidth, child: child))
+              .toList(),
+        );
+      },
     );
   }
 
@@ -451,6 +458,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
     required IconData icon,
     int maxLines = 1,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
@@ -462,6 +470,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
       ),
       maxLines: maxLines,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       validator: validator,
     );
   }

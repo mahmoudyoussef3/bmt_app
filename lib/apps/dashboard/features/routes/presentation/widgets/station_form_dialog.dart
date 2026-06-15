@@ -15,6 +15,7 @@ class StationFormDialog extends StatefulWidget {
 }
 
 class _StationFormDialogState extends State<StationFormDialog> {
+  final _formKey = GlobalKey<FormState>();
   late final TextEditingController _name;
   late final TextEditingController _area;
   late final TextEditingController _offset;
@@ -48,53 +49,79 @@ class _StationFormDialogState extends State<StationFormDialog> {
       title: Text(widget.station == null ? 'إضافة محطة' : 'تعديل محطة'),
       content: SizedBox(
         width: 420,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: _name,
-              textDirection: TextDirection.ltr,
-              decoration: const InputDecoration(labelText: 'اسم المحطة'),
-            ),
-            const SizedBox(height: AppSpacing.medium),
-            TextField(
-              controller: _area,
-              textDirection: TextDirection.ltr,
-              decoration: const InputDecoration(labelText: 'المنطقة'),
-            ),
-            const SizedBox(height: AppSpacing.medium),
-            TextField(
-              controller: _offset,
-              textDirection: TextDirection.ltr,
-              decoration: const InputDecoration(
-                labelText: 'وقت الوصول المتوقع',
+        child: Form(
+          key: _formKey,
+          autovalidateMode: AutovalidateMode.onUserInteraction,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: _name,
+                textDirection: TextDirection.ltr,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'اسم المحطة',
+                  border: OutlineInputBorder(),
+                ),
+                validator: _required('اسم المحطة'),
               ),
-            ),
-            const SizedBox(height: AppSpacing.medium),
-            TextField(
-              controller: _notes,
-              textDirection: TextDirection.ltr,
-              minLines: 2,
-              maxLines: 3,
-              decoration: const InputDecoration(labelText: 'ملاحظات المحطة'),
-            ),
-            CheckboxListTile(
-              value: _pickupAllowed,
-              onChanged: (value) {
-                setState(() => _pickupAllowed = value ?? true);
-              },
-              title: const Text('يسمح بالصعود'),
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-            CheckboxListTile(
-              value: _dropoffAllowed,
-              onChanged: (value) {
-                setState(() => _dropoffAllowed = value ?? true);
-              },
-              title: const Text('يسمح بالنزول'),
-              controlAffinity: ListTileControlAffinity.leading,
-            ),
-          ],
+              const SizedBox(height: AppSpacing.medium),
+              TextFormField(
+                controller: _area,
+                textDirection: TextDirection.ltr,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'المنطقة',
+                  border: OutlineInputBorder(),
+                ),
+                validator: _required('المنطقة'),
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              TextFormField(
+                controller: _offset,
+                textDirection: TextDirection.ltr,
+                textInputAction: TextInputAction.next,
+                decoration: const InputDecoration(
+                  labelText: 'وقت الوصول المتوقع',
+                  hintText: 'مثال: 20 دقيقة أو 08:30',
+                  border: OutlineInputBorder(),
+                ),
+                validator: _required('وقت الوصول المتوقع'),
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              TextFormField(
+                controller: _notes,
+                textDirection: TextDirection.ltr,
+                minLines: 2,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: 'ملاحظات المحطة',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              CheckboxListTile(
+                value: _pickupAllowed,
+                onChanged: (value) {
+                  setState(() => _pickupAllowed = value ?? true);
+                },
+                title: const Text('يسمح بالصعود'),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+              CheckboxListTile(
+                value: _dropoffAllowed,
+                onChanged: (value) {
+                  setState(() => _dropoffAllowed = value ?? true);
+                },
+                title: const Text('يسمح بالنزول'),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+              if (!_pickupAllowed && !_dropoffAllowed)
+                Text(
+                  'يجب أن تكون المحطة صعوداً أو نزولاً على الأقل.',
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
+                ),
+            ],
+          ),
         ),
       ),
       actions: [
@@ -104,6 +131,8 @@ class _StationFormDialogState extends State<StationFormDialog> {
         ),
         FilledButton(
           onPressed: () {
+            if (_formKey.currentState?.validate() != true) return;
+            if (!_pickupAllowed && !_dropoffAllowed) return;
             final existing = widget.station;
             widget.onSubmit(
               RouteStation(
@@ -124,5 +153,10 @@ class _StationFormDialogState extends State<StationFormDialog> {
         ),
       ],
     );
+  }
+
+  String? Function(String?) _required(String label) {
+    return (value) =>
+        value == null || value.trim().isEmpty ? '$label مطلوب' : null;
   }
 }

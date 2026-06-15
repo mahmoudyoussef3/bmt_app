@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -942,6 +943,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           child: TextFormField(
             controller: _priceController,
             keyboardType: TextInputType.number,
+            inputFormatters: FleetInputFormatters.money,
             decoration: const InputDecoration(
               labelText: 'سعر التذكرة',
               suffixText: 'ج.م',
@@ -1037,6 +1039,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                           child: TextFormField(
                             initialValue: config.oneTime.toStringAsFixed(0),
                             keyboardType: TextInputType.number,
+                            inputFormatters: FleetInputFormatters.money,
                             textAlign: TextAlign.center,
                             decoration: const InputDecoration(
                               suffixText: 'ج.م',
@@ -1261,6 +1264,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                           key: ValueKey('${key}_${pkg.type}_price'),
                           initialValue: pkg.price.toStringAsFixed(0),
                           keyboardType: TextInputType.number,
+                          inputFormatters: FleetInputFormatters.money,
                           onChanged: (val) {
                             final parsed = double.tryParse(val) ?? 0.0;
                             pkg.setPrice(parsed);
@@ -1278,6 +1282,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                           key: ValueKey('${key}_${pkg.type}_disc'),
                           initialValue: discountPercent.toStringAsFixed(0),
                           keyboardType: TextInputType.number,
+                          inputFormatters: FleetInputFormatters.money,
                           decoration: const InputDecoration(suffixText: '%'),
                           onChanged: (val) {
                             final parsedDisc = double.tryParse(val) ?? 0.0;

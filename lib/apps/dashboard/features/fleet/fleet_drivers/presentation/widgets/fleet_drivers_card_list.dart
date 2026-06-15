@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/driver_operations.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -30,6 +31,15 @@ class FleetDriversCardList extends StatelessWidget {
     return match.first.vehicleNumber;
   }
 
+  Color _healthColor(BuildContext context, DriverHealthLevel health) {
+    final scheme = Theme.of(context).colorScheme;
+    return switch (health) {
+      DriverHealthLevel.healthy => scheme.primary,
+      DriverHealthLevel.warning => scheme.tertiary,
+      DriverHealthLevel.critical => scheme.error,
+    };
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -58,12 +68,8 @@ class FleetDriversCardList extends StatelessWidget {
           itemBuilder: (context, index) {
             final driver = paged[index];
             final vehicle = _vehicleName(driver.currentVehicleId);
-            final documentExpired = driver.documents.any(
-              (d) => d.status == FleetDocumentStatus.expired,
-            );
-            final documentExpiring = driver.documents.any(
-              (d) => d.status == FleetDocumentStatus.expiringSoon,
-            );
+            final snapshot = DriverOperations.snapshot(driver, workspace);
+            final healthColor = _healthColor(context, snapshot.health);
 
             return AppCard(
               padding: const EdgeInsets.all(AppSpacing.medium),
@@ -94,7 +100,31 @@ class FleetDriversCardList extends StatelessWidget {
                           ],
                         ),
                       ),
-                      StatusChip(label: driver.status.label),
+                      StatusChip(
+                        label: snapshot.health.label,
+                        color: healthColor.withAlpha(24),
+                        textColor: healthColor,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  Row(
+                    children: [
+                      Expanded(child: StatusChip(label: snapshot.status.label)),
+                      const SizedBox(width: AppSpacing.small),
+                      Expanded(
+                        child: Text(
+                          snapshot.primaryReason,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: healthColor,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: AppSpacing.medium),
@@ -119,11 +149,15 @@ class FleetDriversCardList extends StatelessWidget {
                     icon: Icons.calendar_today_rounded,
                     label: 'انتهاء الرخصة',
                     value: driver.licenseExpiry,
-                    valueColor: documentExpired
-                        ? scheme.error
-                        : documentExpiring
-                        ? scheme.tertiary
-                        : null,
+                    valueColor: healthColor,
+                  ),
+                  FleetMetaRow(
+                    icon: Icons.assignment_late_outlined,
+                    label: 'قرار التشغيل',
+                    value: snapshot.canAssign ? 'جاهز للتعيين' : 'راجع المخاطر',
+                    valueColor: snapshot.canAssign
+                        ? scheme.primary
+                        : healthColor,
                   ),
                   const SizedBox(height: AppSpacing.medium),
                   Row(

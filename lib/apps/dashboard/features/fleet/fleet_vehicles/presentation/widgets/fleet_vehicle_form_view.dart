@@ -1,11 +1,12 @@
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io' as io;
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/cubit/fleet_vehicles_cubit.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -76,7 +77,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
 
     if (v != null) {
       vehicleType = v.vehicleType.isEmpty ? 'Coaster' : v.vehicleType;
-      seatLayoutType = v.seatLayoutType.isEmpty ? 'standard' : v.seatLayoutType;
+      seatLayoutType = 'standard';
     }
 
     selectedDriverId = v?.currentDriverId.isNotEmpty == true
@@ -311,6 +312,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
             hint: 'مثال: 2024',
             icon: Icons.calendar_today_rounded,
             keyboardType: TextInputType.number,
+            inputFormatters: FleetInputFormatters.year,
             validator: FleetValidators.validateManufactureYear,
           ),
           _textFormField(
@@ -319,6 +321,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
             hint: 'عدد المقاعد الفعلي',
             icon: Icons.event_seat_rounded,
             keyboardType: TextInputType.number,
+            inputFormatters: FleetInputFormatters.capacity,
             validator: FleetValidators.validateCapacity,
           ),
           _textFormField(
@@ -357,13 +360,13 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
               labelText: 'تخطيط المقاعد',
               prefixIcon: Icon(Icons.grid_view_rounded),
               border: OutlineInputBorder(),
+              helperText: 'كل مقاعد الركاب قياسية. لا توجد فئات VIP.',
             ),
             items: const [
               DropdownMenuItem(
                 value: 'standard',
                 child: Text('Standard - قياسي'),
               ),
-              DropdownMenuItem(value: 'VIP', child: Text('VIP - مميز')),
             ],
             onChanged: (v) => setState(() => seatLayoutType = v ?? 'standard'),
           ),
@@ -418,6 +421,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     String? hint,
     int maxLines = 1,
     TextInputType? keyboardType,
+    List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
   }) {
     return TextFormField(
@@ -430,6 +434,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
       ),
       maxLines: maxLines,
       keyboardType: keyboardType,
+      inputFormatters: inputFormatters,
       validator: validator,
     );
   }
