@@ -25,8 +25,10 @@ class PaymentCheckoutData {
   final String pickupPoint;
   final String destination;
   final String vehicleNumber;
+  final String tripDate;
   final String departureTime;
   final String arrivalTime;
+  final String selectedSeatId;
   final String selectedSeat;
   final String driverName;
   final int baseFare;
@@ -40,8 +42,10 @@ class PaymentCheckoutData {
     required this.pickupPoint,
     required this.destination,
     required this.vehicleNumber,
+    required this.tripDate,
     required this.departureTime,
     required this.arrivalTime,
+    required this.selectedSeatId,
     required this.selectedSeat,
     required this.driverName,
     this.baseFare = 60,
@@ -58,6 +62,8 @@ class PaymentCheckoutData {
 
   int remainingWalletAfterPayment(int total) =>
       (walletBalance - total).clamp(0, walletBalance);
+
+  String get route => '$pickupPoint → $destination';
 }
 
 class PaymentResultData {

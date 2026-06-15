@@ -46,7 +46,9 @@ class FleetAssignmentsCardList extends StatelessWidget {
     final cubit = context.read<FleetAssignmentsCubit>();
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, assignments.length);
-    final paged = start >= assignments.length ? <FleetAssignment>[] : assignments.sublist(start, end);
+    final paged = start >= assignments.length
+        ? <FleetAssignment>[]
+        : assignments.sublist(start, end);
 
     if (paged.isEmpty) {
       return const Center(
@@ -101,7 +103,9 @@ class FleetAssignmentsCardList extends StatelessWidget {
                   FleetMetaRow(
                     icon: Icons.directions_bus_outlined,
                     label: 'المركبة',
-                    value: vehicleName.isEmpty ? 'مركبة غير معروفة' : vehicleName,
+                    value: vehicleName.isEmpty
+                        ? 'مركبة غير معروفة'
+                        : vehicleName,
                   ),
                   FleetMetaRow(
                     icon: Icons.calendar_today_rounded,
@@ -117,7 +121,8 @@ class FleetAssignmentsCardList extends StatelessWidget {
                         child: const Text('تغيير المركبة'),
                       ),
                       TextButton(
-                        onPressed: assignment.status == FleetAssignmentStatus.active
+                        onPressed:
+                            assignment.status == FleetAssignmentStatus.active
                             ? () => cubit.removeAssignment(assignment.id)
                             : null,
                         child: const Text('فك التعيين'),
@@ -145,7 +150,9 @@ class FleetAssignmentsCardList extends StatelessWidget {
               ),
               Text('صفحة ${page + 1} من $pages'),
               IconButton(
-                onPressed: page >= pages - 1 ? null : () => onPageChanged(page + 1),
+                onPressed: page >= pages - 1
+                    ? null
+                    : () => onPageChanged(page + 1),
                 icon: const Icon(Icons.chevron_left_rounded),
               ),
             ],

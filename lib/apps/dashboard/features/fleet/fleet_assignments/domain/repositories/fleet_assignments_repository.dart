@@ -7,7 +7,13 @@ abstract class FleetAssignmentsRepository {
   Future<List<FleetAssignment>> getAssignments();
   Future<List<FleetDriver>> getDrivers();
   Future<List<FleetVehicle>> getVehicles();
-  Future<FleetAssignment> assignDriverToVehicle(String driverId, String vehicleId);
-  Future<FleetAssignment> reassignVehicle(String assignmentId, String newVehicleId);
+  Future<FleetAssignment> assignDriverToVehicle(
+    String driverId,
+    String vehicleId,
+  );
+  Future<FleetAssignment> reassignVehicle(
+    String assignmentId,
+    String newVehicleId,
+  );
   Future<FleetAssignment> removeAssignment(String assignmentId);
 }

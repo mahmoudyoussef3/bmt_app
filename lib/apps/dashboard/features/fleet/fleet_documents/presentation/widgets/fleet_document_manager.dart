@@ -53,8 +53,9 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
 
   String _safeStorageFileName(String input) {
     final extension = input.contains('.') ? '.${input.split('.').last}' : '';
-    final nameWithoutExtension =
-        input.contains('.') ? input.substring(0, input.lastIndexOf('.')) : input;
+    final nameWithoutExtension = input.contains('.')
+        ? input.substring(0, input.lastIndexOf('.'))
+        : input;
 
     final safeName = nameWithoutExtension
         .trim()
@@ -77,7 +78,10 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
     return segments.skip(bucketIndex + 1).join('/');
   }
 
-  Future<bool> _confirmDelete(BuildContext context, FleetDocument document) async {
+  Future<bool> _confirmDelete(
+    BuildContext context,
+    FleetDocument document,
+  ) async {
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => Directionality(
@@ -179,7 +183,9 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
       );
 
       if (url == null || url.isEmpty) {
-        throw Exception('فشل رفع الملف إلى Supabase Storage. تأكد من وجود bucket باسم documents.');
+        throw Exception(
+          'فشل رفع الملف إلى Supabase Storage. تأكد من وجود bucket باسم documents.',
+        );
       }
 
       final saveError = await cubit.saveDocument(
@@ -276,7 +282,8 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
           const FleetSectionTitle(
             icon: Icons.folder_copy_outlined,
             title: 'الوثائق والمستندات',
-            subtitle: 'ارفع ملفات PDF أو صور، وسيتم حفظ الرابط والبيانات في Supabase.',
+            subtitle:
+                'ارفع ملفات PDF أو صور، وسيتم حفظ الرابط والبيانات في Supabase.',
           ),
           const SizedBox(height: AppSpacing.medium),
           if (widget.documents.isEmpty)
@@ -292,11 +299,13 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
                 if (!useGrid) {
                   return Column(
                     children: widget.documents
-                        .map((doc) => _DocumentCard(
-                              doc: doc,
-                              onDelete: () => _deleteDoc(doc),
-                              docColor: _documentColor(context, doc.status),
-                            ))
+                        .map(
+                          (doc) => _DocumentCard(
+                            doc: doc,
+                            onDelete: () => _deleteDoc(doc),
+                            docColor: _documentColor(context, doc.status),
+                          ),
+                        )
                         .toList(),
                   );
                 }
@@ -371,7 +380,9 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
                         children: fields
                             .map(
                               (field) => Padding(
-                                padding: const EdgeInsets.only(bottom: AppSpacing.small),
+                                padding: const EdgeInsets.only(
+                                  bottom: AppSpacing.small,
+                                ),
                                 child: field,
                               ),
                             )
@@ -399,12 +410,17 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
                           onPressed: uploading ? null : _pickFile,
                           icon: const Icon(Icons.attach_file_rounded),
                           label: Text(
-                            pickedFile != null ? 'تغيير الملف' : 'اختيار ملف الوثيقة',
+                            pickedFile != null
+                                ? 'تغيير الملف'
+                                : 'اختيار ملف الوثيقة',
                           ),
                         ),
                         if (pickedFile != null)
                           Chip(
-                            avatar: const Icon(Icons.description_outlined, size: 18),
+                            avatar: const Icon(
+                              Icons.description_outlined,
+                              size: 18,
+                            ),
                             label: Text(
                               pickedFile!.name,
                               overflow: TextOverflow.ellipsis,
@@ -416,7 +432,9 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
                               ? const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : const Icon(Icons.cloud_upload_rounded),
                           label: const Text('رفع وحفظ'),
@@ -501,16 +519,16 @@ class _DocumentCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     Text(
                       doc.expiryDate,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -529,9 +547,9 @@ class _DocumentCard extends StatelessWidget {
                 onPressed: doc.fileUrl.isEmpty
                     ? null
                     : () => launchUrl(
-                          Uri.parse(doc.fileUrl),
-                          mode: LaunchMode.externalApplication,
-                        ),
+                        Uri.parse(doc.fileUrl),
+                        mode: LaunchMode.externalApplication,
+                      ),
                 icon: const Icon(Icons.open_in_new_rounded, size: 16),
                 label: const Text('فتح'),
               ),

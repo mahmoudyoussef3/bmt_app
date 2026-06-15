@@ -6,7 +6,10 @@ abstract class FleetVehiclesRepository {
   Future<List<FleetVehicle>> getVehicles();
   Future<FleetVehicle> createVehicle(FleetVehicle vehicle);
   Future<FleetVehicle> updateVehicle(FleetVehicle vehicle);
-  Future<FleetVehicle> updateVehicleStatus(String vehicleId, FleetVehicleStatus status);
+  Future<FleetVehicle> updateVehicleStatus(
+    String vehicleId,
+    FleetVehicleStatus status,
+  );
   Future<String> uploadFile(String bucket, String path, List<int> bytes);
   Future<void> deleteFile(String bucket, String path);
 }

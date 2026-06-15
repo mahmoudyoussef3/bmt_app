@@ -32,7 +32,11 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
     return sorted;
   }
 
-  void _openHistory(BuildContext context, String title, List<FleetHistoryItem> items) {
+  void _openHistory(
+    BuildContext context,
+    String title,
+    List<FleetHistoryItem> items,
+  ) {
     showDialog<void>(
       context: context,
       builder: (_) => Directionality(
@@ -45,15 +49,21 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: items.isEmpty
-                    ? [const ListTile(title: Text('لا توجد سجلات تعيين سابقة.'))]
+                    ? [
+                        const ListTile(
+                          title: Text('لا توجد سجلات تعيين سابقة.'),
+                        ),
+                      ]
                     : items
-                        .map(
-                          (item) => ListTile(
-                            title: Text(item.title),
-                            subtitle: Text('${item.date} - ${item.description}'),
-                          ),
-                        )
-                        .toList(),
+                          .map(
+                            (item) => ListTile(
+                              title: Text(item.title),
+                              subtitle: Text(
+                                '${item.date} - ${item.description}',
+                              ),
+                            ),
+                          )
+                          .toList(),
               ),
             ),
           ),
@@ -68,16 +78,33 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
     );
   }
 
-  void _openAssignDialog(BuildContext context, FleetWorkspace workspace, FleetAssignmentsCubit cubit) {
+  void _openAssignDialog(
+    BuildContext context,
+    FleetWorkspace workspace,
+    FleetAssignmentsCubit cubit,
+  ) {
     final activeDrivers = workspace.drivers
-        .where((driver) => driver.status == FleetDriverStatus.active && driver.currentVehicleId.isEmpty)
+        .where(
+          (driver) =>
+              driver.status == FleetDriverStatus.active &&
+              driver.currentVehicleId.isEmpty,
+        )
         .toList();
 
     final activeVehicles = workspace.vehicles
-        .where((vehicle) => vehicle.status == FleetVehicleStatus.active && vehicle.currentDriverId.isEmpty)
+        .where(
+          (vehicle) =>
+              vehicle.status == FleetVehicleStatus.active &&
+              vehicle.currentDriverId.isEmpty,
+        )
         .toList();
 
-    _openPairingDialog(context, cubit, drivers: activeDrivers, vehicles: activeVehicles);
+    _openPairingDialog(
+      context,
+      cubit,
+      drivers: activeDrivers,
+      vehicles: activeVehicles,
+    );
   }
 
   void _openReassignDialog(
@@ -87,10 +114,19 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
     FleetAssignment assignment,
   ) {
     final activeVehicles = workspace.vehicles
-        .where((vehicle) => vehicle.status == FleetVehicleStatus.active && vehicle.currentDriverId.isEmpty)
+        .where(
+          (vehicle) =>
+              vehicle.status == FleetVehicleStatus.active &&
+              vehicle.currentDriverId.isEmpty,
+        )
         .toList();
 
-    _openPairingDialog(context, cubit, assignment: assignment, vehicles: activeVehicles);
+    _openPairingDialog(
+      context,
+      cubit,
+      assignment: assignment,
+      vehicles: activeVehicles,
+    );
   }
 
   void _openPairingDialog(
@@ -141,10 +177,14 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(state.message, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    state.message,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: AppSpacing.medium),
                   FilledButton(
-                    onPressed: () => context.read<FleetAssignmentsCubit>().load(),
+                    onPressed: () =>
+                        context.read<FleetAssignmentsCubit>().load(),
                     child: const Text('إعادة المحاولة'),
                   ),
                 ],
@@ -171,9 +211,12 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
                       workspace: workspace,
                       page: _page,
                       pageSize: _pageSize,
-                      onPageChanged: (newPage) => setState(() => _page = newPage),
-                      onReassign: (a) => _openReassignDialog(context, workspace, cubit, a),
-                      onViewHistory: (items) => _openHistory(context, 'سجل التعيين', items),
+                      onPageChanged: (newPage) =>
+                          setState(() => _page = newPage),
+                      onReassign: (a) =>
+                          _openReassignDialog(context, workspace, cubit, a),
+                      onViewHistory: (items) =>
+                          _openHistory(context, 'سجل التعيين', items),
                     );
                   } else {
                     return FleetAssignmentsTable(
@@ -181,9 +224,12 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
                       workspace: workspace,
                       page: _page,
                       pageSize: _pageSize,
-                      onPageChanged: (newPage) => setState(() => _page = newPage),
-                      onReassign: (a) => _openReassignDialog(context, workspace, cubit, a),
-                      onViewHistory: (items) => _openHistory(context, 'سجل التعيين', items),
+                      onPageChanged: (newPage) =>
+                          setState(() => _page = newPage),
+                      onReassign: (a) =>
+                          _openReassignDialog(context, workspace, cubit, a),
+                      onViewHistory: (items) =>
+                          _openHistory(context, 'سجل التعيين', items),
                     );
                   }
                 },
@@ -205,14 +251,19 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
   ) {
     final scheme = Theme.of(context).colorScheme;
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium, vertical: AppSpacing.small),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small,
+      ),
       child: Row(
         children: [
           Expanded(
             child: SearchBar(
               hintText: 'البحث باسم السائق أو كود المركبة المعينة...',
               elevation: WidgetStateProperty.all(0),
-              backgroundColor: WidgetStateProperty.all(scheme.surfaceContainerHighest.withAlpha(90)),
+              backgroundColor: WidgetStateProperty.all(
+                scheme.surfaceContainerHighest.withAlpha(90),
+              ),
               onChanged: cubit.search,
               leading: const Icon(Icons.search_rounded),
             ),
@@ -236,7 +287,11 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
           ),
           IconButton(
             onPressed: () => setState(() => _sortAscending = !_sortAscending),
-            icon: Icon(_sortAscending ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded),
+            icon: Icon(
+              _sortAscending
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+            ),
             tooltip: 'ترتيب حسب تاريخ التعيين',
           ),
           const SizedBox(width: AppSpacing.small),

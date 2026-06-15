@@ -46,7 +46,6 @@ class SeatLegend extends StatelessWidget {
                 iconColor: scheme.onSurface.withAlpha(120),
                 muted: true,
               ),
-       
             ];
 
             if (wrap) {

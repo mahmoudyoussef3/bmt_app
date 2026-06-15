@@ -30,7 +30,9 @@ class FleetDocumentsTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, documents.length);
-    final paged = start >= documents.length ? <FleetDocument>[] : documents.sublist(start, end);
+    final paged = start >= documents.length
+        ? <FleetDocument>[]
+        : documents.sublist(start, end);
 
     return FleetTableShell(
       headers: const [
@@ -47,7 +49,10 @@ class FleetDocumentsTable extends StatelessWidget {
       rows: paged.map((document) {
         final docColor = _documentColor(context, document.status);
         return [
-          Text(document.type.label, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            document.type.label,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           Text(document.ownerName),
           Text(document.referenceNumber),
           Text(document.expiryDate),

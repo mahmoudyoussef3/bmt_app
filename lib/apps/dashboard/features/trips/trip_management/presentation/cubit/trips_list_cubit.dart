@@ -39,46 +39,55 @@ class TripsListLoaded extends TripsListState {
   List<OperationTrip> get filteredTrips {
     final query = searchQuery.trim();
     return trips.where((trip) {
-      final matchesSearch = query.isEmpty ||
+      final matchesSearch =
+          query.isEmpty ||
           trip.id.contains(query) ||
           trip.route.contains(query) ||
           trip.driver.contains(query) ||
           trip.vehicle.contains(query);
       final matchesStatus = statusFilter == null || trip.status == statusFilter;
       final matchesRoute = routeFilter == 'الكل' || trip.route == routeFilter;
-      final matchesDriver = driverFilter == 'الكل' || trip.driver == driverFilter;
+      final matchesDriver =
+          driverFilter == 'الكل' || trip.driver == driverFilter;
       final matchesDate = dateFilter == 'الكل' || trip.date == dateFilter;
-      return matchesSearch && matchesStatus && matchesRoute && matchesDriver && matchesDate;
+      return matchesSearch &&
+          matchesStatus &&
+          matchesRoute &&
+          matchesDriver &&
+          matchesDate;
     }).toList();
   }
 
   List<String> get routes => [
-        'الكل',
-        ...trips.map((trip) => trip.route).toSet(),
-      ];
+    'الكل',
+    ...trips.map((trip) => trip.route).toSet(),
+  ];
   List<String> get drivers => [
-        'الكل',
-        ...trips.map((trip) => trip.driver).toSet(),
-      ];
-  List<String> get dates => [
-        'الكل',
-        ...trips.map((trip) => trip.date).toSet(),
-      ];
+    'الكل',
+    ...trips.map((trip) => trip.driver).toSet(),
+  ];
+  List<String> get dates => ['الكل', ...trips.map((trip) => trip.date).toSet()];
 
   int get todayTrips {
     final now = DateTime.now();
-    final todayStr = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final todayStr =
+        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     return trips.where((trip) => trip.date == todayStr).length;
   }
+
   int get upcomingTrips => trips
-      .where((trip) =>
-          trip.status == OperationTripStatus.scheduled ||
-          trip.status == OperationTripStatus.openForBooking)
+      .where(
+        (trip) =>
+            trip.status == OperationTripStatus.scheduled ||
+            trip.status == OperationTripStatus.openForBooking,
+      )
       .length;
-  int get runningTrips =>
-      trips.where((trip) => trip.status == OperationTripStatus.inProgress).length;
-  int get completedTrips =>
-      trips.where((trip) => trip.status == OperationTripStatus.completed).length;
+  int get runningTrips => trips
+      .where((trip) => trip.status == OperationTripStatus.inProgress)
+      .length;
+  int get completedTrips => trips
+      .where((trip) => trip.status == OperationTripStatus.completed)
+      .length;
 
   TripsListLoaded copyWith({
     List<OperationTrip>? trips,
@@ -92,7 +101,9 @@ class TripsListLoaded extends TripsListState {
     return TripsListLoaded(
       trips: trips ?? this.trips,
       searchQuery: searchQuery ?? this.searchQuery,
-      statusFilter: clearStatusFilter ? null : statusFilter ?? this.statusFilter,
+      statusFilter: clearStatusFilter
+          ? null
+          : statusFilter ?? this.statusFilter,
       routeFilter: routeFilter ?? this.routeFilter,
       driverFilter: driverFilter ?? this.driverFilter,
       dateFilter: dateFilter ?? this.dateFilter,
@@ -124,7 +135,9 @@ class TripsListCubit extends Cubit<TripsListState> {
   void filterStatus(OperationTripStatus? status) {
     final current = state;
     if (current is! TripsListLoaded) return;
-    emit(current.copyWith(statusFilter: status, clearStatusFilter: status == null));
+    emit(
+      current.copyWith(statusFilter: status, clearStatusFilter: status == null),
+    );
   }
 
   void filterRoute(String route) {
@@ -154,8 +167,12 @@ class TripsListCubit extends Cubit<TripsListState> {
   void updateTripInList(OperationTrip updated) {
     final current = state;
     if (current is! TripsListLoaded) return;
-    emit(current.copyWith(
-      trips: current.trips.map((t) => t.id == updated.id ? updated : t).toList(),
-    ));
+    emit(
+      current.copyWith(
+        trips: current.trips
+            .map((t) => t.id == updated.id ? updated : t)
+            .toList(),
+      ),
+    );
   }
 }

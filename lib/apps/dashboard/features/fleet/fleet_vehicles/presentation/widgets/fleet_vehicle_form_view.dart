@@ -65,7 +65,11 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     color = TextEditingController(text: v?.color ?? '');
     notes = TextEditingController(text: v?.notes ?? '');
     if (v != null && v.imageUrl.isNotEmpty) {
-      _existingImageUrls = v.imageUrl.split(',').map((url) => url.trim()).where((url) => url.isNotEmpty).toList();
+      _existingImageUrls = v.imageUrl
+          .split(',')
+          .map((url) => url.trim())
+          .where((url) => url.isNotEmpty)
+          .toList();
     } else {
       _existingImageUrls = [];
     }
@@ -75,7 +79,9 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
       seatLayoutType = v.seatLayoutType.isEmpty ? 'standard' : v.seatLayoutType;
     }
 
-    selectedDriverId = v?.currentDriverId.isNotEmpty == true ? v!.currentDriverId : null;
+    selectedDriverId = v?.currentDriverId.isNotEmpty == true
+        ? v!.currentDriverId
+        : null;
   }
 
   List<FleetDriver> _getAvailableDrivers() {
@@ -121,8 +127,9 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
 
   String _safeStorageFileName(String input) {
     final extension = input.contains('.') ? '.${input.split('.').last}' : '';
-    final nameWithoutExtension =
-        input.contains('.') ? input.substring(0, input.lastIndexOf('.')) : input;
+    final nameWithoutExtension = input.contains('.')
+        ? input.substring(0, input.lastIndexOf('.'))
+        : input;
 
     final safeName = nameWithoutExtension
         .trim()
@@ -146,14 +153,17 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FleetBreadcrumbs(
-            currentLabel: isEdit ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}' : 'إضافة مركبة جديدة',
+            currentLabel: isEdit
+                ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}'
+                : 'إضافة مركبة جديدة',
             onBack: widget.onBack,
           ),
           const SizedBox(height: AppSpacing.large),
           FleetFormHeroCard(
             icon: Icons.directions_bus_filled_rounded,
             title: isEdit ? 'تعديل بيانات المركبة' : 'إضافة مركبة جديدة',
-            subtitle: 'أدخل بيانات المركبة والصورة والسائق المرتبط بها. الصورة ترفع إلى Supabase Storage قبل الحفظ.',
+            subtitle:
+                'أدخل بيانات المركبة والصورة والسائق المرتبط بها. الصورة ترفع إلى Supabase Storage قبل الحفظ.',
           ),
           const SizedBox(height: AppSpacing.large),
           LayoutBuilder(
@@ -263,91 +273,101 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _responsiveGrid(
-          columns,
-          [
-            _textFormField(
-              controller: code,
-              label: 'كود المركبة الداخلي',
-              hint: 'مثال: BUS-201',
-              icon: Icons.directions_bus_rounded,
-              validator: FleetValidators.validateVehicleCode,
+        _responsiveGrid(columns, [
+          _textFormField(
+            controller: code,
+            label: 'كود المركبة الداخلي',
+            hint: 'مثال: BUS-201',
+            icon: Icons.directions_bus_rounded,
+            validator: FleetValidators.validateVehicleCode,
+          ),
+          _textFormField(
+            controller: plate,
+            label: 'رقم اللوحة المرورية',
+            hint: 'مثال: ٣٣٠٠ ق ل',
+            icon: Icons.confirmation_number_outlined,
+            validator: FleetValidators.validatePlateNumber,
+          ),
+          _textFormField(
+            controller: brand,
+            label: 'الماركة',
+            hint: 'Toyota / Mercedes',
+            icon: Icons.branding_watermark_outlined,
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'اسم الماركة مطلوب' : null,
+          ),
+          _textFormField(
+            controller: model,
+            label: 'الموديل',
+            hint: 'Coaster / Sprinter / Hiace',
+            icon: Icons.model_training_rounded,
+            validator: (v) => (v == null || v.trim().isEmpty)
+                ? 'اسم طراز الموديل مطلوب'
+                : null,
+          ),
+          _textFormField(
+            controller: year,
+            label: 'سنة الصنع',
+            hint: 'مثال: 2024',
+            icon: Icons.calendar_today_rounded,
+            keyboardType: TextInputType.number,
+            validator: FleetValidators.validateManufactureYear,
+          ),
+          _textFormField(
+            controller: seats,
+            label: 'السعة الركابية',
+            hint: 'عدد المقاعد الفعلي',
+            icon: Icons.event_seat_rounded,
+            keyboardType: TextInputType.number,
+            validator: FleetValidators.validateCapacity,
+          ),
+          _textFormField(
+            controller: color,
+            label: 'لون المركبة',
+            hint: 'أبيض / فضي / رمادي',
+            icon: Icons.color_lens_outlined,
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'لون الهيكل مطلوب' : null,
+          ),
+          DropdownButtonFormField<String>(
+            initialValue: vehicleType,
+            decoration: const InputDecoration(
+              labelText: 'نوع المركبة',
+              prefixIcon: Icon(Icons.category_outlined),
+              border: OutlineInputBorder(),
             ),
-            _textFormField(
-              controller: plate,
-              label: 'رقم اللوحة المرورية',
-              hint: 'مثال: ٣٣٠٠ ق ل',
-              icon: Icons.confirmation_number_outlined,
-              validator: FleetValidators.validatePlateNumber,
-            ),
-            _textFormField(
-              controller: brand,
-              label: 'الماركة',
-              hint: 'Toyota / Mercedes',
-              icon: Icons.branding_watermark_outlined,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'اسم الماركة مطلوب' : null,
-            ),
-            _textFormField(
-              controller: model,
-              label: 'الموديل',
-              hint: 'Coaster / Sprinter / Hiace',
-              icon: Icons.model_training_rounded,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'اسم طراز الموديل مطلوب' : null,
-            ),
-            _textFormField(
-              controller: year,
-              label: 'سنة الصنع',
-              hint: 'مثال: 2024',
-              icon: Icons.calendar_today_rounded,
-              keyboardType: TextInputType.number,
-              validator: FleetValidators.validateManufactureYear,
-            ),
-            _textFormField(
-              controller: seats,
-              label: 'السعة الركابية',
-              hint: 'عدد المقاعد الفعلي',
-              icon: Icons.event_seat_rounded,
-              keyboardType: TextInputType.number,
-              validator: FleetValidators.validateCapacity,
-            ),
-            _textFormField(
-              controller: color,
-              label: 'لون المركبة',
-              hint: 'أبيض / فضي / رمادي',
-              icon: Icons.color_lens_outlined,
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'لون الهيكل مطلوب' : null,
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: vehicleType,
-              decoration: const InputDecoration(
-                labelText: 'نوع المركبة',
-                prefixIcon: Icon(Icons.category_outlined),
-                border: OutlineInputBorder(),
+            items: const [
+              DropdownMenuItem(
+                value: 'Coaster',
+                child: Text('Coaster - ميني باص'),
               ),
-              items: const [
-                DropdownMenuItem(value: 'Coaster', child: Text('Coaster - ميني باص')),
-                DropdownMenuItem(value: 'Sprinter', child: Text('Sprinter - سبرنتر')),
-                DropdownMenuItem(value: 'Hiace', child: Text('Hiace - هايس')),
-                DropdownMenuItem(value: 'H1', child: Text('H1 - فان')),
-                DropdownMenuItem(value: 'Other', child: Text('نوع آخر')),
-              ],
-              onChanged: (v) => setState(() => vehicleType = v ?? 'Coaster'),
-            ),
-            DropdownButtonFormField<String>(
-              initialValue: seatLayoutType,
-              decoration: const InputDecoration(
-                labelText: 'تخطيط المقاعد',
-                prefixIcon: Icon(Icons.grid_view_rounded),
-                border: OutlineInputBorder(),
+              DropdownMenuItem(
+                value: 'Sprinter',
+                child: Text('Sprinter - سبرنتر'),
               ),
-              items: const [
-                DropdownMenuItem(value: 'standard', child: Text('Standard - قياسي')),
-                DropdownMenuItem(value: 'VIP', child: Text('VIP - مميز')),
-              ],
-              onChanged: (v) => setState(() => seatLayoutType = v ?? 'standard'),
+              DropdownMenuItem(value: 'Hiace', child: Text('Hiace - هايس')),
+              DropdownMenuItem(value: 'H1', child: Text('H1 - فان')),
+              DropdownMenuItem(value: 'Other', child: Text('نوع آخر')),
+            ],
+            onChanged: (v) => setState(() => vehicleType = v ?? 'Coaster'),
+          ),
+          DropdownButtonFormField<String>(
+            initialValue: seatLayoutType,
+            decoration: const InputDecoration(
+              labelText: 'تخطيط المقاعد',
+              prefixIcon: Icon(Icons.grid_view_rounded),
+              border: OutlineInputBorder(),
             ),
-          ],
-        ),
+            items: const [
+              DropdownMenuItem(
+                value: 'standard',
+                child: Text('Standard - قياسي'),
+              ),
+              DropdownMenuItem(value: 'VIP', child: Text('VIP - مميز')),
+            ],
+            onChanged: (v) => setState(() => seatLayoutType = v ?? 'standard'),
+          ),
+        ]),
         const SizedBox(height: AppSpacing.medium),
         _textFormField(
           controller: notes,
@@ -376,18 +396,15 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final itemWidth = (constraints.maxWidth - AppSpacing.medium * (columns - 1)) / columns;
+        final itemWidth =
+            (constraints.maxWidth - AppSpacing.medium * (columns - 1)) /
+            columns;
 
         return Wrap(
           spacing: AppSpacing.medium,
           runSpacing: AppSpacing.medium,
           children: children
-              .map(
-                (child) => SizedBox(
-                  width: itemWidth,
-                  child: child,
-                ),
-              )
+              .map((child) => SizedBox(width: itemWidth, child: child))
               .toList(),
         );
       },
@@ -437,7 +454,10 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
           continue;
         }
         if (bytes.length > 5 * 1024 * 1024) {
-          setState(() => _globalError = 'بعض الصور تتجاوز الحجم الأقصى 5MB وسجلنا بعضها الآخر.');
+          setState(
+            () => _globalError =
+                'بعض الصور تتجاوز الحجم الأقصى 5MB وسجلنا بعضها الآخر.',
+          );
           continue;
         }
         validFiles.add(file);
@@ -491,10 +511,10 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
             'vehicles/${existing?.id.isNotEmpty == true ? existing!.id : 'new'}/${DateTime.now().millisecondsSinceEpoch}_${i}_$fileName';
 
         final url = await context.read<FleetVehiclesCubit>().uploadVehicleFile(
-              'vehicle-images',
-              path,
-              bytes,
-            );
+          'vehicle-images',
+          path,
+          bytes,
+        );
 
         if (url == null || url.isEmpty) {
           throw Exception('فشل رفع إحدى صور المركبة إلى Supabase Storage.');
@@ -595,7 +615,8 @@ class _VehicleImagePickerCard extends StatelessWidget {
           const FleetSectionTitle(
             icon: Icons.image_rounded,
             title: 'صور المركبة',
-            subtitle: 'ارفع صورة أو أكثر للمركبة. الصورة الأولى ستعتبر الصورة الأساسية.',
+            subtitle:
+                'ارفع صورة أو أكثر للمركبة. الصورة الأولى ستعتبر الصورة الأساسية.',
           ),
           const SizedBox(height: AppSpacing.medium),
           if (totalImages == 0)
@@ -624,15 +645,15 @@ class _VehicleImagePickerCard extends StatelessWidget {
                     Text(
                       'اضغط لاختيار صور المركبة',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'PNG / JPG / WEBP بحد أقصى 5MB للواحدة',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),

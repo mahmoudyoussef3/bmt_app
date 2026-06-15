@@ -1,7 +1,11 @@
 enum SeatAvailability { available, reserved }
 
 class SeatOption {
-  const SeatOption({required this.id, required this.seatNumber, required this.availability});
+  const SeatOption({
+    required this.id,
+    required this.seatNumber,
+    required this.availability,
+  });
 
   final String id;
   final int seatNumber;
@@ -21,6 +25,7 @@ class SeatSelectionData {
     required this.vehicleName,
     required this.vehicleType,
     required this.vehicleModel,
+    required this.tripDate,
     required this.departureTime,
     required this.arrivalTime,
     required this.driverName,
@@ -36,6 +41,7 @@ class SeatSelectionData {
   final String vehicleName;
   final String vehicleType;
   final String vehicleModel;
+  final String tripDate;
   final String departureTime;
   final String arrivalTime;
   final String driverName;

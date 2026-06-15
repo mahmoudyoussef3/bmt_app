@@ -99,6 +99,7 @@ void main() {
       final duplicate = await createRoute(
         original.copyWith(
           id: '',
+          routeCode: '${original.routeCode}-COPY',
           name: '${original.name} - نسخة',
           status: OperationRouteStatus.draft,
           stations: original.stations
@@ -157,10 +158,7 @@ void main() {
     });
 
     test('handles empty routes list without throwing exceptions', () {
-      const state = RoutesLoaded(
-        routes: [],
-        selectedRouteId: '',
-      );
+      const state = RoutesLoaded(routes: [], selectedRouteId: '');
 
       expect(state.selectedRoute, isNotNull);
       expect(state.selectedRoute.id, isEmpty);
@@ -171,6 +169,7 @@ void main() {
 
 const _newRoute = OperationRoute(
   id: '',
+  routeCode: 'TEST-001',
   name: 'مسار اختبار',
   startCity: 'بنها',
   endCity: 'القاهرة',
@@ -187,6 +186,16 @@ const _newRoute = OperationRoute(
       locationDescription: 'أمام موقف بنها الرئيسي',
       notes: 'محطة بداية اختبارية',
       order: 1,
+    ),
+    RouteStation(
+      id: 'draft-2',
+      name: 'محطة اختبار ٢',
+      area: 'القاهرة',
+      arrivalOffset: '٦٠ دقيقة',
+      departureOffset: '٦٣ دقيقة',
+      locationDescription: 'أمام نقطة الوصول',
+      notes: 'محطة نهاية اختبارية',
+      order: 2,
     ),
   ],
   notes: [],
@@ -244,6 +253,7 @@ class _MockRoutesDatasource implements RoutesDatasource {
     _routes.add(
       OperationRouteModel(
         id: 'route-1',
+        routeCode: 'BNS-SV-001',
         name: 'بنها - القرية الذكية',
         startCity: 'بنها',
         endCity: 'القرية الذكية',
@@ -271,6 +281,7 @@ class _MockRoutesDatasource implements RoutesDatasource {
       _routes.add(
         OperationRouteModel(
           id: 'route-$i',
+          routeCode: 'ROUTE-$i',
           name: 'مسار $i',
           startCity: 'مدينة البداية $i',
           endCity: 'مدينة النهاية $i',
@@ -303,7 +314,10 @@ class _MockRoutesDatasource implements RoutesDatasource {
   @override
   Future<OperationRouteModel> createRoute(OperationRoute route) async {
     final newRoute = OperationRouteModel(
-      id: route.id.isEmpty ? 'route-new-${DateTime.now().millisecondsSinceEpoch}' : route.id,
+      id: route.id.isEmpty
+          ? 'route-new-${DateTime.now().millisecondsSinceEpoch}'
+          : route.id,
+      routeCode: route.routeCode,
       name: route.name,
       startCity: route.startCity,
       endCity: route.endCity,
@@ -311,16 +325,27 @@ class _MockRoutesDatasource implements RoutesDatasource {
       distance: route.distance,
       status: route.status,
       notes: route.notes,
-      stations: route.stations.map((s) => RouteStation(
-        id: s.id.isEmpty ? 'station-new-${DateTime.now().millisecondsSinceEpoch}' : s.id,
-        name: s.name,
-        area: s.area,
-        arrivalOffset: s.arrivalOffset,
-        departureOffset: s.departureOffset,
-        locationDescription: s.locationDescription,
-        notes: s.notes,
-        order: s.order,
-      )).toList(),
+      stations: route.stations
+          .map(
+            (s) => RouteStation(
+              id: s.id.isEmpty
+                  ? 'station-new-${DateTime.now().millisecondsSinceEpoch}'
+                  : s.id,
+              name: s.name,
+              area: s.area,
+              arrivalOffset: s.arrivalOffset,
+              departureOffset: s.departureOffset,
+              locationDescription: s.locationDescription,
+              notes: s.notes,
+              order: s.order,
+              latitude: s.latitude,
+              longitude: s.longitude,
+              pickupAllowed: s.pickupAllowed,
+              dropoffAllowed: s.dropoffAllowed,
+              estimatedArrivalTime: s.estimatedArrivalTime,
+            ),
+          )
+          .toList(),
     );
     _routes.add(newRoute);
     return newRoute;
@@ -338,7 +363,10 @@ class _MockRoutesDatasource implements RoutesDatasource {
   }
 
   @override
-  Future<OperationRouteModel> addStation(String routeId, RouteStation station) async {
+  Future<OperationRouteModel> addStation(
+    String routeId,
+    RouteStation station,
+  ) async {
     final index = _routes.indexWhere((r) => r.id == routeId);
     if (index == -1) {
       throw StateError('Route not found');
@@ -354,9 +382,11 @@ class _MockRoutesDatasource implements RoutesDatasource {
       notes: station.notes,
       order: route.stations.length + 1,
     );
-    final updatedStations = List<RouteStation>.from(route.stations)..add(newStation);
+    final updatedStations = List<RouteStation>.from(route.stations)
+      ..add(newStation);
     final updated = OperationRouteModel(
       id: route.id,
+      routeCode: route.routeCode,
       name: route.name,
       startCity: route.startCity,
       endCity: route.endCity,
@@ -371,15 +401,21 @@ class _MockRoutesDatasource implements RoutesDatasource {
   }
 
   @override
-  Future<OperationRouteModel> updateStation(String routeId, RouteStation station) async {
+  Future<OperationRouteModel> updateStation(
+    String routeId,
+    RouteStation station,
+  ) async {
     final index = _routes.indexWhere((r) => r.id == routeId);
     if (index == -1) {
       throw StateError('Route not found');
     }
     final route = _routes[index];
-    final updatedStations = route.stations.map((s) => s.id == station.id ? station : s).toList();
+    final updatedStations = route.stations
+        .map((s) => s.id == station.id ? station : s)
+        .toList();
     final updated = OperationRouteModel(
       id: route.id,
+      routeCode: route.routeCode,
       name: route.name,
       startCity: route.startCity,
       endCity: route.endCity,
@@ -394,15 +430,21 @@ class _MockRoutesDatasource implements RoutesDatasource {
   }
 
   @override
-  Future<OperationRouteModel> deleteStation(String routeId, String stationId) async {
+  Future<OperationRouteModel> deleteStation(
+    String routeId,
+    String stationId,
+  ) async {
     final index = _routes.indexWhere((r) => r.id == routeId);
     if (index == -1) {
       throw StateError('Route not found');
     }
     final route = _routes[index];
-    final updatedStations = route.stations.where((s) => s.id != stationId).toList();
+    final updatedStations = route.stations
+        .where((s) => s.id != stationId)
+        .toList();
     final updated = OperationRouteModel(
       id: route.id,
+      routeCode: route.routeCode,
       name: route.name,
       startCity: route.startCity,
       endCity: route.endCity,
@@ -417,7 +459,11 @@ class _MockRoutesDatasource implements RoutesDatasource {
   }
 
   @override
-  Future<OperationRouteModel> reorderStations(String routeId, int oldIndex, int newIndex) async {
+  Future<OperationRouteModel> reorderStations(
+    String routeId,
+    int oldIndex,
+    int newIndex,
+  ) async {
     final index = _routes.indexWhere((r) => r.id == routeId);
     if (index == -1) {
       throw StateError('Route not found');
@@ -435,6 +481,7 @@ class _MockRoutesDatasource implements RoutesDatasource {
 
     final updated = OperationRouteModel(
       id: route.id,
+      routeCode: route.routeCode,
       name: route.name,
       startCity: route.startCity,
       endCity: route.endCity,

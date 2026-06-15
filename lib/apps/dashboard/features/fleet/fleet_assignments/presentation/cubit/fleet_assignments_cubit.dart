@@ -19,13 +19,13 @@ class FleetAssignmentsCubit extends Cubit<FleetAssignmentsState> {
     required AssignFleetVehicleUseCase assignVehicle,
     required ReassignFleetVehicleUseCase reassignVehicle,
     required RemoveFleetAssignmentUseCase removeAssignment,
-  })  : _getAssignments = getAssignments,
-        _getDrivers = getDrivers,
-        _getVehicles = getVehicles,
-        _assignVehicle = assignVehicle,
-        _reassignVehicle = reassignVehicle,
-        _removeAssignment = removeAssignment,
-        super(const FleetAssignmentsLoading());
+  }) : _getAssignments = getAssignments,
+       _getDrivers = getDrivers,
+       _getVehicles = getVehicles,
+       _assignVehicle = assignVehicle,
+       _reassignVehicle = reassignVehicle,
+       _removeAssignment = removeAssignment,
+       super(const FleetAssignmentsLoading());
 
   Future<void> load() async {
     emit(const FleetAssignmentsLoading());
@@ -33,15 +33,21 @@ class FleetAssignmentsCubit extends Cubit<FleetAssignmentsState> {
       final assignments = await _getAssignments();
       final drivers = await _getDrivers();
       final vehicles = await _getVehicles();
-      debugPrint('[FleetAssignmentsCubit] Loaded ${assignments.length} assignments');
-      emit(FleetAssignmentsLoaded(
-        assignments: assignments,
-        drivers: drivers,
-        vehicles: vehicles,
-      ));
+      debugPrint(
+        '[FleetAssignmentsCubit] Loaded ${assignments.length} assignments',
+      );
+      emit(
+        FleetAssignmentsLoaded(
+          assignments: assignments,
+          drivers: drivers,
+          vehicles: vehicles,
+        ),
+      );
     } catch (error) {
       debugPrint('[FleetAssignmentsCubit] Error: $error');
-      emit(FleetAssignmentsError(error.toString().replaceAll('Exception: ', '')));
+      emit(
+        FleetAssignmentsError(error.toString().replaceAll('Exception: ', '')),
+      );
     }
   }
 
@@ -59,7 +65,9 @@ class FleetAssignmentsCubit extends Cubit<FleetAssignmentsState> {
 
   Future<String?> assign(String driverId, String vehicleId) async {
     try {
-      debugPrint('[FleetAssignmentsCubit] Assigning driver=$driverId vehicle=$vehicleId');
+      debugPrint(
+        '[FleetAssignmentsCubit] Assigning driver=$driverId vehicle=$vehicleId',
+      );
       await _assignVehicle(driverId, vehicleId);
       await _reload();
       return null;
@@ -70,7 +78,9 @@ class FleetAssignmentsCubit extends Cubit<FleetAssignmentsState> {
 
   Future<String?> reassign(String assignmentId, String vehicleId) async {
     try {
-      debugPrint('[FleetAssignmentsCubit] Reassigning $assignmentId to vehicle=$vehicleId');
+      debugPrint(
+        '[FleetAssignmentsCubit] Reassigning $assignmentId to vehicle=$vehicleId',
+      );
       await _reassignVehicle(assignmentId, vehicleId);
       await _reload();
       return null;
@@ -85,7 +95,9 @@ class FleetAssignmentsCubit extends Cubit<FleetAssignmentsState> {
       await _removeAssignment(assignmentId);
       await _reload();
     } catch (error) {
-      emit(FleetAssignmentsError(error.toString().replaceAll('Exception: ', '')));
+      emit(
+        FleetAssignmentsError(error.toString().replaceAll('Exception: ', '')),
+      );
     }
   }
 
@@ -96,20 +108,26 @@ class FleetAssignmentsCubit extends Cubit<FleetAssignmentsState> {
       final drivers = await _getDrivers();
       final vehicles = await _getVehicles();
       if (current is FleetAssignmentsLoaded) {
-        emit(current.copyWith(
-          assignments: assignments,
-          drivers: drivers,
-          vehicles: vehicles,
-        ));
+        emit(
+          current.copyWith(
+            assignments: assignments,
+            drivers: drivers,
+            vehicles: vehicles,
+          ),
+        );
       } else {
-        emit(FleetAssignmentsLoaded(
-          assignments: assignments,
-          drivers: drivers,
-          vehicles: vehicles,
-        ));
+        emit(
+          FleetAssignmentsLoaded(
+            assignments: assignments,
+            drivers: drivers,
+            vehicles: vehicles,
+          ),
+        );
       }
     } catch (error) {
-      emit(FleetAssignmentsError(error.toString().replaceAll('Exception: ', '')));
+      emit(
+        FleetAssignmentsError(error.toString().replaceAll('Exception: ', '')),
+      );
     }
   }
 }

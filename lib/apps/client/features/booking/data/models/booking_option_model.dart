@@ -8,6 +8,7 @@ class RouteOptionModel {
     required this.duration,
     required this.availableSeats,
     required this.startingPrice,
+    this.points = const [],
     this.isFastest = false,
   });
 
@@ -17,6 +18,7 @@ class RouteOptionModel {
   final String duration;
   final int availableSeats;
   final String startingPrice;
+  final List<RoutePointModel> points;
   final bool isFastest;
 
   RouteOptionData toEntity() {
@@ -27,7 +29,31 @@ class RouteOptionModel {
       duration: duration,
       availableSeats: availableSeats,
       startingPrice: startingPrice,
+      points: points.map((point) => point.toEntity()).toList(),
       isFastest: isFastest,
+    );
+  }
+}
+
+class RoutePointModel {
+  const RoutePointModel({
+    required this.name,
+    required this.order,
+    this.latitude,
+    this.longitude,
+  });
+
+  final String name;
+  final int order;
+  final double? latitude;
+  final double? longitude;
+
+  RoutePointData toEntity() {
+    return RoutePointData(
+      name: name,
+      order: order,
+      latitude: latitude,
+      longitude: longitude,
     );
   }
 }

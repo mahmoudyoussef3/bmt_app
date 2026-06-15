@@ -44,7 +44,10 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(state.message, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    state.message,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: AppSpacing.medium),
                   FilledButton(
                     onPressed: () => context.read<FleetDocumentsCubit>().load(),
@@ -73,14 +76,16 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
                       documents: sorted,
                       page: _page,
                       pageSize: _pageSize,
-                      onPageChanged: (newPage) => setState(() => _page = newPage),
+                      onPageChanged: (newPage) =>
+                          setState(() => _page = newPage),
                     );
                   } else {
                     return FleetDocumentsTable(
                       documents: sorted,
                       page: _page,
                       pageSize: _pageSize,
-                      onPageChanged: (newPage) => setState(() => _page = newPage),
+                      onPageChanged: (newPage) =>
+                          setState(() => _page = newPage),
                     );
                   }
                 },
@@ -101,14 +106,19 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
   ) {
     final scheme = Theme.of(context).colorScheme;
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium, vertical: AppSpacing.small),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small,
+      ),
       child: Row(
         children: [
           Expanded(
             child: SearchBar(
               hintText: 'البحث باسم الموظف أو رقم الرخصة أو الوثيقة...',
               elevation: WidgetStateProperty.all(0),
-              backgroundColor: WidgetStateProperty.all(scheme.surfaceContainerHighest.withAlpha(90)),
+              backgroundColor: WidgetStateProperty.all(
+                scheme.surfaceContainerHighest.withAlpha(90),
+              ),
               onChanged: cubit.search,
               leading: const Icon(Icons.search_rounded),
             ),
@@ -121,7 +131,10 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
             items: const [
               DropdownMenuItem(value: 'الكل', child: Text('جميع الحالات')),
               DropdownMenuItem(value: 'سليم', child: Text('صالح وساري')),
-              DropdownMenuItem(value: 'ينتهي قريباً', child: Text('ينتهي قريباً')),
+              DropdownMenuItem(
+                value: 'ينتهي قريباً',
+                child: Text('ينتهي قريباً'),
+              ),
               DropdownMenuItem(value: 'منتهي', child: Text('منتهي الصلاحية')),
             ],
             onChanged: (val) {
@@ -133,7 +146,11 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
           ),
           IconButton(
             onPressed: () => setState(() => _sortAscending = !_sortAscending),
-            icon: Icon(_sortAscending ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded),
+            icon: Icon(
+              _sortAscending
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+            ),
             tooltip: 'ترتيب حسب تاريخ الانتهاء',
           ),
         ],

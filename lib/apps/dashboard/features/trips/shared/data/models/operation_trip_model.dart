@@ -15,6 +15,8 @@ class OperationTripModel extends OperationTrip {
     required super.arrival,
     required super.status,
     required super.capacity,
+    super.ticketPrice,
+    super.currency,
     required super.seats,
     required super.passengers,
     required super.events,
@@ -36,6 +38,8 @@ class OperationTripModel extends OperationTrip {
       arrival: trip.arrival,
       status: trip.status,
       capacity: trip.capacity,
+      ticketPrice: trip.ticketPrice,
+      currency: trip.currency,
       seats: trip.seats,
       passengers: trip.passengers,
       events: trip.events,
@@ -62,24 +66,30 @@ class OperationTripModel extends OperationTrip {
         : vehiclePlate;
 
     // Parse sublists
-    final pointsList = (json['route_points'] as List?)
-            ?.map((p) => TripRoutePointModel.fromJson(p as Map<String, dynamic>))
+    final pointsList =
+        (json['route_points'] as List?)
+            ?.map(
+              (p) => TripRoutePointModel.fromJson(p as Map<String, dynamic>),
+            )
             .toList() ??
         [];
     pointsList.sort((a, b) => a.order.compareTo(b.order));
 
-    final seatsList = (json['seats'] as List?)
+    final seatsList =
+        (json['seats'] as List?)
             ?.map((s) => TripSeatModel.fromJson(s as Map<String, dynamic>))
             .toList() ??
         [];
     seatsList.sort((a, b) => a.label.compareTo(b.label));
 
-    final passengersList = (json['passengers'] as List?)
+    final passengersList =
+        (json['passengers'] as List?)
             ?.map((p) => TripPassengerModel.fromJson(p as Map<String, dynamic>))
             .toList() ??
         [];
 
-    final eventsList = (json['events'] as List?)
+    final eventsList =
+        (json['events'] as List?)
             ?.map((e) => TripEventModel.fromJson(e as Map<String, dynamic>))
             .toList() ??
         [];
@@ -100,8 +110,12 @@ class OperationTripModel extends OperationTrip {
       date: json['trip_date'] as String? ?? '',
       departure: json['departure_time'] as String? ?? '',
       arrival: json['arrival_time'] as String? ?? '',
-      status: OperationTripStatus.fromString(json['status'] as String? ?? 'scheduled'),
+      status: OperationTripStatus.fromString(
+        json['status'] as String? ?? 'scheduled',
+      ),
       capacity: json['capacity'] as int? ?? 0,
+      ticketPrice: (json['ticket_price'] as num? ?? 0).toDouble(),
+      currency: json['currency'] as String? ?? 'ج.م',
       seats: seatsList,
       passengers: passengersList,
       events: eventsList,
@@ -117,8 +131,10 @@ class OperationTripModel extends OperationTrip {
       'trip_date': date,
       'departure_time': departure,
       'arrival_time': arrival.isEmpty ? null : arrival,
-      'status': status.name,
+      'status': status.dbValue,
       'capacity': capacity,
+      'ticket_price': ticketPrice,
+      'currency': currency,
       'notes': notes,
     };
   }
@@ -140,11 +156,7 @@ class TripRoutePointModel extends TripRoutePoint {
   }
 
   Map<String, dynamic> toJson(String tripId) {
-    return {
-      'trip_id': tripId,
-      'point_name': name,
-      'point_order': order,
-    };
+    return {'trip_id': tripId, 'point_name': name, 'point_order': order};
   }
 }
 
@@ -222,7 +234,8 @@ class TripEventModel extends TripEvent {
     final eventTime = json['event_time'] != null
         ? DateTime.parse(json['event_time'] as String).toLocal()
         : DateTime.now();
-    final timeStr = '${eventTime.hour.toString().padLeft(2, '0')}:${eventTime.minute.toString().padLeft(2, '0')}';
+    final timeStr =
+        '${eventTime.hour.toString().padLeft(2, '0')}:${eventTime.minute.toString().padLeft(2, '0')}';
     return TripEventModel(
       title: json['title'] as String? ?? '',
       time: timeStr,

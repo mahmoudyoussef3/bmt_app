@@ -49,7 +49,10 @@ class FleetDriverDetailsView extends StatelessWidget {
                 foregroundColor: scheme.onPrimaryContainer,
                 child: Text(
                   driver.imageLabel,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
               const SizedBox(width: AppSpacing.medium),
@@ -59,9 +62,12 @@ class FleetDriverDetailsView extends StatelessWidget {
                   children: [
                     Text(
                       driver.name,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    Text('كود الموظف: ${driver.employeeCode} | الرقم القومي: ${driver.nationalId}'),
+                    Text(
+                      'كود الموظف: ${driver.employeeCode} | الرقم القومي: ${driver.nationalId}',
+                    ),
                   ],
                 ),
               ),
@@ -87,9 +93,7 @@ class FleetDriverDetailsView extends StatelessWidget {
                       headerWidgets.last,
                     ],
                   )
-                : Row(
-                    children: headerWidgets,
-                  );
+                : Row(children: headerWidgets);
           },
         ),
         const SizedBox(height: AppSpacing.large),
@@ -188,7 +192,9 @@ class FleetDriverDetailsView extends StatelessWidget {
         children: [
           Text(
             'المعلومات الأساسية والمهنية',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppSpacing.medium),
           _detailRow('الاسم الكامل', driver.fullName),
@@ -200,7 +206,10 @@ class FleetDriverDetailsView extends StatelessWidget {
           _detailRow('تاريخ التعيين', driver.hireDate),
           _detailRow('رقم رخصة القيادة', driver.licenseNumber),
           _detailRow('تاريخ انتهاء الرخصة', driver.licenseExpiryDate),
-          _detailRow('المركبة الحالية', vehicle.isEmpty ? 'بدون مركبة حالياً' : vehicle),
+          _detailRow(
+            'المركبة الحالية',
+            vehicle.isEmpty ? 'بدون مركبة حالياً' : vehicle,
+          ),
           _detailRow('حالة الحساب', driver.status.label),
           if (driver.notes.isNotEmpty) ...[
             const Divider(),
@@ -213,7 +222,10 @@ class FleetDriverDetailsView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xSmall),
-            Text(driver.notes, style: const TextStyle(fontStyle: FontStyle.italic)),
+            Text(
+              driver.notes,
+              style: const TextStyle(fontStyle: FontStyle.italic),
+            ),
           ],
         ],
       ),
@@ -228,10 +240,19 @@ class FleetDriverDetailsView extends StatelessWidget {
         children: [
           SizedBox(
             width: 150,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -268,7 +289,9 @@ class _HistoryTimeline extends StatelessWidget {
               const SizedBox(width: AppSpacing.small),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -310,11 +333,17 @@ class _HistoryTimeline extends StatelessWidget {
                         children: [
                           Text(
                             item.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
                           ),
                           Text(
                             '${item.date} - ${item.description}',
-                            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.small),
                         ],

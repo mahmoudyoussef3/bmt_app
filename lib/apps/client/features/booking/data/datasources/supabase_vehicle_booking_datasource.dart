@@ -9,13 +9,16 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
 
   @override
   Future<List<VehicleDetailModel>> getVehicles({String? routeId}) async {
-    var query = _supabase.from('operation_trips').select('''
+    var query = _supabase
+        .from('operation_trips')
+        .select('''
       *,
       vehicles (*),
       drivers (*),
       operation_routes (*),
       trip_pricing (*)
-    ''').eq('status', 'scheduled');
+    ''')
+        .eq('status', 'scheduled');
 
     if (routeId != null) {
       query = query.eq('route_id', routeId);
@@ -28,13 +31,17 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
 
   @override
   Future<VehicleDetailModel?> getVehicleById(String id) async {
-    final response = await _supabase.from('operation_trips').select('''
+    final response = await _supabase
+        .from('operation_trips')
+        .select('''
       *,
       vehicles (*),
       drivers (*),
       operation_routes (*),
       trip_pricing (*)
-    ''').eq('id', id).maybeSingle();
+    ''')
+        .eq('id', id)
+        .maybeSingle();
 
     if (response == null) return null;
 
@@ -49,9 +56,12 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
     final pricing = pricingList.isNotEmpty ? pricingList.first : {};
 
     final features = List<String>.from(vehicle['features'] ?? []);
-    final hasAc = features.contains('AC') || features.contains('Air Conditioning');
+    final hasAc =
+        features.contains('AC') || features.contains('Air Conditioning');
     final driverFullName = driver['full_name']?.toString() ?? 'Driver';
-    final initials = driverFullName.isNotEmpty ? driverFullName[0].toUpperCase() : 'D';
+    final initials = driverFullName.isNotEmpty
+        ? driverFullName[0].toUpperCase()
+        : 'D';
 
     final capacity = vehicle['capacity'] as int? ?? 14;
     final passengerCount = data['passenger_count'] as int? ?? 0;
@@ -65,11 +75,12 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
       hasAirConditioning: hasAc,
       seatType: vehicle['seat_layout_type']?.toString() ?? 'Standard',
       driverName: driverFullName,
-      price: '${pricing['currency'] ?? 'EGP'} ${pricing['base_price'] ?? 50}',
+      price:
+          '${data['currency'] ?? pricing['currency'] ?? 'ج.م'} ${data['ticket_price'] ?? pricing['one_time_price'] ?? 0}',
       availableSeats: capacity - passengerCount,
-      estimatedArrival: data['end_time']?.toString() ?? 'N/A',
+      estimatedArrival: data['arrival_time']?.toString() ?? 'N/A',
       routeDuration: route['duration']?.toString() ?? 'N/A',
-      departureTime: data['start_time']?.toString() ?? 'N/A',
+      departureTime: data['departure_time']?.toString() ?? 'N/A',
       driverInitials: initials,
     );
   }

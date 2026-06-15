@@ -41,7 +41,9 @@ class FleetDriversTable extends StatelessWidget {
     final cubit = context.read<FleetDriversCubit>();
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, drivers.length);
-    final paged = start >= drivers.length ? <FleetDriver>[] : drivers.sublist(start, end);
+    final paged = start >= drivers.length
+        ? <FleetDriver>[]
+        : drivers.sublist(start, end);
 
     return FleetTableShell(
       headers: const [
@@ -67,8 +69,14 @@ class FleetDriversTable extends StatelessWidget {
             value: selectedIds.contains(driver.id),
             onChanged: (_) => cubit.toggleSelection(driver.id),
           ),
-          FleetAvatar(label: driver.imageLabel, profileImageUrl: driver.profileImageUrl),
-          Text(driver.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+          FleetAvatar(
+            label: driver.imageLabel,
+            profileImageUrl: driver.profileImageUrl,
+          ),
+          Text(
+            driver.name,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           Text(driver.phone),
           Text(driver.nationalId),
           Text(driver.licenseNumber),
@@ -88,18 +96,27 @@ class FleetDriversTable extends StatelessWidget {
               ),
               TextButton(
                 onPressed: driver.status == FleetDriverStatus.active
-                    ? () => cubit.updateDriverStatus(driver.id, FleetDriverStatus.suspended)
+                    ? () => cubit.updateDriverStatus(
+                        driver.id,
+                        FleetDriverStatus.suspended,
+                      )
                     : null,
                 child: const Text('إيقاف'),
               ),
               TextButton(
                 onPressed: driver.status == FleetDriverStatus.suspended
-                    ? () => cubit.updateDriverStatus(driver.id, FleetDriverStatus.active)
+                    ? () => cubit.updateDriverStatus(
+                        driver.id,
+                        FleetDriverStatus.active,
+                      )
                     : null,
                 child: const Text('تفعيل'),
               ),
               TextButton(
-                onPressed: () => cubit.updateDriverStatus(driver.id, FleetDriverStatus.archived),
+                onPressed: () => cubit.updateDriverStatus(
+                  driver.id,
+                  FleetDriverStatus.archived,
+                ),
                 child: const Text('أرشفة'),
               ),
             ],

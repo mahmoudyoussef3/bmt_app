@@ -7,10 +7,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 class FleetSeatLayoutVisualizer extends StatelessWidget {
   final SeatConfiguration seatConfig;
 
-  const FleetSeatLayoutVisualizer({
-    super.key,
-    required this.seatConfig,
-  });
+  const FleetSeatLayoutVisualizer({super.key, required this.seatConfig});
 
   @override
   Widget build(BuildContext context) {
@@ -29,7 +26,9 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
         children: [
           Text(
             'تخطيط المقاعد الداخلي',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppSpacing.medium),
           Center(
@@ -44,14 +43,21 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.xSmall),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.xSmall,
+                    ),
                     margin: const EdgeInsets.only(bottom: AppSpacing.medium),
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: scheme.primaryContainer.withAlpha(100),
-                      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                      borderRadius: BorderRadius.circular(
+                        AppTokens.radiusSmall,
+                      ),
                     ),
-                    child: const Text('مقدمة الحافلة (التابلوه)', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: const Text(
+                      'مقدمة الحافلة (التابلوه)',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                   ListView.builder(
                     shrinkWrap: true,
@@ -60,7 +66,9 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                     itemBuilder: (context, rIndex) {
                       final row = rIndex + 1;
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.small),
+                        padding: const EdgeInsets.only(
+                          bottom: AppSpacing.small,
+                        ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                           children: List.generate(seatConfig.columns, (cIndex) {
@@ -90,15 +98,17 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                 color: isDriver
                                     ? scheme.secondaryContainer
                                     : isVip
-                                        ? Colors.amber.shade100
-                                        : scheme.primaryContainer,
-                                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                                    ? Colors.amber.shade100
+                                    : scheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(
+                                  AppTokens.radiusSmall,
+                                ),
                                 border: Border.all(
                                   color: isDriver
                                       ? scheme.secondary
                                       : isVip
-                                          ? Colors.amber.shade800
-                                          : scheme.primary,
+                                      ? Colors.amber.shade800
+                                      : scheme.primary,
                                 ),
                               ),
                               child: Column(
@@ -108,14 +118,14 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                     isDriver
                                         ? Icons.settings_accessibility_rounded
                                         : isVip
-                                            ? Icons.star_rounded
-                                            : Icons.event_seat_rounded,
+                                        ? Icons.star_rounded
+                                        : Icons.event_seat_rounded,
                                     size: 18,
                                     color: isDriver
                                         ? scheme.onSecondaryContainer
                                         : isVip
-                                            ? Colors.amber.shade900
-                                            : scheme.onPrimaryContainer,
+                                        ? Colors.amber.shade900
+                                        : scheme.onPrimaryContainer,
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
@@ -126,8 +136,8 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                       color: isDriver
                                           ? scheme.onSecondaryContainer
                                           : isVip
-                                              ? Colors.amber.shade900
-                                              : scheme.onPrimaryContainer,
+                                          ? Colors.amber.shade900
+                                          : scheme.onPrimaryContainer,
                                     ),
                                   ),
                                 ],

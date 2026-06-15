@@ -26,10 +26,12 @@ class _SeatSelectionScreenState extends State<SeatSelectionScreen> {
     super.didChangeDependencies();
     if (_didInit) return;
     _didInit = true;
-    
-    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
+        {};
     final tripId = args['tripId'] as String? ?? '';
-    
+
     context.read<SeatSelectionCubit>().loadSeatSelection(tripId);
   }
 
@@ -101,7 +103,7 @@ class _SeatSelectionContent extends StatelessWidget {
                       ),
                       children: [
                         const SeatLegend(),
-               
+
                         const SizedBox(height: 14),
                         _buildBusLayout(
                           context,
@@ -115,10 +117,23 @@ class _SeatSelectionContent extends StatelessWidget {
                         else
                           _buildSelectedSeatsSummary(context, selectedSeat!),
                         const SizedBox(height: 12),
-                    //    SeatPassengerPreviewCard(selectedSeat: selectedSeat),
-                      //  const SizedBox(height: 12),
+                        //    SeatPassengerPreviewCard(selectedSeat: selectedSeat),
+                        //  const SizedBox(height: 12),
                         SeatBookingSummaryPanel(
-                          selectedSeat: selectedSeat == null ? null : data.seats.firstWhere((s) => s.id == selectedSeat, orElse: () => const SeatOption(id: '', seatNumber: 0, availability: SeatAvailability.available)).seatNumber.toString(),
+                          selectedSeat: selectedSeat == null
+                              ? null
+                              : data.seats
+                                    .firstWhere(
+                                      (s) => s.id == selectedSeat,
+                                      orElse: () => const SeatOption(
+                                        id: '',
+                                        seatNumber: 0,
+                                        availability:
+                                            SeatAvailability.available,
+                                      ),
+                                    )
+                                    .seatNumber
+                                    .toString(),
                           vehicleName: data.vehicleName,
                           route: data.route,
                           pricePerSeat: data.pricePerSeat,
@@ -137,7 +152,22 @@ class _SeatSelectionContent extends StatelessWidget {
                   ),
                 ),
               ),
-              _buildBottomSummary(context, selectedSeat == null ? null : data.seats.firstWhere((s) => s.id == selectedSeat, orElse: () => const SeatOption(id: '', seatNumber: 0, availability: SeatAvailability.available)).seatNumber.toString()),
+              _buildBottomSummary(
+                context,
+                selectedSeat == null
+                    ? null
+                    : data.seats
+                          .firstWhere(
+                            (s) => s.id == selectedSeat,
+                            orElse: () => const SeatOption(
+                              id: '',
+                              seatNumber: 0,
+                              availability: SeatAvailability.available,
+                            ),
+                          )
+                          .seatNumber
+                          .toString(),
+              ),
             ],
           ),
         ),
@@ -154,10 +184,7 @@ class _SeatSelectionContent extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            scheme.primary.withAlpha(28),
-            scheme.primary.withAlpha(28),
-          ],
+          colors: [scheme.primary.withAlpha(28), scheme.primary.withAlpha(28)],
         ),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: scheme.outline.withAlpha(55)),
@@ -179,7 +206,6 @@ class _SeatSelectionContent extends StatelessWidget {
               gradient: LinearGradient(
                 colors: [scheme.primary, scheme.primary],
               ),
-  
             ),
             child: const Icon(
               Icons.directions_bus_rounded,
@@ -238,6 +264,7 @@ class _SeatSelectionContent extends StatelessWidget {
     );
   }
 
+  // ignore: unused_element
   Widget _buildTripOverview(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AppSurface(
@@ -508,7 +535,16 @@ class _SeatSelectionContent extends StatelessWidget {
 
   Widget _buildSelectedSeatsSummary(BuildContext context, String seatId) {
     final scheme = Theme.of(context).colorScheme;
-    final seatNum = data.seats.firstWhere((s) => s.id == seatId, orElse: () => const SeatOption(id: '', seatNumber: 0, availability: SeatAvailability.available)).seatNumber;
+    final seatNum = data.seats
+        .firstWhere(
+          (s) => s.id == seatId,
+          orElse: () => const SeatOption(
+            id: '',
+            seatNumber: 0,
+            availability: SeatAvailability.available,
+          ),
+        )
+        .seatNumber;
 
     return AppSurface(
       padding: const EdgeInsets.all(16),
@@ -549,6 +585,7 @@ class _SeatSelectionContent extends StatelessWidget {
     );
   }
 
+  // ignore: unused_element
   Widget _buildHintCard(BuildContext context) {
     return AppSurface(
       padding: const EdgeInsets.all(14),
@@ -615,9 +652,11 @@ class _SeatSelectionContent extends StatelessWidget {
                           'pickupPoint': data.pickupPoint,
                           'destination': data.destination,
                           'vehicleNumber': data.vehicleNumber,
+                          'tripDate': data.tripDate,
                           'departureTime': data.departureTime,
                           'arrivalTime': data.arrivalTime,
-                          'selectedSeat': selectedSeat, // this keeps UUID for backend booking
+                          'selectedSeatId': selectedSeat,
+                          'selectedSeat': seatNumStr,
                           'driverName': data.driverName,
                         },
                       ),
@@ -660,15 +699,12 @@ class _SeatMapGrid extends StatelessWidget {
     final spec = _seat(seatNumber);
     if (spec.id.isEmpty) {
       // Missing seat in DB, show it as unavailable
-      return InteractiveSeat(
-        id: '',
-        status: SeatStatus.reserved,
-        onTap: null,
-      );
+      return InteractiveSeat(id: '', status: SeatStatus.reserved, onTap: null);
     }
     final status = _seatStatus(spec, selectedSeatId);
     return InteractiveSeat(
-      id: spec.seatNumber.toString(), // The widget shows label from ID if we want, but let's pass seatNumber string
+      id: spec.seatNumber
+          .toString(), // The widget shows label from ID if we want, but let's pass seatNumber string
       status: status,
       onTap: spec.isAvailable
           ? () => context.read<SeatSelectionCubit>().selectSeat(spec.id)

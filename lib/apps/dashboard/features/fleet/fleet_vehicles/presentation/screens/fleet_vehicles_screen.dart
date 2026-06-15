@@ -76,7 +76,10 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(state.message, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    state.message,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: AppSpacing.medium),
                   FilledButton(
                     onPressed: () => context.read<FleetVehiclesCubit>().load(),
@@ -124,7 +127,6 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
               );
 
             case _VehiclesViewState.list:
-            default:
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -137,7 +139,8 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
                         return FleetVehiclesCardList(
                           vehicles: sorted,
                           workspace: workspace,
-                          onViewDetails: (v) => _setView(_VehiclesViewState.details, v),
+                          onViewDetails: (v) =>
+                              _setView(_VehiclesViewState.details, v),
                           onEdit: (v) => _setView(_VehiclesViewState.form, v),
                           page: _page,
                           pageSize: _pageSize,
@@ -146,12 +149,14 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
                         return FleetVehiclesTable(
                           vehicles: sorted,
                           workspace: workspace,
-                          onView: (v) => _setView(_VehiclesViewState.details, v),
+                          onView: (v) =>
+                              _setView(_VehiclesViewState.details, v),
                           onEdit: (v) => _setView(_VehiclesViewState.form, v),
                           selectedIds: state.selectedIds,
                           page: _page,
                           pageSize: _pageSize,
-                          onPageChanged: (newPage) => setState(() => _page = newPage),
+                          onPageChanged: (newPage) =>
+                              setState(() => _page = newPage),
                         );
                       }
                     },
@@ -166,17 +171,26 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     );
   }
 
-  Widget _buildToolbar(BuildContext context, FleetVehiclesLoaded state, FleetVehiclesCubit cubit) {
+  Widget _buildToolbar(
+    BuildContext context,
+    FleetVehiclesLoaded state,
+    FleetVehiclesCubit cubit,
+  ) {
     final scheme = Theme.of(context).colorScheme;
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium, vertical: AppSpacing.small),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small,
+      ),
       child: Row(
         children: [
           Expanded(
             child: SearchBar(
               hintText: 'البحث برقم المركبة أو رقم اللوحة أو الموديل...',
               elevation: WidgetStateProperty.all(0),
-              backgroundColor: WidgetStateProperty.all(scheme.surfaceContainerHighest.withAlpha(90)),
+              backgroundColor: WidgetStateProperty.all(
+                scheme.surfaceContainerHighest.withAlpha(90),
+              ),
               onChanged: cubit.search,
               leading: const Icon(Icons.search_rounded),
             ),
@@ -187,10 +201,22 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
             underline: const SizedBox.shrink(),
             icon: const Icon(Icons.sort_rounded),
             items: const [
-              DropdownMenuItem(value: FleetSortField.name, child: Text('ترتيب حسب الكود')),
-              DropdownMenuItem(value: FleetSortField.modelYear, child: Text('ترتيب حسب السنة')),
-              DropdownMenuItem(value: FleetSortField.seats, child: Text('ترتيب بالمقاعد')),
-              DropdownMenuItem(value: FleetSortField.status, child: Text('ترتيب حسب الحالة')),
+              DropdownMenuItem(
+                value: FleetSortField.name,
+                child: Text('ترتيب حسب الكود'),
+              ),
+              DropdownMenuItem(
+                value: FleetSortField.modelYear,
+                child: Text('ترتيب حسب السنة'),
+              ),
+              DropdownMenuItem(
+                value: FleetSortField.seats,
+                child: Text('ترتيب بالمقاعد'),
+              ),
+              DropdownMenuItem(
+                value: FleetSortField.status,
+                child: Text('ترتيب حسب الحالة'),
+              ),
             ],
             onChanged: (val) {
               if (val != null) {
@@ -200,7 +226,11 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
           ),
           IconButton(
             onPressed: () => setState(() => _sortAscending = !_sortAscending),
-            icon: Icon(_sortAscending ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded),
+            icon: Icon(
+              _sortAscending
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+            ),
           ),
           const SizedBox(width: AppSpacing.small),
           if (state.selectedIds.isNotEmpty) ...[
@@ -210,7 +240,9 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
                   context: context,
                   builder: (_) => AlertDialog(
                     title: const Text('إيقاف تشغيل المركبات'),
-                    content: Text('هل أنت متأكد من إيقاف ${state.selectedIds.length} من المركبات المحددة؟'),
+                    content: Text(
+                      'هل أنت متأكد من إيقاف ${state.selectedIds.length} من المركبات المحددة؟',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),

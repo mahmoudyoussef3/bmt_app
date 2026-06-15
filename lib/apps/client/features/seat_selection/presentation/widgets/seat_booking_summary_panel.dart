@@ -42,7 +42,7 @@ class SeatBookingSummaryPanel extends StatelessWidget {
                   context,
                 ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
-           /*
+              /*
               if (onPassengerDetailsTap != null && hasSelection)
                 TextButton(
                   onPressed: onPassengerDetailsTap,

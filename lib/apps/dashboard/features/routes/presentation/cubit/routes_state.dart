@@ -83,6 +83,7 @@ class RoutesLoaded extends RoutesState {
       final query = searchQuery.trim();
       final matchesSearch =
           query.isEmpty ||
+          route.routeCode.contains(query) ||
           route.name.contains(query) ||
           route.startCity.contains(query) ||
           route.endCity.contains(query);

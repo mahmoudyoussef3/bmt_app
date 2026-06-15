@@ -13,6 +13,7 @@ class RoutesRepositoryImpl implements RoutesRepository {
     RouteStation station,
   ) async {
     try {
+      _validateStation(station);
       return await _datasource.addStation(routeId, station);
     } catch (e) {
       throw Exception('تعذر إضافة المحطة: $e');
@@ -22,6 +23,8 @@ class RoutesRepositoryImpl implements RoutesRepository {
   @override
   Future<OperationRoute> createRoute(OperationRoute route) async {
     try {
+      final routes = await _datasource.fetchRoutes();
+      _validateRoute(route, existingRoutes: routes);
       return await _datasource.createRoute(route);
     } catch (e) {
       throw Exception('تعذر إنشاء المسار: $e');
@@ -62,6 +65,8 @@ class RoutesRepositoryImpl implements RoutesRepository {
   @override
   Future<OperationRoute> updateRoute(OperationRoute route) async {
     try {
+      final routes = await _datasource.fetchRoutes();
+      _validateRoute(route, existingRoutes: routes);
       return await _datasource.updateRoute(route);
     } catch (e) {
       throw Exception('تعذر تعديل المسار: $e');
@@ -74,9 +79,73 @@ class RoutesRepositoryImpl implements RoutesRepository {
     RouteStation station,
   ) async {
     try {
+      _validateStation(station);
       return await _datasource.updateStation(routeId, station);
     } catch (e) {
       throw Exception('تعذر تعديل المحطة: $e');
+    }
+  }
+
+  void _validateRoute(
+    OperationRoute route, {
+    required List<OperationRoute> existingRoutes,
+  }) {
+    if (route.routeCode.trim().isEmpty) {
+      throw Exception('كود المسار مطلوب.');
+    }
+    if (route.name.trim().isEmpty) {
+      throw Exception('اسم المسار مطلوب.');
+    }
+    if (route.startCity.trim().isEmpty || route.endCity.trim().isEmpty) {
+      throw Exception('نقطتا البداية والنهاية مطلوبتان.');
+    }
+    if (route.stations.length < 2) {
+      throw Exception('لا يمكن حفظ مسار بدون نقطتي بداية ونهاية على الأقل.');
+    }
+    final duplicateCode = existingRoutes.any(
+      (existing) =>
+          existing.id != route.id &&
+          existing.routeCode.trim().toLowerCase() ==
+              route.routeCode.trim().toLowerCase(),
+    );
+    if (duplicateCode) {
+      throw Exception('كود المسار مستخدم بالفعل.');
+    }
+    final orders = route.stations.map((station) => station.order).toList();
+    final sortedOrders = [...orders]..sort();
+    for (var i = 0; i < sortedOrders.length; i++) {
+      if (sortedOrders[i] != i + 1) {
+        throw Exception('ترتيب المحطات غير صحيح.');
+      }
+    }
+    if (!route.stations.any((station) => station.pickupAllowed)) {
+      throw Exception('يجب تحديد محطة واحدة على الأقل تسمح بالصعود.');
+    }
+    if (!route.stations.any((station) => station.dropoffAllowed)) {
+      throw Exception('يجب تحديد محطة واحدة على الأقل تسمح بالنزول.');
+    }
+    for (final station in route.stations) {
+      _validateStation(station);
+    }
+  }
+
+  void _validateStation(RouteStation station) {
+    if (station.name.trim().isEmpty) {
+      throw Exception('اسم المحطة مطلوب.');
+    }
+    if (station.area.trim().isEmpty) {
+      throw Exception('منطقة المحطة مطلوبة.');
+    }
+    if (!station.pickupAllowed && !station.dropoffAllowed) {
+      throw Exception('يجب أن تسمح المحطة بالصعود أو النزول على الأقل.');
+    }
+    final latitude = station.latitude;
+    final longitude = station.longitude;
+    if (latitude != null && (latitude < -90 || latitude > 90)) {
+      throw Exception('إحداثيات خط العرض غير صحيحة.');
+    }
+    if (longitude != null && (longitude < -180 || longitude > 180)) {
+      throw Exception('إحداثيات خط الطول غير صحيحة.');
     }
   }
 }

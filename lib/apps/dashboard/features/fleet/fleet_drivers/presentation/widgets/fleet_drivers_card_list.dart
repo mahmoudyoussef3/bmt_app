@@ -35,7 +35,9 @@ class FleetDriversCardList extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, drivers.length);
-    final paged = start >= drivers.length ? <FleetDriver>[] : drivers.sublist(start, end);
+    final paged = start >= drivers.length
+        ? <FleetDriver>[]
+        : drivers.sublist(start, end);
 
     if (paged.isEmpty) {
       return const Center(
@@ -56,8 +58,12 @@ class FleetDriversCardList extends StatelessWidget {
           itemBuilder: (context, index) {
             final driver = paged[index];
             final vehicle = _vehicleName(driver.currentVehicleId);
-            final documentExpired = driver.documents.any((d) => d.status == FleetDocumentStatus.expired);
-            final documentExpiring = driver.documents.any((d) => d.status == FleetDocumentStatus.expiringSoon);
+            final documentExpired = driver.documents.any(
+              (d) => d.status == FleetDocumentStatus.expired,
+            );
+            final documentExpiring = driver.documents.any(
+              (d) => d.status == FleetDocumentStatus.expiringSoon,
+            );
 
             return AppCard(
               padding: const EdgeInsets.all(AppSpacing.medium),
@@ -66,7 +72,10 @@ class FleetDriversCardList extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      FleetAvatar(label: driver.imageLabel, profileImageUrl: driver.profileImageUrl),
+                      FleetAvatar(
+                        label: driver.imageLabel,
+                        profileImageUrl: driver.profileImageUrl,
+                      ),
                       const SizedBox(width: AppSpacing.medium),
                       Expanded(
                         child: Column(
@@ -74,15 +83,13 @@ class FleetDriversCardList extends StatelessWidget {
                           children: [
                             Text(
                               driver.name,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             Text(
                               driver.employeeCode,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
                         ),
@@ -115,8 +122,8 @@ class FleetDriversCardList extends StatelessWidget {
                     valueColor: documentExpired
                         ? scheme.error
                         : documentExpiring
-                            ? scheme.tertiary
-                            : null,
+                        ? scheme.tertiary
+                        : null,
                   ),
                   const SizedBox(height: AppSpacing.medium),
                   Row(

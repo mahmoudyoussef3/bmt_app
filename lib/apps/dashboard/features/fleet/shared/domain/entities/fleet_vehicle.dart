@@ -28,16 +28,22 @@ class SeatLayoutItem {
   });
 
   Map<String, dynamic> toJson() => {
-        'seat_number': seatNumber,
-        'seat_type': seatType,
-        'row': row,
-        'column': column,
-      };
+    'seat_number': seatNumber,
+    'seat_type': seatType,
+    'row': row,
+    'column': column,
+  };
 
   factory SeatLayoutItem.fromJson(Map<String, dynamic> json) {
+    final rawType = json['seat_type'] as String? ?? 'passenger';
+    final seatType = switch (rawType) {
+      'driver' => 'driver',
+      'empty' => 'empty',
+      _ => 'passenger',
+    };
     return SeatLayoutItem(
       seatNumber: json['seat_number'] as String,
-      seatType: json['seat_type'] as String,
+      seatType: seatType,
       row: json['row'] as int,
       column: json['column'] as int,
     );
@@ -56,16 +62,17 @@ class SeatConfiguration {
   });
 
   Map<String, dynamic> toJson() => {
-        'rows': rows,
-        'columns': columns,
-        'seats': seats.map((s) => s.toJson()).toList(),
-      };
+    'rows': rows,
+    'columns': columns,
+    'seats': seats.map((s) => s.toJson()).toList(),
+  };
 
   factory SeatConfiguration.fromJson(Map<String, dynamic> json) {
     return SeatConfiguration(
       rows: json['rows'] as int,
       columns: json['columns'] as int,
-      seats: (json['seats'] as List?)
+      seats:
+          (json['seats'] as List?)
               ?.map((s) => SeatLayoutItem.fromJson(s as Map<String, dynamic>))
               .toList() ??
           [],
@@ -78,17 +85,26 @@ class SeatConfiguration {
 
   factory SeatConfiguration.generateDefault(int capacity) {
     final List<SeatLayoutItem> seats = [];
-    seats.add(const SeatLayoutItem(
-        seatNumber: 'D', seatType: 'driver', row: 1, column: 1));
+    seats.add(
+      const SeatLayoutItem(
+        seatNumber: 'D',
+        seatType: 'driver',
+        row: 1,
+        column: 1,
+      ),
+    );
 
     int seatNum = 1;
     int curRow = 1;
     if (seatNum <= capacity) {
-      seats.add(SeatLayoutItem(
+      seats.add(
+        SeatLayoutItem(
           seatNumber: '$seatNum',
           seatType: 'passenger',
           row: 1,
-          column: 3));
+          column: 3,
+        ),
+      );
       seatNum++;
     }
 
@@ -96,21 +112,20 @@ class SeatConfiguration {
     while (seatNum <= capacity) {
       for (int col = 1; col <= 3; col++) {
         if (seatNum > capacity) break;
-        seats.add(SeatLayoutItem(
+        seats.add(
+          SeatLayoutItem(
             seatNumber: '$seatNum',
             seatType: 'passenger',
             row: curRow,
-            column: col));
+            column: col,
+          ),
+        );
         seatNum++;
       }
       curRow++;
     }
 
-    return SeatConfiguration(
-      rows: curRow - 1,
-      columns: 3,
-      seats: seats,
-    );
+    return SeatConfiguration(rows: curRow - 1, columns: 3, seats: seats);
   }
 }
 

@@ -48,7 +48,9 @@ class RouteOptionCard extends StatelessWidget {
                 const Spacer(),
                 Text(
                   route.startingPrice,
-                  style: AppTextThemes.priceEmphasis(scheme).copyWith(fontSize: 16),
+                  style: AppTextThemes.priceEmphasis(
+                    scheme,
+                  ).copyWith(fontSize: 16),
                 ),
               ],
             ),
@@ -59,42 +61,27 @@ class RouteOptionCard extends StatelessWidget {
   }
 
   List<RoutePointUiData> _extractRoutePoints(RouteOptionData route) {
-    try {
-      final dynamic dynamicRoute = route;
-      final dynamic points = dynamicRoute.points ?? dynamicRoute.stops;
-
-      if (points is List && points.isNotEmpty) {
-        return points.map((point) {
-          final dynamic p = point;
-          return RoutePointUiData(
-            name: p.name?.toString() ?? p.toString(),
-            latitude: _toDouble(p.latitude),
-            longitude: _toDouble(p.longitude),
-          );
-        }).toList();
-      }
-    } catch (_) {}
+    if (route.points.isNotEmpty) {
+      return route.points
+          .map(
+            (point) => RoutePointUiData(
+              name: point.name,
+              latitude: point.latitude,
+              longitude: point.longitude,
+            ),
+          )
+          .toList();
+    }
 
     return [
       RoutePointUiData(name: route.pickup),
       RoutePointUiData(name: route.destination),
     ];
   }
-
-  double? _toDouble(dynamic value) {
-    if (value == null) return null;
-    if (value is double) return value;
-    if (value is int) return value.toDouble();
-    return double.tryParse(value.toString());
-  }
 }
 
 class RoutePointUiData {
-  const RoutePointUiData({
-    required this.name,
-    this.latitude,
-    this.longitude,
-  });
+  const RoutePointUiData({required this.name, this.latitude, this.longitude});
 
   final String name;
   final double? latitude;
@@ -140,12 +127,16 @@ class _MainRouteLine extends StatelessWidget {
 
     return Row(
       children: [
-        Expanded(child: _PointBlock(label: 'من', value: start)),
+        Expanded(
+          child: _PointBlock(label: 'من', value: start),
+        ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10),
           child: Icon(Icons.arrow_back_rounded),
         ),
-        Expanded(child: _PointBlock(label: 'إلى', value: end)),
+        Expanded(
+          child: _PointBlock(label: 'إلى', value: end),
+        ),
       ],
     );
   }
@@ -171,9 +162,9 @@ class _PointBlock extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: scheme.onSurface,
-              ),
+            fontWeight: FontWeight.w900,
+            color: scheme.onSurface,
+          ),
         ),
       ],
     );
@@ -195,7 +186,9 @@ class _CompactPointsPreview extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withAlpha(80),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withAlpha(80),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -205,9 +198,9 @@ class _CompactPointsPreview extends StatelessWidget {
             middlePoints.isEmpty
                 ? 'رحلة مباشرة بدون محطات مرور'
                 : '${middlePoints.length} محطات مرور',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w800),
           ),
           if (middlePoints.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -250,9 +243,9 @@ class _StopChip extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.primary,
-              fontWeight: FontWeight.w700,
-            ),
+          color: scheme.primary,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -275,9 +268,9 @@ class _MetaItem extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     );

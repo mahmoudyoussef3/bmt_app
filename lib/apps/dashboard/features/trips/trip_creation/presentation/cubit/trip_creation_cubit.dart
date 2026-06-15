@@ -48,11 +48,11 @@ class TripCreationCubit extends Cubit<TripCreationState> {
     required GetActiveRoutesUseCase getActiveRoutes,
     required GetActiveDriversUseCase getActiveDrivers,
     required GetActiveVehiclesUseCase getActiveVehicles,
-  })  : _createTrip = createTrip,
-        _getActiveRoutes = getActiveRoutes,
-        _getActiveDrivers = getActiveDrivers,
-        _getActiveVehicles = getActiveVehicles,
-        super(const TripCreationInitial());
+  }) : _createTrip = createTrip,
+       _getActiveRoutes = getActiveRoutes,
+       _getActiveDrivers = getActiveDrivers,
+       _getActiveVehicles = getActiveVehicles,
+       super(const TripCreationInitial());
 
   Future<void> loadWizardData() async {
     emit(const TripCreationLoading());
@@ -60,17 +60,22 @@ class TripCreationCubit extends Cubit<TripCreationState> {
       final routes = await _getActiveRoutes();
       final drivers = await _getActiveDrivers();
       final vehicles = await _getActiveVehicles();
-      emit(TripCreationWizardDataLoaded(
-        routes: routes,
-        drivers: drivers,
-        vehicles: vehicles,
-      ));
+      emit(
+        TripCreationWizardDataLoaded(
+          routes: routes,
+          drivers: drivers,
+          vehicles: vehicles,
+        ),
+      );
     } catch (e) {
       emit(TripCreationError(e.toString()));
     }
   }
 
-  Future<OperationTrip?> submitTrip(CreateTripInput input, List<TripPricing> pricing) async {
+  Future<OperationTrip?> submitTrip(
+    CreateTripInput input,
+    List<TripPricing> pricing,
+  ) async {
     final prev = state;
     emit(const TripCreationLoading());
     try {

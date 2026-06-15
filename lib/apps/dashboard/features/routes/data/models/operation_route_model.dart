@@ -3,6 +3,7 @@ import '../../domain/entities/operation_route.dart';
 class OperationRouteModel extends OperationRoute {
   const OperationRouteModel({
     required super.id,
+    super.routeCode,
     required super.name,
     required super.startCity,
     required super.endCity,
@@ -16,6 +17,7 @@ class OperationRouteModel extends OperationRoute {
   factory OperationRouteModel.fromEntity(OperationRoute route) {
     return OperationRouteModel(
       id: route.id,
+      routeCode: route.routeCode,
       name: route.name,
       startCity: route.startCity,
       endCity: route.endCity,
@@ -33,6 +35,7 @@ class OperationRouteModel extends OperationRoute {
   }) {
     return OperationRouteModel(
       id: json['id'] as String,
+      routeCode: json['route_code'] as String? ?? '',
       name: json['name'] as String? ?? '',
       startCity: json['start_city'] as String? ?? '',
       endCity: json['end_city'] as String? ?? '',
@@ -47,6 +50,7 @@ class OperationRouteModel extends OperationRoute {
   Map<String, dynamic> toJson() {
     return {
       'name': name,
+      'route_code': routeCode,
       'start_city': startCity,
       'end_city': endCity,
       'duration': duration,
@@ -83,6 +87,11 @@ class RouteStationModel extends RouteStation {
     super.departureOffset,
     super.locationDescription,
     super.notes,
+    super.latitude,
+    super.longitude,
+    super.pickupAllowed,
+    super.dropoffAllowed,
+    super.estimatedArrivalTime,
     required super.order,
   });
 
@@ -95,6 +104,11 @@ class RouteStationModel extends RouteStation {
       departureOffset: json['departure_offset'] as String? ?? '',
       locationDescription: json['location_description'] as String? ?? '',
       notes: json['notes'] as String? ?? '',
+      latitude: (json['latitude'] as num?)?.toDouble(),
+      longitude: (json['longitude'] as num?)?.toDouble(),
+      pickupAllowed: json['pickup_allowed'] as bool? ?? true,
+      dropoffAllowed: json['dropoff_allowed'] as bool? ?? true,
+      estimatedArrivalTime: json['estimated_arrival_time'] as String? ?? '',
       order: json['sort_order'] as int? ?? 0,
     );
   }
@@ -108,6 +122,11 @@ class RouteStationModel extends RouteStation {
       departureOffset: station.departureOffset,
       locationDescription: station.locationDescription,
       notes: station.notes,
+      latitude: station.latitude,
+      longitude: station.longitude,
+      pickupAllowed: station.pickupAllowed,
+      dropoffAllowed: station.dropoffAllowed,
+      estimatedArrivalTime: station.estimatedArrivalTime,
       order: station.order,
     );
   }
@@ -121,6 +140,13 @@ class RouteStationModel extends RouteStation {
       'departure_offset': departureOffset,
       'location_description': locationDescription,
       'notes': notes,
+      'latitude': latitude,
+      'longitude': longitude,
+      'pickup_allowed': pickupAllowed,
+      'dropoff_allowed': dropoffAllowed,
+      'estimated_arrival_time': estimatedArrivalTime.isEmpty
+          ? null
+          : estimatedArrivalTime,
       'sort_order': order,
       'updated_at': DateTime.now().toIso8601String(),
     };

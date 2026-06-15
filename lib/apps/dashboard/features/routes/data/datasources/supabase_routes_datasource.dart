@@ -100,10 +100,7 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
     try {
       final payload = OperationRouteModel.fromEntity(route).toJson();
 
-      await _client
-          .from('operation_routes')
-          .update(payload)
-          .eq('id', route.id);
+      await _client.from('operation_routes').update(payload).eq('id', route.id);
 
       return _assembleRoute(route.id);
     } on PostgrestException catch (e) {
@@ -232,9 +229,7 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
     return OperationRouteModel.fromJson(routeJson, stations: stations);
   }
 
-  Future<List<RouteStationModel>> _fetchStationsForRoute(
-    String routeId,
-  ) async {
+  Future<List<RouteStationModel>> _fetchStationsForRoute(String routeId) async {
     final data = await _client
         .from('route_stations')
         .select()
@@ -264,9 +259,7 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
   List<RouteStationModel> _prepareStations(List<RouteStation> stations) {
     return stations.indexed.map((entry) {
       final (index, station) = entry;
-      return RouteStationModel.fromEntity(
-        station.copyWith(order: index + 1),
-      );
+      return RouteStationModel.fromEntity(station.copyWith(order: index + 1));
     }).toList();
   }
 

@@ -10,10 +10,15 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
 
   @override
   Future<BookingHubData> getBookingHubData() async {
-    final routesResponse = await _supabase.from('operation_routes').select('id');
+    final routesResponse = await _supabase
+        .from('operation_routes')
+        .select('id');
     final packagesResponse = await _supabase.from('packages').select('id');
-    final tripsResponse = await _supabase.from('operation_trips').select('id').eq('status', 'scheduled');
-    
+    final tripsResponse = await _supabase
+        .from('operation_trips')
+        .select('id')
+        .eq('status', 'scheduled');
+
     final user = _supabase.auth.currentUser;
     List<dynamic> upcomingBookings = [];
     if (user != null) {
@@ -29,7 +34,8 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
       monthPlans: '${packagesResponse.length} plans',
       activeTrips: tripsResponse.length.toString(),
       upcomingBookings: upcomingBookings.length.toString(),
-      reservedSeats: '0', // Need more robust logic to calculate total seats reserved by user
+      reservedSeats:
+          '0', // Need more robust logic to calculate total seats reserved by user
     );
   }
 
@@ -44,10 +50,19 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
         ''')
         .eq('status', 'scheduled');
 
-    final routesResponse = await _supabase.from('operation_routes').select('start_city, end_city').eq('status', 'active');
+    final routesResponse = await _supabase
+        .from('operation_routes')
+        .select('start_city, end_city')
+        .eq('status', 'active');
 
-    final distinctPickups = routesResponse.map((e) => e['start_city'].toString()).toSet().toList();
-    final distinctDestinations = routesResponse.map((e) => e['end_city'].toString()).toSet().toList();
+    final distinctPickups = routesResponse
+        .map((e) => e['start_city'].toString())
+        .toSet()
+        .toList();
+    final distinctDestinations = routesResponse
+        .map((e) => e['end_city'].toString())
+        .toSet()
+        .toList();
 
     final vehicles = tripsResponse.map((data) {
       final vehicle = data['vehicles'] as Map<String, dynamic>?;
@@ -65,9 +80,18 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
     }).toList();
 
     return DailyBookingData(
-      pickupPoints: distinctPickups.isNotEmpty ? distinctPickups : ['Banha Station', 'Banha Center'],
-      destinations: distinctDestinations.isNotEmpty ? distinctDestinations : ['Smart Village', 'Nasr City'],
-      arrivalTimes: ['8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM'], // Stubbed, format properly in production
+      pickupPoints: distinctPickups.isNotEmpty
+          ? distinctPickups
+          : ['Banha Station', 'Banha Center'],
+      destinations: distinctDestinations.isNotEmpty
+          ? distinctDestinations
+          : ['Smart Village', 'Nasr City'],
+      arrivalTimes: [
+        '8:30 AM',
+        '9:00 AM',
+        '9:30 AM',
+        '10:00 AM',
+      ], // Stubbed, format properly in production
       vehicles: vehicles,
     );
   }

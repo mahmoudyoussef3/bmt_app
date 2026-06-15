@@ -99,20 +99,26 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
 
     try {
       final bookTripSeat = clientGetIt<BookTripSeatUseCase>();
-      
+
       // Get the payment amount
       final total = widget.checkoutData.totalForDiscount(widget.promoDiscount);
-      
+
       final bookingId = await bookTripSeat({
         'p_trip_id': widget.checkoutData.tripId,
-        'p_seat_id': widget.checkoutData.selectedSeat,
+        'p_seat_id': widget.checkoutData.selectedSeatId,
+        'p_seat': widget.checkoutData.selectedSeat,
         'p_pricing_id': null,
         'p_pickup_point_id': null,
         'p_dropoff_point_id': null,
         'p_passenger_name': 'Me', // Assuming current user
         'p_phone': '',
+        'p_route': widget.checkoutData.route,
+        'p_trip_time': widget.checkoutData.departureTime,
+        'p_trip_date': widget.checkoutData.tripDate,
         'p_payment_method': widget.paymentMethod.title,
         'p_payment_amount': total,
+        'p_pickup_point_name': widget.checkoutData.pickupPoint,
+        'p_dropoff_point_name': widget.checkoutData.destination,
       });
 
       if (!mounted) return;

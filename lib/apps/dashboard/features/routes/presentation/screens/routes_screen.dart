@@ -247,9 +247,11 @@ class _RoutesTable extends StatelessWidget {
             children: [
               _TableHeader(
                 columns: const [
+                  'كود المسار',
                   'اسم المسار',
                   'نقطة البداية',
                   'نقطة النهاية',
+                  'المسافة',
                   'المحطات',
                   'المدة',
                   'الحالة',
@@ -342,9 +344,11 @@ class _RouteTableRow extends StatelessWidget {
       ),
       child: Row(
         children: [
+          Expanded(child: Text(route.routeCode)),
           Expanded(child: Text(route.name)),
           Expanded(child: Text(route.startCity)),
           Expanded(child: Text(route.endCity)),
+          Expanded(child: Text(route.distance)),
           Expanded(child: Text('${route.stations.length}')),
           Expanded(child: Text(route.duration)),
           Expanded(child: StatusChip(label: route.status.label)),
@@ -395,6 +399,8 @@ class _RouteDetailsView extends StatelessWidget {
         const SizedBox(height: AppSpacing.large),
         _StopsTimelinePanel(route: route),
         const SizedBox(height: AppSpacing.large),
+        _ClientRoutePreview(route: route),
+        const SizedBox(height: AppSpacing.large),
         _StopManagementPanel(
           route: route,
           onAdd: (station) => cubit.addStation(station),
@@ -432,7 +438,7 @@ class _DetailsHeader extends StatelessWidget {
                 ),
                 const SizedBox(height: AppSpacing.xSmall),
                 Text(
-                  '${route.startCity} ← ${route.endCity} - ${route.duration} - ${route.distance}',
+                  '${route.routeCode} - ${route.startCity} ← ${route.endCity} - ${route.duration} - ${route.distance}',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -488,6 +494,7 @@ class _BasicInfoPanel extends StatelessWidget {
           const SizedBox(height: AppSpacing.medium),
           _InfoGrid(
             items: [
+              ('كود المسار', route.routeCode),
               ('اسم المسار', route.name),
               ('نقطة البداية', route.startCity),
               ('نقطة النهاية', route.endCity),
@@ -502,7 +509,105 @@ class _BasicInfoPanel extends StatelessWidget {
   }
 }
 
+class _ClientRoutePreview extends StatelessWidget {
+  final OperationRoute route;
 
+  const _ClientRoutePreview({required this.route});
+
+  @override
+  Widget build(BuildContext context) {
+    final pickups = route.stations.where((station) => station.pickupAllowed);
+    final dropoffs = route.stations.where((station) => station.dropoffAllowed);
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'معاينة تطبيق العميل',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
+          const SizedBox(height: AppSpacing.xSmall),
+          Text(
+            'هذه هي نقاط الصعود والنزول التي ستظهر للعميل حسب إعدادات المسار.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          Wrap(
+            spacing: AppSpacing.large,
+            runSpacing: AppSpacing.medium,
+            children: [
+              _PreviewStopGroup(
+                title: 'نقاط الصعود',
+                stations: pickups.toList(),
+              ),
+              _PreviewStopGroup(
+                title: 'نقاط النزول',
+                stations: dropoffs.toList(),
+              ),
+              _PreviewStopGroup(
+                title: 'ترتيب الرحلة',
+                stations: route.stations,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PreviewStopGroup extends StatelessWidget {
+  final String title;
+  final List<RouteStation> stations;
+
+  const _PreviewStopGroup({required this.title, required this.stations});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: 300,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest.withAlpha(70),
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: Theme.of(context).textTheme.titleSmall),
+              const SizedBox(height: AppSpacing.small),
+              if (stations.isEmpty)
+                Text(
+                  'لا توجد نقاط متاحة',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: scheme.error),
+                )
+              else
+                ...stations.map(
+                  (station) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
+                    child: Text(
+                      '${station.order}. ${station.name}'
+                      '${station.estimatedArrivalTime.isEmpty ? '' : ' - ${station.estimatedArrivalTime}'}',
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _InfoGrid extends StatelessWidget {
   final List<(String, String)> items;
@@ -739,10 +844,7 @@ class _StopManagementRow extends StatelessWidget {
               ],
             ),
           ),
-          IconButton(
-            onPressed: onEdit,
-            icon: const Icon(Icons.edit_outlined),
-          ),
+          IconButton(onPressed: onEdit, icon: const Icon(Icons.edit_outlined)),
           IconButton(
             onPressed: onDelete,
             icon: const Icon(Icons.delete_outline),
@@ -752,9 +854,6 @@ class _StopManagementRow extends StatelessWidget {
     );
   }
 }
-
-
-
 
 class _RouteFormView extends StatefulWidget {
   final OperationRoute? route;
@@ -768,6 +867,7 @@ class _RouteFormView extends StatefulWidget {
 class _RouteFormViewState extends State<_RouteFormView> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _name;
+  late final TextEditingController _code;
   late final TextEditingController _start;
   late final TextEditingController _end;
   late final TextEditingController _duration;
@@ -783,32 +883,13 @@ class _RouteFormViewState extends State<_RouteFormView> {
     super.initState();
     final route = widget.route;
     _name = TextEditingController(text: route?.name ?? '');
+    _code = TextEditingController(text: route?.routeCode ?? '');
     _start = TextEditingController(text: route?.startCity ?? '');
     _end = TextEditingController(text: route?.endCity ?? '');
     _duration = TextEditingController(text: route?.duration ?? '');
     _distance = TextEditingController(text: route?.distance ?? '');
     _stations =
-        route?.stations.map((station) => station.copyWith()).toList() ??
-        [
-          const RouteStation(
-            id: 'draft-start',
-            name: 'نقطة الانطلاق',
-            area: 'القاهرة',
-            arrivalOffset: '٠ دقيقة',
-            departureOffset: '٣ دقائق',
-            locationDescription: 'نقطة تجمع بداية المسار',
-            order: 1,
-          ),
-          const RouteStation(
-            id: 'draft-end',
-            name: 'نقطة الوصول',
-            area: 'القاهرة',
-            arrivalOffset: '٦٠ دقيقة',
-            departureOffset: '٦٠ دقيقة',
-            locationDescription: 'نقطة نهاية المسار',
-            order: 2,
-          ),
-        ];
+        route?.stations.map((station) => station.copyWith()).toList() ?? [];
     _status = route?.status == OperationRouteStatus.archived
         ? OperationRouteStatus.paused
         : route?.status ?? OperationRouteStatus.active;
@@ -817,6 +898,7 @@ class _RouteFormViewState extends State<_RouteFormView> {
   @override
   void dispose() {
     _name.dispose();
+    _code.dispose();
     _start.dispose();
     _end.dispose();
     _duration.dispose();
@@ -838,7 +920,9 @@ class _RouteFormViewState extends State<_RouteFormView> {
             currentStep: _step,
             onStepTapped: (step) {
               if (step > _step) {
-                if (_step == 0 && _formKey.currentState?.validate() != true) return;
+                if (_step == 0 && _formKey.currentState?.validate() != true) {
+                  return;
+                }
                 if (_step == 1 && _stations.length < 2) return;
               }
               setState(() => _step = step);
@@ -852,12 +936,14 @@ class _RouteFormViewState extends State<_RouteFormView> {
                   key: _formKey,
                   child: _BasicInfoForm(
                     name: _name,
+                    code: _code,
                     start: _start,
                     end: _end,
                     duration: _duration,
                     distance: _distance,
                     status: _status,
-                    onStatusChanged: (status) => setState(() => _status = status),
+                    onStatusChanged: (status) =>
+                        setState(() => _status = status),
                   ),
                 ),
               ),
@@ -900,7 +986,10 @@ class _RouteFormViewState extends State<_RouteFormView> {
               onPressed: (_step == 1 && _stations.length < 2)
                   ? null
                   : () {
-                      if (_step == 0 && _formKey.currentState?.validate() != true) return;
+                      if (_step == 0 &&
+                          _formKey.currentState?.validate() != true) {
+                        return;
+                      }
 
                       if (_step == 3) {
                         cubit.saveRoute(_buildRoute());
@@ -924,6 +1013,7 @@ class _RouteFormViewState extends State<_RouteFormView> {
     final existing = widget.route;
     return OperationRoute(
       id: existing?.id ?? '',
+      routeCode: _code.text.trim(),
       name: _name.text.trim(),
       startCity: _start.text.trim(),
       endCity: _end.text.trim(),
@@ -966,6 +1056,7 @@ class _FormHeader extends StatelessWidget {
 
 class _BasicInfoForm extends StatelessWidget {
   final TextEditingController name;
+  final TextEditingController code;
   final TextEditingController start;
   final TextEditingController end;
   final TextEditingController duration;
@@ -975,6 +1066,7 @@ class _BasicInfoForm extends StatelessWidget {
 
   const _BasicInfoForm({
     required this.name,
+    required this.code,
     required this.start,
     required this.end,
     required this.duration,
@@ -990,32 +1082,46 @@ class _BasicInfoForm extends StatelessWidget {
         TextFormField(
           controller: name,
           decoration: const InputDecoration(labelText: 'اسم المسار'),
-          validator: (value) =>
-              value == null || value.trim().isEmpty ? 'يرجى إدخال اسم المسار' : null,
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'يرجى إدخال اسم المسار'
+              : null,
+        ),
+        TextFormField(
+          controller: code,
+          decoration: const InputDecoration(labelText: 'كود المسار'),
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'يرجى إدخال كود المسار'
+              : null,
         ),
         TextFormField(
           controller: start,
           decoration: const InputDecoration(labelText: 'نقطة البداية'),
-          validator: (value) =>
-              value == null || value.trim().isEmpty ? 'يرجى إدخال نقطة البداية' : null,
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'يرجى إدخال نقطة البداية'
+              : null,
         ),
         TextFormField(
           controller: end,
           decoration: const InputDecoration(labelText: 'نقطة النهاية'),
-          validator: (value) =>
-              value == null || value.trim().isEmpty ? 'يرجى إدخال نقطة النهاية' : null,
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'يرجى إدخال نقطة النهاية'
+              : null,
         ),
         TextFormField(
           controller: duration,
-          decoration: const InputDecoration(labelText: 'المدة (مثال: ٧٥ دقيقة)'),
-          validator: (value) =>
-              value == null || value.trim().isEmpty ? 'يرجى إدخال مدة المسار' : null,
+          decoration: const InputDecoration(
+            labelText: 'المدة (مثال: ٧٥ دقيقة)',
+          ),
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'يرجى إدخال مدة المسار'
+              : null,
         ),
         TextFormField(
           controller: distance,
           decoration: const InputDecoration(labelText: 'المسافة (مثال: ٧٦ كم)'),
-          validator: (value) =>
-              value == null || value.trim().isEmpty ? 'يرجى إدخال المسافة' : null,
+          validator: (value) => value == null || value.trim().isEmpty
+              ? 'يرجى إدخال المسافة'
+              : null,
         ),
         DropdownButtonFormField<OperationRouteStatus>(
           initialValue: status,
@@ -1097,8 +1203,8 @@ class _StopsFormEditor extends StatelessWidget {
               child: Text(
                 'لم يتم إضافة أي محطات بعد. يرجى إضافة محطتين على الأقل (البداية والنهاية).',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                    ),
+                  color: Theme.of(context).colorScheme.outline,
+                ),
               ),
             ),
           )
@@ -1147,8 +1253,8 @@ class _StopsFormEditor extends StatelessWidget {
             child: Text(
               'تنبيه: يجب إضافة محطتين على الأقل (البداية والنهاية) للمسار.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                color: Theme.of(context).colorScheme.error,
+              ),
             ),
           ),
       ],
@@ -1169,6 +1275,7 @@ class _RouteReview extends StatelessWidget {
         _InfoGrid(
           items: [
             ('اسم المسار', route.name),
+            ('كود المسار', route.routeCode),
             ('البداية', route.startCity),
             ('النهاية', route.endCity),
             ('المدة', route.duration),
@@ -1340,6 +1447,10 @@ class _StopDialogState extends State<_StopDialog> {
   late final TextEditingController _arrival;
   late final TextEditingController _departure;
   late final TextEditingController _location;
+  late final TextEditingController _latitude;
+  late final TextEditingController _longitude;
+  late bool _pickupAllowed;
+  late bool _dropoffAllowed;
 
   @override
   void initState() {
@@ -1350,6 +1461,14 @@ class _StopDialogState extends State<_StopDialog> {
     _arrival = TextEditingController(text: station?.arrivalOffset ?? '');
     _departure = TextEditingController(text: station?.departureOffset ?? '');
     _location = TextEditingController(text: station?.locationDescription ?? '');
+    _latitude = TextEditingController(
+      text: station?.latitude?.toString() ?? '',
+    );
+    _longitude = TextEditingController(
+      text: station?.longitude?.toString() ?? '',
+    );
+    _pickupAllowed = station?.pickupAllowed ?? true;
+    _dropoffAllowed = station?.dropoffAllowed ?? true;
   }
 
   @override
@@ -1359,6 +1478,8 @@ class _StopDialogState extends State<_StopDialog> {
     _arrival.dispose();
     _departure.dispose();
     _location.dispose();
+    _latitude.dispose();
+    _longitude.dispose();
     super.dispose();
   }
 
@@ -1376,8 +1497,9 @@ class _StopDialogState extends State<_StopDialog> {
               TextFormField(
                 controller: _name,
                 decoration: const InputDecoration(labelText: 'اسم المحطة'),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'يرجى إدخال اسم المحطة' : null,
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'يرجى إدخال اسم المحطة'
+                    : null,
               ),
               const SizedBox(height: AppSpacing.small),
               TextFormField(
@@ -1385,8 +1507,9 @@ class _StopDialogState extends State<_StopDialog> {
                 decoration: const InputDecoration(
                   labelText: 'ترتيب / منطقة المحطة',
                 ),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'يرجى إدخال منطقة المحطة' : null,
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'يرجى إدخال منطقة المحطة'
+                    : null,
               ),
               const SizedBox(height: AppSpacing.small),
               Row(
@@ -1394,9 +1517,13 @@ class _StopDialogState extends State<_StopDialog> {
                   Expanded(
                     child: TextFormField(
                       controller: _arrival,
-                      decoration: const InputDecoration(labelText: 'وقت الوصول (مثال: ١٥ دقيقة)'),
+                      decoration: const InputDecoration(
+                        labelText: 'وقت الوصول (مثال: ١٥ دقيقة)',
+                      ),
                       validator: (value) =>
-                          value == null || value.trim().isEmpty ? 'يرجى إدخال وقت الوصول' : null,
+                          value == null || value.trim().isEmpty
+                          ? 'يرجى إدخال وقت الوصول'
+                          : null,
                     ),
                   ),
                   const SizedBox(width: AppSpacing.small),
@@ -1416,8 +1543,46 @@ class _StopDialogState extends State<_StopDialog> {
                 minLines: 2,
                 maxLines: 3,
                 decoration: const InputDecoration(labelText: 'وصف الموقع'),
-                validator: (value) =>
-                    value == null || value.trim().isEmpty ? 'يرجى إدخال وصف الموقع' : null,
+                validator: (value) => value == null || value.trim().isEmpty
+                    ? 'يرجى إدخال وصف الموقع'
+                    : null,
+              ),
+              const SizedBox(height: AppSpacing.small),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _latitude,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'خط العرض'),
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _longitude,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'خط الطول'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.small),
+              CheckboxListTile(
+                value: _pickupAllowed,
+                onChanged: (value) {
+                  setState(() => _pickupAllowed = value ?? true);
+                },
+                title: const Text('يسمح بالصعود من هذه المحطة'),
+                controlAffinity: ListTileControlAffinity.leading,
+              ),
+              CheckboxListTile(
+                value: _dropoffAllowed,
+                onChanged: (value) {
+                  setState(() => _dropoffAllowed = value ?? true);
+                },
+                title: const Text('يسمح بالنزول في هذه المحطة'),
+                controlAffinity: ListTileControlAffinity.leading,
               ),
             ],
           ),
@@ -1442,6 +1607,11 @@ class _StopDialogState extends State<_StopDialog> {
                     ? _arrival.text.trim()
                     : _departure.text.trim(),
                 locationDescription: _location.text.trim(),
+                latitude: double.tryParse(_latitude.text.trim()),
+                longitude: double.tryParse(_longitude.text.trim()),
+                pickupAllowed: _pickupAllowed,
+                dropoffAllowed: _dropoffAllowed,
+                estimatedArrivalTime: _arrival.text.trim(),
                 notes: existing?.notes ?? '',
                 order: existing?.order ?? 0,
               ),

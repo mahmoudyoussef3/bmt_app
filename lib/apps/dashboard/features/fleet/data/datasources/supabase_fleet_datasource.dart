@@ -1,4 +1,3 @@
-
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -294,7 +293,10 @@ class SupabaseFleetDatasource implements FleetDatasource {
       final created = FleetVehicleModel.fromJson(response);
 
       if (vehicle.currentDriverId.isNotEmpty) {
-        await _handleDriverAssignmentChange(created.id, vehicle.currentDriverId);
+        await _handleDriverAssignmentChange(
+          created.id,
+          vehicle.currentDriverId,
+        );
       }
 
       return created;
@@ -563,7 +565,9 @@ class SupabaseFleetDatasource implements FleetDatasource {
 
   Future<String> uploadFile(String bucket, String path, Uint8List bytes) async {
     try {
-      await _client.storage.from(bucket).uploadBinary(
+      await _client.storage
+          .from(bucket)
+          .uploadBinary(
             path,
             bytes,
             fileOptions: const FileOptions(upsert: true),
@@ -627,8 +631,9 @@ class SupabaseFleetDatasource implements FleetDatasource {
     }
 
     if (newVehicleId.isNotEmpty) {
-      final activeAssignForNewVehicle =
-          await _activeAssignmentForVehicle(newVehicleId);
+      final activeAssignForNewVehicle = await _activeAssignmentForVehicle(
+        newVehicleId,
+      );
 
       if (activeAssignForNewVehicle != null) {
         await removeAssignment(activeAssignForNewVehicle['id'] as String);
@@ -652,8 +657,9 @@ class SupabaseFleetDatasource implements FleetDatasource {
     }
 
     if (newDriverId.isNotEmpty) {
-      final activeAssignForNewDriver =
-          await _activeAssignmentForDriver(newDriverId);
+      final activeAssignForNewDriver = await _activeAssignmentForDriver(
+        newDriverId,
+      );
 
       if (activeAssignForNewDriver != null) {
         await removeAssignment(activeAssignForNewDriver['id'] as String);

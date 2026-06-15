@@ -59,12 +59,18 @@ class FleetDriverModel extends FleetDriver {
       employeeCode: json['employee_code'] as String? ?? '',
       fullName: json['full_name'] as String? ?? json['name'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
-      emergencyPhone: json['emergency_phone'] as String? ?? json['emergency_contact'] as String? ?? '',
+      emergencyPhone:
+          json['emergency_phone'] as String? ??
+          json['emergency_contact'] as String? ??
+          '',
       address: json['address'] as String? ?? '',
       nationalId: json['national_id'] as String? ?? '',
       profileImageUrl: json['profile_image_url'] as String? ?? '',
       licenseNumber: json['license_number'] as String? ?? '',
-      licenseExpiryDate: json['license_expiry_date'] as String? ?? json['license_expiry'] as String? ?? '',
+      licenseExpiryDate:
+          json['license_expiry_date'] as String? ??
+          json['license_expiry'] as String? ??
+          '',
       hireDate: json['hire_date'] as String? ?? '',
       notes: json['notes'] as String? ?? '',
       status: FleetDriverStatus.values.firstWhere(
@@ -72,8 +78,12 @@ class FleetDriverModel extends FleetDriver {
         orElse: () => FleetDriverStatus.active,
       ),
       currentVehicleId: currentVehicleId,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
       documents: documents,
     );
   }
@@ -161,19 +171,24 @@ class FleetVehicleModel extends FleetVehicle {
     String insuranceExpiry = '',
     String inspectionExpiry = '',
   }) {
-    final imgUrl = json['image_url'] as String? ?? json['image_label'] as String? ?? '';
+    final imgUrl =
+        json['image_url'] as String? ?? json['image_label'] as String? ?? '';
     final List<FleetVehicleImage> parsedImages = imgUrl.isNotEmpty
         ? imgUrl.split(',').map((url) => FleetVehicleImage(url: url)).toList()
         : const [];
 
     return FleetVehicleModel(
       id: json['id'] as String? ?? '',
-      vehicleCode: json['vehicle_code'] as String? ?? json['vehicle_number'] as String? ?? '',
+      vehicleCode:
+          json['vehicle_code'] as String? ??
+          json['vehicle_number'] as String? ??
+          '',
       plateNumber: json['plate_number'] as String? ?? '',
       vehicleType: json['vehicle_type'] as String? ?? '',
       brand: json['brand'] as String? ?? '',
       model: json['model'] as String? ?? '',
-      manufactureYear: json['manufacture_year'] as int? ?? json['model_year'] as int? ?? 0,
+      manufactureYear:
+          json['manufacture_year'] as int? ?? json['model_year'] as int? ?? 0,
       color: json['color'] as String? ?? '',
       capacity: json['capacity'] as int? ?? json['seats_count'] as int? ?? 0,
       seatLayoutType: json['seat_layout_type'] as String? ?? '',
@@ -184,10 +199,16 @@ class FleetVehicleModel extends FleetVehicle {
         orElse: () => FleetVehicleStatus.active,
       ),
       currentDriverId: currentDriverId,
-      createdAt: json['created_at'] != null ? DateTime.parse(json['created_at'] as String) : null,
-      updatedAt: json['updated_at'] != null ? DateTime.parse(json['updated_at'] as String) : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
       seatConfiguration: json['seat_configuration'] != null
-          ? SeatConfiguration.fromJson(json['seat_configuration'] as Map<String, dynamic>)
+          ? SeatConfiguration.fromJson(
+              json['seat_configuration'] as Map<String, dynamic>,
+            )
           : SeatConfiguration.empty(),
       licenseExpiry: licenseExpiry,
       insuranceExpiry: insuranceExpiry,
@@ -208,12 +229,36 @@ class FleetVehicleModel extends FleetVehicle {
       'color': color,
       'capacity': capacity,
       'seat_layout_type': seatLayoutType,
-      'image_url': images.isNotEmpty ? images.map((i) => i.url).join(',') : imageUrl,
+      'image_url': images.isNotEmpty
+          ? images.map((i) => i.url).join(',')
+          : imageUrl,
       'notes': notes,
       'status': status.name,
-      'seat_configuration': seatConfiguration.toJson(),
+      'seat_configuration': _standardSeatConfiguration(
+        seatConfiguration,
+      ).toJson(),
     };
   }
+}
+
+SeatConfiguration _standardSeatConfiguration(SeatConfiguration configuration) {
+  return SeatConfiguration(
+    rows: configuration.rows,
+    columns: configuration.columns,
+    seats: configuration.seats.map((seat) {
+      final type = switch (seat.seatType) {
+        'driver' => 'driver',
+        'empty' => 'empty',
+        _ => 'passenger',
+      };
+      return SeatLayoutItem(
+        seatNumber: seat.seatNumber,
+        seatType: type,
+        row: seat.row,
+        column: seat.column,
+      );
+    }).toList(),
+  );
 }
 
 class FleetAssignmentModel extends FleetAssignment {
@@ -238,7 +283,8 @@ class FleetAssignmentModel extends FleetAssignment {
   }
 
   factory FleetAssignmentModel.fromJson(Map<String, dynamic> json) {
-    final historyList = (json['history'] as List?)
+    final historyList =
+        (json['history'] as List?)
             ?.map((h) => FleetHistoryItem.fromJson(h as Map<String, dynamic>))
             .toList() ??
         [];
@@ -279,9 +325,13 @@ class FleetDocumentModel extends FleetDocument {
     super.fileUrl,
   });
 
-  factory FleetDocumentModel.fromJson(Map<String, dynamic> json, {String ownerName = ''}) {
+  factory FleetDocumentModel.fromJson(
+    Map<String, dynamic> json, {
+    String ownerName = '',
+  }) {
     final isDriver = json.containsKey('driver_id');
-    final ownerId = (isDriver ? json['driver_id'] : json['vehicle_id']) as String? ?? '';
+    final ownerId =
+        (isDriver ? json['driver_id'] : json['vehicle_id']) as String? ?? '';
     return FleetDocumentModel(
       id: json['id'] as String? ?? '',
       type: _parseDocumentType(json['type'] as String? ?? ''),
@@ -311,10 +361,12 @@ class FleetDocumentModel extends FleetDocument {
 FleetDocumentType _parseDocumentType(String value) {
   return switch (value) {
     'driver_license' || 'driverLicense' => FleetDocumentType.driverLicense,
-    'national_id_front' || 'nationalIdFront' => FleetDocumentType.nationalIdFront,
+    'national_id_front' ||
+    'nationalIdFront' => FleetDocumentType.nationalIdFront,
     'national_id_back' || 'nationalIdBack' => FleetDocumentType.nationalIdBack,
     'criminal_record' || 'criminalRecord' => FleetDocumentType.criminalRecord,
-    'employment_contract' || 'employmentContract' => FleetDocumentType.employmentContract,
+    'employment_contract' ||
+    'employmentContract' => FleetDocumentType.employmentContract,
     'vehicle_license' || 'vehicleLicense' => FleetDocumentType.vehicleLicense,
     'insurance' => FleetDocumentType.insurance,
     'inspection' || 'technical_inspection' => FleetDocumentType.inspection,

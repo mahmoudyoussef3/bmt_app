@@ -42,7 +42,8 @@ class FleetRepositoryImpl implements FleetRepository {
 
       // Rule: Prevent duplicate active assignment (Driver)
       final hasActiveDriverAssign = workspace.assignments.any(
-        (a) => a.driverId == driverId && a.status == FleetAssignmentStatus.active,
+        (a) =>
+            a.driverId == driverId && a.status == FleetAssignmentStatus.active,
       );
       if (hasActiveDriverAssign) {
         throw Exception('السائق مرتبط بالفعل بتعيين نشط.');
@@ -50,7 +51,9 @@ class FleetRepositoryImpl implements FleetRepository {
 
       // Rule: Prevent duplicate active assignment (Vehicle)
       final hasActiveVehicleAssign = workspace.assignments.any(
-        (a) => a.vehicleId == vehicleId && a.status == FleetAssignmentStatus.active,
+        (a) =>
+            a.vehicleId == vehicleId &&
+            a.status == FleetAssignmentStatus.active,
       );
       if (hasActiveVehicleAssign) {
         throw Exception('المركبة مرتبطة بالفعل بتعيين نشط لسائق آخر.');
@@ -61,15 +64,21 @@ class FleetRepositoryImpl implements FleetRepository {
         (doc) => doc.status == FleetDocumentStatus.expired,
       );
       if (hasExpiredDriverDocs) {
-        throw Exception('لا يمكن تعيين السائق لوجود وثائق شخصية منتهية الصلاحية.');
+        throw Exception(
+          'لا يمكن تعيين السائق لوجود وثائق شخصية منتهية الصلاحية.',
+        );
       }
 
       // Rule: Prevent expired documents assignment (Vehicle)
       final hasExpiredVehicleDocs = workspace.documents.any(
-        (doc) => doc.ownerId == vehicleId && doc.status == FleetDocumentStatus.expired,
+        (doc) =>
+            doc.ownerId == vehicleId &&
+            doc.status == FleetDocumentStatus.expired,
       );
       if (hasExpiredVehicleDocs) {
-        throw Exception('لا يمكن تعيين المركبة لوجود رخصة أو وثائق منتهية الصلاحية.');
+        throw Exception(
+          'لا يمكن تعيين المركبة لوجود رخصة أو وثائق منتهية الصلاحية.',
+        );
       }
 
       return await _datasource.assignDriverToVehicle(driverId, vehicleId);
@@ -173,7 +182,10 @@ class FleetRepositoryImpl implements FleetRepository {
 
       // Validate vehicle active assignments
       final hasActiveVehicleAssign = workspace.assignments.any(
-        (a) => a.vehicleId == newVehicleId && a.status == FleetAssignmentStatus.active && a.id != assignmentId,
+        (a) =>
+            a.vehicleId == newVehicleId &&
+            a.status == FleetAssignmentStatus.active &&
+            a.id != assignmentId,
       );
       if (hasActiveVehicleAssign) {
         throw Exception('المركبة الجديدة مرتبطة بالفعل بسائق نشط آخر.');
@@ -181,10 +193,14 @@ class FleetRepositoryImpl implements FleetRepository {
 
       // Validate vehicle documents
       final hasExpiredVehicleDocs = workspace.documents.any(
-        (doc) => doc.ownerId == newVehicleId && doc.status == FleetDocumentStatus.expired,
+        (doc) =>
+            doc.ownerId == newVehicleId &&
+            doc.status == FleetDocumentStatus.expired,
       );
       if (hasExpiredVehicleDocs) {
-        throw Exception('لا يمكن التعيين للمركبة الجديدة لوجود وثائق منتهية الصلاحية.');
+        throw Exception(
+          'لا يمكن التعيين للمركبة الجديدة لوجود وثائق منتهية الصلاحية.',
+        );
       }
 
       return await _datasource.reassignVehicle(assignmentId, newVehicleId);
@@ -341,7 +357,10 @@ class FleetRepositoryImpl implements FleetRepository {
     required bool isDriver,
   }) async {
     try {
-      await _datasource.deleteDocument(documentId: documentId, isDriver: isDriver);
+      await _datasource.deleteDocument(
+        documentId: documentId,
+        isDriver: isDriver,
+      );
     } catch (_) {
       throw Exception('تعذر حذف الوثيقة');
     }
@@ -352,9 +371,13 @@ class FleetRepositoryImpl implements FleetRepository {
     try {
       final datasource = _datasource;
       if (datasource is SupabaseFleetDatasource) {
-        return await datasource.uploadFile(bucket, path, Uint8List.fromList(bytes));
+        return await datasource.uploadFile(
+          bucket,
+          path,
+          Uint8List.fromList(bytes),
+        );
       }
-      return 'https://placeholder.com/mock-upload.jpg';
+      throw Exception('رفع الملفات متاح فقط من خلال مصدر Supabase الحقيقي.');
     } catch (_) {
       throw Exception('تعذر رفع الملف لمخزن البيانات');
     }

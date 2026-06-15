@@ -35,7 +35,9 @@ class FleetVehiclesCardList extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, vehicles.length);
-    final paged = start >= vehicles.length ? <FleetVehicle>[] : vehicles.sublist(start, end);
+    final paged = start >= vehicles.length
+        ? <FleetVehicle>[]
+        : vehicles.sublist(start, end);
 
     if (paged.isEmpty) {
       return const Center(
@@ -64,7 +66,10 @@ class FleetVehiclesCardList extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      FleetVehicleThumb(label: vehicle.imageLabel, imageUrl: vehicle.imageUrl),
+                      FleetVehicleThumb(
+                        label: vehicle.imageLabel,
+                        imageUrl: vehicle.imageUrl,
+                      ),
                       const SizedBox(width: AppSpacing.medium),
                       Expanded(
                         child: Column(
@@ -72,15 +77,13 @@ class FleetVehiclesCardList extends StatelessWidget {
                           children: [
                             Text(
                               vehicle.vehicleNumber,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             Text(
                               '${vehicle.brand} ${vehicle.model} | ${vehicle.plateNumber}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: scheme.onSurfaceVariant,
-                                  ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
                         ),

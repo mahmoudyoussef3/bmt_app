@@ -55,21 +55,26 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
     employeeCode = TextEditingController(text: d?.employeeCode ?? '');
     hireDate = TextEditingController(text: d?.hireDate ?? '');
     notes = TextEditingController(text: d?.notes ?? '');
-    selectedVehicleId = d?.currentVehicleId.isNotEmpty == true ? d!.currentVehicleId : null;
+    selectedVehicleId = d?.currentVehicleId.isNotEmpty == true
+        ? d!.currentVehicleId
+        : null;
   }
 
   List<FleetVehicle> _getAvailableVehicles() {
     return widget.workspace.vehicles.where((v) {
       if (v.status != FleetVehicleStatus.active) return false;
 
-      final hasExpiredDocs = widget.workspace.documents
-          .any((d) => d.ownerId == v.id && d.status == FleetDocumentStatus.expired);
+      final hasExpiredDocs = widget.workspace.documents.any(
+        (d) => d.ownerId == v.id && d.status == FleetDocumentStatus.expired,
+      );
       if (hasExpiredDocs) return false;
 
-      final isAssignedToOther = widget.workspace.assignments.any((a) =>
-          a.vehicleId == v.id &&
-          a.status == FleetAssignmentStatus.active &&
-          a.driverId != widget.driver?.id);
+      final isAssignedToOther = widget.workspace.assignments.any(
+        (a) =>
+            a.vehicleId == v.id &&
+            a.status == FleetAssignmentStatus.active &&
+            a.driverId != widget.driver?.id,
+      );
 
       return !isAssignedToOther;
     }).toList();
@@ -99,7 +104,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
       'البيانات الشخصية',
       'بيانات الاتصال والعنوان',
       'الرخصة وصلاحية العمل',
-      'مراجعة وحفظ البيانات'
+      'مراجعة وحفظ البيانات',
     ];
 
     return Form(
@@ -109,7 +114,9 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           FleetBreadcrumbs(
-            currentLabel: isEdit ? 'تعديل السائق: ${widget.driver!.name}' : 'إضافة سائق جديد',
+            currentLabel: isEdit
+                ? 'تعديل السائق: ${widget.driver!.name}'
+                : 'إضافة سائق جديد',
             onBack: widget.onBack,
           ),
           const SizedBox(height: AppSpacing.large),
@@ -125,25 +132,34 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: active
                               ? scheme.primary
                               : done
-                                  ? scheme.primaryContainer
-                                  : scheme.surfaceContainerHighest,
+                              ? scheme.primaryContainer
+                              : scheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             if (done)
-                              Icon(Icons.check_rounded, size: 14, color: scheme.onPrimaryContainer)
+                              Icon(
+                                Icons.check_rounded,
+                                size: 14,
+                                color: scheme.onPrimaryContainer,
+                              )
                             else
                               Text(
                                 '${index + 1}',
                                 style: TextStyle(
-                                  color: active ? scheme.onPrimary : scheme.onSurfaceVariant,
+                                  color: active
+                                      ? scheme.onPrimary
+                                      : scheme.onSurfaceVariant,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 11,
                                 ),
@@ -152,13 +168,16 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                             Text(
                               steps[index],
                               style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: active ? FontWeight.bold : FontWeight.normal,
-                                  color: active
-                                      ? scheme.onPrimary
-                                      : done
-                                          ? scheme.onPrimaryContainer
-                                          : scheme.onSurfaceVariant),
+                                fontSize: 11,
+                                fontWeight: active
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                                color: active
+                                    ? scheme.onPrimary
+                                    : done
+                                    ? scheme.onPrimaryContainer
+                                    : scheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
@@ -179,10 +198,12 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                         scrollDirection: Axis.horizontal,
                         child: Row(
                           children: stepIndicators
-                              .map((w) => Padding(
-                                    padding: const EdgeInsets.only(left: 8.0),
-                                    child: w,
-                                  ))
+                              .map(
+                                (w) => Padding(
+                                  padding: const EdgeInsets.only(left: 8.0),
+                                  child: w,
+                                ),
+                              )
                               .toList(),
                         ),
                       )
@@ -200,7 +221,13 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
           ),
           const SizedBox(height: AppSpacing.large),
           if (_globalError.isNotEmpty) ...[
-            Text(_globalError, style: TextStyle(color: scheme.error, fontWeight: FontWeight.bold)),
+            Text(
+              _globalError,
+              style: TextStyle(
+                color: scheme.error,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             const SizedBox(height: AppSpacing.medium),
           ],
           Row(
@@ -215,7 +242,11 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
               ],
               FilledButton(
                 onPressed: _onNext,
-                child: Text(_currentStep == steps.length - 1 ? 'تأكيد وحفظ السائق' : 'التالي'),
+                child: Text(
+                  _currentStep == steps.length - 1
+                      ? 'تأكيد وحفظ السائق'
+                      : 'التالي',
+                ),
               ),
             ],
           ),
@@ -232,121 +263,127 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
 
         switch (_currentStep) {
           case 0:
-            return _responsiveGrid(
-              colCount,
-              [
-                _textFormField(
-                  controller: name,
-                  label: 'الاسم الكامل للسائق ثنائياً أو أكثر',
-                  icon: Icons.person_outline_rounded,
-                  validator: FleetValidators.validateName,
-                ),
-                _textFormField(
-                  controller: nationalId,
-                  label: 'الرقم القومي (14 رقماً مصرياً)',
-                  icon: Icons.badge_outlined,
-                  keyboardType: TextInputType.number,
-                  validator: FleetValidators.validateNationalId,
-                ),
-                _textFormField(
-                  controller: employeeCode,
-                  label: 'كود الموظف (EMP-XXX)',
-                  icon: Icons.vpn_key_outlined,
-                  validator: FleetValidators.validateEmployeeCode,
-                ),
-              ],
-            );
+            return _responsiveGrid(colCount, [
+              _textFormField(
+                controller: name,
+                label: 'الاسم الكامل للسائق ثنائياً أو أكثر',
+                icon: Icons.person_outline_rounded,
+                validator: FleetValidators.validateName,
+              ),
+              _textFormField(
+                controller: nationalId,
+                label: 'الرقم القومي (14 رقماً مصرياً)',
+                icon: Icons.badge_outlined,
+                keyboardType: TextInputType.number,
+                validator: FleetValidators.validateNationalId,
+              ),
+              _textFormField(
+                controller: employeeCode,
+                label: 'كود الموظف (EMP-XXX)',
+                icon: Icons.vpn_key_outlined,
+                validator: FleetValidators.validateEmployeeCode,
+              ),
+            ]);
           case 1:
-            return _responsiveGrid(
-              colCount,
-              [
-                _textFormField(
-                  controller: phone,
-                  label: 'رقم الهاتف الأساسي',
-                  icon: Icons.phone_android_rounded,
-                  keyboardType: TextInputType.phone,
-                  validator: (v) => FleetValidators.validatePhone(v ?? '', 'رقم الهاتف'),
-                ),
-                _textFormField(
-                  controller: emergency,
-                  label: 'رقم هاتف الطوارئ البديل',
-                  icon: Icons.contact_phone_outlined,
-                  keyboardType: TextInputType.phone,
-                  validator: (v) {
-                    final err = FleetValidators.validatePhone(v ?? '', 'رقم هاتف الطوارئ');
-                    if (err == null && phone.text.trim() == emergency.text.trim()) {
-                      return 'رقم هاتف الطوارئ لا يمكن أن يكون هو نفسه رقم الهاتف الأساسي';
-                    }
-                    return err;
-                  },
-                ),
-                _textFormField(
-                  controller: address,
-                  label: 'العنوان السكني التفصيلي',
-                  icon: Icons.home_outlined,
-                  validator: (v) => (v == null || v.trim().isEmpty) ? 'العنوان السكني مطلوب' : null,
-                ),
-              ],
-            );
+            return _responsiveGrid(colCount, [
+              _textFormField(
+                controller: phone,
+                label: 'رقم الهاتف الأساسي',
+                icon: Icons.phone_android_rounded,
+                keyboardType: TextInputType.phone,
+                validator: (v) =>
+                    FleetValidators.validatePhone(v ?? '', 'رقم الهاتف'),
+              ),
+              _textFormField(
+                controller: emergency,
+                label: 'رقم هاتف الطوارئ البديل',
+                icon: Icons.contact_phone_outlined,
+                keyboardType: TextInputType.phone,
+                validator: (v) {
+                  final err = FleetValidators.validatePhone(
+                    v ?? '',
+                    'رقم هاتف الطوارئ',
+                  );
+                  if (err == null &&
+                      phone.text.trim() == emergency.text.trim()) {
+                    return 'رقم هاتف الطوارئ لا يمكن أن يكون هو نفسه رقم الهاتف الأساسي';
+                  }
+                  return err;
+                },
+              ),
+              _textFormField(
+                controller: address,
+                label: 'العنوان السكني التفصيلي',
+                icon: Icons.home_outlined,
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'العنوان السكني مطلوب'
+                    : null,
+              ),
+            ]);
           case 2:
             final availableVehicles = _getAvailableVehicles();
-            return _responsiveGrid(
-              colCount,
-              [
-                _textFormField(
-                  controller: license,
-                  label: 'رقم رخصة القيادة',
-                  icon: Icons.card_membership_rounded,
-                  validator: FleetValidators.validateLicenseNumber,
+            return _responsiveGrid(colCount, [
+              _textFormField(
+                controller: license,
+                label: 'رقم رخصة القيادة',
+                icon: Icons.card_membership_rounded,
+                validator: FleetValidators.validateLicenseNumber,
+              ),
+              _dateFormField(
+                controller: expiry,
+                label: 'تاريخ انتهاء صلاحية الرخصة (YYYY-MM-DD)',
+                validator: (v) => FleetValidators.validateDate(
+                  v ?? '',
+                  'تاريخ انتهاء الرخصة',
                 ),
-                _dateFormField(
-                  controller: expiry,
-                  label: 'تاريخ انتهاء صلاحية الرخصة (YYYY-MM-DD)',
-                  validator: (v) => FleetValidators.validateDate(v ?? '', 'تاريخ انتهاء الرخصة'),
+              ),
+              _dateFormField(
+                controller: hireDate,
+                label: 'تاريخ تعيين الموظف بالشركة (YYYY-MM-DD)',
+                validator: (v) =>
+                    FleetValidators.validateDate(v ?? '', 'تاريخ التعيين'),
+              ),
+              DropdownButtonFormField<String>(
+                initialValue: selectedVehicleId,
+                decoration: const InputDecoration(
+                  labelText: 'المركبة المعينة (اختياري)',
+                  prefixIcon: Icon(Icons.directions_car_rounded),
+                  border: OutlineInputBorder(),
                 ),
-                _dateFormField(
-                  controller: hireDate,
-                  label: 'تاريخ تعيين الموظف بالشركة (YYYY-MM-DD)',
-                  validator: (v) => FleetValidators.validateDate(v ?? '', 'تاريخ التعيين'),
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedVehicleId,
-                  decoration: const InputDecoration(
-                    labelText: 'المركبة المعينة (اختياري)',
-                    prefixIcon: Icon(Icons.directions_car_rounded),
-                    border: OutlineInputBorder(),
+                items: [
+                  const DropdownMenuItem<String>(
+                    value: null,
+                    child: Text('غير معين (بدون مركبة)'),
                   ),
-                  items: [
-                    const DropdownMenuItem<String>(
-                      value: null,
-                      child: Text('غير معين (بدون مركبة)'),
+                  ...availableVehicles.map(
+                    (v) => DropdownMenuItem<String>(
+                      value: v.id,
+                      child: Text('${v.vehicleCode} (${v.plateNumber})'),
                     ),
-                    ...availableVehicles.map((v) => DropdownMenuItem<String>(
-                          value: v.id,
-                          child: Text('${v.vehicleCode} (${v.plateNumber})'),
-                        )),
-                  ],
-                  onChanged: (val) {
-                    setState(() {
-                      selectedVehicleId = val;
-                    });
-                  },
-                ),
-                _textFormField(
-                  controller: notes,
-                  label: 'ملاحظات إضافية عن السائق',
-                  icon: Icons.notes_rounded,
-                  maxLines: 2,
-                ),
-              ],
-            );
+                  ),
+                ],
+                onChanged: (val) {
+                  setState(() {
+                    selectedVehicleId = val;
+                  });
+                },
+              ),
+              _textFormField(
+                controller: notes,
+                label: 'ملاحظات إضافية عن السائق',
+                icon: Icons.notes_rounded,
+                maxLines: 2,
+              ),
+            ]);
           case 3:
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'يرجى مراجعة البيانات بعناية قبل التأكيد:',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.medium),
                 _reviewRow('الاسم الكامل', name.text),
@@ -361,10 +398,14 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                 _reviewRow(
                   'المركبة المعينة',
                   selectedVehicleId != null
-                      ? (widget.workspace.vehicles.cast<FleetVehicle?>().firstWhere(
-                            (v) => v?.id == selectedVehicleId,
-                            orElse: () => null,
-                          )?.vehicleCode ?? 'غير معروف')
+                      ? (widget.workspace.vehicles
+                                .cast<FleetVehicle?>()
+                                .firstWhere(
+                                  (v) => v?.id == selectedVehicleId,
+                                  orElse: () => null,
+                                )
+                                ?.vehicleCode ??
+                            'غير معروف')
                       : 'غير معين',
                 ),
                 if (notes.text.isNotEmpty) _reviewRow('الملاحظات', notes.text),
@@ -381,10 +422,12 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
     if (columns == 1) {
       return Column(
         children: children
-            .map((c) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-                  child: c,
-                ))
+            .map(
+              (c) => Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+                child: c,
+              ),
+            )
             .toList(),
       );
     }
@@ -392,10 +435,12 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
       spacing: AppSpacing.medium,
       runSpacing: AppSpacing.medium,
       children: children
-          .map((c) => SizedBox(
-                width: (MediaQuery.of(context).size.width - 320 - 48 - 16) / 2,
-                child: c,
-              ))
+          .map(
+            (c) => SizedBox(
+              width: (MediaQuery.of(context).size.width - 320 - 48 - 16) / 2,
+              child: c,
+            ),
+          )
           .toList(),
     );
   }
@@ -458,9 +503,20 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
         children: [
           SizedBox(
             width: 150,
-            child: Text('$label:', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+            child: Text(
+              '$label:',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.grey,
+              ),
+            ),
           ),
-          Expanded(child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold))),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+          ),
         ],
       ),
     );
@@ -472,7 +528,9 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
       if (_formKey.currentState!.validate()) {
         setState(() => _currentStep++);
       } else {
-        setState(() => _globalError = 'يرجى تصحيح الأخطاء في الحقول المميزة بالأحمر');
+        setState(
+          () => _globalError = 'يرجى تصحيح الأخطاء في الحقول المميزة بالأحمر',
+        );
       }
     } else {
       if (_formKey.currentState!.validate()) {

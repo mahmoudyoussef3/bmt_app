@@ -3,7 +3,6 @@ import 'package:bmt_app/apps/dashboard/features/bookings/data/datasources/bookin
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-
 import '../../features/bookings/data/datasources/supabase_bookings_datasource.dart';
 import '../../features/bookings/data/repositories/bookings_repository_impl.dart';
 import '../../features/bookings/domain/repositories/bookings_repository.dart';
@@ -15,7 +14,8 @@ import '../../features/bookings/domain/usecases/reject_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/request_reupload_usecase.dart';
 import '../../features/bookings/domain/usecases/update_booking_status_usecase.dart';
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
-import '../../features/dashboard_home/data/datasources/mock_dashboard_home_datasource.dart';
+import '../../features/dashboard_home/data/datasources/dashboard_home_datasource.dart';
+import '../../features/dashboard_home/data/datasources/supabase_dashboard_home_datasource.dart';
 import '../../features/dashboard_home/data/repositories/dashboard_home_repository_impl.dart';
 import '../../features/dashboard_home/domain/repositories/dashboard_home_repository.dart';
 import '../../features/dashboard_home/domain/usecases/get_dashboard_home_usecase.dart';
@@ -123,7 +123,6 @@ import '../../features/tickets/domain/usecases/save_internal_note_usecase.dart';
 import '../../features/tickets/domain/usecases/mark_customer_contacted_usecase.dart';
 import '../../features/tickets/domain/usecases/get_ticket_attachments_usecase.dart';
 import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
-import '../../features/finance/data/datasources/mock_finance_datasource.dart';
 import '../../features/finance/data/repositories/finance_repository_impl.dart';
 import '../../features/finance/domain/repositories/finance_repository.dart';
 import '../../features/finance/domain/usecases/cancel_subscription_usecase.dart';
@@ -154,13 +153,13 @@ import '../theme/dashboard_theme_repository.dart';
 final GetIt dashboardDi = GetIt.instance;
 
 void registerDashboardDependencies() {
-if (!dashboardDi.isRegistered<SupabaseClient>()) {
-  dashboardDi.registerLazySingleton<SupabaseClient>(
-    () => Supabase.instance.client,
-  );
-}
+  if (!dashboardDi.isRegistered<SupabaseClient>()) {
+    dashboardDi.registerLazySingleton<SupabaseClient>(
+      () => Supabase.instance.client,
+    );
+  }
 
-registerNetworkDependencies(dashboardDi);
+  registerNetworkDependencies(dashboardDi);
   if (!dashboardDi.isRegistered<DashboardThemeRepository>()) {
     dashboardDi.registerLazySingleton<DashboardThemeRepository>(
       DashboardThemeRepository.new,
@@ -175,7 +174,7 @@ registerNetworkDependencies(dashboardDi);
 
   if (!dashboardDi.isRegistered<DashboardHomeDatasource>()) {
     dashboardDi.registerLazySingleton<DashboardHomeDatasource>(
-      MockDashboardHomeDatasource.new,
+      () => SupabaseDashboardHomeDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
@@ -267,7 +266,8 @@ registerNetworkDependencies(dashboardDi);
   }
   if (!dashboardDi.isRegistered<UpdateFleetDriverStatusUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => UpdateFleetDriverStatusUseCase(dashboardDi<FleetDriversRepository>()),
+      () =>
+          UpdateFleetDriverStatusUseCase(dashboardDi<FleetDriversRepository>()),
     );
   }
   if (!dashboardDi.isRegistered<UploadDriverFileUseCase>()) {
@@ -316,7 +316,9 @@ registerNetworkDependencies(dashboardDi);
   }
   if (!dashboardDi.isRegistered<UpdateFleetVehicleStatusUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => UpdateFleetVehicleStatusUseCase(dashboardDi<FleetVehiclesRepository>()),
+      () => UpdateFleetVehicleStatusUseCase(
+        dashboardDi<FleetVehiclesRepository>(),
+      ),
     );
   }
   if (!dashboardDi.isRegistered<UploadVehicleFileUseCase>()) {
@@ -350,32 +352,42 @@ registerNetworkDependencies(dashboardDi);
   }
   if (!dashboardDi.isRegistered<GetFleetAssignmentsUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => GetFleetAssignmentsUseCase(dashboardDi<FleetAssignmentsRepository>()),
+      () =>
+          GetFleetAssignmentsUseCase(dashboardDi<FleetAssignmentsRepository>()),
     );
   }
   if (!dashboardDi.isRegistered<GetAssignmentDriversUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => GetAssignmentDriversUseCase(dashboardDi<FleetAssignmentsRepository>()),
+      () => GetAssignmentDriversUseCase(
+        dashboardDi<FleetAssignmentsRepository>(),
+      ),
     );
   }
   if (!dashboardDi.isRegistered<GetAssignmentVehiclesUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => GetAssignmentVehiclesUseCase(dashboardDi<FleetAssignmentsRepository>()),
+      () => GetAssignmentVehiclesUseCase(
+        dashboardDi<FleetAssignmentsRepository>(),
+      ),
     );
   }
   if (!dashboardDi.isRegistered<AssignFleetVehicleUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => AssignFleetVehicleUseCase(dashboardDi<FleetAssignmentsRepository>()),
+      () =>
+          AssignFleetVehicleUseCase(dashboardDi<FleetAssignmentsRepository>()),
     );
   }
   if (!dashboardDi.isRegistered<ReassignFleetVehicleUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => ReassignFleetVehicleUseCase(dashboardDi<FleetAssignmentsRepository>()),
+      () => ReassignFleetVehicleUseCase(
+        dashboardDi<FleetAssignmentsRepository>(),
+      ),
     );
   }
   if (!dashboardDi.isRegistered<RemoveFleetAssignmentUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => RemoveFleetAssignmentUseCase(dashboardDi<FleetAssignmentsRepository>()),
+      () => RemoveFleetAssignmentUseCase(
+        dashboardDi<FleetAssignmentsRepository>(),
+      ),
     );
   }
   if (!dashboardDi.isRegistered<FleetAssignmentsCubit>()) {
@@ -517,7 +529,7 @@ registerNetworkDependencies(dashboardDi);
     );
   }
 
-// Mock drivers registrations removed
+  // Mock drivers registrations removed
 
   if (!dashboardDi.isRegistered<LiveTripsDatasource>()) {
     dashboardDi.registerLazySingleton<LiveTripsDatasource>(
@@ -635,7 +647,7 @@ registerNetworkDependencies(dashboardDi);
     );
   }
 
-// Mock assignments registrations removed
+  // Mock assignments registrations removed
 
   if (!dashboardDi.isRegistered<PaymentsDatasource>()) {
     dashboardDi.registerLazySingleton<PaymentsDatasource>(
@@ -811,7 +823,6 @@ registerNetworkDependencies(dashboardDi);
     );
   }
 
-
   if (!dashboardDi.isRegistered<SubscriptionsDatasource>()) {
     dashboardDi.registerLazySingleton<SubscriptionsDatasource>(
       () => SupabaseSubscriptionsDatasource(dashboardDi<SupabaseClient>()),
@@ -888,7 +899,7 @@ registerNetworkDependencies(dashboardDi);
 
   registerTripsDependencies(dashboardDi);
 
-// Mock vehicles registrations removed
+  // Mock vehicles registrations removed
 
   if (!dashboardDi.isRegistered<SupabaseTicketsDatasource>()) {
     dashboardDi.registerLazySingleton<SupabaseTicketsDatasource>(

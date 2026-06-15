@@ -1,14 +1,22 @@
 import '../../domain/entities/seat_option.dart';
 
 class SeatOptionModel {
-  const SeatOptionModel({required this.id, required this.seatNumber, required this.availability});
+  const SeatOptionModel({
+    required this.id,
+    required this.seatNumber,
+    required this.availability,
+  });
 
   final String id;
   final int seatNumber;
   final SeatAvailability availability;
 
   SeatOption toEntity() {
-    return SeatOption(id: id, seatNumber: seatNumber, availability: availability);
+    return SeatOption(
+      id: id,
+      seatNumber: seatNumber,
+      availability: availability,
+    );
   }
 }
 
@@ -23,6 +31,7 @@ class SeatSelectionModel {
     required this.vehicleName,
     required this.vehicleType,
     required this.vehicleModel,
+    required this.tripDate,
     required this.departureTime,
     required this.arrivalTime,
     required this.driverName,
@@ -38,6 +47,7 @@ class SeatSelectionModel {
   final String vehicleName;
   final String vehicleType;
   final String vehicleModel;
+  final String tripDate;
   final String departureTime;
   final String arrivalTime;
   final String driverName;
@@ -54,6 +64,7 @@ class SeatSelectionModel {
       vehicleName: vehicleName,
       vehicleType: vehicleType,
       vehicleModel: vehicleModel,
+      tripDate: tripDate,
       departureTime: departureTime,
       arrivalTime: arrivalTime,
       driverName: driverName,

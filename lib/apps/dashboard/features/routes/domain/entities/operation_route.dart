@@ -11,6 +11,7 @@ enum OperationRouteStatus {
 
 class OperationRoute {
   final String id;
+  final String routeCode;
   final String name;
   final String startCity;
   final String endCity;
@@ -22,6 +23,7 @@ class OperationRoute {
 
   const OperationRoute({
     required this.id,
+    this.routeCode = '',
     required this.name,
     required this.startCity,
     required this.endCity,
@@ -34,6 +36,7 @@ class OperationRoute {
 
   OperationRoute copyWith({
     String? id,
+    String? routeCode,
     String? name,
     String? startCity,
     String? endCity,
@@ -45,6 +48,7 @@ class OperationRoute {
   }) {
     return OperationRoute(
       id: id ?? this.id,
+      routeCode: routeCode ?? this.routeCode,
       name: name ?? this.name,
       startCity: startCity ?? this.startCity,
       endCity: endCity ?? this.endCity,
@@ -65,6 +69,11 @@ class RouteStation {
   final String departureOffset;
   final String locationDescription;
   final String notes;
+  final double? latitude;
+  final double? longitude;
+  final bool pickupAllowed;
+  final bool dropoffAllowed;
+  final String estimatedArrivalTime;
   final int order;
 
   const RouteStation({
@@ -75,6 +84,11 @@ class RouteStation {
     this.departureOffset = '',
     this.locationDescription = '',
     this.notes = '',
+    this.latitude,
+    this.longitude,
+    this.pickupAllowed = true,
+    this.dropoffAllowed = true,
+    this.estimatedArrivalTime = '',
     required this.order,
   });
 
@@ -86,6 +100,13 @@ class RouteStation {
     String? departureOffset,
     String? locationDescription,
     String? notes,
+    double? latitude,
+    double? longitude,
+    bool clearLatitude = false,
+    bool clearLongitude = false,
+    bool? pickupAllowed,
+    bool? dropoffAllowed,
+    String? estimatedArrivalTime,
     int? order,
   }) {
     return RouteStation(
@@ -96,6 +117,11 @@ class RouteStation {
       departureOffset: departureOffset ?? this.departureOffset,
       locationDescription: locationDescription ?? this.locationDescription,
       notes: notes ?? this.notes,
+      latitude: clearLatitude ? null : latitude ?? this.latitude,
+      longitude: clearLongitude ? null : longitude ?? this.longitude,
+      pickupAllowed: pickupAllowed ?? this.pickupAllowed,
+      dropoffAllowed: dropoffAllowed ?? this.dropoffAllowed,
+      estimatedArrivalTime: estimatedArrivalTime ?? this.estimatedArrivalTime,
       order: order ?? this.order,
     );
   }

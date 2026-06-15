@@ -19,6 +19,8 @@ class _StationFormDialogState extends State<StationFormDialog> {
   late final TextEditingController _area;
   late final TextEditingController _offset;
   late final TextEditingController _notes;
+  late bool _pickupAllowed;
+  late bool _dropoffAllowed;
 
   @override
   void initState() {
@@ -27,6 +29,8 @@ class _StationFormDialogState extends State<StationFormDialog> {
     _area = TextEditingController(text: widget.station?.area ?? '');
     _offset = TextEditingController(text: widget.station?.arrivalOffset ?? '');
     _notes = TextEditingController(text: widget.station?.notes ?? '');
+    _pickupAllowed = widget.station?.pickupAllowed ?? true;
+    _dropoffAllowed = widget.station?.dropoffAllowed ?? true;
   }
 
   @override
@@ -74,6 +78,22 @@ class _StationFormDialogState extends State<StationFormDialog> {
               maxLines: 3,
               decoration: const InputDecoration(labelText: 'ملاحظات المحطة'),
             ),
+            CheckboxListTile(
+              value: _pickupAllowed,
+              onChanged: (value) {
+                setState(() => _pickupAllowed = value ?? true);
+              },
+              title: const Text('يسمح بالصعود'),
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
+            CheckboxListTile(
+              value: _dropoffAllowed,
+              onChanged: (value) {
+                setState(() => _dropoffAllowed = value ?? true);
+              },
+              title: const Text('يسمح بالنزول'),
+              controlAffinity: ListTileControlAffinity.leading,
+            ),
           ],
         ),
       ),
@@ -88,15 +108,12 @@ class _StationFormDialogState extends State<StationFormDialog> {
             widget.onSubmit(
               RouteStation(
                 id: existing?.id ?? '',
-                name: _name.text.trim().isEmpty
-                    ? 'محطة جديدة'
-                    : _name.text.trim(),
-                area: _area.text.trim().isEmpty
-                    ? 'غير محدد'
-                    : _area.text.trim(),
-                arrivalOffset: _offset.text.trim().isEmpty
-                    ? 'غير محدد'
-                    : _offset.text.trim(),
+                name: _name.text.trim(),
+                area: _area.text.trim(),
+                arrivalOffset: _offset.text.trim(),
+                estimatedArrivalTime: _offset.text.trim(),
+                pickupAllowed: _pickupAllowed,
+                dropoffAllowed: _dropoffAllowed,
                 notes: _notes.text.trim(),
                 order: existing?.order ?? 0,
               ),

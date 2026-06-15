@@ -8,19 +8,45 @@ abstract class TripsDatasource {
   Future<OperationTripModel> fetchTripById(String tripId);
   Future<OperationTripModel> createTrip(CreateTripInput input);
   Future<OperationTripModel> updateTripInfo(OperationTrip trip);
-  Future<OperationTripModel> updateTripStatus(String tripId, OperationTripStatus status);
-  Future<OperationTripModel> updateSeatState(String tripId, String seatId, TripSeatState state);
-  Future<OperationTripModel> updatePassenger(String tripId, TripPassenger passenger);
+  Future<OperationTripModel> updateTripStatus(
+    String tripId,
+    OperationTripStatus status,
+  );
+  Future<OperationTripModel> updateSeatState(
+    String tripId,
+    String seatId,
+    TripSeatState state,
+  );
+  Future<OperationTripModel> updatePassenger(
+    String tripId,
+    TripPassenger passenger,
+  );
   Future<OperationTripModel> cancelPassenger(String tripId, String passengerId);
-  Future<OperationTripModel> movePassenger(String tripId, String passengerId, String seatLabel);
+  Future<OperationTripModel> movePassenger(
+    String tripId,
+    String passengerId,
+    String seatLabel,
+  );
   Future<List<TripPricingModel>> fetchTripPricing(String tripId);
   Future<TripPricingModel> upsertTripPricing(TripPricing pricing);
-  Future<TripPricingModel> toggleTripPricingStatus(String pricingId, bool isActive);
+  Future<TripPricingModel> toggleTripPricingStatus(
+    String pricingId,
+    bool isActive,
+  );
   Future<List<TripEventModel>> fetchTripEvents(String tripId);
   Future<List<Map<String, dynamic>>> fetchActiveDrivers();
   Future<List<Map<String, dynamic>>> fetchActiveVehicles();
   Future<List<Map<String, dynamic>>> fetchActiveRoutes();
-  Future<bool> checkDuplicateTrip(String vehicleId, String date, String departureTime);
+  Future<bool> checkDuplicateTrip(
+    String vehicleId,
+    String date,
+    String departureTime,
+  );
+  Future<bool> checkDriverTripConflict(
+    String driverId,
+    String date,
+    String departureTime,
+  );
   Future<String> getDriverStatus(String driverId);
   Future<String> getVehicleStatus(String vehicleId);
   Future<String> getRouteStatus(String routeId);

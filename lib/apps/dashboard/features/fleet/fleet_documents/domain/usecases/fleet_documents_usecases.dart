@@ -17,15 +17,14 @@ class CreateFleetDocumentUseCase {
     required String fileUrl,
     required String expiryDate,
     required FleetDocumentStatus status,
-  }) =>
-      _repository.createDocument(
-        ownerId: ownerId,
-        isDriver: isDriver,
-        type: type,
-        fileUrl: fileUrl,
-        expiryDate: expiryDate,
-        status: status,
-      );
+  }) => _repository.createDocument(
+    ownerId: ownerId,
+    isDriver: isDriver,
+    type: type,
+    fileUrl: fileUrl,
+    expiryDate: expiryDate,
+    status: status,
+  );
 }
 
 class UpdateFleetDocumentUseCase {
@@ -37,14 +36,13 @@ class UpdateFleetDocumentUseCase {
     required String fileUrl,
     required String expiryDate,
     required FleetDocumentStatus status,
-  }) =>
-      _repository.updateDocument(
-        documentId: documentId,
-        isDriver: isDriver,
-        fileUrl: fileUrl,
-        expiryDate: expiryDate,
-        status: status,
-      );
+  }) => _repository.updateDocument(
+    documentId: documentId,
+    isDriver: isDriver,
+    fileUrl: fileUrl,
+    expiryDate: expiryDate,
+    status: status,
+  );
 }
 
 class DeleteFleetDocumentUseCase {

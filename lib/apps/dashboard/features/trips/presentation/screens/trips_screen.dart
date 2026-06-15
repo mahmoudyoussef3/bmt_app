@@ -183,18 +183,16 @@ class _Header extends StatelessWidget {
               children: [
                 Text(
                   'إدارة وجدولة الرحلات',
-                  style: Theme.of(context)
-                      .textTheme
-                      .headlineSmall
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.xSmall),
                 Text(
                   'لوحة التحكم التشغيلية لجدولة مسارات الأوتوبيس، تعيين السائقين وإدارة الحجوزات والأسعار.',
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyMedium
-                      ?.copyWith(color: scheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -242,7 +240,11 @@ class _DashboardKPIs extends StatelessWidget {
       ('الرحلات اليوم', listState.todayTrips, Icons.today_outlined),
       ('الرحلات القادمة', listState.upcomingTrips, Icons.schedule_rounded),
       ('الرحلات الجارية', listState.runningTrips, Icons.near_me_outlined),
-      ('الرحلات المكتملة', listState.completedTrips, Icons.check_circle_outline),
+      (
+        'الرحلات المكتملة',
+        listState.completedTrips,
+        Icons.check_circle_outline,
+      ),
     ];
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -268,10 +270,9 @@ class _DashboardKPIs extends StatelessWidget {
                   Expanded(child: Text(label)),
                   Text(
                     '$value',
-                    style: Theme.of(context)
-                        .textTheme
-                        .headlineSmall
-                        ?.copyWith(fontWeight: FontWeight.bold),
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -308,10 +309,7 @@ class _FilterBar extends StatelessWidget {
           );
           // Build filter dropdowns
           final filters = [
-            SizedBox(
-              width: 180,
-              child: _StatusFilter(state: listState),
-            ),
+            SizedBox(width: 180, child: _StatusFilter(state: listState)),
             SizedBox(
               width: 220,
               child: _StringFilter(
@@ -365,10 +363,8 @@ class _StatusFilter extends StatelessWidget {
       items: [
         const DropdownMenuItem(value: null, child: Text('الكل')),
         ...OperationTripStatus.values.map(
-          (status) => DropdownMenuItem(
-            value: status,
-            child: Text(status.label),
-          ),
+          (status) =>
+              DropdownMenuItem(value: status, child: Text(status.label)),
         ),
       ],
       onChanged: context.read<TripsListCubit>().filterStatus,
@@ -426,14 +422,16 @@ class _TripsTable extends StatelessWidget {
               children: [
                 Text(
                   'قائمة الرحلات',
-                  style: theme.textTheme.titleMedium
-                      ?.copyWith(fontWeight: FontWeight.bold),
+                  style: theme.textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const Spacer(),
                 Text(
                   '${listState.filteredTrips.length} رحلة',
-                  style: theme.textTheme.bodySmall
-                      ?.copyWith(color: scheme.onSurfaceVariant),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -441,70 +439,70 @@ class _TripsTable extends StatelessWidget {
           // Use a Scrollbar for horizontal table scrolling
           _HorizontalScroll(
             child: ConstrainedBox(
-                constraints: const BoxConstraints(minWidth: 1280),
-                child: listState.filteredTrips.isEmpty
-                    ? Padding(
-                        padding: const EdgeInsets.all(AppSpacing.large),
-                        child: Text(
-                          'لا توجد رحلات مطابقة للفلاتر الحالية',
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(color: scheme.onSurfaceVariant),
+              constraints: const BoxConstraints(minWidth: 1280),
+              child: listState.filteredTrips.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.all(AppSpacing.large),
+                      child: Text(
+                        'لا توجد رحلات مطابقة للفلاتر الحالية',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurfaceVariant,
                         ),
-                      )
-                    : DataTable(
-                        headingRowColor: WidgetStateProperty.all(
-                          scheme.surfaceContainerHighest.withAlpha(90),
-                        ),
-                        dataRowColor: WidgetStateProperty.resolveWith(
-                          (states) {
-                            if (states.contains(WidgetState.hovered)) {
-                              return scheme.primary.withAlpha(10);
-                            }
-                            return Colors.transparent;
-                          },
-                        ),
-                        columns: const [
-                          DataColumn(label: Text('رقم الرحلة')),
-                          DataColumn(label: Text('المسار')),
-                          DataColumn(label: Text('الإنطلاق')),
-                          DataColumn(label: Text('السائق')),
-                          DataColumn(label: Text('المركبة')),
-                          DataColumn(label: Text('محجوز')),
-                          DataColumn(label: Text('متاح')),
-                          DataColumn(label: Text('الحالة')),
-                          DataColumn(label: Text('إجراء')),
-                        ],
-                        rows: listState.filteredTrips.map((trip) {
-                          final detailsState =
-                              context.watch<TripDetailsCubit>().state;
-                          final selected = detailsState is TripDetailsLoaded &&
-                              detailsState.trip.id == trip.id;
-                          return DataRow(
-                            selected: selected,
-                            cells: [
-                              DataCell(Text(trip.id)),
-                              DataCell(Text(trip.route)),
-                              DataCell(Text('${trip.date} - ${trip.departure}')),
-                              DataCell(Text(trip.driver)),
-                              DataCell(Text(trip.vehicle)),
-                              DataCell(Text('${trip.bookedSeats}')),
-                              DataCell(Text('${trip.availableSeats}')),
-                              DataCell(StatusChip(label: trip.status.label)),
-                              DataCell(
-                                FilledButton.tonalIcon(
-                                  onPressed: () => onOpenTrip(trip),
-                                  icon: const Icon(Icons.open_in_new_rounded),
-                                  label: const Text('فتح'),
-                                ),
-                              ),
-                            ],
-                            onSelectChanged: (_) => onOpenTrip(trip),
-                          );
-                        }).toList(),
                       ),
-              ),
+                    )
+                  : DataTable(
+                      headingRowColor: WidgetStateProperty.all(
+                        scheme.surfaceContainerHighest.withAlpha(90),
+                      ),
+                      dataRowColor: WidgetStateProperty.resolveWith((states) {
+                        if (states.contains(WidgetState.hovered)) {
+                          return scheme.primary.withAlpha(10);
+                        }
+                        return Colors.transparent;
+                      }),
+                      columns: const [
+                        DataColumn(label: Text('رقم الرحلة')),
+                        DataColumn(label: Text('المسار')),
+                        DataColumn(label: Text('الإنطلاق')),
+                        DataColumn(label: Text('السائق')),
+                        DataColumn(label: Text('المركبة')),
+                        DataColumn(label: Text('محجوز')),
+                        DataColumn(label: Text('متاح')),
+                        DataColumn(label: Text('الحالة')),
+                        DataColumn(label: Text('إجراء')),
+                      ],
+                      rows: listState.filteredTrips.map((trip) {
+                        final detailsState = context
+                            .watch<TripDetailsCubit>()
+                            .state;
+                        final selected =
+                            detailsState is TripDetailsLoaded &&
+                            detailsState.trip.id == trip.id;
+                        return DataRow(
+                          selected: selected,
+                          cells: [
+                            DataCell(Text(trip.id)),
+                            DataCell(Text(trip.route)),
+                            DataCell(Text('${trip.date} - ${trip.departure}')),
+                            DataCell(Text(trip.driver)),
+                            DataCell(Text(trip.vehicle)),
+                            DataCell(Text('${trip.bookedSeats}')),
+                            DataCell(Text('${trip.availableSeats}')),
+                            DataCell(StatusChip(label: trip.status.label)),
+                            DataCell(
+                              FilledButton.tonalIcon(
+                                onPressed: () => onOpenTrip(trip),
+                                icon: const Icon(Icons.open_in_new_rounded),
+                                label: const Text('فتح'),
+                              ),
+                            ),
+                          ],
+                          onSelectChanged: (_) => onOpenTrip(trip),
+                        );
+                      }).toList(),
+                    ),
             ),
-          
+          ),
         ],
       ),
     );
@@ -541,17 +539,13 @@ class _TripWorkspace extends StatelessWidget {
                       children: [
                         Text(
                           'مساحة تشغيل ${trip.id}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleLarge
+                          style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: AppSpacing.xSmall),
                         Text(
                           '${trip.route} • ${trip.departure} • ${trip.driver} • ${trip.vehicle}',
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodyMedium
+                          style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
@@ -559,14 +553,19 @@ class _TripWorkspace extends StatelessWidget {
                   ),
                   _WorkspaceFact(label: 'محجوز', value: '${trip.bookedSeats}'),
                   const SizedBox(width: AppSpacing.small),
-                  _WorkspaceFact(label: 'متاح', value: '${trip.availableSeats}'),
+                  _WorkspaceFact(
+                    label: 'متاح',
+                    value: '${trip.availableSeats}',
+                  ),
                   const SizedBox(width: AppSpacing.small),
                   PopupMenuButton<OperationTripStatus>(
                     tooltip: 'تغيير الحالة التشغيلية',
                     onSelected: (nextStatus) async {
                       final updated = await cubit.updateStatus(nextStatus);
                       if (updated != null && context.mounted) {
-                        context.read<TripsListCubit>().updateTripInList(updated);
+                        context.read<TripsListCubit>().updateTripInList(
+                          updated,
+                        );
                       }
                     },
                     itemBuilder: (context) => OperationTripStatus.values
@@ -605,16 +604,16 @@ class _TripWorkspace extends StatelessWidget {
                     TripWorkspaceTab.payments => 'المدفوعات والتوثيق',
                     TripWorkspaceTab.history => 'السجل',
                   };
-                    final selected = state.tab == tab;
-                    return selected
-                        ? FilledButton(
-                            onPressed: () => cubit.changeWorkspaceTab(tab),
-                            child: Text(label),
-                          )
-                        : OutlinedButton(
-                            onPressed: () => cubit.changeWorkspaceTab(tab),
-                            child: Text(label),
-                          );
+                  final selected = state.tab == tab;
+                  return selected
+                      ? FilledButton(
+                          onPressed: () => cubit.changeWorkspaceTab(tab),
+                          child: Text(label),
+                        )
+                      : OutlinedButton(
+                          onPressed: () => cubit.changeWorkspaceTab(tab),
+                          child: Text(label),
+                        );
                 }).toList(),
               ),
               const SizedBox(height: AppSpacing.medium),
@@ -659,15 +658,15 @@ class _WorkspaceFact extends StatelessWidget {
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
           Text(
             value,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -739,64 +738,72 @@ class _OverviewTab extends StatelessWidget {
             children: [
               Text(
                 'الجدول الزمني لمحطات الوقوف والانتظار المتوقع:',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleSmall
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: AppSpacing.medium),
               _HorizontalScroll(
                 child: Row(
-                    children: trip.routePoints.map((point) {
-                      final isLast = point == trip.routePoints.last;
-                      return Row(
-                        children: [
-                          Container(
-                            constraints: const BoxConstraints(minWidth: 120),
-                            padding: const EdgeInsets.all(AppSpacing.small),
-                            decoration: BoxDecoration(
-                              color: scheme.surfaceContainerHighest.withAlpha(60),
-                              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                              border: Border.all(color: scheme.outline.withAlpha(60)),
+                  children: trip.routePoints.map((point) {
+                    final isLast = point == trip.routePoints.last;
+                    return Row(
+                      children: [
+                        Container(
+                          constraints: const BoxConstraints(minWidth: 120),
+                          padding: const EdgeInsets.all(AppSpacing.small),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest.withAlpha(60),
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.radiusSmall,
                             ),
-                            child: Column(
-                              children: [
-                                Text(
-                                  '${point.order}',
-                                  style: TextStyle(
-                                    color: scheme.primary,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  point.name,
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  point.order == 1
-                                      ? 'مغادرة ${trip.departure}'
-                                      : 'وصول متوقع',
-                                  style: Theme.of(context).textTheme.labelSmall,
-                                ),
-                              ],
+                            border: Border.all(
+                              color: scheme.outline.withAlpha(60),
                             ),
                           ),
-                          if (!isLast)
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.small),
-                              child: Icon(Icons.arrow_back_rounded,
-                                  color: scheme.onSurfaceVariant, size: 18),
+                          child: Column(
+                            children: [
+                              Text(
+                                '${point.order}',
+                                style: TextStyle(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                point.name,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                point.order == 1
+                                    ? 'مغادرة ${trip.departure}'
+                                    : 'وصول متوقع',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (!isLast)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.small,
                             ),
-                        ],
-                      );
-                    }).toList(),
-                  ),
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              color: scheme.onSurfaceVariant,
+                              size: 18,
+                            ),
+                          ),
+                      ],
+                    );
+                  }).toList(),
                 ),
-              
+              ),
             ],
           ),
         ),
@@ -809,7 +816,11 @@ class _InfoCard extends StatelessWidget {
   final String title;
   final IconData icon;
   final List<(String, String)> items;
-  const _InfoCard({required this.title, required this.icon, required this.items});
+  const _InfoCard({
+    required this.title,
+    required this.icon,
+    required this.items,
+  });
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -822,25 +833,34 @@ class _InfoCard extends StatelessWidget {
             children: [
               Icon(icon, color: scheme.primary, size: 20),
               const SizedBox(width: AppSpacing.small),
-              Text(title,
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: AppSpacing.medium),
-          ...items.map((it) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.small),
-                child: Row(
-                  children: [
-                    Text(it.$1,
-                        style: TextStyle(
-                            color: scheme.onSurfaceVariant, fontSize: 13)),
-                    const Spacer(),
-                    Text(it.$2,
-                        style: const TextStyle(
-                            fontWeight: FontWeight.w600, fontSize: 13)),
-                  ],
-                ),
-              )),
+          ...items.map(
+            (it) => Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.small),
+              child: Row(
+                children: [
+                  Text(
+                    it.$1,
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    it.$2,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -869,81 +889,84 @@ class _PassengersTab extends StatelessWidget {
       padding: EdgeInsets.zero,
       child: _HorizontalScroll(
         child: ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 1120),
-            child: DataTable(
-              headingRowColor: WidgetStateProperty.all(
-                scheme.surfaceContainerHighest.withAlpha(90),
-              ),
-              columns: headers
-                  .map((h) => DataColumn(label: Text(h)))
-                  .toList(),
-              rows: trip.passengers.isEmpty
-                  ? [
-                      DataRow(
-                        cells: [
-                          DataCell(
-                            Padding(
-                              padding: const EdgeInsets.all(AppSpacing.large),
-                              child: Text(
-                                'لا يوجد ركاب مسجلين على هذه الرحلة حالياً',
-                                style: TextStyle(
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
+          constraints: const BoxConstraints(minWidth: 1120),
+          child: DataTable(
+            headingRowColor: WidgetStateProperty.all(
+              scheme.surfaceContainerHighest.withAlpha(90),
+            ),
+            columns: headers.map((h) => DataColumn(label: Text(h))).toList(),
+            rows: trip.passengers.isEmpty
+                ? [
+                    DataRow(
+                      cells: [
+                        DataCell(
+                          Padding(
+                            padding: const EdgeInsets.all(AppSpacing.large),
+                            child: Text(
+                              'لا يوجد ركاب مسجلين على هذه الرحلة حالياً',
+                              style: TextStyle(color: scheme.onSurfaceVariant),
                             ),
                           ),
-                          ...List<DataCell>.generate(
-                            headers.length - 1,
-                            (_) => const DataCell(SizedBox.shrink()),
+                        ),
+                        ...List<DataCell>.generate(
+                          headers.length - 1,
+                          (_) => const DataCell(SizedBox.shrink()),
+                        ),
+                      ],
+                    ),
+                  ]
+                : trip.passengers.map((p) {
+                    return DataRow(
+                      cells: [
+                        DataCell(
+                          Text(
+                            p.name,
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
-                        ],
-                      ),
-                    ]
-                  : trip.passengers.map((p) {
-                      return DataRow(cells: [
-                        DataCell(Text(p.name,
-                            style: const TextStyle(fontWeight: FontWeight.bold))),
+                        ),
                         DataCell(Text(p.phone)),
                         DataCell(Text(p.seat)),
                         DataCell(Text(p.pickup)),
                         DataCell(Text(p.dropoff)),
                         DataCell(Text(p.paymentMethod)),
                         DataCell(Text(p.status)),
-                        DataCell(Row(
-                          children: [
-                            Tooltip(
-                              message: 'تعديل بيانات الراكب',
-                              child: TextButton(
-                                onPressed: () => _openPassengerDialog(
-                                    context, trip, p),
-                                child: const Text('تعديل'),
+                        DataCell(
+                          Row(
+                            children: [
+                              Tooltip(
+                                message: 'تعديل بيانات الراكب',
+                                child: TextButton(
+                                  onPressed: () =>
+                                      _openPassengerDialog(context, trip, p),
+                                  child: const Text('تعديل'),
+                                ),
                               ),
-                            ),
-                            Tooltip(
-                              message: 'إلغاء حجز هذا الراكب',
-                              child: TextButton(
-                                onPressed: () => context
-                                    .read<TripPassengersCubit>()
-                                    .cancelBooking(trip.id, p.id),
-                                child: const Text('إلغاء'),
+                              Tooltip(
+                                message: 'إلغاء حجز هذا الراكب',
+                                child: TextButton(
+                                  onPressed: () => context
+                                      .read<TripPassengersCubit>()
+                                      .cancelBooking(trip.id, p.id),
+                                  child: const Text('إلغاء'),
+                                ),
                               ),
-                            ),
-                            Tooltip(
-                              message: 'نقل الراكب إلى مقعد آخر',
-                              child: TextButton(
-                                onPressed: () => _openMoveDialog(
-                                    context, trip, p),
-                                child: const Text('نقل'),
+                              Tooltip(
+                                message: 'نقل الراكب إلى مقعد آخر',
+                                child: TextButton(
+                                  onPressed: () =>
+                                      _openMoveDialog(context, trip, p),
+                                  child: const Text('نقل'),
+                                ),
                               ),
-                            ),
-                          ],
-                        )),
-                      ]);
-                    }).toList(),
-            ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
           ),
         ),
-      
+      ),
     );
   }
 }
@@ -973,104 +996,107 @@ class _SeatsTab extends StatelessWidget {
               .toList(),
         ),
         const SizedBox(height: AppSpacing.medium),
-        Text('مخطط توزيع مقاعد الأوتوبيس (انقر على مقعد لتغيير حالته):',
-            style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          'مخطط توزيع مقاعد الأوتوبيس (انقر على مقعد لتغيير حالته):',
+          style: Theme.of(context).textTheme.bodySmall,
+        ),
         const SizedBox(height: AppSpacing.medium),
         // Use a horizontal scrollbar around seat layout
         _HorizontalScroll(
           child: Container(
-              width: 380,
-              padding: const EdgeInsets.all(AppSpacing.medium),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest.withAlpha(20),
-                border: Border.all(color: scheme.outline.withAlpha(40)),
-                borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        width: 65,
-                        height: 52,
-                        decoration: BoxDecoration(
-                          color: scheme.outline.withAlpha(40),
-                          borderRadius: BorderRadius.circular(AppTokens.radius),
-                        ),
-                        child: const Center(
-                          child: Text(
-                            'مقعد\nالسائق',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 11, fontWeight: FontWeight.bold),
+            width: 380,
+            padding: const EdgeInsets.all(AppSpacing.medium),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withAlpha(20),
+              border: Border.all(color: scheme.outline.withAlpha(40)),
+              borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+            ),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 65,
+                      height: 52,
+                      decoration: BoxDecoration(
+                        color: scheme.outline.withAlpha(40),
+                        borderRadius: BorderRadius.circular(AppTokens.radius),
+                      ),
+                      child: const Center(
+                        child: Text(
+                          'مقعد\nالسائق',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
-                      const Icon(Icons.directions_car_outlined, size: 28),
-                      const SizedBox(width: 65),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.large),
-                  const Divider(),
-                  const SizedBox(height: AppSpacing.medium),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: trip.seats.length,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      crossAxisSpacing: AppSpacing.small,
-                      mainAxisSpacing: AppSpacing.small,
-                      mainAxisExtent: 60,
                     ),
-                    itemBuilder: (context, index) {
-                      final seat = trip.seats[index];
-                      return InkWell(
-                        onTap: () => _openSeatStateDialog(
-                            context,
-                            trip,
-                            seat,
-                            context.read<TripSeatsCubit>()),
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color:
-                                _seatColor(context, seat.state).withAlpha(35),
-                            border: Border.all(
-                                color: _seatColor(context, seat.state),
-                                width: 1.5),
-                            borderRadius:
-                                BorderRadius.circular(AppTokens.radius),
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                seat.state == TripSeatState.available
-                                    ? Icons.airline_seat_recline_normal
-                                    : Icons.airline_seat_flat_rounded,
-                                size: 18,
-                                color: _seatColor(context, seat.state),
-                              ),
-                              Text(
-                                seat.label,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  color: _seatColor(context, seat.state),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+                    const Icon(Icons.directions_car_outlined, size: 28),
+                    const SizedBox(width: 65),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.large),
+                const Divider(),
+                const SizedBox(height: AppSpacing.medium),
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: trip.seats.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: AppSpacing.small,
+                    mainAxisSpacing: AppSpacing.small,
+                    mainAxisExtent: 60,
                   ),
-                ],
-              ),
+                  itemBuilder: (context, index) {
+                    final seat = trip.seats[index];
+                    return InkWell(
+                      onTap: () => _openSeatStateDialog(
+                        context,
+                        trip,
+                        seat,
+                        context.read<TripSeatsCubit>(),
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: _seatColor(context, seat.state).withAlpha(35),
+                          border: Border.all(
+                            color: _seatColor(context, seat.state),
+                            width: 1.5,
+                          ),
+                          borderRadius: BorderRadius.circular(AppTokens.radius),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              seat.state == TripSeatState.available
+                                  ? Icons.airline_seat_recline_normal
+                                  : Icons.airline_seat_flat_rounded,
+                              size: 18,
+                              color: _seatColor(context, seat.state),
+                            ),
+                            Text(
+                              seat.label,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: _seatColor(context, seat.state),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
-        
+        ),
       ],
     );
   }
@@ -1083,12 +1109,14 @@ class _PackagesTab extends StatefulWidget {
   @override
   State<_PackagesTab> createState() => _PackagesTabState();
 }
+
 class _PackagesTabState extends State<_PackagesTab> {
   @override
   void initState() {
     super.initState();
     context.read<TripPricingCubit>().loadPricing(widget.trip.id);
   }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -1106,8 +1134,7 @@ class _PackagesTabState extends State<_PackagesTab> {
               padding: const EdgeInsets.all(AppSpacing.large),
               child: Text(
                 'يرجى إضافة تسعير شريحة أولاً لتفعيل الباقات.',
-                style:
-                    TextStyle(color: scheme.onSurfaceVariant),
+                style: TextStyle(color: scheme.onSurfaceVariant),
               ),
             );
           }
@@ -1116,18 +1143,29 @@ class _PackagesTabState extends State<_PackagesTab> {
             children: [
               Text(
                 'الباقات والاشتراكات النشطة للشريحة:',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: AppSpacing.medium),
               ...state.pricing.map((pr) {
                 final configs = [
-                  (name: 'اشتراك أسبوع عمل كامل', days: 5, price: pr.fiveDaysPrice),
-                  (name: 'اشتراك أسبوعين خلال الشهر', days: 10, price: pr.tenDaysPrice),
+                  (
+                    name: 'اشتراك أسبوع عمل كامل',
+                    days: 5,
+                    price: pr.fiveDaysPrice,
+                  ),
+                  (
+                    name: 'اشتراك أسبوعين خلال الشهر',
+                    days: 10,
+                    price: pr.tenDaysPrice,
+                  ),
                   (name: 'اشتراك شهري كامل', days: 22, price: pr.monthlyPrice),
-                  (name: 'اشتراك 3 شهور مميز', days: 66, price: pr.threeMonthsPrice),
+                  (
+                    name: 'اشتراك 3 شهور مميز',
+                    days: 66,
+                    price: pr.threeMonthsPrice,
+                  ),
                 ];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: AppSpacing.medium),
@@ -1138,14 +1176,14 @@ class _PackagesTabState extends State<_PackagesTab> {
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.card_membership_rounded,
-                                color: scheme.primary),
+                            Icon(
+                              Icons.card_membership_rounded,
+                              color: scheme.primary,
+                            ),
                             const SizedBox(width: AppSpacing.small),
                             Text(
                               'الشريحة: ${pr.fromPointName} ← ${pr.toPointName}',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
+                              style: Theme.of(context).textTheme.titleMedium
                                   ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                             const SizedBox(width: AppSpacing.small),
@@ -1166,38 +1204,61 @@ class _PackagesTabState extends State<_PackagesTab> {
                             4: FlexColumnWidth(1.2),
                           },
                           border: TableBorder.all(
-                              color: scheme.outline.withAlpha(40)),
+                            color: scheme.outline.withAlpha(40),
+                          ),
                           children: [
                             TableRow(
                               decoration: BoxDecoration(
-                                  color: scheme.surfaceContainerHighest
-                                      .withAlpha(50)),
+                                color: scheme.surfaceContainerHighest.withAlpha(
+                                  50,
+                                ),
+                              ),
                               children: const [
                                 Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Text('اسم الباقة',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'اسم الباقة',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                                 Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Text('السعر الأساسي',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'السعر الأساسي',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                                 Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Text('سعر الاشتراك',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'سعر الاشتراك',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                                 Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Text('نسبة الخصم',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'نسبة الخصم',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                                 Padding(
-                                    padding: EdgeInsets.all(8),
-                                    child: Text('الوفر التشغيلي',
-                                        style: TextStyle(
-                                            fontWeight: FontWeight.bold))),
+                                  padding: EdgeInsets.all(8),
+                                  child: Text(
+                                    'الوفر التشغيلي',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
                               ],
                             ),
                             ...configs.map((c) {
@@ -1206,23 +1267,31 @@ class _PackagesTabState extends State<_PackagesTab> {
                                   ? ((basePrice - c.price) / basePrice * 100)
                                   : 0.0;
                               final savings = basePrice - c.price;
-                              return TableRow(children: [
-                                Padding(
+                              return TableRow(
+                                children: [
+                                  Padding(
                                     padding: const EdgeInsets.all(8),
-                                    child: Text(c.name)),
-                                Padding(
-                                    padding: const EdgeInsets.all(8),
-                                    child: Text(
-                                        '${basePrice.toStringAsFixed(0)} ج.م')),
-                                Padding(
+                                    child: Text(c.name),
+                                  ),
+                                  Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: Text(
-                                        '${c.price.toStringAsFixed(0)} ج.م')),
-                                Padding(
+                                      '${basePrice.toStringAsFixed(0)} ج.م',
+                                    ),
+                                  ),
+                                  Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: Text(
-                                        '${discPercent.toStringAsFixed(0)}%')),
-                                Padding(
+                                      '${c.price.toStringAsFixed(0)} ج.م',
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8),
+                                    child: Text(
+                                      '${discPercent.toStringAsFixed(0)}%',
+                                    ),
+                                  ),
+                                  Padding(
                                     padding: const EdgeInsets.all(8),
                                     child: Text(
                                       '${savings.toStringAsFixed(0)} ج.م',
@@ -1232,8 +1301,10 @@ class _PackagesTabState extends State<_PackagesTab> {
                                             : scheme.error,
                                         fontWeight: FontWeight.bold,
                                       ),
-                                    )),
-                              ]);
+                                    ),
+                                  ),
+                                ],
+                              );
                             }),
                           ],
                         ),
@@ -1264,26 +1335,25 @@ class _PaymentsTab extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.payment_rounded,
-                size: 48, color: scheme.onSurfaceVariant.withAlpha(120)),
+            Icon(
+              Icons.payment_rounded,
+              size: 48,
+              color: scheme.onSurfaceVariant.withAlpha(120),
+            ),
             const SizedBox(height: AppSpacing.medium),
             Text(
               'لا توجد مدفوعات مرتبطة بهذه الرحلة حتى الآن',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.bold,
+              ),
             ),
             const SizedBox(height: AppSpacing.xSmall),
             Text(
               'سيتم عرض قائمة المدفوعات والتوثيقات فور حجز الركاب وتأكيد عمليات الدفع.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant.withAlpha(180)),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant.withAlpha(180),
+              ),
             ),
           ],
         ),
@@ -1311,37 +1381,36 @@ class _HistoryTab extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: trip.events
-          .map((event) => Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    event.done
-                        ? Icons.check_circle_rounded
-                        : Icons.radio_button_unchecked_rounded,
-                    color: scheme.primary,
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  Expanded(
-                    child: Padding(
-                      padding:
-                          const EdgeInsets.only(bottom: AppSpacing.medium),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            event.title,
-                            style: Theme.of(context)
-                                .textTheme
-                                .titleSmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                          Text('${event.time} - ${event.description}'),
-                        ],
-                      ),
+          .map(
+            (event) => Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  event.done
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: scheme.primary,
+                ),
+                const SizedBox(width: AppSpacing.small),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          event.title,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        Text('${event.time} - ${event.description}'),
+                      ],
                     ),
                   ),
-                ],
-              ))
+                ),
+              ],
+            ),
+          )
           .toList(),
     );
   }
@@ -1411,14 +1480,14 @@ void _openPassengerDialog(
           FilledButton(
             onPressed: () {
               context.read<TripPassengersCubit>().editPassenger(
-                    trip.id,
-                    passenger.copyWith(
-                      name: name.text,
-                      phone: phone.text,
-                      pickup: pickup.text,
-                      dropoff: dropoff.text,
-                    ),
-                  );
+                trip.id,
+                passenger.copyWith(
+                  name: name.text,
+                  phone: phone.text,
+                  pickup: pickup.text,
+                  dropoff: dropoff.text,
+                ),
+              );
               Navigator.of(context).pop();
             },
             child: const Text('حفظ'),
@@ -1486,7 +1555,11 @@ void _openMoveDialog(
                 );
                 if (result == null) {
                   final s = cubit.state;
-                  setState(() => error = s is TripPassengersError ? s.message : 'تعذر نقل الراكب');
+                  setState(
+                    () => error = s is TripPassengersError
+                        ? s.message
+                        : 'تعذر نقل الراكب',
+                  );
                   return;
                 }
                 if (context.mounted) Navigator.of(context).pop();

@@ -14,10 +14,10 @@ class FleetHistoryItem {
   });
 
   Map<String, dynamic> toJson() => {
-        'title': title,
-        'date': date,
-        'description': description,
-      };
+    'title': title,
+    'date': date,
+    'description': description,
+  };
 
   factory FleetHistoryItem.fromJson(Map<String, dynamic> json) {
     return FleetHistoryItem(

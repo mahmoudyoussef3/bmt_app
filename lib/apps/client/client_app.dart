@@ -114,14 +114,18 @@ class _ClientAppState extends State<ClientApp> {
 
               home: BlocBuilder<OnboardingCubit, OnboardingState>(
                 builder: (context, onboardingState) {
-                  if (onboardingState is OnboardingLoading || onboardingState is OnboardingInitial) {
+                  if (onboardingState is OnboardingLoading ||
+                      onboardingState is OnboardingInitial) {
                     return Scaffold(
-                      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+                      backgroundColor: Theme.of(
+                        context,
+                      ).scaffoldBackgroundColor,
                       body: const Center(child: CircularProgressIndicator()),
                     );
                   }
 
-                  if (onboardingState is OnboardingLoaded && !onboardingState.hasSeenOnboarding) {
+                  if (onboardingState is OnboardingLoaded &&
+                      !onboardingState.hasSeenOnboarding) {
                     return const OnboardingScreen();
                   }
 
@@ -141,164 +145,173 @@ class _ClientAppState extends State<ClientApp> {
                 },
               ),
 
-            routes: {
-              '/home': (_) => _buildClientShell(),
+              routes: {
+                '/home': (_) => _buildClientShell(),
 
-              // Authentication Screens
-              AuthRoutes.welcome: (_) => _buildAuthScope(const WelcomeScreen()),
-              AuthRoutes.signIn: (_) => _buildAuthScope(const SignInScreen()),
-              AuthRoutes.signUp: (_) => _buildAuthScope(const SignUpScreen()),
-              AuthRoutes.forgotPassword: (_) => _buildForgotPasswordScope(const ForgotPasswordScreen()),
+                // Authentication Screens
+                AuthRoutes.welcome: (_) =>
+                    _buildAuthScope(const WelcomeScreen()),
+                AuthRoutes.signIn: (_) => _buildAuthScope(const SignInScreen()),
+                AuthRoutes.signUp: (_) => _buildAuthScope(const SignUpScreen()),
+                AuthRoutes.forgotPassword: (_) =>
+                    _buildForgotPasswordScope(const ForgotPasswordScreen()),
 
-              AuthRoutes.success: (_) => _buildClientShell(),
+                AuthRoutes.success: (_) => _buildClientShell(),
 
-              // Booking
-              BookingRoutes.search: (context) => _buildBookingScope(
-                SearchTripScreen(
-                  initialQuery: BookingSearchQuery.fromArguments(
-                    ModalRoute.of(context)?.settings.arguments,
+                // Booking
+                BookingRoutes.search: (context) => _buildBookingScope(
+                  SearchTripScreen(
+                    initialQuery: BookingSearchQuery.fromArguments(
+                      ModalRoute.of(context)?.settings.arguments,
+                    ),
                   ),
                 ),
-              ),
 
-              BookingRoutes.routeSelection: (_) =>
-                  _buildBookingScope(const RouteSelectionScreen()),
-              BookingRoutes.popularRoutes: (_) =>
-                  _buildBookingScope(const PopularRoutesScreen()),
-              BookingRoutes.mapSelection: (_) =>
-                  _buildBookingScope(const MapRouteSelectionScreen()),
-              BookingRoutes.availableTrips: (_) =>
-                  _buildBookingScope(const AvailableTripsScreen()),
-              BookingRoutes.vehicleListing: (_) =>
-                  _buildBookingScope(const VehicleListingScreen()),
+                BookingRoutes.routeSelection: (_) =>
+                    _buildBookingScope(const RouteSelectionScreen()),
+                BookingRoutes.popularRoutes: (_) =>
+                    _buildBookingScope(const PopularRoutesScreen()),
+                BookingRoutes.mapSelection: (_) =>
+                    _buildBookingScope(const MapRouteSelectionScreen()),
+                BookingRoutes.availableTrips: (_) =>
+                    _buildBookingScope(const AvailableTripsScreen()),
+                BookingRoutes.vehicleListing: (_) =>
+                    _buildBookingScope(const VehicleListingScreen()),
 
-              BookingRoutes.vehicleDetails: (context) {
-                final args = ModalRoute.of(context)?.settings.arguments;
-                String? vehicleId;
+                BookingRoutes.vehicleDetails: (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments;
+                  String? vehicleId;
 
-                if (args is Map) {
-                  vehicleId = args['vehicleId']?.toString();
-                }
+                  if (args is Map) {
+                    vehicleId = args['vehicleId']?.toString();
+                  }
 
-                return _buildBookingScope(
-                  VehicleDetailsScreen(vehicleId: vehicleId),
-                );
-              },
+                  return _buildBookingScope(
+                    VehicleDetailsScreen(vehicleId: vehicleId),
+                  );
+                },
 
-              '/daily-booking': (_) =>
-                  _buildBookingScope(const DailyBookingFlowScreen()),
-              '/seat-selection': (_) =>
-                  _buildSeatSelectionScope(const SeatSelectionScreen()),
-              '/seat-release': (_) =>
-                  _buildSeatReleaseScope(const SeatReleaseScreen()),
+                '/daily-booking': (_) =>
+                    _buildBookingScope(const DailyBookingFlowScreen()),
+                '/seat-selection': (_) =>
+                    _buildSeatSelectionScope(const SeatSelectionScreen()),
+                '/seat-release': (_) =>
+                    _buildSeatReleaseScope(const SeatReleaseScreen()),
 
-              '/payment-demo': (context) {
-                final args = ModalRoute.of(context)?.settings.arguments;
-                final checkoutData = args is Map
-                    ? PaymentCheckoutData(
-                        tripId: args['tripId']?.toString() ?? '',
-                        pickupPoint:
-                            args['pickupPoint']?.toString() ?? 'Banha Station',
-                        destination:
-                            args['destination']?.toString() ?? 'Smart Village',
-                        vehicleNumber:
-                            args['vehicleNumber']?.toString() ?? 'MB-15-2847',
-                        departureTime:
-                            args['departureTime']?.toString() ?? '8:40 AM',
-                        arrivalTime:
-                            args['arrivalTime']?.toString() ?? '9:20 AM',
-                        selectedSeat: args['selectedSeat']?.toString() ?? '6',
-                        driverName:
-                            args['driverName']?.toString() ?? 'Ahmed Mohamed',
-                      )
-                    : PaymentCheckoutData(
-                        tripId: '',
-                        pickupPoint: 'Banha Station',
-                        destination: 'Smart Village',
-                        vehicleNumber: 'MB-15-2847',
-                        departureTime: '8:40 AM',
-                        arrivalTime: '9:20 AM',
-                        selectedSeat: '6',
-                        driverName: 'Ahmed Mohamed',
-                      );
+                '/payment-demo': (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments;
+                  final checkoutData = args is Map
+                      ? PaymentCheckoutData(
+                          tripId: args['tripId']?.toString() ?? '',
+                          pickupPoint: args['pickupPoint']?.toString() ?? '',
+                          destination: args['destination']?.toString() ?? '',
+                          vehicleNumber:
+                              args['vehicleNumber']?.toString() ?? '',
+                          tripDate: args['tripDate']?.toString() ?? '',
+                          departureTime:
+                              args['departureTime']?.toString() ?? '',
+                          arrivalTime: args['arrivalTime']?.toString() ?? '',
+                          selectedSeatId:
+                              args['selectedSeatId']?.toString() ?? '',
+                          selectedSeat: args['selectedSeat']?.toString() ?? '',
+                          driverName: args['driverName']?.toString() ?? '',
+                        )
+                      : PaymentCheckoutData(
+                          tripId: '',
+                          pickupPoint: '',
+                          destination: '',
+                          vehicleNumber: '',
+                          tripDate: '',
+                          departureTime: '',
+                          arrivalTime: '',
+                          selectedSeatId: '',
+                          selectedSeat: '',
+                          driverName: '',
+                        );
 
-                return _buildPaymentScope(
-                  PaymentCheckoutScreen(checkoutData: checkoutData),
-                );
-              },
+                  return _buildPaymentScope(
+                    PaymentCheckoutScreen(checkoutData: checkoutData),
+                  );
+                },
 
-              '/subscription': (_) =>
-                  _buildPackagesScope(const SubscriptionScreen()),
+                '/subscription': (_) =>
+                    _buildPackagesScope(const SubscriptionScreen()),
 
-              '/subscription-confirmation': (_) => _buildPackagesScope(
-                const SubscriptionConfirmationScreen(
-                  pickup: '',
-                  destination: '',
-                  time: '',
-                  planName: 'Monthly',
-                  price: 'EGP 1,200/month',
+                '/subscription-confirmation': (_) => _buildPackagesScope(
+                  const SubscriptionConfirmationScreen(
+                    pickup: '',
+                    destination: '',
+                    time: '',
+                    planName: 'Monthly',
+                    price: 'EGP 1,200/month',
+                  ),
                 ),
-              ),
 
-              // Trips
-              TripsRoutes.myTrips: (context) => _buildTripsScope(
-                MyTripsScreen(
-                  onOpenRoute: (route, [arguments]) {
-                    Navigator.of(
-                      context,
-                    ).pushNamed(route, arguments: arguments);
-                  },
+                // Trips
+                TripsRoutes.myTrips: (context) => _buildTripsScope(
+                  MyTripsScreen(
+                    onOpenRoute: (route, [arguments]) {
+                      Navigator.of(
+                        context,
+                      ).pushNamed(route, arguments: arguments);
+                    },
+                  ),
                 ),
-              ),
 
-              TripsRoutes.tripDetails: (context) {
-                final args = ModalRoute.of(context)?.settings.arguments;
-                String? tripId;
+                TripsRoutes.tripDetails: (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments;
+                  String? tripId;
 
-                if (args is Map) {
-                  tripId = args['tripId']?.toString();
-                }
+                  if (args is Map) {
+                    tripId = args['tripId']?.toString();
+                  }
 
-                return _buildTripsScope(TripDetailsScreen(tripId: tripId));
-              },
+                  return _buildTripsScope(TripDetailsScreen(tripId: tripId));
+                },
 
-              // Other Features
-              '/tracking': (_) => _buildTrackingScope(const TrackingScreen()),
-              '/support': (_) =>
-                  _buildSupportScope(const SupportCenterScreen()),
-              '/create_ticket': (context) {
-                final args = ModalRoute.of(context)?.settings.arguments as String?;
-                return _buildSupportScope(CreateSupportTicketScreen(initialCategory: args));
-              },
-              '/ticket_details': (context) {
-                final args = ModalRoute.of(context)?.settings.arguments as String;
-                return _buildSupportScope(SupportTicketDetailsScreen(ticketId: args));
-              },
-              
-              '/communication': (_) =>
-                  _buildCommunicationScope(const CommunicationScreen()),
-              '/rewards': (_) =>
-                  _buildReferralRewardsScope(const ReferralRewardsScreen()),
-              '/loyalty': (_) => _buildLoyaltyScope(const LoyaltyScreen()),
-              '/settings': (_) => _buildSettingsScope(const SettingsScreen()),
+                // Other Features
+                '/tracking': (_) => _buildTrackingScope(const TrackingScreen()),
+                '/support': (_) =>
+                    _buildSupportScope(const SupportCenterScreen()),
+                '/create_ticket': (context) {
+                  final args =
+                      ModalRoute.of(context)?.settings.arguments as String?;
+                  return _buildSupportScope(
+                    CreateSupportTicketScreen(initialCategory: args),
+                  );
+                },
+                '/ticket_details': (context) {
+                  final args =
+                      ModalRoute.of(context)?.settings.arguments as String;
+                  return _buildSupportScope(
+                    SupportTicketDetailsScreen(ticketId: args),
+                  );
+                },
 
-              '/profile': (context) => _buildProfileScope(
-                ProfileScreen(
-                  onOpenRoute: (route, [arguments]) {
-                    Navigator.of(
-                      context,
-                    ).pushNamed(route, arguments: arguments);
-                  },
+                '/communication': (_) =>
+                    _buildCommunicationScope(const CommunicationScreen()),
+                '/rewards': (_) =>
+                    _buildReferralRewardsScope(const ReferralRewardsScreen()),
+                '/loyalty': (_) => _buildLoyaltyScope(const LoyaltyScreen()),
+                '/settings': (_) => _buildSettingsScope(const SettingsScreen()),
+
+                '/profile': (context) => _buildProfileScope(
+                  ProfileScreen(
+                    onOpenRoute: (route, [arguments]) {
+                      Navigator.of(
+                        context,
+                      ).pushNamed(route, arguments: arguments);
+                    },
+                  ),
                 ),
-              ),
 
-              // Other Versions
-              '/driver': (_) => const CaptainAppShell(),
-              '/admin': (_) => const DashboardWebApp(),
-            },
-          ),
-        );
-      },
+                // Other Versions
+                '/driver': (_) => const CaptainAppShell(),
+                '/admin': (_) => const DashboardWebApp(),
+              },
+            ),
+          );
+        },
       ),
     );
   }

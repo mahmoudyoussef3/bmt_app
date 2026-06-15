@@ -91,7 +91,11 @@ class FleetVehiclesRepositoryImpl implements FleetVehiclesRepository {
     try {
       final datasource = _datasource;
       if (datasource is SupabaseFleetDatasource) {
-        return await datasource.uploadFile(bucket, path, Uint8List.fromList(bytes));
+        return await datasource.uploadFile(
+          bucket,
+          path,
+          Uint8List.fromList(bytes),
+        );
       }
       throw Exception('رفع الملفات متاح فقط مع Supabase');
     } catch (e) {

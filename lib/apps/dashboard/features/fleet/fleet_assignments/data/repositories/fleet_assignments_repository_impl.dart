@@ -64,14 +64,17 @@ class FleetAssignmentsRepositoryImpl implements FleetAssignmentsRepository {
       }
 
       final hasActiveDriverAssign = workspace.assignments.any(
-        (a) => a.driverId == driverId && a.status == FleetAssignmentStatus.active,
+        (a) =>
+            a.driverId == driverId && a.status == FleetAssignmentStatus.active,
       );
       if (hasActiveDriverAssign) {
         throw Exception('السائق مرتبط بالفعل بتعيين نشط.');
       }
 
       final hasActiveVehicleAssign = workspace.assignments.any(
-        (a) => a.vehicleId == vehicleId && a.status == FleetAssignmentStatus.active,
+        (a) =>
+            a.vehicleId == vehicleId &&
+            a.status == FleetAssignmentStatus.active,
       );
       if (hasActiveVehicleAssign) {
         throw Exception('المركبة مرتبطة بالفعل بتعيين نشط لسائق آخر.');
@@ -81,21 +84,29 @@ class FleetAssignmentsRepositoryImpl implements FleetAssignmentsRepository {
         (doc) => doc.status == FleetDocumentStatus.expired,
       );
       if (hasExpiredDriverDocs) {
-        throw Exception('لا يمكن تعيين السائق لوجود وثائق شخصية منتهية الصلاحية.');
+        throw Exception(
+          'لا يمكن تعيين السائق لوجود وثائق شخصية منتهية الصلاحية.',
+        );
       }
 
       final hasExpiredVehicleDocs = workspace.documents.any(
-        (doc) => doc.ownerId == vehicleId && doc.status == FleetDocumentStatus.expired,
+        (doc) =>
+            doc.ownerId == vehicleId &&
+            doc.status == FleetDocumentStatus.expired,
       );
       if (hasExpiredVehicleDocs) {
-        throw Exception('لا يمكن تعيين المركبة لوجود رخصة أو وثائق منتهية الصلاحية.');
+        throw Exception(
+          'لا يمكن تعيين المركبة لوجود رخصة أو وثائق منتهية الصلاحية.',
+        );
       }
 
       return await _datasource.assignDriverToVehicle(driverId, vehicleId);
     } on Exception catch (e) {
       throw Exception(e.toString().replaceAll('Exception: ', ''));
     } catch (_) {
-      throw Exception('تعذر إنشاء التعيين. تأكد أن السائق والمركبة غير مرتبطين.');
+      throw Exception(
+        'تعذر إنشاء التعيين. تأكد أن السائق والمركبة غير مرتبطين.',
+      );
     }
   }
 
@@ -127,10 +138,14 @@ class FleetAssignmentsRepositoryImpl implements FleetAssignmentsRepository {
       }
 
       final hasExpiredVehicleDocs = workspace.documents.any(
-        (doc) => doc.ownerId == newVehicleId && doc.status == FleetDocumentStatus.expired,
+        (doc) =>
+            doc.ownerId == newVehicleId &&
+            doc.status == FleetDocumentStatus.expired,
       );
       if (hasExpiredVehicleDocs) {
-        throw Exception('لا يمكن التعيين للمركبة الجديدة لوجود وثائق منتهية الصلاحية.');
+        throw Exception(
+          'لا يمكن التعيين للمركبة الجديدة لوجود وثائق منتهية الصلاحية.',
+        );
       }
 
       return await _datasource.reassignVehicle(assignmentId, newVehicleId);

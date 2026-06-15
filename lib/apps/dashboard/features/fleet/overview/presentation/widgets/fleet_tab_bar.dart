@@ -101,9 +101,9 @@ class _DashboardTabButton extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: selected ? scheme.onPrimary : scheme.onSurface,
-                    fontWeight: FontWeight.w900,
-                  ),
+                color: selected ? scheme.onPrimary : scheme.onSurface,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ),

@@ -10,13 +10,15 @@ class GetFleetDriversUseCase {
 class CreateFleetDriverUseCase {
   final FleetDriversRepository _repository;
   const CreateFleetDriverUseCase(this._repository);
-  Future<FleetDriver> call(FleetDriver driver) => _repository.createDriver(driver);
+  Future<FleetDriver> call(FleetDriver driver) =>
+      _repository.createDriver(driver);
 }
 
 class UpdateFleetDriverUseCase {
   final FleetDriversRepository _repository;
   const UpdateFleetDriverUseCase(this._repository);
-  Future<FleetDriver> call(FleetDriver driver) => _repository.updateDriver(driver);
+  Future<FleetDriver> call(FleetDriver driver) =>
+      _repository.updateDriver(driver);
 }
 
 class UpdateFleetDriverStatusUseCase {

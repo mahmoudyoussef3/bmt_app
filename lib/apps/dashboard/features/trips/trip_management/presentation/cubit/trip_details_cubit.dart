@@ -38,14 +38,8 @@ class TripDetailsLoaded extends TripDetailsState {
     this.tab = TripWorkspaceTab.overview,
   });
 
-  TripDetailsLoaded copyWith({
-    OperationTrip? trip,
-    TripWorkspaceTab? tab,
-  }) {
-    return TripDetailsLoaded(
-      trip: trip ?? this.trip,
-      tab: tab ?? this.tab,
-    );
+  TripDetailsLoaded copyWith({OperationTrip? trip, TripWorkspaceTab? tab}) {
+    return TripDetailsLoaded(trip: trip ?? this.trip, tab: tab ?? this.tab);
   }
 }
 
@@ -58,10 +52,10 @@ class TripDetailsCubit extends Cubit<TripDetailsState> {
     required GetTripDetailsUseCase getTripDetails,
     required UpdateTripStatusUseCase updateTripStatus,
     required UpdateTripInfoUseCase updateTripInfo,
-  })  : _getTripDetails = getTripDetails,
-        _updateTripStatus = updateTripStatus,
-        _updateTripInfo = updateTripInfo,
-        super(const TripDetailsInitial());
+  }) : _getTripDetails = getTripDetails,
+       _updateTripStatus = updateTripStatus,
+       _updateTripInfo = updateTripInfo,
+       super(const TripDetailsInitial());
 
   Future<void> showDetails(OperationTrip trip) async {
     emit(TripDetailsLoaded(trip: trip));

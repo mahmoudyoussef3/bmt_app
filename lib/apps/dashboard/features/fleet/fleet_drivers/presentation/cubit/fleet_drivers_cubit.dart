@@ -20,13 +20,13 @@ class FleetDriversCubit extends Cubit<FleetDriversState> {
     required UpdateFleetDriverStatusUseCase updateDriverStatus,
     required UploadDriverFileUseCase uploadFile,
     required DeleteDriverFileUseCase deleteFile,
-  })  : _getDrivers = getDrivers,
-        _createDriver = createDriver,
-        _updateDriver = updateDriver,
-        _updateDriverStatus = updateDriverStatus,
-        _uploadFile = uploadFile,
-        _deleteFile = deleteFile,
-        super(const FleetDriversLoading());
+  }) : _getDrivers = getDrivers,
+       _createDriver = createDriver,
+       _updateDriver = updateDriver,
+       _updateDriverStatus = updateDriverStatus,
+       _uploadFile = uploadFile,
+       _deleteFile = deleteFile,
+       super(const FleetDriversLoading());
 
   Future<void> load() async {
     emit(const FleetDriversLoading());
@@ -82,9 +82,14 @@ class FleetDriversCubit extends Cubit<FleetDriversState> {
     }
   }
 
-  Future<void> updateDriverStatus(String driverId, FleetDriverStatus status) async {
+  Future<void> updateDriverStatus(
+    String driverId,
+    FleetDriverStatus status,
+  ) async {
     try {
-      debugPrint('[FleetDriversCubit] Updating status of $driverId to ${status.name}');
+      debugPrint(
+        '[FleetDriversCubit] Updating status of $driverId to ${status.name}',
+      );
       await _updateDriverStatus(driverId, status);
       await _reload();
     } catch (error) {
@@ -101,9 +106,15 @@ class FleetDriversCubit extends Cubit<FleetDriversState> {
     await _reload();
   }
 
-  Future<String?> uploadDriverFile(String bucket, String path, List<int> bytes) async {
+  Future<String?> uploadDriverFile(
+    String bucket,
+    String path,
+    List<int> bytes,
+  ) async {
     try {
-      debugPrint('[FleetDriversCubit] Uploading file: bucket=$bucket path=$path');
+      debugPrint(
+        '[FleetDriversCubit] Uploading file: bucket=$bucket path=$path',
+      );
       return await _uploadFile(bucket, path, bytes);
     } catch (error) {
       debugPrint('[FleetDriversCubit] Upload error: $error');

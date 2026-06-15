@@ -6,7 +6,10 @@ abstract class FleetDriversRepository {
   Future<List<FleetDriver>> getDrivers();
   Future<FleetDriver> createDriver(FleetDriver driver);
   Future<FleetDriver> updateDriver(FleetDriver driver);
-  Future<FleetDriver> updateDriverStatus(String driverId, FleetDriverStatus status);
+  Future<FleetDriver> updateDriverStatus(
+    String driverId,
+    FleetDriverStatus status,
+  );
   Future<String> uploadFile(String bucket, String path, List<int> bytes);
   Future<void> deleteFile(String bucket, String path);
 }

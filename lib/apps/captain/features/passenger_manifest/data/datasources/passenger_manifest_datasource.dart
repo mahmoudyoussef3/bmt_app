@@ -14,6 +14,18 @@ class PassengerManifestDataSource {
         .eq('trip_id', tripId)
         .order('created_at', ascending: true);
 
+    final pointsResponse = await _supabase
+        .from('trip_route_points')
+        .select('route_point_id, point_name, arrival_offset, departure_offset')
+        .eq('trip_id', tripId);
+    final pickupTimesByName = {
+      for (final point in pointsResponse)
+        (point['point_name']?.toString() ??
+            ''): point['departure_offset']?.toString().isNotEmpty == true
+            ? point['departure_offset'].toString()
+            : point['arrival_offset']?.toString() ?? '',
+    };
+
     return (response as List).map((e) {
       final statusString = e['status'] as String? ?? 'pending';
       PassengerBoardingStatus status;
@@ -42,7 +54,8 @@ class PassengerManifestDataSource {
         seat: e['seat_label'] as String? ?? '',
         pickupPoint: e['pickup_point_name'] as String? ?? '',
         destination: e['dropoff_point_name'] as String? ?? '',
-        pickupTime: e['pickup_time']?.toString() ?? '',
+        pickupTime:
+            pickupTimesByName[e['pickup_point_name']?.toString() ?? ''] ?? '',
         phone: e['phone'] as String? ?? '',
         status: status,
       );

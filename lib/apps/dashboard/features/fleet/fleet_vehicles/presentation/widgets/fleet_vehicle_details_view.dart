@@ -31,7 +31,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final vehicleDocs = workspace.documents.where((d) => d.ownerId == vehicle.id).toList();
+    final vehicleDocs = workspace.documents
+        .where((d) => d.ownerId == vehicle.id)
+        .toList();
     final driverName = _driverName(vehicle.currentDriverId);
 
     return Column(
@@ -55,7 +57,11 @@ class FleetVehicleDetailsView extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                   border: Border.all(color: scheme.outline.withAlpha(90)),
                 ),
-                child: Icon(Icons.directions_bus_rounded, color: scheme.primary, size: 28),
+                child: Icon(
+                  Icons.directions_bus_rounded,
+                  color: scheme.primary,
+                  size: 28,
+                ),
               ),
               const SizedBox(width: AppSpacing.medium),
               Expanded(
@@ -64,9 +70,12 @@ class FleetVehicleDetailsView extends StatelessWidget {
                   children: [
                     Text(
                       '${vehicle.brand} ${vehicle.model} (${vehicle.vehicleNumber})',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
-                    Text('رقم اللوحة: ${vehicle.plateNumber} | السعة الركابية: ${vehicle.capacity} مقعد'),
+                    Text(
+                      'رقم اللوحة: ${vehicle.plateNumber} | السعة الركابية: ${vehicle.capacity} مقعد',
+                    ),
                   ],
                 ),
               ),
@@ -92,9 +101,7 @@ class FleetVehicleDetailsView extends StatelessWidget {
                       headerWidgets.last,
                     ],
                   )
-                : Row(
-                    children: headerWidgets,
-                  );
+                : Row(children: headerWidgets);
           },
         ),
         const SizedBox(height: AppSpacing.large),
@@ -113,7 +120,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
                         const SizedBox(height: AppSpacing.medium),
                         _infoCard(context, vehicle, driverName),
                         const SizedBox(height: AppSpacing.medium),
-                        FleetSeatLayoutVisualizer(seatConfig: vehicle.seatConfiguration),
+                        FleetSeatLayoutVisualizer(
+                          seatConfig: vehicle.seatConfiguration,
+                        ),
                         const SizedBox(height: AppSpacing.medium),
                         FleetDocumentManager(
                           ownerId: vehicle.id,
@@ -157,7 +166,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
                   const SizedBox(height: AppSpacing.medium),
                   _infoCard(context, vehicle, driverName),
                   const SizedBox(height: AppSpacing.medium),
-                  FleetSeatLayoutVisualizer(seatConfig: vehicle.seatConfiguration),
+                  FleetSeatLayoutVisualizer(
+                    seatConfig: vehicle.seatConfiguration,
+                  ),
                   const SizedBox(height: AppSpacing.medium),
                   FleetDocumentManager(
                     ownerId: vehicle.id,
@@ -191,7 +202,11 @@ class FleetVehicleDetailsView extends StatelessWidget {
     );
   }
 
-  Widget _infoCard(BuildContext context, FleetVehicle vehicle, String driverName) {
+  Widget _infoCard(
+    BuildContext context,
+    FleetVehicle vehicle,
+    String driverName,
+  ) {
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
@@ -199,7 +214,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
         children: [
           Text(
             'المعلومات الأساسية والتشغيلية',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppSpacing.medium),
           _detailRow('كود المركبة', vehicle.vehicleCode),
@@ -211,7 +228,10 @@ class FleetVehicleDetailsView extends StatelessWidget {
           _detailRow('لون المركبة', vehicle.color),
           _detailRow('السعة الركابية', '${vehicle.capacity} مقعد'),
           _detailRow('نوع تخطيط المقاعد', vehicle.seatLayoutType),
-          _detailRow('السائق الحالي', driverName.isEmpty ? 'بدون سائق حالياً' : driverName),
+          _detailRow(
+            'السائق الحالي',
+            driverName.isEmpty ? 'بدون سائق حالياً' : driverName,
+          ),
           _detailRow('حالة المركبة', vehicle.status.label),
           _detailRow('انتهاء الرخصة', vehicle.licenseExpiry),
           _detailRow('انتهاء التأمين', vehicle.insuranceExpiry),
@@ -227,7 +247,10 @@ class FleetVehicleDetailsView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppSpacing.xSmall),
-            Text(vehicle.notes, style: const TextStyle(fontStyle: FontStyle.italic)),
+            Text(
+              vehicle.notes,
+              style: const TextStyle(fontStyle: FontStyle.italic),
+            ),
           ],
         ],
       ),
@@ -242,10 +265,19 @@ class FleetVehicleDetailsView extends StatelessWidget {
         children: [
           SizedBox(
             width: 150,
-            child: Text(label, style: const TextStyle(fontWeight: FontWeight.w500, color: Colors.grey)),
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontWeight: FontWeight.w500,
+                color: Colors.grey,
+              ),
+            ),
           ),
           Expanded(
-            child: Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+            child: Text(
+              value,
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -280,7 +312,9 @@ class _HistoryTimeline extends StatelessWidget {
               const SizedBox(width: AppSpacing.small),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -322,11 +356,17 @@ class _HistoryTimeline extends StatelessWidget {
                         children: [
                           Text(
                             item.title,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
                           ),
                           Text(
                             '${item.date} - ${item.description}',
-                            style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                            style: TextStyle(
+                              color: scheme.onSurfaceVariant,
+                              fontSize: 12,
+                            ),
                           ),
                           const SizedBox(height: AppSpacing.small),
                         ],
@@ -374,7 +414,9 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
         children: [
           Text(
             'معرض صور المركبة',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppSpacing.medium),
           if (images.isEmpty)
@@ -402,7 +444,10 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                   const SizedBox(height: 4),
                   Text(
                     'اضغط على زر "تعديل البيانات" لإضافة صور للأسطول.',
-                    style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                    style: TextStyle(
+                      color: scheme.onSurfaceVariant,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -416,9 +461,10 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                 color: scheme.surfaceContainerHighest,
                 child: AnimatedSwitcher(
                   duration: const Duration(milliseconds: 300),
-                  transitionBuilder: (Widget child, Animation<double> animation) {
-                    return FadeTransition(opacity: animation, child: child);
-                  },
+                  transitionBuilder:
+                      (Widget child, Animation<double> animation) {
+                        return FadeTransition(opacity: animation, child: child);
+                      },
                   child: Image.network(
                     images[_selectedIndex].url,
                     key: ValueKey<int>(_selectedIndex),
@@ -455,7 +501,9 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                           decoration: BoxDecoration(
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: isSelected ? scheme.primary : scheme.outline.withAlpha(60),
+                              color: isSelected
+                                  ? scheme.primary
+                                  : scheme.outline.withAlpha(60),
                               width: isSelected ? 2 : 1,
                             ),
                           ),

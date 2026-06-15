@@ -43,9 +43,7 @@ class FleetTableShell extends StatelessWidget {
                             (header) => Expanded(
                               child: Text(
                                 header,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .labelLarge
+                                style: Theme.of(context).textTheme.labelLarge
                                     ?.copyWith(fontWeight: FontWeight.bold),
                               ),
                             ),
@@ -71,7 +69,9 @@ class FleetTableShell extends StatelessWidget {
                         ),
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
-                          children: cells.map((cell) => Expanded(child: cell)).toList(),
+                          children: cells
+                              .map((cell) => Expanded(child: cell))
+                              .toList(),
                         ),
                       ),
                     ),
@@ -88,11 +88,15 @@ class FleetTableShell extends StatelessWidget {
                 Text('صفحة ${currentPage + 1} من $pages'),
                 const SizedBox(width: AppSpacing.small),
                 IconButton(
-                  onPressed: currentPage == 0 ? null : () => onPageChanged(currentPage - 1),
+                  onPressed: currentPage == 0
+                      ? null
+                      : () => onPageChanged(currentPage - 1),
                   icon: const Icon(Icons.chevron_right_rounded),
                 ),
                 IconButton(
-                  onPressed: currentPage >= pages - 1 ? null : () => onPageChanged(currentPage + 1),
+                  onPressed: currentPage >= pages - 1
+                      ? null
+                      : () => onPageChanged(currentPage + 1),
                   icon: const Icon(Icons.chevron_left_rounded),
                 ),
               ],

@@ -44,7 +44,9 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     final sorted = [...list];
     sorted.sort((a, b) {
       final cmp = switch (_sortField) {
-        FleetSortField.licenseExpiry => a.licenseExpiry.compareTo(b.licenseExpiry),
+        FleetSortField.licenseExpiry => a.licenseExpiry.compareTo(
+          b.licenseExpiry,
+        ),
         FleetSortField.status => a.status.label.compareTo(b.status.label),
         _ => a.name.compareTo(b.name),
       };
@@ -75,7 +77,10 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(state.message, style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text(
+                    state.message,
+                    style: const TextStyle(fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: AppSpacing.medium),
                   FilledButton(
                     onPressed: () => context.read<FleetDriversCubit>().load(),
@@ -125,7 +130,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
               );
 
             case _DriversViewState.list:
-            default:
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -138,7 +142,8 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
                         return FleetDriversCardList(
                           drivers: sorted,
                           workspace: workspace,
-                          onViewDetails: (d) => _setView(_DriversViewState.details, d),
+                          onViewDetails: (d) =>
+                              _setView(_DriversViewState.details, d),
                           onEdit: (d) => _setView(_DriversViewState.form, d),
                           page: _page,
                           pageSize: _pageSize,
@@ -152,7 +157,8 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
                           selectedIds: state.selectedIds,
                           page: _page,
                           pageSize: _pageSize,
-                          onPageChanged: (newPage) => setState(() => _page = newPage),
+                          onPageChanged: (newPage) =>
+                              setState(() => _page = newPage),
                         );
                       }
                     },
@@ -167,17 +173,26 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     );
   }
 
-  Widget _buildToolbar(BuildContext context, FleetDriversLoaded state, FleetDriversCubit cubit) {
+  Widget _buildToolbar(
+    BuildContext context,
+    FleetDriversLoaded state,
+    FleetDriversCubit cubit,
+  ) {
     final scheme = Theme.of(context).colorScheme;
     return AppCard(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium, vertical: AppSpacing.small),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small,
+      ),
       child: Row(
         children: [
           Expanded(
             child: SearchBar(
               hintText: 'البحث باسم السائق أو الرقم القومي أو الهاتف...',
               elevation: WidgetStateProperty.all(0),
-              backgroundColor: WidgetStateProperty.all(scheme.surfaceContainerHighest.withAlpha(90)),
+              backgroundColor: WidgetStateProperty.all(
+                scheme.surfaceContainerHighest.withAlpha(90),
+              ),
               onChanged: cubit.search,
               leading: const Icon(Icons.search_rounded),
             ),
@@ -188,9 +203,18 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
             underline: const SizedBox.shrink(),
             icon: const Icon(Icons.sort_rounded),
             items: const [
-              DropdownMenuItem(value: FleetSortField.name, child: Text('ترتيب حسب الاسم')),
-              DropdownMenuItem(value: FleetSortField.status, child: Text('ترتيب حسب الحالة')),
-              DropdownMenuItem(value: FleetSortField.licenseExpiry, child: Text('ترتيب بانتهاء الرخصة')),
+              DropdownMenuItem(
+                value: FleetSortField.name,
+                child: Text('ترتيب حسب الاسم'),
+              ),
+              DropdownMenuItem(
+                value: FleetSortField.status,
+                child: Text('ترتيب حسب الحالة'),
+              ),
+              DropdownMenuItem(
+                value: FleetSortField.licenseExpiry,
+                child: Text('ترتيب بانتهاء الرخصة'),
+              ),
             ],
             onChanged: (val) {
               if (val != null) {
@@ -200,7 +224,11 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           ),
           IconButton(
             onPressed: () => setState(() => _sortAscending = !_sortAscending),
-            icon: Icon(_sortAscending ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded),
+            icon: Icon(
+              _sortAscending
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+            ),
           ),
           const SizedBox(width: AppSpacing.small),
           if (state.selectedIds.isNotEmpty) ...[
@@ -210,7 +238,9 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
                   context: context,
                   builder: (_) => AlertDialog(
                     title: const Text('أرشفة السائقين'),
-                    content: Text('هل أنت متأكد من أرشفة ${state.selectedIds.length} من السائقين المحددين؟'),
+                    content: Text(
+                      'هل أنت متأكد من أرشفة ${state.selectedIds.length} من السائقين المحددين؟',
+                    ),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context, false),

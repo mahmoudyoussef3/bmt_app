@@ -20,13 +20,13 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
     required UpdateFleetVehicleStatusUseCase updateVehicleStatus,
     required UploadVehicleFileUseCase uploadFile,
     required DeleteVehicleFileUseCase deleteFile,
-  })  : _getVehicles = getVehicles,
-        _createVehicle = createVehicle,
-        _updateVehicle = updateVehicle,
-        _updateVehicleStatus = updateVehicleStatus,
-        _uploadFile = uploadFile,
-        _deleteFile = deleteFile,
-        super(const FleetVehiclesLoading());
+  }) : _getVehicles = getVehicles,
+       _createVehicle = createVehicle,
+       _updateVehicle = updateVehicle,
+       _updateVehicleStatus = updateVehicleStatus,
+       _uploadFile = uploadFile,
+       _deleteFile = deleteFile,
+       super(const FleetVehiclesLoading());
 
   Future<void> load() async {
     emit(const FleetVehiclesLoading());
@@ -63,7 +63,9 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
   Future<void> saveVehicle(FleetVehicle vehicle) async {
     try {
       if (vehicle.id.isEmpty) {
-        debugPrint('[FleetVehiclesCubit] Creating vehicle: ${vehicle.vehicleCode}');
+        debugPrint(
+          '[FleetVehiclesCubit] Creating vehicle: ${vehicle.vehicleCode}',
+        );
         await _createVehicle(vehicle);
       } else {
         debugPrint('[FleetVehiclesCubit] Updating vehicle: ${vehicle.id}');
@@ -76,7 +78,10 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
     }
   }
 
-  Future<void> updateVehicleStatus(String vehicleId, FleetVehicleStatus status) async {
+  Future<void> updateVehicleStatus(
+    String vehicleId,
+    FleetVehicleStatus status,
+  ) async {
     try {
       await _updateVehicleStatus(vehicleId, status);
       await _reload();
@@ -94,7 +99,11 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
     await _reload();
   }
 
-  Future<String?> uploadVehicleFile(String bucket, String path, List<int> bytes) async {
+  Future<String?> uploadVehicleFile(
+    String bucket,
+    String path,
+    List<int> bytes,
+  ) async {
     try {
       return await _uploadFile(bucket, path, bytes);
     } catch (error) {

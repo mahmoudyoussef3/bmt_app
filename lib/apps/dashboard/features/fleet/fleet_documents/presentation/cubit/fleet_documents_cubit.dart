@@ -20,13 +20,13 @@ class FleetDocumentsCubit extends Cubit<FleetDocumentsState> {
     required DeleteFleetDocumentUseCase deleteDocument,
     required UploadDocumentFileUseCase uploadFile,
     required DeleteDocumentFileUseCase deleteFile,
-  })  : _getDocuments = getDocuments,
-        _createDocument = createDocument,
-        _updateDocument = updateDocument,
-        _deleteDocument = deleteDocument,
-        _uploadFile = uploadFile,
-        _deleteFile = deleteFile,
-        super(const FleetDocumentsLoading());
+  }) : _getDocuments = getDocuments,
+       _createDocument = createDocument,
+       _updateDocument = updateDocument,
+       _deleteDocument = deleteDocument,
+       _uploadFile = uploadFile,
+       _deleteFile = deleteFile,
+       super(const FleetDocumentsLoading());
 
   Future<void> load() async {
     emit(const FleetDocumentsLoading());
@@ -76,7 +76,9 @@ class FleetDocumentsCubit extends Cubit<FleetDocumentsState> {
     try {
       final status = calculateDocumentStatus(expiryDate);
       if (documentId == null || documentId.isEmpty) {
-        debugPrint('[FleetDocumentsCubit] Creating document for owner=$ownerId');
+        debugPrint(
+          '[FleetDocumentsCubit] Creating document for owner=$ownerId',
+        );
         await _createDocument(
           ownerId: ownerId,
           isDriver: isDriver,
@@ -116,9 +118,15 @@ class FleetDocumentsCubit extends Cubit<FleetDocumentsState> {
     }
   }
 
-  Future<String?> uploadDocumentFile(String bucket, String path, List<int> bytes) async {
+  Future<String?> uploadDocumentFile(
+    String bucket,
+    String path,
+    List<int> bytes,
+  ) async {
     try {
-      debugPrint('[FleetDocumentsCubit] Uploading file: bucket=$bucket path=$path');
+      debugPrint(
+        '[FleetDocumentsCubit] Uploading file: bucket=$bucket path=$path',
+      );
       return await _uploadFile(bucket, path, bytes);
     } catch (error) {
       debugPrint('[FleetDocumentsCubit] Upload error: $error');

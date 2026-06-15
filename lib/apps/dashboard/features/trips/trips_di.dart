@@ -38,16 +38,24 @@ void registerTripsDependencies(GetIt di) {
 
   // 3. Use Cases
   // Trip Management
-  di.registerLazySingleton(() => GetOperationTripsUseCase(di<TripsRepository>()));
+  di.registerLazySingleton(
+    () => GetOperationTripsUseCase(di<TripsRepository>()),
+  );
   di.registerLazySingleton(() => GetTripDetailsUseCase(di<TripsRepository>()));
-  di.registerLazySingleton(() => UpdateTripStatusUseCase(di<TripsRepository>()));
+  di.registerLazySingleton(
+    () => UpdateTripStatusUseCase(di<TripsRepository>()),
+  );
   di.registerLazySingleton(() => UpdateTripInfoUseCase(di<TripsRepository>()));
 
   // Trip Creation
   di.registerLazySingleton(() => CreateTripUseCase(di<TripsRepository>()));
   di.registerLazySingleton(() => GetActiveRoutesUseCase(di<TripsRepository>()));
-  di.registerLazySingleton(() => GetActiveDriversUseCase(di<TripsRepository>()));
-  di.registerLazySingleton(() => GetActiveVehiclesUseCase(di<TripsRepository>()));
+  di.registerLazySingleton(
+    () => GetActiveDriversUseCase(di<TripsRepository>()),
+  );
+  di.registerLazySingleton(
+    () => GetActiveVehiclesUseCase(di<TripsRepository>()),
+  );
 
   // Trip Seats
   di.registerLazySingleton(() => UpdateSeatStateUseCase(di<TripsRepository>()));
@@ -55,7 +63,9 @@ void registerTripsDependencies(GetIt di) {
   // Trip Pricing
   di.registerLazySingleton(() => GetTripPricingUseCase(di<TripsRepository>()));
   di.registerLazySingleton(() => SaveTripPricingUseCase(di<TripsRepository>()));
-  di.registerLazySingleton(() => ToggleTripPricingUseCase(di<TripsRepository>()));
+  di.registerLazySingleton(
+    () => ToggleTripPricingUseCase(di<TripsRepository>()),
+  );
 
   // Trip Passengers
   di.registerLazySingleton(() => UpdatePassengerUseCase(di<TripsRepository>()));

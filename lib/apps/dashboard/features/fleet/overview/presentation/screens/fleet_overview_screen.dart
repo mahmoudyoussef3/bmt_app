@@ -71,10 +71,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                   const SizedBox(height: AppSpacing.large),
                   FleetSummaryCards(summary: workspace.summary),
                   const SizedBox(height: AppSpacing.large),
-                  FleetTabBar(
-                    active: _activeTab,
-                    onTabChanged: _changeTab,
-                  ),
+                  FleetTabBar(active: _activeTab, onTabChanged: _changeTab),
                   const SizedBox(height: AppSpacing.medium),
                 ],
                 AnimatedSwitcher(
@@ -83,39 +80,48 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                     key: ValueKey('tab-$_activeTab-list-$_isListMode'),
                     child: switch (_activeTab) {
                       FleetTab.drivers => MultiBlocProvider(
-                          providers: [
-                            BlocProvider<FleetDriversCubit>(
-                              create: (_) => dashboardDi<FleetDriversCubit>()..load(),
-                            ),
-                            BlocProvider<FleetDocumentsCubit>(
-                              create: (_) => dashboardDi<FleetDocumentsCubit>()..load(),
-                            ),
-                          ],
-                          child: FleetDriversScreen(
-                            onViewStateChanged: (isList) => setState(() => _isListMode = isList),
+                        providers: [
+                          BlocProvider<FleetDriversCubit>(
+                            create: (_) =>
+                                dashboardDi<FleetDriversCubit>()..load(),
                           ),
+                          BlocProvider<FleetDocumentsCubit>(
+                            create: (_) =>
+                                dashboardDi<FleetDocumentsCubit>()..load(),
+                          ),
+                        ],
+                        child: FleetDriversScreen(
+                          onViewStateChanged: (isList) =>
+                              setState(() => _isListMode = isList),
                         ),
+                      ),
                       FleetTab.vehicles => MultiBlocProvider(
-                          providers: [
-                            BlocProvider<FleetVehiclesCubit>(
-                              create: (_) => dashboardDi<FleetVehiclesCubit>()..load(),
-                            ),
-                            BlocProvider<FleetDocumentsCubit>(
-                              create: (_) => dashboardDi<FleetDocumentsCubit>()..load(),
-                            ),
-                          ],
-                          child: FleetVehiclesScreen(
-                            onViewStateChanged: (isList) => setState(() => _isListMode = isList),
+                        providers: [
+                          BlocProvider<FleetVehiclesCubit>(
+                            create: (_) =>
+                                dashboardDi<FleetVehiclesCubit>()..load(),
                           ),
+                          BlocProvider<FleetDocumentsCubit>(
+                            create: (_) =>
+                                dashboardDi<FleetDocumentsCubit>()..load(),
+                          ),
+                        ],
+                        child: FleetVehiclesScreen(
+                          onViewStateChanged: (isList) =>
+                              setState(() => _isListMode = isList),
                         ),
-                      FleetTab.assignments => BlocProvider<FleetAssignmentsCubit>(
-                          create: (_) => dashboardDi<FleetAssignmentsCubit>()..load(),
+                      ),
+                      FleetTab.assignments =>
+                        BlocProvider<FleetAssignmentsCubit>(
+                          create: (_) =>
+                              dashboardDi<FleetAssignmentsCubit>()..load(),
                           child: const FleetAssignmentsScreen(),
                         ),
                       FleetTab.documents => BlocProvider<FleetDocumentsCubit>(
-                          create: (_) => dashboardDi<FleetDocumentsCubit>()..load(),
-                          child: const FleetDocumentsScreen(),
-                        ),
+                        create: (_) =>
+                            dashboardDi<FleetDocumentsCubit>()..load(),
+                        child: const FleetDocumentsScreen(),
+                      ),
                     },
                   ),
                 ),
@@ -139,10 +145,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
         gradient: LinearGradient(
           begin: AlignmentDirectional.topStart,
           end: AlignmentDirectional.bottomEnd,
-          colors: [
-            scheme.primary,
-            scheme.secondary,
-          ],
+          colors: [scheme.primary, scheme.secondary],
         ),
         boxShadow: [
           BoxShadow(
@@ -191,10 +194,10 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                      height: 1.1,
-                    ),
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  height: 1.1,
+                ),
               ),
               const SizedBox(height: AppSpacing.xSmall),
               Text(
@@ -202,10 +205,10 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                 maxLines: isCompact ? 3 : 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withAlpha(230),
-                      fontWeight: FontWeight.w600,
-                      height: 1.6,
-                    ),
+                  color: Colors.white.withAlpha(230),
+                  fontWeight: FontWeight.w600,
+                  height: 1.6,
+                ),
               ),
             ],
           );

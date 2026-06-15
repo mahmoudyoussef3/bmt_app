@@ -41,7 +41,9 @@ class FleetVehiclesTable extends StatelessWidget {
     final cubit = context.read<FleetVehiclesCubit>();
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, vehicles.length);
-    final paged = start >= vehicles.length ? <FleetVehicle>[] : vehicles.sublist(start, end);
+    final paged = start >= vehicles.length
+        ? <FleetVehicle>[]
+        : vehicles.sublist(start, end);
 
     return FleetTableShell(
       headers: const [
@@ -70,8 +72,14 @@ class FleetVehiclesTable extends StatelessWidget {
             value: selectedIds.contains(vehicle.id),
             onChanged: (_) => cubit.toggleSelection(vehicle.id),
           ),
-          FleetVehicleThumb(label: vehicle.imageLabel, imageUrl: vehicle.imageUrl),
-          Text(vehicle.vehicleNumber, style: const TextStyle(fontWeight: FontWeight.bold)),
+          FleetVehicleThumb(
+            label: vehicle.imageLabel,
+            imageUrl: vehicle.imageUrl,
+          ),
+          Text(
+            vehicle.vehicleNumber,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           Text(vehicle.plateNumber),
           Text(vehicle.model),
           Text('${vehicle.modelYear}'),
@@ -94,18 +102,27 @@ class FleetVehiclesTable extends StatelessWidget {
               ),
               TextButton(
                 onPressed: vehicle.status == FleetVehicleStatus.active
-                    ? () => cubit.updateVehicleStatus(vehicle.id, FleetVehicleStatus.suspended)
+                    ? () => cubit.updateVehicleStatus(
+                        vehicle.id,
+                        FleetVehicleStatus.suspended,
+                      )
                     : null,
                 child: const Text('إيقاف'),
               ),
               TextButton(
                 onPressed: vehicle.status == FleetVehicleStatus.suspended
-                    ? () => cubit.updateVehicleStatus(vehicle.id, FleetVehicleStatus.active)
+                    ? () => cubit.updateVehicleStatus(
+                        vehicle.id,
+                        FleetVehicleStatus.active,
+                      )
                     : null,
                 child: const Text('تفعيل'),
               ),
               TextButton(
-                onPressed: () => cubit.updateVehicleStatus(vehicle.id, FleetVehicleStatus.archived),
+                onPressed: () => cubit.updateVehicleStatus(
+                  vehicle.id,
+                  FleetVehicleStatus.archived,
+                ),
                 child: const Text('أرشفة'),
               ),
             ],

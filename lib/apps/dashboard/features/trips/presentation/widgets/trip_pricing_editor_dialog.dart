@@ -130,7 +130,9 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
                       child: DropdownButtonFormField<TripRoutePoint>(
                         key: ValueKey(fromPoint.id),
                         initialValue: toPoint,
-                        decoration: const InputDecoration(labelText: 'إلى نقطة'),
+                        decoration: const InputDecoration(
+                          labelText: 'إلى نقطة',
+                        ),
                         items: availableToPoints
                             .map(
                               (point) => DropdownMenuItem(

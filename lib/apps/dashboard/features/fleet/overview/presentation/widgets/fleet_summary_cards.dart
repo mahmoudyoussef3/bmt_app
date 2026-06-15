@@ -44,8 +44,8 @@ class FleetSummaryCards extends StatelessWidget {
         final columns = width >= 1100
             ? 4
             : width >= 720
-                ? 2
-                : 1;
+            ? 2
+            : 1;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -114,9 +114,9 @@ class _SummaryCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -124,8 +124,8 @@ class _SummaryCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -134,9 +134,9 @@ class _SummaryCard extends StatelessWidget {
           Text(
             item.value,
             style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: color,
-                ),
+              fontWeight: FontWeight.w900,
+              color: color,
+            ),
           ),
         ],
       ),

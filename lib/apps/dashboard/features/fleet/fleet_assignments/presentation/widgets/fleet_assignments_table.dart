@@ -45,7 +45,9 @@ class FleetAssignmentsTable extends StatelessWidget {
     final cubit = context.read<FleetAssignmentsCubit>();
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, assignments.length);
-    final paged = start >= assignments.length ? <FleetAssignment>[] : assignments.sublist(start, end);
+    final paged = start >= assignments.length
+        ? <FleetAssignment>[]
+        : assignments.sublist(start, end);
 
     return FleetTableShell(
       headers: const [
@@ -63,7 +65,10 @@ class FleetAssignmentsTable extends StatelessWidget {
         final driver = _driverName(assignment.driverId);
         final vehicle = _vehicleName(assignment.vehicleId);
         return [
-          Text(driver.isEmpty ? 'سائق غير معروف' : driver, style: const TextStyle(fontWeight: FontWeight.bold)),
+          Text(
+            driver.isEmpty ? 'سائق غير معروف' : driver,
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
           Text(vehicle.isEmpty ? 'مركبة غير معروفة' : vehicle),
           Text(assignment.assignedAt),
           StatusChip(label: assignment.status.label),

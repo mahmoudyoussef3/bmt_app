@@ -6,9 +6,8 @@ import 'fleet_overview_state.dart';
 class FleetOverviewCubit extends Cubit<FleetOverviewState> {
   final GetFleetWorkspaceUseCase getWorkspace;
 
-  FleetOverviewCubit({
-    required this.getWorkspace,
-  }) : super(FleetOverviewInitial());
+  FleetOverviewCubit({required this.getWorkspace})
+    : super(FleetOverviewInitial());
 
   Future<void> loadWorkspace() async {
     emit(FleetOverviewLoading());

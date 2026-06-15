@@ -31,7 +31,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .order('departure_time', ascending: false);
 
       return (response as List)
-          .map((json) => OperationTripModel.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) => OperationTripModel.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       throw _handleError(e);
@@ -81,17 +83,24 @@ class SupabaseTripsDatasource implements TripsDatasource {
       final tripCode = 'TR-${DateTime.now().millisecondsSinceEpoch % 1000000}';
 
       // 2. Insert trip record
-      final tripResponse = await _client.from('operation_trips').insert({
-        'trip_code': tripCode,
-        'route_id': input.routeId,
-        'driver_id': input.driverId,
-        'vehicle_id': input.vehicleId,
-        'trip_date': input.date,
-        'departure_time': input.departure,
-        'capacity': input.capacity,
-        'status': 'scheduled',
-        'notes': ['تم إنشاء الرحلة ونمذجة المحطات والمقاعد تلقائياً'],
-      }).select().single();
+      final tripResponse = await _client
+          .from('operation_trips')
+          .insert({
+            'trip_code': tripCode,
+            'route_id': input.routeId,
+            'driver_id': input.driverId,
+            'vehicle_id': input.vehicleId,
+            'trip_date': input.date,
+            'departure_time': input.departure,
+            'arrival_time': input.arrival,
+            'capacity': input.capacity,
+            'ticket_price': input.ticketPrice,
+            'currency': input.currency,
+            'status': 'scheduled',
+            'notes': ['تم إنشاء الرحلة ونمذجة المحطات والمقاعد تلقائياً'],
+          })
+          .select()
+          .single();
 
       final tripId = tripResponse['id'] as String;
 
@@ -105,6 +114,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
           'point_order': station['sort_order'],
           'arrival_offset': station['arrival_offset'],
           'departure_offset': station['departure_offset'],
+          'latitude': station['latitude'],
+          'longitude': station['longitude'],
         });
       }
       await _client.from('trip_route_points').insert(routePointsData);
@@ -116,7 +127,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .eq('id', input.vehicleId)
           .single();
 
-      final config = vehicleResponse['seat_configuration'] as Map<String, dynamic>?;
+      final config =
+          vehicleResponse['seat_configuration'] as Map<String, dynamic>?;
       final List<Map<String, dynamic>> seatsData = [];
 
       if (config != null && config['seats'] != null) {
@@ -124,9 +136,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
         for (final seatVal in seatsList) {
           final s = seatVal as Map<String, dynamic>;
           final type = s['seat_type'] as String? ?? 'passenger';
-          // Skip driver seat row/col details if we only want passenger seats in trip_seats,
-          // but let's insert all or passenger only. Let's insert passenger seats.
           if (type == 'driver') continue;
+          if (type != 'passenger') continue;
           seatsData.add({
             'trip_id': tripId,
             'seat_label': s['seat_number'] as String,
@@ -175,14 +186,19 @@ class SupabaseTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> updateTripInfo(OperationTrip trip) async {
     try {
-      await _client.from('operation_trips').update({
-        'driver_id': trip.driverId,
-        'vehicle_id': trip.vehicleId,
-        'trip_date': trip.date,
-        'departure_time': trip.departure,
-        'arrival_time': trip.arrival.isEmpty ? null : trip.arrival,
-        'status': trip.status.name,
-      }).eq('id', trip.id);
+      await _client
+          .from('operation_trips')
+          .update({
+            'driver_id': trip.driverId,
+            'vehicle_id': trip.vehicleId,
+            'trip_date': trip.date,
+            'departure_time': trip.departure,
+            'arrival_time': trip.arrival.isEmpty ? null : trip.arrival,
+            'status': trip.status.dbValue,
+            'ticket_price': trip.ticketPrice,
+            'currency': trip.currency,
+          })
+          .eq('id', trip.id);
 
       await logEvent(
         trip.id,
@@ -204,7 +220,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
     try {
       await _client
           .from('operation_trips')
-          .update({'status': status.name}).eq('id', tripId);
+          .update({'status': status.dbValue})
+          .eq('id', tripId);
 
       await logEvent(
         tripId,
@@ -233,12 +250,16 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .single();
       final label = seatResponse['seat_label'] as String;
 
-      await _client.from('trip_seats').update({
-        'state': state.name,
-        // If seat is blocked or available, clear passenger
-        if (state == TripSeatState.available || state == TripSeatState.blocked)
-          'passenger_id': null,
-      }).eq('id', seatId);
+      await _client
+          .from('trip_seats')
+          .update({
+            'state': state.name,
+            // If seat is blocked or available, clear passenger
+            if (state == TripSeatState.available ||
+                state == TripSeatState.blocked)
+              'passenger_id': null,
+          })
+          .eq('id', seatId);
 
       await logEvent(
         tripId,
@@ -258,11 +279,14 @@ class SupabaseTripsDatasource implements TripsDatasource {
     TripPassenger passenger,
   ) async {
     try {
-      await _client.from('trip_passengers').update({
-        'passenger_name': passenger.name,
-        'phone': passenger.phone,
-        'status': passenger.status,
-      }).eq('id', passenger.id);
+      await _client
+          .from('trip_passengers')
+          .update({
+            'passenger_name': passenger.name,
+            'phone': passenger.phone,
+            'status': passenger.status,
+          })
+          .eq('id', passenger.id);
 
       await logEvent(
         tripId,
@@ -295,14 +319,15 @@ class SupabaseTripsDatasource implements TripsDatasource {
       // Update passenger status to canceled
       await _client
           .from('trip_passengers')
-          .update({'status': 'ملغي'}).eq('id', passengerId);
+          .update({'status': 'cancelled'})
+          .eq('id', passengerId);
 
       // Free the seat
       if (seatId != null) {
-        await _client.from('trip_seats').update({
-          'state': 'available',
-          'passenger_id': null,
-        }).eq('id', seatId);
+        await _client
+            .from('trip_seats')
+            .update({'state': 'available', 'passenger_id': null})
+            .eq('id', seatId);
       }
 
       await logEvent(
@@ -349,25 +374,26 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
       // 2. Free old seat
       if (oldSeatId != null) {
-        await _client.from('trip_seats').update({
-          'state': 'available',
-          'passenger_id': null,
-        }).eq('id', oldSeatId);
+        await _client
+            .from('trip_seats')
+            .update({'state': 'available', 'passenger_id': null})
+            .eq('id', oldSeatId);
       }
 
       // 3. Occupy new seat
-      final targetSeatState =
-          passengerStatus == 'اشتراك' ? 'subscription' : 'reserved';
-      await _client.from('trip_seats').update({
-        'state': targetSeatState,
-        'passenger_id': passengerId,
-      }).eq('id', newSeatId);
+      final targetSeatState = passengerStatus == 'subscription'
+          ? 'subscription'
+          : 'reserved';
+      await _client
+          .from('trip_seats')
+          .update({'state': targetSeatState, 'passenger_id': passengerId})
+          .eq('id', newSeatId);
 
       // 4. Update passenger details
-      await _client.from('trip_passengers').update({
-        'seat_id': newSeatId,
-        'seat_label': seatLabel,
-      }).eq('id', passengerId);
+      await _client
+          .from('trip_passengers')
+          .update({'seat_id': newSeatId, 'seat_label': seatLabel})
+          .eq('id', passengerId);
 
       await logEvent(
         tripId,
@@ -395,7 +421,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .order('from_point_order', ascending: true);
 
       return (response as List)
-          .map((json) => TripPricingModel.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) => TripPricingModel.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       throw _handleError(e);
@@ -406,12 +434,16 @@ class SupabaseTripsDatasource implements TripsDatasource {
   Future<TripPricingModel> upsertTripPricing(TripPricing pricing) async {
     try {
       final data = TripPricingModel.fromEntity(pricing).toJson();
-      
+
       Map<String, dynamic> response;
       if (pricing.id.trim().isEmpty) {
         // Create new pricing segment
         data['trip_id'] = pricing.tripId;
-        response = await _client.from('trip_pricing').insert(data).select().single();
+        response = await _client
+            .from('trip_pricing')
+            .insert(data)
+            .select()
+            .single();
       } else {
         // Update existing pricing segment
         response = await _client
@@ -503,8 +535,12 @@ class SupabaseTripsDatasource implements TripsDatasource {
     try {
       final response = await _client
           .from('drivers')
-          .select('id, full_name, phone, status')
-          .eq('status', 'active');
+          .select('id, full_name, phone, status, license_expiry_date')
+          .eq('status', 'active')
+          .gte(
+            'license_expiry_date',
+            DateTime.now().toIso8601String().split('T').first,
+          );
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
       throw _handleError(e);
@@ -516,7 +552,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
     try {
       final response = await _client
           .from('vehicles')
-          .select('id, plate_number, vehicle_code, brand, model, capacity, vehicle_type, status')
+          .select(
+            'id, plate_number, vehicle_code, brand, model, capacity, vehicle_type, status, seat_configuration',
+          )
           .eq('status', 'active');
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
@@ -538,14 +576,39 @@ class SupabaseTripsDatasource implements TripsDatasource {
   }
 
   @override
-  Future<bool> checkDuplicateTrip(String vehicleId, String date, String departureTime) async {
+  Future<bool> checkDuplicateTrip(
+    String vehicleId,
+    String date,
+    String departureTime,
+  ) async {
     try {
       final response = await _client
           .from('operation_trips')
           .select('id')
           .eq('vehicle_id', vehicleId)
           .eq('trip_date', date)
-          .eq('departure_time', departureTime);
+          .eq('departure_time', departureTime)
+          .not('status', 'in', '(completed,cancelled)');
+      return (response as List).isNotEmpty;
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<bool> checkDriverTripConflict(
+    String driverId,
+    String date,
+    String departureTime,
+  ) async {
+    try {
+      final response = await _client
+          .from('operation_trips')
+          .select('id')
+          .eq('driver_id', driverId)
+          .eq('trip_date', date)
+          .eq('departure_time', departureTime)
+          .not('status', 'in', '(completed,cancelled)');
       return (response as List).isNotEmpty;
     } catch (e) {
       throw _handleError(e);

@@ -10,7 +10,6 @@ import '../../../routes/domain/entities/operation_route.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_driver.dart';
 import '../../shared/domain/entities/operation_trip.dart';
-import '../../shared/domain/entities/trip_pricing.dart';
 import '../../trip_creation/presentation/cubit/trip_creation_cubit.dart';
 
 class TripCreationWizardDialog extends StatelessWidget {
@@ -35,9 +34,7 @@ class TripCreationWizardDialog extends StatelessWidget {
           return const Dialog(
             child: SizedBox(
               height: 200,
-              child: Center(
-                child: CircularProgressIndicator(),
-              ),
+              child: Center(child: CircularProgressIndicator()),
             ),
           );
         }
@@ -52,8 +49,8 @@ class TripCreationWizardDialog extends StatelessWidget {
                   Text(
                     'خطأ في التحميل',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          color: Theme.of(context).colorScheme.error,
-                        ),
+                      color: Theme.of(context).colorScheme.error,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.medium),
                   Text(state.message),
@@ -87,19 +84,23 @@ class TripCreationWizardDialog extends StatelessWidget {
   }
 
   OperationRoute _parseRoute(Map<String, dynamic> map) {
-    final stationsList = (map['route_stations'] as List? ?? [])
-        .map((st) => RouteStation(
-              id: st['id'] as String,
-              name: st['name'] as String? ?? '',
-              area: st['area'] as String? ?? '',
-              arrivalOffset: st['arrival_offset'] as String? ?? '',
-              departureOffset: st['departure_offset'] as String? ?? '',
-              locationDescription: st['location_description'] as String? ?? '',
-              notes: st['notes'] as String? ?? '',
-              order: st['sort_order'] as int? ?? 0,
-            ))
-        .toList()
-      ..sort((a, b) => a.order.compareTo(b.order));
+    final stationsList =
+        (map['route_stations'] as List? ?? [])
+            .map(
+              (st) => RouteStation(
+                id: st['id'] as String,
+                name: st['name'] as String? ?? '',
+                area: st['area'] as String? ?? '',
+                arrivalOffset: st['arrival_offset'] as String? ?? '',
+                departureOffset: st['departure_offset'] as String? ?? '',
+                locationDescription:
+                    st['location_description'] as String? ?? '',
+                notes: st['notes'] as String? ?? '',
+                order: st['sort_order'] as int? ?? 0,
+              ),
+            )
+            .toList()
+          ..sort((a, b) => a.order.compareTo(b.order));
 
     return OperationRoute(
       id: map['id'] as String,
@@ -121,7 +122,8 @@ class TripCreationWizardDialog extends StatelessWidget {
       plateNumber: map['plate_number'] as String? ?? '',
       vehicleType: map['vehicle_type'] as String? ?? 'ميكروباص',
       brand: map['brand'] as String? ?? '',
-      model: map['model'] as String? ?? map['vehicle_code'] as String? ?? 'مركبة',
+      model:
+          map['model'] as String? ?? map['vehicle_code'] as String? ?? 'مركبة',
       manufactureYear: 2024,
       color: '',
       capacity: map['capacity'] as int? ?? 14,
@@ -183,6 +185,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   // Schedule values
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
+  final _arrivalController = TextEditingController();
+  final _priceController = TextEditingController();
   Map<String, int> _stopWaits = {}; // stationId -> wait minutes
 
   // Pricing values
@@ -193,6 +197,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   void dispose() {
     _dateController.dispose();
     _timeController.dispose();
+    _arrivalController.dispose();
+    _priceController.dispose();
     super.dispose();
   }
 
@@ -201,9 +207,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     final points = _selectedRoute!.stations;
 
     // Initialize stop wait durations (default 2 mins)
-    _stopWaits = {
-      for (var st in points) st.id: 2,
-    };
+    _stopWaits = {for (var st in points) st.id: 2};
 
     // Initialize stop-to-stop combinations
     _pricingMatrix = {};
@@ -215,9 +219,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         final baseOneTime = dist > 0 ? dist : 15.0;
         _pricingMatrix[key] = _PricingConfig(
           oneTime: baseOneTime,
-          fiveDays: baseOneTime * 5 * 0.9,      // 10% discount
-          tenDays: baseOneTime * 10 * 0.85,    // 15% discount
-          monthly: baseOneTime * 22 * 0.8,     // 20% discount
+          fiveDays: baseOneTime * 5 * 0.9, // 10% discount
+          tenDays: baseOneTime * 10 * 0.85, // 15% discount
+          monthly: baseOneTime * 22 * 0.8, // 20% discount
           threeMonths: baseOneTime * 66 * 0.75, // 25% discount
         );
       }
@@ -264,10 +268,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       'اختيار المركبة',
       'اختيار السائق',
       'جدولة الرحلة والمحطات',
-      'إدارة تسعير الرحلة',
-      'اشتراكات وباقات الرحلة',
+      'تسعير الرحلة',
       'مراجعة الرحلة وتأكيدها',
-      'إنشاء الرحلة والتشغيل',
     ];
 
     return Container(
@@ -278,9 +280,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           topLeft: Radius.circular(AppTokens.radiusLarge),
           topRight: Radius.circular(AppTokens.radiusLarge),
         ),
-        border: Border(
-          bottom: BorderSide(color: scheme.outline.withAlpha(50)),
-        ),
+        border: Border(bottom: BorderSide(color: scheme.outline.withAlpha(50))),
       ),
       child: Row(
         children: [
@@ -291,16 +291,16 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             children: [
               Text(
                 'مساعد إنشاء رحلة جديدة',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 2),
               Text(
-                'الخطوة ${_currentStep + 1} من 8: ${stepTitles[_currentStep]}',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                'الخطوة ${_currentStep + 1} من 6: ${stepTitles[_currentStep]}',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -320,7 +320,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       width: double.infinity,
       color: scheme.outline.withAlpha(30),
       child: Row(
-        children: List.generate(8, (index) {
+        children: List.generate(6, (index) {
           final active = index <= _currentStep;
           return Expanded(
             child: Container(
@@ -346,11 +346,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       case 4:
         return _buildStep5PricingMatrix();
       case 5:
-        return _buildStep6PackagesPricing();
-      case 6:
         return _buildStep7Review();
-      case 7:
-        return _buildStep8Confirmation();
       default:
         return const SizedBox.shrink();
     }
@@ -389,9 +385,13 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: selected ? scheme.primaryContainer.withAlpha(40) : scheme.surface,
+                  color: selected
+                      ? scheme.primaryContainer.withAlpha(40)
+                      : scheme.surface,
                   border: Border.all(
-                    color: selected ? scheme.primary : scheme.outline.withAlpha(60),
+                    color: selected
+                        ? scheme.primary
+                        : scheme.outline.withAlpha(60),
                     width: selected ? 2 : 1,
                   ),
                   borderRadius: BorderRadius.circular(AppTokens.radius),
@@ -405,10 +405,11 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                         children: [
                           Text(
                             route.name,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: selected ? scheme.primary : null,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: selected ? scheme.primary : null,
+                                ),
                           ),
                           const SizedBox(height: AppSpacing.xSmall),
                           Text(
@@ -418,24 +419,49 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                           const Spacer(),
                           Row(
                             children: [
-                              Icon(Icons.location_on_outlined, size: 14, color: scheme.primary),
+                              Icon(
+                                Icons.location_on_outlined,
+                                size: 14,
+                                color: scheme.primary,
+                              ),
                               const SizedBox(width: 4),
-                              Text('${route.stations.length} محطات', style: Theme.of(context).textTheme.labelSmall),
+                              Text(
+                                '${route.stations.length} محطات',
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
                               const SizedBox(width: AppSpacing.medium),
-                              Icon(Icons.directions_car_outlined, size: 14, color: scheme.secondary),
+                              Icon(
+                                Icons.directions_car_outlined,
+                                size: 14,
+                                color: scheme.secondary,
+                              ),
                               const SizedBox(width: 4),
-                              Text(route.distance, style: Theme.of(context).textTheme.labelSmall),
+                              Text(
+                                route.distance,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
                               const SizedBox(width: AppSpacing.medium),
-                              Icon(Icons.access_time, size: 14, color: scheme.tertiary),
+                              Icon(
+                                Icons.access_time,
+                                size: 14,
+                                color: scheme.tertiary,
+                              ),
                               const SizedBox(width: 4),
-                              Text(route.duration, style: Theme.of(context).textTheme.labelSmall),
+                              Text(
+                                route.duration,
+                                style: Theme.of(context).textTheme.labelSmall,
+                              ),
                             ],
                           ),
                         ],
                       ),
                     ),
                     if (selected)
-                      Icon(Icons.check_circle_rounded, color: scheme.primary, size: 28),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: scheme.primary,
+                        size: 28,
+                      ),
                   ],
                 ),
               ),
@@ -475,16 +501,21 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                 setState(() {
                   _selectedVehicle = vehicle;
                   // If selected driver is assigned to another vehicle, reset
-                  if (_selectedDriver != null && _selectedDriver!.currentVehicle != vehicle.plateNumber) {
+                  if (_selectedDriver != null &&
+                      _selectedDriver!.currentVehicle != vehicle.plateNumber) {
                     _selectedDriver = null;
                   }
                 });
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: selected ? scheme.primaryContainer.withAlpha(40) : scheme.surface,
+                  color: selected
+                      ? scheme.primaryContainer.withAlpha(40)
+                      : scheme.surface,
                   border: Border.all(
-                    color: selected ? scheme.primary : scheme.outline.withAlpha(60),
+                    color: selected
+                        ? scheme.primary
+                        : scheme.outline.withAlpha(60),
                     width: selected ? 2 : 1,
                   ),
                   borderRadius: BorderRadius.circular(AppTokens.radius),
@@ -500,31 +531,50 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                             children: [
                               Text(
                                 vehicle.model,
-                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: selected ? scheme.primary : null,
-                                ),
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: selected ? scheme.primary : null,
+                                    ),
                               ),
                               const SizedBox(width: AppSpacing.small),
                               StatusChip(label: vehicle.status.label),
                             ],
                           ),
                           const SizedBox(height: AppSpacing.xSmall),
-                          Text('رقم اللوحة: ${vehicle.plateNumber}', style: Theme.of(context).textTheme.bodyMedium),
-                          Text('النوع: ${vehicle.type}', style: Theme.of(context).textTheme.bodySmall),
+                          Text(
+                            'رقم اللوحة: ${vehicle.plateNumber}',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          Text(
+                            'النوع: ${vehicle.type}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                           const Spacer(),
                           Row(
                             children: [
-                              Icon(Icons.airline_seat_recline_normal, size: 16, color: scheme.primary),
+                              Icon(
+                                Icons.airline_seat_recline_normal,
+                                size: 16,
+                                color: scheme.primary,
+                              ),
                               const SizedBox(width: 4),
-                              Text('السعة: ${vehicle.capacity} مقعد', style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                              Text(
+                                'السعة: ${vehicle.capacity} مقعد',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(fontWeight: FontWeight.bold),
+                              ),
                             ],
                           ),
                         ],
                       ),
                     ),
                     if (selected)
-                      Icon(Icons.check_circle_rounded, color: scheme.primary, size: 28),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: scheme.primary,
+                        size: 28,
+                      ),
                   ],
                 ),
               ),
@@ -569,9 +619,13 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               },
               child: Container(
                 decoration: BoxDecoration(
-                  color: selected ? scheme.primaryContainer.withAlpha(40) : scheme.surface,
+                  color: selected
+                      ? scheme.primaryContainer.withAlpha(40)
+                      : scheme.surface,
                   border: Border.all(
-                    color: selected ? scheme.primary : scheme.outline.withAlpha(60),
+                    color: selected
+                        ? scheme.primary
+                        : scheme.outline.withAlpha(60),
                     width: selected ? 2 : 1,
                   ),
                   borderRadius: BorderRadius.circular(AppTokens.radius),
@@ -584,7 +638,10 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                       backgroundColor: scheme.primary.withAlpha(30),
                       child: Text(
                         driver.avatarInitials,
-                        style: TextStyle(color: scheme.primary, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: scheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppSpacing.medium),
@@ -594,30 +651,36 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                         children: [
                           Text(
                             driver.name,
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: selected ? scheme.primary : null,
-                            ),
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: selected ? scheme.primary : null,
+                                ),
                           ),
-                          Text('رقم الهاتف: ${driver.phone}', style: Theme.of(context).textTheme.bodySmall),
+                          Text(
+                            'رقم الهاتف: ${driver.phone}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                           const Spacer(),
                           Text(
                             'المركبة الحالية: ${driver.currentVehicle}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
                           Text(
                             'آخر رحلة: ${driver.currentRoute}',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
                           ),
                         ],
                       ),
                     ),
                     if (selected)
-                      Icon(Icons.check_circle_rounded, color: scheme.primary, size: 28),
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: scheme.primary,
+                        size: 28,
+                      ),
                   ],
                 ),
               ),
@@ -678,7 +741,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                     lastDate: DateTime.now().add(const Duration(days: 365)),
                   );
                   if (date != null) {
-                    _dateController.text = '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                    _dateController.text =
+                        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
                     setState(() {});
                   }
                 },
@@ -700,7 +764,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                     initialTime: TimeOfDay.now(),
                   );
                   if (time != null) {
-                    _timeController.text = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
+                    _timeController.text =
+                        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
                     setState(() {});
                   }
                 },
@@ -708,6 +773,29 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                   labelText: 'وقت الانطلاق',
                   hintText: 'HH:MM:SS',
                   prefixIcon: Icon(Icons.access_time_rounded),
+                ),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(
+              child: TextField(
+                controller: _arrivalController,
+                readOnly: true,
+                onTap: () async {
+                  final time = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay.now(),
+                  );
+                  if (time != null) {
+                    _arrivalController.text =
+                        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
+                    setState(() {});
+                  }
+                },
+                decoration: const InputDecoration(
+                  labelText: 'وقت الوصول',
+                  hintText: 'HH:MM:SS',
+                  prefixIcon: Icon(Icons.flag_rounded),
                 ),
               ),
             ),
@@ -746,28 +834,48 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                     CircleAvatar(
                       radius: 16,
                       backgroundColor: scheme.primary.withAlpha(20),
-                      child: Text('${index + 1}', style: TextStyle(color: scheme.primary)),
+                      child: Text(
+                        '${index + 1}',
+                        style: TextStyle(color: scheme.primary),
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.medium),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(station.name, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                          Text('النطاق: ${station.area}', style: Theme.of(context).textTheme.bodySmall),
+                          Text(
+                            station.name,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            'النطاق: ${station.area}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                          ),
                         ],
                       ),
                     ),
                     const SizedBox(width: AppSpacing.medium),
-                    _TimeIndicator(label: 'وصول متوقع', time: index == 0 ? _timeController.text : arrivalTime),
+                    _TimeIndicator(
+                      label: 'وصول متوقع',
+                      time: index == 0 ? _timeController.text : arrivalTime,
+                    ),
                     const SizedBox(width: AppSpacing.medium),
                     SizedBox(
                       width: 130,
                       child: DropdownButtonFormField<int>(
                         initialValue: wait,
-                        decoration: const InputDecoration(labelText: 'فترة الانتظار'),
+                        decoration: const InputDecoration(
+                          labelText: 'فترة الانتظار',
+                        ),
                         items: [1, 2, 3, 5, 8, 10]
-                            .map((m) => DropdownMenuItem(value: m, child: Text('$m دقائق')))
+                            .map(
+                              (m) => DropdownMenuItem(
+                                value: m,
+                                child: Text('$m دقائق'),
+                              ),
+                            )
                             .toList(),
                         onChanged: (val) {
                           setState(() {
@@ -820,13 +928,27 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'إدارة تسعير الرحلة (Matrix UI):',
+          'سعر التذكرة القياسي:',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: AppSpacing.small),
         Text(
-          'أدخل سعر التذكرة الفردية (بالجنيه المصري) لكل محطات الصعود والوصول مباشرة في الجدول أدناه:',
+          'أدخل سعر التذكرة القياسي. سيتم تطبيقه على جميع مقاطع الصعود والنزول المتاحة بدون أي فئات VIP أو أسعار مميزة.',
           style: Theme.of(context).textTheme.bodySmall,
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        SizedBox(
+          width: 280,
+          child: TextFormField(
+            controller: _priceController,
+            keyboardType: TextInputType.number,
+            decoration: const InputDecoration(
+              labelText: 'سعر التذكرة',
+              suffixText: 'ج.م',
+              prefixIcon: Icon(Icons.payments_outlined),
+            ),
+            onChanged: (_) => setState(() {}),
+          ),
         ),
         const SizedBox(height: AppSpacing.medium),
         SingleChildScrollView(
@@ -837,21 +959,35 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             children: [
               // Header Row
               TableRow(
-                decoration: BoxDecoration(color: scheme.surfaceContainerHighest.withAlpha(80)),
+                decoration: BoxDecoration(
+                  color: scheme.surfaceContainerHighest.withAlpha(80),
+                ),
                 children: [
                   const TableCell(
                     verticalAlignment: TableCellVerticalAlignment.middle,
                     child: Padding(
                       padding: EdgeInsets.all(8.0),
-                      child: Text('من \\ إلى', style: TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                      child: Text(
+                        'من \\ إلى',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
                     ),
                   ),
-                  ...stations.sublist(1).map(
+                  ...stations
+                      .sublist(1)
+                      .map(
                         (st) => TableCell(
                           verticalAlignment: TableCellVerticalAlignment.middle,
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
-                            child: Text(st.name, style: const TextStyle(fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                            child: Text(
+                              st.name,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
                           ),
                         ),
                       ),
@@ -867,7 +1003,10 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                       child: Container(
                         color: scheme.surfaceContainerHighest.withAlpha(40),
                         padding: const EdgeInsets.all(8.0),
-                        child: Text(fromSt.name, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        child: Text(
+                          fromSt.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
                       ),
                     ),
                     ...List.generate(stations.length - 1, (j) {
@@ -885,19 +1024,26 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                       }
 
                       final key = '${fromSt.id}_${toSt.id}';
-                      final config = _pricingMatrix[key] ?? _PricingConfig(oneTime: 15);
+                      final config =
+                          _pricingMatrix[key] ?? _PricingConfig(oneTime: 15);
 
                       return TableCell(
                         verticalAlignment: TableCellVerticalAlignment.middle,
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 4.0),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8.0,
+                            vertical: 4.0,
+                          ),
                           child: TextFormField(
                             initialValue: config.oneTime.toStringAsFixed(0),
                             keyboardType: TextInputType.number,
                             textAlign: TextAlign.center,
                             decoration: const InputDecoration(
                               suffixText: 'ج.م',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                              contentPadding: EdgeInsets.symmetric(
+                                horizontal: 4,
+                                vertical: 4,
+                              ),
                             ),
                             onChanged: (val) {
                               final parsed = double.tryParse(val) ?? 15.0;
@@ -926,6 +1072,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   }
 
   // --- STEP 6: PACKAGE PRICING ---
+  // ignore: unused_element
   Widget _buildStep6PackagesPricing() {
     final scheme = Theme.of(context).colorScheme;
     if (_selectedRoute == null) {
@@ -957,28 +1104,36 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             type: 'أسبوعي (5 أيام)',
             days: 5,
             price: config.fiveDays,
-            setPrice: (double p) => setState(() => _pricingMatrix[key] = config.copyWith(fiveDays: p)),
+            setPrice: (double p) => setState(
+              () => _pricingMatrix[key] = config.copyWith(fiveDays: p),
+            ),
           ),
           (
             name: 'اشتراك أسبوعين خلال الشهر',
             type: 'نصف شهري (10 أيام)',
             days: 10,
             price: config.tenDays,
-            setPrice: (double p) => setState(() => _pricingMatrix[key] = config.copyWith(tenDays: p)),
+            setPrice: (double p) => setState(
+              () => _pricingMatrix[key] = config.copyWith(tenDays: p),
+            ),
           ),
           (
             name: 'اشتراك شهري كامل',
             type: 'شهري (22 يوم)',
             days: 22,
             price: config.monthly,
-            setPrice: (double p) => setState(() => _pricingMatrix[key] = config.copyWith(monthly: p)),
+            setPrice: (double p) => setState(
+              () => _pricingMatrix[key] = config.copyWith(monthly: p),
+            ),
           ),
           (
             name: 'اشتراك ربع سنوي مميز',
             type: '3 شهور (66 يوم)',
             days: 66,
             price: config.threeMonths,
-            setPrice: (double p) => setState(() => _pricingMatrix[key] = config.copyWith(threeMonths: p)),
+            setPrice: (double p) => setState(
+              () => _pricingMatrix[key] = config.copyWith(threeMonths: p),
+            ),
           ),
         ];
 
@@ -999,13 +1154,17 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                   items: segments.map((seg) {
                     return DropdownMenuItem(
                       value: '${seg.from.id}_${seg.to.id}',
-                      child: Text('${seg.from.name} ← ${seg.to.name} (التذكرة: ${(_pricingMatrix['${seg.from.id}_${seg.to.id}']?.oneTime ?? 15.0).toStringAsFixed(0)} ج.م)'),
+                      child: Text(
+                        '${seg.from.name} ← ${seg.to.name} (التذكرة: ${(_pricingMatrix['${seg.from.id}_${seg.to.id}']?.oneTime ?? 15.0).toStringAsFixed(0)} ج.م)',
+                      ),
                     );
                   }).toList(),
                   onChanged: (val) {
                     if (val == null) return;
                     final parts = val.split('_');
-                    final matched = segments.firstWhere((s) => s.from.id == parts[0] && s.to.id == parts[1]);
+                    final matched = segments.firstWhere(
+                      (s) => s.from.id == parts[0] && s.to.id == parts[1],
+                    );
                     setSubState(() => currentSegment = matched);
                   },
                 ),
@@ -1024,28 +1183,80 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               border: TableBorder.all(color: scheme.outline.withAlpha(50)),
               children: [
                 TableRow(
-                  decoration: BoxDecoration(color: scheme.surfaceContainerHighest.withAlpha(85)),
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerHighest.withAlpha(85),
+                  ),
                   children: const [
-                    Padding(padding: EdgeInsets.all(10), child: Text('اسم الباقة', style: TextStyle(fontWeight: FontWeight.bold))),
-                    Padding(padding: EdgeInsets.all(10), child: Text('نوع الباقة', style: TextStyle(fontWeight: FontWeight.bold))),
-                    Padding(padding: EdgeInsets.all(10), child: Text('السعر الأساسي', style: TextStyle(fontWeight: FontWeight.bold))),
-                    Padding(padding: EdgeInsets.all(10), child: Text('سعر الاشتراك', style: TextStyle(fontWeight: FontWeight.bold))),
-                    Padding(padding: EdgeInsets.all(10), child: Text('نسبة الخصم', style: TextStyle(fontWeight: FontWeight.bold))),
-                    Padding(padding: EdgeInsets.all(10), child: Text('الوفر الفعلي', style: TextStyle(fontWeight: FontWeight.bold))),
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        'اسم الباقة',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        'نوع الباقة',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        'السعر الأساسي',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        'سعر الاشتراك',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        'نسبة الخصم',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Text(
+                        'الوفر الفعلي',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ],
                 ),
                 ...packagesList.map((pkg) {
                   final basePrice = config.oneTime * pkg.days;
-                  final discountPercent = basePrice > 0 ? ((basePrice - pkg.price) / basePrice * 100) : 0.0;
+                  final discountPercent = basePrice > 0
+                      ? ((basePrice - pkg.price) / basePrice * 100)
+                      : 0.0;
                   final savings = basePrice - pkg.price;
 
                   return TableRow(
                     children: [
-                      Padding(padding: const EdgeInsets.all(10), child: Text(pkg.name)),
-                      Padding(padding: const EdgeInsets.all(10), child: Text(pkg.type)),
-                      Padding(padding: const EdgeInsets.all(10), child: Text('${basePrice.toStringAsFixed(0)} ج.م')),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                        padding: const EdgeInsets.all(10),
+                        child: Text(pkg.name),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Text(pkg.type),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: Text('${basePrice.toStringAsFixed(0)} ج.م'),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0,
+                          vertical: 2.0,
+                        ),
                         child: TextFormField(
                           key: ValueKey('${key}_${pkg.type}_price'),
                           initialValue: pkg.price.toStringAsFixed(0),
@@ -1059,7 +1270,10 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                         ),
                       ),
                       Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 2.0),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8.0,
+                          vertical: 2.0,
+                        ),
                         child: TextFormField(
                           key: ValueKey('${key}_${pkg.type}_disc'),
                           initialValue: discountPercent.toStringAsFixed(0),
@@ -1067,7 +1281,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                           decoration: const InputDecoration(suffixText: '%'),
                           onChanged: (val) {
                             final parsedDisc = double.tryParse(val) ?? 0.0;
-                            final nextPrice = basePrice * (1 - parsedDisc / 100);
+                            final nextPrice =
+                                basePrice * (1 - parsedDisc / 100);
                             pkg.setPrice(nextPrice);
                             setSubState(() {});
                           },
@@ -1096,16 +1311,13 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 
   // --- STEP 7: REVIEW ---
   Widget _buildStep7Review() {
-    if (_selectedRoute == null || _selectedVehicle == null || _selectedDriver == null) {
-      return const Center(child: Text('البيانات غير مكتملة، يرجى مراجعة الخطوات السابقة.'));
+    if (_selectedRoute == null ||
+        _selectedVehicle == null ||
+        _selectedDriver == null) {
+      return const Center(
+        child: Text('البيانات غير مكتملة، يرجى مراجعة الخطوات السابقة.'),
+      );
     }
-
-    final pricingList = _pricingMatrix.entries.where((e) {
-      final parts = e.key.split('_');
-      final from = _selectedRoute!.stations.firstWhere((st) => st.id == parts[0]);
-      final to = _selectedRoute!.stations.firstWhere((st) => st.id == parts[1]);
-      return from.order < to.order;
-    }).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1119,19 +1331,53 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           padding: const EdgeInsets.all(AppSpacing.medium),
           child: Column(
             children: [
-              _buildReviewRow('المسار المختار', _selectedRoute!.name, Icons.alt_route_rounded),
+              _buildReviewRow(
+                'المسار المختار',
+                _selectedRoute!.name,
+                Icons.alt_route_rounded,
+              ),
               const Divider(),
-              _buildReviewRow('المركبة ولوحة الأرقام', '${_selectedVehicle!.model} (${_selectedVehicle!.plateNumber})', Icons.airport_shuttle_rounded),
+              _buildReviewRow(
+                'المركبة ولوحة الأرقام',
+                '${_selectedVehicle!.model} (${_selectedVehicle!.plateNumber})',
+                Icons.airport_shuttle_rounded,
+              ),
               const Divider(),
-              _buildReviewRow('السائق المعين', _selectedDriver!.name, Icons.person_outline_rounded),
+              _buildReviewRow(
+                'السائق المعين',
+                _selectedDriver!.name,
+                Icons.person_outline_rounded,
+              ),
               const Divider(),
-              _buildReviewRow('موعد وتاريخ انطلاق الرحلة', '${_dateController.text} في ${_timeController.text}', Icons.access_time_rounded),
+              _buildReviewRow(
+                'موعد وتاريخ انطلاق الرحلة',
+                '${_dateController.text} في ${_timeController.text}',
+                Icons.access_time_rounded,
+              ),
               const Divider(),
-              _buildReviewRow('السعة الاستيعابية للرحلة', '${_selectedVehicle!.capacity} مقعد', Icons.airline_seat_recline_normal),
+              _buildReviewRow(
+                'وقت الوصول المتوقع',
+                _arrivalController.text,
+                Icons.flag_outlined,
+              ),
               const Divider(),
-              _buildReviewRow('إجمالي نقاط الوقوف', '${_selectedRoute!.stations.length} محطات', Icons.pin_drop_outlined),
+              _buildReviewRow(
+                'السعة الاستيعابية للرحلة',
+                '${_selectedVehicle!.capacity} مقعد',
+                Icons.airline_seat_recline_normal,
+              ),
               const Divider(),
-              _buildReviewRow('عدد تسعيرات الشرائح التي تم إعدادها', '${pricingList.length} شريحة مسار', Icons.price_change_outlined),
+              _buildReviewRow(
+                'إجمالي نقاط الوقوف',
+                '${_selectedRoute!.stations.length} محطات',
+                Icons.pin_drop_outlined,
+              ),
+              const Divider(),
+              _buildReviewRow(
+                'سعر التذكرة القياسي',
+                '${_priceController.text} ج.م',
+                Icons.price_change_outlined,
+              ),
             ],
           ),
         ),
@@ -1155,6 +1401,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   }
 
   // --- STEP 8: CONFIRMATION & CREATION ---
+  // ignore: unused_element
   Widget _buildStep8Confirmation() {
     final scheme = Theme.of(context).colorScheme;
     return Column(
@@ -1165,7 +1412,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         const SizedBox(height: AppSpacing.medium),
         Text(
           'كل شيء جاهز للتشغيل!',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+          style: Theme.of(
+            context,
+          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: AppSpacing.small),
         const Text(
@@ -1178,8 +1427,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   }
 
   Widget _buildFooter(ColorScheme scheme) {
-    final canGoNext = _currentStep < 7;
-    final canSubmit = _currentStep == 7;
+    final canGoNext = _currentStep < 5;
+    final canSubmit = _currentStep == 5;
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.medium),
@@ -1189,9 +1438,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           bottomLeft: Radius.circular(AppTokens.radiusLarge),
           bottomRight: Radius.circular(AppTokens.radiusLarge),
         ),
-        border: Border(
-          top: BorderSide(color: scheme.outline.withAlpha(50)),
-        ),
+        border: Border(top: BorderSide(color: scheme.outline.withAlpha(50))),
       ),
       child: Row(
         children: [
@@ -1232,7 +1479,11 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       case 2:
         return _selectedDriver != null;
       case 3:
-        return _dateController.text.isNotEmpty && _timeController.text.isNotEmpty;
+        return _dateController.text.isNotEmpty &&
+            _timeController.text.isNotEmpty &&
+            _arrivalController.text.isNotEmpty;
+      case 4:
+        return (double.tryParse(_priceController.text.trim()) ?? 0) > 0;
       default:
         return true;
     }
@@ -1248,39 +1499,14 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       vehicle: _selectedVehicle!.plateNumber,
       date: _dateController.text,
       departure: _timeController.text,
+      arrival: _arrivalController.text,
       capacity: _selectedVehicle!.capacity,
+      ticketPrice: double.tryParse(_priceController.text.trim()) ?? 0,
+      currency: 'ج.م',
     );
 
-    // Build the pricing configs
-    final List<TripPricing> pricingList = [];
-    _pricingMatrix.forEach((key, config) {
-      final parts = key.split('_');
-      final fromSt = _selectedRoute!.stations.firstWhere((st) => st.id == parts[0]);
-      final toSt = _selectedRoute!.stations.firstWhere((st) => st.id == parts[1]);
-
-      pricingList.add(TripPricing(
-        id: '', // Generated by repository
-        tripId: '', // Filled during creation
-        fromPointId: fromSt.id,
-        toPointId: toSt.id,
-        fromPointName: fromSt.name,
-        toPointName: toSt.name,
-        fromPointOrder: fromSt.order,
-        toPointOrder: toSt.order,
-        oneTimePrice: config.oneTime,
-        fiveDaysPrice: config.fiveDays,
-        tenDaysPrice: config.tenDays,
-        monthlyPrice: config.monthly,
-        threeMonthsPrice: config.threeMonths,
-        currency: 'ج.م',
-        isActive: true,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ));
-    });
-
     final cubit = context.read<TripCreationCubit>();
-    final created = await cubit.submitTrip(input, pricingList);
+    final created = await cubit.submitTrip(input, const []);
 
     if (mounted && created != null) {
       Navigator.of(context).pop(); // Close wizard dialog
@@ -1299,7 +1525,12 @@ class _TimeIndicator extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Column(
       children: [
-        Text(label, style: Theme.of(context).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant)),
+        Text(
+          label,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+        ),
         const SizedBox(height: 2),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -1309,7 +1540,10 @@ class _TimeIndicator extends StatelessWidget {
           ),
           child: Text(
             time,
-            style: TextStyle(fontWeight: FontWeight.bold, color: scheme.primary),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: scheme.primary,
+            ),
           ),
         ),
       ],

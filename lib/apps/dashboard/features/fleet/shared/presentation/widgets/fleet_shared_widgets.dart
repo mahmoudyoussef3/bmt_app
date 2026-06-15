@@ -19,7 +19,9 @@ class FleetAvatar extends StatelessWidget {
     return CircleAvatar(
       backgroundColor: scheme.primaryContainer,
       foregroundColor: scheme.onPrimaryContainer,
-      backgroundImage: profileImageUrl.isNotEmpty ? NetworkImage(profileImageUrl) : null,
+      backgroundImage: profileImageUrl.isNotEmpty
+          ? NetworkImage(profileImageUrl)
+          : null,
       child: profileImageUrl.isNotEmpty ? null : Text(label),
     );
   }
@@ -29,16 +31,14 @@ class FleetVehicleThumb extends StatelessWidget {
   final String label;
   final String imageUrl;
 
-  const FleetVehicleThumb({
-    super.key,
-    required this.label,
-    this.imageUrl = '',
-  });
+  const FleetVehicleThumb({super.key, required this.label, this.imageUrl = ''});
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final displayUrl = imageUrl.contains(',') ? imageUrl.split(',').first.trim() : imageUrl;
+    final displayUrl = imageUrl.contains(',')
+        ? imageUrl.split(',').first.trim()
+        : imageUrl;
     return Container(
       width: 54,
       height: 38,
@@ -54,7 +54,9 @@ class FleetVehicleThumb extends StatelessWidget {
               )
             : null,
       ),
-      child: displayUrl.isNotEmpty ? null : Icon(Icons.directions_bus_rounded, color: scheme.primary),
+      child: displayUrl.isNotEmpty
+          ? null
+          : Icon(Icons.directions_bus_rounded, color: scheme.primary),
     );
   }
 }
@@ -96,9 +98,9 @@ class FleetSectionTitle extends StatelessWidget {
                 title,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
               ),
               const SizedBox(height: 2),
               Text(
@@ -106,9 +108,9 @@ class FleetSectionTitle extends StatelessWidget {
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
+                  color: scheme.onSurfaceVariant,
+                  height: 1.5,
+                ),
               ),
             ],
           ),
@@ -156,9 +158,9 @@ class FleetFormHeroCard extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -166,9 +168,9 @@ class FleetFormHeroCard extends StatelessWidget {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        height: 1.5,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                    height: 1.5,
+                  ),
                 ),
               ],
             ),
@@ -201,13 +203,15 @@ class FleetFormActionsBar extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              saving ? 'جاري الحفظ والرفع...' : 'راجع البيانات قبل الحفظ النهائي.',
+              saving
+                  ? 'جاري الحفظ والرفع...'
+                  : 'راجع البيانات قبل الحفظ النهائي.',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(width: AppSpacing.medium),
@@ -263,17 +267,17 @@ class FleetEmptyInlineState extends StatelessWidget {
           const SizedBox(height: AppSpacing.small),
           Text(
             title,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 4),
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ),
@@ -309,15 +313,19 @@ class FleetBreadcrumbs extends StatelessWidget {
             style: TextStyle(color: scheme.onSurfaceVariant),
           ),
         ),
-        Icon(Icons.chevron_left_rounded, size: 16, color: scheme.onSurfaceVariant),
+        Icon(
+          Icons.chevron_left_rounded,
+          size: 16,
+          color: scheme.onSurfaceVariant,
+        ),
         const SizedBox(width: AppSpacing.small),
         Expanded(
           child: Text(
             currentLabel,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: scheme.primary,
-                ),
+              fontWeight: FontWeight.bold,
+              color: scheme.primary,
+            ),
             overflow: TextOverflow.ellipsis,
           ),
         ),

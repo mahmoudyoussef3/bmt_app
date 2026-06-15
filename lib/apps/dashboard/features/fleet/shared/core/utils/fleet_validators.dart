@@ -45,7 +45,8 @@ class FleetValidators {
   static String? validateEmployeeCode(String? value) {
     if (value == null || value.trim().isEmpty) return 'كود الموظف مطلوب';
     final trimmed = value.trim();
-    if (trimmed.length < 3) return 'كود الموظف يجب أن يتكون من 3 رموز على الأقل';
+    if (trimmed.length < 3)
+      return 'كود الموظف يجب أن يتكون من 3 رموز على الأقل';
     return null;
   }
 
@@ -59,7 +60,8 @@ class FleetValidators {
   static String? validateVehicleCode(String? value) {
     if (value == null || value.trim().isEmpty) return 'كود المركبة مطلوب';
     final trimmed = value.trim();
-    if (trimmed.length < 3) return 'كود المركبة يجب أن يتكون من 3 رموز على الأقل';
+    if (trimmed.length < 3)
+      return 'كود المركبة يجب أن يتكون من 3 رموز على الأقل';
     return null;
   }
 

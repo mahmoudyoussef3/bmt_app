@@ -6,6 +6,7 @@ class RouteOptionData {
     required this.duration,
     required this.availableSeats,
     required this.startingPrice,
+    this.points = const [],
     this.isFastest = false,
   });
 
@@ -15,7 +16,22 @@ class RouteOptionData {
   final String duration;
   final int availableSeats;
   final String startingPrice;
+  final List<RoutePointData> points;
   final bool isFastest;
+}
+
+class RoutePointData {
+  const RoutePointData({
+    required this.name,
+    required this.order,
+    this.latitude,
+    this.longitude,
+  });
+
+  final String name;
+  final int order;
+  final double? latitude;
+  final double? longitude;
 }
 
 class PopularRouteListData {

@@ -80,7 +80,8 @@ class _FleetAssignmentDialogState extends State<FleetAssignmentDialog> {
                   .toList(),
               onChanged: (value) => setState(() => vehicleId = value ?? ''),
             ),
-            if (widget.vehicles.isEmpty || (!reassign && widget.drivers.isEmpty)) ...[
+            if (widget.vehicles.isEmpty ||
+                (!reassign && widget.drivers.isEmpty)) ...[
               const SizedBox(height: AppSpacing.small),
               Text(
                 'لا توجد بيانات متاحة غير معينة حالياً',

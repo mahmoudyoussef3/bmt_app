@@ -10,13 +10,15 @@ class GetFleetVehiclesUseCase {
 class CreateFleetVehicleUseCase {
   final FleetVehiclesRepository _repository;
   const CreateFleetVehicleUseCase(this._repository);
-  Future<FleetVehicle> call(FleetVehicle vehicle) => _repository.createVehicle(vehicle);
+  Future<FleetVehicle> call(FleetVehicle vehicle) =>
+      _repository.createVehicle(vehicle);
 }
 
 class UpdateFleetVehicleUseCase {
   final FleetVehiclesRepository _repository;
   const UpdateFleetVehicleUseCase(this._repository);
-  Future<FleetVehicle> call(FleetVehicle vehicle) => _repository.updateVehicle(vehicle);
+  Future<FleetVehicle> call(FleetVehicle vehicle) =>
+      _repository.updateVehicle(vehicle);
 }
 
 class UpdateFleetVehicleStatusUseCase {

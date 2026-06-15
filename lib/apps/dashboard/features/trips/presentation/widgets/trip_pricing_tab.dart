@@ -49,8 +49,8 @@ class _TripPricingTabState extends State<TripPricingTab> {
                     Text(
                       '${widget.trip.id} • ${widget.trip.date} • ${widget.trip.departure}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                   ],
                 ),
@@ -73,10 +73,9 @@ class _TripPricingTabState extends State<TripPricingTab> {
             } else if (state is TripPricingError) {
               return Text(
                 state.message,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: scheme.error),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: scheme.error),
               );
             } else if (state is TripPricingLoaded) {
               if (state.pricing.isEmpty) {
@@ -84,10 +83,9 @@ class _TripPricingTabState extends State<TripPricingTab> {
                   padding: const EdgeInsets.all(AppSpacing.large),
                   child: Text(
                     'لم يتم إعداد تسعير لهذه الرحلة بعد',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: scheme.onSurfaceVariant),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 );
               }

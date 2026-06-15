@@ -33,12 +33,15 @@ class TripPassengersCubit extends Cubit<TripPassengersState> {
     required UpdatePassengerUseCase updatePassenger,
     required CancelPassengerUseCase cancelPassenger,
     required MovePassengerUseCase movePassenger,
-  })  : _updatePassenger = updatePassenger,
-        _cancelPassenger = cancelPassenger,
-        _movePassenger = movePassenger,
-        super(const TripPassengersInitial());
+  }) : _updatePassenger = updatePassenger,
+       _cancelPassenger = cancelPassenger,
+       _movePassenger = movePassenger,
+       super(const TripPassengersInitial());
 
-  Future<OperationTrip?> editPassenger(String tripId, TripPassenger passenger) async {
+  Future<OperationTrip?> editPassenger(
+    String tripId,
+    TripPassenger passenger,
+  ) async {
     emit(const TripPassengersLoading());
     try {
       final updated = await _updatePassenger(tripId, passenger);
@@ -50,7 +53,10 @@ class TripPassengersCubit extends Cubit<TripPassengersState> {
     }
   }
 
-  Future<OperationTrip?> cancelBooking(String tripId, String passengerId) async {
+  Future<OperationTrip?> cancelBooking(
+    String tripId,
+    String passengerId,
+  ) async {
     emit(const TripPassengersLoading());
     try {
       final updated = await _cancelPassenger(tripId, passengerId);

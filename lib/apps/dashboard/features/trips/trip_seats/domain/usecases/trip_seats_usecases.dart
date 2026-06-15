@@ -6,7 +6,11 @@ class UpdateSeatStateUseCase {
 
   const UpdateSeatStateUseCase(this._repository);
 
-  Future<OperationTrip> call(String tripId, String seatId, TripSeatState state) {
+  Future<OperationTrip> call(
+    String tripId,
+    String seatId,
+    TripSeatState state,
+  ) {
     return _repository.updateSeatState(tripId, seatId, state);
   }
 }

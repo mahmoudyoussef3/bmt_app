@@ -33,7 +33,9 @@ class FleetDocumentsCardList extends StatelessWidget {
   Widget build(BuildContext context) {
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, documents.length);
-    final paged = start >= documents.length ? <FleetDocument>[] : documents.sublist(start, end);
+    final paged = start >= documents.length
+        ? <FleetDocument>[]
+        : documents.sublist(start, end);
 
     if (paged.isEmpty) {
       return const Center(
@@ -124,7 +126,9 @@ class FleetDocumentsCardList extends StatelessWidget {
               ),
               Text('صفحة ${page + 1} من $pages'),
               IconButton(
-                onPressed: page >= pages - 1 ? null : () => onPageChanged(page + 1),
+                onPressed: page >= pages - 1
+                    ? null
+                    : () => onPageChanged(page + 1),
                 icon: const Icon(Icons.chevron_left_rounded),
               ),
             ],

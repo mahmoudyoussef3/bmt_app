@@ -1,6 +1,6 @@
 import '../../domain/entities/dashboard_home_data.dart';
 import '../../domain/repositories/dashboard_home_repository.dart';
-import '../datasources/mock_dashboard_home_datasource.dart';
+import '../datasources/dashboard_home_datasource.dart';
 
 class DashboardHomeRepositoryImpl implements DashboardHomeRepository {
   final DashboardHomeDatasource _datasource;

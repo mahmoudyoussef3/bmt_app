@@ -111,6 +111,16 @@ class _ActionNowSection extends StatelessWidget {
       title: 'إجراءات تحتاج تدخل الآن',
       child: LayoutBuilder(
         builder: (context, constraints) {
+          if (items.isEmpty) {
+            return const AppCard(
+              padding: EdgeInsets.all(AppSpacing.medium),
+              child: EmptyState(
+                title: 'لا توجد إجراءات عاجلة الآن',
+                subtitle: 'كل قوائم التشغيل المتصلة بالتطبيقات مستقرة حالياً.',
+              ),
+            );
+          }
+
           final columns = constraints.maxWidth >= 1180
               ? 4
               : constraints.maxWidth >= 760
@@ -237,6 +247,16 @@ class _TodayTripsSection extends StatelessWidget {
       title: 'رحلات اليوم',
       child: LayoutBuilder(
         builder: (context, constraints) {
+          if (trips.isEmpty) {
+            return const AppCard(
+              padding: EdgeInsets.all(AppSpacing.medium),
+              child: EmptyState(
+                title: 'لا توجد رحلات مجدولة اليوم',
+                subtitle: 'ستظهر الرحلات فور إنشائها في جدول التشغيل.',
+              ),
+            );
+          }
+
           final columns = constraints.maxWidth >= 1060 ? 2 : 1;
 
           return GridView.builder(
@@ -719,20 +739,26 @@ class _AlertsSection extends StatelessWidget {
       title: 'تنبيهات التشغيل',
       child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.medium),
-        child: Column(
-          children: items.indexed.map((entry) {
-            final (index, item) = entry;
-            return Column(
-              children: [
-                if (index > 0) const Divider(height: AppSpacing.large),
-                _AlertRow(
-                  item: item,
-                  onTap: () => onOpenModule?.call(item.targetModule),
-                ),
-              ],
-            );
-          }).toList(),
-        ),
+        child: items.isEmpty
+            ? const EmptyState(
+                title: 'لا توجد تنبيهات تشغيل',
+                subtitle:
+                    'أي تأخير أو تعارض أو مستند منتهي سيظهر هنا فور رصده.',
+              )
+            : Column(
+                children: items.indexed.map((entry) {
+                  final (index, item) = entry;
+                  return Column(
+                    children: [
+                      if (index > 0) const Divider(height: AppSpacing.large),
+                      _AlertRow(
+                        item: item,
+                        onTap: () => onOpenModule?.call(item.targetModule),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
       ),
     );
   }

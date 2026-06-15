@@ -53,10 +53,10 @@ class TripPricingCubit extends Cubit<TripPricingState> {
     required GetTripPricingUseCase getTripPricing,
     required SaveTripPricingUseCase saveTripPricing,
     required ToggleTripPricingUseCase toggleTripPricing,
-  })  : _getTripPricing = getTripPricing,
-        _saveTripPricing = saveTripPricing,
-        _toggleTripPricing = toggleTripPricing,
-        super(const TripPricingInitial());
+  }) : _getTripPricing = getTripPricing,
+       _saveTripPricing = saveTripPricing,
+       _toggleTripPricing = toggleTripPricing,
+       super(const TripPricingInitial());
 
   Future<void> loadPricing(String tripId) async {
     emit(const TripPricingLoading());
@@ -74,14 +74,15 @@ class TripPricingCubit extends Cubit<TripPricingState> {
     emit(current.copyWith(isSaving: true, clearError: true));
     try {
       final saved = await _saveTripPricing(pricingData);
-      final List<TripPricing> list = <TripPricing>[
-        saved,
-        ...current.pricing.where((p) => p.id != saved.id),
-      ]..sort((a, b) {
-          final fromOrder = a.fromPointOrder.compareTo(b.fromPointOrder);
-          if (fromOrder != 0) return fromOrder;
-          return a.toPointOrder.compareTo(b.toPointOrder);
-        });
+      final List<TripPricing> list =
+          <TripPricing>[
+            saved,
+            ...current.pricing.where((p) => p.id != saved.id),
+          ]..sort((a, b) {
+            final fromOrder = a.fromPointOrder.compareTo(b.fromPointOrder);
+            if (fromOrder != 0) return fromOrder;
+            return a.toPointOrder.compareTo(b.toPointOrder);
+          });
       emit(TripPricingLoaded(pricing: list));
       return null;
     } catch (e) {
@@ -94,8 +95,13 @@ class TripPricingCubit extends Cubit<TripPricingState> {
     final current = state;
     if (current is! TripPricingLoaded) return;
     try {
-      final updated = await _toggleTripPricing(pricingData.id, !pricingData.isActive);
-      final List<TripPricing> list = current.pricing.map((p) => p.id == updated.id ? updated : p).toList();
+      final updated = await _toggleTripPricing(
+        pricingData.id,
+        !pricingData.isActive,
+      );
+      final List<TripPricing> list = current.pricing
+          .map((p) => p.id == updated.id ? updated : p)
+          .toList();
       emit(current.copyWith(pricing: list));
     } catch (e) {
       emit(current.copyWith(error: e.toString()));

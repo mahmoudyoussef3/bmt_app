@@ -26,6 +26,7 @@ class RouteBuilderView extends StatefulWidget {
 
 class _RouteBuilderViewState extends State<RouteBuilderView> {
   late final TextEditingController _name;
+  late final TextEditingController _code;
   late final TextEditingController _start;
   late final TextEditingController _end;
   late final TextEditingController _duration;
@@ -46,7 +47,8 @@ class _RouteBuilderViewState extends State<RouteBuilderView> {
     super.initState();
     final route = widget.route;
     _name = TextEditingController(text: route?.name ?? '');
-    _start = TextEditingController(text: route?.startCity ?? 'بنها');
+    _code = TextEditingController(text: route?.routeCode ?? '');
+    _start = TextEditingController(text: route?.startCity ?? '');
     _end = TextEditingController(text: route?.endCity ?? '');
     _duration = TextEditingController(text: route?.duration ?? '');
     _distance = TextEditingController(text: route?.distance ?? '');
@@ -58,32 +60,13 @@ class _RouteBuilderViewState extends State<RouteBuilderView> {
     _stationArrival = TextEditingController();
     _stationNotes = TextEditingController();
     _stations = [...?route?.stations];
-    if (_stations.isEmpty) {
-      _stations = const [
-        RouteStation(
-          id: 'draft-1',
-          name: 'نقطة الانطلاق',
-          area: 'بنها',
-          arrivalOffset: '٠ دقيقة',
-          notes: 'محطة بداية الرحلة.',
-          order: 1,
-        ),
-        RouteStation(
-          id: 'draft-2',
-          name: 'محطة وسطية',
-          area: 'القاهرة',
-          arrivalOffset: '٣٠ دقيقة',
-          notes: 'نقطة تحميل ركاب وسط المسار.',
-          order: 2,
-        ),
-      ];
-    }
     _status = route?.status ?? OperationRouteStatus.draft;
   }
 
   @override
   void dispose() {
     _name.dispose();
+    _code.dispose();
     _start.dispose();
     _end.dispose();
     _duration.dispose();
@@ -151,6 +134,7 @@ class _RouteBuilderViewState extends State<RouteBuilderView> {
             final compact = constraints.maxWidth < 1080;
             final builder = _BuilderPanel(
               name: _name,
+              code: _code,
               start: _start,
               end: _end,
               duration: _duration,
@@ -201,16 +185,13 @@ class _RouteBuilderViewState extends State<RouteBuilderView> {
     final nextOrder = existing?.order ?? _stations.length + 1;
     final station = RouteStation(
       id: existing?.id ?? 'draft-${DateTime.now().microsecondsSinceEpoch}',
-      name: _stationName.text.trim().isEmpty
-          ? 'محطة جديدة'
-          : _stationName.text.trim(),
-      area: _stationArea.text.trim().isEmpty
-          ? 'منطقة غير محددة'
-          : _stationArea.text.trim(),
-      arrivalOffset: _stationArrival.text.trim().isEmpty
-          ? 'غير محدد'
-          : _stationArrival.text.trim(),
+      name: _stationName.text.trim(),
+      area: _stationArea.text.trim(),
+      arrivalOffset: _stationArrival.text.trim(),
+      estimatedArrivalTime: _stationArrival.text.trim(),
       notes: _stationNotes.text.trim(),
+      pickupAllowed: existing?.pickupAllowed ?? true,
+      dropoffAllowed: existing?.dropoffAllowed ?? true,
       order: nextOrder,
     );
 
@@ -278,15 +259,12 @@ class _RouteBuilderViewState extends State<RouteBuilderView> {
     final route = widget.route;
     return OperationRoute(
       id: route?.id ?? '',
-      name: _name.text.trim().isEmpty ? 'مسار جديد' : _name.text.trim(),
-      startCity: _start.text.trim().isEmpty ? 'بنها' : _start.text.trim(),
-      endCity: _end.text.trim().isEmpty ? 'وجهة جديدة' : _end.text.trim(),
-      duration: _duration.text.trim().isEmpty
-          ? 'غير محدد'
-          : _duration.text.trim(),
-      distance: _distance.text.trim().isEmpty
-          ? 'غير محدد'
-          : _distance.text.trim(),
+      routeCode: _code.text.trim(),
+      name: _name.text.trim(),
+      startCity: _start.text.trim(),
+      endCity: _end.text.trim(),
+      duration: _duration.text.trim(),
+      distance: _distance.text.trim(),
       status: _status,
       stations: _normalize(_stations),
       notes: _routeNote.text.trim().isEmpty ? const [] : [_routeNote.text],
@@ -296,6 +274,7 @@ class _RouteBuilderViewState extends State<RouteBuilderView> {
 
 class _BuilderPanel extends StatelessWidget {
   final TextEditingController name;
+  final TextEditingController code;
   final TextEditingController start;
   final TextEditingController end;
   final TextEditingController duration;
@@ -317,6 +296,7 @@ class _BuilderPanel extends StatelessWidget {
 
   const _BuilderPanel({
     required this.name,
+    required this.code,
     required this.start,
     required this.end,
     required this.duration,
@@ -350,6 +330,7 @@ class _BuilderPanel extends StatelessWidget {
             runSpacing: AppSpacing.medium,
             children: [
               _TextInput(label: 'اسم المسار', controller: name),
+              _TextInput(label: 'كود المسار', controller: code),
               _TextInput(label: 'نقطة البداية', controller: start),
               _TextInput(label: 'نقطة النهاية', controller: end),
               _TextInput(label: 'مدة الرحلة', controller: duration),

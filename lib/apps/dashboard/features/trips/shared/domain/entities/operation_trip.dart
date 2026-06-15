@@ -1,5 +1,6 @@
 enum OperationTripStatus {
   scheduled('مجدولة'),
+  boarding('صعود الركاب'),
   openForBooking('مفتوحة للحجز'),
   inProgress('جارية'),
   completed('مكتملة'),
@@ -9,9 +10,18 @@ enum OperationTripStatus {
 
   const OperationTripStatus(this.label);
 
+  String get dbValue {
+    return switch (this) {
+      OperationTripStatus.inProgress => 'in_progress',
+      OperationTripStatus.openForBooking => 'scheduled',
+      _ => name,
+    };
+  }
+
   static OperationTripStatus fromString(String value) {
+    if (value == 'in_progress') return OperationTripStatus.inProgress;
     return OperationTripStatus.values.firstWhere(
-      (e) => e.name == value,
+      (e) => e.name == value || e.dbValue == value,
       orElse: () => OperationTripStatus.scheduled,
     );
   }
@@ -50,6 +60,8 @@ class OperationTrip {
   final String arrival;
   final OperationTripStatus status;
   final int capacity;
+  final double ticketPrice;
+  final String currency;
   final List<TripSeat> seats;
   final List<TripPassenger> passengers;
   final List<TripEvent> events;
@@ -69,6 +81,8 @@ class OperationTrip {
     required this.arrival,
     required this.status,
     required this.capacity,
+    this.ticketPrice = 0,
+    this.currency = 'ج.م',
     required this.seats,
     required this.passengers,
     required this.events,
@@ -89,6 +103,8 @@ class OperationTrip {
     String? arrival,
     OperationTripStatus? status,
     int? capacity,
+    double? ticketPrice,
+    String? currency,
     List<TripSeat>? seats,
     List<TripPassenger>? passengers,
     List<TripEvent>? events,
@@ -108,6 +124,8 @@ class OperationTrip {
       arrival: arrival ?? this.arrival,
       status: status ?? this.status,
       capacity: capacity ?? this.capacity,
+      ticketPrice: ticketPrice ?? this.ticketPrice,
+      currency: currency ?? this.currency,
       seats: seats ?? this.seats,
       passengers: passengers ?? this.passengers,
       events: events ?? this.events,
@@ -266,7 +284,10 @@ class CreateTripInput {
   final String vehicle;
   final String date;
   final String departure;
+  final String arrival;
   final int capacity;
+  final double ticketPrice;
+  final String currency;
 
   const CreateTripInput({
     required this.routeId,
@@ -277,6 +298,9 @@ class CreateTripInput {
     required this.vehicle,
     required this.date,
     required this.departure,
+    this.arrival = '',
     required this.capacity,
+    this.ticketPrice = 0,
+    this.currency = 'ج.م',
   });
 }

@@ -1,5 +1,6 @@
 import '../../../../core/network/network_di.dart';
 import 'package:get_it/get_it.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/assigned_trips/data/datasources/captain_trip_remote_datasource.dart';
 import '../../features/assigned_trips/data/repositories/captain_trip_repository_impl.dart';
@@ -49,6 +50,12 @@ import '../../features/trip_status_updates/presentation/cubit/trip_status_update
 final GetIt captainGetIt = GetIt.instance;
 
 void registerCaptainDependencies() {
+  if (!captainGetIt.isRegistered<SupabaseClient>()) {
+    captainGetIt.registerLazySingleton<SupabaseClient>(
+      () => Supabase.instance.client,
+    );
+  }
+
   // Register Core Networking (Dio, Retrofit ApiService)
   registerNetworkDependencies(captainGetIt);
 
@@ -65,7 +72,7 @@ void registerCaptainDependencies() {
 void _registerAssignedTripsDependencies() {
   if (!captainGetIt.isRegistered<CaptainTripRemoteDataSource>()) {
     captainGetIt.registerLazySingleton<CaptainTripRemoteDataSource>(
-      () => const CaptainTripRemoteDataSource(),
+      () => CaptainTripRemoteDataSource(captainGetIt<SupabaseClient>()),
     );
   }
   if (!captainGetIt.isRegistered<CaptainTripRepository>()) {
@@ -116,7 +123,7 @@ void _registerPassengerManifestDependencies() {
 void _registerTripExecutionDependencies() {
   if (!captainGetIt.isRegistered<TripExecutionDataSource>()) {
     captainGetIt.registerLazySingleton<TripExecutionDataSource>(
-      () => const TripExecutionDataSource(),
+      () => TripExecutionDataSource(captainGetIt<SupabaseClient>()),
     );
   }
   if (!captainGetIt.isRegistered<TripExecutionRepository>()) {

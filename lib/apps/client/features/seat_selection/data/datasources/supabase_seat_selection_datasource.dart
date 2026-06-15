@@ -10,78 +10,100 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
 
   @override
   Future<SeatSelectionModel> getSeatSelectionData(String tripId) async {
-    // 1. Fetch real trip_seats for this trip
-    final seatsResponse = await _supabase
-        .from('trip_seats')
-        .select('*')
-        .eq('trip_id', tripId)
-        .order('seat_number', ascending: true);
+    try {
+      // 1. Fetch real trip_seats for this trip.
+      final seatsResponse = await _supabase
+          .from('trip_seats')
+          .select('id, seat_label, seat_row, seat_column, state')
+          .eq('trip_id', tripId)
+          .order('seat_row', ascending: true)
+          .order('seat_column', ascending: true);
 
-    final List<SeatOptionModel> seats = [];
-    for (final seatRecord in seatsResponse) {
-      final seatId = seatRecord['id'].toString();
-      final state = seatRecord['state']?.toString() ?? 'available';
-      final seatNumber = seatRecord['seat_number'] as int? ?? 0;
-      seats.add(
-        SeatOptionModel(
-          id: seatId,
-          seatNumber: seatNumber,
-          availability: state == 'available' 
-              ? SeatAvailability.available 
-              : SeatAvailability.reserved,
-        ),
-      );
-    }
+      final List<SeatOptionModel> seats = [];
+      for (var index = 0; index < seatsResponse.length; index++) {
+        final seatRecord = seatsResponse[index];
+        final state = seatRecord['state']?.toString() ?? 'reserved';
+        final label = seatRecord['seat_label']?.toString() ?? '';
+        final seatNumber =
+            int.tryParse(label.replaceAll(RegExp(r'[^0-9]'), '')) ?? index + 1;
+        seats.add(
+          SeatOptionModel(
+            id: seatRecord['id'].toString(),
+            seatNumber: seatNumber,
+            availability: state == 'available'
+                ? SeatAvailability.available
+                : SeatAvailability.reserved,
+          ),
+        );
+      }
 
-    // 2. Fetch trip details, vehicle details and driver
-    final tripResponse = await _supabase
-        .from('operation_trips')
-        .select('''
+      // 2. Fetch trip details, vehicle details and driver.
+      final tripResponse = await _supabase
+          .from('operation_trips')
+          .select('''
           *,
           vehicles (*),
           drivers (*),
           operation_routes (*),
           trip_pricing (*)
         ''')
-        .eq('id', tripId)
-        .maybeSingle();
+          .eq('id', tripId)
+          .maybeSingle();
 
-    if (tripResponse == null) {
-      throw Exception('Trip details not found');
+      if (tripResponse == null) {
+        throw Exception('تعذر العثور على تفاصيل الرحلة.');
+      }
+
+      final vehicle = tripResponse['vehicles'] as Map<String, dynamic>? ?? {};
+      final driver = tripResponse['drivers'] as Map<String, dynamic>? ?? {};
+      final route =
+          tripResponse['operation_routes'] as Map<String, dynamic>? ?? {};
+      final pricingList = tripResponse['trip_pricing'] as List<dynamic>? ?? [];
+      final pricing = pricingList.isNotEmpty
+          ? pricingList.first as Map<String, dynamic>
+          : <String, dynamic>{};
+
+      final ticketPrice = tripResponse['ticket_price'];
+      final legacyPrice = pricing['one_time_price'];
+      final fare = ticketPrice is num
+          ? ticketPrice.toDouble()
+          : legacyPrice is num
+          ? legacyPrice.toDouble()
+          : 0.0;
+      final driverRating = driver['rating'];
+
+      return SeatSelectionModel(
+        tripId: tripId,
+        seats: seats,
+        pricePerSeat: fare,
+        pickupPoint: route['start_city']?.toString() ?? '',
+        destination: route['end_city']?.toString() ?? '',
+        vehicleNumber:
+            vehicle['plate_number']?.toString() ??
+            vehicle['vehicle_code']?.toString() ??
+            '',
+        vehicleName: vehicle['brand']?.toString() ?? '',
+        vehicleType: vehicle['vehicle_type']?.toString() ?? '',
+        vehicleModel: vehicle['model']?.toString() ?? '',
+        tripDate: tripResponse['trip_date']?.toString() ?? '',
+        departureTime: tripResponse['departure_time']?.toString() ?? '',
+        arrivalTime: tripResponse['arrival_time']?.toString() ?? '',
+        driverName: driver['full_name']?.toString() ?? '',
+        driverRating: driverRating is num ? driverRating.toDouble() : 0.0,
+      );
+    } catch (error) {
+      if (error is PostgrestException) {
+        throw Exception('تعذر تحميل مقاعد الرحلة من قاعدة البيانات.');
+      }
+      rethrow;
     }
-
-    final vehicle = tripResponse['vehicles'] as Map<String, dynamic>? ?? {};
-    final driver = tripResponse['drivers'] as Map<String, dynamic>? ?? {};
-    final route = tripResponse['operation_routes'] as Map<String, dynamic>? ?? {};
-    final pricingList = tripResponse['trip_pricing'] as List<dynamic>? ?? [];
-    final pricing = pricingList.isNotEmpty ? pricingList.first : {};
-
-    final pickup = route['start_city']?.toString() ?? 'Unknown';
-    final destination = route['end_city']?.toString() ?? 'Unknown';
-    final fare = pricing['base_price'] != null ? (pricing['base_price'] as num).toDouble() : 85.0;
-
-    return SeatSelectionModel(
-      tripId: tripId,
-      seats: seats,
-      pricePerSeat: fare,
-      pickupPoint: pickup,
-      destination: destination,
-      vehicleNumber: vehicle['license_plate']?.toString() ?? 'N/A',
-      vehicleName: vehicle['brand']?.toString() ?? 'Unknown Vehicle',
-      vehicleType: vehicle['vehicle_type']?.toString() ?? 'Shuttle',
-      vehicleModel: vehicle['model']?.toString() ?? 'Standard',
-      departureTime: tripResponse['start_time']?.toString() ?? 'N/A',
-      arrivalTime: tripResponse['end_time']?.toString() ?? 'N/A',
-      driverName: driver['full_name']?.toString() ?? 'Unknown',
-      driverRating: 5.0, // Hardcoded fallback for now
-    );
   }
 
   @override
   Future<String> bookTripSeat(Map<String, dynamic> params) async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('User not logged in');
-    
+
     final finalParams = Map<String, dynamic>.from(params);
     finalParams['p_client_id'] = user.id;
 

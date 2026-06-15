@@ -53,7 +53,9 @@ class FleetAssignmentsLoaded extends FleetAssignmentsState {
 
   String vehicleName(String vehicleId) {
     final v = vehicles.where((v) => v.id == vehicleId);
-    return v.isNotEmpty ? '${v.first.brand} ${v.first.model} (${v.first.plateNumber})' : 'غير معروفة';
+    return v.isNotEmpty
+        ? '${v.first.brand} ${v.first.model} (${v.first.plateNumber})'
+        : 'غير معروفة';
   }
 
   List<FleetAssignment> get filteredAssignments {

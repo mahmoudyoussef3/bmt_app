@@ -37,7 +37,10 @@ void main() {
 
     test('moves trip status', () async {
       final updateStatus = UpdateTripStatusUseCase(repository);
-      final updated = await updateStatus('trip-1', OperationTripStatus.completed);
+      final updated = await updateStatus(
+        'trip-1',
+        OperationTripStatus.completed,
+      );
 
       expect(updated.status, OperationTripStatus.completed);
     });
@@ -55,6 +58,8 @@ void main() {
         vehicle: 'ق س أ 1234',
         date: '2026-06-12',
         departure: '09:00',
+        arrival: '10:30',
+        ticketPrice: 75,
         capacity: 14,
       );
 
@@ -73,11 +78,19 @@ void main() {
         vehicle: 'ق س أ 1234',
         date: '2026-06-12',
         departure: '09:00',
+        arrival: '10:30',
+        ticketPrice: 75,
         capacity: 14,
       );
       expect(
         () => createTrip(inputArchivedRoute, []),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('لا يمكن جدولة رحلة لمسار مؤرشف'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('لا يمكن جدولة رحلة لمسار مؤرشف'),
+          ),
+        ),
       );
 
       // 3. Driver suspended validation
@@ -90,11 +103,19 @@ void main() {
         vehicle: 'ق س أ 1234',
         date: '2026-06-12',
         departure: '09:00',
+        arrival: '10:30',
+        ticketPrice: 75,
         capacity: 14,
       );
       expect(
         () => createTrip(inputSuspendedDriver, []),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('السائق غير نشط'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('السائق غير نشط'),
+          ),
+        ),
       );
 
       // 4. Vehicle maintenance validation
@@ -107,11 +128,19 @@ void main() {
         vehicle: 'ق س أ 1234',
         date: '2026-06-12',
         departure: '09:00',
+        arrival: '10:30',
+        ticketPrice: 75,
         capacity: 14,
       );
       expect(
         () => createTrip(inputMaintenanceVehicle, []),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('المركبة غير متاحة للتشغيل'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('المركبة غير متاحة للتشغيل'),
+          ),
+        ),
       );
 
       // 5. Duplicate trip validation
@@ -124,17 +153,29 @@ void main() {
         vehicle: 'ق س أ 1234',
         date: '2026-06-12',
         departure: 'duplicate-time',
+        arrival: '10:30',
+        ticketPrice: 75,
         capacity: 14,
       );
       expect(
         () => createTrip(inputDuplicate, []),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('توجد رحلة مجدولة بالفعل'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('توجد رحلة مجدولة بالفعل'),
+          ),
+        ),
       );
     });
 
     test('updates a trip seat state', () async {
       final updateSeat = UpdateSeatStateUseCase(repository);
-      final updated = await updateSeat('trip-1', 'seat-1', TripSeatState.blocked);
+      final updated = await updateSeat(
+        'trip-1',
+        'seat-1',
+        TripSeatState.blocked,
+      );
 
       final updatedSeat = updated.seats.firstWhere((s) => s.id == 'seat-1');
       expect(updatedSeat.state, TripSeatState.blocked);
@@ -164,10 +205,7 @@ void main() {
 
       // Move passenger seat
       final moved = await movePassenger('trip-1', 'pass-1', 'A2');
-      expect(
-        moved.passengers.firstWhere((p) => p.id == 'pass-1').seat,
-        'A2',
-      );
+      expect(moved.passengers.firstWhere((p) => p.id == 'pass-1').seat, 'A2');
 
       // Cancel passenger
       final cancelled = await cancelPassenger('trip-1', 'pass-1');
@@ -209,21 +247,42 @@ void main() {
       final samePointPricing = pricing.copyWith(toPointId: 'st-1');
       expect(
         () => savePricing(samePointPricing),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('يجب أن تكون نقطتا البداية والنهاية مختلفتين'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('يجب أن تكون نقطتا البداية والنهاية مختلفتين'),
+          ),
+        ),
       );
 
       // Invalid pricing - from order >= to order
-      final wrongOrderPricing = pricing.copyWith(fromPointOrder: 2, toPointOrder: 1);
+      final wrongOrderPricing = pricing.copyWith(
+        fromPointOrder: 2,
+        toPointOrder: 1,
+      );
       expect(
         () => savePricing(wrongOrderPricing),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('نقطة البداية يجب أن تسبق'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('نقطة البداية يجب أن تسبق'),
+          ),
+        ),
       );
 
       // Invalid pricing - negative or zero price
       final zeroPricePricing = pricing.copyWith(oneTimePrice: 0.0);
       expect(
         () => savePricing(zeroPricePricing),
-        throwsA(isA<Exception>().having((e) => e.toString(), 'message', contains('يجب أن تكون جميع قيم الأسعار أكبر من صفر'))),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('يجب أن يكون سعر التذكرة والعملة صالحين'),
+          ),
+        ),
       );
     });
 
@@ -271,9 +330,28 @@ class _MockTripsDatasource implements TripsDatasource {
         status: OperationTripStatus.scheduled,
         capacity: 14,
         seats: [
-          const TripSeat(id: 'seat-1', label: 'A1', row: 1, column: 1, state: TripSeatState.available),
-          const TripSeat(id: 'seat-2', label: 'A2', row: 1, column: 2, state: TripSeatState.blocked),
-          const TripSeat(id: 'seat-3', label: 'A3', row: 2, column: 1, state: TripSeatState.reserved, passengerId: 'pass-1'),
+          const TripSeat(
+            id: 'seat-1',
+            label: 'A1',
+            row: 1,
+            column: 1,
+            state: TripSeatState.available,
+          ),
+          const TripSeat(
+            id: 'seat-2',
+            label: 'A2',
+            row: 1,
+            column: 2,
+            state: TripSeatState.blocked,
+          ),
+          const TripSeat(
+            id: 'seat-3',
+            label: 'A3',
+            row: 2,
+            column: 1,
+            state: TripSeatState.reserved,
+            passengerId: 'pass-1',
+          ),
         ],
         passengers: [
           const TripPassenger(
@@ -338,12 +416,20 @@ class _MockTripsDatasource implements TripsDatasource {
       vehicle: input.vehicle,
       date: input.date,
       departure: input.departure,
-      arrival: '',
+      arrival: input.arrival,
+      ticketPrice: input.ticketPrice,
+      currency: input.currency,
       status: OperationTripStatus.scheduled,
       capacity: input.capacity,
       seats: List.generate(
         input.capacity,
-        (i) => TripSeat(id: 'seat-new-$i', label: 'S${i+1}', row: (i~/2)+1, column: (i%2)+1, state: TripSeatState.available),
+        (i) => TripSeat(
+          id: 'seat-new-$i',
+          label: 'S${i + 1}',
+          row: (i ~/ 2) + 1,
+          column: (i % 2) + 1,
+          state: TripSeatState.available,
+        ),
       ),
       passengers: const [],
       events: const [],
@@ -364,63 +450,94 @@ class _MockTripsDatasource implements TripsDatasource {
   }
 
   @override
-  Future<OperationTripModel> updateTripStatus(String tripId, OperationTripStatus status) async {
+  Future<OperationTripModel> updateTripStatus(
+    String tripId,
+    OperationTripStatus status,
+  ) async {
     final idx = _trips.indexWhere((t) => t.id == tripId);
     if (idx != -1) {
       final trip = _trips[idx];
-      _trips[idx] = OperationTripModel.fromEntity(trip.copyWith(status: status));
+      _trips[idx] = OperationTripModel.fromEntity(
+        trip.copyWith(status: status),
+      );
       return _trips[idx];
     }
     throw Exception('Trip not found');
   }
 
   @override
-  Future<OperationTripModel> updateSeatState(String tripId, String seatId, TripSeatState state) async {
+  Future<OperationTripModel> updateSeatState(
+    String tripId,
+    String seatId,
+    TripSeatState state,
+  ) async {
     final idx = _trips.indexWhere((t) => t.id == tripId);
     if (idx != -1) {
       final trip = _trips[idx];
-      final newSeats = trip.seats.map((s) => s.id == seatId ? s.copyWith(state: state) : s).toList();
-      _trips[idx] = OperationTripModel.fromEntity(trip.copyWith(seats: newSeats));
+      final newSeats = trip.seats
+          .map((s) => s.id == seatId ? s.copyWith(state: state) : s)
+          .toList();
+      _trips[idx] = OperationTripModel.fromEntity(
+        trip.copyWith(seats: newSeats),
+      );
       return _trips[idx];
     }
     throw Exception('Trip not found');
   }
 
   @override
-  Future<OperationTripModel> updatePassenger(String tripId, TripPassenger passenger) async {
+  Future<OperationTripModel> updatePassenger(
+    String tripId,
+    TripPassenger passenger,
+  ) async {
     final idx = _trips.indexWhere((t) => t.id == tripId);
     if (idx != -1) {
       final trip = _trips[idx];
-      final newPassengers = trip.passengers.map((p) => p.id == passenger.id ? passenger : p).toList();
-      _trips[idx] = OperationTripModel.fromEntity(trip.copyWith(passengers: newPassengers));
+      final newPassengers = trip.passengers
+          .map((p) => p.id == passenger.id ? passenger : p)
+          .toList();
+      _trips[idx] = OperationTripModel.fromEntity(
+        trip.copyWith(passengers: newPassengers),
+      );
       return _trips[idx];
     }
     throw Exception('Trip not found');
   }
 
   @override
-  Future<OperationTripModel> cancelPassenger(String tripId, String passengerId) async {
+  Future<OperationTripModel> cancelPassenger(
+    String tripId,
+    String passengerId,
+  ) async {
     final idx = _trips.indexWhere((t) => t.id == tripId);
     if (idx != -1) {
       final trip = _trips[idx];
       final newPassengers = trip.passengers
           .map((p) => p.id == passengerId ? p.copyWith(status: 'ملغي') : p)
           .toList();
-      _trips[idx] = OperationTripModel.fromEntity(trip.copyWith(passengers: newPassengers));
+      _trips[idx] = OperationTripModel.fromEntity(
+        trip.copyWith(passengers: newPassengers),
+      );
       return _trips[idx];
     }
     throw Exception('Trip not found');
   }
 
   @override
-  Future<OperationTripModel> movePassenger(String tripId, String passengerId, String seatLabel) async {
+  Future<OperationTripModel> movePassenger(
+    String tripId,
+    String passengerId,
+    String seatLabel,
+  ) async {
     final idx = _trips.indexWhere((t) => t.id == tripId);
     if (idx != -1) {
       final trip = _trips[idx];
       final newPassengers = trip.passengers
           .map((p) => p.id == passengerId ? p.copyWith(seat: seatLabel) : p)
           .toList();
-      _trips[idx] = OperationTripModel.fromEntity(trip.copyWith(passengers: newPassengers));
+      _trips[idx] = OperationTripModel.fromEntity(
+        trip.copyWith(passengers: newPassengers),
+      );
       return _trips[idx];
     }
     throw Exception('Trip not found');
@@ -444,10 +561,15 @@ class _MockTripsDatasource implements TripsDatasource {
   }
 
   @override
-  Future<TripPricingModel> toggleTripPricingStatus(String pricingId, bool isActive) async {
+  Future<TripPricingModel> toggleTripPricingStatus(
+    String pricingId,
+    bool isActive,
+  ) async {
     final idx = _pricings.indexWhere((p) => p.id == pricingId);
     if (idx != -1) {
-      _pricings[idx] = TripPricingModel.fromEntity(_pricings[idx].copyWith(isActive: isActive));
+      _pricings[idx] = TripPricingModel.fromEntity(
+        _pricings[idx].copyWith(isActive: isActive),
+      );
       return _pricings[idx];
     }
     throw Exception('Pricing not found');
@@ -474,8 +596,21 @@ class _MockTripsDatasource implements TripsDatasource {
   }
 
   @override
-  Future<bool> checkDuplicateTrip(String vehicleId, String date, String departureTime) async {
+  Future<bool> checkDuplicateTrip(
+    String vehicleId,
+    String date,
+    String departureTime,
+  ) async {
     return departureTime == 'duplicate-time';
+  }
+
+  @override
+  Future<bool> checkDriverTripConflict(
+    String driverId,
+    String date,
+    String departureTime,
+  ) async {
+    return false;
   }
 
   @override
@@ -594,7 +729,20 @@ class _FailingTripsDatasource implements TripsDatasource {
   }
 
   @override
-  Future<bool> checkDuplicateTrip(String vehicleId, String date, String departureTime) {
+  Future<bool> checkDuplicateTrip(
+    String vehicleId,
+    String date,
+    String departureTime,
+  ) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<bool> checkDriverTripConflict(
+    String driverId,
+    String date,
+    String departureTime,
+  ) {
     throw StateError('failure');
   }
 

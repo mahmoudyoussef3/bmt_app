@@ -70,8 +70,14 @@ class TripsRepositoryImpl implements TripsRepository {
       if (input.departure.trim().isEmpty) {
         throw Exception('وقت الانطلاق مطلوب.');
       }
+      if (input.arrival.trim().isEmpty) {
+        throw Exception('وقت الوصول مطلوب.');
+      }
       if (input.capacity <= 0) {
         throw Exception('سعة الركاب يجب أن تكون أكبر من صفر.');
+      }
+      if (input.ticketPrice <= 0) {
+        throw Exception('سعر التذكرة مطلوب ويجب أن يكون أكبر من صفر.');
       }
 
       // 2. Cannot create trip with archived route
@@ -89,7 +95,9 @@ class TripsRepositoryImpl implements TripsRepository {
       // 4. Cannot create trip with maintenance, suspended, or archived vehicle
       final vehicleStatus = await _datasource.getVehicleStatus(input.vehicleId);
       if (vehicleStatus != 'active') {
-        throw Exception('المركبة غير متاحة للتشغيل حالياً (حالة المركبة: $vehicleStatus).');
+        throw Exception(
+          'المركبة غير متاحة للتشغيل حالياً (حالة المركبة: $vehicleStatus).',
+        );
       }
 
       // 5. Cannot create duplicate trip for same vehicle/date/time
@@ -99,7 +107,20 @@ class TripsRepositoryImpl implements TripsRepository {
         input.departure,
       );
       if (isDuplicate) {
-        throw Exception('توجد رحلة مجدولة بالفعل لهذه المركبة في نفس التاريخ ووقت الانطلاق.');
+        throw Exception(
+          'توجد رحلة مجدولة بالفعل لهذه المركبة في نفس التاريخ ووقت الانطلاق.',
+        );
+      }
+
+      final hasDriverConflict = await _datasource.checkDriverTripConflict(
+        input.driverId,
+        input.date,
+        input.departure,
+      );
+      if (hasDriverConflict) {
+        throw Exception(
+          'السائق لديه رحلة مجدولة بالفعل في نفس التاريخ ووقت الانطلاق.',
+        );
       }
 
       return await _datasource.createTrip(input);
@@ -208,14 +229,12 @@ class TripsRepositoryImpl implements TripsRepository {
         throw Exception('يجب أن تكون نقطتا البداية والنهاية مختلفتين.');
       }
       if (pricing.fromPointOrder >= pricing.toPointOrder) {
-        throw Exception('نقطة البداية يجب أن تسبق نقطة النهاية في خط سير المسار.');
+        throw Exception(
+          'نقطة البداية يجب أن تسبق نقطة النهاية في خط سير المسار.',
+        );
       }
-      if (pricing.oneTimePrice <= 0 ||
-          pricing.fiveDaysPrice <= 0 ||
-          pricing.tenDaysPrice <= 0 ||
-          pricing.monthlyPrice <= 0 ||
-          pricing.threeMonthsPrice <= 0) {
-        throw Exception('يجب أن تكون جميع قيم الأسعار أكبر من صفر.');
+      if (pricing.oneTimePrice <= 0 || pricing.currency.trim().isEmpty) {
+        throw Exception('يجب أن يكون سعر التذكرة والعملة صالحين.');
       }
 
       return await _datasource.upsertTripPricing(pricing);

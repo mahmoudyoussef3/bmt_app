@@ -64,7 +64,8 @@ class FleetDriver {
   String get emergencyContact => emergencyPhone;
   String get licenseExpiry => licenseExpiryDate;
   String get imageLabel => fullName.isNotEmpty ? fullName.substring(0, 1) : '';
-  String get avatarInitials => fullName.isNotEmpty ? fullName.substring(0, 1) : '';
+  String get avatarInitials =>
+      fullName.isNotEmpty ? fullName.substring(0, 1) : '';
   String get currentVehicle => currentVehicleId;
   String get currentRoute => '';
 
