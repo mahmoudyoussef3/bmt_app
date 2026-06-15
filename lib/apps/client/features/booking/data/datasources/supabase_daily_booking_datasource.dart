@@ -44,10 +44,10 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
         ''')
         .eq('status', 'scheduled');
 
-    final routesResponse = await _supabase.from('operation_routes').select('start_point, end_point').eq('status', 'active');
+    final routesResponse = await _supabase.from('operation_routes').select('start_city, end_city').eq('status', 'active');
 
-    final distinctPickups = routesResponse.map((e) => e['start_point'].toString()).toSet().toList();
-    final distinctDestinations = routesResponse.map((e) => e['end_point'].toString()).toSet().toList();
+    final distinctPickups = routesResponse.map((e) => e['start_city'].toString()).toSet().toList();
+    final distinctDestinations = routesResponse.map((e) => e['end_city'].toString()).toSet().toList();
 
     final vehicles = tripsResponse.map((data) {
       final vehicle = data['vehicles'] as Map<String, dynamic>?;

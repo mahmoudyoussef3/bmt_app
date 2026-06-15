@@ -15,7 +15,7 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
       drivers (*),
       operation_routes (*),
       trip_pricing (*)
-    ''').eq('status', 'active');
+    ''').eq('status', 'scheduled');
 
     if (routeId != null) {
       query = query.eq('route_id', routeId);
@@ -68,7 +68,7 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
       price: '${pricing['currency'] ?? 'EGP'} ${pricing['base_price'] ?? 50}',
       availableSeats: capacity - passengerCount,
       estimatedArrival: data['end_time']?.toString() ?? 'N/A',
-      routeDuration: route['estimated_time']?.toString() ?? 'N/A',
+      routeDuration: route['duration']?.toString() ?? 'N/A',
       departureTime: data['start_time']?.toString() ?? 'N/A',
       driverInitials: initials,
     );

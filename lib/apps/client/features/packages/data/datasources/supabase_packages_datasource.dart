@@ -11,7 +11,7 @@ class SupabasePackagesDatasource implements PackagesDatasource {
   Future<PackageSelectionDataModel> getSelectionData() async {
     final packagesFuture = _supabase.from('packages').select().eq('status', 'active');
     final vehicleTiersFuture = _supabase.from('package_vehicle_tiers').select().eq('status', 'active');
-    final routesFuture = _supabase.from('operation_routes').select('start_point, end_point').eq('status', 'active');
+    final routesFuture = _supabase.from('operation_routes').select('start_city, end_city').eq('status', 'active');
 
     final responses = await Future.wait([
       packagesFuture,
@@ -41,9 +41,9 @@ class SupabasePackagesDatasource implements PackagesDatasource {
           description: e['description']?.toString() ?? '',
         )).toList();
 
-    final pickups = routesData.map((e) => e['start_point']?.toString() ?? '').toSet().toList();
-    final destinations = routesData.map((e) => e['end_point']?.toString() ?? '').toSet().toList();
-    final routeNames = routesData.map((e) => '${e['start_point']} - ${e['end_point']}').toSet().toList();
+    final pickups = routesData.map((e) => e['start_city']?.toString() ?? '').toSet().toList();
+    final destinations = routesData.map((e) => e['end_city']?.toString() ?? '').toSet().toList();
+    final routeNames = routesData.map((e) => '${e['start_city']} - ${e['end_city']}').toSet().toList();
 
     // Ideally fetched from active seat mapping for a chosen trip, hardcoded stub for now
     final occupiedSeats = {3, 7, 12, 16};

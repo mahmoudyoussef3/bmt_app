@@ -56,8 +56,8 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
     final pricingList = tripResponse['trip_pricing'] as List<dynamic>? ?? [];
     final pricing = pricingList.isNotEmpty ? pricingList.first : {};
 
-    final pickup = route['start_point']?.toString() ?? 'Unknown';
-    final destination = route['end_point']?.toString() ?? 'Unknown';
+    final pickup = route['start_city']?.toString() ?? 'Unknown';
+    final destination = route['end_city']?.toString() ?? 'Unknown';
     final fare = pricing['base_price'] != null ? (pricing['base_price'] as num).toDouble() : 85.0;
 
     return SeatSelectionModel(

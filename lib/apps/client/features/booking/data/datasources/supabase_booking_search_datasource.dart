@@ -33,19 +33,19 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         final stationName = station['name']?.toString() ?? '';
         final sortOrder = station['sort_order'] as int? ?? 0;
         
-        if (stationName.toLowerCase() == pickup.toLowerCase() || data['start_point'].toString().toLowerCase() == pickup.toLowerCase()) {
+        if (stationName.toLowerCase() == pickup.toLowerCase() || data['start_city'].toString().toLowerCase() == pickup.toLowerCase()) {
           hasPickup = true;
           pickupOrder = sortOrder;
         }
-        if (stationName.toLowerCase() == dest.toLowerCase() || data['end_point'].toString().toLowerCase() == dest.toLowerCase()) {
+        if (stationName.toLowerCase() == dest.toLowerCase() || data['end_city'].toString().toLowerCase() == dest.toLowerCase()) {
           hasDest = true;
           destOrder = sortOrder;
         }
       }
 
       if (stations.isEmpty) {
-        if (data['start_point'].toString().toLowerCase() == pickup.toLowerCase()) hasPickup = true;
-        if (data['end_point'].toString().toLowerCase() == dest.toLowerCase()) hasDest = true;
+        if (data['start_city'].toString().toLowerCase() == pickup.toLowerCase()) hasPickup = true;
+        if (data['end_city'].toString().toLowerCase() == dest.toLowerCase()) hasDest = true;
         pickupOrder = 0;
         destOrder = 1;
       }
@@ -55,7 +55,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           id: data['id']?.toString() ?? '',
           pickup: pickup,
           destination: dest,
-          duration: data['estimated_time']?.toString() ?? 'N/A',
+          duration: data['duration']?.toString() ?? 'N/A',
           availableSeats: 14, // Real count needs to come from trips
           startingPrice: basePrice,
           isFastest: true,
@@ -78,12 +78,12 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       final basePrice = 'Varies';
 
       return PopularRouteListModel(
-        routeName: data['route_code']?.toString() ?? '${data['start_point']} — ${data['end_point']}',
+        routeName: data['name']?.toString() ?? '${data['start_city']} — ${data['end_city']}',
         dailyTrips: 15, // Can be counted dynamically if needed
-        averageDuration: data['estimated_time']?.toString() ?? 'N/A',
+        averageDuration: data['duration']?.toString() ?? 'N/A',
         startingPrice: basePrice,
-        pickup: data['start_point']?.toString() ?? '',
-        destination: data['end_point']?.toString() ?? '',
+        pickup: data['start_city']?.toString() ?? '',
+        destination: data['end_city']?.toString() ?? '',
       );
     }).toList();
   }
@@ -98,10 +98,10 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           *,
           vehicles (vehicle_type, capacity),
           drivers (full_name),
-          operation_routes(estimated_time),
+          operation_routes(id, start_city, end_city, duration),
           trip_pricing(base_price, currency)
         ''')
-        .eq('status', 'active')
+        .eq('status', 'scheduled')
         .limit(5);
 
     return response.map((data) {
@@ -119,7 +119,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         vehicleType: vehicle['vehicle_type']?.toString() ?? 'Standard',
         driverName: driver['full_name']?.toString() ?? 'Driver',
         estimatedArrival: data['end_time']?.toString() ?? 'N/A',
-        routeDuration: route['estimated_time']?.toString() ?? 'N/A',
+        routeDuration: route['duration']?.toString() ?? 'N/A',
         availableSeats: capacity - passengerCount,
         startingPrice: basePrice,
       );
@@ -130,10 +130,10 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
   Future<List<MapPinOptionModel>> getPickupMapPins() async {
     final response = await _supabase
         .from('route_stations')
-        .select('station_name, operation_routes!inner(status)')
+        .select('name, operation_routes!inner(status)')
         .eq('operation_routes.status', 'active');
         
-    final distinctPickups = response.map((e) => e['station_name'].toString()).toSet();
+    final distinctPickups = response.map((e) => e['name'].toString()).toSet();
     
     return distinctPickups.map((pickup) {
       return MapPinOptionModel(
@@ -154,7 +154,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
     return response.map((data) {
       return MapPinOptionModel(
-        label: data['station_name']?.toString() ?? 'Station',
+        label: data['name']?.toString() ?? 'Station',
         subtitle: 'Terminal',
         x: data['latitude'] != null ? (data['latitude'] as num).toDouble() : 30.0,
         y: data['longitude'] != null ? (data['longitude'] as num).toDouble() : 31.0,

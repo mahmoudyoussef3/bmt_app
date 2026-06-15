@@ -445,8 +445,8 @@ class _BookingEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               FilledButton.icon(
-                onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded),
+                onPressed: () => Navigator.of(context).pop(),
+                icon: const Icon(Icons.search_rounded),
                 label: Text(AppLocalizations.of(context)!.booking_searchAgain),
               ),
             ],

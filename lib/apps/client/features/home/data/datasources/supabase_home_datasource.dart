@@ -50,9 +50,9 @@ class SupabaseHomeDatasource implements HomeDatasource {
     final currentTripData = responses[3];
 
     final popularRoutes = popularRoutesData.map((e) => PopularRouteModel(
-          pickup: e['start_point'] as String? ?? 'Unknown',
-          destination: e['end_point'] as String? ?? 'Unknown',
-          duration: e['estimated_time']?.toString() ?? '60 mins',
+          pickup: e['start_city'] as String? ?? 'Unknown',
+          destination: e['end_city'] as String? ?? 'Unknown',
+          duration: e['duration']?.toString() ?? '60 mins',
           startingPrice: 'Starts from EGP 50', // We will join trip_pricing or set it realistically
         )).toList();
 
@@ -61,7 +61,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
           destination: 'Destination', 
           departureTime: e['trip_date']?.toString() ?? '',
           seatsLeft: 14 - ((e['passenger_count'] as int?) ?? 0),
-          isLive: e['status'] == 'active',
+          isLive: e['status'] == 'in_progress' || e['status'] == 'boarding',
         )).toList();
 
     final packagePlans = packagesData.map((e) => PackagePlanModel(
