@@ -19,7 +19,7 @@ class DioFactory {
       baseUrl: ApiConstants.baseUrl,
       connectTimeout: ApiConstants.connectTimeout,
       receiveTimeout: ApiConstants.receiveTimeout,
-      sendTimeout: ApiConstants.sendTimeout,
+      sendTimeout: kIsWeb ? null : ApiConstants.sendTimeout,
       headers: {
         'Content-Type': ApiConstants.contentType,
         'Accept': ApiConstants.accept,
