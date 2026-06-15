@@ -39,7 +39,7 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
 
     if (_didLoad) return;
     _didLoad = true;
-    context.read<BookingCubit>().loadVehicles(sort: _sort);
+    context.read<BookingCubit>().loadVehicles(sort: _sort, routeId: _query.routeId);
   }
 
   void _openDetails(VehicleDetailData vehicle) {
@@ -58,7 +58,7 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
   void _selectSort(VehicleSortOption option) {
     if (_sort == option) return;
     setState(() => _sort = option);
-    context.read<BookingCubit>().loadVehicles(sort: option);
+    context.read<BookingCubit>().loadVehicles(sort: option, routeId: _query.routeId);
   }
 
   @override
@@ -80,7 +80,7 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
               sort: _sort,
               selectedVehicleId: _selectedVehicleId,
               onRetry: () =>
-                  context.read<BookingCubit>().loadVehicles(sort: _sort),
+                  context.read<BookingCubit>().loadVehicles(sort: _sort, routeId: _query.routeId),
               onSort: _selectSort,
               onOpenDetails: _openDetails,
               onSelect: _selectVehicle,

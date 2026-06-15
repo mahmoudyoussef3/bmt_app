@@ -185,13 +185,6 @@ class _VehicleGalleryAppBar extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (vehicle.isRecommended) ...[
-                    _WhitePill(
-                      icon: Icons.auto_awesome_rounded,
-                      label: AppLocalizations.of(context)!.booking_recommendedForYou,
-                    ),
-                    const SizedBox(height: 10),
-                  ],
                   Text(
                     vehicle.name,
                     maxLines: 1,
@@ -349,9 +342,9 @@ class _QuickStatsCard extends StatelessWidget {
           const _VerticalDivider(),
           Expanded(
             child: _QuickStat(
-              icon: Icons.star_rounded,
-              label: AppLocalizations.of(context)!.booking_sortRating,
-              value: vehicle.driverRating.toStringAsFixed(1),
+              icon: Icons.schedule_rounded,
+              label: 'Departure',
+              value: vehicle.departureTime,
             ),
           ),
         ],
@@ -539,17 +532,10 @@ class _ComfortCard extends StatelessWidget {
             positive: true,
           ),
           _ComfortTile(
-            icon: Icons.airline_seat_recline_normal_rounded,
-            label: AppLocalizations.of(context)!.booking_recliningSeats,
-            value: vehicle.hasRecliningSeats ? AppLocalizations.of(context)!.common_yes : AppLocalizations.of(context)!.common_no,
-            positive: vehicle.hasRecliningSeats,
-          ),
-          _LegRoomTile(rating: vehicle.legRoomRating),
-          _ComfortTile(
-            icon: Icons.build_circle_outlined,
-            label: AppLocalizations.of(context)!.booking_vehicleCondition,
-            value: _vehicleConditionLabel(context, vehicle.vehicleCondition),
-            positive: vehicle.vehicleCondition == 'Excellent',
+            icon: Icons.chair_rounded,
+            label: AppLocalizations.of(context)!.booking_seatType,
+            value: vehicle.seatType,
+            positive: true,
           ),
         ],
       ),
@@ -712,33 +698,6 @@ class _DriverCard extends StatelessWidget {
                           ),
                     ),
                     const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        ...List.generate(5, (i) {
-                          final filled = i < vehicle.driverRating.floor();
-                          return Icon(
-                            filled ? Icons.star_rounded : Icons.star_outline_rounded,
-                            size: 18,
-                            color: scheme.tertiary,
-                          );
-                        }),
-                        const SizedBox(width: 8),
-                        Text(
-                          vehicle.driverRating.toStringAsFixed(2),
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                              ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      '${vehicle.completedTrips} ${AppLocalizations.of(context)!.booking_completedTrips} · ${vehicle.yearsExperience} ${AppLocalizations.of(context)!.booking_yearsExperience}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurface.withAlpha(170),
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
                   ],
                 ),
               ),

@@ -64,14 +64,14 @@ class BookingRepositoryImpl implements BookingRepository {
   }
 
   @override
-  Future<List<VehicleDetailData>> getVehicles() async {
-    final models = await _vehicleDatasource.getVehicles();
-    return models.map((vehicle) => vehicle.toEntity()).toList();
+  Future<List<VehicleDetailData>> getVehicles({String? routeId}) async {
+    final models = await _vehicleDatasource.getVehicles(routeId: routeId);
+    return models;
   }
 
   @override
   Future<VehicleDetailData?> getVehicleById(String id) async {
     final model = await _vehicleDatasource.getVehicleById(id);
-    return model?.toEntity();
+    return model;
   }
 }

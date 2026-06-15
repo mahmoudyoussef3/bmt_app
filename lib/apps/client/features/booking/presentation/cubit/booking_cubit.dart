@@ -93,10 +93,11 @@ class BookingCubit extends Cubit<BookingState> {
 
   Future<void> loadVehicles({
     VehicleSortOption sort = VehicleSortOption.recommended,
+    String? routeId,
   }) async {
     emit(const BookingLoading());
     try {
-      final vehicles = await _getVehicles();
+      final vehicles = await _getVehicles(routeId: routeId);
       emit(VehiclesLoaded(_sortVehicles(vehicles, sort)));
     } catch (error) {
       emit(BookingError(error.toString()));

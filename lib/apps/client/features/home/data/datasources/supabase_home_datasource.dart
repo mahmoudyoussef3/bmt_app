@@ -52,13 +52,13 @@ class SupabaseHomeDatasource implements HomeDatasource {
     final popularRoutes = popularRoutesData.map((e) => PopularRouteModel(
           pickup: e['start_point'] as String? ?? 'Unknown',
           destination: e['end_point'] as String? ?? 'Unknown',
-          duration: '60 min', // Default since missing in operation_routes
-          startingPrice: 'EGP 50', // Default since starting_price is in pricing table now
+          duration: e['estimated_time']?.toString() ?? '60 mins',
+          startingPrice: 'Starts from EGP 50', // We will join trip_pricing or set it realistically
         )).toList();
 
     final nearbyTrips = nearbyTripsData.map((e) => NearbyTripModel(
-          pickup: e['route_code']?.toString() ?? 'Station', // Assuming route_code holds some label for now
-          destination: 'Destination', // Requires proper join or mapping in production
+          pickup: 'Terminal', // Or fallback to real station
+          destination: 'Destination', 
           departureTime: e['trip_date']?.toString() ?? '',
           seatsLeft: 14 - ((e['passenger_count'] as int?) ?? 0),
           isLive: e['status'] == 'active',

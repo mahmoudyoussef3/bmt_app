@@ -1,9 +1,10 @@
 enum SeatAvailability { available, reserved }
 
 class SeatOption {
-  const SeatOption({required this.id, required this.availability});
+  const SeatOption({required this.id, required this.seatNumber, required this.availability});
 
   final String id;
+  final int seatNumber;
   final SeatAvailability availability;
 
   bool get isAvailable => availability == SeatAvailability.available;

@@ -1,13 +1,14 @@
 import '../../domain/entities/seat_option.dart';
 
 class SeatOptionModel {
-  const SeatOptionModel({required this.id, required this.availability});
+  const SeatOptionModel({required this.id, required this.seatNumber, required this.availability});
 
   final String id;
+  final int seatNumber;
   final SeatAvailability availability;
 
   SeatOption toEntity() {
-    return SeatOption(id: id, availability: availability);
+    return SeatOption(id: id, seatNumber: seatNumber, availability: availability);
   }
 }
 

@@ -8,63 +8,69 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
   const SupabaseVehicleBookingDatasource(this._supabase);
 
   @override
-  Future<List<VehicleDetailModel>> getVehicles() async {
-    final response = await _supabase.from('vehicles').select();
+  Future<List<VehicleDetailModel>> getVehicles({String? routeId}) async {
+    var query = _supabase.from('operation_trips').select('''
+      *,
+      vehicles (*),
+      drivers (*),
+      operation_routes (*),
+      trip_pricing (*)
+    ''').eq('status', 'active');
 
-    return response.map((data) {
-      return VehicleDetailModel(
-        id: data['id']?.toString() ?? '',
-        name: data['brand']?.toString() ?? 'Vehicle',
-        model: data['model']?.toString() ?? 'Unknown',
-        vehicleType: data['vehicle_type']?.toString() ?? 'Standard',
-        imageLabels: const ['Exterior', 'Interior'],
-        hasAirConditioning: true,
-        seatType: data['seat_layout_type']?.toString() ?? 'Standard',
-        hasRecliningSeats: true,
-        legRoomRating: 4.5,
-        vehicleCondition: 'Excellent',
-        driverName: 'Driver',
-        driverRating: 4.8,
-        completedTrips: 150,
-        yearsExperience: 5,
-        price: 'EGP 85',
-        availableSeats: data['capacity'] as int? ?? 14,
-        estimatedArrival: '8:40 AM',
-        routeDuration: '45 min',
-      );
-    }).toList();
+    if (routeId != null) {
+      query = query.eq('route_id', routeId);
+    }
+
+    final response = await query;
+
+    return response.map((data) => _mapToModel(data)).toList();
   }
 
   @override
   Future<VehicleDetailModel?> getVehicleById(String id) async {
-    final response = await _supabase
-        .from('vehicles')
-        .select()
-        .eq('id', id)
-        .limit(1)
-        .maybeSingle();
+    final response = await _supabase.from('operation_trips').select('''
+      *,
+      vehicles (*),
+      drivers (*),
+      operation_routes (*),
+      trip_pricing (*)
+    ''').eq('id', id).maybeSingle();
 
     if (response == null) return null;
 
+    return _mapToModel(response);
+  }
+
+  VehicleDetailModel _mapToModel(Map<String, dynamic> data) {
+    final vehicle = data['vehicles'] ?? {};
+    final driver = data['drivers'] ?? {};
+    final route = data['operation_routes'] ?? {};
+    final pricingList = data['trip_pricing'] as List<dynamic>? ?? [];
+    final pricing = pricingList.isNotEmpty ? pricingList.first : {};
+
+    final features = List<String>.from(vehicle['features'] ?? []);
+    final hasAc = features.contains('AC') || features.contains('Air Conditioning');
+    final driverFullName = driver['full_name']?.toString() ?? 'Driver';
+    final initials = driverFullName.isNotEmpty ? driverFullName[0].toUpperCase() : 'D';
+
+    final capacity = vehicle['capacity'] as int? ?? 14;
+    final passengerCount = data['passenger_count'] as int? ?? 0;
+
     return VehicleDetailModel(
-      id: response['id']?.toString() ?? '',
-      name: response['brand']?.toString() ?? 'Vehicle',
-      model: response['model']?.toString() ?? 'Unknown',
-      vehicleType: response['vehicle_type']?.toString() ?? 'Standard',
+      id: data['id']?.toString() ?? '',
+      name: vehicle['brand']?.toString() ?? 'Vehicle',
+      model: vehicle['model']?.toString() ?? 'Unknown',
+      vehicleType: vehicle['vehicle_type']?.toString() ?? 'Standard',
       imageLabels: const ['Exterior', 'Interior'],
-      hasAirConditioning: true,
-      seatType: response['seat_layout_type']?.toString() ?? 'Standard',
-      hasRecliningSeats: true,
-      legRoomRating: 4.5,
-      vehicleCondition: 'Excellent',
-      driverName: 'Driver',
-      driverRating: 4.8,
-      completedTrips: 150,
-      yearsExperience: 5,
-      price: 'EGP 85',
-      availableSeats: response['capacity'] as int? ?? 14,
-      estimatedArrival: '8:40 AM',
-      routeDuration: '45 min',
+      hasAirConditioning: hasAc,
+      seatType: vehicle['seat_layout_type']?.toString() ?? 'Standard',
+      driverName: driverFullName,
+      price: '${pricing['currency'] ?? 'EGP'} ${pricing['base_price'] ?? 50}',
+      availableSeats: capacity - passengerCount,
+      estimatedArrival: data['end_time']?.toString() ?? 'N/A',
+      routeDuration: route['estimated_time']?.toString() ?? 'N/A',
+      departureTime: data['start_time']?.toString() ?? 'N/A',
+      driverInitials: initials,
     );
   }
 }

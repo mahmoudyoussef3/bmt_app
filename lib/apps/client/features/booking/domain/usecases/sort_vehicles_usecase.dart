@@ -14,15 +14,16 @@ class SortVehiclesUseCase {
           (a, b) => _priceValue(a.price).compareTo(_priceValue(b.price)),
         );
       case VehicleSortOption.rating:
-        list.sort((a, b) => b.driverRating.compareTo(a.driverRating));
+        // Rating field removed since it was fake data. Sort by available seats as fallback.
+        list.sort((a, b) => b.availableSeats.compareTo(a.availableSeats));
       case VehicleSortOption.seats:
         list.sort((a, b) => b.availableSeats.compareTo(a.availableSeats));
       case VehicleSortOption.recommended:
+        // Recommended field removed. Sort by time (earliest departure first)
         list.sort((a, b) {
-          if (a.isRecommended != b.isRecommended) {
-            return a.isRecommended ? -1 : 1;
-          }
-          return b.driverRating.compareTo(a.driverRating);
+          final timeA = DateTime.tryParse('1970-01-01 ${a.departureTime}') ?? DateTime(1970);
+          final timeB = DateTime.tryParse('1970-01-01 ${b.departureTime}') ?? DateTime(1970);
+          return timeA.compareTo(timeB);
         });
     }
     return list;

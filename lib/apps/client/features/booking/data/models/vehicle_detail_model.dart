@@ -1,72 +1,58 @@
 import '../../domain/entities/vehicle_detail.dart';
 
-class VehicleDetailModel {
+class VehicleDetailModel extends VehicleDetailData {
   const VehicleDetailModel({
-    required this.id,
-    required this.name,
-    required this.model,
-    required this.vehicleType,
-    required this.imageLabels,
-    required this.hasAirConditioning,
-    required this.seatType,
-    required this.hasRecliningSeats,
-    required this.legRoomRating,
-    required this.vehicleCondition,
-    required this.driverName,
-    required this.driverRating,
-    required this.completedTrips,
-    required this.yearsExperience,
-    required this.price,
-    required this.availableSeats,
-    required this.estimatedArrival,
-    required this.routeDuration,
-    this.isRecommended = false,
-    this.driverInitials = 'AM',
+    required super.id,
+    required super.name,
+    required super.model,
+    required super.vehicleType,
+    required super.imageLabels,
+    required super.hasAirConditioning,
+    required super.seatType,
+    required super.driverName,
+    required super.price,
+    required super.availableSeats,
+    required super.estimatedArrival,
+    required super.routeDuration,
+    required super.departureTime,
+    super.driverInitials = 'AM',
   });
 
-  final String id;
-  final String name;
-  final String model;
-  final String vehicleType;
-  final List<String> imageLabels;
-  final bool hasAirConditioning;
-  final String seatType;
-  final bool hasRecliningSeats;
-  final double legRoomRating;
-  final String vehicleCondition;
-  final String driverName;
-  final double driverRating;
-  final int completedTrips;
-  final int yearsExperience;
-  final String price;
-  final int availableSeats;
-  final String estimatedArrival;
-  final String routeDuration;
-  final bool isRecommended;
-  final String driverInitials;
-
-  VehicleDetailData toEntity() {
-    return VehicleDetailData(
-      id: id,
-      name: name,
-      model: model,
-      vehicleType: vehicleType,
-      imageLabels: imageLabels,
-      hasAirConditioning: hasAirConditioning,
-      seatType: seatType,
-      hasRecliningSeats: hasRecliningSeats,
-      legRoomRating: legRoomRating,
-      vehicleCondition: vehicleCondition,
-      driverName: driverName,
-      driverRating: driverRating,
-      completedTrips: completedTrips,
-      yearsExperience: yearsExperience,
-      price: price,
-      availableSeats: availableSeats,
-      estimatedArrival: estimatedArrival,
-      routeDuration: routeDuration,
-      isRecommended: isRecommended,
-      driverInitials: driverInitials,
+  factory VehicleDetailModel.fromJson(Map<String, dynamic> json) {
+    return VehicleDetailModel(
+      id: json['id'] as String,
+      name: json['name'] as String,
+      model: json['model'] as String,
+      vehicleType: json['vehicle_type'] as String,
+      imageLabels: List<String>.from(json['image_labels'] as List? ?? []),
+      hasAirConditioning: json['has_air_conditioning'] as bool? ?? false,
+      seatType: json['seat_type'] as String,
+      driverName: json['driver_name'] as String,
+      price: json['price'] as String,
+      availableSeats: json['available_seats'] as int,
+      estimatedArrival: json['estimated_arrival'] as String,
+      routeDuration: json['route_duration'] as String,
+      departureTime: json['departure_time'] as String,
+      driverInitials: json['driver_initials'] as String? ?? 'AM',
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'name': name,
+      'model': model,
+      'vehicle_type': vehicleType,
+      'image_labels': imageLabels,
+      'has_air_conditioning': hasAirConditioning,
+      'seat_type': seatType,
+      'driver_name': driverName,
+      'price': price,
+      'available_seats': availableSeats,
+      'estimated_arrival': estimatedArrival,
+      'route_duration': routeDuration,
+      'departure_time': departureTime,
+      'driver_initials': driverInitials,
+    };
   }
 }

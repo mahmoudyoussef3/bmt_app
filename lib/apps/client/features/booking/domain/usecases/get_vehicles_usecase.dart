@@ -6,7 +6,7 @@ class GetVehiclesUseCase {
 
   final BookingRepository _repository;
 
-  Future<List<VehicleDetailData>> call() {
-    return _repository.getVehicles();
+  Future<List<VehicleDetailData>> call({String? routeId}) {
+    return _repository.getVehicles(routeId: routeId);
   }
 }

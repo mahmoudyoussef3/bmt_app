@@ -11,7 +11,7 @@ class SelectSeatUseCase {
     final seat = seats.firstWhere(
       (seat) => seat.id == seatId,
       orElse: () =>
-          const SeatOption(id: '', availability: SeatAvailability.reserved),
+          const SeatOption(id: '', seatNumber: 0, availability: SeatAvailability.reserved),
     );
     if (!seat.isAvailable) return currentSeatId;
     return currentSeatId == seatId ? null : seatId;

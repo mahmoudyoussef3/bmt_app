@@ -105,12 +105,6 @@ class _VehicleImageHeader extends StatelessWidget {
             height: compact ? 118 : 132,
           ),
         ),
-        if (vehicle.isRecommended)
-          PositionedDirectional(
-            top: 10,
-            start: 10,
-            child: AppBadge(text: 'مقترحة'),
-          ),
         PositionedDirectional(
           top: 10,
           end: 10,
@@ -300,14 +294,6 @@ class _DriverCompactRow extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
             ),
-          ),
-          Icon(Icons.star_rounded, size: 16, color: scheme.tertiary),
-          const SizedBox(width: 4),
-          Text(
-            vehicle.driverRating.toStringAsFixed(1),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
           ),
         ],
       ),

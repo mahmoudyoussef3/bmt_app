@@ -118,7 +118,7 @@ class _SeatSelectionContent extends StatelessWidget {
                     //    SeatPassengerPreviewCard(selectedSeat: selectedSeat),
                       //  const SizedBox(height: 12),
                         SeatBookingSummaryPanel(
-                          selectedSeat: selectedSeat,
+                          selectedSeat: selectedSeat == null ? null : data.seats.firstWhere((s) => s.id == selectedSeat, orElse: () => const SeatOption(id: '', seatNumber: 0, availability: SeatAvailability.available)).seatNumber.toString(),
                           vehicleName: data.vehicleName,
                           route: data.route,
                           pricePerSeat: data.pricePerSeat,
@@ -137,7 +137,7 @@ class _SeatSelectionContent extends StatelessWidget {
                   ),
                 ),
               ),
-              _buildBottomSummary(context),
+              _buildBottomSummary(context, selectedSeat == null ? null : data.seats.firstWhere((s) => s.id == selectedSeat, orElse: () => const SeatOption(id: '', seatNumber: 0, availability: SeatAvailability.available)).seatNumber.toString()),
             ],
           ),
         ),
@@ -506,8 +506,9 @@ class _SeatSelectionContent extends StatelessWidget {
     );
   }
 
-  Widget _buildSelectedSeatsSummary(BuildContext context, String seat) {
+  Widget _buildSelectedSeatsSummary(BuildContext context, String seatId) {
     final scheme = Theme.of(context).colorScheme;
+    final seatNum = data.seats.firstWhere((s) => s.id == seatId, orElse: () => const SeatOption(id: '', seatNumber: 0, availability: SeatAvailability.available)).seatNumber;
 
     return AppSurface(
       padding: const EdgeInsets.all(16),
@@ -530,7 +531,7 @@ class _SeatSelectionContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Seat $seat selected',
+                  'Seat $seatNum selected',
                   style: Theme.of(
                     context,
                   ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -574,7 +575,7 @@ class _SeatSelectionContent extends StatelessWidget {
     );
   }
 
-  Widget _buildBottomSummary(BuildContext context) {
+  Widget _buildBottomSummary(BuildContext context, String? seatNumStr) {
     final width = MediaQuery.sizeOf(context).width;
     final maxContentWidth = width >= 900
         ? 720.0
@@ -603,7 +604,7 @@ class _SeatSelectionContent extends StatelessWidget {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: maxContentWidth),
               child: BookingFooterSummary(
-                selectedSeat: selectedSeat,
+                selectedSeat: seatNumStr,
                 pricePerSeat: data.pricePerSeat,
                 onConfirm: selectedSeat == null
                     ? null
@@ -616,7 +617,7 @@ class _SeatSelectionContent extends StatelessWidget {
                           'vehicleNumber': data.vehicleNumber,
                           'departureTime': data.departureTime,
                           'arrivalTime': data.arrivalTime,
-                          'selectedSeat': selectedSeat,
+                          'selectedSeat': selectedSeat, // this keeps UUID for backend booking
                           'driverName': data.driverName,
                         },
                       ),
@@ -644,13 +645,30 @@ class _SeatMapGrid extends StatelessWidget {
   final double aisleGap;
   final double rowGap;
 
-  SeatOption _seat(String id) => seats.firstWhere((seat) => seat.id == id);
+  SeatOption _seat(int seatNumber) {
+    return seats.firstWhere(
+      (seat) => seat.seatNumber == seatNumber,
+      orElse: () => SeatOption(
+        id: '',
+        seatNumber: seatNumber,
+        availability: SeatAvailability.reserved,
+      ),
+    );
+  }
 
-  Widget _seatTile(BuildContext context, String id) {
-    final spec = _seat(id);
+  Widget _seatTile(BuildContext context, int seatNumber) {
+    final spec = _seat(seatNumber);
+    if (spec.id.isEmpty) {
+      // Missing seat in DB, show it as unavailable
+      return InteractiveSeat(
+        id: '',
+        status: SeatStatus.reserved,
+        onTap: null,
+      );
+    }
     final status = _seatStatus(spec, selectedSeatId);
     return InteractiveSeat(
-      id: spec.id,
+      id: spec.seatNumber.toString(), // The widget shows label from ID if we want, but let's pass seatNumber string
       status: status,
       onTap: spec.isAvailable
           ? () => context.read<SeatSelectionCubit>().selectSeat(spec.id)
@@ -668,35 +686,35 @@ class _SeatMapGrid extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        _tripleRow(context, ['1', '2', '3']),
+        _tripleRow(context, [1, 2, 3]),
         SizedBox(height: rowGap),
-        _pairSingleRow(context, ['4', '5'], '6'),
+        _pairSingleRow(context, [4, 5], 6),
         SizedBox(height: rowGap),
-        _pairSingleRow(context, ['7', '8'], '9'),
+        _pairSingleRow(context, [7, 8], 9),
         SizedBox(height: rowGap),
-        _pairSingleRow(context, ['10', '11'], '12'),
+        _pairSingleRow(context, [10, 11], 12),
         SizedBox(height: rowGap),
-        _tripleRow(context, ['13', '14', '15']),
+        _tripleRow(context, [13, 14, 15]),
       ],
     );
   }
 
-  Widget _tripleRow(BuildContext context, List<String> ids) {
+  Widget _tripleRow(BuildContext context, List<int> numbers) {
     return Row(
       children: [
-        Expanded(child: _seatTile(context, ids[0])),
+        Expanded(child: _seatTile(context, numbers[0])),
         SizedBox(width: horizontalGap),
-        Expanded(child: _seatTile(context, ids[1])),
+        Expanded(child: _seatTile(context, numbers[1])),
         SizedBox(width: horizontalGap),
-        Expanded(child: _seatTile(context, ids[2])),
+        Expanded(child: _seatTile(context, numbers[2])),
       ],
     );
   }
 
   Widget _pairSingleRow(
     BuildContext context,
-    List<String> leftSeats,
-    String rightSeat,
+    List<int> leftSeats,
+    int rightSeat,
   ) {
     return Row(
       children: [

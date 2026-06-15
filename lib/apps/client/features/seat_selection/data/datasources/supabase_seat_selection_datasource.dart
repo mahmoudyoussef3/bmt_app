@@ -21,9 +21,11 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
     for (final seatRecord in seatsResponse) {
       final seatId = seatRecord['id'].toString();
       final state = seatRecord['state']?.toString() ?? 'available';
+      final seatNumber = seatRecord['seat_number'] as int? ?? 0;
       seats.add(
         SeatOptionModel(
           id: seatId,
+          seatNumber: seatNumber,
           availability: state == 'available' 
               ? SeatAvailability.available 
               : SeatAvailability.reserved,
@@ -37,10 +39,11 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
         .select('''
           *,
           vehicles (*),
-          drivers (*)
+          drivers (*),
+          operation_routes (*),
+          trip_pricing (*)
         ''')
         .eq('id', tripId)
-        .limit(1)
         .maybeSingle();
 
     if (tripResponse == null) {
@@ -49,12 +52,13 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
 
     final vehicle = tripResponse['vehicles'] as Map<String, dynamic>? ?? {};
     final driver = tripResponse['drivers'] as Map<String, dynamic>? ?? {};
+    final route = tripResponse['operation_routes'] as Map<String, dynamic>? ?? {};
+    final pricingList = tripResponse['trip_pricing'] as List<dynamic>? ?? [];
+    final pricing = pricingList.isNotEmpty ? pricingList.first : {};
 
-    final routeParts = (tripResponse['route'] as String? ?? '').split(' - ');
-    final pickup = routeParts.isNotEmpty ? routeParts[0] : 'Unknown';
-    final destination = routeParts.length > 1 ? routeParts[1] : 'Unknown';
-    final fareStr = tripResponse['fare']?.toString() ?? '85';
-    final fare = double.tryParse(fareStr) ?? 85.0;
+    final pickup = route['start_point']?.toString() ?? 'Unknown';
+    final destination = route['end_point']?.toString() ?? 'Unknown';
+    final fare = pricing['base_price'] != null ? (pricing['base_price'] as num).toDouble() : 85.0;
 
     return SeatSelectionModel(
       tripId: tripId,
@@ -66,10 +70,10 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
       vehicleName: vehicle['brand']?.toString() ?? 'Unknown Vehicle',
       vehicleType: vehicle['vehicle_type']?.toString() ?? 'Shuttle',
       vehicleModel: vehicle['model']?.toString() ?? 'Standard',
-      departureTime: tripResponse['trip_time']?.toString() ?? 'N/A',
-      arrivalTime: 'N/A', // You could calculate this if needed
+      departureTime: tripResponse['start_time']?.toString() ?? 'N/A',
+      arrivalTime: tripResponse['end_time']?.toString() ?? 'N/A',
       driverName: driver['full_name']?.toString() ?? 'Unknown',
-      driverRating: 4.8, // Fallback as actual rating calculation isn't in drivers table by default
+      driverRating: 5.0, // Hardcoded fallback for now
     );
   }
 

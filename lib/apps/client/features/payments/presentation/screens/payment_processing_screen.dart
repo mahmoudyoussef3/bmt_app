@@ -105,23 +105,14 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
       
       final bookingId = await bookTripSeat({
         'p_trip_id': widget.checkoutData.tripId,
-        // Since we don't pass the actual seat ID or pricing ID, we will use mock UUIDs 
-        // to satisfy the schema constraints for this demo.
-        // The real implementation needs them fetched properly.
         'p_seat_id': widget.checkoutData.selectedSeat,
-        'p_pricing_id': null, // The DB function should handle null pricing or we must pass a valid one. We modified DB to ON DELETE SET NULL so null should be fine if it allows null.
+        'p_pricing_id': null,
         'p_pickup_point_id': null,
         'p_dropoff_point_id': null,
-        'p_passenger_name': widget.checkoutData.driverName, // Should be current user's name
+        'p_passenger_name': 'Me', // Assuming current user
         'p_phone': '',
-        'p_route': '${widget.checkoutData.pickupPoint} - ${widget.checkoutData.destination}',
-        'p_trip_time': widget.checkoutData.departureTime,
-        'p_trip_date': DateTime.now().toIso8601String().split('T')[0],
-        'p_seat': widget.checkoutData.selectedSeat,
         'p_payment_method': widget.paymentMethod.title,
         'p_payment_amount': total,
-        'p_pickup_point_name': widget.checkoutData.pickupPoint,
-        'p_dropoff_point_name': widget.checkoutData.destination,
       });
 
       if (!mounted) return;

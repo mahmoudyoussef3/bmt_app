@@ -19,7 +19,7 @@ abstract class BookingRepository {
 
   Future<List<MapPinOption>> getDestinationMapPins();
 
-  Future<List<VehicleDetailData>> getVehicles();
+  Future<List<VehicleDetailData>> getVehicles({String? routeId});
 
   Future<VehicleDetailData?> getVehicleById(String id);
 }
