@@ -197,6 +197,7 @@ class _ClientAppState extends State<ClientApp> {
                 final args = ModalRoute.of(context)?.settings.arguments;
                 final checkoutData = args is Map
                     ? PaymentCheckoutData(
+                        tripId: args['tripId']?.toString() ?? '',
                         pickupPoint:
                             args['pickupPoint']?.toString() ?? 'Banha Station',
                         destination:
@@ -212,6 +213,7 @@ class _ClientAppState extends State<ClientApp> {
                             args['driverName']?.toString() ?? 'Ahmed Mohamed',
                       )
                     : PaymentCheckoutData(
+                        tripId: '',
                         pickupPoint: 'Banha Station',
                         destination: 'Smart Village',
                         vehicleNumber: 'MB-15-2847',

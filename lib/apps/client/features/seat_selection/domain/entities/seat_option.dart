@@ -11,6 +11,7 @@ class SeatOption {
 
 class SeatSelectionData {
   const SeatSelectionData({
+    required this.tripId,
     required this.seats,
     required this.pricePerSeat,
     required this.pickupPoint,
@@ -25,6 +26,7 @@ class SeatSelectionData {
     required this.driverRating,
   });
 
+  final String tripId;
   final List<SeatOption> seats;
   final double pricePerSeat;
   final String pickupPoint;

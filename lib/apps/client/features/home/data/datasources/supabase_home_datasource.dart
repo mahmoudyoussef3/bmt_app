@@ -10,10 +10,9 @@ class SupabaseHomeDatasource implements HomeDatasource {
   @override
   Future<HomeDataModel> getHomeData() async {
     final popularRoutesFuture = _supabase
-        .from('routes')
+        .from('operation_routes')
         .select()
         .eq('status', 'active')
-        .eq('is_popular', true)
         .limit(4);
 
     final nearbyTripsFuture = _supabase
@@ -51,10 +50,10 @@ class SupabaseHomeDatasource implements HomeDatasource {
     final currentTripData = responses[3];
 
     final popularRoutes = popularRoutesData.map((e) => PopularRouteModel(
-          pickup: e['pickup'] as String? ?? 'Unknown',
-          destination: e['destination'] as String? ?? 'Unknown',
-          duration: e['duration'] as String? ?? '0 min',
-          startingPrice: 'EGP ${e['starting_price']}',
+          pickup: e['start_point'] as String? ?? 'Unknown',
+          destination: e['end_point'] as String? ?? 'Unknown',
+          duration: '60 min', // Default since missing in operation_routes
+          startingPrice: 'EGP 50', // Default since starting_price is in pricing table now
         )).toList();
 
     final nearbyTrips = nearbyTripsData.map((e) => NearbyTripModel(

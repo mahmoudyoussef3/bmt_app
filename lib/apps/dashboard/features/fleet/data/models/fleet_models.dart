@@ -55,7 +55,7 @@ class FleetDriverModel extends FleetDriver {
     List<FleetDocument> documents = const [],
   }) {
     return FleetDriverModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       employeeCode: json['employee_code'] as String? ?? '',
       fullName: json['full_name'] as String? ?? json['name'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
@@ -167,7 +167,7 @@ class FleetVehicleModel extends FleetVehicle {
         : const [];
 
     return FleetVehicleModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       vehicleCode: json['vehicle_code'] as String? ?? json['vehicle_number'] as String? ?? '',
       plateNumber: json['plate_number'] as String? ?? '',
       vehicleType: json['vehicle_type'] as String? ?? '',
@@ -243,10 +243,10 @@ class FleetAssignmentModel extends FleetAssignment {
             .toList() ??
         [];
     return FleetAssignmentModel(
-      id: json['id'] as String,
-      driverId: json['driver_id'] as String,
-      vehicleId: json['vehicle_id'] as String,
-      assignedAt: json['assigned_at'] as String,
+      id: json['id'] as String? ?? '',
+      driverId: json['driver_id'] as String? ?? '',
+      vehicleId: json['vehicle_id'] as String? ?? '',
+      assignedAt: json['assigned_at'] as String? ?? '',
       status: FleetAssignmentStatus.values.firstWhere(
         (e) => e.name == json['status'],
         orElse: () => FleetAssignmentStatus.active,
@@ -283,12 +283,12 @@ class FleetDocumentModel extends FleetDocument {
     final isDriver = json.containsKey('driver_id');
     final ownerId = (isDriver ? json['driver_id'] : json['vehicle_id']) as String? ?? '';
     return FleetDocumentModel(
-      id: json['id'] as String,
+      id: json['id'] as String? ?? '',
       type: _parseDocumentType(json['type'] as String? ?? ''),
       ownerId: ownerId,
       ownerName: ownerName,
-      referenceNumber: json['id'] as String,
-      expiryDate: json['expiry_date'] as String,
+      referenceNumber: json['id'] as String? ?? '',
+      expiryDate: json['expiry_date'] as String? ?? '',
       status: _parseDocumentStatus(json['status'] as String? ?? ''),
       fileUrl: json['file_url'] as String? ?? '',
     );

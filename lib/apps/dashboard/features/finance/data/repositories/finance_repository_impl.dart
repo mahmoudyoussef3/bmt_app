@@ -1,9 +1,9 @@
 import '../../domain/entities/finance_entities.dart';
 import '../../domain/repositories/finance_repository.dart';
-import '../datasources/mock_finance_datasource.dart';
+import '../datasources/finance_datasource.dart';
 
 class FinanceRepositoryImpl implements FinanceRepository {
-  final MockFinanceDatasource _datasource;
+  final FinanceDatasource _datasource;
 
   const FinanceRepositoryImpl(this._datasource);
 

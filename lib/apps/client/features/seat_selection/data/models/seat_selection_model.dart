@@ -13,6 +13,7 @@ class SeatOptionModel {
 
 class SeatSelectionModel {
   const SeatSelectionModel({
+    required this.tripId,
     required this.seats,
     required this.pricePerSeat,
     required this.pickupPoint,
@@ -27,6 +28,7 @@ class SeatSelectionModel {
     required this.driverRating,
   });
 
+  final String tripId;
   final List<SeatOptionModel> seats;
   final double pricePerSeat;
   final String pickupPoint;
@@ -42,6 +44,7 @@ class SeatSelectionModel {
 
   SeatSelectionData toEntity() {
     return SeatSelectionData(
+      tripId: tripId,
       seats: seats.map((seat) => seat.toEntity()).toList(),
       pricePerSeat: pricePerSeat,
       pickupPoint: pickupPoint,

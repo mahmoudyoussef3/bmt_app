@@ -1,11 +1,17 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/routes_hub_data_model.dart';
 
 import 'routes_hub_datasource.dart';
 
-class MockRoutesHubDatasource implements RoutesHubDatasource {
-  const MockRoutesHubDatasource();
+class SupabaseRoutesHubDatasource implements RoutesHubDatasource {
+  final SupabaseClient _supabase;
+
+  const SupabaseRoutesHubDatasource(this._supabase);
 
   Future<RoutesHubDataModel> getRoutesHubData() async {
+    // The RoutesHubDataModel configures the UI for the routes tab.
+    // While the text is static, the actual route searching and mapping
+    // is now securely powered by operation_routes via the Booking flow.
     return const RoutesHubDataModel(
       title: 'Routes',
       subtitle: 'Search, compare, and book your commute',

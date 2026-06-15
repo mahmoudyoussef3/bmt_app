@@ -12,4 +12,9 @@ class SeatSelectionRepositoryImpl implements SeatSelectionRepository {
     final model = await _datasource.getSeatSelectionData(tripId);
     return model.toEntity();
   }
+
+  @override
+  Future<String> bookTripSeat(Map<String, dynamic> params) {
+    return _datasource.bookTripSeat(params);
+  }
 }

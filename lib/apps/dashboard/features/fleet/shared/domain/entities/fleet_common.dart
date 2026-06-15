@@ -21,9 +21,9 @@ class FleetHistoryItem {
 
   factory FleetHistoryItem.fromJson(Map<String, dynamic> json) {
     return FleetHistoryItem(
-      title: json['title'] as String,
-      date: json['date'] as String,
-      description: json['description'] as String,
+      title: json['title'] as String? ?? '',
+      date: json['date'] as String? ?? '',
+      description: json['description'] as String? ?? '',
     );
   }
 }

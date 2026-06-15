@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/features/tickets/domain/entities/complain
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/repositories/tickets_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/assign_complaint_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/close_complaint_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/delete_complaint_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/escalate_complaint_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/get_complaints_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/respond_to_complaint_usecase.dart';
@@ -25,6 +26,7 @@ void main() {
         updateComplaintStatus: UpdateComplaintStatusUseCase(repository),
         escalateComplaint: EscalateComplaintUseCase(repository),
         closeComplaint: CloseComplaintUseCase(repository),
+        deleteComplaint: DeleteComplaintUseCase(repository),
       );
     });
 
@@ -204,5 +206,10 @@ class _MockTicketsRepository implements TicketsRepository {
     final updated = complaints[idx].copyWith(status: ComplaintStatus.closed);
     complaints[idx] = updated;
     return updated;
+  }
+
+  @override
+  Future<void> deleteComplaint(String id) async {
+    complaints.removeWhere((c) => c.id == id);
   }
 }

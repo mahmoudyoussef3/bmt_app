@@ -10,17 +10,26 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
 
   @override
   Future<SeatSelectionModel> getSeatSelectionData(String tripId) async {
-    // 1. Fetch reserved seats for this trip
-    final bookingsResponse = await _supabase
-        .from('operation_bookings')
-        .select('seat')
-        .eq('trip_id', tripId);
-        
-    final List<String> reservedSeats = bookingsResponse
-        .map((b) => b['seat']?.toString())
-        .where((s) => s != null)
-        .cast<String>()
-        .toList();
+    // 1. Fetch real trip_seats for this trip
+    final seatsResponse = await _supabase
+        .from('trip_seats')
+        .select('*')
+        .eq('trip_id', tripId)
+        .order('seat_number', ascending: true);
+
+    final List<SeatOptionModel> seats = [];
+    for (final seatRecord in seatsResponse) {
+      final seatId = seatRecord['id'].toString();
+      final state = seatRecord['state']?.toString() ?? 'available';
+      seats.add(
+        SeatOptionModel(
+          id: seatId,
+          availability: state == 'available' 
+              ? SeatAvailability.available 
+              : SeatAvailability.reserved,
+        ),
+      );
+    }
 
     // 2. Fetch trip details, vehicle details and driver
     final tripResponse = await _supabase
@@ -40,20 +49,6 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
 
     final vehicle = tripResponse['vehicles'] as Map<String, dynamic>? ?? {};
     final driver = tripResponse['drivers'] as Map<String, dynamic>? ?? {};
-    final capacity = int.tryParse(vehicle['seating_capacity']?.toString() ?? '15') ?? 15;
-    
-    // 3. Build seat options up to capacity
-    final List<SeatOptionModel> seats = [];
-    for (int i = 1; i <= capacity; i++) {
-      final seatId = i.toString();
-      final isReserved = reservedSeats.contains(seatId) || i <= 2; // Usually 1 & 2 are for driver cabin in microbus layout
-      seats.add(
-        SeatOptionModel(
-          id: seatId,
-          availability: isReserved ? SeatAvailability.reserved : SeatAvailability.available,
-        ),
-      );
-    }
 
     final routeParts = (tripResponse['route'] as String? ?? '').split(' - ');
     final pickup = routeParts.isNotEmpty ? routeParts[0] : 'Unknown';
@@ -62,6 +57,7 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
     final fare = double.tryParse(fareStr) ?? 85.0;
 
     return SeatSelectionModel(
+      tripId: tripId,
       seats: seats,
       pricePerSeat: fare,
       pickupPoint: pickup,
@@ -75,5 +71,17 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
       driverName: driver['full_name']?.toString() ?? 'Unknown',
       driverRating: 4.8, // Fallback as actual rating calculation isn't in drivers table by default
     );
+  }
+
+  @override
+  Future<String> bookTripSeat(Map<String, dynamic> params) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+    
+    final finalParams = Map<String, dynamic>.from(params);
+    finalParams['p_client_id'] = user.id;
+
+    final response = await _supabase.rpc('book_trip_seat', params: finalParams);
+    return response.toString();
   }
 }

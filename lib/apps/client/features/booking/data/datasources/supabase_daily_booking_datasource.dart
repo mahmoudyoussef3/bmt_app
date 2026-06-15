@@ -10,7 +10,7 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
 
   @override
   Future<BookingHubData> getBookingHubData() async {
-    final routesResponse = await _supabase.from('routes').select('id');
+    final routesResponse = await _supabase.from('operation_routes').select('id');
     final packagesResponse = await _supabase.from('packages').select('id');
     final tripsResponse = await _supabase.from('operation_trips').select('id').eq('status', 'scheduled');
     
@@ -44,10 +44,10 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
         ''')
         .eq('status', 'scheduled');
 
-    final routesResponse = await _supabase.from('routes').select('pickup, destination').eq('status', 'active');
+    final routesResponse = await _supabase.from('operation_routes').select('start_point, end_point').eq('status', 'active');
 
-    final distinctPickups = routesResponse.map((e) => e['pickup'].toString()).toSet().toList();
-    final distinctDestinations = routesResponse.map((e) => e['destination'].toString()).toSet().toList();
+    final distinctPickups = routesResponse.map((e) => e['start_point'].toString()).toSet().toList();
+    final distinctDestinations = routesResponse.map((e) => e['end_point'].toString()).toSet().toList();
 
     final vehicles = tripsResponse.map((data) {
       final vehicle = data['vehicles'] as Map<String, dynamic>?;

@@ -81,7 +81,7 @@ import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/get_profile_data_usecase.dart';
 import '../../features/profile/presentation/cubit/profile_cubit.dart';
-import '../../features/routes/data/datasources/mock_routes_hub_datasource.dart';
+import '../../features/routes/data/datasources/supabase_routes_hub_datasource.dart';
 import '../../features/routes/data/repositories/routes_hub_repository_impl.dart';
 import '../../features/routes/domain/repositories/routes_hub_repository.dart';
 import '../../features/routes/domain/usecases/get_routes_hub_data_usecase.dart';
@@ -98,6 +98,7 @@ import '../../features/seat_selection/data/repositories/seat_selection_repositor
 import '../../features/seat_selection/domain/repositories/seat_selection_repository.dart';
 import '../../features/seat_selection/domain/usecases/get_seat_selection_data_usecase.dart';
 import '../../features/seat_selection/domain/usecases/select_seat_usecase.dart';
+import '../../features/seat_selection/domain/usecases/book_trip_seat_usecase.dart';
 import '../../features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import '../../features/seat_release/data/datasources/mock_seat_release_datasource.dart';
 import '../../features/seat_release/data/repositories/seat_release_repository_impl.dart';
@@ -431,6 +432,12 @@ void _registerSeatSelectionDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<BookTripSeatUseCase>()) {
+    clientGetIt.registerLazySingleton<BookTripSeatUseCase>(
+      () => BookTripSeatUseCase(clientGetIt<SeatSelectionRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<SeatSelectionCubit>()) {
     clientGetIt.registerFactory<SeatSelectionCubit>(
       () => SeatSelectionCubit(
@@ -744,15 +751,15 @@ void _registerProfileDependencies() {
 }
 
 void _registerRoutesHubDependencies() {
-  if (!clientGetIt.isRegistered<MockRoutesHubDatasource>()) {
-    clientGetIt.registerLazySingleton<MockRoutesHubDatasource>(
-      () => const MockRoutesHubDatasource(),
+  if (!clientGetIt.isRegistered<SupabaseRoutesHubDatasource>()) {
+    clientGetIt.registerLazySingleton<SupabaseRoutesHubDatasource>(
+      () => SupabaseRoutesHubDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<RoutesHubRepository>()) {
     clientGetIt.registerLazySingleton<RoutesHubRepository>(
-      () => RoutesHubRepositoryImpl(clientGetIt<MockRoutesHubDatasource>()),
+      () => RoutesHubRepositoryImpl(clientGetIt<SupabaseRoutesHubDatasource>()),
     );
   }
 

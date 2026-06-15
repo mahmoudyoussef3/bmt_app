@@ -1,7 +1,10 @@
 import 'dart:math';
 import '../../domain/entities/finance_entities.dart';
 
-class MockFinanceDatasource {
+import '../../domain/entities/finance_entities.dart';
+import 'finance_datasource.dart';
+
+class MockFinanceDatasource implements FinanceDatasource {
   final List<PaymentRecord> _payments = [];
   final List<ReceiptReview> _receipts = [];
   final List<RefundRequest> _refunds = [];
@@ -214,16 +217,20 @@ class MockFinanceDatasource {
     }
   }
 
-  // Retrieve Methods
-  List<PaymentRecord> getPayments() => List.unmodifiable(_payments);
+  @override
+  Future<List<PaymentRecord>> getPayments() async => List.unmodifiable(_payments);
 
-  List<ReceiptReview> getReceiptReviews() => List.unmodifiable(_receipts);
+  @override
+  Future<List<ReceiptReview>> getReceiptReviews() async => List.unmodifiable(_receipts);
 
-  List<RefundRequest> getRefundRequests() => List.unmodifiable(_refunds);
+  @override
+  Future<List<RefundRequest>> getRefundRequests() async => List.unmodifiable(_refunds);
 
-  List<SubscriptionRecord> getSubscriptions() => List.unmodifiable(_subscriptions);
+  @override
+  Future<List<SubscriptionRecord>> getSubscriptions() async => List.unmodifiable(_subscriptions);
 
-  RevenueMetrics getRevenueMetrics() {
+  @override
+  Future<RevenueMetrics> getRevenueMetrics() async {
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
     final weekStart = now.subtract(const Duration(days: 7));
@@ -277,7 +284,8 @@ class MockFinanceDatasource {
   }
 
   // Update Methods
-  void reviewReceipt(String id, ReceiptReviewStatus action, {String? notes}) {
+  @override
+  Future<void> reviewReceipt(String id, ReceiptReviewStatus action, {String? notes}) async {
     final index = _receipts.indexWhere((r) => r.id == id);
     if (index == -1) return;
 
@@ -319,7 +327,8 @@ class MockFinanceDatasource {
     }
   }
 
-  void processRefund(String id, RefundStatus action) {
+  @override
+  Future<void> processRefund(String id, RefundStatus action) async {
     final index = _refunds.indexWhere((r) => r.id == id);
     if (index == -1) return;
 
@@ -343,7 +352,8 @@ class MockFinanceDatasource {
     }
   }
 
-  void cancelSubscription(String id) {
+  @override
+  Future<void> cancelSubscription(String id) async {
     final index = _subscriptions.indexWhere((s) => s.id == id);
     if (index == -1) return;
 

@@ -610,6 +610,7 @@ class _SeatSelectionContent extends StatelessWidget {
                     : () => Navigator.of(context).pushNamed(
                         '/payment-demo',
                         arguments: {
+                          'tripId': data.tripId,
                           'pickupPoint': data.pickupPoint,
                           'destination': data.destination,
                           'vehicleNumber': data.vehicleNumber,

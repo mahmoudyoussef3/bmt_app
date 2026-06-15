@@ -14,8 +14,8 @@ class RoutesRepositoryImpl implements RoutesRepository {
   ) async {
     try {
       return await _datasource.addStation(routeId, station);
-    } catch (_) {
-      throw Exception('تعذر إضافة المحطة');
+    } catch (e) {
+      throw Exception('تعذر إضافة المحطة: $e');
     }
   }
 
@@ -23,8 +23,8 @@ class RoutesRepositoryImpl implements RoutesRepository {
   Future<OperationRoute> createRoute(OperationRoute route) async {
     try {
       return await _datasource.createRoute(route);
-    } catch (_) {
-      throw Exception('تعذر إنشاء المسار');
+    } catch (e) {
+      throw Exception('تعذر إنشاء المسار: $e');
     }
   }
 
@@ -32,8 +32,8 @@ class RoutesRepositoryImpl implements RoutesRepository {
   Future<OperationRoute> deleteStation(String routeId, String stationId) async {
     try {
       return await _datasource.deleteStation(routeId, stationId);
-    } catch (_) {
-      throw Exception('تعذر حذف المحطة');
+    } catch (e) {
+      throw Exception('تعذر حذف المحطة: $e');
     }
   }
 
@@ -41,8 +41,8 @@ class RoutesRepositoryImpl implements RoutesRepository {
   Future<List<OperationRoute>> getRoutes() async {
     try {
       return await _datasource.fetchRoutes();
-    } catch (_) {
-      throw Exception('تعذر تحميل المسارات');
+    } catch (e) {
+      throw Exception('تعذر تحميل المسارات: $e');
     }
   }
 
@@ -54,8 +54,8 @@ class RoutesRepositoryImpl implements RoutesRepository {
   ) async {
     try {
       return await _datasource.reorderStations(routeId, oldIndex, newIndex);
-    } catch (_) {
-      throw Exception('تعذر ترتيب المحطات');
+    } catch (e) {
+      throw Exception('تعذر ترتيب المحطات: $e');
     }
   }
 
@@ -63,8 +63,8 @@ class RoutesRepositoryImpl implements RoutesRepository {
   Future<OperationRoute> updateRoute(OperationRoute route) async {
     try {
       return await _datasource.updateRoute(route);
-    } catch (_) {
-      throw Exception('تعذر تعديل المسار');
+    } catch (e) {
+      throw Exception('تعذر تعديل المسار: $e');
     }
   }
 
@@ -75,8 +75,8 @@ class RoutesRepositoryImpl implements RoutesRepository {
   ) async {
     try {
       return await _datasource.updateStation(routeId, station);
-    } catch (_) {
-      throw Exception('تعذر تعديل المحطة');
+    } catch (e) {
+      throw Exception('تعذر تعديل المحطة: $e');
     }
   }
 }

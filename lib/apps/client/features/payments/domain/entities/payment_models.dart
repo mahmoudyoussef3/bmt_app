@@ -21,6 +21,7 @@ class PaymentMethodData {
 }
 
 class PaymentCheckoutData {
+  final String tripId;
   final String pickupPoint;
   final String destination;
   final String vehicleNumber;
@@ -35,6 +36,7 @@ class PaymentCheckoutData {
   final int walletBalance;
 
   const PaymentCheckoutData({
+    required this.tripId,
     required this.pickupPoint,
     required this.destination,
     required this.vehicleNumber,

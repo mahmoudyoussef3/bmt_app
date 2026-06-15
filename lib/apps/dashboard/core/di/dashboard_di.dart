@@ -100,6 +100,7 @@ import '../../features/routes/domain/usecases/update_route_station_usecase.dart'
 import '../../features/routes/domain/usecases/update_route_usecase.dart';
 import '../../features/routes/presentation/cubit/routes_cubit.dart';
 import '../../features/subscriptions/data/datasources/mock_subscriptions_datasource.dart';
+import '../../features/subscriptions/data/datasources/supabase_subscriptions_datasource.dart';
 import '../../features/subscriptions/data/repositories/subscriptions_repository_impl.dart';
 import '../../features/subscriptions/domain/repositories/subscriptions_repository.dart';
 import '../../features/subscriptions/domain/usecases/cancel_subscription_usecase.dart';
@@ -135,6 +136,8 @@ import '../../features/finance/domain/usecases/get_revenue_metrics_usecase.dart'
 import '../../features/finance/domain/usecases/get_subscriptions_usecase.dart';
 import '../../features/finance/domain/usecases/process_refund_usecase.dart';
 import '../../features/finance/domain/usecases/review_receipt_usecase.dart';
+import '../../features/finance/data/datasources/finance_datasource.dart';
+import '../../features/finance/data/datasources/supabase_finance_datasource.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
 import '../../features/reports/data/datasources/reports_datasource.dart';
 import '../../features/reports/data/datasources/supabase_reports_datasource.dart';
@@ -813,7 +816,7 @@ registerNetworkDependencies(dashboardDi);
 
   if (!dashboardDi.isRegistered<SubscriptionsDatasource>()) {
     dashboardDi.registerLazySingleton<SubscriptionsDatasource>(
-      MockSubscriptionsDatasource.new,
+      () => SupabaseSubscriptionsDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
@@ -957,15 +960,15 @@ registerNetworkDependencies(dashboardDi);
   }
 
   // Finance Feature Registration
-  if (!dashboardDi.isRegistered<MockFinanceDatasource>()) {
-    dashboardDi.registerLazySingleton<MockFinanceDatasource>(
-      MockFinanceDatasource.new,
+  if (!dashboardDi.isRegistered<FinanceDatasource>()) {
+    dashboardDi.registerLazySingleton<FinanceDatasource>(
+      () => SupabaseFinanceDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
   if (!dashboardDi.isRegistered<FinanceRepository>()) {
     dashboardDi.registerLazySingleton<FinanceRepository>(
-      () => FinanceRepositoryImpl(dashboardDi<MockFinanceDatasource>()),
+      () => FinanceRepositoryImpl(dashboardDi<FinanceDatasource>()),
     );
   }
 

@@ -13,6 +13,7 @@ class SupabaseTicketsDatasource implements TicketsDatasource {
   Future<List<Complaint>> getComplaints() async {
     final response = await _client.from(_table).select('''
       *,
+      client:clients(id, full_name, phone),
       messages:support_messages(
         id, sender_name, sender_type, message, created_at, 
         attachments:support_attachments(file_url)
@@ -22,21 +23,7 @@ class SupabaseTicketsDatasource implements TicketsDatasource {
       )
     ''').order('created_at', ascending: false);
 
-    final clientIds = response.map((e) => e['client_id']?.toString()).whereType<String>().toSet().toList();
-    
-    Map<String, dynamic> clientMap = {};
-    if (clientIds.isNotEmpty) {
-      final clientsResponse = await _client.from('clients').select('id, full_name, phone').inFilter('id', clientIds);
-      for (var c in clientsResponse) {
-        clientMap[c['id'].toString()] = c;
-      }
-    }
-
     return response.map((json) {
-      final clientId = json['client_id']?.toString();
-      if (clientId != null && clientMap.containsKey(clientId)) {
-        json['client'] = clientMap[clientId];
-      }
       return _mapToComplaintModel(json);
     }).toList();
   }
@@ -154,6 +141,7 @@ class SupabaseTicketsDatasource implements TicketsDatasource {
   Future<Complaint> _fetchSingleComplaint(String id) async {
     final response = await _client.from(_table).select('''
       *,
+      client:clients(id, full_name, phone),
       messages:support_messages(
         id, sender_name, sender_type, message, created_at, 
         attachments:support_attachments(file_url)
@@ -162,16 +150,6 @@ class SupabaseTicketsDatasource implements TicketsDatasource {
         id, event_type, title, description, created_at
       )
     ''').eq('id', id).single();
-
-    final clientId = response['client_id']?.toString();
-    if (clientId != null) {
-      try {
-        final clientData = await _client.from('clients').select('id, full_name, phone').eq('id', clientId).maybeSingle();
-        if (clientData != null) {
-          response['client'] = clientData;
-        }
-      } catch (_) {}
-    }
 
     return _mapToComplaintModel(response);
   }
