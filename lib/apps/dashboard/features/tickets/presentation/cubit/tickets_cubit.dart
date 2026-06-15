@@ -1,49 +1,44 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/complaint.dart';
-import '../../domain/usecases/assign_complaint_usecase.dart';
-import '../../domain/usecases/close_complaint_usecase.dart';
-import '../../domain/usecases/delete_complaint_usecase.dart';
-import '../../domain/usecases/escalate_complaint_usecase.dart';
-import '../../domain/usecases/get_complaints_usecase.dart';
-import '../../domain/usecases/respond_to_complaint_usecase.dart';
-import '../../domain/usecases/update_complaint_status_usecase.dart';
+import '../../domain/usecases/get_tickets_usecase.dart';
+import '../../domain/usecases/update_ticket_status_usecase.dart';
+import '../../domain/usecases/save_internal_note_usecase.dart';
+import '../../domain/usecases/mark_customer_contacted_usecase.dart';
+import '../../domain/usecases/close_ticket_usecase.dart';
+import '../../domain/usecases/get_ticket_attachments_usecase.dart';
 import 'tickets_state.dart';
 
 class TicketsCubit extends Cubit<TicketsState> {
-  final GetComplaintsUseCase _getComplaints;
-  final AssignComplaintUseCase _assignComplaint;
-  final RespondToComplaintUseCase _respondToComplaint;
-  final UpdateComplaintStatusUseCase _updateComplaintStatus;
-  final EscalateComplaintUseCase _escalateComplaint;
-  final CloseComplaintUseCase _closeComplaint;
-  final DeleteComplaintUseCase _deleteComplaint;
+  final GetTicketsUseCase _getTickets;
+  final UpdateTicketStatusUseCase _updateTicketStatus;
+  final SaveInternalNoteUseCase _saveInternalNote;
+  final MarkCustomerContactedUseCase _markCustomerContacted;
+  final CloseTicketUseCase _closeTicket;
+  final GetTicketAttachmentsUseCase _getTicketAttachments;
 
   TicketsCubit({
-    required GetComplaintsUseCase getComplaints,
-    required AssignComplaintUseCase assignComplaint,
-    required RespondToComplaintUseCase respondToComplaint,
-    required UpdateComplaintStatusUseCase updateComplaintStatus,
-    required EscalateComplaintUseCase escalateComplaint,
-    required CloseComplaintUseCase closeComplaint,
-    required DeleteComplaintUseCase deleteComplaint,
-  })  : _getComplaints = getComplaints,
-        _assignComplaint = assignComplaint,
-        _respondToComplaint = respondToComplaint,
-        _updateComplaintStatus = updateComplaintStatus,
-        _escalateComplaint = escalateComplaint,
-        _closeComplaint = closeComplaint,
-        _deleteComplaint = deleteComplaint,
+    required GetTicketsUseCase getTickets,
+    required UpdateTicketStatusUseCase updateTicketStatus,
+    required SaveInternalNoteUseCase saveInternalNote,
+    required MarkCustomerContactedUseCase markCustomerContacted,
+    required CloseTicketUseCase closeTicket,
+    required GetTicketAttachmentsUseCase getTicketAttachments,
+  })  : _getTickets = getTickets,
+        _updateTicketStatus = updateTicketStatus,
+        _saveInternalNote = saveInternalNote,
+        _markCustomerContacted = markCustomerContacted,
+        _closeTicket = closeTicket,
+        _getTicketAttachments = getTicketAttachments,
         super(const TicketsLoading());
 
   Future<void> load() async {
     emit(const TicketsLoading());
     try {
-      final complaints = await _getComplaints();
+      final tickets = await _getTickets();
       emit(
         TicketsLoaded(
-          complaints: complaints,
-          selectedComplaintId: complaints.isEmpty ? null : complaints.first.id,
+          tickets: tickets,
         ),
       );
     } catch (error) {
@@ -51,40 +46,32 @@ class TicketsCubit extends Cubit<TicketsState> {
     }
   }
 
-  void selectComplaint(String id) {
+  Future<void> selectTicket(String id) async {
     final current = state;
     if (current is! TicketsLoaded) return;
-    emit(current.copyWith(selectedComplaintId: id, clearMessage: true));
-  }
+    
+    emit(current.copyWith(selectedTicketId: id));
 
-  void setFilterStatus(ComplaintStatus? status) {
-    final current = state;
-    if (current is! TicketsLoaded) return;
-    if (status == null) {
-      emit(current.copyWith(clearStatusFilter: true));
-    } else {
-      emit(current.copyWith(filterStatus: status));
+    try {
+      final attachments = await _getTicketAttachments(id);
+      if (state is TicketsLoaded && (state as TicketsLoaded).selectedTicketId == id) {
+        emit((state as TicketsLoaded).copyWith(selectedTicketAttachments: attachments));
+      }
+    } catch (e) {
+      print('Failed to load attachments: $e');
     }
   }
 
-  void setFilterPriority(ComplaintPriority? priority) {
+  void setFilterStatus(TicketStatus? status) {
     final current = state;
     if (current is! TicketsLoaded) return;
-    if (priority == null) {
-      emit(current.copyWith(clearPriorityFilter: true));
-    } else {
-      emit(current.copyWith(filterPriority: priority));
-    }
+    emit(current.copyWith(filterStatus: status, clearFilterStatus: status == null));
   }
 
-  void setFilterCategory(ComplaintCategory? category) {
+  void setFilterPriority(TicketPriority? priority) {
     final current = state;
     if (current is! TicketsLoaded) return;
-    if (category == null) {
-      emit(current.copyWith(clearCategoryFilter: true));
-    } else {
-      emit(current.copyWith(filterCategory: category));
-    }
+    emit(current.copyWith(filterPriority: priority, clearFilterPriority: priority == null));
   }
 
   void setSearchQuery(String query) {
@@ -93,132 +80,80 @@ class TicketsCubit extends Cubit<TicketsState> {
     emit(current.copyWith(searchQuery: query));
   }
 
-  Future<void> assign(String agentName) async {
+  Future<void> updateStatus(TicketStatus status) async {
     final current = state;
     if (current is! TicketsLoaded) return;
-    final selectedId = current.selectedComplaintId;
+    final selectedId = current.selectedTicketId;
     if (selectedId == null) return;
 
-    emit(current.copyWith(actionLoading: true, clearMessage: true));
+    emit(current.copyWith(actionLoading: true));
     try {
-      final updated = await _assignComplaint(selectedId, agentName);
-      _emitUpdated(current, updated, 'تم تعيين الشكوى إلى المسؤول: $agentName نجاح');
+      final updated = await _updateTicketStatus(selectedId, status);
+      _emitUpdated(current, updated, 'Ticket status updated to ${status.label}');
     } catch (error) {
       emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
     }
   }
 
-  Future<void> respond(String content, {List<String> attachments = const []}) async {
-    final normalized = content.trim();
-    if (normalized.isEmpty && attachments.isEmpty) return;
-
+  Future<void> saveInternalNote(String note) async {
     final current = state;
     if (current is! TicketsLoaded) return;
-    final selectedId = current.selectedComplaintId;
+    final selectedId = current.selectedTicketId;
     if (selectedId == null) return;
 
-    emit(current.copyWith(actionLoading: true, clearMessage: true));
+    emit(current.copyWith(actionLoading: true));
     try {
-      final updated = await _respondToComplaint(
-        selectedId,
-        senderName: current.selectedComplaint?.assignedTo ?? 'الدعم الفني',
-        senderType: 'agent',
-        content: normalized,
-        attachments: attachments,
-      );
-      _emitUpdated(current, updated, 'تم إرسال الرد بنجاح');
+      final updated = await _saveInternalNote(selectedId, note);
+      _emitUpdated(current, updated, 'Internal note saved');
     } catch (error) {
       emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
     }
   }
 
-  Future<void> updateStatus(ComplaintStatus status) async {
+  Future<void> markCustomerContacted() async {
     final current = state;
     if (current is! TicketsLoaded) return;
-    final selectedId = current.selectedComplaintId;
+    final selectedId = current.selectedTicketId;
     if (selectedId == null) return;
 
-    emit(current.copyWith(actionLoading: true, clearMessage: true));
+    emit(current.copyWith(actionLoading: true));
     try {
-      final updated = await _updateComplaintStatus(selectedId, status);
-      _emitUpdated(current, updated, 'تم تحديث حالة الشكوى إلى: ${status.label}');
+      final updated = await _markCustomerContacted(selectedId);
+      _emitUpdated(current, updated, 'Marked as contacted');
     } catch (error) {
       emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
     }
   }
 
-  Future<void> escalate() async {
+  Future<void> closeTicket() async {
     final current = state;
     if (current is! TicketsLoaded) return;
-    final selectedId = current.selectedComplaintId;
+    final selectedId = current.selectedTicketId;
     if (selectedId == null) return;
 
-    emit(current.copyWith(actionLoading: true, clearMessage: true));
+    emit(current.copyWith(actionLoading: true));
     try {
-      final updated = await _escalateComplaint(selectedId);
-      _emitUpdated(current, updated, 'تم تصعيد الشكوى وتغيير الأولوية إلى حرجة');
+      final updated = await _closeTicket(selectedId);
+      _emitUpdated(current, updated, 'Ticket closed');
     } catch (error) {
       emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
     }
   }
 
-  Future<void> closeComplaint() async {
-    final current = state;
-    if (current is! TicketsLoaded) return;
-    final selectedId = current.selectedComplaintId;
-    if (selectedId == null) return;
-
-    emit(current.copyWith(actionLoading: true, clearMessage: true));
-    try {
-      final updated = await _closeComplaint(selectedId);
-      _emitUpdated(current, updated, 'تم إغلاق الشكوى نهائياً');
-    } catch (error) {
-      emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
-    }
-  }
-
-  Future<void> deleteComplaint() async {
-    final current = state;
-    if (current is! TicketsLoaded) return;
-    final selectedId = current.selectedComplaintId;
-    if (selectedId == null) return;
-
-    emit(current.copyWith(actionLoading: true, clearMessage: true));
-    try {
-      await _deleteComplaint(selectedId);
-      
-      final list = current.complaints.where((c) => c.id != selectedId).toList();
-      emit(
-        current.copyWith(
-          complaints: list,
-          selectedComplaintId: list.isEmpty ? null : list.first.id,
-          actionLoading: false,
-          actionMessage: 'تم حذف الشكوى بنجاح',
-        ),
-      );
-    } catch (error) {
-      emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
-    }
+  void _emitUpdated(TicketsLoaded current, SupportTicket updated, String successMsg) {
+    final updatedList = current.tickets.map((t) => t.id == updated.id ? updated : t).toList();
+    emit(
+      current.copyWith(
+        tickets: updatedList,
+        actionLoading: false,
+        actionMessage: successMsg,
+      ),
+    );
   }
 
   void clearActionMessage() {
-    final current = state;
-    if (current is TicketsLoaded) {
-      emit(current.copyWith(clearMessage: true));
+    if (state is TicketsLoaded) {
+      emit((state as TicketsLoaded).copyWith(actionMessage: null));
     }
-  }
-
-  void _emitUpdated(TicketsLoaded current, Complaint updated, String successMessage) {
-    final list = current.complaints
-        .map((c) => c.id == updated.id ? updated : c)
-        .toList();
-    emit(
-      current.copyWith(
-        complaints: list,
-        selectedComplaintId: updated.id,
-        actionLoading: false,
-        actionMessage: successMessage,
-      ),
-    );
   }
 }

@@ -1,9 +1,6 @@
 import 'dart:io';
 import '../entities/support_ticket.dart';
-import '../entities/support_message.dart';
 import '../entities/support_attachment.dart';
-import '../entities/support_refund_request.dart';
-import '../entities/support_timeline_event.dart';
 import '../entities/support_workspace.dart';
 
 abstract class SupportRepository {
@@ -22,31 +19,10 @@ abstract class SupportRepository {
 
   Future<SupportTicket> getTicketDetails(String ticketId);
   
-  Future<List<SupportMessage>> getTicketMessages(String ticketId);
-  
-  Future<List<SupportTimelineEvent>> getTicketTimeline(String ticketId);
-
-  Future<SupportMessage> sendTicketMessage({
-    required String ticketId,
-    required String message,
-  });
+  Future<List<SupportAttachment>> getTicketAttachments(String ticketId);
 
   Future<SupportAttachment> uploadAttachment({
     required String ticketId,
-    String? messageId,
     required File file,
   });
-
-  Future<SupportRefundRequest> createRefundRequest({
-    required String reason,
-    String? description,
-    required double amount,
-    String? bookingId,
-    String? tripId,
-    File? evidenceFile,
-  });
-
-  Stream<List<SupportMessage>> subscribeToMessages(String ticketId);
-  
-  Stream<SupportTicket> subscribeToTicketUpdates(String ticketId);
 }

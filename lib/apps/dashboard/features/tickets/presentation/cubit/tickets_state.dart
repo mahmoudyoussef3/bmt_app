@@ -14,53 +14,50 @@ class TicketsError extends TicketsState {
 }
 
 class TicketsLoaded extends TicketsState {
-  final List<Complaint> complaints;
-  final String? selectedComplaintId;
-  final ComplaintStatus? filterStatus;
-  final ComplaintPriority? filterPriority;
-  final ComplaintCategory? filterCategory;
+  final List<SupportTicket> tickets;
+  final String? selectedTicketId;
+  final TicketStatus? filterStatus;
+  final TicketPriority? filterPriority;
   final String searchQuery;
   final bool actionLoading;
   final String? actionMessage;
+  final List<SupportAttachment>? selectedTicketAttachments; // Useful for the details view
 
   const TicketsLoaded({
-    required this.complaints,
-    this.selectedComplaintId,
+    required this.tickets,
+    this.selectedTicketId,
     this.filterStatus,
     this.filterPriority,
-    this.filterCategory,
     this.searchQuery = '',
     this.actionLoading = false,
     this.actionMessage,
+    this.selectedTicketAttachments,
   });
 
-  Complaint? get selectedComplaint {
-    if (selectedComplaintId == null || complaints.isEmpty) return null;
-    for (final c in complaints) {
-      if (c.id == selectedComplaintId) return c;
+  SupportTicket? get selectedTicket {
+    if (selectedTicketId == null || tickets.isEmpty) return null;
+    for (final t in tickets) {
+      if (t.id == selectedTicketId) return t;
     }
-    return complaints.first;
+    return tickets.first;
   }
 
-  List<Complaint> get filteredComplaints {
-    return complaints.where((c) {
+  List<SupportTicket> get filteredTickets {
+    return tickets.where((t) {
       // 1. Status Filter
-      if (filterStatus != null && c.status != filterStatus) return false;
+      if (filterStatus != null && t.status != filterStatus) return false;
 
       // 2. Priority Filter
-      if (filterPriority != null && c.priority != filterPriority) return false;
+      if (filterPriority != null && t.priority != filterPriority) return false;
 
-      // 3. Category Filter
-      if (filterCategory != null && c.category != filterCategory) return false;
-
-      // 4. Search Query
+      // 3. Search Query
       if (searchQuery.isNotEmpty) {
         final query = searchQuery.toLowerCase();
-        final matchesId = c.id.toLowerCase().contains(query);
-        final matchesClient = c.clientName.toLowerCase().contains(query);
-        final matchesTrip = c.tripCode.toLowerCase().contains(query);
-        final matchesDesc = c.description.toLowerCase().contains(query);
-        if (!matchesId && !matchesClient && !matchesTrip && !matchesDesc) {
+        final matchesId = t.ticketNumber.toLowerCase().contains(query);
+        final matchesClient = t.clientName.toLowerCase().contains(query);
+        final matchesPhone = t.clientPhone.toLowerCase().contains(query);
+        final matchesTitle = t.title.toLowerCase().contains(query);
+        if (!matchesId && !matchesClient && !matchesPhone && !matchesTitle) {
           return false;
         }
       }
@@ -71,49 +68,47 @@ class TicketsLoaded extends TicketsState {
 
   // Summary Metrics
   int get newCount {
-    return complaints.where((c) => c.status == ComplaintStatus.newlyCreated).length;
+    return tickets.where((t) => t.status == TicketStatus.submitted).length;
   }
 
-  int get inProgressCount {
-    return complaints.where((c) => c.status == ComplaintStatus.inProgress).length;
+  int get underReviewCount {
+    return tickets.where((t) => t.status == TicketStatus.underReview).length;
   }
 
   int get resolvedCount {
-    return complaints.where((c) => c.status == ComplaintStatus.resolved).length;
+    return tickets.where((t) => t.status == TicketStatus.resolved).length;
   }
 
   int get delayedCount {
     final limit = DateTime.now().subtract(const Duration(hours: 24));
-    return complaints.where((c) {
-      final isUnresolved = c.status != ComplaintStatus.resolved && c.status != ComplaintStatus.closed;
-      final isDelayed = c.createdAt.isBefore(limit);
+    return tickets.where((t) {
+      final isUnresolved = t.status != TicketStatus.resolved && t.status != TicketStatus.closed;
+      final isDelayed = t.createdAt.isBefore(limit);
       return isUnresolved && isDelayed;
     }).length;
   }
 
   TicketsLoaded copyWith({
-    List<Complaint>? complaints,
-    String? selectedComplaintId,
-    ComplaintStatus? filterStatus,
-    ComplaintPriority? filterPriority,
-    ComplaintCategory? filterCategory,
+    List<SupportTicket>? tickets,
+    String? selectedTicketId,
+    TicketStatus? filterStatus,
+    TicketPriority? filterPriority,
     String? searchQuery,
     bool? actionLoading,
     String? actionMessage,
-    bool clearStatusFilter = false,
-    bool clearPriorityFilter = false,
-    bool clearCategoryFilter = false,
-    bool clearMessage = false,
+    List<SupportAttachment>? selectedTicketAttachments,
+    bool clearFilterStatus = false,
+    bool clearFilterPriority = false,
   }) {
     return TicketsLoaded(
-      complaints: complaints ?? this.complaints,
-      selectedComplaintId: selectedComplaintId ?? this.selectedComplaintId,
-      filterStatus: clearStatusFilter ? null : filterStatus ?? this.filterStatus,
-      filterPriority: clearPriorityFilter ? null : filterPriority ?? this.filterPriority,
-      filterCategory: clearCategoryFilter ? null : filterCategory ?? this.filterCategory,
+      tickets: tickets ?? this.tickets,
+      selectedTicketId: selectedTicketId ?? this.selectedTicketId,
+      filterStatus: clearFilterStatus ? null : (filterStatus ?? this.filterStatus),
+      filterPriority: clearFilterPriority ? null : (filterPriority ?? this.filterPriority),
       searchQuery: searchQuery ?? this.searchQuery,
       actionLoading: actionLoading ?? this.actionLoading,
-      actionMessage: clearMessage ? null : actionMessage ?? this.actionMessage,
+      actionMessage: actionMessage, // don't persist actionMessage by default
+      selectedTicketAttachments: selectedTicketAttachments ?? this.selectedTicketAttachments,
     );
   }
 }

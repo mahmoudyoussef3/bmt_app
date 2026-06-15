@@ -1,0 +1,215 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../../domain/entities/complaint.dart';
+import '../cubit/tickets_cubit.dart';
+import '../cubit/tickets_state.dart';
+import 'tickets_shared_widgets.dart';
+
+class TicketDetailsDialog extends StatefulWidget {
+  const TicketDetailsDialog({super.key});
+
+  @override
+  State<TicketDetailsDialog> createState() => _TicketDetailsDialogState();
+}
+
+class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
+  final _noteController = TextEditingController();
+
+  @override
+  void dispose() {
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketsCubit, TicketsState>(
+      builder: (context, state) {
+        if (state is! TicketsLoaded || state.selectedTicket == null) {
+          return const AlertDialog(content: Text('No ticket selected'));
+        }
+
+        final ticket = state.selectedTicket!;
+        final cubit = context.read<TicketsCubit>();
+
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Ticket ${ticket.ticketNumber}',
+                      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.close),
+                      onPressed: () => Navigator.of(context).pop(),
+                    )
+                  ],
+                ),
+                const Divider(height: 32),
+
+                // Content
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Left Column (Details)
+                        Expanded(
+                          flex: 3,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              DetailField(label: 'Status', value: ticket.status.label),
+                              DetailField(label: 'Priority', value: ticket.priority.label),
+                              DetailField(label: 'Category', value: ticket.category),
+                              DetailField(label: 'Client', value: '${ticket.clientName} (${ticket.clientPhone})'),
+                              DetailField(label: 'Created At', value: '${ticket.createdAt.toLocal()}'),
+                              if (ticket.customerContactedAt != null)
+                                DetailField(label: 'Contacted At', value: '${ticket.customerContactedAt!.toLocal()}'),
+                              const SizedBox(height: 16),
+                              
+                              const Text('Title', style: TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(ticket.title),
+                              const SizedBox(height: 16),
+                              
+                              const Text('Description', style: TextStyle(fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.grey[100],
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Text(ticket.description),
+                              ),
+
+                              if (state.selectedTicketAttachments != null && state.selectedTicketAttachments!.isNotEmpty) ...[
+                                const SizedBox(height: 16),
+                                const Text('Attachments', style: TextStyle(fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 8),
+                                ...state.selectedTicketAttachments!.map(
+                                  (a) => ListTile(
+                                    leading: const Icon(Icons.attachment),
+                                    title: Text(a.fileName),
+                                    trailing: IconButton(
+                                      icon: const Icon(Icons.open_in_new),
+                                      onPressed: () => launchUrl(Uri.parse(a.fileUrl)),
+                                    ),
+                                  )
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 24),
+                        // Right Column (Actions & Notes)
+                        Expanded(
+                          flex: 2,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              const Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              const SizedBox(height: 12),
+                              
+                              if (ticket.status == TicketStatus.submitted)
+                                FilledButton.icon(
+                                  onPressed: () => cubit.updateStatus(TicketStatus.underReview),
+                                  icon: const Icon(Icons.rate_review),
+                                  label: const Text('Mark Under Review'),
+                                ),
+                              
+                              if (ticket.status != TicketStatus.contacted && ticket.status != TicketStatus.resolved && ticket.status != TicketStatus.closed)
+                                ...[
+                                  const SizedBox(height: 8),
+                                  FilledButton.tonalIcon(
+                                    onPressed: () => cubit.markCustomerContacted(),
+                                    icon: const Icon(Icons.phone_in_talk),
+                                    label: const Text('Mark Contacted'),
+                                  ),
+                                ],
+
+                              if (ticket.status != TicketStatus.resolved && ticket.status != TicketStatus.closed)
+                                ...[
+                                  const SizedBox(height: 8),
+                                  FilledButton.tonalIcon(
+                                    onPressed: () => cubit.updateStatus(TicketStatus.resolved),
+                                    icon: const Icon(Icons.check_circle),
+                                    label: const Text('Mark Resolved'),
+                                    style: FilledButton.styleFrom(backgroundColor: Colors.green[100], foregroundColor: Colors.green[900]),
+                                  ),
+                                ],
+
+                              if (ticket.status != TicketStatus.closed)
+                                ...[
+                                  const SizedBox(height: 8),
+                                  TextButton.icon(
+                                    onPressed: () => cubit.closeTicket(),
+                                    icon: const Icon(Icons.close),
+                                    label: const Text('Close Ticket'),
+                                    style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+                                  ),
+                                ],
+
+                              const Divider(height: 32),
+                              const Text('Internal Note', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              const SizedBox(height: 8),
+                              if (ticket.internalNote != null) ...[
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange[50],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(color: Colors.orange[200]!),
+                                  ),
+                                  child: Text(ticket.internalNote!),
+                                ),
+                                const SizedBox(height: 12),
+                              ],
+                              TextField(
+                                controller: _noteController,
+                                decoration: const InputDecoration(
+                                  hintText: 'Add/Update internal note...',
+                                  border: OutlineInputBorder(),
+                                ),
+                                maxLines: 3,
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton(
+                                onPressed: () {
+                                  if (_noteController.text.trim().isNotEmpty) {
+                                    cubit.saveInternalNote(_noteController.text.trim());
+                                    _noteController.clear();
+                                  }
+                                },
+                                child: const Text('Save Note'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ), // Closing ConstrainedBox
+        );
+      },
+    );
+  }
+}

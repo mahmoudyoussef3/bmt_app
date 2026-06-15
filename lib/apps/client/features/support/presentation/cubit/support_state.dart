@@ -1,7 +1,6 @@
 import 'package:equatable/equatable.dart';
 import '../../domain/entities/support_ticket.dart';
-import '../../domain/entities/support_message.dart';
-import '../../domain/entities/support_timeline_event.dart';
+import '../../domain/entities/support_attachment.dart';
 
 abstract class SupportState extends Equatable {
   const SupportState();
@@ -57,34 +56,30 @@ class SupportActionLoading extends SupportState {
 
 class SupportTicketDetailsLoaded extends SupportState {
   final SupportTicket ticket;
-  final List<SupportMessage> messages;
-  final List<SupportTimelineEvent> timeline;
+  final List<SupportAttachment> attachments;
 
   const SupportTicketDetailsLoaded({
     required this.ticket,
-    required this.messages,
-    required this.timeline,
+    required this.attachments,
   });
 
   @override
-  List<Object?> get props => [ticket, messages, timeline];
+  List<Object?> get props => [ticket, attachments];
 
   SupportTicketDetailsLoaded copyWith({
     SupportTicket? ticket,
-    List<SupportMessage>? messages,
-    List<SupportTimelineEvent>? timeline,
+    List<SupportAttachment>? attachments,
   }) {
     return SupportTicketDetailsLoaded(
       ticket: ticket ?? this.ticket,
-      messages: messages ?? this.messages,
-      timeline: timeline ?? this.timeline,
+      attachments: attachments ?? this.attachments,
     );
   }
 }
 
 class SupportSuccess extends SupportState {
   final String message;
-  final SupportTicket? ticket; // Useful if navigating to the ticket after creation
+  final SupportTicket? ticket; 
   
   const SupportSuccess({required this.message, this.ticket});
 

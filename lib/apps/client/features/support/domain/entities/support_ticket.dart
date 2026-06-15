@@ -1,4 +1,4 @@
-enum TicketStatus { open, underReview, inProgress, resolved, closed }
+enum TicketStatus { submitted, underReview, contacted, resolved, closed, rejected }
 enum TicketPriority { low, medium, high, urgent }
 
 class SupportTicket {
@@ -13,6 +13,8 @@ class SupportTicket {
     this.assignedAgentName,
     this.relatedBookingId,
     this.relatedTripId,
+    this.internalNote,
+    this.customerContactedAt,
     required this.createdAt,
     required this.updatedAt,
     this.resolvedAt,
@@ -29,6 +31,8 @@ class SupportTicket {
   final String? assignedAgentName;
   final String? relatedBookingId;
   final String? relatedTripId;
+  final String? internalNote;
+  final DateTime? customerContactedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? resolvedAt;
@@ -45,6 +49,8 @@ class SupportTicket {
     String? assignedAgentName,
     String? relatedBookingId,
     String? relatedTripId,
+    String? internalNote,
+    DateTime? customerContactedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? resolvedAt,
@@ -61,6 +67,8 @@ class SupportTicket {
       assignedAgentName: assignedAgentName ?? this.assignedAgentName,
       relatedBookingId: relatedBookingId ?? this.relatedBookingId,
       relatedTripId: relatedTripId ?? this.relatedTripId,
+      internalNote: internalNote ?? this.internalNote,
+      customerContactedAt: customerContactedAt ?? this.customerContactedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       resolvedAt: resolvedAt ?? this.resolvedAt,

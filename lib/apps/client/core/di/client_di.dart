@@ -117,11 +117,8 @@ import '../../features/support/domain/usecases/create_support_ticket_usecase.dar
 import '../../features/support/domain/usecases/get_support_workspace_usecase.dart';
 import '../../features/support/domain/usecases/get_my_support_tickets_usecase.dart';
 import '../../features/support/domain/usecases/get_ticket_details_usecase.dart';
-import '../../features/support/domain/usecases/get_ticket_timeline_usecase.dart';
-import '../../features/support/domain/usecases/send_ticket_message_usecase.dart';
-import '../../features/support/domain/usecases/create_refund_request_usecase.dart';
-import '../../features/support/domain/usecases/upload_support_attachment_usecase.dart';
-import '../../features/support/domain/usecases/subscribe_to_ticket_updates_usecase.dart';
+
+
 import '../../features/support/presentation/cubit/support_cubit.dart';
 import '../../features/trips/data/datasources/supabase_trips_datasource.dart';
 import '../../features/trips/data/datasources/trips_datasource.dart';
@@ -649,36 +646,6 @@ void _registerSupportDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<GetTicketTimelineUseCase>()) {
-    clientGetIt.registerLazySingleton<GetTicketTimelineUseCase>(
-      () => GetTicketTimelineUseCase(clientGetIt<SupportRepository>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<SendTicketMessageUseCase>()) {
-    clientGetIt.registerLazySingleton<SendTicketMessageUseCase>(
-      () => SendTicketMessageUseCase(clientGetIt<SupportRepository>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<CreateRefundRequestUseCase>()) {
-    clientGetIt.registerLazySingleton<CreateRefundRequestUseCase>(
-      () => CreateRefundRequestUseCase(clientGetIt<SupportRepository>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<UploadSupportAttachmentUseCase>()) {
-    clientGetIt.registerLazySingleton<UploadSupportAttachmentUseCase>(
-      () => UploadSupportAttachmentUseCase(clientGetIt<SupportRepository>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<SubscribeToTicketUpdatesUseCase>()) {
-    clientGetIt.registerLazySingleton<SubscribeToTicketUpdatesUseCase>(
-      () => SubscribeToTicketUpdatesUseCase(clientGetIt<SupportRepository>()),
-    );
-  }
-
   if (!clientGetIt.isRegistered<SupportCubit>()) {
     clientGetIt.registerFactory<SupportCubit>(
       () => SupportCubit(
@@ -686,11 +653,7 @@ void _registerSupportDependencies() {
         getMySupportTickets: clientGetIt<GetMySupportTicketsUseCase>(),
         createSupportTicket: clientGetIt<CreateSupportTicketUseCase>(),
         getTicketDetails: clientGetIt<GetTicketDetailsUseCase>(),
-        getTicketTimeline: clientGetIt<GetTicketTimelineUseCase>(),
-        sendTicketMessage: clientGetIt<SendTicketMessageUseCase>(),
-        createRefundRequest: clientGetIt<CreateRefundRequestUseCase>(),
-        uploadSupportAttachment: clientGetIt<UploadSupportAttachmentUseCase>(),
-        subscribeToTicketUpdates: clientGetIt<SubscribeToTicketUpdatesUseCase>(),
+        supportRepository: clientGetIt<SupportRepository>(),
       ),
     );
   }

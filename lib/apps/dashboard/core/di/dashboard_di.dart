@@ -114,16 +114,14 @@ import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart
 import '../../features/trips/trips_di.dart';
 // Mock vehicles removed
 import '../../features/tickets/data/datasources/supabase_tickets_datasource.dart';
-import '../../features/tickets/data/datasources/tickets_datasource.dart';
 import '../../features/tickets/data/repositories/tickets_repository_impl.dart';
 import '../../features/tickets/domain/repositories/tickets_repository.dart';
-import '../../features/tickets/domain/usecases/assign_complaint_usecase.dart';
-import '../../features/tickets/domain/usecases/close_complaint_usecase.dart';
-import '../../features/tickets/domain/usecases/delete_complaint_usecase.dart';
-import '../../features/tickets/domain/usecases/escalate_complaint_usecase.dart';
-import '../../features/tickets/domain/usecases/get_complaints_usecase.dart';
-import '../../features/tickets/domain/usecases/respond_to_complaint_usecase.dart';
-import '../../features/tickets/domain/usecases/update_complaint_status_usecase.dart';
+import '../../features/tickets/domain/usecases/close_ticket_usecase.dart';
+import '../../features/tickets/domain/usecases/get_tickets_usecase.dart';
+import '../../features/tickets/domain/usecases/update_ticket_status_usecase.dart';
+import '../../features/tickets/domain/usecases/save_internal_note_usecase.dart';
+import '../../features/tickets/domain/usecases/mark_customer_contacted_usecase.dart';
+import '../../features/tickets/domain/usecases/get_ticket_attachments_usecase.dart';
 import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
 import '../../features/finance/data/datasources/mock_finance_datasource.dart';
 import '../../features/finance/data/repositories/finance_repository_impl.dart';
@@ -892,69 +890,63 @@ registerNetworkDependencies(dashboardDi);
 
 // Mock vehicles registrations removed
 
-  if (!dashboardDi.isRegistered<TicketsDatasource>()) {
-    dashboardDi.registerLazySingleton<TicketsDatasource>(
+  if (!dashboardDi.isRegistered<SupabaseTicketsDatasource>()) {
+    dashboardDi.registerLazySingleton<SupabaseTicketsDatasource>(
       () => SupabaseTicketsDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
   if (!dashboardDi.isRegistered<TicketsRepository>()) {
     dashboardDi.registerLazySingleton<TicketsRepository>(
-      () => TicketsRepositoryImpl(dashboardDi<TicketsDatasource>()),
+      () => TicketsRepositoryImpl(dashboardDi<SupabaseTicketsDatasource>()),
     );
   }
 
-  if (!dashboardDi.isRegistered<GetComplaintsUseCase>()) {
+  if (!dashboardDi.isRegistered<GetTicketsUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => GetComplaintsUseCase(dashboardDi<TicketsRepository>()),
+      () => GetTicketsUseCase(dashboardDi<TicketsRepository>()),
     );
   }
 
-  if (!dashboardDi.isRegistered<AssignComplaintUseCase>()) {
+  if (!dashboardDi.isRegistered<UpdateTicketStatusUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => AssignComplaintUseCase(dashboardDi<TicketsRepository>()),
+      () => UpdateTicketStatusUseCase(dashboardDi<TicketsRepository>()),
     );
   }
 
-  if (!dashboardDi.isRegistered<RespondToComplaintUseCase>()) {
+  if (!dashboardDi.isRegistered<SaveInternalNoteUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => RespondToComplaintUseCase(dashboardDi<TicketsRepository>()),
+      () => SaveInternalNoteUseCase(dashboardDi<TicketsRepository>()),
     );
   }
 
-  if (!dashboardDi.isRegistered<UpdateComplaintStatusUseCase>()) {
+  if (!dashboardDi.isRegistered<MarkCustomerContactedUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => UpdateComplaintStatusUseCase(dashboardDi<TicketsRepository>()),
+      () => MarkCustomerContactedUseCase(dashboardDi<TicketsRepository>()),
     );
   }
 
-  if (!dashboardDi.isRegistered<EscalateComplaintUseCase>()) {
+  if (!dashboardDi.isRegistered<CloseTicketUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => EscalateComplaintUseCase(dashboardDi<TicketsRepository>()),
+      () => CloseTicketUseCase(dashboardDi<TicketsRepository>()),
     );
   }
 
-  if (!dashboardDi.isRegistered<CloseComplaintUseCase>()) {
-    dashboardDi.registerLazySingleton<CloseComplaintUseCase>(
-      () => CloseComplaintUseCase(dashboardDi<TicketsRepository>()),
-    );
-  }
-  if (!dashboardDi.isRegistered<DeleteComplaintUseCase>()) {
-    dashboardDi.registerLazySingleton<DeleteComplaintUseCase>(
-      () => DeleteComplaintUseCase(dashboardDi<TicketsRepository>()),
+  if (!dashboardDi.isRegistered<GetTicketAttachmentsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetTicketAttachmentsUseCase(dashboardDi<TicketsRepository>()),
     );
   }
 
   if (!dashboardDi.isRegistered<TicketsCubit>()) {
     dashboardDi.registerFactory(
       () => TicketsCubit(
-        getComplaints: dashboardDi<GetComplaintsUseCase>(),
-        assignComplaint: dashboardDi<AssignComplaintUseCase>(),
-        respondToComplaint: dashboardDi<RespondToComplaintUseCase>(),
-        updateComplaintStatus: dashboardDi<UpdateComplaintStatusUseCase>(),
-        escalateComplaint: dashboardDi<EscalateComplaintUseCase>(),
-        closeComplaint: dashboardDi<CloseComplaintUseCase>(),
-        deleteComplaint: dashboardDi<DeleteComplaintUseCase>(),
+        getTickets: dashboardDi<GetTicketsUseCase>(),
+        updateTicketStatus: dashboardDi<UpdateTicketStatusUseCase>(),
+        saveInternalNote: dashboardDi<SaveInternalNoteUseCase>(),
+        markCustomerContacted: dashboardDi<MarkCustomerContactedUseCase>(),
+        closeTicket: dashboardDi<CloseTicketUseCase>(),
+        getTicketAttachments: dashboardDi<GetTicketAttachmentsUseCase>(),
       ),
     );
   }

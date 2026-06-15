@@ -1,15 +1,10 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:file_picker/file_picker.dart';
 
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
-
-import '../widgets/support_chat_bubble.dart';
-import '../widgets/support_timeline.dart';
 
 class SupportTicketDetailsScreen extends StatefulWidget {
   final String ticketId;
@@ -21,75 +16,31 @@ class SupportTicketDetailsScreen extends StatefulWidget {
 }
 
 class _SupportTicketDetailsScreenState extends State<SupportTicketDetailsScreen> {
-  final _messageController = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-  File? _attachment;
-
   @override
   void initState() {
     super.initState();
     context.read<SupportCubit>().openTicketDetails(widget.ticketId);
   }
 
-  @override
-  void dispose() {
-    _messageController.dispose();
-    _scrollController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _pickAttachment() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['jpg', 'png', 'pdf', 'jpeg'],
-    );
-
-    if (result != null && result.files.single.path != null) {
-      setState(() {
-        _attachment = File(result.files.single.path!);
-      });
-    }
-  }
-
-  void _sendMessage() {
-    final text = _messageController.text.trim();
-    if (text.isEmpty && _attachment == null) return;
-
-    context.read<SupportCubit>().sendUserMessage(widget.ticketId, text, _attachment);
-    _messageController.clear();
-    setState(() {
-      _attachment = null;
-    });
-
-    // Scroll to bottom
-    Future.delayed(const Duration(milliseconds: 300), () {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
   Color _getStatusColor(TicketStatus status) {
     switch (status) {
-      case TicketStatus.open: return Colors.blue;
-      case TicketStatus.underReview:
-      case TicketStatus.inProgress: return Colors.orange;
-      case TicketStatus.resolved:
-      case TicketStatus.closed: return Colors.green;
+      case TicketStatus.submitted: return Colors.blue;
+      case TicketStatus.underReview: return Colors.orange;
+      case TicketStatus.contacted: return Colors.purple;
+      case TicketStatus.resolved: return Colors.green;
+      case TicketStatus.closed: return Colors.grey;
+      case TicketStatus.rejected: return Colors.red;
     }
   }
 
   String _getStatusLabel(TicketStatus status) {
     switch (status) {
-      case TicketStatus.open: return 'Open';
+      case TicketStatus.submitted: return 'Submitted';
       case TicketStatus.underReview: return 'Under Review';
-      case TicketStatus.inProgress: return 'In Progress';
+      case TicketStatus.contacted: return 'Contacted';
       case TicketStatus.resolved: return 'Resolved';
       case TicketStatus.closed: return 'Closed';
+      case TicketStatus.rejected: return 'Rejected';
     }
   }
 
@@ -121,14 +72,41 @@ class _SupportTicketDetailsScreenState extends State<SupportTicketDetailsScreen>
 
           if (state is SupportTicketDetailsLoaded) {
             final ticket = state.ticket;
-            final isClosed = ticket.status == TicketStatus.closed || ticket.status == TicketStatus.resolved;
 
-            return Column(
+            return ListView(
+              padding: const EdgeInsets.all(16),
               children: [
-                // Header Details
+                // Info Box
                 Container(
-                  color: Colors.white,
                   padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.blue[50],
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.blue[100]!),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.info_outline, color: Colors.blue),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Our customer service team is reviewing your ticket and may contact you by phone soon.',
+                          style: TextStyle(color: Colors.blue[900]),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                
+                // Details Card
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: Colors.grey[200]!),
+                  ),
+                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -142,7 +120,7 @@ class _SupportTicketDetailsScreenState extends State<SupportTicketDetailsScreen>
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              color: _getStatusColor(ticket.status).withOpacity(0.1),
+                              color: _getStatusColor(ticket.status).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
@@ -156,146 +134,99 @@ class _SupportTicketDetailsScreenState extends State<SupportTicketDetailsScreen>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 16),
                       Text(
                         ticket.title,
-                        style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w600),
+                        style: GoogleFonts.outfit(fontSize: 20, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        'Category: ${ticket.category}',
+                        style: TextStyle(color: Colors.grey[600]),
+                      ),
+                      const Divider(height: 32),
+                      Text(
+                        'Description',
+                        style: GoogleFonts.outfit(fontSize: 16, fontWeight: FontWeight.w600),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        ticket.description,
+                        style: const TextStyle(fontSize: 15, height: 1.5),
                       ),
                     ],
                   ),
                 ),
-                
-                // Content Switcher
-                Expanded(
-                  child: DefaultTabController(
-                    length: 2,
-                    child: Column(
-                      children: [
-                        const Material(
-                          color: Colors.white,
-                          child: TabBar(
-                            labelColor: Colors.black87,
-                            unselectedLabelColor: Colors.grey,
-                            indicatorColor: Colors.blue,
-                            tabs: [
-                              Tab(text: 'Chat'),
-                              Tab(text: 'Timeline'),
-                            ],
-                          ),
-                        ),
-                        Expanded(
-                          child: TabBarView(
-                            children: [
-                              // Chat View
-                              ListView.builder(
-                                controller: _scrollController,
-                                padding: const EdgeInsets.only(top: 16, bottom: 80), // Padding for input
-                                itemCount: state.messages.length,
-                                itemBuilder: (context, index) {
-                                  return SupportChatBubble(message: state.messages[index]);
-                                },
-                              ),
-                              // Timeline View
-                              ListView(
-                                children: [
-                                  SupportTimeline(events: state.timeline),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
 
-                // Chat Input
-                if (!isClosed)
+                // Customer Service Note (if exists)
+                if (ticket.internalNote != null && ticket.internalNote!.isNotEmpty) ...[
+                  const SizedBox(height: 16),
                   Container(
-                    padding: EdgeInsets.only(
-                      bottom: MediaQuery.of(context).padding.bottom + 8,
-                      top: 8,
-                      left: 16,
-                      right: 16,
-                    ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          offset: const Offset(0, -2),
-                          blurRadius: 4,
-                        ),
-                      ],
+                      color: Colors.orange[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.orange[200]!),
                     ),
+                    padding: const EdgeInsets.all(20),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        if (_attachment != null)
-                          Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                            decoration: BoxDecoration(
-                              color: Colors.grey[100],
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.grey[300]!),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.image, size: 20, color: Colors.blue),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    _attachment!.path.split('/').last,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.close, size: 18),
-                                  onPressed: () => setState(() => _attachment = null),
-                                  constraints: const BoxConstraints(),
-                                  padding: EdgeInsets.zero,
-                                ),
-                              ],
-                            ),
-                          ),
                         Row(
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.attach_file),
-                              color: Colors.grey[600],
-                              onPressed: _pickAttachment,
-                            ),
-                            Expanded(
-                              child: TextField(
-                                controller: _messageController,
-                                decoration: InputDecoration(
-                                  hintText: 'Type a message...',
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(24),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                  filled: true,
-                                  fillColor: Colors.grey[100],
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                                ),
-                                minLines: 1,
-                                maxLines: 4,
-                              ),
-                            ),
+                            const Icon(Icons.support_agent, color: Colors.orange),
                             const SizedBox(width: 8),
-                            CircleAvatar(
-                              backgroundColor: Theme.of(context).primaryColor,
-                              child: IconButton(
-                                icon: const Icon(Icons.send, color: Colors.white, size: 18),
-                                onPressed: _sendMessage,
+                            Text(
+                              'Customer Service Note',
+                              style: GoogleFonts.outfit(
+                                fontSize: 16, 
+                                fontWeight: FontWeight.w600,
+                                color: Colors.orange[900]
                               ),
                             ),
                           ],
                         ),
+                        const SizedBox(height: 12),
+                        Text(
+                          ticket.internalNote!,
+                          style: TextStyle(fontSize: 15, color: Colors.orange[900]),
+                        ),
                       ],
                     ),
                   ),
+                ],
+
+                // Attachments
+                if (state.attachments.isNotEmpty) ...[
+                  const SizedBox(height: 24),
+                  Text(
+                    'Attachments',
+                    style: GoogleFonts.outfit(fontSize: 18, fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 12),
+                  ...state.attachments.map((attachment) => Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      border: Border.all(color: Colors.grey[300]!),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.attach_file, color: Colors.blue),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            attachment.fileName,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                ],
               ],
             );
           }

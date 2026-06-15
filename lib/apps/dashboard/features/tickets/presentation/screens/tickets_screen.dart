@@ -3,14 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
 
 import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 
 import '../widgets/tickets_summary.dart';
 import '../widgets/tickets_table.dart';
-import '../widgets/complaint_workspace.dart';
 
 class TicketsScreen extends StatefulWidget {
   const TicketsScreen({super.key});
@@ -29,13 +27,13 @@ class _TicketsScreenState extends State<TicketsScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.ltr, // Since Dashboard is generally Arabic but this matches their setup
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('مركز إدارة الشكاوى والمقترحات'),
+          title: const Text('Support Tickets'),
           actions: [
             IconButton(
-              tooltip: 'تحديث البيانات',
+              tooltip: 'Refresh',
               onPressed: () => context.read<TicketsCubit>().load(),
               icon: const Icon(Icons.refresh_rounded),
             ),
@@ -87,7 +85,7 @@ class _ErrorView extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => context.read<TicketsCubit>().load(),
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('إعادة المحاولة'),
+              label: const Text('Retry'),
             ),
           ],
         ),
@@ -102,8 +100,6 @@ class _LoadedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final selected = state.selectedComplaint;
-
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
@@ -112,60 +108,34 @@ class _LoadedView extends StatelessWidget {
           SummaryStats(state: state),
           const SizedBox(height: AppSpacing.medium),
 
-          // 2. Filter Bar
-          FilterBar(state: state),
+          // 2. Search & Filters (Could extract to separate widget if needed)
+          _buildFilterBar(context),
           const SizedBox(height: AppSpacing.medium),
 
-          // 3. Workspace Layout
-          Expanded(
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                final useSplit = constraints.maxWidth > 950;
-
-                if (!useSplit) {
-                  // Single view layout: Show table if no selected, else detail
-                  if (selected != null) {
-                    return Column(
-                      children: [
-                        TextButton.icon(
-                          onPressed: () => context.read<TicketsCubit>().selectComplaint(''),
-                          icon: const Icon(Icons.arrow_back),
-                          label: const Text('العودة لقائمة الشكاوى'),
-                        ),
-                        Expanded(child: DetailWorkspace(complaint: selected, state: state)),
-                      ],
-                    );
-                  }
-                  return ComplaintsTable(state: state);
-                }
-
-                // Split Layout: 40% Table / 60% Detail Workspace
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: ComplaintsTable(state: state),
-                    ),
-                    const SizedBox(width: AppSpacing.medium),
-                    Expanded(
-                      flex: 6,
-                      child: selected == null
-                          ? const AppCard(
-                              child: EmptyState(
-                                title: 'اختر شكوى من الجدول لعرض تفاصيلها',
-                                subtitle: 'تظهر هنا المحادثات والملفات والإجراءات والسجل الخاص بالشكوى.',
-                              ),
-                            )
-                          : DetailWorkspace(complaint: selected, state: state),
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
+          // 3. Table
+          Expanded(child: TicketsTable(state: state)),
         ],
       ),
+    );
+  }
+
+  Widget _buildFilterBar(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: TextField(
+            decoration: const InputDecoration(
+              hintText: 'Search tickets...',
+              prefixIcon: Icon(Icons.search),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: (val) => context.read<TicketsCubit>().setSearchQuery(val),
+          ),
+        ),
+        const SizedBox(width: 16),
+        // Filter button or dropdowns could go here if needed.
+      ],
     );
   }
 }

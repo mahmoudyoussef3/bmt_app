@@ -4,10 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
-import 'package:bmt_app/core/widgets/app_button.dart';
 
-import '../widgets/support_home_header.dart';
-import '../widgets/support_category_card.dart';
 import '../widgets/support_ticket_card.dart';
 
 class SupportCenterScreen extends StatefulWidget {
@@ -32,7 +29,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
         backgroundColor: Colors.white,
         elevation: 0,
         title: Text(
-          'Support Center',
+          'Support Tickets',
           style: GoogleFonts.outfit(
             color: Colors.black87,
             fontWeight: FontWeight.w600,
@@ -44,10 +41,18 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             onPressed: () {
-              context.read<SupportCubit>().loadWorkspace();
+              context.read<SupportCubit>().refreshTickets();
             },
           ),
         ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.pushNamed(context, '/create_ticket');
+        },
+        backgroundColor: Colors.black87,
+        icon: const Icon(Icons.add),
+        label: const Text('Create Ticket'),
       ),
       body: BlocConsumer<SupportCubit, SupportState>(
         listener: (context, state) {
@@ -65,105 +70,36 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
           if (state is SupportLoaded) {
             return RefreshIndicator(
               onRefresh: () => context.read<SupportCubit>().refreshTickets(),
-              child: ListView(
-                padding: const EdgeInsets.all(16),
-                children: [
-                  const SupportHomeHeader(),
-                  const SizedBox(height: 24),
-                  
-                  // Quick Actions
-                  Row(
-                    children: [
-                      Expanded(
-                        child: AppButton.primary(
-                          text: 'Create Ticket',
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/create_ticket');
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: AppButton.secondary(
-                          text: 'Request Refund',
-                          onPressed: () {
-                            Navigator.pushNamed(context, '/create_refund');
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  
-                  // Categories
-                  Text(
-                    'Help Topics',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      mainAxisSpacing: 12,
-                      crossAxisSpacing: 12,
-                      childAspectRatio: 2.5,
-                    ),
-                    itemCount: state.categories.length,
-                    itemBuilder: (context, index) {
-                      return SupportCategoryCard(
-                        title: state.categories[index],
-                        onTap: () {
-                          Navigator.pushNamed(
-                            context, 
-                            '/create_ticket',
-                            arguments: state.categories[index],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                  
-                  const SizedBox(height: 32),
-                  
-                  // Active Tickets
-                  Text(
-                    'My Tickets',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  if (state.tickets.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(32),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.grey[200]!),
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(Icons.inbox_outlined, size: 48, color: Colors.grey[400]),
-                          const SizedBox(height: 12),
-                          Text(
-                            'No active tickets',
-                            style: TextStyle(color: Colors.grey[600]),
+              child: state.tickets.isEmpty
+                  ? ListView(
+                      children: [
+                        SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
+                              const SizedBox(height: 16),
+                              Text(
+                                'No active tickets',
+                                style: GoogleFonts.outfit(
+                                  fontSize: 18,
+                                  color: Colors.grey[600],
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Tap + to create a new ticket',
+                                style: TextStyle(color: Colors.grey[500]),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     )
-                  else
-                    ListView.separated(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
+                  : ListView.separated(
+                      padding: const EdgeInsets.all(16),
                       itemCount: state.tickets.length,
                       separatorBuilder: (context, index) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
@@ -179,12 +115,9 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
                         );
                       },
                     ),
-                ],
-              ),
             );
           }
 
-          // Fallback
           return const Center(child: Text('Something went wrong'));
         },
       ),

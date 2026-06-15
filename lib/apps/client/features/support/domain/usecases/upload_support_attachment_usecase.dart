@@ -9,12 +9,10 @@ class UploadSupportAttachmentUseCase {
 
   Future<SupportAttachment> call({
     required String ticketId,
-    String? messageId,
     required File file,
   }) {
     return _repository.uploadAttachment(
       ticketId: ticketId,
-      messageId: messageId,
       file: file,
     );
   }

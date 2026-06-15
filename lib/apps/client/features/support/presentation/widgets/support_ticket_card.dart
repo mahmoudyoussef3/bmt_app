@@ -14,29 +14,23 @@ class SupportTicketCard extends StatelessWidget {
 
   Color _getStatusColor(TicketStatus status) {
     switch (status) {
-      case TicketStatus.open:
-        return Colors.blue;
-      case TicketStatus.underReview:
-      case TicketStatus.inProgress:
-        return Colors.orange;
-      case TicketStatus.resolved:
-      case TicketStatus.closed:
-        return Colors.green;
+      case TicketStatus.submitted: return Colors.blue;
+      case TicketStatus.underReview: return Colors.orange;
+      case TicketStatus.contacted: return Colors.purple;
+      case TicketStatus.resolved: return Colors.green;
+      case TicketStatus.closed: return Colors.grey;
+      case TicketStatus.rejected: return Colors.red;
     }
   }
 
   String _getStatusLabel(TicketStatus status) {
     switch (status) {
-      case TicketStatus.open:
-        return 'Open';
-      case TicketStatus.underReview:
-        return 'Under Review';
-      case TicketStatus.inProgress:
-        return 'In Progress';
-      case TicketStatus.resolved:
-        return 'Resolved';
-      case TicketStatus.closed:
-        return 'Closed';
+      case TicketStatus.submitted: return 'Submitted';
+      case TicketStatus.underReview: return 'Under Review';
+      case TicketStatus.contacted: return 'Contacted';
+      case TicketStatus.resolved: return 'Resolved';
+      case TicketStatus.closed: return 'Closed';
+      case TicketStatus.rejected: return 'Rejected';
     }
   }
 
@@ -69,7 +63,7 @@ class SupportTicketCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(ticket.status).withOpacity(0.1),
+                    color: _getStatusColor(ticket.status).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(

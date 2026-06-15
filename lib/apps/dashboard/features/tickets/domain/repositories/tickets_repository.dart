@@ -1,17 +1,15 @@
 import '../entities/complaint.dart';
 
 abstract class TicketsRepository {
-  Future<List<Complaint>> getComplaints();
-  Future<Complaint> assignComplaint(String id, String agentName);
-  Future<Complaint> respondToComplaint(
-    String id, {
-    required String senderName,
-    required String senderType,
-    required String content,
-    required List<String> attachments,
-  });
-  Future<Complaint> updateComplaintStatus(String id, ComplaintStatus status);
-  Future<Complaint> escalateComplaint(String id);
-  Future<Complaint> closeComplaint(String id);
-  Future<void> deleteComplaint(String id);
+  Future<List<SupportTicket>> getTickets();
+  
+  Future<SupportTicket> updateTicketStatus(String id, TicketStatus status);
+  
+  Future<SupportTicket> saveInternalNote(String id, String note);
+  
+  Future<SupportTicket> markCustomerContacted(String id);
+  
+  Future<SupportTicket> closeTicket(String id);
+
+  Future<List<SupportAttachment>> getTicketAttachments(String ticketId);
 }

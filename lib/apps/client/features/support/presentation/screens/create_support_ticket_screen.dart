@@ -29,11 +29,11 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
 
   final List<String> _categories = [
     'Booking Issue',
-    'Driver Issue',
-    'Vehicle Issue',
-    'Route Issue',
-    'Technical Issue',
-    'Refund Request',
+    'Payment Issue',
+    'Trip Delay',
+    'Driver or Vehicle Issue',
+    'Subscription Issue',
+    'Lost Item',
     'Other',
   ];
 

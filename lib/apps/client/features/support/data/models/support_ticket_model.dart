@@ -12,6 +12,8 @@ class SupportTicketModel extends SupportTicket {
     super.assignedAgentName,
     super.relatedBookingId,
     super.relatedTripId,
+    super.internalNote,
+    super.customerContactedAt,
     required super.createdAt,
     required super.updatedAt,
     super.resolvedAt,
@@ -30,6 +32,8 @@ class SupportTicketModel extends SupportTicket {
       assignedAgentName: json['assigned_agent_name'] as String?,
       relatedBookingId: json['related_booking_id'] as String?,
       relatedTripId: json['related_trip_id'] as String?,
+      internalNote: json['internal_note'] as String?,
+      customerContactedAt: json['customer_contacted_at'] != null ? DateTime.parse(json['customer_contacted_at'] as String) : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       resolvedAt: json['resolved_at'] != null ? DateTime.parse(json['resolved_at'] as String) : null,
@@ -39,20 +43,21 @@ class SupportTicketModel extends SupportTicket {
 
   static TicketStatus _parseStatus(String? status) {
     switch (status?.toLowerCase()) {
-      case 'open':
-        return TicketStatus.open;
+      case 'submitted':
+        return TicketStatus.submitted;
       case 'underreview':
       case 'under_review':
         return TicketStatus.underReview;
-      case 'inprogress':
-      case 'in_progress':
-        return TicketStatus.inProgress;
+      case 'contacted':
+        return TicketStatus.contacted;
       case 'resolved':
         return TicketStatus.resolved;
       case 'closed':
         return TicketStatus.closed;
+      case 'rejected':
+        return TicketStatus.rejected;
       default:
-        return TicketStatus.open;
+        return TicketStatus.submitted;
     }
   }
 

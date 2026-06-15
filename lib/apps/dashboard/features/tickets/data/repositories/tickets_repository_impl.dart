@@ -1,86 +1,65 @@
 import '../../domain/entities/complaint.dart';
 import '../../domain/repositories/tickets_repository.dart';
-import '../datasources/tickets_datasource.dart';
+import '../datasources/supabase_tickets_datasource.dart';
 
 class TicketsRepositoryImpl implements TicketsRepository {
-  final TicketsDatasource _datasource;
+  final SupabaseTicketsDatasource _datasource;
 
   const TicketsRepositoryImpl(this._datasource);
 
   @override
-  Future<List<Complaint>> getComplaints() async {
+  Future<List<SupportTicket>> getTickets() async {
     try {
-      return await _datasource.getComplaints();
+      return await _datasource.getTickets();
     } catch (e, stack) {
-      print('Error loading complaints: $e');
+      print('Error loading tickets: $e');
       print(stack);
-      throw Exception('تعذر تحميل الشكاوى: $e');
+      throw Exception('Failed to load tickets: $e');
     }
   }
 
   @override
-  Future<Complaint> assignComplaint(String id, String agentName) async {
+  Future<SupportTicket> updateTicketStatus(String id, TicketStatus status) async {
     try {
-      return await _datasource.assignComplaint(id, agentName);
+      return await _datasource.updateTicketStatus(id, status);
     } catch (_) {
-      throw Exception('تعذر تعيين الشكوى');
+      throw Exception('Failed to update ticket status');
     }
   }
 
   @override
-  Future<Complaint> respondToComplaint(
-    String id, {
-    required String senderName,
-    required String senderType,
-    required String content,
-    required List<String> attachments,
-  }) async {
+  Future<SupportTicket> saveInternalNote(String id, String note) async {
     try {
-      return await _datasource.respondToComplaint(
-        id,
-        senderName: senderName,
-        senderType: senderType,
-        content: content,
-        attachments: attachments,
-      );
+      return await _datasource.saveInternalNote(id, note);
     } catch (_) {
-      throw Exception('تعذر إرسال الرد');
+      throw Exception('Failed to save internal note');
     }
   }
 
   @override
-  Future<Complaint> updateComplaintStatus(String id, ComplaintStatus status) async {
+  Future<SupportTicket> markCustomerContacted(String id) async {
     try {
-      return await _datasource.updateComplaintStatus(id, status);
+      return await _datasource.markCustomerContacted(id);
     } catch (_) {
-      throw Exception('تعذر تحديث حالة الشكوى');
+      throw Exception('Failed to mark customer as contacted');
     }
   }
 
   @override
-  Future<Complaint> escalateComplaint(String id) async {
+  Future<SupportTicket> closeTicket(String id) async {
     try {
-      return await _datasource.escalateComplaint(id);
+      return await _datasource.closeTicket(id);
     } catch (_) {
-      throw Exception('تعذر تصعيد الشكوى');
+      throw Exception('Failed to close ticket');
     }
   }
 
   @override
-  Future<Complaint> closeComplaint(String id) async {
+  Future<List<SupportAttachment>> getTicketAttachments(String ticketId) async {
     try {
-      return await _datasource.closeComplaint(id);
+      return await _datasource.getTicketAttachments(ticketId);
     } catch (_) {
-      throw Exception('تعذر إغلاق الشكوى');
-    }
-  }
-
-  @override
-  Future<void> deleteComplaint(String id) async {
-    try {
-      await _datasource.deleteComplaint(id);
-    } catch (_) {
-      throw Exception('تعذر حذف الشكوى');
+      throw Exception('Failed to get ticket attachments');
     }
   }
 }

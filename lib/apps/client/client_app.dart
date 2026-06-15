@@ -27,7 +27,6 @@ import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_
 import 'package:bmt_app/apps/client/features/support/presentation/screens/support_center_screen.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/screens/create_support_ticket_screen.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/screens/support_ticket_details_screen.dart';
-import 'package:bmt_app/apps/client/features/support/presentation/screens/support_refund_request_screen.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/cubit/notifications_cubit.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_cubit.dart';
@@ -275,7 +274,7 @@ class _ClientAppState extends State<ClientApp> {
                 final args = ModalRoute.of(context)?.settings.arguments as String;
                 return _buildSupportScope(SupportTicketDetailsScreen(ticketId: args));
               },
-              '/create_refund': (_) => _buildSupportScope(const SupportRefundRequestScreen()),
+              
               '/communication': (_) =>
                   _buildCommunicationScope(const CommunicationScreen()),
               '/rewards': (_) =>

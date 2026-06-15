@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
 
 import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 import 'tickets_shared_widgets.dart';
+import 'ticket_details_dialog.dart';
 
-class ComplaintsTable extends StatelessWidget {
+class TicketsTable extends StatelessWidget {
   final TicketsLoaded state;
-  const ComplaintsTable({super.key, required this.state});
+  const TicketsTable({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
-    final filtered = state.filteredComplaints;
+    final filtered = state.filteredTickets;
     final cubit = context.read<TicketsCubit>();
 
     return AppCard(
@@ -26,11 +26,11 @@ class ComplaintsTable extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'قائمة الشكاوى (${filtered.length})',
+                  'Tickets (${filtered.length})',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text(
-                  'الشكاوى المفلترة',
+                  'Filtered Tickets',
                   style: TextStyle(color: Theme.of(context).colorScheme.outline, fontSize: 12),
                 ),
               ],
@@ -40,10 +40,7 @@ class ComplaintsTable extends StatelessWidget {
           if (filtered.isEmpty)
             const Expanded(
               child: Center(
-                child: EmptyState(
-                  title: 'لم يتم العثور على أي شكاوى مطابقة للفلاتر',
-                  subtitle: 'يرجى تهيئة الفلاتر أو تغيير كلمة البحث.',
-                ),
+                child: Text('No tickets found.'),
               ),
             )
           else
@@ -55,31 +52,36 @@ class ComplaintsTable extends StatelessWidget {
                   child: DataTable(
                     showCheckboxColumn: false,
                     columns: const [
-                      DataColumn(label: Text('رقم الشكوى', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('العميل', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('نوع الشكوى', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('الرحلة', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('تاريخ الإنشاء', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('المسؤول', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('الأولوية', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Ticket Number', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Client', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Category', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Title', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Created At', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Priority', style: TextStyle(fontWeight: FontWeight.bold))),
                     ],
-                    rows: filtered.map((c) {
-                      final isSelected = c.id == state.selectedComplaintId;
+                    rows: filtered.map((t) {
                       return DataRow(
-                        selected: isSelected,
-                        onSelectChanged: (_) => cubit.selectComplaint(c.id),
+                        onSelectChanged: (_) {
+                          cubit.selectTicket(t.id);
+                          showDialog(
+                            context: context,
+                            builder: (context) => BlocProvider.value(
+                              value: cubit,
+                              child: const TicketDetailsDialog(),
+                            ),
+                          );
+                        },
                         cells: [
-                          DataCell(Text(c.id, style: const TextStyle(fontWeight: FontWeight.bold))),
-                          DataCell(Text(c.clientName)),
-                          DataCell(Text(c.category.label)),
-                          DataCell(Text(c.tripCode)),
+                          DataCell(Text(t.ticketNumber, style: const TextStyle(fontWeight: FontWeight.bold))),
+                          DataCell(Text(t.clientName)),
+                          DataCell(Text(t.category)),
+                          DataCell(Text(t.title)),
                           DataCell(Text(
-                            '${c.createdAt.year}/${c.createdAt.month}/${c.createdAt.day}',
+                            '${t.createdAt.year}/${t.createdAt.month}/${t.createdAt.day}',
                           )),
-                          DataCell(Text(c.assignedTo ?? 'غير معين', style: TextStyle(color: c.assignedTo == null ? Colors.red : null))),
-                          DataCell(StatusBadge(status: c.status)),
-                          DataCell(PriorityBadge(priority: c.priority)),
+                          DataCell(StatusBadge(status: t.status)),
+                          DataCell(PriorityBadge(priority: t.priority)),
                         ],
                       );
                     }).toList(),

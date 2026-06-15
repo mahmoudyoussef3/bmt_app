@@ -5,17 +5,18 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import '../../domain/entities/complaint.dart';
 
 class StatusBadge extends StatelessWidget {
-  final ComplaintStatus status;
+  final TicketStatus status;
   const StatusBadge({super.key, required this.status});
 
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      ComplaintStatus.newlyCreated => Colors.blue,
-      ComplaintStatus.inProgress => Colors.orange,
-      ComplaintStatus.waitingForClient => Colors.purple,
-      ComplaintStatus.resolved => Colors.green,
-      ComplaintStatus.closed => Colors.grey,
+      TicketStatus.submitted => Colors.blue,
+      TicketStatus.underReview => Colors.orange,
+      TicketStatus.contacted => Colors.purple,
+      TicketStatus.resolved => Colors.green,
+      TicketStatus.closed => Colors.grey,
+      TicketStatus.rejected => Colors.red,
     };
 
     return Container(
@@ -34,16 +35,16 @@ class StatusBadge extends StatelessWidget {
 }
 
 class PriorityBadge extends StatelessWidget {
-  final ComplaintPriority priority;
+  final TicketPriority priority;
   const PriorityBadge({super.key, required this.priority});
 
   @override
   Widget build(BuildContext context) {
     final color = switch (priority) {
-      ComplaintPriority.low => Colors.grey,
-      ComplaintPriority.medium => Colors.blue,
-      ComplaintPriority.high => Colors.orange,
-      ComplaintPriority.critical => Colors.red.shade900,
+      TicketPriority.low => Colors.grey,
+      TicketPriority.medium => Colors.blue,
+      TicketPriority.high => Colors.orange,
+      TicketPriority.urgent => Colors.red.shade900,
     };
 
     return Container(
@@ -74,7 +75,7 @@ class DetailField extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
-            width: 180,
+            width: 150,
             child: Text(
               '$label: ',
               style: TextStyle(
@@ -154,52 +155,6 @@ class StatCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class DropdownFilter<T> extends StatelessWidget {
-  final String label;
-  final T? value;
-  final List<T> items;
-  final String Function(T) labelMapper;
-  final ValueChanged<T?> onChanged;
-
-  const DropdownFilter({
-    super.key,
-    required this.label,
-    required this.value,
-    required this.items,
-    required this.labelMapper,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
-        const SizedBox(width: 4),
-        DropdownButton<T>(
-          value: value,
-          hint: Text('الكل', style: TextStyle(color: Theme.of(context).colorScheme.outline)),
-          items: [
-            DropdownMenuItem<T>(
-              value: null,
-              child: Text('الكل', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
-            ),
-            ...items.map(
-              (item) => DropdownMenuItem<T>(
-                value: item,
-                child: Text(labelMapper(item)),
-              ),
-            )
-          ],
-          onChanged: onChanged,
-          underline: const SizedBox(),
-        ),
-      ],
     );
   }
 }
