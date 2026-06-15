@@ -26,10 +26,16 @@ HomeDataModel _$HomeDataModelFromJson(Map<String, dynamic> json) =>
       timeSuggestions: (json['time_suggestions'] as List<dynamic>)
           .map((e) => e as String)
           .toList(),
+      userName: json['user_name'] as String?,
       currentTrip: json['current_trip'] == null
           ? null
           : HomeCurrentTripModel.fromJson(
               json['current_trip'] as Map<String, dynamic>,
+            ),
+      activePackage: json['active_package'] == null
+          ? null
+          : HomeActivePackageModel.fromJson(
+              json['active_package'] as Map<String, dynamic>,
             ),
     );
 
@@ -41,7 +47,9 @@ Map<String, dynamic> _$HomeDataModelToJson(HomeDataModel instance) =>
       'pickup_suggestions': instance.pickupSuggestions,
       'destination_suggestions': instance.destinationSuggestions,
       'time_suggestions': instance.timeSuggestions,
+      'user_name': instance.userName,
       'current_trip': instance.currentTrip,
+      'active_package': instance.activePackage,
     };
 
 PopularRouteModel _$PopularRouteModelFromJson(Map<String, dynamic> json) =>
@@ -99,6 +107,7 @@ Map<String, dynamic> _$PackagePlanModelToJson(PackagePlanModel instance) =>
 HomeCurrentTripModel _$HomeCurrentTripModelFromJson(
   Map<String, dynamic> json,
 ) => HomeCurrentTripModel(
+  id: json['id'] as String,
   pickup: json['pickup'] as String,
   destination: json['destination'] as String,
   schedule: json['schedule'] as String,
@@ -109,9 +118,28 @@ HomeCurrentTripModel _$HomeCurrentTripModelFromJson(
 Map<String, dynamic> _$HomeCurrentTripModelToJson(
   HomeCurrentTripModel instance,
 ) => <String, dynamic>{
+  'id': instance.id,
   'pickup': instance.pickup,
   'destination': instance.destination,
   'schedule': instance.schedule,
   'status_label': instance.statusLabel,
   'driver_line': instance.driverLine,
+};
+
+HomeActivePackageModel _$HomeActivePackageModelFromJson(
+  Map<String, dynamic> json,
+) => HomeActivePackageModel(
+  title: json['title'] as String,
+  expiryText: json['expiryText'] as String,
+  remainingTrips: (json['remainingTrips'] as num).toInt(),
+  totalTrips: (json['totalTrips'] as num).toInt(),
+);
+
+Map<String, dynamic> _$HomeActivePackageModelToJson(
+  HomeActivePackageModel instance,
+) => <String, dynamic>{
+  'title': instance.title,
+  'expiryText': instance.expiryText,
+  'remainingTrips': instance.remainingTrips,
+  'totalTrips': instance.totalTrips,
 };

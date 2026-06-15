@@ -56,7 +56,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           pickup: pickup,
           destination: dest,
           duration: data['duration']?.toString() ?? 'N/A',
-          availableSeats: 14, // Real count needs to come from trips
+          availableSeats: 0, // Should be populated from actual trips
           startingPrice: basePrice,
           isFastest: true,
         ));
@@ -79,7 +79,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
       return PopularRouteListModel(
         routeName: data['name']?.toString() ?? '${data['start_city']} — ${data['end_city']}',
-        dailyTrips: 15, // Can be counted dynamically if needed
+        dailyTrips: 0, // Should be calculated from trips count
         averageDuration: data['duration']?.toString() ?? 'N/A',
         startingPrice: basePrice,
         pickup: data['start_city']?.toString() ?? '',

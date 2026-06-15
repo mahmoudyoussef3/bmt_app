@@ -12,13 +12,13 @@ class HomePackagesSection extends StatelessWidget {
     super.key,
     required this.onOpenSubscription,
     required this.plans,
-    this.showActivePackage = true,
+    this.activePackage,
     this.previewCount = 3,
   });
 
   final VoidCallback onOpenSubscription;
   final List<PackagePlanData> plans;
-  final bool showActivePackage;
+  final HomeActivePackageData? activePackage;
   final int previewCount;
 
   @override
@@ -44,9 +44,10 @@ class HomePackagesSection extends StatelessWidget {
         ),
         const SizedBox(height: AppLayout.spaceMd),
 
-        if (showActivePackage) ...[
+        if (activePackage != null) ...[
           _ActivePackageCard(
             scheme: scheme,
+            package: activePackage!,
             onTap: onOpenSubscription,
           ),
           const SizedBox(height: AppLayout.spaceLg),
@@ -84,17 +85,19 @@ class HomePackagesSection extends StatelessWidget {
 class _ActivePackageCard extends StatelessWidget {
   const _ActivePackageCard({
     required this.scheme,
+    required this.package,
     required this.onTap,
   });
 
   final ColorScheme scheme;
+  final HomeActivePackageData package;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    const remainingTrips = 18;
-    const totalTrips = 30;
-    const progress = remainingTrips / totalTrips;
+    final remainingTrips = package.remainingTrips;
+    final totalTrips = package.totalTrips;
+    final progress = totalTrips > 0 ? remainingTrips / totalTrips : 0.0;
 
     return Material(
       color: Colors.transparent,
@@ -151,7 +154,7 @@ class _ActivePackageCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Monthly Pass',
+                          package.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style:
@@ -161,7 +164,7 @@ class _ActivePackageCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Expires in 12 days',
+                          package.expiryText,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style:
@@ -227,30 +230,52 @@ class _EmptyPackagesCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: scheme.surface,
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
+            color: scheme.surfaceContainerHighest.withAlpha(50),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: scheme.outline.withAlpha(70)),
+            border: Border.all(color: scheme.outline.withAlpha(70), width: 1.5),
           ),
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Icon(Icons.card_membership_rounded, color: scheme.primary),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  'No packages available right now',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(Icons.card_membership_rounded, color: scheme.primary, size: 28),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Unlock unlimited rides',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Subscribe to a package for daily commutes with great discounts.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurface.withAlpha(150),
+                    ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Explore Packages',
+                style: TextStyle(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
                 ),
               ),
-              const Icon(Icons.chevron_right_rounded),
             ],
           ),
         ),

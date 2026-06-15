@@ -6,7 +6,9 @@ class HomeData {
     required this.pickupSuggestions,
     required this.destinationSuggestions,
     required this.timeSuggestions,
+    this.userName,
     this.currentTrip,
+    this.activePackage,
   });
 
   final List<PopularRouteData> popularRoutes;
@@ -15,7 +17,9 @@ class HomeData {
   final List<String> pickupSuggestions;
   final List<String> destinationSuggestions;
   final List<String> timeSuggestions;
+  final String? userName;
   final HomeCurrentTripData? currentTrip;
+  final HomeActivePackageData? activePackage;
 }
 
 class PopularRouteData {
@@ -66,6 +70,7 @@ class PackagePlanData {
 
 class HomeCurrentTripData {
   const HomeCurrentTripData({
+    required this.id,
     required this.pickup,
     required this.destination,
     required this.schedule,
@@ -73,6 +78,7 @@ class HomeCurrentTripData {
     this.driverLine,
   });
 
+  final String id;
   final String pickup;
   final String destination;
   final String schedule;
@@ -80,4 +86,18 @@ class HomeCurrentTripData {
   final String? driverLine;
 
   String get routeLabel => '$pickup → $destination';
+}
+
+class HomeActivePackageData {
+  const HomeActivePackageData({
+    required this.title,
+    required this.expiryText,
+    required this.remainingTrips,
+    required this.totalTrips,
+  });
+
+  final String title;
+  final String expiryText;
+  final int remainingTrips;
+  final int totalTrips;
 }

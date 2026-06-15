@@ -1,11 +1,12 @@
 import '../../domain/entities/conversation.dart';
 import '../../domain/repositories/communication_repository.dart';
-import '../datasources/mock_communication_datasource.dart';
+
+import '../datasources/supabase_communication_datasource.dart';
 
 class CommunicationRepositoryImpl implements CommunicationRepository {
   const CommunicationRepositoryImpl(this._datasource);
 
-  final MockCommunicationDatasource _datasource;
+  final SupabaseCommunicationDatasource _datasource;
 
   @override
   Future<List<Conversation>> getConversations() async {

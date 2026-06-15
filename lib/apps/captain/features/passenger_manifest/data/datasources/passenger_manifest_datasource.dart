@@ -1,30 +1,51 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/passenger.dart';
 import '../models/passenger_model.dart';
 
 class PassengerManifestDataSource {
-  const PassengerManifestDataSource();
+  const PassengerManifestDataSource(this._supabase);
+
+  final SupabaseClient _supabase;
 
   Future<List<PassengerModel>> getTripPassengers(String tripId) async {
-    final prefix = tripId == 't2' ? 'q' : 'p';
-    final count = tripId == 't2' ? 5 : 9;
-    final destination = tripId == 't2' ? 'Nasr City' : 'Smart Village';
-    final pickup = tripId == 't2' ? 'Banha Downtown' : 'Banha Center';
-    return List.generate(
-      count,
-      (index) => PassengerModel(
-        id: '$prefix${index + 1}',
-        name: tripId == 't2'
-            ? 'Passenger Q${index + 1}'
-            : 'Passenger ${index + 1}',
-        seat: '${tripId == 't2' ? index + 11 : index + 1}',
-        pickupPoint: index.isEven ? pickup : 'Banha Station',
-        destination: destination,
-        pickupTime: tripId == 't2'
-            ? '9:${50 + index * 5}'
-            : '8:${30 + (index % 3) * 5}',
-        phone: '+20 100 000 ${100 + index}',
-        status: PassengerBoardingStatus.pending,
-      ),
-    );
+    final response = await _supabase
+        .from('trip_passengers')
+        .select()
+        .eq('trip_id', tripId)
+        .order('created_at', ascending: true);
+
+    return (response as List).map((e) {
+      final statusString = e['status'] as String? ?? 'pending';
+      PassengerBoardingStatus status;
+      switch (statusString.toLowerCase()) {
+        case 'boarded':
+        case 'ركب':
+        case 'تم الصعود':
+          status = PassengerBoardingStatus.boarded;
+          break;
+        case 'absent':
+        case 'no_show':
+        case 'غائب':
+          status = PassengerBoardingStatus.absent;
+          break;
+        case 'cancelled':
+        case 'ملغي':
+          status = PassengerBoardingStatus.cancelled;
+          break;
+        default:
+          status = PassengerBoardingStatus.pending;
+      }
+
+      return PassengerModel(
+        id: e['id'] as String? ?? '',
+        name: e['passenger_name'] as String? ?? 'Unknown',
+        seat: e['seat_label'] as String? ?? '',
+        pickupPoint: e['pickup_point_name'] as String? ?? '',
+        destination: e['dropoff_point_name'] as String? ?? '',
+        pickupTime: e['pickup_time']?.toString() ?? '',
+        phone: e['phone'] as String? ?? '',
+        status: status,
+      );
+    }).toList();
   }
 }

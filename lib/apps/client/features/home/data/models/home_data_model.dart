@@ -12,7 +12,9 @@ class HomeDataModel {
     required this.pickupSuggestions,
     required this.destinationSuggestions,
     required this.timeSuggestions,
+    this.userName,
     this.currentTrip,
+    this.activePackage,
   });
 
   factory HomeDataModel.fromJson(Map<String, dynamic> json) => _$HomeDataModelFromJson(json);
@@ -36,8 +38,14 @@ class HomeDataModel {
   @JsonKey(name: 'time_suggestions')
   final List<String> timeSuggestions;
   
+  @JsonKey(name: 'user_name')
+  final String? userName;
+  
   @JsonKey(name: 'current_trip')
   final HomeCurrentTripModel? currentTrip;
+  
+  @JsonKey(name: 'active_package')
+  final HomeActivePackageModel? activePackage;
 
   HomeData toEntity() {
     return HomeData(
@@ -47,7 +55,9 @@ class HomeDataModel {
       pickupSuggestions: pickupSuggestions,
       destinationSuggestions: destinationSuggestions,
       timeSuggestions: timeSuggestions,
+      userName: userName,
       currentTrip: currentTrip?.toEntity(),
+      activePackage: activePackage?.toEntity(),
     );
   }
 }
@@ -147,6 +157,7 @@ class PackagePlanModel {
 @JsonSerializable()
 class HomeCurrentTripModel {
   const HomeCurrentTripModel({
+    required this.id,
     required this.pickup,
     required this.destination,
     required this.schedule,
@@ -157,6 +168,7 @@ class HomeCurrentTripModel {
   factory HomeCurrentTripModel.fromJson(Map<String, dynamic> json) => _$HomeCurrentTripModelFromJson(json);
   Map<String, dynamic> toJson() => _$HomeCurrentTripModelToJson(this);
 
+  final String id;
   final String pickup;
   final String destination;
   final String schedule;
@@ -167,11 +179,41 @@ class HomeCurrentTripModel {
 
   HomeCurrentTripData toEntity() {
     return HomeCurrentTripData(
+      id: id,
       pickup: pickup,
       destination: destination,
       schedule: schedule,
       statusLabel: statusLabel,
       driverLine: driverLine,
+    );
+  }
+}
+
+@JsonSerializable()
+class HomeActivePackageModel {
+  const HomeActivePackageModel({
+    required this.title,
+    required this.expiryText,
+    required this.remainingTrips,
+    required this.totalTrips,
+  });
+
+  factory HomeActivePackageModel.fromJson(Map<String, dynamic> json) =>
+      _$HomeActivePackageModelFromJson(json);
+
+  final String title;
+  final String expiryText;
+  final int remainingTrips;
+  final int totalTrips;
+
+  Map<String, dynamic> toJson() => _$HomeActivePackageModelToJson(this);
+
+  HomeActivePackageData toEntity() {
+    return HomeActivePackageData(
+      title: title,
+      expiryText: expiryText,
+      remainingTrips: remainingTrips,
+      totalTrips: totalTrips,
     );
   }
 }

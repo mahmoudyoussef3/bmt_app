@@ -9,17 +9,18 @@ class SupabaseHomeDatasource implements HomeDatasource {
 
   @override
   Future<HomeDataModel> getHomeData() async {
-    final popularRoutesFuture = _supabase
+    final routesFuture = _supabase
         .from('operation_routes')
         .select()
-        .eq('status', 'active')
-        .limit(4);
+        .eq('status', 'active');
 
-    final nearbyTripsFuture = _supabase
+    final tripsFuture = _supabase
         .from('operation_trips')
-        .select()
+        .select('*, route:operation_routes(start_city, end_city)')
         .eq('status', 'scheduled')
-        .limit(3);
+        .order('trip_date')
+        .order('departure_time')
+        .limit(10);
 
     final packagesFuture = _supabase
         .from('packages')
@@ -38,36 +39,46 @@ class SupabaseHomeDatasource implements HomeDatasource {
     }
 
     final responses = await Future.wait([
-      popularRoutesFuture,
-      nearbyTripsFuture,
+      routesFuture,
+      tripsFuture,
       packagesFuture,
       if (currentTripFuture != null) currentTripFuture else Future.value([]),
     ]);
 
-    final popularRoutesData = responses[0];
-    final nearbyTripsData = responses[1];
-    final packagesData = responses[2];
-    final currentTripData = responses[3];
+    final routesData = responses[0] as List<dynamic>;
+    final tripsData = responses[1] as List<dynamic>;
+    final packagesData = responses[2] as List<dynamic>;
+    final currentTripData = responses[3] as List<dynamic>;
+
+    final popularRoutesData = routesData.take(4).toList();
+    final nearbyTripsData = tripsData.take(3).toList();
 
     final popularRoutes = popularRoutesData.map((e) => PopularRouteModel(
-          pickup: e['start_city'] as String? ?? 'Unknown',
-          destination: e['end_city'] as String? ?? 'Unknown',
-          duration: e['duration']?.toString() ?? '60 mins',
-          startingPrice: 'Starts from EGP 50', // We will join trip_pricing or set it realistically
+          pickup: e['start_city'] as String? ?? '',
+          destination: e['end_city'] as String? ?? '',
+          duration: e['duration']?.toString() ?? '',
+          startingPrice: '', 
         )).toList();
 
-    final nearbyTrips = nearbyTripsData.map((e) => NearbyTripModel(
-          pickup: 'Terminal', // Or fallback to real station
-          destination: 'Destination', 
-          departureTime: e['trip_date']?.toString() ?? '',
-          seatsLeft: 14 - ((e['passenger_count'] as int?) ?? 0),
+    final nearbyTrips = nearbyTripsData.map((e) {
+      final route = e['route'] as Map<String, dynamic>? ?? {};
+      final capacity = e['capacity'] as int? ?? 0;
+      final passengerCount = e['passenger_count'] as int? ?? 0;
+      final departureTime = e['departure_time']?.toString() ?? e['trip_date']?.toString() ?? '';
+      
+      return NearbyTripModel(
+          pickup: route['start_city'] as String? ?? '', 
+          destination: route['end_city'] as String? ?? '', 
+          departureTime: departureTime,
+          seatsLeft: capacity - passengerCount,
           isLive: e['status'] == 'in_progress' || e['status'] == 'boarding',
-        )).toList();
+        );
+    }).toList();
 
     final packagePlans = packagesData.map((e) => PackagePlanModel(
           title: e['title'] as String? ?? '',
           subtitle: e['subtitle'] as String? ?? '',
-          price: 'EGP ${e['price']}',
+          price: e['price']?.toString() ?? '',
           badge: e['badge'] as String? ?? '',
           iconKey: e['icon_key'] as String? ?? 'dateRange',
         )).toList();
@@ -76,26 +87,45 @@ class SupabaseHomeDatasource implements HomeDatasource {
     if (currentTripData.isNotEmpty) {
       final trip = currentTripData.first;
       currentTrip = HomeCurrentTripModel(
-        pickup: trip['route']?.toString().split(' ').first ?? 'Pickup',
-        destination: trip['route']?.toString().split(' ').last ?? 'Destination',
-        schedule: '${trip['trip_date']} · Departs ${trip['trip_time']}',
+        id: trip['id']?.toString() ?? '',
+        pickup: trip['route']?.toString().split(' ').first ?? '',
+        destination: trip['route']?.toString().split(' ').last ?? '',
+        schedule: '${trip['trip_date']} · ${trip['trip_time']}',
         statusLabel: trip['assigned_trip']?.toString() ?? 'Processing',
         driverLine: trip['status'] == 'active' ? 'Driver assigned' : 'Waiting for assignment',
       );
     }
 
-    // Suggestions can be derived from routes in a robust implementation
-    final pickupSuggestions = ['Banha Center', 'Banha Station', 'Smart Village Gate'];
-    final destinationSuggestions = ['Smart Village', 'Nasr City', 'Mohandessin'];
-    final timeSuggestions = ['7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM'];
+    final pickupSet = <String>{};
+    final destinationSet = <String>{};
+    for (var r in routesData) {
+      if (r['start_city'] != null && r['start_city'].toString().isNotEmpty) {
+        pickupSet.add(r['start_city'].toString());
+      }
+      if (r['end_city'] != null && r['end_city'].toString().isNotEmpty) {
+        destinationSet.add(r['end_city'].toString());
+      }
+    }
+
+    final timeSet = <String>{};
+    for (var t in tripsData) {
+      if (t['departure_time'] != null && t['departure_time'].toString().isNotEmpty) {
+        timeSet.add(t['departure_time'].toString());
+      }
+    }
+
+    final userName = user?.userMetadata?['full_name']?.toString() 
+        ?? user?.userMetadata?['name']?.toString() 
+        ?? 'User';
 
     return HomeDataModel(
       popularRoutes: popularRoutes,
       nearbyTrips: nearbyTrips,
       packagePlans: packagePlans,
-      pickupSuggestions: pickupSuggestions,
-      destinationSuggestions: destinationSuggestions,
-      timeSuggestions: timeSuggestions,
+      pickupSuggestions: pickupSet.toList(),
+      destinationSuggestions: destinationSet.toList(),
+      timeSuggestions: timeSet.toList(),
+      userName: userName,
       currentTrip: currentTrip,
     );
   }

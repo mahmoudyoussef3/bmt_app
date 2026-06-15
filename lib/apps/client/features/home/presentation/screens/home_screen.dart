@@ -31,15 +31,10 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  Map<String, String> get _searchArguments => const {
-    'pickup': 'Banha Station',
-    'destination': 'Smart Village',
-    'date': 'Today, Jun 3',
-    'time': '8:40 AM',
-  };
-
   void _openSearch() {
-    widget.onOpenRoute(ClientRoutes.bookingSearch, _searchArguments);
+    // Open the booking search screen with no predefined selections,
+    // allowing the user to start a fresh search.
+    widget.onOpenRoute(ClientRoutes.bookingSearch, const <String, String>{});
   }
 
   @override
@@ -117,6 +112,7 @@ class _HomeContent extends StatelessWidget {
                   children: [
                     _HomeHeader(
                       scheme: scheme,
+                      userName: data.userName ?? 'User',
                       onOpenNotifications: onOpenNotifications,
                     ),
                     const SizedBox(height: AppLayout.spaceLg),
@@ -125,7 +121,7 @@ class _HomeContent extends StatelessWidget {
                       trip: currentTrip,
                       onBookTrip: onOpenSearch,
                       onViewTrip: () => onOpenRoute(ClientRoutes.tripDetails, {
-                        'tripId': 'T1',
+                        if (currentTrip != null) 'tripId': currentTrip.id,
                       }),
                       onTrackTrip: () => onOpenRoute(ClientRoutes.tracking),
                     ),
@@ -148,6 +144,7 @@ class _HomeContent extends StatelessWidget {
                   const SizedBox(height: AppLayout.spaceXl),
                   HomePackagesSection(
                     plans: data.packagePlans,
+                    activePackage: data.activePackage,
                     onOpenSubscription: () =>
                         onOpenRoute(ClientRoutes.subscription),
                   ),
@@ -168,9 +165,10 @@ class _HomeContent extends StatelessWidget {
 }
 
 class _HomeHeader extends StatelessWidget {
-  const _HomeHeader({required this.scheme, required this.onOpenNotifications});
+  const _HomeHeader({required this.scheme, required this.userName, required this.onOpenNotifications});
 
   final ColorScheme scheme;
+  final String userName;
   final VoidCallback onOpenNotifications;
 
   @override
@@ -183,7 +181,7 @@ class _HomeHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppLocalizations.of(context)!.home_goodMorning('Ahmed'),
+                AppLocalizations.of(context)!.home_goodMorning(userName),
                 style: AppTypography.display(scheme).copyWith(
                   fontSize: 24,
                   fontWeight: FontWeight.w800,

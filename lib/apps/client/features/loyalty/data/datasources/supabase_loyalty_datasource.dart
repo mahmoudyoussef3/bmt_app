@@ -22,21 +22,45 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
     }
 
     // 1. Fetch points and wallet balance
-    final accountResponse = await _supabase
+    final accountFuture = _supabase
         .from('loyalty_accounts')
         .select()
         .eq('client_id', user.id)
         .maybeSingle();
 
-    final currentPoints = accountResponse?['points'] as int? ?? 0;
-    // double walletBalance = double.tryParse(accountResponse?['wallet_balance']?.toString() ?? '0') ?? 0.0;
-
     // 2. Fetch point transactions
-    final txResponse = await _supabase
+    final txFuture = _supabase
         .from('loyalty_transactions')
         .select()
         .eq('client_id', user.id)
         .order('created_at', ascending: false);
+
+    // 3. Fetch loyalty tiers
+    final tiersFuture = _supabase
+        .from('loyalty_tiers')
+        .select()
+        .order('points_required_val', ascending: true); // Assuming a numeric field for sorting
+
+    // 4. Fetch redeemable rewards
+    final rewardsFuture = _supabase
+        .from('loyalty_rewards')
+        .select()
+        .eq('is_active', true)
+        .order('points_cost', ascending: true);
+
+    final responses = await Future.wait([
+      accountFuture,
+      txFuture,
+      tiersFuture,
+      rewardsFuture,
+    ]);
+
+    final accountResponse = responses[0] as Map<String, dynamic>?;
+    final txResponse = responses[1] as List<dynamic>;
+    final tiersResponse = responses[2] as List<dynamic>;
+    final rewardsResponse = responses[3] as List<dynamic>;
+
+    final currentPoints = accountResponse?['points'] as int? ?? 0;
 
     final transactions = txResponse.map((tx) {
       return PointsTransaction(
@@ -47,114 +71,38 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
       );
     }).toList();
 
+    final tiers = tiersResponse.map((tier) {
+      final colors = (tier['gradient_colors'] as List<dynamic>?)
+          ?.map((c) => int.tryParse(c.toString()) ?? 0xFFB0BEC5)
+          .toList() ?? [0xFFB0BEC5, 0xFF607D8B];
+
+      return LoyaltyTier(
+        name: tier['name']?.toString() ?? 'Tier',
+        pointsRequired: tier['points_required']?.toString() ?? '0 pts',
+        iconKey: tier['icon_key']?.toString() ?? 'stars',
+        gradientColors: colors,
+        perks: (tier['perks'] as List<dynamic>?)?.map((p) => p.toString()).toList() ?? [],
+      );
+    }).toList();
+
+    final rewards = rewardsResponse.map((reward) {
+      return RedeemableReward(
+        id: reward['id']?.toString() ?? '',
+        title: reward['title']?.toString() ?? '',
+        description: reward['description']?.toString() ?? '',
+        pointsCost: reward['points_cost'] as int? ?? 0,
+        valueLabel: reward['value_label']?.toString() ?? '',
+        category: reward['category']?.toString() ?? 'Discount',
+        couponCode: reward['coupon_code']?.toString() ?? '',
+      );
+    }).toList();
+
     return LoyaltyData(
       currentPoints: currentPoints,
       currentTierName: _calculateTier(currentPoints),
-      tiers: const [
-        LoyaltyTier(
-          name: 'Bronze',
-          pointsRequired: '0 pts',
-          iconKey: 'premium',
-          gradientColors: [0xFF8C5A3C, 0xFF5C3A21],
-          perks: [
-            'Earn 1x points on standard commutes',
-            'Standard customer support ticket queues',
-          ],
-        ),
-        LoyaltyTier(
-          name: 'Silver',
-          pointsRequired: '1,000 pts',
-          iconKey: 'shield',
-          gradientColors: [0xFFB0BEC5, 0xFF607D8B],
-          perks: [
-            'Earn 1.2x points on comfort rides',
-            'Priority seating allocations',
-            'Dedicated Silver support queue hotline',
-          ],
-        ),
-        LoyaltyTier(
-          name: 'Gold',
-          pointsRequired: '2,000 pts',
-          iconKey: 'stars',
-          gradientColors: [0xFFFFD54F, 0xFFFFB300],
-          perks: [
-            'Earn 1.5x points on luxury coaches',
-            'Free shuttle scheduling adjustments',
-            'VIP boarding privileges',
-            'No service fees on refund transactions',
-          ],
-        ),
-        LoyaltyTier(
-          name: 'Platinum',
-          pointsRequired: '3,000 pts',
-          iconKey: 'diamond',
-          gradientColors: [0xFFE2E8F0, 0xFF475569],
-          perks: [
-            'Earn 2x points on all shuttle rides',
-            'Complimentary cabin beverage selection',
-            'Guaranteed reserved seat on commute lines',
-            'Priority executive ticket desk helpline',
-            'Free trip voucher every 15 rides',
-          ],
-        ),
-      ],
+      tiers: tiers,
       transactions: transactions,
-      rewards: const [
-        RedeemableReward(
-          id: 'r1',
-          title: 'EGP 30 Off Shuttle Ride',
-          description: 'Get EGP 30 off standard or comfort daily runs.',
-          pointsCost: 300,
-          valueLabel: 'EGP 30',
-          category: 'Discount',
-          couponCode: 'DISC30PTS',
-        ),
-        RedeemableReward(
-          id: 'r2',
-          title: 'EGP 60 Off Commute',
-          description: 'Save EGP 60 on your next booking seat fare.',
-          pointsCost: 500,
-          valueLabel: 'EGP 60',
-          category: 'Discount',
-          couponCode: 'DISC60PTS',
-        ),
-        RedeemableReward(
-          id: 'r3',
-          title: '1 Free Commute Ticket',
-          description: 'Free single ride voucher valid on any shuttle coach.',
-          pointsCost: 1000,
-          valueLabel: 'FREE TRIP',
-          category: 'FreeRide',
-          couponCode: 'FREETRIPPTS',
-        ),
-        RedeemableReward(
-          id: 'r4',
-          title: 'EGP 100 Cashback',
-          description: 'Claim EGP 100 directly to your main BMT account wallet.',
-          pointsCost: 1500,
-          valueLabel: 'EGP 100 CASH',
-          category: 'Cashback',
-          couponCode: 'CASHBACK100',
-        ),
-        RedeemableReward(
-          id: 'r5',
-          title: 'EGP 200 Package Discount',
-          description: 'Get EGP 200 off your next weekly/monthly subscription bundle.',
-          pointsCost: 2000,
-          valueLabel: 'EGP 200 OFF',
-          category: 'Package',
-          couponCode: 'PKGDIST200',
-        ),
-        RedeemableReward(
-          id: 'r6',
-          title: 'Free Month Upgrade',
-          description: 'Upgrade your weekly package to VIP comfort tier package.',
-          pointsCost: 2800,
-          valueLabel: 'FREE UPGRADE',
-          category: 'Package',
-          couponCode: 'VIPUPGRADEFREE',
-        ),
-      ],
+      rewards: rewards,
     );
   }
 }

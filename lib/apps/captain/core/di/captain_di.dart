@@ -90,7 +90,7 @@ void _registerAssignedTripsDependencies() {
 void _registerPassengerManifestDependencies() {
   if (!captainGetIt.isRegistered<PassengerManifestDataSource>()) {
     captainGetIt.registerLazySingleton<PassengerManifestDataSource>(
-      () => const PassengerManifestDataSource(),
+      () => PassengerManifestDataSource(captainGetIt()),
     );
   }
   if (!captainGetIt.isRegistered<PassengerManifestRepository>()) {

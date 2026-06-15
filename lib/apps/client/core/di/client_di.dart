@@ -36,7 +36,7 @@ import '../../features/booking/domain/usecases/get_vehicle_details_usecase.dart'
 import '../../features/booking/domain/usecases/get_vehicles_usecase.dart';
 import '../../features/booking/domain/usecases/sort_vehicles_usecase.dart';
 import '../../features/booking/presentation/cubit/booking_cubit.dart';
-import '../../features/communication/data/datasources/mock_communication_datasource.dart';
+import '../../features/communication/data/datasources/supabase_communication_datasource.dart';
 import '../../features/communication/data/repositories/communication_repository_impl.dart';
 import '../../features/communication/domain/repositories/communication_repository.dart';
 import '../../features/communication/domain/usecases/add_conversation_message_usecase.dart';
@@ -740,19 +740,8 @@ void _registerRoutesHubDependencies() {
 }
 
 void _registerCommunicationDependencies() {
-  if (!clientGetIt.isRegistered<MockCommunicationDatasource>()) {
-    clientGetIt.registerLazySingleton<MockCommunicationDatasource>(
-      () => const MockCommunicationDatasource(),
-    );
-  }
 
-  if (!clientGetIt.isRegistered<CommunicationRepository>()) {
-    clientGetIt.registerLazySingleton<CommunicationRepository>(
-      () => CommunicationRepositoryImpl(
-        clientGetIt<MockCommunicationDatasource>(),
-      ),
-    );
-  }
+
 
   if (!clientGetIt.isRegistered<GetConversationsUseCase>()) {
     clientGetIt.registerLazySingleton<GetConversationsUseCase>(
