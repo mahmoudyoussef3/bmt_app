@@ -520,59 +520,143 @@ class _SubscriptionPromo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(20),
       child: InkWell(
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(20),
         onTap: onTap,
         child: Ink(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: scheme.primary,
-            borderRadius: BorderRadius.circular(18),
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: scheme.primary.withAlpha(62), width: 1.2),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.primary.withAlpha(18),
+                blurRadius: 24,
+                offset: const Offset(0, 12),
+              ),
+            ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
             children: [
-              Text(
-                'Ride more, pay less with packages',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: scheme.onPrimary,
-                  fontWeight: FontWeight.w900,
-                  height: 1.1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Save on repeat commutes, plan seats ahead, and reduce checkout time.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onPrimary.withAlpha(220),
-                  height: 1.35,
-                ),
-              ),
-              const SizedBox(height: 14),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: const [
-                  _PromoBenefit(label: 'Predictable cost'),
-                  _PromoBenefit(label: 'Flexible durations'),
-                  _PromoBenefit(label: 'Faster booking'),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: FilledButton.icon(
-                  onPressed: onTap,
-                  icon: const Icon(Icons.workspace_premium_rounded),
-                  label: const Text('View packages'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: scheme.onPrimary,
-                    foregroundColor: scheme.primary,
+              PositionedDirectional(
+                top: -34,
+                end: -26,
+                child: Container(
+                  width: 112,
+                  height: 112,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: scheme.primary.withAlpha(18),
                   ),
                 ),
+              ),
+              PositionedDirectional(
+                bottom: -40,
+                start: -34,
+                child: Container(
+                  width: 132,
+                  height: 132,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: scheme.secondary.withAlpha(12),
+                  ),
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 46,
+                        height: 46,
+                        decoration: BoxDecoration(
+                          color: scheme.primary.withAlpha(22),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Icon(
+                          Icons.workspace_premium_rounded,
+                          color: scheme.primary,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Commute smarter with ride packages',
+                              style: textTheme.titleMedium?.copyWith(
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w900,
+                                height: 1.12,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Lower repeat-trip costs and keep your booking routine fast.',
+                              style: textTheme.bodySmall?.copyWith(
+                                color: scheme.onSurface.withAlpha(154),
+                                height: 1.35,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  const _PromoBenefit(
+                    icon: Icons.savings_outlined,
+                    label: 'Save on frequent rides',
+                  ),
+                  const SizedBox(height: 10),
+                  const _PromoBenefit(
+                    icon: Icons.event_available_rounded,
+                    label: 'Pick a plan that matches your schedule',
+                  ),
+                  const SizedBox(height: 10),
+                  const _PromoBenefit(
+                    icon: Icons.flash_on_rounded,
+                    label: 'Book faster with fewer repeat steps',
+                  ),
+                  const SizedBox(height: 18),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Weekly to three-month plans',
+                          style: textTheme.labelLarge?.copyWith(
+                            color: scheme.onSurface.withAlpha(170),
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      FilledButton.icon(
+                        onPressed: onTap,
+                        icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                        label: const Text('View plans'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: scheme.primary,
+                          foregroundColor: scheme.onPrimary,
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 12,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ],
           ),
@@ -583,27 +667,38 @@ class _SubscriptionPromo extends StatelessWidget {
 }
 
 class _PromoBenefit extends StatelessWidget {
-  const _PromoBenefit({required this.label});
+  const _PromoBenefit({required this.icon, required this.label});
 
+  final IconData icon;
   final String label;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-      decoration: BoxDecoration(
-        color: scheme.onPrimary.withAlpha(28),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: scheme.onPrimary.withAlpha(42)),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: scheme.onPrimary,
-          fontWeight: FontWeight.w800,
+
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: scheme.primary.withAlpha(18),
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Icon(icon, size: 16, color: scheme.primary),
         ),
-      ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: scheme.onSurface.withAlpha(178),
+              fontWeight: FontWeight.w800,
+              height: 1.25,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
