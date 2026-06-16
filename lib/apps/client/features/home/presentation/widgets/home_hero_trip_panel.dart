@@ -15,7 +15,7 @@ import 'package:bmt_app/l10n/app_localizations.dart';
 /// - This widget reads optional trip route points dynamically, so it will still
 ///   compile even if `HomeCurrentTripData` does not yet have `points`.
 /// - Recommended entity fields:
-///   final List<HomeTripPointData> points;
+///   final List&lt;HomeTripPointData&gt; points;
 ///   final int? currentPointIndex;
 /// - Latitude/longitude should be stored in data, but not shown to the user.
 class HomeHeroTripPanel extends StatelessWidget {
@@ -108,10 +108,7 @@ class _ActiveTripPanel extends StatelessWidget {
                   const SizedBox(height: 16),
                   Divider(height: 1, color: scheme.outline.withAlpha(55)),
                   const SizedBox(height: 14),
-                  _DriverSummary(
-                    scheme: scheme,
-                    driverLine: trip.driverLine!,
-                  ),
+                  _DriverSummary(scheme: scheme, driverLine: trip.driverLine!),
                 ],
                 const SizedBox(height: 18),
                 _ActionButtons(
@@ -163,11 +160,13 @@ class _TripHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isTrackingAvailable ? AppLocalizations.of(context)!.home_tripStarted : AppLocalizations.of(context)!.home_upcomingTrip,
+                isTrackingAvailable
+                    ? AppLocalizations.of(context)!.home_tripStarted
+                    : AppLocalizations.of(context)!.home_upcomingTrip,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 16,
-                    ),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 3),
               Text(
@@ -175,9 +174,9 @@ class _TripHeader extends StatelessWidget {
                     ? AppLocalizations.of(context)!.home_trackBus
                     : AppLocalizations.of(context)!.home_reviewTrip,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface.withAlpha(145),
-                      fontWeight: FontWeight.w600,
-                    ),
+                  color: scheme.onSurface.withAlpha(145),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -237,11 +236,13 @@ class _TripRouteTimeline extends StatelessWidget {
           if (points.length > visiblePoints.length) ...[
             const SizedBox(height: 8),
             Text(
-              AppLocalizations.of(context)!.home_moreStations(points.length - visiblePoints.length),
+              AppLocalizations.of(
+                context,
+              )!.home_moreStations(points.length - visiblePoints.length),
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurface.withAlpha(130),
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: scheme.onSurface.withAlpha(130),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ],
@@ -287,7 +288,9 @@ class _TripRouteTimeline extends StatelessWidget {
       ..sort();
 
     return indexes
-        .map((index) => _VisiblePoint(point: allPoints[index], realIndex: index))
+        .map(
+          (index) => _VisiblePoint(point: allPoints[index], realIndex: index),
+        )
         .toList();
   }
 }
@@ -309,9 +312,9 @@ class _RouteTitle extends StatelessWidget {
       children: [
         Text(
           AppLocalizations.of(context)!.home_tripRoute,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
         ),
         const Spacer(),
         Container(
@@ -321,11 +324,13 @@ class _RouteTitle extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
           ),
           child: Text(
-            hasCurrentPoint ? AppLocalizations.of(context)!.home_liveTracking : AppLocalizations.of(context)!.home_stationsCount(pointsCount),
+            hasCurrentPoint
+                ? AppLocalizations.of(context)!.home_liveTracking
+                : AppLocalizations.of(context)!.home_stationsCount(pointsCount),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: scheme.primary,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],
@@ -357,10 +362,10 @@ class _TripPointTile extends StatelessWidget {
     final color = isPassed
         ? scheme.secondary
         : isCurrent
-            ? scheme.primary
-            : isLast
-                ? scheme.tertiary
-                : scheme.outline;
+        ? scheme.primary
+        : isLast
+        ? scheme.tertiary
+        : scheme.outline;
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -400,11 +405,11 @@ class _TripPointTile extends StatelessWidget {
                 Text(
                   _getLabel(context),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: isCurrent
-                            ? scheme.primary
-                            : scheme.onSurface.withAlpha(135),
-                        fontWeight: FontWeight.w800,
-                      ),
+                    color: isCurrent
+                        ? scheme.primary
+                        : scheme.onSurface.withAlpha(135),
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -412,9 +417,8 @@ class _TripPointTile extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight:
-                            isCurrent ? FontWeight.w900 : FontWeight.w800,
-                      ),
+                    fontWeight: isCurrent ? FontWeight.w900 : FontWeight.w800,
+                  ),
                 ),
               ],
             ),
@@ -442,10 +446,7 @@ class _TripPointTile extends StatelessWidget {
 }
 
 class _DriverSummary extends StatelessWidget {
-  const _DriverSummary({
-    required this.scheme,
-    required this.driverLine,
-  });
+  const _DriverSummary({required this.scheme, required this.driverLine});
 
   final ColorScheme scheme;
   final String driverLine;
@@ -466,10 +467,10 @@ class _DriverSummary extends StatelessWidget {
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurface.withAlpha(165),
-                  fontWeight: FontWeight.w700,
-                  height: 1.4,
-                ),
+              color: scheme.onSurface.withAlpha(165),
+              fontWeight: FontWeight.w700,
+              height: 1.4,
+            ),
           ),
         ),
       ],
@@ -478,10 +479,7 @@ class _DriverSummary extends StatelessWidget {
 }
 
 class _ActionButtons extends StatelessWidget {
-  const _ActionButtons({
-    required this.onViewTrip,
-    this.onTrackTrip,
-  });
+  const _ActionButtons({required this.onViewTrip, this.onTrackTrip});
 
   final VoidCallback onViewTrip;
   final VoidCallback? onTrackTrip;
@@ -542,17 +540,19 @@ class _NoTripPanel extends StatelessWidget {
             Text(
               AppLocalizations.of(context)!.home_whereTo,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 16.5,
-                  ),
+                fontWeight: FontWeight.w900,
+                fontSize: 16.5,
+              ),
             ),
             const SizedBox(height: 12),
             InkWell(
               onTap: onBookTrip,
               borderRadius: BorderRadius.circular(14),
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHighest.withAlpha(130),
                   borderRadius: BorderRadius.circular(14),
@@ -593,9 +593,9 @@ class _NoTripPanel extends StatelessWidget {
                 Text(
                   AppLocalizations.of(context)!.home_quickDestinations,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(120),
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: scheme.onSurface.withAlpha(120),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -658,9 +658,9 @@ class _ShortcutChip extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
         ),
@@ -711,10 +711,7 @@ class _TripPointUiData {
 }
 
 class _VisiblePoint {
-  const _VisiblePoint({
-    required this.point,
-    required this.realIndex,
-  });
+  const _VisiblePoint({required this.point, required this.realIndex});
 
   final _TripPointUiData point;
   final int realIndex;

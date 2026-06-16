@@ -17,33 +17,34 @@ class HomeDataModel {
     this.activePackage,
   });
 
-  factory HomeDataModel.fromJson(Map<String, dynamic> json) => _$HomeDataModelFromJson(json);
+  factory HomeDataModel.fromJson(Map<String, dynamic> json) =>
+      _$HomeDataModelFromJson(json);
   Map<String, dynamic> toJson() => _$HomeDataModelToJson(this);
 
   @JsonKey(name: 'popular_routes')
   final List<PopularRouteModel> popularRoutes;
-  
+
   @JsonKey(name: 'nearby_trips')
   final List<NearbyTripModel> nearbyTrips;
-  
+
   @JsonKey(name: 'package_plans')
   final List<PackagePlanModel> packagePlans;
-  
+
   @JsonKey(name: 'pickup_suggestions')
   final List<String> pickupSuggestions;
-  
+
   @JsonKey(name: 'destination_suggestions')
   final List<String> destinationSuggestions;
-  
+
   @JsonKey(name: 'time_suggestions')
   final List<String> timeSuggestions;
-  
+
   @JsonKey(name: 'user_name')
   final String? userName;
-  
+
   @JsonKey(name: 'current_trip')
   final HomeCurrentTripModel? currentTrip;
-  
+
   @JsonKey(name: 'active_package')
   final HomeActivePackageModel? activePackage;
 
@@ -65,27 +66,39 @@ class HomeDataModel {
 @JsonSerializable()
 class PopularRouteModel {
   const PopularRouteModel({
+    required this.id,
+    required this.routeName,
     required this.pickup,
     required this.destination,
     required this.duration,
     required this.startingPrice,
+    required this.tripsAvailable,
   });
 
-  factory PopularRouteModel.fromJson(Map<String, dynamic> json) => _$PopularRouteModelFromJson(json);
+  factory PopularRouteModel.fromJson(Map<String, dynamic> json) =>
+      _$PopularRouteModelFromJson(json);
   Map<String, dynamic> toJson() => _$PopularRouteModelToJson(this);
 
+  final String id;
+  @JsonKey(name: 'route_name')
+  final String routeName;
   final String pickup;
   final String destination;
   final String duration;
   @JsonKey(name: 'starting_price')
   final String startingPrice;
+  @JsonKey(name: 'trips_available')
+  final int tripsAvailable;
 
   PopularRouteData toEntity() {
     return PopularRouteData(
+      id: id,
+      routeName: routeName,
       pickup: pickup,
       destination: destination,
       duration: duration,
       startingPrice: startingPrice,
+      tripsAvailable: tripsAvailable,
     );
   }
 }
@@ -100,7 +113,8 @@ class NearbyTripModel {
     required this.isLive,
   });
 
-  factory NearbyTripModel.fromJson(Map<String, dynamic> json) => _$NearbyTripModelFromJson(json);
+  factory NearbyTripModel.fromJson(Map<String, dynamic> json) =>
+      _$NearbyTripModelFromJson(json);
   Map<String, dynamic> toJson() => _$NearbyTripModelToJson(this);
 
   final String pickup;
@@ -133,7 +147,8 @@ class PackagePlanModel {
     required this.iconKey,
   });
 
-  factory PackagePlanModel.fromJson(Map<String, dynamic> json) => _$PackagePlanModelFromJson(json);
+  factory PackagePlanModel.fromJson(Map<String, dynamic> json) =>
+      _$PackagePlanModelFromJson(json);
   Map<String, dynamic> toJson() => _$PackagePlanModelToJson(this);
 
   final String title;
@@ -165,7 +180,8 @@ class HomeCurrentTripModel {
     this.driverLine,
   });
 
-  factory HomeCurrentTripModel.fromJson(Map<String, dynamic> json) => _$HomeCurrentTripModelFromJson(json);
+  factory HomeCurrentTripModel.fromJson(Map<String, dynamic> json) =>
+      _$HomeCurrentTripModelFromJson(json);
   Map<String, dynamic> toJson() => _$HomeCurrentTripModelToJson(this);
 
   final String id;

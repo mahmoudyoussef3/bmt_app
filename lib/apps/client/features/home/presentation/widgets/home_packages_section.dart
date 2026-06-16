@@ -5,7 +5,6 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_pack
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/widgets/badge.dart';
 import 'package:bmt_app/core/widgets/section_header.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
 
 class HomePackagesSection extends StatelessWidget {
   const HomePackagesSection({
@@ -24,22 +23,25 @@ class HomePackagesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final width = MediaQuery.sizeOf(context).width;
+    final cardWidth = width >= 720 ? 248.0 : 226.0;
 
-    final int safeCount = plans.isEmpty
+    final prioritizedPlans = _prioritizePlans(plans);
+    final int safeCount = prioritizedPlans.isEmpty
         ? 0
-        : previewCount.clamp(1, plans.length).toInt();
+        : previewCount.clamp(1, prioritizedPlans.length).toInt();
 
-    final visiblePlans = plans.take(safeCount).toList();
+    final visiblePlans = prioritizedPlans.take(safeCount).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         SectionHeader(
-          title: AppLocalizations.of(context)!.home_packagesTitle,
-          subtitle: AppLocalizations.of(context)!.home_packagesSubtitle,
+          title: 'Packages preview',
+          subtitle: 'Dynamic plans published from the dashboard',
           action: TextButton(
             onPressed: onOpenSubscription,
-            child: Text(AppLocalizations.of(context)!.home_seeAll),
+            child: const Text('See all'),
           ),
         ),
         const SizedBox(height: AppLayout.spaceMd),
@@ -54,10 +56,7 @@ class HomePackagesSection extends StatelessWidget {
         ],
 
         if (visiblePlans.isEmpty)
-          _EmptyPackagesCard(
-            scheme: scheme,
-            onTap: onOpenSubscription,
-          )
+          _EmptyPackagesCard(scheme: scheme, onTap: onOpenSubscription)
         else
           SizedBox(
             height: HomePackageCard.cardHeight,
@@ -66,12 +65,12 @@ class HomePackagesSection extends StatelessWidget {
               clipBehavior: Clip.none,
               physics: const BouncingScrollPhysics(),
               itemCount: visiblePlans.length,
-              separatorBuilder: (_, __) =>
+              separatorBuilder: (_, separatorIndex) =>
                   const SizedBox(width: AppLayout.spaceMd),
               itemBuilder: (context, index) {
                 return HomePackageCard(
                   plan: visiblePlans[index],
-                  width: 210,
+                  width: cardWidth,
                   onTap: onOpenSubscription,
                 );
               },
@@ -79,6 +78,31 @@ class HomePackagesSection extends StatelessWidget {
           ),
       ],
     );
+  }
+
+  List<PackagePlanData> _prioritizePlans(List<PackagePlanData> source) {
+    const order = ['weekly', 'two', 'three', 'month'];
+    final remaining = [...source];
+    final ordered = <PackagePlanData>[];
+
+    for (final key in order) {
+      final index = remaining.indexWhere((plan) {
+        final text = '${plan.title} ${plan.subtitle}'.toLowerCase();
+        if (key == 'three') {
+          return text.contains('three') || text.contains('3 month');
+        }
+        if (key == 'month') {
+          return (text.contains('monthly') || text.contains('month')) &&
+              !text.contains('three') &&
+              !text.contains('3 month');
+        }
+        return text.contains(key);
+      });
+      if (index != -1) ordered.add(remaining.removeAt(index));
+    }
+
+    ordered.addAll(remaining);
+    return ordered;
   }
 }
 
@@ -109,10 +133,7 @@ class _ActivePackageCard extends StatelessWidget {
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: scheme.primary.withAlpha(70),
-              width: 1.3,
-            ),
+            border: Border.all(color: scheme.primary.withAlpha(70), width: 1.3),
             gradient: LinearGradient(
               colors: [
                 scheme.primary.withAlpha(20),
@@ -157,21 +178,19 @@ class _ActivePackageCard extends StatelessWidget {
                           package.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.titleSmall?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                  ),
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w900),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           package.expiryText,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: scheme.onSurface.withAlpha(145),
-                                    fontWeight: FontWeight.w600,
-                                  ),
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: scheme.onSurface.withAlpha(145),
+                                fontWeight: FontWeight.w600,
+                              ),
                         ),
                       ],
                     ),
@@ -186,17 +205,17 @@ class _ActivePackageCard extends StatelessWidget {
                     child: Text(
                       'Trips remaining',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: scheme.onSurface.withAlpha(150),
-                            fontWeight: FontWeight.w700,
-                          ),
+                        color: scheme.onSurface.withAlpha(150),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
                   Text(
                     '$remainingTrips / $totalTrips left',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurface,
-                          fontWeight: FontWeight.w900,
-                        ),
+                      color: scheme.onSurface,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ],
               ),
@@ -219,10 +238,7 @@ class _ActivePackageCard extends StatelessWidget {
 }
 
 class _EmptyPackagesCard extends StatelessWidget {
-  const _EmptyPackagesCard({
-    required this.scheme,
-    required this.onTap,
-  });
+  const _EmptyPackagesCard({required this.scheme, required this.onTap});
 
   final ColorScheme scheme;
   final VoidCallback onTap;
@@ -251,26 +267,30 @@ class _EmptyPackagesCard extends StatelessWidget {
                   color: scheme.primary.withAlpha(20),
                   shape: BoxShape.circle,
                 ),
-                child: Icon(Icons.card_membership_rounded, color: scheme.primary, size: 28),
+                child: Icon(
+                  Icons.card_membership_rounded,
+                  color: scheme.primary,
+                  size: 28,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Unlock unlimited rides',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                'Packages are not available yet',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
               const SizedBox(height: 8),
               Text(
-                'Subscribe to a package for daily commutes with great discounts.',
+                'When plans are published from the dashboard, weekly and monthly options will appear here.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurface.withAlpha(150),
-                    ),
+                  color: scheme.onSurface.withAlpha(150),
+                ),
               ),
               const SizedBox(height: 16),
               Text(
-                'Explore Packages',
+                'View packages',
                 style: TextStyle(
                   color: scheme.primary,
                   fontWeight: FontWeight.w700,

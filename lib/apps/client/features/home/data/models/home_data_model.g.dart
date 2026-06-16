@@ -54,18 +54,24 @@ Map<String, dynamic> _$HomeDataModelToJson(HomeDataModel instance) =>
 
 PopularRouteModel _$PopularRouteModelFromJson(Map<String, dynamic> json) =>
     PopularRouteModel(
+      id: json['id'] as String,
+      routeName: json['route_name'] as String,
       pickup: json['pickup'] as String,
       destination: json['destination'] as String,
       duration: json['duration'] as String,
       startingPrice: json['starting_price'] as String,
+      tripsAvailable: (json['trips_available'] as num).toInt(),
     );
 
 Map<String, dynamic> _$PopularRouteModelToJson(PopularRouteModel instance) =>
     <String, dynamic>{
+      'id': instance.id,
+      'route_name': instance.routeName,
       'pickup': instance.pickup,
       'destination': instance.destination,
       'duration': instance.duration,
       'starting_price': instance.startingPrice,
+      'trips_available': instance.tripsAvailable,
     };
 
 NearbyTripModel _$NearbyTripModelFromJson(Map<String, dynamic> json) =>

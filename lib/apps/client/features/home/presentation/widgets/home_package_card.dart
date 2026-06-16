@@ -19,7 +19,7 @@ class HomePackageCard extends StatelessWidget {
   final VoidCallback onTap;
   final double width;
 
-  static const double cardHeight = 158;
+  static const double cardHeight = 182;
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +70,7 @@ class HomePackageCard extends StatelessWidget {
                     if (plan.badge.isNotEmpty) AppBadge(text: plan.badge),
                   ],
                 ),
-                const Spacer(),
-                // Title
+                const SizedBox(height: 14),
                 Text(
                   plan.title,
                   maxLines: 1,
@@ -81,33 +80,51 @@ class HomePackageCard extends StatelessWidget {
                   ).copyWith(fontSize: 15, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 2),
-                // Subtitle
                 Text(
-                  plan.subtitle,
-                  maxLines: 1,
+                  plan.subtitle.isEmpty
+                      ? 'Flexible rides for repeat commutes.'
+                      : plan.subtitle,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTypography.caption(scheme).copyWith(
                     color: scheme.onSurface.withAlpha(140),
                     fontSize: 11.5,
+                    height: 1.25,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  plan.badge.isEmpty ? 'Savings vary by route' : plan.badge,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTypography.caption(scheme).copyWith(
+                    color: scheme.secondary,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 8),
-                // Price + CTA Arrow
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      plan.price,
-                      style: AppTextThemes.priceEmphasis(scheme).copyWith(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w800,
-                        color: scheme.primary,
+                    Expanded(
+                      child: Text(
+                        plan.price,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextThemes.priceEmphasis(scheme).copyWith(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: scheme.primary,
+                        ),
                       ),
                     ),
-                    Icon(
-                      Icons.arrow_forward_rounded,
-                      size: 16,
-                      color: scheme.primary,
+                    const SizedBox(width: 8),
+                    Text(
+                      'View plan',
+                      style: AppTypography.caption(scheme).copyWith(
+                        color: scheme.primary,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                   ],
                 ),

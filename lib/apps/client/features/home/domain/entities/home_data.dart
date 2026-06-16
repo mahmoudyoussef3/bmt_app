@@ -24,16 +24,22 @@ class HomeData {
 
 class PopularRouteData {
   const PopularRouteData({
+    required this.id,
+    required this.routeName,
     required this.pickup,
     required this.destination,
     required this.duration,
     required this.startingPrice,
+    required this.tripsAvailable,
   });
 
+  final String id;
+  final String routeName;
   final String pickup;
   final String destination;
   final String duration;
   final String startingPrice;
+  final int tripsAvailable;
 }
 
 class NearbyTripData {
