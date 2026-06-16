@@ -1,125 +1,197 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/booking/domain/entities/vehicle_detail.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_image_strip.dart';
 import 'package:bmt_app/core/theme/text_themes.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
-/// Simple vehicle card for listing screen.
-/// Focus: price, seats, ETA, rating, and main actions only.
+/// Focused trip + vehicle choice card.
+///
+/// This screen is about choosing a departure and the assigned vehicle quickly,
+/// so non-decision details such as driver profile, image gallery, and rating are
+/// intentionally omitted.
 class VehicleCompareCard extends StatelessWidget {
   const VehicleCompareCard({
     super.key,
     required this.vehicle,
-    required this.onViewDetails,
     required this.onSelect,
-    this.compact = false,
+    this.selected = false,
   });
 
   final VehicleDetailData vehicle;
-  final VoidCallback onViewDetails;
   final VoidCallback onSelect;
-  final bool compact;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final lowSeats = vehicle.availableSeats <= 4;
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: AppCard(
-        padding: EdgeInsets.zero,
-        child: Column(
-          children: [
-            _VehicleImageHeader(
-              vehicle: vehicle,
-              compact: compact,
+    return AppSurface(
+      radius: 18,
+      padding: const EdgeInsets.all(16),
+      onTap: onSelect,
+      border: Border.all(
+        color: selected ? scheme.primary : scheme.outline.withAlpha(70),
+        width: selected ? 1.4 : 1,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withAlpha(22),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(Icons.schedule_rounded, color: scheme.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${vehicle.departureTime} - ${vehicle.estimatedArrival}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      vehicle.routeDuration,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(145),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                vehicle.price,
+                style: AppTextThemes.priceEmphasis(
+                  scheme,
+                ).copyWith(fontSize: 17, height: 1.1),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          _OccupancyBlock(vehicle: vehicle),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withAlpha(45),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: scheme.outline.withAlpha(45)),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _VehicleMainInfo(vehicle: vehicle),
-                  const SizedBox(height: 12),
-                  _MainStatsRow(
-                    vehicle: vehicle,
-                    lowSeats: lowSeats,
-                  ),
-                  const SizedBox(height: 12),
-                  _DriverCompactRow(vehicle: vehicle),
-                  const SizedBox(height: 14),
-                  Row(
+            child: Row(
+              children: [
+                Icon(Icons.directions_bus_rounded, color: scheme.secondary),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: AppButton(
-                          label: 'التفاصيل',
-                          outline: true,
-                          height: 48,
-                          onPressed: onViewDetails,
+                      Text(
+                        vehicle.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        flex: 2,
-                        child: AppButton(
-                          label: 'اختيار العربية',
-                          height: 48,
-                          onPressed: onSelect,
+                      const SizedBox(height: 3),
+                      Text(
+                        '${vehicle.vehicleType} · ${vehicle.capacity} seats capacity',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurface.withAlpha(150),
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
-                ],
+                ),
+                const SizedBox(width: 8),
+                _SeatsBadge(availableSeats: vehicle.availableSeats),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          FilledButton.icon(
+            onPressed: onSelect,
+            icon: Icon(
+              selected
+                  ? Icons.check_circle_rounded
+                  : Icons.arrow_forward_rounded,
+              size: 19,
+            ),
+            label: Text(selected ? 'Selected' : 'Select trip and vehicle'),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OccupancyBlock extends StatelessWidget {
+  const _OccupancyBlock({required this.vehicle});
+
+  final VehicleDetailData vehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final occupancyPercent = (vehicle.occupancyRatio * 100).round();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Occupancy',
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurface.withAlpha(145),
+                  fontWeight: FontWeight.w800,
+                ),
               ),
+            ),
+            Text(
+              '$occupancyPercent% full',
+              style: Theme.of(
+                context,
+              ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w900),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _VehicleImageHeader extends StatelessWidget {
-  const _VehicleImageHeader({
-    required this.vehicle,
-    required this.compact,
-  });
-
-  final VehicleDetailData vehicle;
-  final bool compact;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Stack(
-      children: [
+        const SizedBox(height: 8),
         ClipRRect(
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(18),
-          ),
-          child: VehicleImageStrip(
-            labels: vehicle.imageLabels,
-            height: compact ? 118 : 132,
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: vehicle.occupancyRatio.clamp(0, 1),
+            minHeight: 8,
+            backgroundColor: scheme.surfaceContainerHighest,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              vehicle.availableSeats <= 4 ? scheme.tertiary : scheme.primary,
+            ),
           ),
         ),
-        PositionedDirectional(
-          top: 10,
-          end: 10,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: scheme.surface.withAlpha(235),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              vehicle.price,
-              style: AppTextThemes.priceEmphasis(scheme).copyWith(
-                fontSize: 14,
-              ),
-            ),
+        const SizedBox(height: 8),
+        Text(
+          '${vehicle.availableSeats} available · ${vehicle.occupiedSeats} booked',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: scheme.onSurface.withAlpha(150),
+            fontWeight: FontWeight.w700,
           ),
         ),
       ],
@@ -127,175 +199,28 @@ class _VehicleImageHeader extends StatelessWidget {
   }
 }
 
-class _VehicleMainInfo extends StatelessWidget {
-  const _VehicleMainInfo({required this.vehicle});
+class _SeatsBadge extends StatelessWidget {
+  const _SeatsBadge({required this.availableSeats});
 
-  final VehicleDetailData vehicle;
+  final int availableSeats;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                vehicle.name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                vehicle.model,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface.withAlpha(150),
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 10),
-        StatusChip(label: vehicle.vehicleType),
-      ],
-    );
-  }
-}
-
-class _MainStatsRow extends StatelessWidget {
-  const _MainStatsRow({
-    required this.vehicle,
-    required this.lowSeats,
-  });
-
-  final VehicleDetailData vehicle;
-  final bool lowSeats;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: _StatTile(
-            icon: Icons.schedule_rounded,
-            label: 'المدة',
-            value: vehicle.routeDuration,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _StatTile(
-            icon: Icons.event_seat_rounded,
-            label: 'المقاعد',
-            value: lowSeats
-                ? '${vehicle.availableSeats} فقط'
-                : '${vehicle.availableSeats} متاح',
-            warning: lowSeats,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _StatTile(
-            icon: Icons.near_me_rounded,
-            label: 'الوصول',
-            value: vehicle.estimatedArrival,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _StatTile extends StatelessWidget {
-  const _StatTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.warning = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final bool warning;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = warning ? scheme.tertiary : scheme.primary;
+    final lowSeats = availableSeats <= 4;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 9),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withAlpha(45)),
+        color: (lowSeats ? scheme.tertiary : scheme.primary).withAlpha(18),
+        borderRadius: BorderRadius.circular(999),
       ),
-      child: Column(
-        children: [
-          Icon(icon, size: 17, color: color),
-          const SizedBox(height: 5),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurface.withAlpha(135),
-                  fontSize: 11,
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DriverCompactRow extends StatelessWidget {
-  const _DriverCompactRow({required this.vehicle});
-
-  final VehicleDetailData vehicle;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(70),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          AppAvatar(initials: vehicle.driverInitials, radius: 20),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              vehicle.driverName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-          ),
-        ],
+      child: Text(
+        '$availableSeats seats',
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: lowSeats ? scheme.tertiary : scheme.primary,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }

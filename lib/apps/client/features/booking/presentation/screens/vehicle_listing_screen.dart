@@ -6,19 +6,12 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/vehicle_det
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_compare_card.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
-/// شاشة اختيار العربية.
-///
-/// UX notes:
-/// - الشاشة مقصودة تكون هادية وبسيطة.
-/// - لا يوجد Hero كبير أو كلام تسويقي زائد.
-/// - التركيز الأساسي على كروت العربيات نفسها.
-/// - كل النصوص بالعربي.
+/// Trip and vehicle selection screen.
 class VehicleListingScreen extends StatefulWidget {
   const VehicleListingScreen({super.key});
 
@@ -39,26 +32,28 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
 
     if (_didLoad) return;
     _didLoad = true;
-    context.read<BookingCubit>().loadVehicles(sort: _sort, routeId: _query.routeId);
-  }
-
-  void _openDetails(VehicleDetailData vehicle) {
-    Navigator.pushNamed(
-      context,
-      BookingRoutes.vehicleDetails,
-      arguments: {'vehicleId': vehicle.id, ..._query.toArguments()},
+    context.read<BookingCubit>().loadVehicles(
+      sort: _sort,
+      routeId: _query.routeId,
     );
   }
 
   void _selectVehicle(VehicleDetailData vehicle) {
     setState(() => _selectedVehicleId = vehicle.id);
-    Navigator.pushNamed(context, '/seat-selection', arguments: {'tripId': vehicle.id});
+    Navigator.pushNamed(
+      context,
+      '/seat-selection',
+      arguments: {'tripId': vehicle.id, ..._query.toArguments()},
+    );
   }
 
   void _selectSort(VehicleSortOption option) {
     if (_sort == option) return;
     setState(() => _sort = option);
-    context.read<BookingCubit>().loadVehicles(sort: option, routeId: _query.routeId);
+    context.read<BookingCubit>().loadVehicles(
+      sort: option,
+      routeId: _query.routeId,
+    );
   }
 
   @override
@@ -72,17 +67,18 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
               : <VehicleDetailData>[];
 
           return BookingFlowScaffold(
-            title: AppLocalizations.of(context)!.booking_selectVehicle,
+            title: 'Choose trip and vehicle',
             query: _query,
             body: _VehicleListingBody(
               state: state,
               vehicles: vehicles,
               sort: _sort,
               selectedVehicleId: _selectedVehicleId,
-              onRetry: () =>
-                  context.read<BookingCubit>().loadVehicles(sort: _sort, routeId: _query.routeId),
+              onRetry: () => context.read<BookingCubit>().loadVehicles(
+                sort: _sort,
+                routeId: _query.routeId,
+              ),
               onSort: _selectSort,
-              onOpenDetails: _openDetails,
               onSelect: _selectVehicle,
             ),
           );
@@ -100,7 +96,6 @@ class _VehicleListingBody extends StatelessWidget {
     required this.selectedVehicleId,
     required this.onRetry,
     required this.onSort,
-    required this.onOpenDetails,
     required this.onSelect,
   });
 
@@ -110,7 +105,6 @@ class _VehicleListingBody extends StatelessWidget {
   final String? selectedVehicleId;
   final VoidCallback onRetry;
   final ValueChanged<VehicleSortOption> onSort;
-  final ValueChanged<VehicleDetailData> onOpenDetails;
   final ValueChanged<VehicleDetailData> onSelect;
 
   @override
@@ -154,8 +148,8 @@ class _VehicleListingBody extends StatelessWidget {
           selected: selected,
           child: VehicleCompareCard(
             vehicle: vehicle,
-            onViewDetails: () => onOpenDetails(vehicle),
             onSelect: () => onSelect(vehicle),
+            selected: selected,
           ),
         );
       },
@@ -195,18 +189,18 @@ class _CompactHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(context)!.booking_availableVehicles,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                  'Available trips',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  AppLocalizations.of(context)!.booking_availableOptions(vehiclesCount),
+                  '$vehiclesCount trip options with assigned vehicles',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(150),
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: scheme.onSurface.withAlpha(150),
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -226,9 +220,9 @@ class _SortBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final options = [
-      (VehicleSortOption.recommended, AppLocalizations.of(context)!.booking_sortRecommended, Icons.auto_awesome_rounded),
-      (VehicleSortOption.priceLow, AppLocalizations.of(context)!.booking_sortPriceLow, Icons.payments_rounded),
-      (VehicleSortOption.rating, AppLocalizations.of(context)!.booking_sortRating, Icons.star_rounded),
+      (VehicleSortOption.recommended, 'Earliest', Icons.schedule_rounded),
+      (VehicleSortOption.priceLow, 'Lowest price', Icons.payments_rounded),
+      (VehicleSortOption.seats, 'Most seats', Icons.event_seat_rounded),
     ];
 
     return SingleChildScrollView(
@@ -293,9 +287,9 @@ class _SortChip extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: active ? scheme.primary : scheme.onSurface,
-                    fontWeight: active ? FontWeight.w900 : FontWeight.w700,
-                  ),
+                color: active ? scheme.primary : scheme.onSurface,
+                fontWeight: active ? FontWeight.w900 : FontWeight.w700,
+              ),
             ),
           ],
         ),
@@ -345,9 +339,9 @@ class _BookingLoadingState extends StatelessWidget {
             Text(
               AppLocalizations.of(context)!.booking_searchingBestOptions,
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
           ],
         ),
@@ -378,18 +372,18 @@ class _BookingErrorState extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 AppLocalizations.of(context)!.booking_errorLoadingVehicles,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.6,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(height: 1.6),
               ),
               const SizedBox(height: 14),
               FilledButton.icon(
@@ -430,18 +424,18 @@ class _BookingEmptyState extends StatelessWidget {
               const SizedBox(height: 12),
               Text(
                 AppLocalizations.of(context)!.booking_noVehiclesAvailable,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 AppLocalizations.of(context)!.booking_noVehiclesDesc,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      height: 1.6,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(height: 1.6),
               ),
               const SizedBox(height: 14),
               FilledButton.icon(
