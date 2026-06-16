@@ -75,6 +75,21 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final viewport = MediaQuery.sizeOf(context);
+    final dialogWidth = (viewport.width - 48).clamp(340.0, 620.0);
+    final dialogHeight = (viewport.height - 96).clamp(420.0, 560.0);
+    if (widget.trip.routePoints.length < 2) {
+      return AlertDialog(
+        title: const Text('تعذر تعديل التسعير'),
+        content: const Text('يجب أن يحتوي المسار على نقطتين على الأقل.'),
+        actions: [
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('إغلاق'),
+          ),
+        ],
+      );
+    }
     final availableToPoints = widget.trip.routePoints
         .where((point) => point.order > fromPoint.order)
         .toList();
@@ -82,120 +97,197 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
       toPoint = availableToPoints.first;
     }
 
-    return SizedBox(
-      width: 620,
-      height: 500,
-      child: AlertDialog(
-        title: Text(widget.pricing == null ? 'إضافة تسعير' : 'تعديل التسعير'),
-        content: SizedBox(
-          width: 620,
-          height: 400,
-          child: SingleChildScrollView(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: DropdownButtonFormField<TripRoutePoint>(
-                        initialValue: fromPoint,
-                        decoration: const InputDecoration(labelText: 'من نقطة'),
-                        items: widget.trip.routePoints
-                            .where(
-                              (point) =>
-                                  point.order <
-                                  widget.trip.routePoints.last.order,
-                            )
-                            .map(
-                              (point) => DropdownMenuItem(
-                                value: point,
-                                child: Text(point.name),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (next) {
-                          if (next == null) return;
-                          setState(() {
-                            fromPoint = next;
-                            final nextToPoints = widget.trip.routePoints
-                                .where((point) => point.order > fromPoint.order)
-                                .toList();
-                            toPoint = nextToPoints.first;
-                          });
-                        },
+    return Dialog(
+      insetPadding: const EdgeInsets.all(24),
+      child: SizedBox(
+        width: dialogWidth,
+        height: dialogHeight,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.medium,
+                AppSpacing.medium,
+                AppSpacing.medium,
+                AppSpacing.small,
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.pricing == null ? 'إضافة تسعير' : 'تعديل التسعير',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(
-                      child: DropdownButtonFormField<TripRoutePoint>(
-                        key: ValueKey(fromPoint.id),
-                        initialValue: toPoint,
-                        decoration: const InputDecoration(
-                          labelText: 'إلى نقطة',
-                        ),
-                        items: availableToPoints
-                            .map(
-                              (point) => DropdownMenuItem(
-                                value: point,
-                                child: Text(point.name),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: (next) =>
-                            setState(() => toPoint = next ?? toPoint),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.small),
-                _PriceFields(
-                  oneTime: oneTime,
-                  fiveDays: fiveDays,
-                  tenDays: tenDays,
-                  monthly: monthly,
-                  threeMonths: threeMonths,
-                ),
-                const SizedBox(height: AppSpacing.small),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextField(
-                        controller: currency,
-                        decoration: const InputDecoration(labelText: 'العملة'),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.medium),
-                    SwitchListTile(
-                      value: isActive,
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(isActive ? 'نشط' : 'غير نشط'),
-                      onChanged: (value) => setState(() => isActive = value),
-                    ),
-                  ],
-                ),
-                if (error.isNotEmpty) ...[
-                  const SizedBox(height: AppSpacing.small),
-                  Text(
-                    error,
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodyMedium?.copyWith(color: scheme.error),
+                  ),
+                  IconButton(
+                    onPressed: saving
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    icon: const Icon(Icons.close_rounded),
+                    tooltip: 'إغلاق',
                   ),
                 ],
-              ],
+              ),
             ),
-          ),
+            Divider(height: 1, color: scheme.outline.withAlpha(60)),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppSpacing.medium),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final fieldWidth = constraints.maxWidth >= 520
+                            ? (constraints.maxWidth - AppSpacing.small) / 2
+                            : constraints.maxWidth;
+                        return Wrap(
+                          spacing: AppSpacing.small,
+                          runSpacing: AppSpacing.small,
+                          children: [
+                            SizedBox(
+                              width: fieldWidth,
+                              child: DropdownButtonFormField<TripRoutePoint>(
+                                initialValue: fromPoint,
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'من نقطة',
+                                ),
+                                items: widget.trip.routePoints
+                                    .where(
+                                      (point) =>
+                                          point.order <
+                                          widget.trip.routePoints.last.order,
+                                    )
+                                    .map(
+                                      (point) => DropdownMenuItem(
+                                        value: point,
+                                        child: Text(
+                                          point.name,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (next) {
+                                  if (next == null) return;
+                                  setState(() {
+                                    fromPoint = next;
+                                    final nextToPoints = widget.trip.routePoints
+                                        .where(
+                                          (point) =>
+                                              point.order > fromPoint.order,
+                                        )
+                                        .toList();
+                                    toPoint = nextToPoints.first;
+                                  });
+                                },
+                              ),
+                            ),
+                            SizedBox(
+                              width: fieldWidth,
+                              child: DropdownButtonFormField<TripRoutePoint>(
+                                key: ValueKey(fromPoint.id),
+                                initialValue: toPoint,
+                                isExpanded: true,
+                                decoration: const InputDecoration(
+                                  labelText: 'إلى نقطة',
+                                ),
+                                items: availableToPoints
+                                    .map(
+                                      (point) => DropdownMenuItem(
+                                        value: point,
+                                        child: Text(
+                                          point.name,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (next) =>
+                                    setState(() => toPoint = next ?? toPoint),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: AppSpacing.medium),
+                    _PriceFields(
+                      oneTime: oneTime,
+                      fiveDays: fiveDays,
+                      tenDays: tenDays,
+                      monthly: monthly,
+                      threeMonths: threeMonths,
+                    ),
+                    const SizedBox(height: AppSpacing.medium),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final compact = constraints.maxWidth < 520;
+                        final currencyField = TextField(
+                          controller: currency,
+                          decoration: const InputDecoration(
+                            labelText: 'العملة',
+                          ),
+                        );
+                        final activeSwitch = SwitchListTile(
+                          value: isActive,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(isActive ? 'نشط' : 'غير نشط'),
+                          onChanged: (value) =>
+                              setState(() => isActive = value),
+                        );
+                        if (compact) {
+                          return Column(
+                            children: [currencyField, activeSwitch],
+                          );
+                        }
+                        return Row(
+                          children: [
+                            Expanded(child: currencyField),
+                            const SizedBox(width: AppSpacing.medium),
+                            SizedBox(width: 180, child: activeSwitch),
+                          ],
+                        );
+                      },
+                    ),
+                    if (error.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.small),
+                      Text(
+                        error,
+                        style: Theme.of(
+                          context,
+                        ).textTheme.bodyMedium?.copyWith(color: scheme.error),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            ),
+            Divider(height: 1, color: scheme.outline.withAlpha(60)),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.medium),
+              child: Row(
+                children: [
+                  TextButton(
+                    onPressed: saving
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    child: const Text('إلغاء'),
+                  ),
+                  const Spacer(),
+                  FilledButton(
+                    onPressed: saving ? null : _save,
+                    child: Text(saving ? 'جار الحفظ' : 'حفظ'),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: saving ? null : () => Navigator.of(context).pop(),
-            child: const Text('إلغاء'),
-          ),
-          FilledButton(
-            onPressed: saving ? null : _save,
-            child: Text(saving ? 'جار الحفظ' : 'حفظ'),
-          ),
-        ],
       ),
     );
   }

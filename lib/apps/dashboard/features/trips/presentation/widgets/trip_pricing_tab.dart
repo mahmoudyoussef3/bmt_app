@@ -110,7 +110,7 @@ class _TripPricingTabState extends State<TripPricingTab> {
       builder: (_) => BlocProvider.value(
         value: context.read<TripPricingCubit>(),
         child: Directionality(
-          textDirection: TextDirection.ltr,
+          textDirection: TextDirection.rtl,
           child: TripPricingEditorDialog(trip: widget.trip, pricing: pricing),
         ),
       ),

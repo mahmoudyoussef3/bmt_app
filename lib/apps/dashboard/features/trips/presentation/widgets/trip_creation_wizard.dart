@@ -241,16 +241,19 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final viewport = MediaQuery.sizeOf(context);
+    final dialogWidth = (viewport.width - 48).clamp(360.0, 1100.0);
+    final dialogHeight = (viewport.height - 48).clamp(520.0, 780.0);
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 40, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
       backgroundColor: scheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
       ),
       child: SizedBox(
-        width: 1100,
-        height: 780,
+        width: dialogWidth,
+        height: dialogHeight,
         child: Column(
           children: [
             // Header
@@ -373,108 +376,119 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: AppSpacing.medium),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: widget.routes.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: AppSpacing.medium,
-            mainAxisSpacing: AppSpacing.medium,
-            mainAxisExtent: 140,
-          ),
-          itemBuilder: (context, index) {
-            final route = widget.routes[index];
-            final selected = _selectedRoute?.id == route.id;
-            return InkWell(
-              onTap: () {
-                setState(() {
-                  _selectedRoute = route;
-                  _initializeWizardData();
-                });
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: selected
-                      ? scheme.primaryContainer.withAlpha(40)
-                      : scheme.surface,
-                  border: Border.all(
-                    color: selected
-                        ? scheme.primary
-                        : scheme.outline.withAlpha(60),
-                    width: selected ? 2 : 1,
-                  ),
-                  borderRadius: BorderRadius.circular(AppTokens.radius),
-                ),
-                padding: const EdgeInsets.all(AppSpacing.medium),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            route.name,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: selected ? scheme.primary : null,
-                                ),
-                          ),
-                          const SizedBox(height: AppSpacing.xSmall),
-                          Text(
-                            'البداية: ${route.startCity} • النهاية: ${route.endCity}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const Spacer(),
-                          Row(
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 760 ? 2 : 1;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: widget.routes.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: AppSpacing.medium,
+                mainAxisSpacing: AppSpacing.medium,
+                mainAxisExtent: 140,
+              ),
+              itemBuilder: (context, index) {
+                final route = widget.routes[index];
+                final selected = _selectedRoute?.id == route.id;
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedRoute = route;
+                      _initializeWizardData();
+                    });
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? scheme.primaryContainer.withAlpha(40)
+                          : scheme.surface,
+                      border: Border.all(
+                        color: selected
+                            ? scheme.primary
+                            : scheme.outline.withAlpha(60),
+                        width: selected ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
+                    ),
+                    padding: const EdgeInsets.all(AppSpacing.medium),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Icon(
-                                Icons.location_on_outlined,
-                                size: 14,
-                                color: scheme.primary,
-                              ),
-                              const SizedBox(width: 4),
                               Text(
-                                '${route.stations.length} محطات',
-                                style: Theme.of(context).textTheme.labelSmall,
+                                route.name,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: selected ? scheme.primary : null,
+                                    ),
                               ),
-                              const SizedBox(width: AppSpacing.medium),
-                              Icon(
-                                Icons.directions_car_outlined,
-                                size: 14,
-                                color: scheme.secondary,
-                              ),
-                              const SizedBox(width: 4),
+                              const SizedBox(height: AppSpacing.xSmall),
                               Text(
-                                route.distance,
-                                style: Theme.of(context).textTheme.labelSmall,
+                                'البداية: ${route.startCity} • النهاية: ${route.endCity}',
+                                style: Theme.of(context).textTheme.bodySmall,
                               ),
-                              const SizedBox(width: AppSpacing.medium),
-                              Icon(
-                                Icons.access_time,
-                                size: 14,
-                                color: scheme.tertiary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                route.duration,
-                                style: Theme.of(context).textTheme.labelSmall,
+                              const Spacer(),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.location_on_outlined,
+                                    size: 14,
+                                    color: scheme.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    '${route.stations.length} محطات',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.labelSmall,
+                                  ),
+                                  const SizedBox(width: AppSpacing.medium),
+                                  Icon(
+                                    Icons.directions_car_outlined,
+                                    size: 14,
+                                    color: scheme.secondary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    route.distance,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.labelSmall,
+                                  ),
+                                  const SizedBox(width: AppSpacing.medium),
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 14,
+                                    color: scheme.tertiary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    route.duration,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.labelSmall,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
+                        ),
+                        if (selected)
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: scheme.primary,
+                            size: 28,
+                          ),
+                      ],
                     ),
-                    if (selected)
-                      Icon(
-                        Icons.check_circle_rounded,
-                        color: scheme.primary,
-                        size: 28,
-                      ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             );
           },
         ),
@@ -493,101 +507,113 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: AppSpacing.medium),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: widget.vehicles.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: AppSpacing.medium,
-            mainAxisSpacing: AppSpacing.medium,
-            mainAxisExtent: 150,
-          ),
-          itemBuilder: (context, index) {
-            final vehicle = widget.vehicles[index];
-            final selected = _selectedVehicle?.id == vehicle.id;
-            return InkWell(
-              onTap: () {
-                setState(() {
-                  _selectedVehicle = vehicle;
-                  // If selected driver is assigned to another vehicle, reset
-                  if (_selectedDriver != null &&
-                      _selectedDriver!.currentVehicle != vehicle.plateNumber) {
-                    _selectedDriver = null;
-                  }
-                });
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: selected
-                      ? scheme.primaryContainer.withAlpha(40)
-                      : scheme.surface,
-                  border: Border.all(
-                    color: selected
-                        ? scheme.primary
-                        : scheme.outline.withAlpha(60),
-                    width: selected ? 2 : 1,
-                  ),
-                  borderRadius: BorderRadius.circular(AppTokens.radius),
-                ),
-                padding: const EdgeInsets.all(AppSpacing.medium),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Text(
-                                vehicle.model,
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: selected ? scheme.primary : null,
-                                    ),
-                              ),
-                              const SizedBox(width: AppSpacing.small),
-                              StatusChip(label: vehicle.status.label),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.xSmall),
-                          Text(
-                            'رقم اللوحة: ${vehicle.plateNumber}',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                          Text(
-                            'النوع: ${vehicle.type}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const Spacer(),
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.airline_seat_recline_normal,
-                                size: 16,
-                                color: scheme.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                'السعة: ${vehicle.capacity} مقعد',
-                                style: Theme.of(context).textTheme.bodyMedium
-                                    ?.copyWith(fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (selected)
-                      Icon(
-                        Icons.check_circle_rounded,
-                        color: scheme.primary,
-                        size: 28,
-                      ),
-                  ],
-                ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 760 ? 2 : 1;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: widget.vehicles.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: AppSpacing.medium,
+                mainAxisSpacing: AppSpacing.medium,
+                mainAxisExtent: 150,
               ),
+              itemBuilder: (context, index) {
+                final vehicle = widget.vehicles[index];
+                final selected = _selectedVehicle?.id == vehicle.id;
+                return InkWell(
+                  onTap: () {
+                    setState(() {
+                      _selectedVehicle = vehicle;
+                      // If selected driver is assigned to another vehicle, reset
+                      if (_selectedDriver != null &&
+                          _selectedDriver!.currentVehicle !=
+                              vehicle.plateNumber) {
+                        _selectedDriver = null;
+                      }
+                    });
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? scheme.primaryContainer.withAlpha(40)
+                          : scheme.surface,
+                      border: Border.all(
+                        color: selected
+                            ? scheme.primary
+                            : scheme.outline.withAlpha(60),
+                        width: selected ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
+                    ),
+                    padding: const EdgeInsets.all(AppSpacing.medium),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    vehicle.model,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: selected
+                                              ? scheme.primary
+                                              : null,
+                                        ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.small),
+                                  StatusChip(label: vehicle.status.label),
+                                ],
+                              ),
+                              const SizedBox(height: AppSpacing.xSmall),
+                              Text(
+                                'رقم اللوحة: ${vehicle.plateNumber}',
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                              Text(
+                                'النوع: ${vehicle.type}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const Spacer(),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.airline_seat_recline_normal,
+                                    size: 16,
+                                    color: scheme.primary,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    'السعة: ${vehicle.capacity} مقعد',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodyMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (selected)
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: scheme.primary,
+                            size: 28,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),
@@ -610,90 +636,95 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: AppSpacing.medium),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: availableDrivers.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: AppSpacing.medium,
-            mainAxisSpacing: AppSpacing.medium,
-            mainAxisExtent: 140,
-          ),
-          itemBuilder: (context, index) {
-            final driver = availableDrivers[index];
-            final selected = _selectedDriver?.id == driver.id;
-            return InkWell(
-              onTap: () {
-                setState(() => _selectedDriver = driver);
-              },
-              child: Container(
-                decoration: BoxDecoration(
-                  color: selected
-                      ? scheme.primaryContainer.withAlpha(40)
-                      : scheme.surface,
-                  border: Border.all(
-                    color: selected
-                        ? scheme.primary
-                        : scheme.outline.withAlpha(60),
-                    width: selected ? 2 : 1,
-                  ),
-                  borderRadius: BorderRadius.circular(AppTokens.radius),
-                ),
-                padding: const EdgeInsets.all(AppSpacing.medium),
-                child: Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 24,
-                      backgroundColor: scheme.primary.withAlpha(30),
-                      child: Text(
-                        driver.avatarInitials,
-                        style: TextStyle(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.medium),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            driver.name,
-                            style: Theme.of(context).textTheme.titleMedium
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                  color: selected ? scheme.primary : null,
-                                ),
-                          ),
-                          Text(
-                            'رقم الهاتف: ${driver.phone}',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                          const Spacer(),
-                          Text(
-                            'المركبة الحالية: ${driver.currentVehicle}',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                          Text(
-                            'آخر رحلة: ${driver.currentRoute}',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: scheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                    ),
-                    if (selected)
-                      Icon(
-                        Icons.check_circle_rounded,
-                        color: scheme.primary,
-                        size: 28,
-                      ),
-                  ],
-                ),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 760 ? 2 : 1;
+            return GridView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: availableDrivers.length,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: columns,
+                crossAxisSpacing: AppSpacing.medium,
+                mainAxisSpacing: AppSpacing.medium,
+                mainAxisExtent: 140,
               ),
+              itemBuilder: (context, index) {
+                final driver = availableDrivers[index];
+                final selected = _selectedDriver?.id == driver.id;
+                return InkWell(
+                  onTap: () {
+                    setState(() => _selectedDriver = driver);
+                  },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: selected
+                          ? scheme.primaryContainer.withAlpha(40)
+                          : scheme.surface,
+                      border: Border.all(
+                        color: selected
+                            ? scheme.primary
+                            : scheme.outline.withAlpha(60),
+                        width: selected ? 2 : 1,
+                      ),
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
+                    ),
+                    padding: const EdgeInsets.all(AppSpacing.medium),
+                    child: Row(
+                      children: [
+                        CircleAvatar(
+                          radius: 24,
+                          backgroundColor: scheme.primary.withAlpha(30),
+                          child: Text(
+                            driver.avatarInitials,
+                            style: TextStyle(
+                              color: scheme.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.medium),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                driver.name,
+                                style: Theme.of(context).textTheme.titleMedium
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: selected ? scheme.primary : null,
+                                    ),
+                              ),
+                              Text(
+                                'رقم الهاتف: ${driver.phone}',
+                                style: Theme.of(context).textTheme.bodySmall,
+                              ),
+                              const Spacer(),
+                              Text(
+                                'المركبة الحالية: ${driver.currentVehicle}',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                              Text(
+                                'آخر رحلة: ${driver.currentRoute}',
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (selected)
+                          Icon(
+                            Icons.check_circle_rounded,
+                            color: scheme.primary,
+                            size: 28,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              },
             );
           },
         ),
@@ -737,79 +768,91 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: AppSpacing.medium),
-        Row(
-          children: [
-            Expanded(
-              child: TextField(
-                controller: _dateController,
-                readOnly: true,
-                onTap: () async {
-                  final date = await showDatePicker(
-                    context: context,
-                    initialDate: DateTime.now(),
-                    firstDate: DateTime.now(),
-                    lastDate: DateTime.now().add(const Duration(days: 365)),
-                  );
-                  if (date != null) {
-                    _dateController.text =
-                        '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
-                    setState(() {});
-                  }
-                },
-                decoration: const InputDecoration(
-                  labelText: 'تاريخ الرحلة',
-                  hintText: 'YYYY-MM-DD',
-                  prefixIcon: Icon(Icons.calendar_today_rounded),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final fieldWidth = constraints.maxWidth >= 840
+                ? (constraints.maxWidth - AppSpacing.medium * 2) / 3
+                : constraints.maxWidth >= 560
+                ? (constraints.maxWidth - AppSpacing.medium) / 2
+                : constraints.maxWidth;
+            return Wrap(
+              spacing: AppSpacing.medium,
+              runSpacing: AppSpacing.medium,
+              children: [
+                SizedBox(
+                  width: fieldWidth,
+                  child: TextField(
+                    controller: _dateController,
+                    readOnly: true,
+                    onTap: () async {
+                      final date = await showDatePicker(
+                        context: context,
+                        initialDate: DateTime.now(),
+                        firstDate: DateTime.now(),
+                        lastDate: DateTime.now().add(const Duration(days: 365)),
+                      );
+                      if (date != null) {
+                        _dateController.text =
+                            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+                        setState(() {});
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'تاريخ الرحلة',
+                      hintText: 'YYYY-MM-DD',
+                      prefixIcon: Icon(Icons.calendar_today_rounded),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.medium),
-            Expanded(
-              child: TextField(
-                controller: _timeController,
-                readOnly: true,
-                onTap: () async {
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.now(),
-                  );
-                  if (time != null) {
-                    _timeController.text =
-                        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
-                    setState(() {});
-                  }
-                },
-                decoration: const InputDecoration(
-                  labelText: 'وقت الانطلاق',
-                  hintText: 'HH:MM:SS',
-                  prefixIcon: Icon(Icons.access_time_rounded),
+                SizedBox(
+                  width: fieldWidth,
+                  child: TextField(
+                    controller: _timeController,
+                    readOnly: true,
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.now(),
+                      );
+                      if (time != null) {
+                        _timeController.text =
+                            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
+                        setState(() {});
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'وقت الانطلاق',
+                      hintText: 'HH:MM:SS',
+                      prefixIcon: Icon(Icons.access_time_rounded),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.medium),
-            Expanded(
-              child: TextField(
-                controller: _arrivalController,
-                readOnly: true,
-                onTap: () async {
-                  final time = await showTimePicker(
-                    context: context,
-                    initialTime: TimeOfDay.now(),
-                  );
-                  if (time != null) {
-                    _arrivalController.text =
-                        '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
-                    setState(() {});
-                  }
-                },
-                decoration: const InputDecoration(
-                  labelText: 'وقت الوصول',
-                  hintText: 'HH:MM:SS',
-                  prefixIcon: Icon(Icons.flag_rounded),
+                SizedBox(
+                  width: fieldWidth,
+                  child: TextField(
+                    controller: _arrivalController,
+                    readOnly: true,
+                    onTap: () async {
+                      final time = await showTimePicker(
+                        context: context,
+                        initialTime: TimeOfDay.now(),
+                      );
+                      if (time != null) {
+                        _arrivalController.text =
+                            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
+                        setState(() {});
+                      }
+                    },
+                    decoration: const InputDecoration(
+                      labelText: 'وقت الوصول',
+                      hintText: 'HH:MM:SS',
+                      prefixIcon: Icon(Icons.flag_rounded),
+                    ),
+                  ),
                 ),
-              ),
-            ),
-          ],
+              ],
+            );
+          },
         ),
         const SizedBox(height: AppSpacing.large),
         Text(
@@ -939,9 +982,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           padding: const EdgeInsets.all(32.0),
           child: Text(
             'عفواً، هذا المسار لا يحتوي على نقاط وقوف كافية (يجب أن يحتوي على محطتين على الأقل) لإعداد التسعير. يرجى تعديل المسار أو اختيار مسار آخر.',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-              color: scheme.error,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(color: scheme.error),
             textAlign: TextAlign.center,
           ),
         ),
@@ -979,7 +1022,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           child: Table(
-            defaultColumnWidth: const FixedColumnWidth(130),
+            defaultColumnWidth: const IntrinsicColumnWidth(),
             border: TableBorder.all(color: scheme.outline.withAlpha(50)),
             children: [
               // Header Row
