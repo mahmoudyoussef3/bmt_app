@@ -240,7 +240,7 @@ void _registerIncidentsDependencies() {
 void _registerCheckInDependencies() {
   if (!captainGetIt.isRegistered<CheckInDataSource>()) {
     captainGetIt.registerLazySingleton<CheckInDataSource>(
-      () => const CheckInDataSource(),
+      () => CheckInDataSource(captainGetIt<SupabaseClient>()),
     );
   }
   if (!captainGetIt.isRegistered<CheckInRepository>()) {

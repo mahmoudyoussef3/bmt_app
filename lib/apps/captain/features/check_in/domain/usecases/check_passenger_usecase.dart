@@ -8,12 +8,12 @@ class CheckPassengerUseCase {
 
   Future<CheckInResult> call({
     required String tripId,
-    required String passengerId,
+    required String bookingId,
     required CheckInStatus status,
   }) {
     return _repository.checkPassenger(
       tripId: tripId,
-      passengerId: passengerId,
+      bookingId: bookingId,
       status: status,
     );
   }

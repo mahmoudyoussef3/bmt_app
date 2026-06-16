@@ -149,9 +149,11 @@ class TripExecutionPage extends StatelessWidget {
 
   String _statusLabel(TripExecutionStatus status) {
     return switch (status) {
-      TripExecutionStatus.scheduled => 'Scheduled',
+      TripExecutionStatus.scheduled  => 'Scheduled',
+      TripExecutionStatus.boarding   => 'Boarding',
       TripExecutionStatus.inProgress => 'In Progress',
-      TripExecutionStatus.completed => 'Completed',
+      TripExecutionStatus.completed  => 'Completed',
+      TripExecutionStatus.cancelled  => 'Cancelled',
     };
   }
 }

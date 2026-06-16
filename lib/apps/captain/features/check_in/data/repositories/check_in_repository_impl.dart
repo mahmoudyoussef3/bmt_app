@@ -10,12 +10,12 @@ class CheckInRepositoryImpl implements CheckInRepository {
   @override
   Future<CheckInResult> checkPassenger({
     required String tripId,
-    required String passengerId,
+    required String bookingId,
     required CheckInStatus status,
   }) async {
     return (await _dataSource.checkPassenger(
       tripId: tripId,
-      passengerId: passengerId,
+      bookingId: bookingId,
       status: status,
     )).toEntity();
   }

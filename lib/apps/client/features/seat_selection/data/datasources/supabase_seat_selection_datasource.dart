@@ -116,6 +116,61 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
   }
 
   @override
+  Future<Map<String, dynamic>> lockTripSeat({
+    required String tripId,
+    required String seatId,
+  }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    try {
+      final response = await _supabase.rpc('lock_trip_seat', params: {
+        'p_trip_id':   tripId,
+        'p_seat_id':   seatId,
+        'p_client_id': user.id,
+      });
+      return Map<String, dynamic>.from(response as Map);
+    } on PostgrestException catch (e) {
+      if (e.message.contains('seat_unavailable')) {
+        throw Exception('seat_unavailable');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> confirmSeatBooking(
+    Map<String, dynamic> params,
+  ) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final rpcParams = Map<String, dynamic>.from(params);
+    rpcParams['p_client_id'] = user.id;
+
+    try {
+      final response = await _supabase.rpc(
+        'confirm_seat_booking',
+        params: rpcParams,
+      );
+      return Map<String, dynamic>.from(response as Map);
+    } on PostgrestException catch (e) {
+      if (e.message.contains('lock_expired')) {
+        throw Exception('lock_expired');
+      }
+      if (e.message.contains('seat_not_locked') ||
+          e.message.contains('seat_locked_by_other')) {
+        throw Exception('seat_unavailable');
+      }
+      if (e.message.contains('trip_full')) {
+        throw Exception('trip_full');
+      }
+      rethrow;
+    }
+  }
+
+  @override
+  @Deprecated('Use lockTripSeat + confirmSeatBooking instead')
   Future<String> bookTripSeat(Map<String, dynamic> params) async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('User not logged in');

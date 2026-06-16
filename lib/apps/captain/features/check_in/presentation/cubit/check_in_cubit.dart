@@ -11,7 +11,7 @@ class CheckInCubit extends Cubit<CheckInState> {
 
   Future<void> check({
     required String tripId,
-    required String passengerId,
+    required String bookingId,
     required CheckInStatus status,
   }) async {
     emit(const CheckInLoading());
@@ -20,7 +20,7 @@ class CheckInCubit extends Cubit<CheckInState> {
         CheckInReady(
           result: await _checkPassenger(
             tripId: tripId,
-            passengerId: passengerId,
+            bookingId: bookingId,
             status: status,
           ),
         ),

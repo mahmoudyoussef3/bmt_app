@@ -8,8 +8,16 @@ class TripExecutionDataSource {
 
   final SupabaseClient _supabase;
 
+  Future<TripExecutionModel> startBoarding(String tripId) async {
+    await _transitionStatus(tripId, 'boarding');
+    return TripExecutionModel(
+      tripId: tripId,
+      status: TripExecutionStatus.boarding,
+    );
+  }
+
   Future<TripExecutionModel> startTrip(String tripId) async {
-    await _updateTripStatus(tripId, 'in_progress', 'بدأ السائق الرحلة');
+    await _transitionStatus(tripId, 'in_progress');
     return TripExecutionModel(
       tripId: tripId,
       status: TripExecutionStatus.inProgress,
@@ -17,28 +25,29 @@ class TripExecutionDataSource {
   }
 
   Future<TripExecutionModel> completeTrip(String tripId) async {
-    await _updateTripStatus(tripId, 'completed', 'أنهى السائق الرحلة');
+    await _transitionStatus(tripId, 'completed');
     return TripExecutionModel(
       tripId: tripId,
       status: TripExecutionStatus.completed,
     );
   }
 
-  Future<void> _updateTripStatus(
-    String tripId,
-    String status,
-    String eventTitle,
-  ) async {
-    await _supabase
-        .from('operation_trips')
-        .update({'status': status})
-        .eq('id', tripId);
-    await _supabase.from('trip_events').insert({
-      'trip_id': tripId,
-      'title': eventTitle,
-      'description': eventTitle,
-      'event_time': DateTime.now().toUtc().toIso8601String(),
-      'done': true,
-    });
+  /// Calls the update_trip_status RPC which enforces the valid transition
+  /// machine and logs a trip_events entry — all in one transaction.
+  Future<void> _transitionStatus(String tripId, String newStatus) async {
+    try {
+      await _supabase.rpc('update_trip_status', params: {
+        'p_trip_id':    tripId,
+        'p_new_status': newStatus,
+      });
+    } on PostgrestException catch (e) {
+      if (e.message.contains('invalid_transition')) {
+        throw Exception('حالة الرحلة لا تسمح بهذا الانتقال');
+      }
+      if (e.message.contains('trip_not_found')) {
+        throw Exception('الرحلة غير موجودة');
+      }
+      rethrow;
+    }
   }
 }

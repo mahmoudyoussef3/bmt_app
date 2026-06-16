@@ -67,7 +67,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> createTrip(CreateTripInput input) async {
     try {
-      // 1. Fetch route stations to snapshot
+      // 1. Fetch route stations (client-side; used to build the snapshot array)
       final stationsResponse = await _client
           .from('route_stations')
           .select()
@@ -79,108 +79,71 @@ class SupabaseTripsDatasource implements TripsDatasource {
         throw Exception('لا يمكن إنشاء رحلة لمسار ليس له محطات.');
       }
 
-      // Generate a unique trip code
-      final tripCode = 'TR-${DateTime.now().millisecondsSinceEpoch % 1000000}';
-
-      // 2. Insert trip record
-      final tripResponse = await _client
-          .from('operation_trips')
-          .insert({
-            'trip_code': tripCode,
-            'route_id': input.routeId,
-            'driver_id': input.driverId,
-            'vehicle_id': input.vehicleId,
-            'trip_date': input.date,
-            'departure_time': input.departure,
-            'arrival_time': input.arrival,
-            'capacity': input.capacity,
-            'ticket_price': input.ticketPrice,
-            'currency': input.currency,
-            'status': 'scheduled',
-            'notes': ['تم إنشاء الرحلة ونمذجة المحطات والمقاعد تلقائياً'],
-          })
-          .select()
-          .single();
-
-      final tripId = tripResponse['id'] as String;
-
-      // 3. Snapshot route points
-      final List<Map<String, dynamic>> routePointsData = [];
+      // 2. Build route points array (preserving custom time overrides)
+      final List<Map<String, dynamic>> routePoints = [];
       for (final station in stations) {
         final stId = station['id']?.toString();
-        
-        // Find custom override if any
-        String arrivalOffset = station['arrival_offset']?.toString() ?? '';
+        String arrivalOffset   = station['arrival_offset']?.toString()   ?? '';
         String departureOffset = station['departure_offset']?.toString() ?? '';
-        
+
         if (input.customStationTimes.isNotEmpty) {
           final override = input.customStationTimes.firstWhere(
-            (e) => e['route_point_id'] == stId, 
+            (e) => e['route_point_id'] == stId,
             orElse: () => <String, String>{},
           );
           if (override.isNotEmpty) {
-            final customArrival = override['arrival_offset'];
-            final customDeparture = override['departure_offset'];
-            if (customArrival != null && customArrival.isNotEmpty) arrivalOffset = customArrival;
-            if (customDeparture != null && customDeparture.isNotEmpty) departureOffset = customDeparture;
+            final ca = override['arrival_offset'];
+            final cd = override['departure_offset'];
+            if (ca != null && ca.isNotEmpty) arrivalOffset   = ca;
+            if (cd != null && cd.isNotEmpty) departureOffset = cd;
           }
         }
 
-        routePointsData.add({
-          'trip_id': tripId,
-          'route_point_id': stId,
-          'point_name': station['name'],
-          'point_order': station['sort_order'],
-          'arrival_offset': arrivalOffset,
+        routePoints.add({
+          'route_point_id':   stId,
+          'point_name':       station['name'],
+          'point_order':      station['sort_order'],
+          'arrival_offset':   arrivalOffset,
           'departure_offset': departureOffset,
-          'latitude': station['latitude'],
-          'longitude': station['longitude'],
+          'latitude':         station['latitude'],
+          'longitude':        station['longitude'],
         });
       }
-      await _client.from('trip_route_points').insert(routePointsData);
 
-      // 4. Fetch vehicle seat configuration if available, otherwise generate default
+      // 3. Build seats array from vehicle seat_configuration or default layout
       final vehicleResponse = await _client
           .from('vehicles')
           .select('seat_configuration')
           .eq('id', input.vehicleId)
           .single();
 
-      final config =
-          vehicleResponse['seat_configuration'] as Map<String, dynamic>?;
-      final List<Map<String, dynamic>> seatsData = [];
+      final config = vehicleResponse['seat_configuration'] as Map<String, dynamic>?;
+      final List<Map<String, dynamic>> seats = [];
 
       if (config != null && config['seats'] != null) {
-        final seatsList = config['seats'] as List;
-        for (final seatVal in seatsList) {
-          final s = seatVal as Map<String, dynamic>;
+        for (final seatVal in config['seats'] as List) {
+          final s    = seatVal as Map<String, dynamic>;
           final type = s['seat_type'] as String? ?? 'passenger';
-          if (type == 'driver') continue;
           if (type != 'passenger') continue;
-          seatsData.add({
-            'trip_id': tripId,
-            'seat_label': s['seat_number'] as String,
-            'seat_row': s['row'] as int? ?? 0,
+          seats.add({
+            'seat_label':  s['seat_number'] as String,
+            'seat_row':    s['row']    as int? ?? 0,
             'seat_column': s['column'] as int? ?? 0,
-            'state': 'available',
           });
         }
       }
-      
-      if (seatsData.isEmpty) {
-        // Fallback default generation
-        int colCount = 3;
-        int curRow = 1;
-        int seatNum = 1;
+
+      if (seats.isEmpty) {
+        const colCount = 3;
+        var curRow  = 1;
+        var seatNum = 1;
         while (seatNum <= input.capacity) {
-          for (int col = 1; col <= colCount; col++) {
+          for (var col = 1; col <= colCount; col++) {
             if (seatNum > input.capacity) break;
-            seatsData.add({
-              'trip_id': tripId,
-              'seat_label': '$seatNum',
-              'seat_row': curRow,
+            seats.add({
+              'seat_label':  '$seatNum',
+              'seat_row':    curRow,
               'seat_column': col,
-              'state': 'available',
             });
             seatNum++;
           }
@@ -188,16 +151,29 @@ class SupabaseTripsDatasource implements TripsDatasource {
         }
       }
 
-      await _client.from('trip_seats').insert(seatsData);
+      // 4. Single atomic RPC call — all inserts in one transaction.
+      //    If any insert fails the entire trip creation rolls back.
+      final tripCode = 'TR-${DateTime.now().millisecondsSinceEpoch % 1000000}';
 
-      // 5. Log creation event
-      await logEvent(
-        tripId,
-        'تم إنشاء الرحلة',
-        'تم إنشاء الرحلة بالرمز $tripCode للمسار ${input.route}.',
-      );
+      final rpcResult = await _client.rpc('create_trip', params: {
+        'p_trip_code':      tripCode,
+        'p_route_id':       input.routeId,
+        'p_driver_id':      input.driverId,
+        'p_vehicle_id':     input.vehicleId,
+        'p_trip_date':      input.date,
+        'p_departure_time': input.departure,
+        'p_arrival_time':   input.arrival,
+        'p_capacity':       input.capacity,
+        'p_ticket_price':   input.ticketPrice,
+        'p_currency':       input.currency,
+        'p_notes':          ['تم إنشاء الرحلة ونمذجة المحطات والمقاعد تلقائياً'],
+        'p_route_points':   routePoints,
+        'p_seats':          seats,
+      });
 
-      // Fetch the full assembled trip
+      final tripId = (rpcResult as Map<String, dynamic>)['trip_id'] as String;
+
+      // 5. Fetch the fully assembled trip to return to the cubit
       return await fetchTripById(tripId);
     } catch (e) {
       throw _handleError(e);

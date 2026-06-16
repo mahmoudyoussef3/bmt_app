@@ -69,13 +69,21 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
     BookingStatus status,
   ) async {
     try {
-      final updated = <OperationBookingModel>[];
-      for (final id in bookingIds) {
-        // Doing sequentially to append to timelines properly, 
-        // a more optimized approach would use an edge function
-        updated.add(await updateBookingStatus(id, status));
-      }
-      return updated;
+      // Single UPDATE via RPC instead of N sequential round-trips
+      await _client.rpc('bulk_update_booking_status', params: {
+        'p_booking_ids': bookingIds,
+        'p_new_status':  status.name,
+      });
+
+      // Re-fetch the updated rows to return current state
+      final response = await _client
+          .from('operation_bookings')
+          .select()
+          .inFilter('id', bookingIds);
+
+      return (response as List)
+          .map((json) => OperationBookingModel.fromJson(json as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       throw _handleError(e);
     }
@@ -129,31 +137,36 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
     String? note,
   ) async {
     try {
+      // RPC atomically updates booking status AND transitions trip_seats to 'paid'.
+      // This prevents the booking being approved while the seat stays 'reserved'.
+      await _client.rpc('approve_booking', params: {
+        'p_booking_id':    bookingId,
+        'p_reviewer_name': reviewer,
+      });
+
+      // Append to timeline (non-critical audit trail, separate from atomic write)
       final event = BookingTimelineEventModel(
         timestamp: DateTime.now(),
         action: 'تم قبول الدفع',
         actor: reviewer,
         note: note,
       );
-
       final existing = await _client
           .from('operation_bookings')
           .select('timeline')
           .eq('id', bookingId)
           .single();
-          
-      final List<dynamic> currentTimeline = existing['timeline'] as List<dynamic>? ?? [];
-      currentTimeline.insert(0, event.toJson());
+      final List<dynamic> timeline = existing['timeline'] as List<dynamic>? ?? [];
+      timeline.insert(0, event.toJson());
+      await _client
+          .from('operation_bookings')
+          .update({'timeline': timeline})
+          .eq('id', bookingId);
 
       final response = await _client
           .from('operation_bookings')
-          .update({
-            'status': BookingStatus.approved.name,
-            'reviewer_name': reviewer,
-            'timeline': currentTimeline,
-          })
-          .eq('id', bookingId)
           .select()
+          .eq('id', bookingId)
           .single();
 
       return OperationBookingModel.fromJson(response);
@@ -170,32 +183,37 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
     String? note,
   ) async {
     try {
+      // RPC atomically updates booking status, releases the seat, and decrements
+      // the trip counter — all in one transaction.
+      await _client.rpc('reject_booking', params: {
+        'p_booking_id':       bookingId,
+        'p_rejection_reason': reason,
+        'p_reviewer_name':    reviewer,
+      });
+
+      // Append to timeline (non-critical)
       final event = BookingTimelineEventModel(
         timestamp: DateTime.now(),
         action: 'تم رفض الدفع',
         actor: reviewer,
         note: '$reason${note != null ? ' - $note' : ''}',
       );
-
       final existing = await _client
           .from('operation_bookings')
           .select('timeline')
           .eq('id', bookingId)
           .single();
-          
-      final List<dynamic> currentTimeline = existing['timeline'] as List<dynamic>? ?? [];
-      currentTimeline.insert(0, event.toJson());
+      final List<dynamic> timeline = existing['timeline'] as List<dynamic>? ?? [];
+      timeline.insert(0, event.toJson());
+      await _client
+          .from('operation_bookings')
+          .update({'timeline': timeline})
+          .eq('id', bookingId);
 
       final response = await _client
           .from('operation_bookings')
-          .update({
-            'status': BookingStatus.rejected.name,
-            'reviewer_name': reviewer,
-            'rejection_reason': reason,
-            'timeline': currentTimeline,
-          })
-          .eq('id', bookingId)
           .select()
+          .eq('id', bookingId)
           .single();
 
       return OperationBookingModel.fromJson(response);

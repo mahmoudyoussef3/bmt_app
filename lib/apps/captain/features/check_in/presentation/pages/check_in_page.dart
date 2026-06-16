@@ -107,7 +107,7 @@ class _CheckInPageState extends State<CheckInPage> {
   void _check(BuildContext context, CheckInStatus status) {
     context.read<CheckInCubit>().check(
       tripId: widget.tripId,
-      passengerId: _passengerId,
+      bookingId: _passengerId,
       status: status,
     );
   }

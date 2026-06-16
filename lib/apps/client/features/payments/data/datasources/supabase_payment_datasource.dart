@@ -14,7 +14,8 @@ class SupabasePaymentDatasource implements PaymentDatasource {
       final response = await _supabase
           .from('payment_methods')
           .select()
-          .eq('is_active', true);
+          .eq('is_active', true)
+          .order('sort_order');
 
       final methods = response
           .map((json) => _mapPaymentMethod(Map<String, dynamic>.from(json)))

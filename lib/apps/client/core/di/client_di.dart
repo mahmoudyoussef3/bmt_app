@@ -97,6 +97,8 @@ import '../../features/seat_selection/domain/repositories/seat_selection_reposit
 import '../../features/seat_selection/domain/usecases/get_seat_selection_data_usecase.dart';
 import '../../features/seat_selection/domain/usecases/select_seat_usecase.dart';
 import '../../features/seat_selection/domain/usecases/book_trip_seat_usecase.dart';
+import '../../features/seat_selection/domain/usecases/lock_trip_seat_usecase.dart';
+import '../../features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
 import '../../features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import '../../features/seat_release/data/datasources/mock_seat_release_datasource.dart';
 import '../../features/seat_release/data/repositories/seat_release_repository_impl.dart';
@@ -429,6 +431,18 @@ void _registerSeatSelectionDependencies() {
   if (!clientGetIt.isRegistered<BookTripSeatUseCase>()) {
     clientGetIt.registerLazySingleton<BookTripSeatUseCase>(
       () => BookTripSeatUseCase(clientGetIt<SeatSelectionRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<LockTripSeatUseCase>()) {
+    clientGetIt.registerLazySingleton<LockTripSeatUseCase>(
+      () => LockTripSeatUseCase(clientGetIt<SeatSelectionRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<ConfirmSeatBookingUseCase>()) {
+    clientGetIt.registerLazySingleton<ConfirmSeatBookingUseCase>(
+      () => ConfirmSeatBookingUseCase(clientGetIt<SeatSelectionRepository>()),
     );
   }
 
