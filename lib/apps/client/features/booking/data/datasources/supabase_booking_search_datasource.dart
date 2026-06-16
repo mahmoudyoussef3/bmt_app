@@ -10,9 +10,6 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
   @override
   Future<List<RouteOptionModel>> getRoutes(BookingSearchQuery query) async {
-    final pickup = query.pickup.isEmpty ? 'Cairo' : query.pickup;
-    final dest = query.destination.isEmpty ? 'Alexandria' : query.destination;
-
     var routesQuery = _supabase
         .from('operation_routes')
         .select()
@@ -47,13 +44,19 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     for (var data in response) {
       final routeId = data['id']?.toString() ?? '';
       final stations = stationsByRouteId[routeId] ?? const <dynamic>[];
+      final startCity = data['start_city']?.toString() ?? '';
+      final endCity = data['end_city']?.toString() ?? '';
+      final pickup = query.pickup.isEmpty ? startCity : query.pickup;
+      final dest = query.destination.isEmpty ? endCity : query.destination;
       final trips = await _supabase
           .from('operation_trips')
-          .select(
-            'capacity, passenger_count, booked_seats, ticket_price, currency',
-          )
+          .select('''
+            id, departure_time, arrival_time, capacity, passenger_count, booked_seats,
+            ticket_price, currency, status,
+            vehicles(vehicle_type)
+          ''')
           .eq('route_id', data['id'])
-          .eq('status', 'scheduled');
+          .inFilter('status', ['scheduled', 'openForBooking']);
       final availableSeats = trips.fold<int>(0, (sum, trip) {
         final capacity = trip['capacity'] as int? ?? 0;
         final used =
@@ -63,64 +66,85 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         final remaining = capacity - used;
         return sum + remaining.clamp(0, capacity).toInt();
       });
-      final firstTrip = trips.isNotEmpty ? trips.first : null;
-      final basePrice = firstTrip == null
-          ? 'غير متاح'
-          : '${firstTrip['currency'] ?? 'ج.م'} ${firstTrip['ticket_price'] ?? 0}';
+      final pricedTrips = trips
+          .where((trip) => trip['ticket_price'] != null)
+          .toList();
+      pricedTrips.sort((a, b) {
+        final aPrice =
+            (a['ticket_price'] as num?)?.toDouble() ?? double.infinity;
+        final bPrice =
+            (b['ticket_price'] as num?)?.toDouble() ?? double.infinity;
+        return aPrice.compareTo(bPrice);
+      });
+      final firstPricedTrip = pricedTrips.isNotEmpty ? pricedTrips.first : null;
+      final currency = firstPricedTrip?['currency']?.toString() ?? 'EGP';
+      final basePrice = firstPricedTrip == null
+          ? 'Price pending'
+          : '$currency ${firstPricedTrip['ticket_price'] ?? 0}';
+      final priceRange = _priceRangeLabel(pricedTrips, currency: currency);
+      final availableTrips = trips.map((trip) {
+        final capacity = trip['capacity'] as int? ?? 0;
+        final used =
+            trip['passenger_count'] as int? ??
+            trip['booked_seats'] as int? ??
+            0;
+        final remaining = capacity - used;
+        final vehicle = trip['vehicles'] as Map<String, dynamic>? ?? {};
+        final tripCurrency = trip['currency']?.toString() ?? currency;
+        final tripPrice = trip['ticket_price'];
+
+        return RouteTripOptionModel(
+          id: trip['id']?.toString() ?? '',
+          departureTime: trip['departure_time']?.toString() ?? 'Not set',
+          arrivalTime: trip['arrival_time']?.toString() ?? 'Not set',
+          availableSeats: remaining.clamp(0, capacity).toInt(),
+          vehicleType: vehicle['vehicle_type']?.toString() ?? 'Standard',
+          price: tripPrice == null
+              ? 'Price pending'
+              : '$tripCurrency $tripPrice',
+        );
+      }).toList();
       final routePoints = _mapRoutePoints(
         stations,
-        startCity: data['start_city']?.toString() ?? '',
-        endCity: data['end_city']?.toString() ?? '',
+        startCity: startCity,
+        endCity: endCity,
       );
 
-      bool hasPickup = false;
-      bool hasDest = false;
-      int pickupOrder = -1;
-      int destOrder = -1;
+      final pickupOrder = _pointOrder(
+        pickup,
+        stations: stations,
+        startCity: startCity,
+        endCity: endCity,
+        checkPickup: true,
+      );
+      final destOrder = _pointOrder(
+        dest,
+        stations: stations,
+        startCity: startCity,
+        endCity: endCity,
+        checkPickup: false,
+      );
+      final matchesRequestedRoute =
+          query.routeId != null && query.routeId!.isNotEmpty;
 
-      for (var station in stations) {
-        final stationName = station['name']?.toString() ?? '';
-        final sortOrder = station['sort_order'] as int? ?? 0;
-
-        final pickupAllowed = station['pickup_allowed'] as bool? ?? true;
-        final dropoffAllowed = station['dropoff_allowed'] as bool? ?? true;
-        if (pickupAllowed &&
-            (stationName.toLowerCase() == pickup.toLowerCase() ||
-                data['start_city'].toString().toLowerCase() ==
-                    pickup.toLowerCase())) {
-          hasPickup = true;
-          pickupOrder = sortOrder;
-        }
-        if (dropoffAllowed &&
-            (stationName.toLowerCase() == dest.toLowerCase() ||
-                data['end_city'].toString().toLowerCase() ==
-                    dest.toLowerCase())) {
-          hasDest = true;
-          destOrder = sortOrder;
-        }
-      }
-
-      if (stations.isEmpty) {
-        if (data['start_city'].toString().toLowerCase() ==
-            pickup.toLowerCase()) {
-          hasPickup = true;
-        }
-        if (data['end_city'].toString().toLowerCase() == dest.toLowerCase()) {
-          hasDest = true;
-        }
-        pickupOrder = 0;
-        destOrder = 1;
-      }
-
-      if (hasPickup && hasDest && pickupOrder <= destOrder) {
+      if (matchesRequestedRoute ||
+          (pickupOrder != null &&
+              destOrder != null &&
+              pickupOrder <= destOrder)) {
         matchedRoutes.add(
           RouteOptionModel(
             id: routeId,
+            routeName: data['name']?.toString().trim().isNotEmpty == true
+                ? data['name'].toString()
+                : '$startCity - $endCity',
             pickup: pickup,
             destination: dest,
+            distance: data['distance']?.toString() ?? 'Not set',
             duration: data['duration']?.toString() ?? 'N/A',
             availableSeats: availableSeats,
             startingPrice: basePrice,
+            priceRange: priceRange,
+            availableTrips: availableTrips,
             points: routePoints,
             isFastest: true,
           ),
@@ -194,6 +218,8 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
               return RoutePointModel(
                 name: name,
                 order: station['sort_order'] as int? ?? 0,
+                pickupAllowed: station['pickup_allowed'] as bool? ?? true,
+                dropoffAllowed: station['dropoff_allowed'] as bool? ?? true,
                 latitude: _toDouble(station['latitude']),
                 longitude: _toDouble(station['longitude']),
               );
@@ -205,9 +231,78 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     if (points.isNotEmpty) return points;
 
     return [
-      if (startCity.isNotEmpty) RoutePointModel(name: startCity, order: 1),
-      if (endCity.isNotEmpty) RoutePointModel(name: endCity, order: 2),
+      if (startCity.isNotEmpty)
+        RoutePointModel(
+          name: startCity,
+          order: 1,
+          pickupAllowed: true,
+          dropoffAllowed: false,
+        ),
+      if (endCity.isNotEmpty)
+        RoutePointModel(
+          name: endCity,
+          order: 2,
+          pickupAllowed: false,
+          dropoffAllowed: true,
+        ),
     ];
+  }
+
+  int? _pointOrder(
+    String value, {
+    required List<dynamic> stations,
+    required String startCity,
+    required String endCity,
+    required bool checkPickup,
+  }) {
+    final normalized = value.trim().toLowerCase();
+    if (normalized.isEmpty) return null;
+
+    if (startCity.trim().toLowerCase() == normalized) {
+      return stations.isEmpty ? 0 : _stationOrder(stations.first);
+    }
+    if (endCity.trim().toLowerCase() == normalized) {
+      return stations.isEmpty ? 1 : _stationOrder(stations.last);
+    }
+
+    for (final station in stations) {
+      final stationName =
+          station['name']?.toString().trim().toLowerCase() ?? '';
+      if (stationName != normalized) continue;
+      final allowed = checkPickup
+          ? station['pickup_allowed'] as bool? ?? true
+          : station['dropoff_allowed'] as bool? ?? true;
+      if (!allowed) return null;
+      return _stationOrder(station);
+    }
+    return null;
+  }
+
+  int _stationOrder(dynamic station) {
+    return station['sort_order'] as int? ?? 0;
+  }
+
+  String _priceRangeLabel(
+    List<dynamic> pricedTrips, {
+    required String currency,
+  }) {
+    if (pricedTrips.isEmpty) return 'Price pending';
+    final prices = pricedTrips
+        .map((trip) => (trip['ticket_price'] as num?)?.toDouble())
+        .whereType<double>()
+        .toList();
+    if (prices.isEmpty) return 'Price pending';
+    prices.sort();
+    final min = prices.first;
+    final max = prices.last;
+    if (min == max) return '$currency ${_formatPrice(min)}';
+    return '$currency ${_formatPrice(min)} - ${_formatPrice(max)}';
+  }
+
+  String _formatPrice(double value) {
+    return value == value.roundToDouble()
+        ? value.round().toString()
+        : value.toStringAsFixed(2);
   }
 
   double? _toDouble(dynamic value) {

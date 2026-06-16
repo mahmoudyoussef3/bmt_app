@@ -8,11 +8,10 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_option_card.dart';
+import 'package:bmt_app/core/theme/text_themes.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
 
-/// Lists available route options for the current search.
+/// Route details and decision screen for the current search.
 class RouteSelectionScreen extends StatefulWidget {
   const RouteSelectionScreen({super.key});
 
@@ -23,6 +22,7 @@ class RouteSelectionScreen extends StatefulWidget {
 class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
   late BookingSearchQuery _query;
   String? _selectedRouteId;
+  String? _selectedTripId;
 
   @override
   void didChangeDependencies() {
@@ -31,11 +31,16 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
     context.read<BookingCubit>().loadRoutes(_query);
   }
 
-  void _continueToTrips() {
+  void _continueToVehicles() {
+    final routeId = _selectedRouteId;
+    if (routeId == null || routeId.isEmpty) return;
+    final arguments = _query.copyWith(routeId: routeId).toArguments();
+    final tripId = _selectedTripId;
+    if (tripId != null) arguments['tripId'] = tripId;
     Navigator.pushNamed(
       context,
       BookingRoutes.vehicleListing,
-      arguments: _query.toArguments(),
+      arguments: arguments,
     );
   }
 
@@ -46,25 +51,36 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
         final routes = state is BookingRoutesLoaded
             ? state.routes
             : <RouteOptionData>[];
-        _selectedRouteId ??= routes.isEmpty ? null : routes.first.id;
+        if (routes.isNotEmpty) {
+          final queryRouteId = _query.routeId;
+          _selectedRouteId ??=
+              queryRouteId != null &&
+                  routes.any((route) => route.id == queryRouteId)
+              ? queryRouteId
+              : routes.first.id;
+        }
+        final selectedRoute = _selectedRoute(routes);
 
         return BookingFlowScaffold(
-          title: AppLocalizations.of(context)!.booking_selectRoute,
+          title: 'Route details',
           query: _query,
           bottomBar: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
               child: AppButton(
-                label: AppLocalizations.of(context)!.booking_compareVehicles,
+                label: selectedRoute == null
+                    ? 'Select route'
+                    : 'Continue with this route',
                 height: 52,
-                onPressed: _selectedRouteId == null ? () {} : _continueToTrips,
+                onPressed: selectedRoute == null ? () {} : _continueToVehicles,
               ),
             ),
           ),
-          body: _RouteSelectionBody(
+          body: _RouteDetailsBody(
             state: state,
             routes: routes,
-            selectedRouteId: _selectedRouteId,
+            selectedRoute: selectedRoute,
+            selectedTripId: _selectedTripId,
             onRetry: () => context.read<BookingCubit>().loadRoutes(_query),
             onMap: () {
               Navigator.pushNamed(
@@ -73,63 +89,808 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                 arguments: _query.toArguments(),
               );
             },
-            onSelect: (routeId) => setState(() => _selectedRouteId = routeId),
+            onSelectRoute: (route) {
+              setState(() {
+                _selectedRouteId = route.id;
+                _selectedTripId = null;
+              });
+            },
+            onSelectTrip: (trip) => setState(() => _selectedTripId = trip.id),
           ),
         );
       },
     );
   }
+
+  RouteOptionData? _selectedRoute(List<RouteOptionData> routes) {
+    if (routes.isEmpty) return null;
+    return routes.firstWhere(
+      (route) => route.id == _selectedRouteId,
+      orElse: () => routes.first,
+    );
+  }
 }
 
-class _RouteSelectionBody extends StatelessWidget {
-  const _RouteSelectionBody({
+class _RouteDetailsBody extends StatelessWidget {
+  const _RouteDetailsBody({
     required this.state,
     required this.routes,
-    required this.selectedRouteId,
+    required this.selectedRoute,
+    required this.selectedTripId,
     required this.onRetry,
     required this.onMap,
-    required this.onSelect,
+    required this.onSelectRoute,
+    required this.onSelectTrip,
   });
 
   final BookingState state;
   final List<RouteOptionData> routes;
-  final String? selectedRouteId;
+  final RouteOptionData? selectedRoute;
+  final String? selectedTripId;
   final VoidCallback onRetry;
   final VoidCallback onMap;
-  final ValueChanged<String> onSelect;
+  final ValueChanged<RouteOptionData> onSelectRoute;
+  final ValueChanged<RouteTripOptionData> onSelectTrip;
 
   @override
   Widget build(BuildContext context) {
-    if (state is BookingLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    if (state is BookingLoading) return const _RouteDetailsLoading();
     if (state is BookingError) {
       return _BookingErrorState(
         message: (state as BookingError).message,
         onRetry: onRetry,
       );
     }
+    final route = selectedRoute;
+    if (route == null) {
+      return _RouteEmptyState(onRetry: onRetry);
+    }
 
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
       children: [
-        SectionHeader(
-          title: AppLocalizations.of(context)!.booking_availableRoutes,
-          subtitle: AppLocalizations.of(context)!.booking_optionsForSearch(routes.length),
-          action: TextButton(onPressed: onMap, child: Text(AppLocalizations.of(context)!.booking_map)),
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Is this route suitable?',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  height: 1.05,
+                ),
+              ),
+            ),
+            TextButton.icon(
+              onPressed: onMap,
+              icon: const Icon(Icons.map_rounded, size: 18),
+              label: const Text('Map'),
+            ),
+          ],
         ),
         const SizedBox(height: 12),
-        ...routes.map((route) {
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: RouteOptionCard(
-              route: route,
-              selected: selectedRouteId == route.id,
-              onTap: () => onSelect(route.id),
-            ),
-          );
-        }),
+        _RouteOverviewCard(route: route),
+        const SizedBox(height: 14),
+        _RouteTimelineCard(points: route.points),
+        const SizedBox(height: 14),
+        _PricingCard(route: route),
+        const SizedBox(height: 14),
+        _AvailableTripsSection(
+          trips: route.availableTrips,
+          selectedTripId: selectedTripId,
+          onSelectTrip: onSelectTrip,
+        ),
+        if (routes.length > 1) ...[
+          const SizedBox(height: 18),
+          _AlternativeRoutesSection(
+            routes: routes,
+            selectedRouteId: route.id,
+            onSelectRoute: onSelectRoute,
+          ),
+        ],
       ],
+    );
+  }
+}
+
+class _RouteOverviewCard extends StatelessWidget {
+  const _RouteOverviewCard({required this.route});
+
+  final RouteOptionData route;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppSurface(
+      radius: 18,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withAlpha(22),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(Icons.route_rounded, color: scheme.primary),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      route.routeName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${route.pickup} to ${route.destination}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(155),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              _OverviewMetric(
+                icon: Icons.trip_origin_rounded,
+                label: 'Departure',
+                value: route.pickup,
+              ),
+              _OverviewMetric(
+                icon: Icons.flag_rounded,
+                label: 'Destination',
+                value: route.destination,
+              ),
+              _OverviewMetric(
+                icon: Icons.straighten_rounded,
+                label: 'Distance',
+                value: route.distance,
+              ),
+              _OverviewMetric(
+                icon: Icons.schedule_rounded,
+                label: 'Duration',
+                value: route.duration,
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OverviewMetric extends StatelessWidget {
+  const _OverviewMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      constraints: const BoxConstraints(minWidth: 132),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(55),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.outline.withAlpha(50)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 17, color: scheme.primary),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurface.withAlpha(135),
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value.isEmpty ? 'Not set' : value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RouteTimelineCard extends StatelessWidget {
+  const _RouteTimelineCard({required this.points});
+
+  final List<RoutePointData> points;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppSurface(
+      radius: 18,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Route timeline',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Pickup and drop-off availability by stop',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: scheme.onSurface.withAlpha(150),
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (points.isEmpty)
+            _InlineEmpty(
+              icon: Icons.alt_route_rounded,
+              title: 'Stops are not published yet',
+              subtitle: 'Route stations will appear here once available.',
+            )
+          else
+            ...points.asMap().entries.map((entry) {
+              final index = entry.key;
+              final point = entry.value;
+              return _TimelineStop(
+                point: point,
+                isFirst: index == 0,
+                isLast: index == points.length - 1,
+              );
+            }),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimelineStop extends StatelessWidget {
+  const _TimelineStop({
+    required this.point,
+    required this.isFirst,
+    required this.isLast,
+  });
+
+  final RoutePointData point;
+  final bool isFirst;
+  final bool isLast;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Column(
+            children: [
+              Container(
+                width: 18,
+                height: 18,
+                decoration: BoxDecoration(
+                  color: isFirst
+                      ? scheme.primary
+                      : isLast
+                      ? scheme.secondary
+                      : scheme.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: scheme.primary, width: 2),
+                ),
+              ),
+              if (!isLast)
+                Expanded(
+                  child: Container(
+                    width: 2,
+                    margin: const EdgeInsets.symmetric(vertical: 4),
+                    color: scheme.outline.withAlpha(80),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    point.name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Wrap(
+                    spacing: 6,
+                    runSpacing: 6,
+                    children: [
+                      if (point.pickupAllowed)
+                        const _CapabilityChip(
+                          label: 'Pickup',
+                          icon: Icons.login_rounded,
+                        ),
+                      if (point.dropoffAllowed)
+                        const _CapabilityChip(
+                          label: 'Drop-off',
+                          icon: Icons.logout_rounded,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CapabilityChip extends StatelessWidget {
+  const _CapabilityChip({required this.label, required this.icon});
+
+  final String label;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.primary.withAlpha(18),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: scheme.primary),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: scheme.primary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PricingCard extends StatelessWidget {
+  const _PricingCard({required this.route});
+
+  final RouteOptionData route;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppSurface(
+      radius: 18,
+      padding: const EdgeInsets.all(18),
+      child: Row(
+        children: [
+          Expanded(
+            child: _PriceBlock(
+              label: 'Starting price',
+              value: route.startingPrice,
+              highlighted: true,
+            ),
+          ),
+          Container(width: 1, height: 48, color: scheme.outline.withAlpha(70)),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16),
+              child: _PriceBlock(label: 'Price range', value: route.priceRange),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PriceBlock extends StatelessWidget {
+  const _PriceBlock({
+    required this.label,
+    required this.value,
+    this.highlighted = false,
+  });
+
+  final String label;
+  final String value;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+            color: scheme.onSurface.withAlpha(145),
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: highlighted
+              ? AppTextThemes.priceEmphasis(scheme).copyWith(fontSize: 21)
+              : Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+        ),
+      ],
+    );
+  }
+}
+
+class _AvailableTripsSection extends StatelessWidget {
+  const _AvailableTripsSection({
+    required this.trips,
+    required this.selectedTripId,
+    required this.onSelectTrip,
+  });
+
+  final List<RouteTripOptionData> trips;
+  final String? selectedTripId;
+  final ValueChanged<RouteTripOptionData> onSelectTrip;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppSurface(
+      radius: 18,
+      padding: const EdgeInsets.all(18),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Available trips',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Choose the departure that works best for you.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Theme.of(context).colorScheme.onSurface.withAlpha(150),
+            ),
+          ),
+          const SizedBox(height: 14),
+          if (trips.isEmpty)
+            const _InlineEmpty(
+              icon: Icons.event_busy_rounded,
+              title: 'No scheduled trips yet',
+              subtitle: 'Trips created from the dashboard will appear here.',
+            )
+          else
+            ...trips.map(
+              (trip) => Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _TripOptionTile(
+                  trip: trip,
+                  selected: selectedTripId == trip.id,
+                  onTap: () => onSelectTrip(trip),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TripOptionTile extends StatelessWidget {
+  const _TripOptionTile({
+    required this.trip,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final RouteTripOptionData trip;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(14),
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: selected
+                ? scheme.primary.withAlpha(18)
+                : scheme.surfaceContainerHighest.withAlpha(45),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? scheme.primary : scheme.outline.withAlpha(45),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                selected
+                    ? Icons.radio_button_checked_rounded
+                    : Icons.radio_button_off_rounded,
+                color: selected ? scheme.primary : scheme.outline,
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${trip.departureTime} - ${trip.arrivalTime}',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${trip.vehicleType} · ${trip.availableSeats} seats',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(150),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Text(
+                trip.price,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _AlternativeRoutesSection extends StatelessWidget {
+  const _AlternativeRoutesSection({
+    required this.routes,
+    required this.selectedRouteId,
+    required this.onSelectRoute,
+  });
+
+  final List<RouteOptionData> routes;
+  final String selectedRouteId;
+  final ValueChanged<RouteOptionData> onSelectRoute;
+
+  @override
+  Widget build(BuildContext context) {
+    final alternatives = routes
+        .where((route) => route.id != selectedRouteId)
+        .toList();
+    if (alternatives.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Other matching routes',
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 10),
+        ...alternatives.map(
+          (route) => Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: AppSurface(
+              radius: 14,
+              padding: const EdgeInsets.all(14),
+              onTap: () => onSelectRoute(route),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          route.routeName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.titleSmall
+                              ?.copyWith(fontWeight: FontWeight.w900),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          '${route.duration} · ${route.startingPrice}',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right_rounded),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _InlineEmpty extends StatelessWidget {
+  const _InlineEmpty({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(45),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: scheme.primary),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  subtitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurface.withAlpha(145),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RouteDetailsLoading extends StatelessWidget {
+  const _RouteDetailsLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+      children: [
+        const SkeletonBox(height: 30, width: 220),
+        const SizedBox(height: 14),
+        SkeletonBox(height: 176, borderRadius: BorderRadius.circular(18)),
+        const SizedBox(height: 14),
+        SkeletonBox(height: 220, borderRadius: BorderRadius.circular(18)),
+        const SizedBox(height: 14),
+        SkeletonBox(height: 100, borderRadius: BorderRadius.circular(18)),
+        const SizedBox(height: 14),
+        SkeletonBox(height: 190, borderRadius: BorderRadius.circular(18)),
+      ],
+    );
+  }
+}
+
+class _RouteEmptyState extends StatelessWidget {
+  const _RouteEmptyState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.route_outlined, color: scheme.primary, size: 48),
+            const SizedBox(height: 16),
+            Text(
+              'No route found',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Try a different departure or destination.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurface.withAlpha(150),
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton(onPressed: onRetry, child: const Text('Try again')),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -150,7 +911,7 @@ class _BookingErrorState extends StatelessWidget {
           children: [
             Text(message, textAlign: TextAlign.center),
             const SizedBox(height: 12),
-            FilledButton(onPressed: onRetry, child: Text(AppLocalizations.of(context)!.common_tryAgain)),
+            FilledButton(onPressed: onRetry, child: const Text('Try again')),
           ],
         ),
       ),

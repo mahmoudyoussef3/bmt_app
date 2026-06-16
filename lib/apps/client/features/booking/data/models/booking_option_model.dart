@@ -3,34 +3,75 @@ import '../../domain/entities/booking_option.dart';
 class RouteOptionModel {
   const RouteOptionModel({
     required this.id,
+    required this.routeName,
     required this.pickup,
     required this.destination,
+    required this.distance,
     required this.duration,
     required this.availableSeats,
     required this.startingPrice,
+    required this.priceRange,
+    required this.availableTrips,
     this.points = const [],
     this.isFastest = false,
   });
 
   final String id;
+  final String routeName;
   final String pickup;
   final String destination;
+  final String distance;
   final String duration;
   final int availableSeats;
   final String startingPrice;
+  final String priceRange;
+  final List<RouteTripOptionModel> availableTrips;
   final List<RoutePointModel> points;
   final bool isFastest;
 
   RouteOptionData toEntity() {
     return RouteOptionData(
       id: id,
+      routeName: routeName,
       pickup: pickup,
       destination: destination,
+      distance: distance,
       duration: duration,
       availableSeats: availableSeats,
       startingPrice: startingPrice,
+      priceRange: priceRange,
+      availableTrips: availableTrips.map((trip) => trip.toEntity()).toList(),
       points: points.map((point) => point.toEntity()).toList(),
       isFastest: isFastest,
+    );
+  }
+}
+
+class RouteTripOptionModel {
+  const RouteTripOptionModel({
+    required this.id,
+    required this.departureTime,
+    required this.arrivalTime,
+    required this.availableSeats,
+    required this.vehicleType,
+    required this.price,
+  });
+
+  final String id;
+  final String departureTime;
+  final String arrivalTime;
+  final int availableSeats;
+  final String vehicleType;
+  final String price;
+
+  RouteTripOptionData toEntity() {
+    return RouteTripOptionData(
+      id: id,
+      departureTime: departureTime,
+      arrivalTime: arrivalTime,
+      availableSeats: availableSeats,
+      vehicleType: vehicleType,
+      price: price,
     );
   }
 }
@@ -39,12 +80,16 @@ class RoutePointModel {
   const RoutePointModel({
     required this.name,
     required this.order,
+    this.pickupAllowed = true,
+    this.dropoffAllowed = true,
     this.latitude,
     this.longitude,
   });
 
   final String name;
   final int order;
+  final bool pickupAllowed;
+  final bool dropoffAllowed;
   final double? latitude;
   final double? longitude;
 
@@ -52,6 +97,8 @@ class RoutePointModel {
     return RoutePointData(
       name: name,
       order: order,
+      pickupAllowed: pickupAllowed,
+      dropoffAllowed: dropoffAllowed,
       latitude: latitude,
       longitude: longitude,
     );
