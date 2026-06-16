@@ -14,6 +14,7 @@ class FinancePaymentModel extends FinancePayment {
     required super.referenceNumber,
     required super.receiptLabel,
     required super.receiptMeta,
+    super.receiptUrl,
     required super.notes,
     required super.history,
   });
@@ -32,6 +33,7 @@ class FinancePaymentModel extends FinancePayment {
       referenceNumber: payment.referenceNumber,
       receiptLabel: payment.receiptLabel,
       receiptMeta: payment.receiptMeta,
+      receiptUrl: payment.receiptUrl,
       notes: payment.notes,
       history: payment.history,
     );

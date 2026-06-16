@@ -83,11 +83,14 @@ class TripCreationCubit extends Cubit<TripCreationState> {
       emit(TripCreationSuccess(trip));
       return trip;
     } catch (e) {
-      emit(TripCreationError(e.toString()));
-      if (prev is TripCreationWizardDataLoaded) {
-        // Restore data state
-        emit(prev);
-      }
+      final msg = e.toString();
+      final friendly = msg.contains('driver_conflict')
+          ? 'السائق لديه رحلة مجدولة بالفعل في هذا اليوم. يرجى اختيار سائق آخر أو تاريخ مختلف.'
+          : msg.contains('vehicle_conflict')
+              ? 'المركبة مخصصة لرحلة أخرى في هذا اليوم. يرجى اختيار مركبة أخرى أو تاريخ مختلف.'
+              : msg;
+      emit(TripCreationError(friendly));
+      if (prev is TripCreationWizardDataLoaded) emit(prev);
       return null;
     }
   }

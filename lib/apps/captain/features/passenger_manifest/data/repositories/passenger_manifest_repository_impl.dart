@@ -12,4 +12,8 @@ class PassengerManifestRepositoryImpl implements PassengerManifestRepository {
     final models = await _dataSource.getTripPassengers(tripId);
     return models.map((model) => model.toEntity()).toList();
   }
+
+  @override
+  Stream<void> watchPassengerUpdates(String tripId) =>
+      _dataSource.watchPassengerUpdates(tripId);
 }

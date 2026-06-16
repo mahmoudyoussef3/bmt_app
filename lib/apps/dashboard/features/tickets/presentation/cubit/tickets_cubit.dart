@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/complaint.dart';
+import '../../domain/usecases/assign_agent_usecase.dart';
 import '../../domain/usecases/get_tickets_usecase.dart';
 import '../../domain/usecases/update_ticket_status_usecase.dart';
 import '../../domain/usecases/save_internal_note_usecase.dart';
@@ -16,6 +17,8 @@ class TicketsCubit extends Cubit<TicketsState> {
   final MarkCustomerContactedUseCase _markCustomerContacted;
   final CloseTicketUseCase _closeTicket;
   final GetTicketAttachmentsUseCase _getTicketAttachments;
+  final AssignAgentUseCase _assignAgent;
+  final GetAgentsUseCase _getAgents;
 
   TicketsCubit({
     required GetTicketsUseCase getTickets,
@@ -24,25 +27,42 @@ class TicketsCubit extends Cubit<TicketsState> {
     required MarkCustomerContactedUseCase markCustomerContacted,
     required CloseTicketUseCase closeTicket,
     required GetTicketAttachmentsUseCase getTicketAttachments,
+    required AssignAgentUseCase assignAgent,
+    required GetAgentsUseCase getAgents,
   })  : _getTickets = getTickets,
         _updateTicketStatus = updateTicketStatus,
         _saveInternalNote = saveInternalNote,
         _markCustomerContacted = markCustomerContacted,
         _closeTicket = closeTicket,
         _getTicketAttachments = getTicketAttachments,
+        _assignAgent = assignAgent,
+        _getAgents = getAgents,
         super(const TicketsLoading());
 
   Future<void> load() async {
     emit(const TicketsLoading());
     try {
-      final tickets = await _getTickets();
-      emit(
-        TicketsLoaded(
-          tickets: tickets,
-        ),
-      );
+      final results = await Future.wait([_getTickets(), _getAgents()]);
+      emit(TicketsLoaded(
+        tickets: results[0] as List<SupportTicket>,
+        agents: results[1] as List<Map<String, dynamic>>,
+      ));
     } catch (error) {
       emit(TicketsError(error.toString()));
+    }
+  }
+
+  Future<void> assignAgent(String agentId, String agentName) async {
+    final current = state;
+    if (current is! TicketsLoaded) return;
+    final selectedId = current.selectedTicketId;
+    if (selectedId == null) return;
+    emit(current.copyWith(actionLoading: true));
+    try {
+      final updated = await _assignAgent(selectedId, agentId, agentName);
+      _emitUpdated(current.copyWith(agents: current.agents), updated, 'Assigned to $agentName');
+    } catch (error) {
+      emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
     }
   }
 

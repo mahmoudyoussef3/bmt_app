@@ -31,4 +31,6 @@ abstract class BookingsDatasource {
     String reviewer,
     String reason,
   );
+
+  Stream<List<OperationBookingModel>> watchBookings();
 }

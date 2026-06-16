@@ -9,4 +9,8 @@ abstract class PaymentsRepository {
   );
 
   Future<FinancePayment> addNote(String paymentId, String note);
+
+  Future<List<Map<String, dynamic>>> getAvailableTrips();
+
+  Future<void> reassignBooking(String bookingId, String newTripId);
 }

@@ -8,6 +8,11 @@ class TripExecutionRepositoryImpl implements TripExecutionRepository {
   final TripExecutionDataSource _dataSource;
 
   @override
+  Future<TripExecutionStateData> startBoarding(String tripId) async {
+    return (await _dataSource.startBoarding(tripId)).toEntity();
+  }
+
+  @override
   Future<TripExecutionStateData> startTrip(String tripId) async {
     return (await _dataSource.startTrip(tripId)).toEntity();
   }

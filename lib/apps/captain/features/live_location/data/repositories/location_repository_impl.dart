@@ -5,7 +5,7 @@ import '../datasources/location_datasource.dart';
 class LocationRepositoryImpl implements LocationRepository {
   const LocationRepositoryImpl(this._dataSource);
 
-  final LocationDataSource _dataSource;
+  final LocationDatasource _dataSource;
 
   @override
   Future<LocationSharingStateData> startSharing(String tripId) async {

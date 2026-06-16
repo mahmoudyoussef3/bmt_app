@@ -106,9 +106,11 @@ class OperationBookingModel extends OperationBooking {
       tripDetails: json['trip_details'] != null
           ? BookingTripDetailsModel.fromJson(json['trip_details'] as Map<String, dynamic>)
           : BookingTripDetailsModel.empty(),
-      paymentDetails: json['payment_details'] != null
-          ? BookingPaymentDetailsModel.fromJson(json['payment_details'] as Map<String, dynamic>)
-          : BookingPaymentDetailsModel.empty(paymentMethod),
+      paymentDetails: BookingPaymentDetailsModel.fromJson({
+        if (json['payment_details'] != null)
+          ...(json['payment_details'] as Map<String, dynamic>),
+        'receipt_url': json['payment_receipt_url'],
+      }),
       attachments: attachmentsList,
       notes: notesList,
       timeline: timelineList,
@@ -229,6 +231,7 @@ class BookingPaymentDetailsModel extends BookingPaymentDetails {
     required super.reference,
     super.receiptReference,
     super.receiptUploadedAt,
+    super.receiptUrl,
   });
 
   factory BookingPaymentDetailsModel.fromJson(Map<String, dynamic> json) {
@@ -247,6 +250,7 @@ class BookingPaymentDetailsModel extends BookingPaymentDetails {
       receiptUploadedAt: json['receipt_uploaded_at'] != null
           ? DateTime.parse(json['receipt_uploaded_at'] as String).toLocal()
           : null,
+      receiptUrl: json['receipt_url'] as String?,
     );
   }
 
@@ -267,6 +271,7 @@ class BookingPaymentDetailsModel extends BookingPaymentDetails {
       'reference': reference,
       'receipt_reference': receiptReference,
       'receipt_uploaded_at': receiptUploadedAt?.toUtc().toIso8601String(),
+      'receipt_url': receiptUrl,
     };
   }
 }

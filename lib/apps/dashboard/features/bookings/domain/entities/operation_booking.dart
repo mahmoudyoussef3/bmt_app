@@ -167,6 +167,7 @@ class BookingPaymentDetails {
   final String reference;
   final String? receiptReference;
   final DateTime? receiptUploadedAt;
+  final String? receiptUrl;
 
   const BookingPaymentDetails({
     required this.amount,
@@ -175,5 +176,6 @@ class BookingPaymentDetails {
     required this.reference,
     this.receiptReference,
     this.receiptUploadedAt,
+    this.receiptUrl,
   });
 }

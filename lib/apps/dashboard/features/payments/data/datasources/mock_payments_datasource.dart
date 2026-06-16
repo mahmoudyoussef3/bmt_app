@@ -10,6 +10,10 @@ abstract class PaymentsDatasource {
   );
 
   Future<FinancePayment> addNote(String paymentId, String note);
+
+  Future<List<Map<String, dynamic>>> fetchAvailableTrips();
+
+  Future<void> reassignBooking(String bookingId, String newTripId);
 }
 
 class MockPaymentsDatasource implements PaymentsDatasource {
@@ -136,6 +140,12 @@ class MockPaymentsDatasource implements PaymentsDatasource {
     _payments[index] = updated;
     return updated;
   }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchAvailableTrips() async => const [];
+
+  @override
+  Future<void> reassignBooking(String bookingId, String newTripId) async {}
 
   @override
   Future<FinancePayment> addNote(String paymentId, String note) async {

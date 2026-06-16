@@ -262,6 +262,19 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
     }
   }
 
+  @override
+  Stream<List<OperationBookingModel>> watchBookings() {
+    return _client
+        .from('operation_bookings')
+        .stream(primaryKey: ['id'])
+        .order('created_at', ascending: false)
+        .map(
+          (rows) => rows
+              .map((json) => OperationBookingModel.fromJson(json))
+              .toList(),
+        );
+  }
+
   Exception _handleError(dynamic error) {
     if (error is PostgrestException) {
       return Exception('خطأ بقاعدة البيانات: ${error.message} (${error.code})');

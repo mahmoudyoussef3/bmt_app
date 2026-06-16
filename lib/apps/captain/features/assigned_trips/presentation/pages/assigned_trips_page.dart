@@ -102,7 +102,9 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
             final List<AssignedTrip> trips = state is AssignedTripsLoaded
                 ? state.trips
                 : const <AssignedTrip>[];
-            return ListView(
+            return RefreshIndicator(
+              onRefresh: () => context.read<AssignedTripsCubit>().refresh(),
+              child: ListView(
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
               children: [
                 Row(
@@ -176,6 +178,7 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                   const SizedBox(height: 10),
                 ],
               ],
+              ),
             );
           },
         ),

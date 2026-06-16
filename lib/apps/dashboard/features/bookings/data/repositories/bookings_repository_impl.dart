@@ -91,4 +91,8 @@ class BookingsRepositoryImpl implements BookingsRepository {
       throw Exception('تعذر طلب إعادة رفع الإيصال');
     }
   }
+
+  @override
+  Stream<List<OperationBooking>> watchBookings() =>
+      _datasource.watchBookings().cast();
 }

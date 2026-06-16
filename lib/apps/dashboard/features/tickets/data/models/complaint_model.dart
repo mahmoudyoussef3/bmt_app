@@ -13,12 +13,15 @@ class SupportTicketModel extends SupportTicket {
     required super.priority,
     required super.status,
     super.assignedAgentName,
+    super.assignedAgentId,
     super.internalNote,
     super.customerContactedAt,
     required super.createdAt,
     required super.updatedAt,
     super.resolvedAt,
     super.closedAt,
+    super.slaDueAt,
+    super.slaBreached,
   });
 
   factory SupportTicketModel.fromJson(Map<String, dynamic> json) {
@@ -43,12 +46,15 @@ class SupportTicketModel extends SupportTicket {
       priority: _parsePriority(json['priority'] as String?),
       status: _parseStatus(json['status'] as String?),
       assignedAgentName: json['assigned_agent_name'] as String?,
+      assignedAgentId: json['assigned_agent_id'] as String?,
       internalNote: json['internal_note'] as String?,
       customerContactedAt: json['customer_contacted_at'] != null ? DateTime.parse(json['customer_contacted_at'] as String).toLocal() : null,
       createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
       updatedAt: DateTime.parse(json['updated_at'] as String).toLocal(),
       resolvedAt: json['resolved_at'] != null ? DateTime.parse(json['resolved_at'] as String).toLocal() : null,
       closedAt: json['closed_at'] != null ? DateTime.parse(json['closed_at'] as String).toLocal() : null,
+      slaDueAt: json['sla_due_at'] != null ? DateTime.parse(json['sla_due_at'] as String).toLocal() : null,
+      slaBreached: json['sla_breached'] as bool? ?? false,
     );
   }
 

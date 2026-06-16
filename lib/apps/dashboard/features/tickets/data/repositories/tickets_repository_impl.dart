@@ -62,4 +62,26 @@ class TicketsRepositoryImpl implements TicketsRepository {
       throw Exception('Failed to get ticket attachments');
     }
   }
+
+  @override
+  Future<SupportTicket> assignAgent(
+    String ticketId,
+    String agentId,
+    String agentName,
+  ) async {
+    try {
+      return await _datasource.assignAgent(ticketId, agentId, agentName);
+    } catch (_) {
+      throw Exception('Failed to assign agent');
+    }
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getAgents() async {
+    try {
+      return await _datasource.getAgents();
+    } catch (_) {
+      throw Exception('Failed to load agents');
+    }
+  }
 }

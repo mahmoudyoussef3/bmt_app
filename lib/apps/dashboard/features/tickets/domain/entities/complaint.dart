@@ -32,12 +32,15 @@ class SupportTicket {
   final TicketPriority priority;
   final TicketStatus status;
   final String? assignedAgentName;
+  final String? assignedAgentId;
   final String? internalNote;
   final DateTime? customerContactedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? resolvedAt;
   final DateTime? closedAt;
+  final DateTime? slaDueAt;
+  final bool slaBreached;
 
   const SupportTicket({
     required this.id,
@@ -51,13 +54,21 @@ class SupportTicket {
     required this.priority,
     required this.status,
     this.assignedAgentName,
+    this.assignedAgentId,
     this.internalNote,
     this.customerContactedAt,
     required this.createdAt,
     required this.updatedAt,
     this.resolvedAt,
     this.closedAt,
+    this.slaDueAt,
+    this.slaBreached = false,
   });
+
+  bool get isSlaNearBreach =>
+      slaDueAt != null &&
+      !slaBreached &&
+      slaDueAt!.difference(DateTime.now()).inHours < 2;
 
   SupportTicket copyWith({
     String? id,
@@ -71,12 +82,15 @@ class SupportTicket {
     TicketPriority? priority,
     TicketStatus? status,
     String? assignedAgentName,
+    String? assignedAgentId,
     String? internalNote,
     DateTime? customerContactedAt,
     DateTime? createdAt,
     DateTime? updatedAt,
     DateTime? resolvedAt,
     DateTime? closedAt,
+    DateTime? slaDueAt,
+    bool? slaBreached,
   }) {
     return SupportTicket(
       id: id ?? this.id,
@@ -90,12 +104,15 @@ class SupportTicket {
       priority: priority ?? this.priority,
       status: status ?? this.status,
       assignedAgentName: assignedAgentName ?? this.assignedAgentName,
+      assignedAgentId: assignedAgentId ?? this.assignedAgentId,
       internalNote: internalNote ?? this.internalNote,
       customerContactedAt: customerContactedAt ?? this.customerContactedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       resolvedAt: resolvedAt ?? this.resolvedAt,
       closedAt: closedAt ?? this.closedAt,
+      slaDueAt: slaDueAt ?? this.slaDueAt,
+      slaBreached: slaBreached ?? this.slaBreached,
     );
   }
 }

@@ -1,5 +1,11 @@
 import '../../../../core/network/network_di.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/data/datasources/bookings_datasource.dart';
+import 'package:bmt_app/apps/dashboard/features/users/data/datasources/users_datasource.dart';
+import 'package:bmt_app/apps/dashboard/features/users/domain/repositories/users_repository.dart';
+import 'package:bmt_app/apps/dashboard/features/users/domain/usecases/get_current_user_role_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/users/domain/usecases/get_users_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/users/domain/usecases/update_user_role_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/users/presentation/cubit/users_cubit.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -13,6 +19,7 @@ import '../../features/bookings/domain/usecases/get_operation_bookings_usecase.d
 import '../../features/bookings/domain/usecases/reject_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/request_reupload_usecase.dart';
 import '../../features/bookings/domain/usecases/update_booking_status_usecase.dart';
+import '../../features/bookings/domain/usecases/watch_bookings_usecase.dart';
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
 import '../../features/dashboard_home/data/datasources/dashboard_home_datasource.dart';
 import '../../features/dashboard_home/data/datasources/supabase_dashboard_home_datasource.dart';
@@ -54,6 +61,7 @@ import '../../features/fleet/domain/repositories/fleet_repository.dart';
 import '../../features/fleet/domain/usecases/fleet_usecases.dart';
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import '../../features/live_trips/data/datasources/mock_live_trips_datasource.dart';
+import '../../features/live_trips/data/datasources/supabase_live_trips_datasource.dart';
 import '../../features/live_trips/data/repositories/live_trips_repository_impl.dart';
 import '../../features/live_trips/domain/repositories/live_trips_repository.dart';
 import '../../features/live_trips/domain/usecases/get_live_trips_usecase.dart';
@@ -72,13 +80,16 @@ import '../../features/live_trips/domain/usecases/send_driver_message_usecase.da
 import '../../features/live_trips/domain/usecases/toggle_passenger_checkin_usecase.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/payments/data/datasources/mock_payments_datasource.dart';
+import '../../features/payments/data/datasources/supabase_payments_datasource.dart';
 import '../../features/payments/data/repositories/payments_repository_impl.dart';
 import '../../features/payments/domain/repositories/payments_repository.dart';
 import '../../features/payments/domain/usecases/add_payment_note_usecase.dart';
 import '../../features/payments/domain/usecases/get_finance_payments_usecase.dart';
+import '../../features/payments/domain/usecases/reassign_booking_usecase.dart';
 import '../../features/payments/domain/usecases/update_payment_review_status_usecase.dart';
 import '../../features/payments/presentation/cubit/payments_cubit.dart';
 import '../../features/payment_verification/data/datasources/mock_booking_payment_verification_datasource.dart';
+import '../../features/payment_verification/data/datasources/supabase_booking_payment_verification_datasource.dart';
 import '../../features/payment_verification/data/repositories/booking_payment_verification_repository_impl.dart';
 import '../../features/payment_verification/domain/repositories/booking_payment_verification_repository.dart';
 import '../../features/payment_verification/domain/usecases/add_booking_payment_note_usecase.dart';
@@ -121,6 +132,7 @@ import '../../features/tickets/domain/usecases/get_tickets_usecase.dart';
 import '../../features/tickets/domain/usecases/update_ticket_status_usecase.dart';
 import '../../features/tickets/domain/usecases/save_internal_note_usecase.dart';
 import '../../features/tickets/domain/usecases/mark_customer_contacted_usecase.dart';
+import '../../features/tickets/domain/usecases/assign_agent_usecase.dart';
 import '../../features/tickets/domain/usecases/get_ticket_attachments_usecase.dart';
 import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
 import '../../features/finance/data/repositories/finance_repository_impl.dart';
@@ -515,6 +527,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<WatchBookingsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => WatchBookingsUseCase(dashboardDi<BookingsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<BookingsCubit>()) {
     dashboardDi.registerFactory(
       () => BookingsCubit(
@@ -525,6 +543,7 @@ void registerDashboardDependencies() {
         approveBooking: dashboardDi<ApproveBookingUseCase>(),
         rejectBooking: dashboardDi<RejectBookingUseCase>(),
         requestReupload: dashboardDi<RequestReuploadUseCase>(),
+        watchBookings: dashboardDi<WatchBookingsUseCase>(),
       ),
     );
   }
@@ -533,7 +552,7 @@ void registerDashboardDependencies() {
 
   if (!dashboardDi.isRegistered<LiveTripsDatasource>()) {
     dashboardDi.registerLazySingleton<LiveTripsDatasource>(
-      MockLiveTripsDatasource.new,
+      () => SupabaseLiveTripsDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
@@ -651,7 +670,7 @@ void registerDashboardDependencies() {
 
   if (!dashboardDi.isRegistered<PaymentsDatasource>()) {
     dashboardDi.registerLazySingleton<PaymentsDatasource>(
-      MockPaymentsDatasource.new,
+      () => SupabasePaymentsDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
@@ -679,19 +698,32 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<GetAvailableTripsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetAvailableTripsUseCase(dashboardDi<PaymentsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<ReassignBookingUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ReassignBookingUseCase(dashboardDi<PaymentsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<PaymentsCubit>()) {
     dashboardDi.registerFactory(
       () => PaymentsCubit(
         getPayments: dashboardDi<GetFinancePaymentsUseCase>(),
         updateStatus: dashboardDi<UpdatePaymentReviewStatusUseCase>(),
         addNote: dashboardDi<AddPaymentNoteUseCase>(),
+        getAvailableTrips: dashboardDi<GetAvailableTripsUseCase>(),
+        reassignBooking: dashboardDi<ReassignBookingUseCase>(),
       ),
     );
   }
 
   if (!dashboardDi.isRegistered<BookingPaymentVerificationDatasource>()) {
     dashboardDi.registerLazySingleton<BookingPaymentVerificationDatasource>(
-      MockBookingPaymentVerificationDatasource.new,
+      () => SupabaseBookingPaymentVerificationDatasource(dashboardDi<SupabaseClient>()),
     );
   }
 
@@ -949,6 +981,17 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<AssignAgentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => AssignAgentUseCase(dashboardDi<TicketsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetAgentsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetAgentsUseCase(dashboardDi<TicketsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<TicketsCubit>()) {
     dashboardDi.registerFactory(
       () => TicketsCubit(
@@ -958,6 +1001,8 @@ void registerDashboardDependencies() {
         markCustomerContacted: dashboardDi<MarkCustomerContactedUseCase>(),
         closeTicket: dashboardDi<CloseTicketUseCase>(),
         getTicketAttachments: dashboardDi<GetTicketAttachmentsUseCase>(),
+        assignAgent: dashboardDi<AssignAgentUseCase>(),
+        getAgents: dashboardDi<GetAgentsUseCase>(),
       ),
     );
   }
@@ -1096,6 +1141,35 @@ void registerDashboardDependencies() {
         getAvailableDrivers: dashboardDi<GetAvailableDriversUseCase>(),
         getAvailableVehicles: dashboardDi<GetAvailableVehiclesUseCase>(),
         getAvailablePackages: dashboardDi<GetAvailablePackagesUseCase>(),
+      ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<UsersRepository>()) {
+    dashboardDi.registerLazySingleton<UsersRepository>(
+      () => SupabaseUsersDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetCurrentUserRoleUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetCurrentUserRoleUseCase(dashboardDi<UsersRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetUsersUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetUsersUseCase(dashboardDi<UsersRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<UpdateUserRoleUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateUserRoleUseCase(dashboardDi<UsersRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<UsersCubit>()) {
+    dashboardDi.registerFactory(
+      () => UsersCubit(
+        getUsers: dashboardDi<GetUsersUseCase>(),
+        updateRole: dashboardDi<UpdateUserRoleUseCase>(),
       ),
     );
   }

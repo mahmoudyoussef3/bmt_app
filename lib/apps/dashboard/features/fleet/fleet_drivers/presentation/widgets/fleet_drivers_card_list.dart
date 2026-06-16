@@ -127,6 +127,41 @@ class FleetDriversCardList extends StatelessWidget {
                       ),
                     ],
                   ),
+                  if (driver.isLicenseExpired) ...[
+                    const SizedBox(height: AppSpacing.small),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.red[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red[300]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.warning_rounded, color: Colors.red[700], size: 16),
+                          const SizedBox(width: 6),
+                          Text('الرخصة منتهية', style: TextStyle(color: Colors.red[700], fontSize: 12, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ] else if (driver.isLicenseExpiringSoon) ...[
+                    const SizedBox(height: AppSpacing.small),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.orange[50],
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.orange[300]!),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(Icons.schedule_rounded, color: Colors.orange[800], size: 16),
+                          const SizedBox(width: 6),
+                          Text('الرخصة تنتهي قريباً', style: TextStyle(color: Colors.orange[800], fontSize: 12, fontWeight: FontWeight.bold)),
+                        ],
+                      ),
+                    ),
+                  ],
                   const SizedBox(height: AppSpacing.medium),
                   const Divider(),
                   const SizedBox(height: AppSpacing.small),

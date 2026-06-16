@@ -189,10 +189,12 @@ class ReportData {
   final Map<String, String> kpis;
   final List<dynamic> rows; // Will contain row types matching selection
   final List<MapEntry<String, double>> trends; // Trend data points for graphing
+  final List<MapEntry<String, double>> occupancyTrends; // Occupancy % by period
 
   const ReportData({
     required this.kpis,
     required this.rows,
     required this.trends,
+    this.occupancyTrends = const [],
   });
 }

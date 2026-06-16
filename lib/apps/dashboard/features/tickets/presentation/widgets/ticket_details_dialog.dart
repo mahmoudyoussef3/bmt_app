@@ -7,6 +7,20 @@ import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 import 'tickets_shared_widgets.dart';
 
+class _Template {
+  const _Template(this.title, this.body);
+  final String title;
+  final String body;
+}
+
+const _kTemplates = [
+  _Template('Contacted', 'تم التواصل مع العميل وجاري المتابعة.'),
+  _Template('Under investigation', 'تم استلام البلاغ وهو قيد الفحص من الفريق المختص.'),
+  _Template('Resolved', 'تم حل المشكلة بنجاح. يرجى التواصل إذا احتجت لأي مساعدة إضافية.'),
+  _Template('Trip delay', 'تأخر الرحلة ناتج عن ظروف خارجة عن إرادتنا. نعتذر عن الإزعاج.'),
+  _Template('Needs info', 'نحتاج معلومات إضافية لإتمام المعالجة. يرجى التواصل معنا.'),
+];
+
 class TicketDetailsDialog extends StatefulWidget {
   const TicketDetailsDialog({super.key});
 
@@ -165,6 +179,35 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                 ],
 
                               const Divider(height: 32),
+                              const Text('Assign Agent', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              const SizedBox(height: 8),
+                              if (state.agents.isEmpty)
+                                const Text('No agents available', style: TextStyle(color: Colors.grey, fontSize: 12))
+                              else
+                                DropdownButtonFormField<String>(
+                                  key: ValueKey(ticket.assignedAgentId),
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                    isDense: true,
+                                  ),
+                                  hint: const Text('Select agent'),
+                                  initialValue: ticket.assignedAgentId,
+                                  items: state.agents.map((a) {
+                                    final id = a['user_id'] as String? ?? '';
+                                    final role = a['role'] as String? ?? '';
+                                    final name = a['name'] as String? ?? id.substring(0, 8);
+                                    return DropdownMenuItem(value: id, child: Text('$name ($role)', style: const TextStyle(fontSize: 13)));
+                                  }).toList(),
+                                  onChanged: (agentId) {
+                                    if (agentId == null) return;
+                                    final agent = state.agents.firstWhere((a) => a['user_id'] == agentId, orElse: () => {});
+                                    final name = agent['name'] as String? ?? agentId.substring(0, 8);
+                                    cubit.assignAgent(agentId, name);
+                                  },
+                                ),
+
+                              const Divider(height: 32),
                               const Text('Internal Note', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                               const SizedBox(height: 8),
                               if (ticket.internalNote != null) ...[
@@ -179,6 +222,20 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                 ),
                                 const SizedBox(height: 12),
                               ],
+                              const Text('Quick Templates', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              const SizedBox(height: 6),
+                              Wrap(
+                                spacing: 6,
+                                runSpacing: 4,
+                                children: _kTemplates.map((t) => ActionChip(
+                                  label: Text(t.title, style: const TextStyle(fontSize: 11)),
+                                  onPressed: () {
+                                    _noteController.text = t.body;
+                                    _noteController.selection = TextSelection.collapsed(offset: t.body.length);
+                                  },
+                                )).toList(),
+                              ),
+                              const SizedBox(height: 8),
                               TextField(
                                 controller: _noteController,
                                 decoration: const InputDecoration(

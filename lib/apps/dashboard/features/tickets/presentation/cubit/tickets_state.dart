@@ -21,7 +21,8 @@ class TicketsLoaded extends TicketsState {
   final String searchQuery;
   final bool actionLoading;
   final String? actionMessage;
-  final List<SupportAttachment>? selectedTicketAttachments; // Useful for the details view
+  final List<SupportAttachment>? selectedTicketAttachments;
+  final List<Map<String, dynamic>> agents;
 
   const TicketsLoaded({
     required this.tickets,
@@ -32,6 +33,7 @@ class TicketsLoaded extends TicketsState {
     this.actionLoading = false,
     this.actionMessage,
     this.selectedTicketAttachments,
+    this.agents = const [],
   });
 
   SupportTicket? get selectedTicket {
@@ -97,6 +99,7 @@ class TicketsLoaded extends TicketsState {
     bool? actionLoading,
     String? actionMessage,
     List<SupportAttachment>? selectedTicketAttachments,
+    List<Map<String, dynamic>>? agents,
     bool clearFilterStatus = false,
     bool clearFilterPriority = false,
   }) {
@@ -107,8 +110,9 @@ class TicketsLoaded extends TicketsState {
       filterPriority: clearFilterPriority ? null : (filterPriority ?? this.filterPriority),
       searchQuery: searchQuery ?? this.searchQuery,
       actionLoading: actionLoading ?? this.actionLoading,
-      actionMessage: actionMessage, // don't persist actionMessage by default
+      actionMessage: actionMessage,
       selectedTicketAttachments: selectedTicketAttachments ?? this.selectedTicketAttachments,
+      agents: agents ?? this.agents,
     );
   }
 }

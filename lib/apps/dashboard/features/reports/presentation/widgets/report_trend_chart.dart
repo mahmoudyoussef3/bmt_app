@@ -10,20 +10,42 @@ class ReportTrendChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final trends = state.reportData.trends;
-    final scheme = Theme.of(context).colorScheme;
+    final occupancy = state.reportData.occupancyTrends;
 
-    if (trends.isEmpty) {
+    if (trends.isEmpty && occupancy.isEmpty) {
       return const SizedBox();
     }
 
-    final double maxVal = trends.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-    final double maxCeiling = maxVal == 0 ? 1000 : ((maxVal / 50).ceil() * 50).toDouble();
+    return Column(
+      children: [
+        if (trends.isNotEmpty) _BarChart(title: 'الاتجاهات', dataPoints: trends, suffix: ''),
+        if (trends.isNotEmpty && occupancy.isNotEmpty) const SizedBox(height: AppSpacing.medium),
+        if (occupancy.isNotEmpty) _BarChart(title: 'معدل الإشغال بالخط (%)', dataPoints: occupancy, suffix: '%', maxCeiling: 100),
+      ],
+    );
+  }
+}
+
+class _BarChart extends StatelessWidget {
+  final String title;
+  final List<MapEntry<String, double>> dataPoints;
+  final String suffix;
+  final double? maxCeiling;
+
+  const _BarChart({required this.title, required this.dataPoints, required this.suffix, this.maxCeiling});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    final double maxVal = dataPoints.map((e) => e.value).reduce((a, b) => a > b ? a : b);
+    final double computedCeiling = maxCeiling ?? (maxVal == 0 ? 1000 : ((maxVal / 50).ceil() * 50).toDouble());
 
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('رسم بياني توضيحي للاتجاهات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
           const SizedBox(height: AppSpacing.large),
           SizedBox(
             height: 160,
@@ -34,9 +56,9 @@ class ReportTrendChart extends StatelessWidget {
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(4, (index) {
-                    final double val = maxCeiling * (3 - index) / 3;
+                    final double val = computedCeiling * (3 - index) / 3;
                     return Text(
-                      val.toStringAsFixed(0),
+                      '${val.toStringAsFixed(0)}$suffix',
                       style: const TextStyle(fontSize: 8, color: Colors.grey),
                     );
                   }),
@@ -50,8 +72,8 @@ class ReportTrendChart extends StatelessWidget {
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.end,
-                        children: trends.map((e) {
-                          final double barPct = maxCeiling == 0 ? 0.0 : e.value / maxCeiling;
+                        children: dataPoints.map((e) {
+                          final double barPct = computedCeiling == 0 ? 0.0 : e.value / computedCeiling;
                           return Column(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [

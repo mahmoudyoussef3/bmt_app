@@ -189,6 +189,23 @@ class FleetVehicle {
   String get imageLabel => vehicleCode;
   String get type => vehicleType;
 
+  bool _isExpired(String dateStr) {
+    final d = DateTime.tryParse(dateStr);
+    return d != null && d.isBefore(DateTime.now());
+  }
+
+  bool _isExpiringSoon(String dateStr) {
+    final d = DateTime.tryParse(dateStr);
+    if (d == null) return false;
+    final diff = d.difference(DateTime.now()).inDays;
+    return diff >= 0 && diff <= 30;
+  }
+
+  bool get hasExpiredDocument =>
+      _isExpired(licenseExpiry) || _isExpired(insuranceExpiry) || _isExpired(inspectionExpiry);
+  bool get hasDocumentExpiringSoon =>
+      _isExpiringSoon(licenseExpiry) || _isExpiringSoon(insuranceExpiry) || _isExpiringSoon(inspectionExpiry);
+
   FleetVehicle copyWith({
     String? id,
     String? vehicleCode,

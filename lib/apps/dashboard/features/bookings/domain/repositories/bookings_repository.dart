@@ -30,4 +30,6 @@ abstract class BookingsRepository {
     String reviewer,
     String reason,
   );
+
+  Stream<List<OperationBooking>> watchBookings();
 }

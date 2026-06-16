@@ -7,17 +7,28 @@ import '../../domain/entities/incident_report.dart';
 import '../cubit/incident_cubit.dart';
 
 class ReportIncidentPage extends StatefulWidget {
-  const ReportIncidentPage({super.key, required this.tripId});
+  const ReportIncidentPage({
+    super.key,
+    required this.tripId,
+    this.initialType = IncidentType.delay,
+  });
 
   final String tripId;
+  final IncidentType initialType;
 
   @override
   State<ReportIncidentPage> createState() => _ReportIncidentPageState();
 }
 
 class _ReportIncidentPageState extends State<ReportIncidentPage> {
-  IncidentType _type = IncidentType.delay;
+  late IncidentType _type;
   String _description = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _type = widget.initialType;
+  }
 
   @override
   Widget build(BuildContext context) {

@@ -59,6 +59,18 @@ class FleetDriver {
     this.activityTimeline = const [],
   });
 
+  DateTime? get _parsedLicenseExpiry => DateTime.tryParse(licenseExpiryDate);
+  bool get isLicenseExpired {
+    final d = _parsedLicenseExpiry;
+    return d != null && d.isBefore(DateTime.now());
+  }
+  bool get isLicenseExpiringSoon {
+    final d = _parsedLicenseExpiry;
+    if (d == null) return false;
+    final diff = d.difference(DateTime.now()).inDays;
+    return diff >= 0 && diff <= 30;
+  }
+
   // Legacy compatibility getters:
   String get name => fullName;
   String get emergencyContact => emergencyPhone;

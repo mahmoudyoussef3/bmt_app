@@ -141,7 +141,11 @@ class _TripsViewState extends State<_TripsView> {
                     const SizedBox(height: AppSpacing.large),
                     _FilterBar(listState: listState),
                     const SizedBox(height: AppSpacing.medium),
-                    _TripsTable(listState: listState, onOpenTrip: _openTrip),
+                    _TripsTable(
+                      listState: listState,
+                      onOpenTrip: _openTrip,
+                      onDuplicateTrip: _duplicateTrip,
+                    ),
                   ],
                 );
               },
@@ -163,6 +167,21 @@ class _TripsViewState extends State<_TripsView> {
         curve: Curves.easeOutCubic,
       );
     });
+  }
+
+  void _duplicateTrip(OperationTrip source) {
+    final tripsCubit = context.read<TripsListCubit>();
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => BlocProvider(
+        create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: TripCreationWizardDialog(prefillTrip: source),
+        ),
+      ),
+    ).then((_) => tripsCubit.load());
   }
 }
 
@@ -510,7 +529,12 @@ class _StringFilter extends StatelessWidget {
 class _TripsTable extends StatelessWidget {
   final TripsListLoaded listState;
   final ValueChanged<OperationTrip> onOpenTrip;
-  const _TripsTable({required this.listState, required this.onOpenTrip});
+  final ValueChanged<OperationTrip> onDuplicateTrip;
+  const _TripsTable({
+    required this.listState,
+    required this.onOpenTrip,
+    required this.onDuplicateTrip,
+  });
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -584,6 +608,7 @@ class _TripsTable extends StatelessWidget {
                         trip: trip,
                         selected: selectedId == trip.id,
                         onOpen: () => onOpenTrip(trip),
+                        onDuplicate: () => onDuplicateTrip(trip),
                       );
                     },
                   );
@@ -600,11 +625,13 @@ class _TripOperationCard extends StatelessWidget {
   final OperationTrip trip;
   final bool selected;
   final VoidCallback onOpen;
+  final VoidCallback onDuplicate;
 
   const _TripOperationCard({
     required this.trip,
     required this.selected,
     required this.onOpen,
+    required this.onDuplicate,
   });
 
   @override
@@ -691,6 +718,14 @@ class _TripOperationCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.small),
+                    Tooltip(
+                      message: 'نسخ الرحلة',
+                      child: IconButton(
+                        onPressed: onDuplicate,
+                        icon: const Icon(Icons.copy_rounded),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
                     Tooltip(
                       message: 'فتح مساحة تشغيل الرحلة',
                       child: IconButton.filledTonal(

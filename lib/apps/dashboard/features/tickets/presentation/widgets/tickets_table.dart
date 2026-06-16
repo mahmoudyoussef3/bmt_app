@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
+import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 import 'tickets_shared_widgets.dart';
@@ -59,9 +60,14 @@ class TicketsTable extends StatelessWidget {
                       DataColumn(label: Text('Created At', style: TextStyle(fontWeight: FontWeight.bold))),
                       DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
                       DataColumn(label: Text('Priority', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('SLA', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('Agent', style: TextStyle(fontWeight: FontWeight.bold))),
                     ],
                     rows: filtered.map((t) {
                       return DataRow(
+                        color: t.slaBreached
+                            ? WidgetStateProperty.all(Colors.red.withAlpha(20))
+                            : null,
                         onSelectChanged: (_) {
                           cubit.selectTicket(t.id);
                           showDialog(
@@ -82,6 +88,8 @@ class TicketsTable extends StatelessWidget {
                           )),
                           DataCell(StatusBadge(status: t.status)),
                           DataCell(PriorityBadge(priority: t.priority)),
+                          DataCell(_SlaBadge(ticket: t)),
+                          DataCell(Text(t.assignedAgentName ?? '—', style: const TextStyle(fontSize: 12))),
                         ],
                       );
                     }).toList(),
@@ -91,6 +99,43 @@ class TicketsTable extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _SlaBadge extends StatelessWidget {
+  const _SlaBadge({required this.ticket});
+  final SupportTicket ticket;
+
+  @override
+  Widget build(BuildContext context) {
+    if (ticket.slaDueAt == null) return const Text('—', style: TextStyle(fontSize: 12));
+    if (ticket.slaBreached) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: Colors.red.withAlpha(30),
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: Colors.red.withAlpha(120)),
+        ),
+        child: const Text('BREACHED', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
+      );
+    }
+    final remaining = ticket.slaDueAt!.difference(DateTime.now());
+    final label = remaining.isNegative
+        ? 'Overdue'
+        : remaining.inHours > 0
+            ? '${remaining.inHours}h left'
+            : '${remaining.inMinutes}m left';
+    final color = ticket.isSlaNearBreach ? Colors.orange : Colors.green;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withAlpha(30),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withAlpha(120)),
+      ),
+      child: Text(label, style: TextStyle(fontSize: 11, color: color)),
     );
   }
 }

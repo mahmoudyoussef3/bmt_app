@@ -80,8 +80,30 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                     },
                   ),
             ),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                children: [
+                  'أنا في الطريق',
+                  'وصلت المحطة',
+                  'الرحلة بدأت',
+                  'هل أنت في المكان؟',
+                  'سأصل خلال 5 دقائق',
+                ].map((text) => Padding(
+                  padding: const EdgeInsets.only(right: 6),
+                  child: ActionChip(
+                    label: Text(text, style: const TextStyle(fontSize: 12)),
+                    onPressed: () {
+                      _controller.text = text;
+                      _controller.selection = TextSelection.collapsed(offset: text.length);
+                    },
+                  ),
+                )).toList(),
+              ),
+            ),
             Padding(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
               child: Row(
                 children: [
                   Expanded(

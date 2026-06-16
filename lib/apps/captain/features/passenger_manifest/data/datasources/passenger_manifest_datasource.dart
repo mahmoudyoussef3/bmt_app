@@ -7,6 +7,14 @@ class PassengerManifestDataSource {
 
   final SupabaseClient _supabase;
 
+  Stream<void> watchPassengerUpdates(String tripId) {
+    return _supabase
+        .from('trip_passengers')
+        .stream(primaryKey: ['id'])
+        .eq('trip_id', tripId)
+        .map((_) {});
+  }
+
   Future<List<PassengerModel>> getTripPassengers(String tripId) async {
     final response = await _supabase
         .from('trip_passengers')

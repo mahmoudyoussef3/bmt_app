@@ -12,4 +12,7 @@ class CaptainTripRepositoryImpl implements CaptainTripRepository {
     final models = await _dataSource.getAssignedTrips();
     return models.map((model) => model.toEntity()).toList();
   }
+
+  @override
+  Stream<void> watchTripUpdates() => _dataSource.watchTripUpdates();
 }

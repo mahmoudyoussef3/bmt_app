@@ -16,6 +16,7 @@ class BookingPaymentVerificationModel extends BookingPaymentVerification {
     required super.status,
     required super.notes,
     required super.history,
+    super.receiptUrl,
   });
 
   factory BookingPaymentVerificationModel.fromEntity(
@@ -33,6 +34,7 @@ class BookingPaymentVerificationModel extends BookingPaymentVerification {
       referenceNumber: verification.referenceNumber,
       receiptTitle: verification.receiptTitle,
       receiptMeta: verification.receiptMeta,
+      receiptUrl: verification.receiptUrl,
       status: verification.status,
       notes: verification.notes,
       history: verification.history,

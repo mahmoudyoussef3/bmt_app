@@ -5,7 +5,7 @@ import '../datasources/chat_datasource.dart';
 class CommunicationRepositoryImpl implements CommunicationRepository {
   const CommunicationRepositoryImpl(this._dataSource);
 
-  final ChatDataSource _dataSource;
+  final ChatDatasource _dataSource;
 
   @override
   Future<CaptainConversation> getConversation({
@@ -32,4 +32,8 @@ class CommunicationRepositoryImpl implements CommunicationRepository {
       type: type,
     )).toEntity();
   }
+
+  @override
+  Stream<String> watchIncomingOpsMessages() =>
+      _dataSource.watchIncomingOpsMessages();
 }

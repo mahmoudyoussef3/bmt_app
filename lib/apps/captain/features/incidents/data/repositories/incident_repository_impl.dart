@@ -5,7 +5,7 @@ import '../datasources/incident_datasource.dart';
 class IncidentRepositoryImpl implements IncidentRepository {
   const IncidentRepositoryImpl(this._dataSource);
 
-  final IncidentDataSource _dataSource;
+  final IncidentDatasource _dataSource;
 
   @override
   Future<IncidentReport> reportIncident(IncidentReport report) async {

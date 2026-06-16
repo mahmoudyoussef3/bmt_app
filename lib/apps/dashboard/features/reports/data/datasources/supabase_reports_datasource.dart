@@ -187,7 +187,37 @@ class SupabaseReportsDatasource implements ReportsDatasource {
         break;
     }
 
-    return ReportData(kpis: kpis, rows: rows, trends: trends);
+    final occupancyTrends = await _fetchOccupancyByRoute(startOfDay, endOfDay);
+    return ReportData(kpis: kpis, rows: rows, trends: trends, occupancyTrends: occupancyTrends);
+  }
+
+  Future<List<MapEntry<String, double>>> _fetchOccupancyByRoute(String start, String end) async {
+    try {
+      final response = await _client
+          .from('operation_trips')
+          .select('operation_routes(name), trip_passengers(id), vehicles(capacity)')
+          .gte('trip_date', start)
+          .lte('trip_date', end)
+          .inFilter('status', ['completed', 'in_progress'])
+          .limit(10);
+
+      final routeOccupancy = <String, List<double>>{};
+      for (final r in (response as List)) {
+        final routeName = (r['operation_routes'] as Map<String, dynamic>?)?['name'] as String? ?? 'غير محدد';
+        final capacity = (r['vehicles'] as Map<String, dynamic>?)?['capacity'] as int? ?? 1;
+        final passengers = (r['trip_passengers'] as List?)?.length ?? 0;
+        final occupancy = capacity > 0 ? (passengers / capacity * 100) : 0.0;
+        routeOccupancy.putIfAbsent(routeName, () => []).add(occupancy);
+      }
+
+      return routeOccupancy.entries.map((e) {
+        final avg = e.value.isNotEmpty ? e.value.reduce((a, b) => a + b) / e.value.length : 0.0;
+        final label = e.key.length > 10 ? e.key.substring(0, 10) : e.key;
+        return MapEntry(label, avg);
+      }).toList();
+    } catch (_) {
+      return const [];
+    }
   }
 
   @override

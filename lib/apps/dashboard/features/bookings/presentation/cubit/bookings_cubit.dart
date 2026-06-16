@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/operation_booking.dart';
@@ -8,6 +10,7 @@ import '../../domain/usecases/get_operation_bookings_usecase.dart';
 import '../../domain/usecases/reject_booking_usecase.dart';
 import '../../domain/usecases/request_reupload_usecase.dart';
 import '../../domain/usecases/update_booking_status_usecase.dart';
+import '../../domain/usecases/watch_bookings_usecase.dart';
 import '../models/booking_filters.dart';
 import 'bookings_state.dart';
 
@@ -19,6 +22,9 @@ class BookingsCubit extends Cubit<BookingsState> {
   final ApproveBookingUseCase _approveBooking;
   final RejectBookingUseCase _rejectBooking;
   final RequestReuploadUseCase _requestReupload;
+  final WatchBookingsUseCase _watchBookings;
+
+  StreamSubscription<List<OperationBooking>>? _bookingsSubscription;
 
   BookingsCubit({
     required GetOperationBookingsUseCase getBookings,
@@ -28,6 +34,7 @@ class BookingsCubit extends Cubit<BookingsState> {
     required ApproveBookingUseCase approveBooking,
     required RejectBookingUseCase rejectBooking,
     required RequestReuploadUseCase requestReupload,
+    required WatchBookingsUseCase watchBookings,
   }) : _getBookings = getBookings,
        _updateStatus = updateStatus,
        _bulkUpdateStatus = bulkUpdateStatus,
@@ -35,6 +42,7 @@ class BookingsCubit extends Cubit<BookingsState> {
        _approveBooking = approveBooking,
        _rejectBooking = rejectBooking,
        _requestReupload = requestReupload,
+       _watchBookings = watchBookings,
        super(const BookingsLoading());
 
   Future<void> load() async {
@@ -42,9 +50,29 @@ class BookingsCubit extends Cubit<BookingsState> {
     try {
       final bookings = await _getBookings();
       emit(BookingsLoaded(bookings: bookings, filters: const BookingFilters()));
+      _bookingsSubscription?.cancel();
+      _bookingsSubscription = _watchBookings().listen(_onRealtimeUpdate);
     } catch (error) {
       emit(BookingsError(error.toString()));
     }
+  }
+
+  void _onRealtimeUpdate(List<OperationBooking> updatedBookings) {
+    final current = state;
+    if (current is! BookingsLoaded) return;
+    final opened = current.openedBooking == null
+        ? null
+        : updatedBookings.firstWhere(
+            (b) => b.id == current.openedBooking!.id,
+            orElse: () => current.openedBooking!,
+          );
+    emit(current.copyWith(bookings: updatedBookings, openedBooking: opened));
+  }
+
+  @override
+  Future<void> close() {
+    _bookingsSubscription?.cancel();
+    return super.close();
   }
 
   void switchTab(BookingStatus status) {

@@ -4,15 +4,27 @@ import '../../domain/entities/assigned_trip.dart';
 import '../models/assigned_trip_model.dart';
 
 class CaptainTripRemoteDataSource {
-  const CaptainTripRemoteDataSource(this._supabase);
+  CaptainTripRemoteDataSource(this._supabase);
 
   final SupabaseClient _supabase;
+  String? _cachedDriverId;
+
+  Stream<void> watchTripUpdates() {
+    final driverId = _cachedDriverId;
+    if (driverId == null) return const Stream.empty();
+    return _supabase
+        .from('operation_trips')
+        .stream(primaryKey: ['id'])
+        .eq('driver_id', driverId)
+        .map((_) {});
+  }
 
   Future<List<AssignedTripModel>> getAssignedTrips() async {
     final user = _supabase.auth.currentUser;
     if (user == null) return const [];
 
-    final driverId = await _resolveDriverId(user);
+    _cachedDriverId = await _resolveDriverId(user);
+    final driverId = _cachedDriverId;
     if (driverId == null) return const [];
 
     final response = await _supabase

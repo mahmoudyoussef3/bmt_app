@@ -14,7 +14,8 @@ import '../../shared/domain/entities/operation_trip.dart';
 import '../../trip_creation/presentation/cubit/trip_creation_cubit.dart';
 
 class TripCreationWizardDialog extends StatelessWidget {
-  const TripCreationWizardDialog({super.key});
+  const TripCreationWizardDialog({super.key, this.prefillTrip});
+  final OperationTrip? prefillTrip;
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +86,7 @@ class TripCreationWizardDialog extends StatelessWidget {
             routes: parsedRoutes,
             vehicles: parsedVehicles,
             drivers: parsedDrivers,
+            prefillTrip: prefillTrip,
           );
         }
 
@@ -172,12 +174,14 @@ class TripCreationWizard extends StatefulWidget {
   final List<OperationRoute> routes;
   final List<FleetVehicle> vehicles;
   final List<FleetDriver> drivers;
+  final OperationTrip? prefillTrip;
 
   const TripCreationWizard({
     super.key,
     required this.routes,
     required this.vehicles,
     required this.drivers,
+    this.prefillTrip,
   });
 
   @override
@@ -204,6 +208,20 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   // Pricing values
   // Matrix format: fromPointId_toPointId -> prices
   Map<String, _PricingConfig> _pricingMatrix = {};
+
+  @override
+  void initState() {
+    super.initState();
+    final prefill = widget.prefillTrip;
+    if (prefill != null) {
+      _selectedRoute = widget.routes.where((r) => r.id == prefill.routeId).firstOrNull;
+      _selectedVehicle = widget.vehicles.where((v) => v.id == prefill.vehicleId).firstOrNull;
+      _selectedDriver = widget.drivers.where((d) => d.id == prefill.driverId).firstOrNull;
+      _timeController.text = prefill.departure;
+      _arrivalController.text = prefill.arrival;
+      if (_selectedRoute != null) _initializeWizardData();
+    }
+  }
 
   @override
   void dispose() {

@@ -107,6 +107,8 @@ class FleetDriverDetailsView extends StatelessWidget {
           },
         ),
         const SizedBox(height: AppSpacing.large),
+        _PerformanceMetricsCard(driver: driver),
+        const SizedBox(height: AppSpacing.large),
         LayoutBuilder(
           builder: (context, constraints) {
             final isDesktop = constraints.maxWidth >= 900;
@@ -553,6 +555,77 @@ class _HistoryTimeline extends StatelessWidget {
                 );
               },
             ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PerformanceMetricsCard extends StatelessWidget {
+  const _PerformanceMetricsCard({required this.driver});
+  final FleetDriver driver;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tripCount = driver.tripHistory.length;
+    final violationCount = driver.violations.length;
+    final licenseExpired = driver.isLicenseExpired;
+    final licenseWarn = driver.isLicenseExpiringSoon;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'مؤشرات الأداء',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          Row(
+            children: [
+              Expanded(child: _PerfMetric(label: 'إجمالي الرحلات', value: '$tripCount', icon: Icons.map_outlined, color: scheme.primary)),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(child: _PerfMetric(label: 'المخالفات', value: '$violationCount', icon: Icons.gpp_bad_outlined, color: violationCount > 0 ? scheme.error : scheme.primary)),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(child: _PerfMetric(
+                label: 'الرخصة',
+                value: licenseExpired ? 'منتهية' : licenseWarn ? 'تنتهي قريباً' : 'سارية',
+                icon: Icons.badge_outlined,
+                color: licenseExpired ? scheme.error : licenseWarn ? scheme.tertiary : scheme.primary,
+              )),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PerfMetric extends StatelessWidget {
+  const _PerfMetric({required this.label, required this.value, required this.icon, required this.color});
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color, size: 20),
+          const SizedBox(height: 6),
+          Text(value, style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: color)),
+          const SizedBox(height: 2),
+          Text(label, style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );

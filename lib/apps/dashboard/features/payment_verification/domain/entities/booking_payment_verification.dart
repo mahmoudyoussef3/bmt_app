@@ -42,6 +42,7 @@ class BookingPaymentVerification {
   final String referenceNumber;
   final String receiptTitle;
   final String receiptMeta;
+  final String? receiptUrl;
   final BookingVerificationStatus status;
   final List<String> notes;
   final List<VerificationHistoryItem> history;
@@ -61,6 +62,7 @@ class BookingPaymentVerification {
     required this.status,
     required this.notes,
     required this.history,
+    this.receiptUrl,
   });
 
   BookingPaymentVerification copyWith({
@@ -81,6 +83,7 @@ class BookingPaymentVerification {
       referenceNumber: referenceNumber,
       receiptTitle: receiptTitle,
       receiptMeta: receiptMeta,
+      receiptUrl: receiptUrl,
       status: status ?? this.status,
       notes: notes ?? this.notes,
       history: history ?? this.history,

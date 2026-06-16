@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_button.dart';
@@ -6,6 +7,8 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/finance_payment.dart';
+import '../cubit/payments_cubit.dart';
+import '../cubit/payments_state.dart';
 import 'payment_note_dialog.dart';
 
 class PaymentDetailsPanel extends StatelessWidget {
@@ -138,44 +141,70 @@ class _ReceiptPreview extends StatelessWidget {
               height: 330,
               width: double.infinity,
               color: scheme.surfaceContainerHighest,
-              child: Center(
-                child: Transform.scale(
-                  scale: zoom,
-                  child: Container(
-                    width: 220,
-                    padding: const EdgeInsets.all(AppSpacing.large),
-                    decoration: BoxDecoration(
-                      color: scheme.surface,
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: scheme.outlineVariant),
+              child: payment.receiptUrl != null &&
+                      payment.receiptUrl!.isNotEmpty
+                  ? InteractiveViewer(
+                      minScale: 0.8,
+                      maxScale: 4.0,
+                      child: Transform.scale(
+                        scale: zoom,
+                        child: Image.network(
+                          payment.receiptUrl!,
+                          fit: BoxFit.contain,
+                          loadingBuilder: (context, child, progress) {
+                            if (progress == null) return child;
+                            return const Center(
+                              child: CircularProgressIndicator(),
+                            );
+                          },
+                          errorBuilder: (_, e, s) => Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.broken_image_outlined,
+                                  size: 46,
+                                  color: scheme.error,
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'تعذر تحميل الإيصال',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(color: scheme.error),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    )
+                  : Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.image_not_supported_outlined,
+                            size: 46,
+                            color: scheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(height: AppSpacing.medium),
+                          Text(
+                            payment.receiptLabel,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          const SizedBox(height: AppSpacing.small),
+                          Text(
+                            'لم يتم رفع إيصال بعد',
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: scheme.onSurfaceVariant),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.image_outlined, size: 46),
-                        const SizedBox(height: AppSpacing.medium),
-                        Text(
-                          payment.receiptLabel,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.small),
-                        Text(
-                          payment.referenceNumber,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                        const Divider(height: AppSpacing.large),
-                        Text(
-                          payment.receiptMeta,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
             ),
           ),
         ],
@@ -194,6 +223,18 @@ class _ActionBar extends StatelessWidget {
     required this.onStatus,
     required this.onAddNote,
   });
+
+  void _showReassignDialog(BuildContext context) {
+    final cubit = context.read<PaymentsCubit>();
+    cubit.loadAvailableTrips();
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => BlocProvider.value(
+        value: cubit,
+        child: _ReassignDialog(bookingId: payment.id),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -230,8 +271,86 @@ class _ActionBar extends StatelessWidget {
               );
             },
           ),
+          AppButton(
+            label: 'تحويل الحجز',
+            height: 42,
+            outline: true,
+            onPressed: () => _showReassignDialog(context),
+          ),
         ],
       ),
+    );
+  }
+}
+
+class _ReassignDialog extends StatefulWidget {
+  const _ReassignDialog({required this.bookingId});
+  final String bookingId;
+
+  @override
+  State<_ReassignDialog> createState() => _ReassignDialogState();
+}
+
+class _ReassignDialogState extends State<_ReassignDialog> {
+  String? _selectedTripId;
+
+  String _tripLabel(Map<String, dynamic> t) {
+    final route = (t['operation_routes'] as Map<String, dynamic>?)?['name'] ?? '';
+    final date = t['trip_date'] as String? ?? '';
+    final time = t['departure_time'] as String? ?? '';
+    return '$route · $date · $time';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<PaymentsCubit, PaymentsState>(
+      builder: (context, state) {
+        final trips = state is PaymentsLoaded ? state.availableTrips : <Map<String, dynamic>>[];
+        final error = state is PaymentsLoaded ? state.reassignError : null;
+
+        return AlertDialog(
+          title: const Text('تحويل الحجز إلى رحلة أخرى'),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (trips.isEmpty)
+                  const Center(child: CircularProgressIndicator())
+                else
+                  DropdownButtonFormField<String>(
+                    key: ValueKey(_selectedTripId),
+                    decoration: const InputDecoration(
+                      labelText: 'اختر الرحلة الجديدة',
+                      border: OutlineInputBorder(),
+                    ),
+                    initialValue: _selectedTripId,
+                    items: trips.map((t) {
+                      final id = t['id'] as String;
+                      return DropdownMenuItem(value: id, child: Text(_tripLabel(t), style: const TextStyle(fontSize: 13)));
+                    }).toList(),
+                    onChanged: (v) => setState(() => _selectedTripId = v),
+                  ),
+                if (error != null) ...[
+                  const SizedBox(height: 8),
+                  Text(error, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13)),
+                ],
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('إلغاء')),
+            FilledButton(
+              onPressed: _selectedTripId == null ? null : () async {
+                final success = await context.read<PaymentsCubit>().reassignBooking(widget.bookingId, _selectedTripId!);
+                if (success && context.mounted) Navigator.of(context).pop();
+              },
+              child: const Text('تحويل'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -340,53 +459,67 @@ class _HistoryTimeline extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('سجل الإجراءات', style: Theme.of(context).textTheme.titleMedium),
+          Row(
+            children: [
+              const Icon(Icons.history_rounded, size: 18),
+              const SizedBox(width: 6),
+              Text('سجل الإجراءات', style: Theme.of(context).textTheme.titleMedium),
+              const Spacer(),
+              Text('${items.length} إجراء', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+            ],
+          ),
           const SizedBox(height: AppSpacing.medium),
-          ...items.map(
-            (item) => Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
+          if (items.isEmpty)
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
+                child: Column(
                   children: [
-                    CircleAvatar(radius: 7, backgroundColor: scheme.primary),
-                    Container(
-                      width: 2,
-                      height: 54,
-                      color: scheme.outlineVariant,
-                    ),
+                    Icon(Icons.assignment_outlined, size: 36, color: scheme.onSurfaceVariant),
+                    const SizedBox(height: 8),
+                    Text('لا توجد إجراءات مسجلة', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
                   ],
                 ),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                item.title,
-                                style: Theme.of(context).textTheme.titleSmall,
-                              ),
-                            ),
-                            Text(
-                              item.time,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
+              ),
+            )
+          else
+            ...items.asMap().entries.map((entry) {
+              final isLast = entry.key == items.length - 1;
+              final item = entry.value;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    children: [
+                      CircleAvatar(radius: 7, backgroundColor: scheme.primary),
+                      if (!isLast)
+                        Container(width: 2, height: 54, color: scheme.outlineVariant),
+                    ],
+                  ),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.medium),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(child: Text(item.title, style: Theme.of(context).textTheme.titleSmall)),
+                              Text(item.time, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                            ],
+                          ),
+                          if (item.description.isNotEmpty) ...[
+                            const SizedBox(height: AppSpacing.xSmall),
+                            Text(item.description, style: Theme.of(context).textTheme.bodySmall),
                           ],
-                        ),
-                        const SizedBox(height: AppSpacing.xSmall),
-                        Text(item.description),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ],
-            ),
-          ),
+                ],
+              );
+            }),
         ],
       ),
     );

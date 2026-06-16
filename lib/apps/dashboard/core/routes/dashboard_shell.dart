@@ -28,6 +28,7 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/tickets/presentation/screens/tickets_screen.dart';
 import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
 import '../../features/trips/presentation/screens/trips_screen.dart';
+import '../../features/users/domain/usecases/get_current_user_role_usecase.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
 import '../di/dashboard_di.dart';
 import '../permissions/dashboard_permission.dart';
@@ -44,8 +45,21 @@ class DashboardShell extends StatefulWidget {
 }
 
 class _DashboardShellState extends State<DashboardShell> {
-  DashboardRole _role = DashboardRole.customerService;
+  DashboardRole _role = DashboardRole.supportAgent;
   String _route = DashboardRoutes.home;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadRole();
+  }
+
+  Future<void> _loadRole() async {
+    try {
+      final role = await dashboardDi<GetCurrentUserRoleUseCase>()();
+      if (mounted && role != null) setState(() => _role = role);
+    } catch (_) {}
+  }
 
   late final List<_DashboardNavItem> _items = [
     _DashboardNavItem(

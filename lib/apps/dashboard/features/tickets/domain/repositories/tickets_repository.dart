@@ -12,4 +12,8 @@ abstract class TicketsRepository {
   Future<SupportTicket> closeTicket(String id);
 
   Future<List<SupportAttachment>> getTicketAttachments(String ticketId);
+
+  Future<SupportTicket> assignAgent(String ticketId, String agentId, String agentName);
+
+  Future<List<Map<String, dynamic>>> getAgents();
 }

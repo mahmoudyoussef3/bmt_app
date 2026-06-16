@@ -73,4 +73,28 @@ class SupabaseTicketsDatasource {
 
     return response.map((json) => SupportAttachmentModel.fromJson(json)).toList();
   }
+
+  Future<SupportTicketModel> assignAgent(
+    String ticketId,
+    String agentId,
+    String agentName,
+  ) async {
+    final response = await _client.from(_table).update({
+      'assigned_agent_id': agentId,
+      'assigned_agent_name': agentName,
+    }).eq('id', ticketId).select('''
+      *,
+      clients:client_id(id, full_name, phone)
+    ''').single();
+    return SupportTicketModel.fromJson(response);
+  }
+
+  Future<List<Map<String, dynamic>>> getAgents() async {
+    final rows = await _client
+        .from('user_roles')
+        .select('user_id, role')
+        .not('role', 'eq', 'client')
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(rows);
+  }
 }

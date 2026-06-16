@@ -33,6 +33,7 @@ class FinancePayment {
   final String referenceNumber;
   final String receiptLabel;
   final String receiptMeta;
+  final String? receiptUrl;
   final List<String> notes;
   final List<PaymentHistoryItem> history;
 
@@ -49,6 +50,7 @@ class FinancePayment {
     required this.referenceNumber,
     required this.receiptLabel,
     required this.receiptMeta,
+    this.receiptUrl,
     required this.notes,
     required this.history,
   });
@@ -71,6 +73,7 @@ class FinancePayment {
       referenceNumber: referenceNumber,
       receiptLabel: receiptLabel,
       receiptMeta: receiptMeta,
+      receiptUrl: receiptUrl,
       notes: notes ?? this.notes,
       history: history ?? this.history,
     );
