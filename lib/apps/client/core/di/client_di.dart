@@ -36,8 +36,6 @@ import '../../features/booking/domain/usecases/get_vehicle_details_usecase.dart'
 import '../../features/booking/domain/usecases/get_vehicles_usecase.dart';
 import '../../features/booking/domain/usecases/sort_vehicles_usecase.dart';
 import '../../features/booking/presentation/cubit/booking_cubit.dart';
-import '../../features/communication/data/datasources/supabase_communication_datasource.dart';
-import '../../features/communication/data/repositories/communication_repository_impl.dart';
 import '../../features/communication/domain/repositories/communication_repository.dart';
 import '../../features/communication/domain/usecases/add_conversation_message_usecase.dart';
 import '../../features/communication/domain/usecases/get_conversations_usecase.dart';
@@ -61,7 +59,7 @@ import '../../features/notifications/domain/repositories/notifications_repositor
 import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
 import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
 import '../../features/payments/data/datasources/payment_datasource.dart';
-import '../../features/payments/data/datasources/static_payment_datasource.dart';
+import '../../features/payments/data/datasources/supabase_payment_datasource.dart';
 import '../../features/payments/data/repositories/payment_repository_impl.dart';
 import '../../features/payments/domain/repositories/payment_repository.dart';
 import '../../features/payments/domain/usecases/apply_promo_code_usecase.dart';
@@ -117,7 +115,6 @@ import '../../features/support/domain/usecases/create_support_ticket_usecase.dar
 import '../../features/support/domain/usecases/get_support_workspace_usecase.dart';
 import '../../features/support/domain/usecases/get_my_support_tickets_usecase.dart';
 import '../../features/support/domain/usecases/get_ticket_details_usecase.dart';
-
 
 import '../../features/support/presentation/cubit/support_cubit.dart';
 import '../../features/trips/data/datasources/supabase_trips_datasource.dart';
@@ -474,7 +471,7 @@ void _registerSeatReleaseDependencies() {
 void _registerPaymentDependencies() {
   if (!clientGetIt.isRegistered<PaymentDatasource>()) {
     clientGetIt.registerLazySingleton<PaymentDatasource>(
-      () => const StaticPaymentDatasource(),
+      () => SupabasePaymentDatasource(clientGetIt<SupabaseClient>()),
     );
   }
 
@@ -740,9 +737,6 @@ void _registerRoutesHubDependencies() {
 }
 
 void _registerCommunicationDependencies() {
-
-
-
   if (!clientGetIt.isRegistered<GetConversationsUseCase>()) {
     clientGetIt.registerLazySingleton<GetConversationsUseCase>(
       () => GetConversationsUseCase(clientGetIt<CommunicationRepository>()),

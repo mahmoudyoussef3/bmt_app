@@ -19,7 +19,6 @@ class PaymentCheckoutScreen extends StatefulWidget {
 
 class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   final TextEditingController _promoController = TextEditingController();
-  final TextEditingController _notesController = TextEditingController();
 
   @override
   void initState() {
@@ -30,7 +29,6 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   @override
   void dispose() {
     _promoController.dispose();
-    _notesController.dispose();
     super.dispose();
   }
 
@@ -40,10 +38,16 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
 
   void _onPayPressed(PaymentCheckoutLoaded state) {
     final method = state.selectedPaymentMethod;
-    final notes = _notesController.text.trim();
+    final validationMessage = _validationMessage(state);
+    if (validationMessage != null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(validationMessage)));
+      return;
+    }
+    if (method == null) return;
 
     if (state.requiresReceipt) {
-      // Navigate to receipt upload screen
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => ReceiptUploadScreen(
@@ -51,12 +55,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             paymentMethod: method,
             promoCode: state.appliedPromoCode,
             promoDiscount: state.promoDiscount,
-            paymentNotes: notes.isEmpty ? null : notes,
           ),
         ),
       );
     } else {
-      // Direct payment processing
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => PaymentProcessingScreen(
@@ -71,19 +73,18 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     }
   }
 
-  void _onSimulateFailurePressed(PaymentCheckoutLoaded state) {
+  String? _validationMessage(PaymentCheckoutLoaded state) {
+    if (!widget.checkoutData.isReadyForPayment) {
+      return 'Missing booking details: ${widget.checkoutData.missingRequiredFields.join(', ')}.';
+    }
     final method = state.selectedPaymentMethod;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PaymentProcessingScreen(
-          checkoutData: widget.checkoutData,
-          paymentMethod: method,
-          promoCode: state.appliedPromoCode,
-          promoDiscount: state.promoDiscount,
-          simulateFailure: true,
-        ),
-      ),
-    );
+    if (method == null) return 'Choose a payment method to continue.';
+    final total = widget.checkoutData.totalForDiscount(state.promoDiscount);
+    if (method.type == PaymentMethodType.walletBalance &&
+        widget.checkoutData.walletBalance < total) {
+      return 'Wallet balance is not enough for this payment.';
+    }
+    return null;
   }
 
   @override
@@ -95,12 +96,13 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
     return BlocBuilder<PaymentCubit, PaymentState>(
       builder: (context, state) {
         if (state is PaymentLoading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const _PaymentLoadingScaffold();
         }
         if (state is PaymentError) {
-          return Scaffold(body: Center(child: Text(state.message)));
+          return _PaymentErrorScaffold(
+            message: state.message,
+            onRetry: () => context.read<PaymentCubit>().loadCheckout(),
+          );
         }
         final checkoutState = state as PaymentCheckoutLoaded;
         final totalAmount = widget.checkoutData.totalForDiscount(
@@ -133,12 +135,12 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Checkout',
+                                'Payment',
                                 style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w800),
+                                    ?.copyWith(fontWeight: FontWeight.w900),
                               ),
                               Text(
-                                'Secure checkout · encrypted',
+                                'Review, choose method, confirm',
                                 style: Theme.of(context).textTheme.bodySmall
                                     ?.copyWith(
                                       color: scheme.secondary,
@@ -148,10 +150,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                             ],
                           ),
                         ),
-                        StatusChip(
-                          label: 'Secure demo',
-                          color: scheme.primary.withAlpha(24),
-                        ),
+                        const StatusChip(label: 'Secure'),
                       ],
                     ),
                   ),
@@ -165,6 +164,12 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                       ),
                       children: [
                         TripSummaryCard(data: widget.checkoutData),
+                        if (!widget.checkoutData.isReadyForPayment) ...[
+                          const SizedBox(height: 12),
+                          _ValidationBanner(
+                            missing: widget.checkoutData.missingRequiredFields,
+                          ),
+                        ],
                         const SizedBox(height: 14),
                         AnimatedSwitcher(
                           duration: const Duration(milliseconds: 240),
@@ -186,29 +191,33 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Payment Method',
+                                'Choose payment method',
                                 style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w800),
+                                    ?.copyWith(fontWeight: FontWeight.w900),
                               ),
                               const SizedBox(height: 12),
-                              for (
-                                var index = 0;
-                                index < checkoutState.methods.length;
-                                index++
-                              ) ...[
-                                PaymentMethodCard(
-                                  method: checkoutState.methods[index],
-                                  selected:
-                                      checkoutState.selectedMethod ==
-                                      checkoutState.methods[index].type,
-                                  onTap: () =>
-                                      context.read<PaymentCubit>().selectMethod(
+                              if (checkoutState.methods.isEmpty)
+                                const _NoPaymentMethodsState()
+                              else
+                                for (
+                                  var index = 0;
+                                  index < checkoutState.methods.length;
+                                  index++
+                                ) ...[
+                                  PaymentMethodCard(
+                                    method: checkoutState.methods[index],
+                                    selected:
+                                        checkoutState.selectedMethod ==
                                         checkoutState.methods[index].type,
-                                      ),
-                                ),
-                                if (index != checkoutState.methods.length - 1)
-                                  const SizedBox(height: 10),
-                              ],
+                                    onTap: () => context
+                                        .read<PaymentCubit>()
+                                        .selectMethod(
+                                          checkoutState.methods[index].type,
+                                        ),
+                                  ),
+                                  if (index != checkoutState.methods.length - 1)
+                                    const SizedBox(height: 10),
+                                ],
                             ],
                           ),
                         ),
@@ -219,11 +228,8 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                           promoDiscount: checkoutState.promoDiscount,
                           onApply: _applyPromo,
                         ),
-                        const SizedBox(height: 14),
-
-                        // Payment Notes section
                         AppSurface(
-                          radius: 24,
+                          radius: 20,
                           padding: const EdgeInsets.all(18),
                           color: scheme.surfaceContainerHigh,
                           border: Border.all(
@@ -233,55 +239,13 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Payment Notes',
+                                'Before you pay',
                                 style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w800),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: _notesController,
-                                maxLines: 2,
-                                maxLength: 100,
-                                style: const TextStyle(fontSize: 13),
-                                decoration: InputDecoration(
-                                  hintText:
-                                      'Enter any payment notes or request details here...',
-                                  hintStyle: TextStyle(
-                                    color: Colors.grey.withAlpha(180),
-                                    fontSize: 13,
-                                  ),
-                                  fillColor: scheme.surfaceContainerHighest,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(16),
-                                    borderSide: BorderSide(
-                                      color: scheme.outline,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-
-                        AppSurface(
-                          radius: 24,
-                          padding: const EdgeInsets.all(18),
-                          color: scheme.surfaceContainerHigh,
-                          border: Border.all(
-                            color: scheme.outline.withAlpha(50),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Terms & Cancellation Policy',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w800),
+                                    ?.copyWith(fontWeight: FontWeight.w900),
                               ),
                               const SizedBox(height: 10),
                               Text(
-                                'This is a simulated checkout. Seats are reserved only after payment success. Cancellations are allowed up to 1 hour before departure in this demo.',
+                                'Your seat is reserved only after confirmation. Please check the route, vehicle, time, seat, and total before continuing.',
                                 style: Theme.of(context).textTheme.bodySmall,
                               ),
                               const SizedBox(height: 12),
@@ -289,9 +253,9 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                                 spacing: 10,
                                 runSpacing: 10,
                                 children: const [
-                                  StatusChip(label: 'Instant confirmation'),
-                                  StatusChip(label: 'Secure demo flow'),
-                                  StatusChip(label: 'No real card processing'),
+                                  StatusChip(label: 'Booking details checked'),
+                                  StatusChip(label: 'Secure confirmation'),
+                                  StatusChip(label: 'Support available'),
                                 ],
                               ),
                             ],
@@ -329,7 +293,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                               Expanded(
                                 child: AppButton(
                                   label: checkoutState.requiresReceipt
-                                      ? 'Proceed to Upload Receipt'
+                                      ? 'Continue to receipt'
                                       : 'Pay Now • $totalAmount EGP',
                                   onPressed: () => _onPayPressed(checkoutState),
                                 ),
@@ -337,30 +301,29 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                             ],
                           ),
                           const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: TextButton(
-                                  onPressed: () =>
-                                      _onSimulateFailurePressed(checkoutState),
-                                  child: const Text('Simulate failure demo'),
-                                ),
+                          if (checkoutState.selectedMethod ==
+                              PaymentMethodType.walletBalance)
+                            Align(
+                              alignment: Alignment.centerRight,
+                              child: StatusChip(
+                                label:
+                                    'Wallet: ${widget.checkoutData.walletBalance} EGP',
+                                color: scheme.secondary.withAlpha(24),
+                                textColor: scheme.secondary,
                               ),
-                              if (checkoutState.selectedMethod ==
-                                  PaymentMethodType.walletBalance)
-                                Expanded(
-                                  child: Align(
-                                    alignment: Alignment.centerRight,
-                                    child: StatusChip(
-                                      label:
-                                          'Wallet: ${widget.checkoutData.walletBalance} EGP',
-                                      color: scheme.secondary.withAlpha(24),
-                                      textColor: scheme.secondary,
-                                    ),
+                            )
+                          else
+                            Text(
+                              checkoutState.requiresReceipt
+                                  ? 'You will attach a receipt before confirmation.'
+                                  : 'You can review the result before leaving checkout.',
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: scheme.onSurface.withAlpha(145),
+                                    fontWeight: FontWeight.w600,
                                   ),
-                                ),
-                            ],
-                          ),
+                            ),
                         ],
                       ),
                     ),
@@ -371,6 +334,151 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _PaymentLoadingScaffold extends StatelessWidget {
+  const _PaymentLoadingScaffold();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: AppSurface(
+            radius: 22,
+            padding: const EdgeInsets.all(22),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                CircularProgressIndicator(color: scheme.primary),
+                const SizedBox(height: 16),
+                Text(
+                  'Preparing secure payment',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'Loading available methods and checking your booking.',
+                  style: Theme.of(context).textTheme.bodySmall,
+                  textAlign: TextAlign.center,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PaymentErrorScaffold extends StatelessWidget {
+  const _PaymentErrorScaffold({required this.message, required this.onRetry});
+
+  final String message;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Scaffold(
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: AppSurface(
+              radius: 22,
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.error_outline_rounded, color: scheme.error),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Payment methods unavailable',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    message,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  const SizedBox(height: 14),
+                  AppButton(label: 'Try again', onPressed: onRetry),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ValidationBanner extends StatelessWidget {
+  const _ValidationBanner({required this.missing});
+
+  final List<String> missing;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return AppSurface(
+      radius: 18,
+      padding: const EdgeInsets.all(14),
+      color: scheme.errorContainer.withAlpha(70),
+      border: Border.all(color: scheme.error.withAlpha(55)),
+      child: Row(
+        children: [
+          Icon(Icons.info_outline_rounded, color: scheme.error),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Complete missing details before payment: ${missing.join(', ')}.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onErrorContainer,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NoPaymentMethodsState extends StatelessWidget {
+  const _NoPaymentMethodsState();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(80),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: scheme.outline.withAlpha(55)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.payments_outlined, color: scheme.onSurfaceVariant),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'No payment methods are currently enabled. Please try again later or contact support.',
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

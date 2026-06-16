@@ -11,7 +11,7 @@ class TripSummaryCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AppSurface(
-      radius: 24,
+      radius: 20,
       padding: const EdgeInsets.all(18),
       color: scheme.surfaceContainerHigh,
       border: Border.all(color: scheme.outline.withAlpha(50)),
@@ -37,14 +37,14 @@ class TripSummaryCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Trip Summary',
+                      'Review your booking',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Secure checkout for your shuttle ride',
+                      'Confirm every detail before payment',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ],
@@ -57,13 +57,13 @@ class TripSummaryCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _SummaryRow(label: 'Pickup', value: data.pickupPoint),
-          _SummaryRow(label: 'Destination', value: data.destination),
+          _SummaryRow(label: 'Route', value: data.route),
           _SummaryRow(label: 'Vehicle', value: data.vehicleNumber),
+          _SummaryRow(label: 'Seat', value: 'Seat ${data.selectedSeat}'),
+          _SummaryRow(label: 'Destination', value: data.destination),
           _SummaryRow(label: 'Departure', value: data.departureTime),
           _SummaryRow(label: 'Arrival', value: data.arrivalTime),
-          _SummaryRow(label: 'Seat', value: 'Seat ${data.selectedSeat}'),
-          _SummaryRow(label: 'Driver', value: data.driverName),
+          _SummaryRow(label: 'Price', value: '${data.baseFare} EGP'),
         ],
       ),
     );
@@ -87,7 +87,7 @@ class FareBreakdownCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final total = data.totalForDiscount(promoDiscount);
     return AppSurface(
-      radius: 24,
+      radius: 20,
       padding: const EdgeInsets.all(18),
       color: scheme.surfaceContainerHighest,
       border: Border.all(color: scheme.outline.withAlpha(50)),
@@ -95,15 +95,16 @@ class FareBreakdownCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Fare Breakdown',
+            'Payment total',
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 14),
-          _PriceRow(label: 'Base fare', value: data.baseFare),
-          _PriceRow(label: 'Service fee', value: data.serviceFee),
-          _PriceRow(label: 'Tax', value: data.tax),
+          _PriceRow(label: 'Trip fare', value: data.baseFare),
+          if (data.serviceFee > 0)
+            _PriceRow(label: 'Service fee', value: data.serviceFee),
+          if (data.tax > 0) _PriceRow(label: 'Tax', value: data.tax),
           if (promoDiscount > 0)
             _PriceRow(
               label: 'Promo discount',
@@ -157,7 +158,7 @@ class PromoCodeCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AppSurface(
-      radius: 24,
+      radius: 20,
       padding: const EdgeInsets.all(18),
       color: scheme.surfaceContainerHigh,
       border: Border.all(color: scheme.outline.withAlpha(50)),
@@ -165,7 +166,7 @@ class PromoCodeCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Promo Code',
+            'Promo code',
             style: Theme.of(
               context,
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
@@ -221,14 +222,14 @@ class PaymentMethodCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AnimatedScale(
-      scale: selected ? 1.02 : 1.0,
+      scale: selected ? 1.01 : 1.0,
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOut,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
         curve: Curves.easeOutCubic,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(18),
           color: selected
               ? scheme.primary.withAlpha(18)
               : scheme.surfaceContainerHighest,
@@ -250,14 +251,14 @@ class PaymentMethodCard extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onTap,
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(18),
             child: Padding(
               padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   Container(
-                    width: 46,
-                    height: 46,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       gradient: LinearGradient(
@@ -301,6 +302,15 @@ class PaymentMethodCard extends StatelessWidget {
                           method.subtitle,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
+                        const SizedBox(height: 6),
+                        Text(
+                          _paymentMethodNextStep(method.type),
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: scheme.onSurface.withAlpha(145),
+                                fontWeight: FontWeight.w700,
+                              ),
+                        ),
                       ],
                     ),
                   ),
@@ -335,6 +345,16 @@ class PaymentMethodCard extends StatelessWidget {
       ),
     );
   }
+}
+
+String _paymentMethodNextStep(PaymentMethodType type) {
+  return switch (type) {
+    PaymentMethodType.creditCard => 'Next: secure card authorization',
+    PaymentMethodType.instapay => 'Next: transfer details and receipt',
+    PaymentMethodType.vodafoneCash => 'Next: wallet transfer and receipt',
+    PaymentMethodType.cashOnBoarding => 'Next: reserve now and pay on boarding',
+    PaymentMethodType.walletBalance => 'Next: instant wallet deduction',
+  };
 }
 
 IconData _paymentMethodIcon(PaymentMethodType type) {
@@ -512,14 +532,21 @@ class _SummaryRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: Theme.of(context).textTheme.bodySmall),
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+          Expanded(
+            child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+          ),
+          const SizedBox(width: 16),
+          Flexible(
+            flex: 2,
+            child: Text(
+              value,
+              textAlign: TextAlign.end,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+            ),
           ),
         ],
       ),

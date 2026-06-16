@@ -1,5 +1,6 @@
-import 'dart:async';
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_processing_screen.dart';
@@ -9,7 +10,6 @@ class ReceiptUploadScreen extends StatefulWidget {
   final PaymentMethodData paymentMethod;
   final String? promoCode;
   final int promoDiscount;
-  final String? paymentNotes;
 
   const ReceiptUploadScreen({
     super.key,
@@ -17,7 +17,6 @@ class ReceiptUploadScreen extends StatefulWidget {
     required this.paymentMethod,
     this.promoCode,
     required this.promoDiscount,
-    this.paymentNotes,
   });
 
   @override
@@ -25,55 +24,32 @@ class ReceiptUploadScreen extends StatefulWidget {
 }
 
 class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
-  bool _receiptSelected = false;
-  bool _isUploading = false;
-  bool _uploadSuccess = false;
-  double _uploadProgress = 0.0;
-  Timer? _progressTimer;
+  File? _receiptFile;
+  String? _receiptName;
+  int? _receiptSize;
 
-  // Mock Receipt Metadata
-  final String _mockFileName = 'screenshot_20260603_receipt.png';
-  final String _mockFileSize = '1.4 MB';
+  Future<void> _pickReceipt() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: const ['jpg', 'jpeg', 'png', 'pdf'],
+    );
 
-  @override
-  void dispose() {
-    _progressTimer?.cancel();
-    super.dispose();
-  }
+    final path = result?.files.single.path;
+    if (path == null) return;
 
-  void _simulateSelectReceipt() {
+    final file = File(path);
     setState(() {
-      _receiptSelected = true;
-      _uploadSuccess = false;
-      _uploadProgress = 0.0;
+      _receiptFile = file;
+      _receiptName = result!.files.single.name;
+      _receiptSize = result.files.single.size;
     });
   }
 
   void _removeReceipt() {
     setState(() {
-      _receiptSelected = false;
-      _uploadSuccess = false;
-      _uploadProgress = 0.0;
-    });
-  }
-
-  void _startUploadSimulation() {
-    if (_isUploading) return;
-    setState(() {
-      _isUploading = true;
-      _uploadProgress = 0.0;
-    });
-
-    _progressTimer = Timer.periodic(const Duration(milliseconds: 150), (timer) {
-      setState(() {
-        if (_uploadProgress < 1.0) {
-          _uploadProgress += 0.1;
-        } else {
-          timer.cancel();
-          _isUploading = false;
-          _uploadSuccess = true;
-        }
-      });
+      _receiptFile = null;
+      _receiptName = null;
+      _receiptSize = null;
     });
   }
 
@@ -99,7 +75,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Verify Receipt'),
+        title: const Text('Attach receipt'),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_rounded),
@@ -128,11 +104,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                     _buildUploadArea(scheme),
                     const SizedBox(height: 20),
 
-                    // Upload Progress indicator
-                    if (_isUploading) _buildUploadProgressIndicator(scheme),
-
-                    // Success Verification Box
-                    if (_uploadSuccess) _buildUploadSuccessBox(scheme),
+                    if (_receiptFile != null) _buildReceiptReadyBox(scheme),
                   ],
                 ),
               ),
@@ -262,8 +234,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
   }
 
   Widget _buildUploadArea(ColorScheme scheme) {
-    if (_receiptSelected) {
-      // Image preview state
+    if (_receiptFile != null) {
       return AppSurface(
         radius: 24,
         padding: const EdgeInsets.all(16),
@@ -289,7 +260,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _mockFileName,
+                    _receiptName ?? _receiptFile!.path.split('/').last,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -299,7 +270,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    _mockFileSize,
+                    _formatFileSize(_receiptSize ?? _receiptFile!.lengthSync()),
                     style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                 ],
@@ -307,7 +278,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
             ),
             IconButton(
               icon: Icon(Icons.delete_outline_rounded, color: scheme.error),
-              onPressed: _isUploading ? null : _removeReceipt,
+              onPressed: _removeReceipt,
             ),
           ],
         ),
@@ -316,7 +287,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
 
     // Default upload area with dashed borders
     return GestureDetector(
-      onTap: _simulateSelectReceipt,
+      onTap: _pickReceipt,
       child: Container(
         height: 180,
         decoration: BoxDecoration(
@@ -362,45 +333,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
     );
   }
 
-  Widget _buildUploadProgressIndicator(ColorScheme scheme) {
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Uploading screenshot...',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
-              ),
-              Text(
-                '${(_uploadProgress * 100).toInt()}%',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: scheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: _uploadProgress,
-              minHeight: 6,
-              color: scheme.primary,
-              backgroundColor: scheme.outline.withAlpha(60),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildUploadSuccessBox(ColorScheme scheme) {
+  Widget _buildReceiptReadyBox(ColorScheme scheme) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -427,7 +360,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Receipt uploaded successfully. We will verify your transaction shortly during checkout.',
+                  'Receipt attached. Submit payment to reserve your selected seat and send the receipt for verification.',
                   style: TextStyle(
                     fontSize: 11,
                     color: Colors.grey,
@@ -443,17 +376,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
   }
 
   Widget _buildStickyBottomPanel(ColorScheme scheme) {
-    VoidCallback? onBtnPressed;
-    String label = 'Upload & Verify';
-
-    if (!_receiptSelected) {
-      onBtnPressed = null; // disabled
-    } else if (!_uploadSuccess && !_isUploading) {
-      onBtnPressed = _startUploadSimulation;
-    } else if (_uploadSuccess) {
-      onBtnPressed = () => _proceedToPaymentProcessing(simulateFailure: false);
-      label = 'Submit Payment';
-    }
+    final hasReceipt = _receiptFile != null;
 
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
@@ -476,28 +399,24 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
             children: [
               Expanded(
                 child: AppButton(
-                  label: _isUploading ? 'Uploading...' : label,
-                  onPressed: onBtnPressed ?? () {},
+                  label: hasReceipt ? 'Submit payment' : 'Attach receipt',
+                  onPressed: hasReceipt
+                      ? () =>
+                            _proceedToPaymentProcessing(simulateFailure: false)
+                      : _pickReceipt,
                 ),
               ),
             ],
           ),
-          if (_uploadSuccess) ...[
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () =>
-                        _proceedToPaymentProcessing(simulateFailure: true),
-                    child: const Text('Simulate failure checkout'),
-                  ),
-                ),
-              ],
-            ),
-          ],
         ],
       ),
     );
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    final kb = bytes / 1024;
+    if (kb < 1024) return '${kb.toStringAsFixed(1)} KB';
+    return '${(kb / 1024).toStringAsFixed(1)} MB';
   }
 }

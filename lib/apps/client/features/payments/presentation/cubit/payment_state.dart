@@ -11,18 +11,23 @@ class PaymentLoading extends PaymentState {
 class PaymentCheckoutLoaded extends PaymentState {
   const PaymentCheckoutLoaded({
     required this.methods,
-    required this.selectedMethod,
+    this.selectedMethod,
     this.appliedPromoCode,
     this.promoDiscount = 0,
   });
 
   final List<PaymentMethodData> methods;
-  final PaymentMethodType selectedMethod;
+  final PaymentMethodType? selectedMethod;
   final String? appliedPromoCode;
   final int promoDiscount;
 
-  PaymentMethodData get selectedPaymentMethod {
-    return methods.firstWhere((method) => method.type == selectedMethod);
+  PaymentMethodData? get selectedPaymentMethod {
+    final method = selectedMethod;
+    if (method == null) return null;
+    for (final item in methods) {
+      if (item.type == method) return item;
+    }
+    return null;
   }
 
   bool get requiresReceipt {

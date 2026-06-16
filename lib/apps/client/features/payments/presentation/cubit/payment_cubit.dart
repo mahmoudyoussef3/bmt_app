@@ -23,7 +23,7 @@ class PaymentCubit extends Cubit<PaymentState> {
       emit(
         PaymentCheckoutLoaded(
           methods: methods,
-          selectedMethod: PaymentMethodType.creditCard,
+          selectedMethod: _initialMethod(methods),
         ),
       );
     } catch (error) {
@@ -47,5 +47,13 @@ class PaymentCubit extends Cubit<PaymentState> {
         promoDiscount: normalized.isEmpty ? 0 : _applyPromoCode(normalized),
       ),
     );
+  }
+
+  PaymentMethodType? _initialMethod(List<PaymentMethodData> methods) {
+    if (methods.isEmpty) return null;
+    for (final method in methods) {
+      if (method.recommended) return method.type;
+    }
+    return methods.first.type;
   }
 }

@@ -48,11 +48,11 @@ class PaymentCheckoutData {
     required this.selectedSeatId,
     required this.selectedSeat,
     required this.driverName,
-    this.baseFare = 60,
-    this.serviceFee = 5,
-    this.tax = 3,
+    this.baseFare = 0,
+    this.serviceFee = 0,
+    this.tax = 0,
     this.walletBalanceLabel = 'Wallet Balance',
-    this.walletBalance = 250,
+    this.walletBalance = 0,
   });
 
   int get subtotal => baseFare + serviceFee + tax;
@@ -64,6 +64,24 @@ class PaymentCheckoutData {
       (walletBalance - total).clamp(0, walletBalance);
 
   String get route => '$pickupPoint → $destination';
+
+  List<String> get missingRequiredFields {
+    final missing = <String>[];
+    if (tripId.trim().isEmpty) missing.add('Trip');
+    if (pickupPoint.trim().isEmpty || destination.trim().isEmpty) {
+      missing.add('Route');
+    }
+    if (vehicleNumber.trim().isEmpty) missing.add('Vehicle');
+    if (selectedSeatId.trim().isEmpty || selectedSeat.trim().isEmpty) {
+      missing.add('Seat');
+    }
+    if (departureTime.trim().isEmpty) missing.add('Departure');
+    if (arrivalTime.trim().isEmpty) missing.add('Arrival');
+    if (baseFare <= 0) missing.add('Price');
+    return missing;
+  }
+
+  bool get isReadyForPayment => missingRequiredFields.isEmpty;
 }
 
 class PaymentResultData {

@@ -215,6 +215,9 @@ class _ClientAppState extends State<ClientApp> {
                               args['selectedSeatId']?.toString() ?? '',
                           selectedSeat: args['selectedSeat']?.toString() ?? '',
                           driverName: args['driverName']?.toString() ?? '',
+                          baseFare: _parseMoney(args['baseFare']),
+                          serviceFee: _parseMoney(args['serviceFee']),
+                          tax: _parseMoney(args['tax']),
                         )
                       : PaymentCheckoutData(
                           tripId: '',
@@ -314,6 +317,11 @@ class _ClientAppState extends State<ClientApp> {
         },
       ),
     );
+  }
+
+  int _parseMoney(Object? value) {
+    if (value is num) return value.round();
+    return num.tryParse(value?.toString() ?? '')?.round() ?? 0;
   }
 
   Widget _buildClientShell() {
