@@ -533,49 +533,66 @@ class _TripWorkspace extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'مساحة تشغيل ${trip.id}',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.bold),
+                        Row(
+                          children: [
+                            Text(
+                              'تفاصيل الرحلة',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                            const SizedBox(width: AppSpacing.small),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: scheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                trip.id.substring(0, 8).toUpperCase(),
+                                style: TextStyle(
+                                  color: scheme.onPrimaryContainer,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'monospace',
+                                  letterSpacing: 1,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: AppSpacing.xSmall),
-                        Text(
-                          '${trip.route} • ${trip.departure} • ${trip.driver} • ${trip.vehicle}',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        const SizedBox(height: AppSpacing.small),
+                        Wrap(
+                          spacing: AppSpacing.small,
+                          runSpacing: AppSpacing.small,
+                          children: [
+                            _TripInfoChip(icon: Icons.alt_route_rounded, label: trip.route),
+                            _TripInfoChip(icon: Icons.access_time_rounded, label: trip.departure),
+                            _TripInfoChip(icon: Icons.person_outline_rounded, label: trip.driver),
+                            _TripInfoChip(icon: Icons.directions_bus_rounded, label: trip.vehicle),
+                          ],
                         ),
                       ],
                     ),
                   ),
                   _WorkspaceFact(label: 'محجوز', value: '${trip.bookedSeats}'),
                   const SizedBox(width: AppSpacing.small),
-                  _WorkspaceFact(
-                    label: 'متاح',
-                    value: '${trip.availableSeats}',
-                  ),
+                  _WorkspaceFact(label: 'متاح', value: '${trip.availableSeats}'),
                   const SizedBox(width: AppSpacing.small),
                   PopupMenuButton<OperationTripStatus>(
                     tooltip: 'تغيير الحالة التشغيلية',
                     onSelected: (nextStatus) async {
                       final updated = await cubit.updateStatus(nextStatus);
                       if (updated != null && context.mounted) {
-                        context.read<TripsListCubit>().updateTripInList(
-                          updated,
-                        );
+                        context.read<TripsListCubit>().updateTripInList(updated);
                       }
                     },
                     itemBuilder: (context) => OperationTripStatus.values
-                        .map(
-                          (status) => PopupMenuItem(
-                            value: status,
-                            child: Text(status.label),
-                          ),
-                        )
+                        .map((status) => PopupMenuItem(value: status, child: Text(status.label)))
                         .toList(),
                     child: MouseRegion(
                       cursor: SystemMouseCursors.click,
@@ -583,39 +600,59 @@ class _TripWorkspace extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.small),
-                  TextButton.icon(
+                  IconButton.filledTonal(
                     onPressed: cubit.closeDetails,
                     icon: const Icon(Icons.close_rounded),
-                    label: const Text('إغلاق'),
+                    tooltip: 'إغلاق',
                   ),
                 ],
               ),
               const SizedBox(height: AppSpacing.small),
+              const Divider(),
+              const SizedBox(height: AppSpacing.small),
               // Tab bar for trip workspace
-              Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: TripWorkspaceTab.values.map((tab) {
-                  final label = switch (tab) {
-                    TripWorkspaceTab.overview => 'نظرة عامة',
-                    TripWorkspaceTab.passengers => 'الركاب',
-                    TripWorkspaceTab.seats => 'المقاعد',
-                    TripWorkspaceTab.pricing => 'التسعير',
-                    TripWorkspaceTab.packages => 'الباقات',
-                    TripWorkspaceTab.payments => 'المدفوعات والتوثيق',
-                    TripWorkspaceTab.history => 'السجل',
-                  };
-                  final selected = state.tab == tab;
-                  return selected
-                      ? FilledButton(
-                          onPressed: () => cubit.changeWorkspaceTab(tab),
-                          child: Text(label),
-                        )
-                      : OutlinedButton(
-                          onPressed: () => cubit.changeWorkspaceTab(tab),
-                          child: Text(label),
-                        );
-                }).toList(),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: TripWorkspaceTab.values.map((tab) {
+                    final label = switch (tab) {
+                      TripWorkspaceTab.overview => 'نظرة عامة',
+                      TripWorkspaceTab.passengers => 'الركاب',
+                      TripWorkspaceTab.seats => 'المقاعد',
+                      TripWorkspaceTab.pricing => 'التسعير',
+                      TripWorkspaceTab.packages => 'الباقات',
+                      TripWorkspaceTab.payments => 'المدفوعات والتوثيق',
+                      TripWorkspaceTab.history => 'السجل',
+                    };
+                    final icon = switch (tab) {
+                      TripWorkspaceTab.overview => Icons.dashboard_outlined,
+                      TripWorkspaceTab.passengers => Icons.people_outline_rounded,
+                      TripWorkspaceTab.seats => Icons.event_seat_outlined,
+                      TripWorkspaceTab.pricing => Icons.payments_outlined,
+                      TripWorkspaceTab.packages => Icons.card_giftcard_outlined,
+                      TripWorkspaceTab.payments => Icons.receipt_long_outlined,
+                      TripWorkspaceTab.history => Icons.history_rounded,
+                    };
+                    final selected = state.tab == tab;
+                    return Padding(
+                      padding: const EdgeInsets.only(left: AppSpacing.small),
+                      child: ChoiceChip(
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(icon, size: 18, color: selected ? scheme.onPrimary : scheme.onSurfaceVariant),
+                            const SizedBox(width: 6),
+                            Text(label),
+                          ],
+                        ),
+                        selected: selected,
+                        onSelected: (_) => cubit.changeWorkspaceTab(tab),
+                        showCheckmark: false,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                    );
+                  }).toList(),
+                ),
               ),
               const SizedBox(height: AppSpacing.medium),
               // Content for each tab
@@ -632,6 +669,39 @@ class _TripWorkspace extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _TripInfoChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _TripInfoChip({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(80),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outline.withAlpha(30)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 16, color: scheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
