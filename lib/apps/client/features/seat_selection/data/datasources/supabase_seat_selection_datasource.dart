@@ -37,6 +37,7 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
         );
       }
 
+
       // 2. Fetch trip details, vehicle details and driver.
       final tripResponse = await _supabase
           .from('operation_trips')
@@ -62,6 +63,21 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
       final pricing = pricingList.isNotEmpty
           ? pricingList.first as Map<String, dynamic>
           : <String, dynamic>{};
+
+      // Fallback: auto-generate seats if trip_seats is empty
+      if (seats.isEmpty) {
+        final capacity = vehicle['capacity'] as int? ?? 14;
+        for (int i = 1; i <= capacity; i++) {
+          seats.add(
+            SeatOptionModel(
+              id: 'generated_$i',
+              seatNumber: i,
+              availability: SeatAvailability.available,
+            ),
+          );
+        }
+      }
+
 
       final ticketPrice = tripResponse['ticket_price'];
       final legacyPrice = pricing['one_time_price'];
