@@ -198,6 +198,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   final _arrivalController = TextEditingController();
   final _priceController = TextEditingController();
   Map<String, int> _stopWaits = {}; // stationId -> wait minutes
+  Map<String, String> _customArrivals = {}; // stationId -> custom HH:MM
+  Map<String, String> _customDepartures = {}; // stationId -> custom HH:MM
 
   // Pricing values
   // Matrix format: fromPointId_toPointId -> prices
@@ -744,7 +746,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     final startTimeParts = _timeController.text.split(':');
     int startHour = 7;
     int startMin = 0;
-    if (startTimeParts.length == 2) {
+    if (startTimeParts.length >= 2) {
       startHour = int.tryParse(startTimeParts[0]) ?? 7;
       startMin = int.tryParse(startTimeParts[1]) ?? 0;
     }
@@ -872,8 +874,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             final offsetNum = _parseMinutes(station.arrivalOffset);
             accumulatedMinutes += offsetNum;
 
-            final arrivalTime = getTimeStr(accumulatedMinutes);
-            final departureTime = getTimeStr(accumulatedMinutes + wait);
+            final arrivalTime = _customArrivals[station.id] ?? (index == 0 ? _timeController.text : getTimeStr(accumulatedMinutes));
+            final departureTime = _customDepartures[station.id] ?? getTimeStr(accumulatedMinutes + wait);
 
             // Accumulate wait for the next station
             accumulatedMinutes += wait;
@@ -912,7 +914,18 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                     const SizedBox(width: AppSpacing.medium),
                     _TimeIndicator(
                       label: 'وصول متوقع',
-                      time: index == 0 ? _timeController.text : arrivalTime,
+                      time: arrivalTime,
+                      onTap: index == 0 ? null : () async {
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.now(),
+                        );
+                        if (time != null) {
+                          setState(() {
+                            _customArrivals[station.id] = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+                          });
+                        }
+                      },
                     ),
                     const SizedBox(width: AppSpacing.medium),
                     SizedBox(
@@ -922,7 +935,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                         decoration: const InputDecoration(
                           labelText: 'فترة الانتظار',
                         ),
-                        items: [1, 2, 3, 5, 8, 10]
+                        items: [1, 2, 3, 5, 8, 10, 15, 20, 30]
                             .map(
                               (m) => DropdownMenuItem(
                                 value: m,
@@ -938,7 +951,21 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                       ),
                     ),
                     const SizedBox(width: AppSpacing.medium),
-                    _TimeIndicator(label: 'تحرك متوقع', time: departureTime),
+                    _TimeIndicator(
+                      label: 'تحرك متوقع', 
+                      time: departureTime,
+                      onTap: () async {
+                        final time = await showTimePicker(
+                          context: context,
+                          initialTime: TimeOfDay.now(),
+                        );
+                        if (time != null) {
+                          setState(() {
+                            _customDepartures[station.id] = '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+                          });
+                        }
+                      },
+                    ),
                   ],
                 ),
               ),
@@ -1561,6 +1588,14 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   }
 
   void _onSubmitTrip() async {
+    final customStationTimesList = _selectedRoute!.stations.map((st) {
+      return {
+        'route_point_id': st.id,
+        'arrival_offset': _customArrivals[st.id] ?? '',
+        'departure_offset': _customDepartures[st.id] ?? '',
+      };
+    }).toList();
+
     final input = CreateTripInput(
       routeId: _selectedRoute!.id,
       route: _selectedRoute!.name,
@@ -1574,6 +1609,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       capacity: _selectedVehicle!.capacity,
       ticketPrice: double.tryParse(_priceController.text.trim()) ?? 0,
       currency: 'ج.م',
+      customStationTimes: customStationTimesList,
     );
 
     final cubit = context.read<TripCreationCubit>();
@@ -1588,8 +1624,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 class _TimeIndicator extends StatelessWidget {
   final String label;
   final String time;
+  final VoidCallback? onTap;
 
-  const _TimeIndicator({required this.label, required this.time});
+  const _TimeIndicator({required this.label, required this.time, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1603,17 +1640,31 @@ class _TimeIndicator extends StatelessWidget {
           ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: 2),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(
-            color: scheme.primary.withAlpha(15),
-            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-          ),
-          child: Text(
-            time,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: scheme.primary,
+        InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: scheme.primary.withAlpha(15),
+              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              border: onTap != null ? Border.all(color: scheme.primary.withAlpha(50)) : null,
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  time,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: scheme.primary,
+                  ),
+                ),
+                if (onTap != null) ...[
+                  const SizedBox(width: 4),
+                  Icon(Icons.edit_rounded, size: 12, color: scheme.primary),
+                ],
+              ],
             ),
           ),
         ),

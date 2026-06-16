@@ -288,6 +288,7 @@ class CreateTripInput {
   final int capacity;
   final double ticketPrice;
   final String currency;
+  final List<Map<String, String>> customStationTimes;
 
   const CreateTripInput({
     required this.routeId,
@@ -302,5 +303,6 @@ class CreateTripInput {
     required this.capacity,
     this.ticketPrice = 0,
     this.currency = 'ج.م',
+    this.customStationTimes = const [],
   });
 }

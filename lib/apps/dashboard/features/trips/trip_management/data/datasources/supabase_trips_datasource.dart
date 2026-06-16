@@ -107,13 +107,32 @@ class SupabaseTripsDatasource implements TripsDatasource {
       // 3. Snapshot route points
       final List<Map<String, dynamic>> routePointsData = [];
       for (final station in stations) {
+        final stId = station['id']?.toString();
+        
+        // Find custom override if any
+        String arrivalOffset = station['arrival_offset']?.toString() ?? '';
+        String departureOffset = station['departure_offset']?.toString() ?? '';
+        
+        if (input.customStationTimes.isNotEmpty) {
+          final override = input.customStationTimes.firstWhere(
+            (e) => e['route_point_id'] == stId, 
+            orElse: () => <String, String>{},
+          );
+          if (override.isNotEmpty) {
+            final customArrival = override['arrival_offset'];
+            final customDeparture = override['departure_offset'];
+            if (customArrival != null && customArrival.isNotEmpty) arrivalOffset = customArrival;
+            if (customDeparture != null && customDeparture.isNotEmpty) departureOffset = customDeparture;
+          }
+        }
+
         routePointsData.add({
           'trip_id': tripId,
-          'route_point_id': station['id'],
+          'route_point_id': stId,
           'point_name': station['name'],
           'point_order': station['sort_order'],
-          'arrival_offset': station['arrival_offset'],
-          'departure_offset': station['departure_offset'],
+          'arrival_offset': arrivalOffset,
+          'departure_offset': departureOffset,
           'latitude': station['latitude'],
           'longitude': station['longitude'],
         });
@@ -146,7 +165,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
             'state': 'available',
           });
         }
-      } else {
+      }
+      
+      if (seatsData.isEmpty) {
         // Fallback default generation
         int colCount = 3;
         int curRow = 1;
