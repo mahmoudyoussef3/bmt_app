@@ -82,7 +82,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           backgroundColor: scheme.surfaceContainerHighest,
           appBar: AppBar(
             title: Text(
-              isProcessing ? AppLocalizations.of(context)!.packages_processing : _getStepTitle(context),
+              isProcessing
+                  ? AppLocalizations.of(context)!.packages_processing
+                  : _getStepTitle(context),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             leading: IconButton(
@@ -186,10 +188,26 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildFilterTab(AppLocalizations.of(context)!.packages_all, loaded, scheme),
-              _buildFilterTab(AppLocalizations.of(context)!.packages_weekly, loaded, scheme),
-              _buildFilterTab(AppLocalizations.of(context)!.packages_monthly, loaded, scheme),
-              _buildFilterTab(AppLocalizations.of(context)!.packages_quarterly, loaded, scheme),
+              _buildFilterTab(
+                AppLocalizations.of(context)!.packages_all,
+                loaded,
+                scheme,
+              ),
+              _buildFilterTab(
+                AppLocalizations.of(context)!.packages_weekly,
+                loaded,
+                scheme,
+              ),
+              _buildFilterTab(
+                AppLocalizations.of(context)!.packages_monthly,
+                loaded,
+                scheme,
+              ),
+              _buildFilterTab(
+                AppLocalizations.of(context)!.packages_quarterly,
+                loaded,
+                scheme,
+              ),
             ],
           ),
         ),
@@ -291,7 +309,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          AppLocalizations.of(context)!.packages_savePercent(package.discountPercent.toInt()),
+                          AppLocalizations.of(context)!.packages_savePercent(
+                            package.discountPercent.toInt(),
+                          ),
                           style: TextStyle(
                             fontSize: 11,
                             color: scheme.primary,
@@ -306,14 +326,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      _buildMiniDetailColumn(AppLocalizations.of(context)!.packages_duration, package.durationLabel),
+                      _buildMiniDetailColumn(
+                        AppLocalizations.of(context)!.packages_duration,
+                        package.durationLabel,
+                      ),
                       _buildMiniDetailColumn(
                         AppLocalizations.of(context)!.packages_totalTrips,
-                        AppLocalizations.of(context)!.packages_ridesCount(package.tripsCount),
+                        AppLocalizations.of(
+                          context,
+                        )!.packages_ridesCount(package.tripsCount),
                       ),
                       _buildMiniDetailColumn(
                         AppLocalizations.of(context)!.packages_totalSavings,
-                        AppLocalizations.of(context)!.packages_egpAmount(package.savingsAmount.toString()),
+                        AppLocalizations.of(
+                          context,
+                        )!.packages_egpAmount(package.savingsAmount.toString()),
                         isHighlight: true,
                         color: scheme.secondary,
                       ),
@@ -330,7 +357,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            AppLocalizations.of(context)!.packages_originalPrice(package.basePrice.toString()),
+                            AppLocalizations.of(
+                              context,
+                            )!.packages_originalPrice(
+                              package.basePrice.toString(),
+                            ),
                             style: const TextStyle(
                               fontSize: 10,
                               decoration: TextDecoration.lineThrough,
@@ -342,7 +373,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                             textBaseline: TextBaseline.alphabetic,
                             children: [
                               Text(
-                                AppLocalizations.of(context)!.packages_egpAmount(package.startingPrice.toString()),
+                                AppLocalizations.of(
+                                  context,
+                                )!.packages_egpAmount(
+                                  package.startingPrice.toString(),
+                                ),
                                 style: TextStyle(
                                   fontSize: 20,
                                   fontWeight: FontWeight.w900,
@@ -351,7 +386,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                               ),
                               const SizedBox(width: 4),
                               Text(
-                                AppLocalizations.of(context)!.packages_startingPrice,
+                                AppLocalizations.of(
+                                  context,
+                                )!.packages_startingPrice,
                                 style: const TextStyle(
                                   fontSize: 11,
                                   color: Colors.grey,
@@ -475,12 +512,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     const SizedBox(height: 8),
                     _buildRowDetailText(
                       AppLocalizations.of(context)!.packages_includedRides,
-                      AppLocalizations.of(context)!.packages_singleTripsDesc(package.tripsCount),
+                      AppLocalizations.of(
+                        context,
+                      )!.packages_singleTripsDesc(package.tripsCount),
                     ),
                     const SizedBox(height: 8),
                     _buildRowDetailText(
                       AppLocalizations.of(context)!.packages_validityPeriod,
-                      AppLocalizations.of(context)!.packages_consecutiveDaysDesc(package.days),
+                      AppLocalizations.of(
+                        context,
+                      )!.packages_consecutiveDaysDesc(package.days),
                     ),
                   ],
                 ),
@@ -580,7 +621,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                   Text(
-                    AppLocalizations.of(context)!.packages_egpAmount(package.basePrice.toString()),
+                    AppLocalizations.of(
+                      context,
+                    )!.packages_egpAmount(package.basePrice.toString()),
                     style: const TextStyle(
                       fontSize: 13,
                       decoration: TextDecoration.lineThrough,
@@ -597,7 +640,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                   Text(
-                    AppLocalizations.of(context)!.packages_percentOff(package.discountPercent.toInt()),
+                    AppLocalizations.of(
+                      context,
+                    )!.packages_percentOff(package.discountPercent.toInt()),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -614,7 +659,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     style: TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                   Text(
-                    AppLocalizations.of(context)!.packages_egpAmount(package.startingPrice.toString()),
+                    AppLocalizations.of(
+                      context,
+                    )!.packages_egpAmount(package.startingPrice.toString()),
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
@@ -907,6 +954,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     required ValueChanged<String?> onChanged,
     required ColorScheme scheme,
   }) {
+    final uniqueItems = _uniqueDropdownItems(items);
+    final matchingValueCount = uniqueItems
+        .where((item) => item == value)
+        .length;
+    final safeValue = matchingValueCount == 1 ? value : null;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
@@ -916,8 +969,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: value,
-          items: items.map((item) {
+          value: safeValue,
+          hint: Text(
+            uniqueItems.isEmpty ? 'No options available' : 'Select option',
+            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+          items: uniqueItems.map((item) {
             return DropdownMenuItem(
               value: item,
               child: Text(
@@ -929,12 +986,23 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               ),
             );
           }).toList(),
-          onChanged: onChanged,
+          onChanged: uniqueItems.isEmpty ? null : onChanged,
           isExpanded: true,
           dropdownColor: scheme.surface,
         ),
       ),
     );
+  }
+
+  List<String> _uniqueDropdownItems(List<String> items) {
+    final seen = <String>{};
+    final result = <String>[];
+    for (final item in items) {
+      final value = item.trim();
+      if (value.isEmpty || !seen.add(value)) continue;
+      result.add(value);
+    }
+    return result;
   }
 
   Widget _buildSeatMapGrid(PackagesLoaded loaded, ColorScheme scheme) {
@@ -1144,7 +1212,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   ],
                 ),
                 Text(
-                  AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.finalPrice.toString()),
+                  AppLocalizations.of(
+                    context,
+                  )!.packages_egpAmount(loaded.pricing.finalPrice.toString()),
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -1283,7 +1353,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   children: [
                     _buildPricingRow(
                       AppLocalizations.of(context)!.packages_basePrice,
-                      AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.rawSubtotal.toString()),
+                      AppLocalizations.of(context)!.packages_egpAmount(
+                        loaded.pricing.rawSubtotal.toString(),
+                      ),
                     ),
                     const SizedBox(height: 8),
                     _buildPricingRow(
@@ -1294,7 +1366,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     const SizedBox(height: 8),
                     _buildPricingRow(
                       AppLocalizations.of(context)!.packages_totalSavings,
-                      AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.totalSavings.toString()),
+                      AppLocalizations.of(context)!.packages_egpAmount(
+                        loaded.pricing.totalSavings.toString(),
+                      ),
                       color: scheme.secondary,
                     ),
                     const Divider(height: 20),
@@ -1302,14 +1376,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.packages_subscriptionCost,
+                          AppLocalizations.of(
+                            context,
+                          )!.packages_subscriptionCost,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
                         ),
                         Text(
-                          AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.finalPrice.toString()),
+                          AppLocalizations.of(context)!.packages_egpAmount(
+                            loaded.pricing.finalPrice.toString(),
+                          ),
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,

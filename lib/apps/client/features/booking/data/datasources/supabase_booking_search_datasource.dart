@@ -13,17 +13,40 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     final pickup = query.pickup.isEmpty ? 'Cairo' : query.pickup;
     final dest = query.destination.isEmpty ? 'Alexandria' : query.destination;
 
-    final response = await _supabase
+    var routesQuery = _supabase
         .from('operation_routes')
-        .select(
-          '*, route_stations(name, sort_order, latitude, longitude, pickup_allowed, dropoff_allowed)',
-        )
+        .select()
         .eq('status', 'active');
+    if (query.routeId != null && query.routeId!.isNotEmpty) {
+      routesQuery = routesQuery.eq('id', query.routeId!);
+    }
+    final response = await routesQuery;
+
+    final routeIds = response
+        .map((route) => route['id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toList();
+    final stationsResponse = routeIds.isEmpty
+        ? const <dynamic>[]
+        : await _supabase
+              .from('route_stations')
+              .select(
+                'route_id, name, sort_order, latitude, longitude, pickup_allowed, dropoff_allowed',
+              )
+              .inFilter('route_id', routeIds)
+              .order('sort_order');
+    final stationsByRouteId = <String, List<dynamic>>{};
+    for (final station in stationsResponse) {
+      final routeId = station['route_id']?.toString();
+      if (routeId == null || routeId.isEmpty) continue;
+      stationsByRouteId.putIfAbsent(routeId, () => []).add(station);
+    }
 
     final List<RouteOptionModel> matchedRoutes = [];
 
     for (var data in response) {
-      final stations = (data['route_stations'] as List<dynamic>?) ?? [];
+      final routeId = data['id']?.toString() ?? '';
+      final stations = stationsByRouteId[routeId] ?? const <dynamic>[];
       final trips = await _supabase
           .from('operation_trips')
           .select(
@@ -92,7 +115,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       if (hasPickup && hasDest && pickupOrder <= destOrder) {
         matchedRoutes.add(
           RouteOptionModel(
-            id: data['id']?.toString() ?? '',
+            id: routeId,
             pickup: pickup,
             destination: dest,
             duration: data['duration']?.toString() ?? 'N/A',
@@ -121,18 +144,29 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         .from('operation_trips')
         .select('route_id, ticket_price, currency')
         .gte('trip_date', today)
-        .eq('status', 'scheduled');
+        .inFilter('status', ['scheduled', 'openForBooking']);
 
     return response.map((data) {
       final routeTrips = trips
           .where((trip) => trip['route_id'] == data['id'])
           .toList();
-      final firstTrip = routeTrips.isNotEmpty ? routeTrips.first : null;
+      final pricedTrips = routeTrips
+          .where((trip) => trip['ticket_price'] != null)
+          .toList();
+      pricedTrips.sort((a, b) {
+        final aPrice =
+            (a['ticket_price'] as num?)?.toDouble() ?? double.infinity;
+        final bPrice =
+            (b['ticket_price'] as num?)?.toDouble() ?? double.infinity;
+        return aPrice.compareTo(bPrice);
+      });
+      final firstTrip = pricedTrips.isNotEmpty ? pricedTrips.first : null;
       final basePrice = firstTrip == null
-          ? 'غير متاح'
-          : '${firstTrip['currency'] ?? 'ج.م'} ${firstTrip['ticket_price'] ?? 0}';
+          ? 'Price pending'
+          : '${firstTrip['currency'] ?? 'EGP'} ${firstTrip['ticket_price'] ?? 0}';
 
       return PopularRouteListModel(
+        id: data['id']?.toString() ?? '',
         routeName:
             data['name']?.toString() ??
             '${data['start_city']} — ${data['end_city']}',
@@ -141,6 +175,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         startingPrice: basePrice,
         pickup: data['start_city']?.toString() ?? '',
         destination: data['end_city']?.toString() ?? '',
+        distance: data['distance']?.toString() ?? 'Not set',
       );
     }).toList();
   }

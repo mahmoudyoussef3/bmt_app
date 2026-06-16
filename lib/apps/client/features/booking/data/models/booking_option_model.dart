@@ -60,29 +60,35 @@ class RoutePointModel {
 
 class PopularRouteListModel {
   const PopularRouteListModel({
+    required this.id,
     required this.routeName,
     required this.dailyTrips,
     required this.averageDuration,
     required this.startingPrice,
     required this.pickup,
     required this.destination,
+    required this.distance,
   });
 
+  final String id;
   final String routeName;
   final int dailyTrips;
   final String averageDuration;
   final String startingPrice;
   final String pickup;
   final String destination;
+  final String distance;
 
   PopularRouteListData toEntity() {
     return PopularRouteListData(
+      id: id,
       routeName: routeName,
       dailyTrips: dailyTrips,
       averageDuration: averageDuration,
       startingPrice: startingPrice,
       pickup: pickup,
       destination: destination,
+      distance: distance,
     );
   }
 }

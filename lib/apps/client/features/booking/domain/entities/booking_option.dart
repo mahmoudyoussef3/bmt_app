@@ -36,20 +36,24 @@ class RoutePointData {
 
 class PopularRouteListData {
   const PopularRouteListData({
+    required this.id,
     required this.routeName,
     required this.dailyTrips,
     required this.averageDuration,
     required this.startingPrice,
     required this.pickup,
     required this.destination,
+    required this.distance,
   });
 
+  final String id;
   final String routeName;
   final int dailyTrips;
   final String averageDuration;
   final String startingPrice;
   final String pickup;
   final String destination;
+  final String distance;
 }
 
 class AvailableTripData {

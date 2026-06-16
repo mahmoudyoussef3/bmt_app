@@ -9,9 +9,18 @@ class SupabasePackagesDatasource implements PackagesDatasource {
 
   @override
   Future<PackageSelectionDataModel> getSelectionData() async {
-    final packagesFuture = _supabase.from('packages').select().eq('status', 'active');
-    final vehicleTiersFuture = _supabase.from('package_vehicle_tiers').select().eq('status', 'active');
-    final routesFuture = _supabase.from('operation_routes').select('start_city, end_city').eq('status', 'active');
+    final packagesFuture = _supabase
+        .from('packages')
+        .select()
+        .eq('status', 'active');
+    final vehicleTiersFuture = _supabase
+        .from('package_vehicle_tiers')
+        .select()
+        .eq('status', 'active');
+    final routesFuture = _supabase
+        .from('operation_routes')
+        .select('name, start_city, end_city')
+        .eq('status', 'active');
 
     final responses = await Future.wait([
       packagesFuture,
@@ -23,38 +32,67 @@ class SupabasePackagesDatasource implements PackagesDatasource {
     final vehicleTiersData = responses[1] as List<dynamic>;
     final routesData = responses[2] as List<dynamic>;
 
-    final packages = packagesData.map((e) => PackagePlanModel(
-          name: e['title']?.toString() ?? '',
-          durationLabel: e['subtitle']?.toString() ?? '',
-          days: e['days'] as int? ?? 30,
-          tripsCount: e['trips_count'] as int? ?? 44,
-          discountPercent: e['discount_percent'] as int? ?? 0,
-          startingPrice: (e['price'] as num?)?.toInt() ?? 0,
-          savingsAmount: (e['savings_amount'] as num?)?.toInt() ?? 0,
-          description: e['description']?.toString() ?? '',
-        )).toList();
+    final packages = packagesData
+        .map(
+          (e) => PackagePlanModel(
+            name: e['title']?.toString() ?? '',
+            durationLabel: e['subtitle']?.toString() ?? '',
+            days: e['days'] as int? ?? 30,
+            tripsCount: e['trips_count'] as int? ?? 44,
+            discountPercent: e['discount_percent'] as int? ?? 0,
+            startingPrice: (e['price'] as num?)?.toInt() ?? 0,
+            savingsAmount: (e['savings_amount'] as num?)?.toInt() ?? 0,
+            description: e['description']?.toString() ?? '',
+          ),
+        )
+        .toList();
 
-    final vehicles = vehicleTiersData.map((e) => PackageVehicleTypeModel(
-          name: e['name']?.toString() ?? '',
-          iconKey: e['icon_key']?.toString() ?? 'bus',
-          extraFee: (e['extra_fee'] as num?)?.toInt() ?? 0,
-          description: e['description']?.toString() ?? '',
-        )).toList();
+    final vehicles = vehicleTiersData
+        .map(
+          (e) => PackageVehicleTypeModel(
+            name: e['name']?.toString() ?? '',
+            iconKey: e['icon_key']?.toString() ?? 'bus',
+            extraFee: (e['extra_fee'] as num?)?.toInt() ?? 0,
+            description: e['description']?.toString() ?? '',
+          ),
+        )
+        .toList();
 
-    final pickups = routesData.map((e) => e['start_city']?.toString() ?? '').toSet().toList();
-    final destinations = routesData.map((e) => e['end_city']?.toString() ?? '').toSet().toList();
-    final routeNames = routesData.map((e) => '${e['start_city']} - ${e['end_city']}').toSet().toList();
-
-    // Ideally fetched from active seat mapping for a chosen trip, hardcoded stub for now
-    final occupiedSeats = {3, 7, 12, 16};
+    final pickups = _uniqueNonEmpty(
+      routesData.map((e) => e['start_city']?.toString() ?? ''),
+    );
+    final destinations = _uniqueNonEmpty(
+      routesData.map((e) => e['end_city']?.toString() ?? ''),
+    );
+    final routeNames = _uniqueNonEmpty(
+      routesData.map((e) {
+        final name = e['name']?.toString().trim() ?? '';
+        if (name.isNotEmpty) return name;
+        final start = e['start_city']?.toString().trim() ?? '';
+        final end = e['end_city']?.toString().trim() ?? '';
+        if (start.isEmpty || end.isEmpty) return '';
+        return '$start - $end';
+      }),
+    );
 
     return PackageSelectionDataModel(
       packages: packages,
-      routes: routeNames.isNotEmpty ? routeNames : ['Banha - Cairo Express'],
-      pickupPoints: pickups.isNotEmpty ? pickups : ['Banha Station'],
-      destinations: destinations.isNotEmpty ? destinations : ['Smart Village'],
+      routes: routeNames,
+      pickupPoints: pickups,
+      destinations: destinations,
       vehicles: vehicles,
-      occupiedSeats: occupiedSeats,
+      occupiedSeats: const {},
     );
+  }
+
+  List<String> _uniqueNonEmpty(Iterable<String> values) {
+    final seen = <String>{};
+    final result = <String>[];
+    for (final value in values) {
+      final normalized = value.trim();
+      if (normalized.isEmpty || !seen.add(normalized)) continue;
+      result.add(normalized);
+    }
+    return result;
   }
 }

@@ -24,16 +24,26 @@ class PackagesCubit extends Cubit<PackagesState> {
     emit(const PackagesLoading());
     try {
       final data = await _getSelectionData();
+      final firstVehicleFee = data.vehicles.isEmpty
+          ? 0
+          : data.vehicles.first.extraFee;
       emit(
         PackagesLoaded(
           data: data,
+          selectedRoute: data.routes.isEmpty ? '' : data.routes.first,
+          selectedPickup: data.pickupPoints.isEmpty
+              ? ''
+              : data.pickupPoints.first,
+          selectedDestination: data.destinations.isEmpty
+              ? ''
+              : data.destinations.first,
           filteredPackages: _filterPackages(
             packages: data.packages,
             filter: 'All',
           ),
           pricing: _calculatePricing(
             package: null,
-            vehicleAddonFee: data.vehicles.first.extraFee,
+            vehicleAddonFee: firstVehicleFee,
             selectedSeatCount: 0,
           ),
         ),
@@ -85,6 +95,7 @@ class PackagesCubit extends Cubit<PackagesState> {
   void selectVehicle(int index) {
     final current = state;
     if (current is! PackagesLoaded) return;
+    if (index < 0 || index >= current.data.vehicles.length) return;
     emit(
       current.copyWith(
         selectedVehicleIndex: index,
@@ -147,12 +158,13 @@ class PackagesCubit extends Cubit<PackagesState> {
     int? selectedVehicleIndex,
     int? selectedSeatCount,
   }) {
-    final vehicle = current
-        .data
-        .vehicles[selectedVehicleIndex ?? current.selectedVehicleIndex];
+    final index = selectedVehicleIndex ?? current.selectedVehicleIndex;
+    final vehicleAddonFee = index >= 0 && index < current.data.vehicles.length
+        ? current.data.vehicles[index].extraFee
+        : 0;
     return _calculatePricing(
       package: package ?? current.selectedPackage,
-      vehicleAddonFee: vehicle.extraFee,
+      vehicleAddonFee: vehicleAddonFee,
       selectedSeatCount: selectedSeatCount ?? current.selectedSeats.length,
     );
   }

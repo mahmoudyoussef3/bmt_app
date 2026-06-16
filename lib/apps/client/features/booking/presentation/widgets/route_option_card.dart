@@ -20,6 +20,7 @@ class RouteOptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final points = _extractRoutePoints(route);
+    final hasSavedStations = route.points.isNotEmpty;
 
     return Directionality(
       textDirection: TextDirection.ltr,
@@ -33,7 +34,10 @@ class RouteOptionCard extends StatelessWidget {
             const SizedBox(height: 14),
             _MainRouteLine(points: points),
             const SizedBox(height: 14),
-            _CompactPointsPreview(points: points),
+            _CompactPointsPreview(
+              points: points,
+              hasSavedStations: hasSavedStations,
+            ),
             const SizedBox(height: 14),
             const AppSeparator(),
             const SizedBox(height: 12),
@@ -172,13 +176,19 @@ class _PointBlock extends StatelessWidget {
 }
 
 class _CompactPointsPreview extends StatelessWidget {
-  const _CompactPointsPreview({required this.points});
+  const _CompactPointsPreview({
+    required this.points,
+    required this.hasSavedStations,
+  });
 
   final List<RoutePointUiData> points;
+  final bool hasSavedStations;
 
   @override
   Widget build(BuildContext context) {
-    final middlePoints = points.length > 2
+    final previewPoints = hasSavedStations
+        ? points
+        : points.length > 2
         ? points.sublist(1, points.length - 1)
         : <RoutePointUiData>[];
 
@@ -195,26 +205,28 @@ class _CompactPointsPreview extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            middlePoints.isEmpty
+            hasSavedStations
+                ? '${points.length} محطات على المسار'
+                : previewPoints.isEmpty
                 ? 'رحلة مباشرة بدون محطات مرور'
-                : '${middlePoints.length} محطات مرور',
+                : '${previewPoints.length} محطات مرور',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w800),
           ),
-          if (middlePoints.isNotEmpty) ...[
+          if (previewPoints.isNotEmpty) ...[
             const SizedBox(height: 10),
             Wrap(
               spacing: 8,
               runSpacing: 8,
-              children: middlePoints.take(4).map((point) {
+              children: previewPoints.take(4).map((point) {
                 return _StopChip(label: point.name);
               }).toList(),
             ),
-            if (middlePoints.length > 4) ...[
+            if (previewPoints.length > 4) ...[
               const SizedBox(height: 8),
               Text(
-                '+ ${middlePoints.length - 4} محطات أخرى',
+                '+ ${previewPoints.length - 4} محطات أخرى',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
