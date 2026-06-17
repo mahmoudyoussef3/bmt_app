@@ -66,6 +66,10 @@ dependencies:
   uuid: ^4.5.3
   equatable: ^2.0.8
   flutter_map: ^8.3.0
+  latlong2: ^0.9.1
+  shared_preferences: ^2.5.5
+  connectivity_plus: ^7.1.1
+  flutter_background_service: ^5.1.0
 
 dev_dependencies:
   flutter_test:

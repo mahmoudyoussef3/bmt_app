@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -103,31 +105,53 @@ class TicketsTable extends StatelessWidget {
   }
 }
 
-class _SlaBadge extends StatelessWidget {
+class _SlaBadge extends StatefulWidget {
   const _SlaBadge({required this.ticket});
   final SupportTicket ticket;
 
   @override
-  Widget build(BuildContext context) {
-    if (ticket.slaDueAt == null) return const Text('—', style: TextStyle(fontSize: 12));
-    if (ticket.slaBreached) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: Colors.red.withAlpha(30),
-          borderRadius: BorderRadius.circular(6),
-          border: Border.all(color: Colors.red.withAlpha(120)),
-        ),
-        child: const Text('BREACHED', style: TextStyle(fontSize: 11, color: Colors.red, fontWeight: FontWeight.bold)),
-      );
+  State<_SlaBadge> createState() => _SlaBadgeState();
+}
+
+class _SlaBadgeState extends State<_SlaBadge> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.ticket.slaDueAt != null && !widget.ticket.slaBreached) {
+      _timer = Timer.periodic(const Duration(minutes: 1), (_) {
+        if (mounted) setState(() {});
+      });
     }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final ticket = widget.ticket;
+    if (ticket.slaDueAt == null) return const Text('—', style: TextStyle(fontSize: 12));
+
+    if (ticket.slaBreached) {
+      return _badge('BREACHED', Colors.red, bold: true);
+    }
+
     final remaining = ticket.slaDueAt!.difference(DateTime.now());
-    final label = remaining.isNegative
-        ? 'Overdue'
-        : remaining.inHours > 0
-            ? '${remaining.inHours}h left'
-            : '${remaining.inMinutes}m left';
+    if (remaining.isNegative) return _badge('Overdue', Colors.red, bold: true);
+
+    final label = remaining.inHours > 0
+        ? '${remaining.inHours}h ${remaining.inMinutes.remainder(60)}m left'
+        : '${remaining.inMinutes}m left';
     final color = ticket.isSlaNearBreach ? Colors.orange : Colors.green;
+    return _badge(label, color);
+  }
+
+  Widget _badge(String label, Color color, {bool bold = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
@@ -135,7 +159,10 @@ class _SlaBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: color.withAlpha(120)),
       ),
-      child: Text(label, style: TextStyle(fontSize: 11, color: color)),
+      child: Text(
+        label,
+        style: TextStyle(fontSize: 11, color: color, fontWeight: bold ? FontWeight.bold : FontWeight.normal),
+      ),
     );
   }
 }

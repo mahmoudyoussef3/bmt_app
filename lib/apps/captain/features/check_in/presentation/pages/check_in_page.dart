@@ -36,7 +36,12 @@ class _CheckInPageState extends State<CheckInPage> {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<CheckInCubit>(
-      create: (_) => captainGetIt<CheckInCubit>(),
+      create: (ctx) {
+        final cubit = captainGetIt<CheckInCubit>();
+        cubit.loadQueueCount();
+        cubit.flushOfflineQueue();
+        return cubit;
+      },
       child: BlocConsumer<CheckInCubit, CheckInState>(
         listener: (context, state) {
           if (state is CheckInReady || state is CheckInError) {
@@ -62,6 +67,20 @@ class _CheckInPageState extends State<CheckInPage> {
             ),
             body: Column(
               children: [
+                if (state is CheckInReady && state.offlineQueueCount > 0)
+                  MaterialBanner(
+                    content: Text(
+                      'وضع بلا إنترنت — ${state.offlineQueueCount} تسجيل في الانتظار',
+                    ),
+                    leading: const Icon(Icons.wifi_off_rounded, color: Colors.orange),
+                    backgroundColor: Colors.orange.shade50,
+                    actions: [
+                      TextButton(
+                        onPressed: () => context.read<CheckInCubit>().flushOfflineQueue(),
+                        child: const Text('إرسال الآن'),
+                      ),
+                    ],
+                  ),
                 SizedBox(
                   height: 300,
                   child: Stack(

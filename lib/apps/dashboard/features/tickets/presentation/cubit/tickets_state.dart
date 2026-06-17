@@ -45,14 +45,9 @@ class TicketsLoaded extends TicketsState {
   }
 
   List<SupportTicket> get filteredTickets {
-    return tickets.where((t) {
-      // 1. Status Filter
+    final result = tickets.where((t) {
       if (filterStatus != null && t.status != filterStatus) return false;
-
-      // 2. Priority Filter
       if (filterPriority != null && t.priority != filterPriority) return false;
-
-      // 3. Search Query
       if (searchQuery.isNotEmpty) {
         final query = searchQuery.toLowerCase();
         final matchesId = t.ticketNumber.toLowerCase().contains(query);
@@ -63,9 +58,20 @@ class TicketsLoaded extends TicketsState {
           return false;
         }
       }
-
       return true;
     }).toList();
+
+    // breached first, then near-breach, then by remaining SLA time
+    result.sort((a, b) {
+      if (a.slaBreached != b.slaBreached) return a.slaBreached ? -1 : 1;
+      if (a.isSlaNearBreach != b.isSlaNearBreach) return a.isSlaNearBreach ? -1 : 1;
+      if (a.slaDueAt != null && b.slaDueAt != null) {
+        return a.slaDueAt!.compareTo(b.slaDueAt!);
+      }
+      return 0;
+    });
+
+    return result;
   }
 
   // Summary Metrics

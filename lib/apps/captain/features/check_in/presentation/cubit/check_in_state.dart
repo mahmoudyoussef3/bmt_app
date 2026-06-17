@@ -5,9 +5,10 @@ sealed class CheckInState {
 }
 
 class CheckInReady extends CheckInState {
-  const CheckInReady({this.result});
+  const CheckInReady({this.result, this.offlineQueueCount = 0});
 
   final CheckInResult? result;
+  final int offlineQueueCount;
 }
 
 class CheckInLoading extends CheckInState {

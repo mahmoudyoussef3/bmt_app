@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/captain/core/background/location_background_service.dart';
 import 'package:bmt_app/apps/captain/main.dart' as captain;
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -14,9 +15,11 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: 'https://nbwzourpbnmewwklewyr.supabase.co',
-    anonKey: 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z',
+    publishableKey: 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z',
     httpClient: DioHttpClientAdapter(DioFactory.getDio()),
   );
+
+  await initLocationBackgroundService();
 
   registerCaptainDependencies();
 

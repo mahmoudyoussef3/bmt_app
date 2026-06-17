@@ -67,7 +67,7 @@ class _UsersView extends StatelessWidget {
                     backgroundColor:
                         Theme.of(context).colorScheme.primaryContainer,
                     child: Text(
-                      user.userId.substring(0, 2).toUpperCase(),
+                      user.displayName.substring(0, 2).toUpperCase(),
                       style: TextStyle(
                         color:
                             Theme.of(context).colorScheme.onPrimaryContainer,
@@ -82,19 +82,23 @@ class _UsersView extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          user.userId,
-                          style:
-                              Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontFamily: 'monospace',
+                          user.email ?? user.userId,
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
-                        const SizedBox(height: 2),
+                        if (user.email != null)
+                          Text(
+                            user.userId,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              fontFamily: 'monospace',
+                              color: Theme.of(context).colorScheme.onSurfaceVariant,
+                            ),
+                          ),
                         Text(
                           'منذ ${_formatDate(user.createdAt)}',
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Theme.of(context)
-                                .colorScheme
-                                .onSurfaceVariant,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant,
                           ),
                         ),
                       ],

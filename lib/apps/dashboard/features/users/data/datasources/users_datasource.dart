@@ -11,12 +11,18 @@ class SupabaseUsersDatasource implements UsersRepository {
 
   @override
   Future<List<AppUser>> getUsers() async {
-    final rows = await _client
-        .from('user_roles')
-        .select()
-        .not('role', 'eq', 'client')
-        .order('created_at', ascending: false);
-    return rows.map(_fromRow).toList();
+    try {
+      final rows = await _client.rpc('get_dashboard_users') as List;
+      return rows.map((r) => _fromRow(r as Map<String, dynamic>)).toList();
+    } catch (_) {
+      // Fallback if migration_12 hasn't been run yet
+      final rows = await _client
+          .from('user_roles')
+          .select()
+          .not('role', 'eq', 'client')
+          .order('created_at', ascending: false);
+      return rows.map(_fromRow).toList();
+    }
   }
 
   @override
@@ -52,6 +58,7 @@ class SupabaseUsersDatasource implements UsersRepository {
     return AppUser(
       id: r['id'] as String,
       userId: r['user_id'] as String,
+      email: r['email'] as String?,
       role: DashboardRole.fromDb(r['role'] as String? ?? 'support_agent'),
       createdAt: DateTime.parse(
         r['created_at'] as String? ?? DateTime.now().toIso8601String(),

@@ -6,4 +6,7 @@ abstract class CheckInRepository {
     required String bookingId,
     required CheckInStatus status,
   });
+
+  Future<int> flushOfflineQueue();
+  Future<int> get offlineQueueLength;
 }

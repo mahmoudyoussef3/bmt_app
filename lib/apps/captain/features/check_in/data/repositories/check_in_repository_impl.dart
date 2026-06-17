@@ -19,4 +19,10 @@ class CheckInRepositoryImpl implements CheckInRepository {
       status: status,
     )).toEntity();
   }
+
+  @override
+  Future<int> flushOfflineQueue() => _dataSource.flushOfflineQueue();
+
+  @override
+  Future<int> get offlineQueueLength => _dataSource.offlineQueueLength;
 }

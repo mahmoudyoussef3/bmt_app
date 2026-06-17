@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -234,43 +236,121 @@ class LiveTripMapPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final points = trip.routePoints;
+    final hasCoords = points.isNotEmpty &&
+        (points.first.latitude != 0 || points.first.longitude != 0);
 
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('الخريطة الحية', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+          Text('الخريطة الحية',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
           const SizedBox(height: AppSpacing.medium),
-          Container(
-            height: 260,
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(AppTokens.radius),
-              border: Border.all(color: scheme.outline.withAlpha(60)),
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Center(
-                    child: Icon(Icons.map_outlined, size: 78, color: scheme.onSurfaceVariant.withAlpha(130)),
-                  ),
-                ),
-                PositionedDirectional(
-                  top: 18,
-                  start: 18,
-                  child: _MapPill(label: trip.currentPoint?.name ?? 'غير محدد', icon: Icons.trip_origin_rounded),
-                ),
-                PositionedDirectional(
-                  bottom: 18,
-                  end: 18,
-                  child: _MapPill(label: trip.nextPoint?.name ?? 'نهاية الرحلة', icon: Icons.location_on_rounded),
-                ),
-                Center(child: _VehicleMarker(label: trip.vehiclePlate)),
-              ],
+          ClipRRect(
+            borderRadius: BorderRadius.circular(AppTokens.radius),
+            child: SizedBox(
+              height: 260,
+              child: hasCoords
+                  ? _RealMap(trip: trip, scheme: scheme)
+                  : _PlaceholderMap(trip: trip, scheme: scheme),
             ),
           ),
           const SizedBox(height: AppSpacing.medium),
           AppProgressBar(progress: trip.progressPercent / 100),
+        ],
+      ),
+    );
+  }
+}
+
+class _RealMap extends StatelessWidget {
+  const _RealMap({required this.trip, required this.scheme});
+  final LiveTrip trip;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    final points = trip.routePoints;
+    final latlngs = points.map((p) => LatLng(p.latitude, p.longitude)).toList();
+    final center = latlngs[points.indexWhere((p) => p.status == LivePointStatus.current)
+        .clamp(0, latlngs.length - 1)];
+
+    return FlutterMap(
+      options: MapOptions(initialCenter: center, initialZoom: 12),
+      children: [
+        TileLayer(
+          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+          userAgentPackageName: 'com.bmt.app',
+        ),
+        PolylineLayer(
+          polylines: [
+            Polyline(points: latlngs, color: scheme.primary, strokeWidth: 3),
+          ],
+        ),
+        MarkerLayer(
+          markers: [
+            for (final p in points)
+              Marker(
+                point: LatLng(p.latitude, p.longitude),
+                child: _StopDot(status: p.status),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _StopDot extends StatelessWidget {
+  const _StopDot({required this.status});
+  final LivePointStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = switch (status) {
+      LivePointStatus.completed => Colors.green,
+      LivePointStatus.current => Colors.blue,
+      LivePointStatus.arrived => Colors.teal,
+      LivePointStatus.skipped => Colors.grey,
+      LivePointStatus.pending => Colors.orange,
+    };
+    return Container(
+      width: 14,
+      height: 14,
+      decoration: BoxDecoration(
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 2),
+        boxShadow: [BoxShadow(color: color.withAlpha(100), blurRadius: 4)],
+      ),
+    );
+  }
+}
+
+class _PlaceholderMap extends StatelessWidget {
+  const _PlaceholderMap({required this.trip, required this.scheme});
+  final LiveTrip trip;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: scheme.surfaceContainerHighest,
+      child: Stack(
+        children: [
+          Center(child: Icon(Icons.map_outlined, size: 78, color: scheme.onSurfaceVariant.withAlpha(130))),
+          PositionedDirectional(
+            top: 18,
+            start: 18,
+            child: _MapPill(label: trip.currentPoint?.name ?? 'غير محدد', icon: Icons.trip_origin_rounded),
+          ),
+          PositionedDirectional(
+            bottom: 18,
+            end: 18,
+            child: _MapPill(label: trip.nextPoint?.name ?? 'نهاية الرحلة', icon: Icons.location_on_rounded),
+          ),
+          Center(child: _VehicleMarker(label: trip.vehiclePlate)),
         ],
       ),
     );

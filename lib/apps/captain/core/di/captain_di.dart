@@ -291,7 +291,10 @@ void _registerCheckInDependencies() {
   }
   if (!captainGetIt.isRegistered<CheckInCubit>()) {
     captainGetIt.registerFactory<CheckInCubit>(
-      () => CheckInCubit(captainGetIt<CheckPassengerUseCase>()),
+      () => CheckInCubit(
+        captainGetIt<CheckPassengerUseCase>(),
+        captainGetIt<CheckInRepository>(),
+      ),
     );
   }
 }
