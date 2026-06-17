@@ -10,7 +10,7 @@ class ChatsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Trip Communication')),
+      appBar: AppBar(title: const Text('تواصل الرحلة')),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
         children: [
@@ -18,14 +18,14 @@ class ChatsPage extends StatelessWidget {
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(
                 builder: (_) =>
-                    ChatDetailsPage(tripId: tripId, title: 'All passengers'),
+                    ChatDetailsPage(tripId: tripId, title: 'جميع الركاب'),
               ),
             ),
             padding: const EdgeInsets.all(14),
             child: const ListTile(
               contentPadding: EdgeInsets.zero,
               leading: Icon(Icons.campaign_rounded),
-              title: Text('Broadcast to all passengers'),
+              title: Text('إرسال رسالة لجميع الركاب'),
             ),
           ),
         ],

@@ -18,7 +18,7 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
       operation_routes (*),
       trip_pricing (*)
     ''')
-        .eq('status', 'scheduled');
+        .inFilter('status', ['open_for_booking', 'boarding']);
 
     if (routeId != null) {
       query = query.eq('route_id', routeId);

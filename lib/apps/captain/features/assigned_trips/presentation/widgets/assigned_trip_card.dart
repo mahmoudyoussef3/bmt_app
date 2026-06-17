@@ -36,7 +36,7 @@ class AssignedTripCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Vehicle ${trip.vehicleNumber} • Plate ${trip.plateNumber}',
+            'المركبة ${trip.vehicleNumber} • ${trip.plateNumber}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 10),
@@ -52,7 +52,7 @@ class AssignedTripCard extends StatelessWidget {
               Icon(Icons.people_alt_rounded, size: 16, color: scheme.primary),
               const SizedBox(width: 6),
               Text(
-                '${trip.boardedCount}/${trip.passengerCount} boarded',
+                '${trip.boardedCount}/${trip.passengerCount} صعد',
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
@@ -61,12 +61,12 @@ class AssignedTripCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: AppButton(label: 'Open Trip', onPressed: onOpen),
+                child: AppButton(label: 'فتح الرحلة', onPressed: onOpen),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: AppButton(
-                  label: 'Passengers',
+                  label: 'الركاب',
                   outline: true,
                   onPressed: onManifest,
                 ),
@@ -90,10 +90,10 @@ class AssignedTripCard extends StatelessWidget {
 
   String _statusLabel(AssignedTripStatus status) {
     return switch (status) {
-      AssignedTripStatus.scheduled => 'Scheduled',
-      AssignedTripStatus.boarding => 'Boarding',
-      AssignedTripStatus.inProgress => 'In Progress',
-      AssignedTripStatus.completed => 'Completed',
+      AssignedTripStatus.scheduled => 'مجدولة',
+      AssignedTripStatus.boarding => 'صعود الركاب',
+      AssignedTripStatus.inProgress => 'جارية',
+      AssignedTripStatus.completed => 'مكتملة',
     };
   }
 }

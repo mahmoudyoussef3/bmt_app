@@ -19,7 +19,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
         .from('operation_trips')
         .select('*, route:operation_routes(start_city, end_city)')
         .gte('trip_date', today)
-        .inFilter('status', ['scheduled', 'openForBooking'])
+        .inFilter('status', ['open_for_booking', 'boarding'])
         .order('trip_date')
         .order('departure_time')
         .limit(50);

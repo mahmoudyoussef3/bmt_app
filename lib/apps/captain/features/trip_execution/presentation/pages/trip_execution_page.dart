@@ -32,7 +32,7 @@ class TripExecutionPage extends StatelessWidget {
               ? state.status
               : TripExecutionStatus.scheduled;
           return Scaffold(
-            appBar: AppBar(title: const Text('Trip Execution')),
+            appBar: AppBar(title: const Text('تنفيذ الرحلة')),
             floatingActionButton: status == TripExecutionStatus.inProgress
                 ? _SosButton(tripId: trip.id)
                 : null,
@@ -50,7 +50,7 @@ class TripExecutionPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        'Vehicle ${trip.vehicleNumber} • ${trip.plateNumber}',
+                        'المركبة ${trip.vehicleNumber} • ${trip.plateNumber}',
                       ),
                       const SizedBox(height: 12),
                       StatusChip(label: _statusLabel(status)),
@@ -71,7 +71,7 @@ class TripExecutionPage extends StatelessWidget {
                 if (status == TripExecutionStatus.inProgress && trip.stops.isNotEmpty)
                   const SizedBox(height: 14),
                 _ActionTile(
-                  label: 'Passenger Manifest',
+                  label: 'قائمة الركاب',
                   icon: Icons.people_alt_rounded,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -80,7 +80,7 @@ class TripExecutionPage extends StatelessWidget {
                   ),
                 ),
                 _ActionTile(
-                  label: 'Check-In',
+                  label: 'تسجيل الدخول',
                   icon: Icons.qr_code_scanner_rounded,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -89,7 +89,7 @@ class TripExecutionPage extends StatelessWidget {
                   ),
                 ),
                 _ActionTile(
-                  label: 'Live Location',
+                  label: 'مشاركة الموقع',
                   icon: Icons.location_on_rounded,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -98,7 +98,7 @@ class TripExecutionPage extends StatelessWidget {
                   ),
                 ),
                 _ActionTile(
-                  label: 'Communication',
+                  label: 'التواصل',
                   icon: Icons.chat_bubble_outline_rounded,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -107,7 +107,7 @@ class TripExecutionPage extends StatelessWidget {
                   ),
                 ),
                 _ActionTile(
-                  label: 'Status Updates',
+                  label: 'تحديث الحالة',
                   icon: Icons.sync_rounded,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -116,7 +116,7 @@ class TripExecutionPage extends StatelessWidget {
                   ),
                 ),
                 _ActionTile(
-                  label: 'Report Incident',
+                  label: 'الإبلاغ عن حادثة',
                   icon: Icons.report_problem_outlined,
                   onTap: () => Navigator.of(context).push(
                     MaterialPageRoute(
@@ -134,26 +134,26 @@ class TripExecutionPage extends StatelessWidget {
 
   String _statusLabel(TripExecutionStatus status) {
     return switch (status) {
-      TripExecutionStatus.scheduled  => 'Scheduled',
-      TripExecutionStatus.boarding   => 'Boarding',
-      TripExecutionStatus.inProgress => 'In Progress',
-      TripExecutionStatus.completed  => 'Completed',
-      TripExecutionStatus.cancelled  => 'Cancelled',
+      TripExecutionStatus.scheduled  => 'مجدولة',
+      TripExecutionStatus.boarding   => 'صعود الركاب',
+      TripExecutionStatus.inProgress => 'جارية',
+      TripExecutionStatus.completed  => 'مكتملة',
+      TripExecutionStatus.cancelled  => 'ملغاة',
     };
   }
 
   Widget _actionButton(BuildContext context, TripExecutionStatus status) {
     return switch (status) {
       TripExecutionStatus.scheduled => AppButton(
-        label: 'Start Boarding',
+        label: 'بدء صعود الركاب',
         onPressed: () => context.read<TripExecutionCubit>().board(trip.id),
       ),
       TripExecutionStatus.boarding => AppButton(
-        label: 'Start Trip',
+        label: 'بدء الرحلة',
         onPressed: () => context.read<TripExecutionCubit>().start(trip.id),
       ),
       TripExecutionStatus.inProgress => AppButton(
-        label: 'End Trip',
+        label: 'إنهاء الرحلة',
         outline: true,
         onPressed: () => context.read<TripExecutionCubit>().complete(trip.id),
       ),
@@ -240,7 +240,7 @@ class _SosButtonState extends State<_SosButton> {
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
-                  content: Text('Hold for 3 seconds to send SOS'),
+                  content: Text('اضغط مطولاً 3 ثوانٍ لإرسال نداء الاستغاثة'),
                   duration: Duration(seconds: 2),
                 ),
               );
@@ -283,13 +283,13 @@ class _NextStopBannerState extends State<_NextStopBanner> {
               Icon(Icons.location_on_rounded, color: scheme.primary, size: 18),
               const SizedBox(width: 6),
               Text(
-                isLast ? 'Final Destination Reached' : 'Next Stop',
+                isLast ? 'تم الوصول إلى الوجهة النهائية' : 'المحطة القادمة',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.primary),
               ),
               const Spacer(),
               if (!isLast)
                 Text(
-                  '$remaining stop${remaining > 1 ? 's' : ''} remaining',
+                  '$remaining محطة متبقية',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
             ],
@@ -305,7 +305,7 @@ class _NextStopBannerState extends State<_NextStopBanner> {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () => setState(() => _currentIndex++),
-                child: const Text('Mark Arrived'),
+                child: const Text('تم الوصول'),
               ),
             ),
           ],

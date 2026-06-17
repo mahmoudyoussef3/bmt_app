@@ -57,7 +57,7 @@ class _CheckInPageState extends State<CheckInPage> {
         builder: (context, state) {
           return Scaffold(
             appBar: AppBar(
-              title: const Text('Passenger Check-In'),
+              title: const Text('تسجيل دخول الركاب'),
               actions: [
                 IconButton(
                   icon: const Icon(Icons.flash_on_rounded),

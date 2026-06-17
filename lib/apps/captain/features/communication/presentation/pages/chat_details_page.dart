@@ -110,12 +110,12 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                     child: TextField(
                       controller: _controller,
                       decoration: const InputDecoration(
-                        hintText: 'Message passenger',
+                        hintText: 'اكتب رسالة...',
                       ),
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Send text',
+                    tooltip: 'إرسال',
                     onPressed: () {
                       context.read<CaptainCommunicationCubit>().send(
                         _controller.text,
@@ -126,14 +126,14 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                     icon: const Icon(Icons.send_rounded),
                   ),
                   IconButton(
-                    tooltip: 'Send voice note',
+                    tooltip: 'مقطع صوتي',
                     onPressed: () => context
                         .read<CaptainCommunicationCubit>()
                         .send('Voice note', CaptainMessageType.voice),
                     icon: const Icon(Icons.mic_rounded),
                   ),
                   IconButton(
-                    tooltip: 'Send image',
+                    tooltip: 'صورة',
                     onPressed: () => context
                         .read<CaptainCommunicationCubit>()
                         .send('Image shared', CaptainMessageType.image),

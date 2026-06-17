@@ -17,7 +17,7 @@ class StatusUpdatePage extends StatelessWidget {
     return BlocProvider<TripStatusUpdateCubit>(
       create: (_) => captainGetIt<TripStatusUpdateCubit>(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Trip Status')),
+        appBar: AppBar(title: const Text('تحديث حالة الرحلة')),
         body: BlocBuilder<TripStatusUpdateCubit, TripStatusUpdateState>(
           builder: (context, state) {
             final selected = state is TripStatusUpdateReady
@@ -52,12 +52,12 @@ class StatusUpdatePage extends StatelessWidget {
 
   String _label(CaptainTripStatus status) {
     return switch (status) {
-      CaptainTripStatus.headingToPickup => 'Heading to pickup',
-      CaptainTripStatus.arrivedPickup => 'Arrived pickup',
-      CaptainTripStatus.boarding => 'Boarding',
-      CaptainTripStatus.departed => 'Departed',
-      CaptainTripStatus.arrivedDestination => 'Arrived destination',
-      CaptainTripStatus.completed => 'Completed',
+      CaptainTripStatus.headingToPickup => 'في الطريق إلى نقطة الانطلاق',
+      CaptainTripStatus.arrivedPickup => 'وصل إلى نقطة الانطلاق',
+      CaptainTripStatus.boarding => 'صعود الركاب',
+      CaptainTripStatus.departed => 'انطلق',
+      CaptainTripStatus.arrivedDestination => 'وصل إلى الوجهة',
+      CaptainTripStatus.completed => 'مكتمل',
     };
   }
 }

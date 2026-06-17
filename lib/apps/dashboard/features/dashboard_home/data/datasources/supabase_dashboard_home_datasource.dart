@@ -276,7 +276,7 @@ class SupabaseDashboardHomeDatasource implements DashboardHomeDatasource {
         .from('operation_trips')
         .select('departure_time, status')
         .eq('trip_date', today)
-        .or('status.eq.scheduled,status.eq.boarding');
+        .or('status.eq.open_for_booking,status.eq.boarding,status.eq.in_progress');
 
     var late = 0;
     var dueSoon = 0;
@@ -305,7 +305,7 @@ class SupabaseDashboardHomeDatasource implements DashboardHomeDatasource {
       json['departure_time'],
     );
     final isLate =
-        status == 'scheduled' &&
+        status == 'open_for_booking' &&
         departureDateTime != null &&
         departureDateTime.isBefore(now);
 

@@ -56,7 +56,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
             vehicles(vehicle_type)
           ''')
           .eq('route_id', data['id'])
-          .inFilter('status', ['scheduled', 'openForBooking']);
+          .inFilter('status', ['open_for_booking', 'boarding']);
       final availableSeats = trips.fold<int>(0, (sum, trip) {
         final capacity = trip['capacity'] as int? ?? 0;
         final used =
@@ -168,7 +168,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         .from('operation_trips')
         .select('route_id, ticket_price, currency')
         .gte('trip_date', today)
-        .inFilter('status', ['scheduled', 'openForBooking']);
+        .inFilter('status', ['open_for_booking', 'boarding']);
 
     return response.map((data) {
       final routeTrips = trips
@@ -324,7 +324,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           operation_routes(id, start_city, end_city, duration),
           trip_pricing(one_time_price, currency)
         ''')
-        .eq('status', 'scheduled')
+        .eq('status', 'open_for_booking')
         .limit(5);
 
     return response.map((data) {

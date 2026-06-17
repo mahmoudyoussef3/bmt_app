@@ -58,6 +58,36 @@ class AppColors {
   static const Color ringDark = Color(0xFF00D9FF);
 }
 
+/// Semantic status color pairs — all WCAG AA 4.5:1 compliant on their own container.
+/// Use [container] as chip background, [onContainer] as chip text/icon color.
+class AppStatusColors {
+  AppStatusColors._();
+
+  // Success (green)
+  static const Color successContainer   = Color(0xFFDCFCE7); // green-100
+  static const Color onSuccessContainer = Color(0xFF166534); // green-800
+
+  // Warning (amber)
+  static const Color warningContainer   = Color(0xFFFEF9C3); // yellow-100
+  static const Color onWarningContainer = Color(0xFF854D0E); // yellow-800
+
+  // Error / danger (red)
+  static const Color errorContainer   = Color(0xFFFEE2E2); // red-100
+  static const Color onErrorContainer = Color(0xFF991B1B); // red-800
+
+  // Info (blue)
+  static const Color infoContainer   = Color(0xFFDBEAFE); // blue-100
+  static const Color onInfoContainer = Color(0xFF1E40AF); // blue-800
+
+  // Neutral (gray)
+  static const Color neutralContainer   = Color(0xFFF3F4F6); // gray-100
+  static const Color onNeutralContainer = Color(0xFF374151); // gray-700
+
+  // Special / accent (purple — used for "contacted" state)
+  static const Color specialContainer   = Color(0xFFF3E8FF); // purple-100
+  static const Color onSpecialContainer = Color(0xFF6B21A8); // purple-800
+}
+
 ColorScheme lightColorSchemeFromPalette() {
   return const ColorScheme(
     brightness: Brightness.light,

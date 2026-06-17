@@ -35,7 +35,7 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
     return BlocProvider<IncidentCubit>(
       create: (_) => captainGetIt<IncidentCubit>(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Report Incident')),
+        appBar: AppBar(title: const Text('الإبلاغ عن حادثة')),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
           children: [
@@ -51,18 +51,18 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
                   .toList(),
               onChanged: (value) =>
                   setState(() => _type = value ?? IncidentType.delay),
-              decoration: const InputDecoration(labelText: 'Incident type'),
+              decoration: const InputDecoration(labelText: 'نوع الحادثة'),
             ),
             const SizedBox(height: 12),
             TextField(
               minLines: 4,
               maxLines: 6,
-              decoration: const InputDecoration(labelText: 'Description'),
+              decoration: const InputDecoration(labelText: 'الوصف'),
               onChanged: (value) => _description = value,
             ),
             const SizedBox(height: 16),
             AppButton(
-              label: 'Submit Report',
+              label: 'إرسال البلاغ',
               onPressed: () {
                 context.read<IncidentCubit>().submit(
                   IncidentReport(
@@ -82,12 +82,12 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
 
   String _label(IncidentType type) {
     return switch (type) {
-      IncidentType.passengerIssue => 'Passenger issue',
-      IncidentType.vehicleIssue => 'Vehicle issue',
-      IncidentType.delay => 'Delay',
-      IncidentType.emergency => 'Emergency',
-      IncidentType.routeBlockage => 'Route blockage',
-      IncidentType.other => 'Other',
+      IncidentType.passengerIssue => 'مشكلة مع راكب',
+      IncidentType.vehicleIssue => 'مشكلة في المركبة',
+      IncidentType.delay => 'تأخير',
+      IncidentType.emergency => 'طوارئ',
+      IncidentType.routeBlockage => 'انسداد الطريق',
+      IncidentType.other => 'أخرى',
     };
   }
 }

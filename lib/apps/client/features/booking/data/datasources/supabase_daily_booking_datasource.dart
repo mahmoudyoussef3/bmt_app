@@ -17,7 +17,7 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
     final tripsResponse = await _supabase
         .from('operation_trips')
         .select('id')
-        .eq('status', 'scheduled');
+        .eq('status', 'open_for_booking');
 
     final user = _supabase.auth.currentUser;
     List<dynamic> upcomingBookings = [];
@@ -48,7 +48,7 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
           vehicles (vehicle_type, capacity),
           drivers (full_name)
         ''')
-        .eq('status', 'scheduled');
+        .inFilter('status', ['open_for_booking', 'boarding']);
 
     final routesResponse = await _supabase
         .from('operation_routes')

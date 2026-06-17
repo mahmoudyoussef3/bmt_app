@@ -13,17 +13,20 @@ enum OperationTripStatus {
   String get dbValue {
     return switch (this) {
       OperationTripStatus.inProgress => 'in_progress',
-      OperationTripStatus.openForBooking => 'scheduled',
+      OperationTripStatus.openForBooking => 'open_for_booking',
       _ => name,
     };
   }
 
   static OperationTripStatus fromString(String value) {
-    if (value == 'in_progress') return OperationTripStatus.inProgress;
-    return OperationTripStatus.values.firstWhere(
-      (e) => e.name == value || e.dbValue == value,
-      orElse: () => OperationTripStatus.scheduled,
-    );
+    return switch (value) {
+      'in_progress' => OperationTripStatus.inProgress,
+      'open_for_booking' => OperationTripStatus.openForBooking,
+      _ => OperationTripStatus.values.firstWhere(
+          (e) => e.name == value,
+          orElse: () => OperationTripStatus.scheduled,
+        ),
+    };
   }
 }
 

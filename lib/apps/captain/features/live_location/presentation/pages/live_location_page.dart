@@ -51,7 +51,7 @@ class _LiveLocationPageState extends State<LiveLocationPage> {
     return BlocProvider<LiveLocationCubit>(
       create: (_) => captainGetIt<LiveLocationCubit>(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Live Location')),
+        appBar: AppBar(title: const Text('مشاركة الموقع')),
         body: Padding(
           padding: const EdgeInsets.all(16),
           child: BlocBuilder<LiveLocationCubit, LiveLocationState>(

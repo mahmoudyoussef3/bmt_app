@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -8,27 +9,28 @@ class StatusBadge extends StatelessWidget {
   final TicketStatus status;
   const StatusBadge({super.key, required this.status});
 
+  (Color bg, Color fg) get _colors => switch (status) {
+    TicketStatus.submitted    => (AppStatusColors.infoContainer,    AppStatusColors.onInfoContainer),
+    TicketStatus.underReview  => (AppStatusColors.warningContainer,  AppStatusColors.onWarningContainer),
+    TicketStatus.contacted    => (AppStatusColors.specialContainer,  AppStatusColors.onSpecialContainer),
+    TicketStatus.resolved     => (AppStatusColors.successContainer,  AppStatusColors.onSuccessContainer),
+    TicketStatus.closed       => (AppStatusColors.neutralContainer,  AppStatusColors.onNeutralContainer),
+    TicketStatus.rejected     => (AppStatusColors.errorContainer,    AppStatusColors.onErrorContainer),
+  };
+
   @override
   Widget build(BuildContext context) {
-    final color = switch (status) {
-      TicketStatus.submitted => Colors.blue,
-      TicketStatus.underReview => Colors.orange,
-      TicketStatus.contacted => Colors.purple,
-      TicketStatus.resolved => Colors.green,
-      TicketStatus.closed => Colors.grey,
-      TicketStatus.rejected => Colors.red,
-    };
-
+    final (bg, fg) = _colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: bg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        border: Border.all(color: fg.withValues(alpha: 0.35)),
       ),
       child: Text(
         status.label,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -38,25 +40,26 @@ class PriorityBadge extends StatelessWidget {
   final TicketPriority priority;
   const PriorityBadge({super.key, required this.priority});
 
+  (Color bg, Color fg) get _colors => switch (priority) {
+    TicketPriority.low    => (AppStatusColors.neutralContainer, AppStatusColors.onNeutralContainer),
+    TicketPriority.medium => (AppStatusColors.infoContainer,    AppStatusColors.onInfoContainer),
+    TicketPriority.high   => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
+    TicketPriority.urgent => (AppStatusColors.errorContainer,   AppStatusColors.onErrorContainer),
+  };
+
   @override
   Widget build(BuildContext context) {
-    final color = switch (priority) {
-      TicketPriority.low => Colors.grey,
-      TicketPriority.medium => Colors.blue,
-      TicketPriority.high => Colors.orange,
-      TicketPriority.urgent => Colors.red.shade900,
-    };
-
+    final (bg, fg) = _colors;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: bg,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        border: Border.all(color: fg.withValues(alpha: 0.35)),
       ),
       child: Text(
         priority.label,
-        style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.bold),
+        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }
@@ -120,7 +123,7 @@ class StatCard extends StatelessWidget {
       child: Container(
         decoration: isAlert
             ? BoxDecoration(
-                border: Border.all(color: Colors.red.withValues(alpha: 0.4), width: 1.5),
+                border: Border.all(color: AppStatusColors.onErrorContainer.withValues(alpha: 0.4), width: 1.5),
                 borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
               )
             : null,
@@ -140,7 +143,7 @@ class StatCard extends StatelessWidget {
                   '$value',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontWeight: FontWeight.w900,
-                        color: isAlert ? Colors.red : scheme.onSurface,
+                        color: isAlert ? AppStatusColors.onErrorContainer : scheme.onSurface,
                       ),
                 ),
                 Text(

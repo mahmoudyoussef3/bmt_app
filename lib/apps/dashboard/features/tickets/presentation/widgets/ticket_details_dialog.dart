@@ -42,7 +42,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
     return BlocBuilder<TicketsCubit, TicketsState>(
       builder: (context, state) {
         if (state is! TicketsLoaded || state.selectedTicket == null) {
-          return const AlertDialog(content: Text('No ticket selected'));
+          return const AlertDialog(content: Text('لم يتم اختيار تذكرة'));
         }
 
         final ticket = state.selectedTicket!;
@@ -63,7 +63,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Ticket ${ticket.ticketNumber}',
+                      'تذكرة ${ticket.ticketNumber}',
                       style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                     IconButton(
@@ -86,21 +86,21 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              DetailField(label: 'Status', value: ticket.status.label),
-                              DetailField(label: 'Priority', value: ticket.priority.label),
-                              DetailField(label: 'Category', value: ticket.category),
-                              DetailField(label: 'Client', value: '${ticket.clientName} (${ticket.clientPhone})'),
-                              DetailField(label: 'Created At', value: '${ticket.createdAt.toLocal()}'),
+                              DetailField(label: 'الحالة', value: ticket.status.label),
+                              DetailField(label: 'الأولوية', value: ticket.priority.label),
+                              DetailField(label: 'الفئة', value: ticket.category),
+                              DetailField(label: 'العميل', value: '${ticket.clientName} (${ticket.clientPhone})'),
+                              DetailField(label: 'تاريخ الإنشاء', value: '${ticket.createdAt.toLocal()}'),
                               if (ticket.customerContactedAt != null)
-                                DetailField(label: 'Contacted At', value: '${ticket.customerContactedAt!.toLocal()}'),
+                                DetailField(label: 'تاريخ التواصل', value: '${ticket.customerContactedAt!.toLocal()}'),
                               const SizedBox(height: 16),
                               
-                              const Text('Title', style: TextStyle(fontWeight: FontWeight.bold)),
+                              const Text('العنوان', style: TextStyle(fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
                               Text(ticket.title),
                               const SizedBox(height: 16),
-                              
-                              const Text('Description', style: TextStyle(fontWeight: FontWeight.bold)),
+
+                              const Text('الوصف', style: TextStyle(fontWeight: FontWeight.bold)),
                               const SizedBox(height: 4),
                               Container(
                                 padding: const EdgeInsets.all(12),
@@ -113,7 +113,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
 
                               if (state.selectedTicketAttachments != null && state.selectedTicketAttachments!.isNotEmpty) ...[
                                 const SizedBox(height: 16),
-                                const Text('Attachments', style: TextStyle(fontWeight: FontWeight.bold)),
+                                const Text('المرفقات', style: TextStyle(fontWeight: FontWeight.bold)),
                                 const SizedBox(height: 8),
                                 ...state.selectedTicketAttachments!.map(
                                   (a) => ListTile(
@@ -136,14 +136,14 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const Text('Actions', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              const Text('الإجراءات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                               const SizedBox(height: 12),
                               
                               if (ticket.status == TicketStatus.submitted)
                                 FilledButton.icon(
                                   onPressed: () => cubit.updateStatus(TicketStatus.underReview),
                                   icon: const Icon(Icons.rate_review),
-                                  label: const Text('Mark Under Review'),
+                                  label: const Text('قيد المراجعة'),
                                 ),
                               
                               if (ticket.status != TicketStatus.contacted && ticket.status != TicketStatus.resolved && ticket.status != TicketStatus.closed)
@@ -152,7 +152,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                   FilledButton.tonalIcon(
                                     onPressed: () => cubit.markCustomerContacted(),
                                     icon: const Icon(Icons.phone_in_talk),
-                                    label: const Text('Mark Contacted'),
+                                    label: const Text('تم التواصل'),
                                   ),
                                 ],
 
@@ -162,7 +162,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                   FilledButton.tonalIcon(
                                     onPressed: () => cubit.updateStatus(TicketStatus.resolved),
                                     icon: const Icon(Icons.check_circle),
-                                    label: const Text('Mark Resolved'),
+                                    label: const Text('تم الحل'),
                                     style: FilledButton.styleFrom(backgroundColor: Colors.green[100], foregroundColor: Colors.green[900]),
                                   ),
                                 ],
@@ -173,16 +173,16 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                   TextButton.icon(
                                     onPressed: () => cubit.closeTicket(),
                                     icon: const Icon(Icons.close),
-                                    label: const Text('Close Ticket'),
+                                    label: const Text('إغلاق التذكرة'),
                                     style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
                                   ),
                                 ],
 
                               const Divider(height: 32),
-                              const Text('Assign Agent', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                              const Text('تعيين مسؤول', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                               const SizedBox(height: 8),
                               if (state.agents.isEmpty)
-                                const Text('No agents available', style: TextStyle(color: Colors.grey, fontSize: 12))
+                                const Text('لا يوجد مسؤولون', style: TextStyle(color: Colors.grey, fontSize: 12))
                               else
                                 DropdownButtonFormField<String>(
                                   key: ValueKey(ticket.assignedAgentId),
@@ -191,7 +191,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                     isDense: true,
                                   ),
-                                  hint: const Text('Select agent'),
+                                  hint: const Text('اختر مسؤولاً'),
                                   initialValue: ticket.assignedAgentId,
                                   items: state.agents.map((a) {
                                     final id = a['user_id'] as String? ?? '';
@@ -208,7 +208,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                 ),
 
                               const Divider(height: 32),
-                              const Text('Internal Note', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              const Text('ملاحظة داخلية', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                               const SizedBox(height: 8),
                               if (ticket.internalNote != null) ...[
                                 Container(
@@ -222,7 +222,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                 ),
                                 const SizedBox(height: 12),
                               ],
-                              const Text('Quick Templates', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              const Text('قوالب سريعة', style: TextStyle(fontSize: 12, color: Colors.grey)),
                               const SizedBox(height: 6),
                               Wrap(
                                 spacing: 6,
@@ -239,7 +239,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                               TextField(
                                 controller: _noteController,
                                 decoration: const InputDecoration(
-                                  hintText: 'Add/Update internal note...',
+                                  hintText: 'أضف أو عدّل الملاحظة الداخلية...',
                                   border: OutlineInputBorder(),
                                 ),
                                 maxLines: 3,
@@ -252,7 +252,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                     _noteController.clear();
                                   }
                                 },
-                                child: const Text('Save Note'),
+                                child: const Text('حفظ الملاحظة'),
                               ),
                             ],
                           ),

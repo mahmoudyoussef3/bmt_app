@@ -47,14 +47,14 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Developer Settings',
+                    'إعدادات المطور',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Switch application mode (development only)',
+                    'تغيير وضع التطبيق (للتطوير فقط)',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),
@@ -114,12 +114,12 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Captain Workspace',
+                            'لوحة السائق',
                             style: Theme.of(context).textTheme.displaySmall,
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Assigned trips only',
+                            'الرحلات المعينة فقط',
                             style: Theme.of(context).textTheme.bodySmall,
                           ),
                         ],
@@ -138,14 +138,14 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                     children: [
                       Expanded(
                         child: _Metric(
-                          label: 'Trips',
+                          label: 'الرحلات',
                           value: trips.length.toString(),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: _Metric(
-                          label: 'Passengers',
+                          label: 'الركاب',
                           value: trips
                               .fold<int>(
                                 0,
@@ -159,7 +159,7 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                Text('Today', style: Theme.of(context).textTheme.titleMedium),
+                Text('اليوم', style: Theme.of(context).textTheme.titleMedium),
                 const SizedBox(height: 10),
                 for (final trip in trips) ...[
                   AssignedTripCard(

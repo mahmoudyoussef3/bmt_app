@@ -36,6 +36,20 @@ class AppLayout {
     spaceXl,
   );
 
+  // Responsive breakpoints
+  static const double breakpointMobile  = 600;   // < 600 → mobile
+  static const double breakpointTablet  = 1024;  // 600–1024 → tablet
+  // > 1024 → desktop
+
+  static bool isMobile(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < breakpointMobile;
+  static bool isTablet(BuildContext context) {
+    final w = MediaQuery.sizeOf(context).width;
+    return w >= breakpointMobile && w < breakpointTablet;
+  }
+  static bool isDesktop(BuildContext context) =>
+      MediaQuery.sizeOf(context).width >= breakpointTablet;
+
   static const double maxContentWidthTablet = 560;
   static const double maxContentWidthDesktop = 720;
 

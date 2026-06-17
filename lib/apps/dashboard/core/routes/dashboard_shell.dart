@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -399,8 +400,10 @@ class _DashboardSidebar extends StatelessWidget {
                 ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: AppSpacing.medium),
-              _RoleSelector(role: role, onChanged: onRoleChanged),
-              const SizedBox(height: AppSpacing.large),
+              if (kDebugMode) ...[
+                _RoleSelector(role: role, onChanged: onRoleChanged),
+                const SizedBox(height: AppSpacing.large),
+              ],
               Expanded(
                 child: ListView.separated(
                   itemCount: items.length,

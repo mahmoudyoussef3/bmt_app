@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
 import '../../domain/entities/complaint.dart';
@@ -29,11 +30,11 @@ class TicketsTable extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'Tickets (${filtered.length})',
+                  'التذاكر (${filtered.length})',
                   style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text(
-                  'Filtered Tickets',
+                  'النتائج المفلترة',
                   style: TextStyle(color: Theme.of(context).colorScheme.outline, fontSize: 12),
                 ),
               ],
@@ -43,7 +44,7 @@ class TicketsTable extends StatelessWidget {
           if (filtered.isEmpty)
             const Expanded(
               child: Center(
-                child: Text('No tickets found.'),
+                child: Text('لا توجد تذاكر.'),
               ),
             )
           else
@@ -55,20 +56,20 @@ class TicketsTable extends StatelessWidget {
                   child: DataTable(
                     showCheckboxColumn: false,
                     columns: const [
-                      DataColumn(label: Text('Ticket Number', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('Client', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('Category', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('Title', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('Created At', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('Status', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('Priority', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('رقم التذكرة', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('العميل', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('الفئة', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('العنوان', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('تاريخ الإنشاء', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('الأولوية', style: TextStyle(fontWeight: FontWeight.bold))),
                       DataColumn(label: Text('SLA', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('Agent', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(label: Text('المسؤول', style: TextStyle(fontWeight: FontWeight.bold))),
                     ],
                     rows: filtered.map((t) {
                       return DataRow(
                         color: t.slaBreached
-                            ? WidgetStateProperty.all(Colors.red.withAlpha(20))
+                            ? WidgetStateProperty.all(AppStatusColors.errorContainer)
                             : null,
                         onSelectChanged: (_) {
                           cubit.selectTicket(t.id);
@@ -138,30 +139,34 @@ class _SlaBadgeState extends State<_SlaBadge> {
     if (ticket.slaDueAt == null) return const Text('—', style: TextStyle(fontSize: 12));
 
     if (ticket.slaBreached) {
-      return _badge('BREACHED', Colors.red, bold: true);
+      return _badge('BREACHED', AppStatusColors.errorContainer, AppStatusColors.onErrorContainer, bold: true);
     }
 
     final remaining = ticket.slaDueAt!.difference(DateTime.now());
-    if (remaining.isNegative) return _badge('Overdue', Colors.red, bold: true);
+    if (remaining.isNegative) {
+      return _badge('Overdue', AppStatusColors.errorContainer, AppStatusColors.onErrorContainer, bold: true);
+    }
 
     final label = remaining.inHours > 0
         ? '${remaining.inHours}h ${remaining.inMinutes.remainder(60)}m left'
         : '${remaining.inMinutes}m left';
-    final color = ticket.isSlaNearBreach ? Colors.orange : Colors.green;
-    return _badge(label, color);
+    final (bg, fg) = ticket.isSlaNearBreach
+        ? (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer)
+        : (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer);
+    return _badge(label, bg, fg);
   }
 
-  Widget _badge(String label, Color color, {bool bold = false}) {
+  Widget _badge(String label, Color bg, Color fg, {bool bold = false}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withAlpha(30),
+        color: bg,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withAlpha(120)),
+        border: Border.all(color: fg.withValues(alpha: 0.35)),
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 11, color: color, fontWeight: bold ? FontWeight.bold : FontWeight.normal),
+        style: TextStyle(fontSize: 11, color: fg, fontWeight: bold ? FontWeight.bold : FontWeight.normal),
       ),
     );
   }

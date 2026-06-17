@@ -27,13 +27,13 @@ class _TicketsScreenState extends State<TicketsScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.ltr, // Since Dashboard is generally Arabic but this matches their setup
+      textDirection: TextDirection.rtl,
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Support Tickets'),
+          title: const Text('تذاكر الدعم الفني'),
           actions: [
             IconButton(
-              tooltip: 'Refresh',
+              tooltip: 'تحديث',
               onPressed: () => context.read<TicketsCubit>().load(),
               icon: const Icon(Icons.refresh_rounded),
             ),
@@ -85,7 +85,7 @@ class _ErrorView extends StatelessWidget {
             FilledButton.icon(
               onPressed: () => context.read<TicketsCubit>().load(),
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Retry'),
+              label: const Text('إعادة المحاولة'),
             ),
           ],
         ),
@@ -126,7 +126,7 @@ class _LoadedView extends StatelessWidget {
           flex: 2,
           child: TextField(
             decoration: const InputDecoration(
-              hintText: 'Search tickets...',
+              hintText: 'ابحث عن تذكرة...',
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(),
             ),

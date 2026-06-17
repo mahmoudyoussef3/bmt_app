@@ -19,7 +19,7 @@ class PassengerListPage extends StatelessWidget {
     return BlocProvider<PassengerManifestCubit>(
       create: (_) => captainGetIt<PassengerManifestCubit>()..load(tripId),
       child: Scaffold(
-        appBar: AppBar(title: const Text('Passenger Manifest')),
+        appBar: AppBar(title: const Text('قائمة الركاب')),
         body: BlocBuilder<PassengerManifestCubit, PassengerManifestState>(
           builder: (context, state) {
             if (state is PassengerManifestLoading) {
@@ -45,7 +45,7 @@ class PassengerListPage extends StatelessWidget {
                     ),
                     color: Theme.of(context).colorScheme.surfaceContainerLow,
                     child: Text(
-                      '✓ $boarded boarded · ${passengers.length - boarded} remaining · ${passengers.length} total',
+                      '✓ $boarded صعد · ${passengers.length - boarded} متبقٍ · ${passengers.length} إجمالاً',
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
                   ),
