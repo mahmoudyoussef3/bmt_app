@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/driver_operations.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
@@ -132,15 +133,15 @@ class FleetDriversCardList extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.red[50],
+                        color: AppStatusColors.errorContainer,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.red[300]!),
+                        border: Border.all(color: AppStatusColors.onErrorContainer),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.warning_rounded, color: Colors.red[700], size: 16),
+                          Icon(Icons.warning_rounded, color: AppStatusColors.onErrorContainer, size: 16),
                           const SizedBox(width: 6),
-                          Text('الرخصة منتهية', style: TextStyle(color: Colors.red[700], fontSize: 12, fontWeight: FontWeight.bold)),
+                          Text('الرخصة منتهية', style: TextStyle(color: AppStatusColors.onErrorContainer, fontSize: 12, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),
@@ -149,15 +150,15 @@ class FleetDriversCardList extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.orange[50],
+                        color: AppStatusColors.warningContainer,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: Colors.orange[300]!),
+                        border: Border.all(color: AppStatusColors.onWarningContainer),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.schedule_rounded, color: Colors.orange[800], size: 16),
+                          Icon(Icons.schedule_rounded, color: AppStatusColors.onWarningContainer, size: 16),
                           const SizedBox(width: 6),
-                          Text('الرخصة تنتهي قريباً', style: TextStyle(color: Colors.orange[800], fontSize: 12, fontWeight: FontWeight.bold)),
+                          Text('الرخصة تنتهي قريباً', style: TextStyle(color: AppStatusColors.onWarningContainer, fontSize: 12, fontWeight: FontWeight.bold)),
                         ],
                       ),
                     ),

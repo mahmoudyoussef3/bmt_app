@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -98,7 +99,7 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                 color: isDriver
                                     ? scheme.secondaryContainer
                                     : isVip
-                                    ? Colors.amber.shade100
+                                    ? AppStatusColors.specialContainer
                                     : scheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(
                                   AppTokens.radiusSmall,
@@ -107,7 +108,7 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                   color: isDriver
                                       ? scheme.secondary
                                       : isVip
-                                      ? Colors.amber.shade800
+                                      ? AppStatusColors.onSpecialContainer
                                       : scheme.primary,
                                 ),
                               ),
@@ -124,7 +125,7 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                     color: isDriver
                                         ? scheme.onSecondaryContainer
                                         : isVip
-                                        ? Colors.amber.shade900
+                                        ? AppStatusColors.onSpecialContainer
                                         : scheme.onPrimaryContainer,
                                   ),
                                   const SizedBox(height: 2),
@@ -136,7 +137,7 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                       color: isDriver
                                           ? scheme.onSecondaryContainer
                                           : isVip
-                                          ? Colors.amber.shade900
+                                          ? AppStatusColors.onSpecialContainer
                                           : scheme.onPrimaryContainer,
                                     ),
                                   ),

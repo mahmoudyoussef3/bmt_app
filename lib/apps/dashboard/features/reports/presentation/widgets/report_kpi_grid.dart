@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import '../cubit/reports_state.dart';
@@ -22,17 +23,17 @@ class ReportKpiGrid extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  if (keys.isNotEmpty) Expanded(child: _KpiCard(label: keys[0], value: kpis[keys[0]]!, color: Colors.blue)),
+                  if (keys.isNotEmpty) Expanded(child: _KpiCard(label: keys[0], value: kpis[keys[0]]!, color: AppStatusColors.onInfoContainer)),
                   SizedBox(width: spacing),
-                  if (keys.length > 1) Expanded(child: _KpiCard(label: keys[1], value: kpis[keys[1]]!, color: Colors.orange)),
+                  if (keys.length > 1) Expanded(child: _KpiCard(label: keys[1], value: kpis[keys[1]]!, color: AppStatusColors.onWarningContainer)),
                 ],
               ),
               SizedBox(height: spacing),
               Row(
                 children: [
-                  if (keys.length > 2) Expanded(child: _KpiCard(label: keys[2], value: kpis[keys[2]]!, color: Colors.green)),
+                  if (keys.length > 2) Expanded(child: _KpiCard(label: keys[2], value: kpis[keys[2]]!, color: AppStatusColors.onSuccessContainer)),
                   SizedBox(width: spacing),
-                  if (keys.length > 3) Expanded(child: _KpiCard(label: keys[3], value: kpis[keys[3]]!, color: Colors.purple)),
+                  if (keys.length > 3) Expanded(child: _KpiCard(label: keys[3], value: kpis[keys[3]]!, color: AppStatusColors.onSpecialContainer)),
                 ],
               ),
             ],
@@ -42,7 +43,7 @@ class ReportKpiGrid extends StatelessWidget {
         return Row(
           children: List.generate(keys.length, (index) {
             final key = keys[index];
-            final color = [Colors.blue, Colors.orange, Colors.green, Colors.purple][index % 4];
+            final color = [AppStatusColors.onInfoContainer, AppStatusColors.onWarningContainer, AppStatusColors.onSuccessContainer, AppStatusColors.onSpecialContainer][index % 4];
             return Expanded(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: index == 0 ? 0 : spacing / 2),

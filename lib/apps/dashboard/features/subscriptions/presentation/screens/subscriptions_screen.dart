@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
@@ -725,15 +726,15 @@ class _SubscriptionStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      SubscriptionStatus.active => Colors.green,
-      SubscriptionStatus.pendingPayment => Colors.orange,
-      SubscriptionStatus.expired => Colors.blueGrey,
-      SubscriptionStatus.cancelled => Colors.red,
+      SubscriptionStatus.active => AppStatusColors.onSuccessContainer,
+      SubscriptionStatus.pendingPayment => AppStatusColors.onWarningContainer,
+      SubscriptionStatus.expired => AppStatusColors.onNeutralContainer,
+      SubscriptionStatus.cancelled => AppStatusColors.onErrorContainer,
     };
     return StatusChip(
       label: status.label,
       color: color.withAlpha(28),
-      textColor: color.shade700,
+      textColor: color,
     );
   }
 }

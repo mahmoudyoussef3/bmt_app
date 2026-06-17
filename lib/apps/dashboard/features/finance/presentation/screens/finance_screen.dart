@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
@@ -84,7 +85,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: Colors.red),
+            const Icon(Icons.error_outline_rounded, size: 48, color: AppStatusColors.onErrorContainer),
             const SizedBox(height: 12),
             Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
@@ -163,15 +164,15 @@ class _MetricsRow extends StatelessWidget {
                 children: [
                   Expanded(child: _MetricCard(title: 'إيرادات اليوم', value: '${metrics.todayRevenue.toStringAsFixed(0)} ج.م', icon: Icons.today, color: const Color(0xFF10B981))),
                   SizedBox(width: spacing),
-                  Expanded(child: _MetricCard(title: 'إيرادات الأسبوع', value: '${metrics.weeklyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.date_range, color: Colors.blue)),
+                  Expanded(child: _MetricCard(title: 'إيرادات الأسبوع', value: '${metrics.weeklyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.date_range, color: AppStatusColors.onInfoContainer)),
                 ],
               ),
               SizedBox(height: spacing),
               Row(
                 children: [
-                  Expanded(child: _MetricCard(title: 'إيرادات الشهر', value: '${metrics.monthlyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.calendar_month, color: Colors.purple)),
+                  Expanded(child: _MetricCard(title: 'إيرادات الشهر', value: '${metrics.monthlyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.calendar_month, color: AppStatusColors.onSpecialContainer)),
                   SizedBox(width: spacing),
-                  Expanded(child: _MetricCard(title: 'الاشتراكات النشطة', value: '${metrics.activeSubscriptions}', icon: Icons.card_membership, color: Colors.orange)),
+                  Expanded(child: _MetricCard(title: 'الاشتراكات النشطة', value: '${metrics.activeSubscriptions}', icon: Icons.card_membership, color: AppStatusColors.onWarningContainer)),
                 ],
               ),
               SizedBox(height: spacing),
@@ -179,7 +180,7 @@ class _MetricsRow extends StatelessWidget {
                 title: 'إجمالي إيرادات الحجوزات',
                 value: '${metrics.totalBookingsRevenue.toStringAsFixed(0)} ج.م',
                 icon: Icons.account_balance_wallet,
-                color: Colors.teal,
+                color: AppStatusColors.onNeutralContainer,
                 isFullWidth: true,
               ),
             ],
@@ -190,13 +191,13 @@ class _MetricsRow extends StatelessWidget {
           children: [
             Expanded(child: _MetricCard(title: 'إيرادات اليوم', value: '${metrics.todayRevenue.toStringAsFixed(0)} ج.م', icon: Icons.today, color: const Color(0xFF10B981))),
             SizedBox(width: spacing),
-            Expanded(child: _MetricCard(title: 'إيرادات الأسبوع', value: '${metrics.weeklyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.date_range, color: Colors.blue)),
+            Expanded(child: _MetricCard(title: 'إيرادات الأسبوع', value: '${metrics.weeklyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.date_range, color: AppStatusColors.onInfoContainer)),
             SizedBox(width: spacing),
-            Expanded(child: _MetricCard(title: 'إيرادات الشهر', value: '${metrics.monthlyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.calendar_month, color: Colors.purple)),
+            Expanded(child: _MetricCard(title: 'إيرادات الشهر', value: '${metrics.monthlyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.calendar_month, color: AppStatusColors.onSpecialContainer)),
             SizedBox(width: spacing),
-            Expanded(child: _MetricCard(title: 'الاشتراكات النشطة', value: '${metrics.activeSubscriptions}', icon: Icons.card_membership, color: Colors.orange)),
+            Expanded(child: _MetricCard(title: 'الاشتراكات النشطة', value: '${metrics.activeSubscriptions}', icon: Icons.card_membership, color: AppStatusColors.onWarningContainer)),
             SizedBox(width: spacing),
-            Expanded(child: _MetricCard(title: 'إجمالي إيرادات الحجوزات', value: '${metrics.totalBookingsRevenue.toStringAsFixed(0)} ج.م', icon: Icons.account_balance_wallet, color: Colors.teal)),
+            Expanded(child: _MetricCard(title: 'إجمالي إيرادات الحجوزات', value: '${metrics.totalBookingsRevenue.toStringAsFixed(0)} ج.م', icon: Icons.account_balance_wallet, color: AppStatusColors.onNeutralContainer)),
           ],
         );
       },
@@ -694,10 +695,10 @@ class _PaymentMethodBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (method) {
-      FinancePaymentMethod.instapay => (Colors.purple.shade50, Colors.purple.shade900),
-      FinancePaymentMethod.vodafoneCash => (Colors.red.shade50, Colors.red.shade900),
-      FinancePaymentMethod.cash => (Colors.amber.shade50, Colors.amber.shade900),
-      FinancePaymentMethod.card => (Colors.blue.shade50, Colors.blue.shade900),
+      FinancePaymentMethod.instapay => (AppStatusColors.specialContainer, AppStatusColors.onSpecialContainer),
+      FinancePaymentMethod.vodafoneCash => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
+      FinancePaymentMethod.cash => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
+      FinancePaymentMethod.card => (AppStatusColors.infoContainer, AppStatusColors.onInfoContainer),
     };
 
     return Container(
@@ -718,10 +719,10 @@ class _PaymentStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      PaymentStatus.success => (Colors.green.shade50, Colors.green.shade900),
-      PaymentStatus.pending => (Colors.orange.shade50, Colors.orange.shade900),
-      PaymentStatus.cancelled => (Colors.red.shade50, Colors.red.shade900),
-      PaymentStatus.refunded => (Colors.grey.shade100, Colors.grey.shade900),
+      PaymentStatus.success => (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer),
+      PaymentStatus.pending => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
+      PaymentStatus.cancelled => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
+      PaymentStatus.refunded => (AppStatusColors.neutralContainer, AppStatusColors.onNeutralContainer),
     };
 
     return Container(
@@ -824,7 +825,7 @@ class _ReviewQueueSectionState extends State<_ReviewQueueSection> {
                                 Text('${r.amount.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold)),
                                 Text(
                                   r.date.toString().substring(5, 16),
-                                  style: const TextStyle(fontSize: 10, color: Colors.grey),
+                                  style: const TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer),
                                 ),
                               ],
                             ),
@@ -953,7 +954,7 @@ class _ReceiptWorkspace extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('${receipt.amount.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Colors.blue)),
+                  Text('${receipt.amount.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppStatusColors.onInfoContainer)),
                   const SizedBox(height: 2),
                   _ReceiptStatusBadge(status: receipt.status),
                 ],
@@ -972,9 +973,9 @@ class _ReceiptWorkspace extends StatelessWidget {
                   flex: 5,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.grey.shade200,
+                      color: AppStatusColors.neutralContainer,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.grey.shade300),
+                      border: Border.all(color: AppStatusColors.onNeutralContainer),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Stack(
@@ -1058,8 +1059,8 @@ class _ReceiptWorkspace extends StatelessWidget {
                                   child: OutlinedButton.icon(
                                     onPressed: onReject,
                                     style: OutlinedButton.styleFrom(
-                                      foregroundColor: Colors.red,
-                                      side: const BorderSide(color: Colors.red),
+                                      foregroundColor: AppStatusColors.onErrorContainer,
+                                      side: const BorderSide(color: AppStatusColors.onErrorContainer),
                                       minimumSize: const Size(0, 42),
                                     ),
                                     icon: const Icon(Icons.close),
@@ -1071,8 +1072,8 @@ class _ReceiptWorkspace extends StatelessWidget {
                                   child: OutlinedButton.icon(
                                     onPressed: onRequestReupload,
                                     style: OutlinedButton.styleFrom(
-                                      foregroundColor: Colors.orange,
-                                      side: const BorderSide(color: Colors.orange),
+                                      foregroundColor: AppStatusColors.onWarningContainer,
+                                      side: const BorderSide(color: AppStatusColors.onWarningContainer),
                                       minimumSize: const Size(0, 42),
                                     ),
                                     icon: const Icon(Icons.replay),
@@ -1086,7 +1087,7 @@ class _ReceiptWorkspace extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.all(AppSpacing.medium),
                             decoration: BoxDecoration(
-                              color: Colors.grey.shade100,
+                              color: AppStatusColors.neutralContainer,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Column(
@@ -1110,7 +1111,7 @@ class _ReceiptWorkspace extends StatelessWidget {
                         const SizedBox(height: AppSpacing.small),
                         ...receipt.history.map((log) => Padding(
                               padding: const EdgeInsets.only(bottom: 6.0),
-                              child: Text('• $log', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                              child: Text('• $log', style: const TextStyle(fontSize: 11, color: AppStatusColors.onNeutralContainer)),
                             )),
                       ],
                     ),
@@ -1141,38 +1142,38 @@ class _ReceiptWorkspace extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('instaPay', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.purple)),
-              Icon(Icons.qr_code, color: Colors.purple.shade900, size: 28),
+              const Text('instaPay', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppStatusColors.onSpecialContainer)),
+              Icon(Icons.qr_code, color: AppStatusColors.onSpecialContainer, size: 28),
             ],
           ),
           const SizedBox(height: 4),
           const Text('معاملة دفع ناجحة', style: TextStyle(color: Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
           const Divider(height: 24),
           const SizedBox(height: 10),
-          const Text('المرسل إليه:', style: TextStyle(fontSize: 10, color: Colors.grey)),
+          const Text('المرسل إليه:', style: TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer)),
           const Text('شركة باصات النقل المتميز (BMT)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          const Text('المرسل:', style: TextStyle(fontSize: 10, color: Colors.grey)),
+          const Text('المرسل:', style: TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer)),
           Text(receipt.clientName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
           const SizedBox(height: 12),
-          const Text('رقم الحساب أو المحفظة:', style: TextStyle(fontSize: 10, color: Colors.grey)),
+          const Text('رقم الحساب أو المحفظة:', style: TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer)),
           const Text('*** *** **8792', style: TextStyle(fontSize: 11)),
           const SizedBox(height: 12),
-          const Text('رقم المعاملة الفريد (RRN):', style: TextStyle(fontSize: 10, color: Colors.grey)),
-          Text(receipt.transactionId, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: Colors.purple)),
+          const Text('رقم المعاملة الفريد (RRN):', style: TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer)),
+          Text(receipt.transactionId, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppStatusColors.onSpecialContainer)),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: Colors.purple.shade50, borderRadius: BorderRadius.circular(6)),
+            decoration: BoxDecoration(color: AppStatusColors.specialContainer, borderRadius: BorderRadius.circular(6)),
             child: Column(
               children: [
-                const Text('القيمة المحولة:', style: TextStyle(fontSize: 10, color: Colors.purple)),
-                Text('${receipt.amount.toStringAsFixed(2)} EGP', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.purple)),
+                const Text('القيمة المحولة:', style: TextStyle(fontSize: 10, color: AppStatusColors.onSpecialContainer)),
+                Text('${receipt.amount.toStringAsFixed(2)} EGP', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppStatusColors.onSpecialContainer)),
               ],
             ),
           ),
           const Spacer(),
-          Text('تاريخ المعاملة: ${receipt.date.toString().substring(0, 16)}', style: const TextStyle(fontSize: 8, color: Colors.grey), textAlign: TextAlign.center),
+          Text('تاريخ المعاملة: ${receipt.date.toString().substring(0, 16)}', style: const TextStyle(fontSize: 8, color: AppStatusColors.onNeutralContainer), textAlign: TextAlign.center),
         ],
       ),
     );
@@ -1191,7 +1192,7 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppStatusColors.onNeutralContainer)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
         ],
       ),
@@ -1206,10 +1207,10 @@ class _ReceiptStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      ReceiptReviewStatus.pending => (Colors.orange.shade50, Colors.orange.shade900),
-      ReceiptReviewStatus.accepted => (Colors.green.shade50, Colors.green.shade900),
-      ReceiptReviewStatus.rejected => (Colors.red.shade50, Colors.red.shade900),
-      ReceiptReviewStatus.reuploadRequested => (Colors.blue.shade50, Colors.blue.shade900),
+      ReceiptReviewStatus.pending => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
+      ReceiptReviewStatus.accepted => (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer),
+      ReceiptReviewStatus.rejected => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
+      ReceiptReviewStatus.reuploadRequested => (AppStatusColors.infoContainer, AppStatusColors.onInfoContainer),
     };
 
     return Container(
@@ -1290,7 +1291,7 @@ class _RefundsSection extends StatelessWidget {
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text('${r.amount.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.red)),
+                                Text('${r.amount.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, color: AppStatusColors.onErrorContainer)),
                                 _RefundStatusBadge(status: r.status),
                               ],
                             ),
@@ -1400,7 +1401,7 @@ class _RefundDetailsPanel extends StatelessWidget {
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: onApprove,
-                      style: FilledButton.styleFrom(backgroundColor: Colors.red.shade700, foregroundColor: Colors.white),
+                      style: FilledButton.styleFrom(backgroundColor: AppStatusColors.onErrorContainer, foregroundColor: Colors.white),
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text('الموافقة وإرجاع المبلغ'),
                     ),
@@ -1421,7 +1422,7 @@ class _RefundDetailsPanel extends StatelessWidget {
           const SizedBox(height: AppSpacing.small),
           ...refund.history.map((log) => Padding(
                 padding: const EdgeInsets.only(bottom: 4.0),
-                child: Text('• $log', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                child: Text('• $log', style: const TextStyle(fontSize: 11, color: AppStatusColors.onNeutralContainer)),
               )),
         ],
       ),
@@ -1436,9 +1437,9 @@ class _RefundStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      RefundStatus.pending => (Colors.orange.shade50, Colors.orange.shade900),
-      RefundStatus.approved => (Colors.green.shade50, Colors.green.shade900),
-      RefundStatus.rejected => (Colors.red.shade50, Colors.red.shade900),
+      RefundStatus.pending => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
+      RefundStatus.approved => (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer),
+      RefundStatus.rejected => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
     };
 
     return Container(
@@ -1637,7 +1638,7 @@ class _SubscriptionDetailPanel extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onCancel,
                 style: FilledButton.styleFrom(
-                  backgroundColor: Colors.red.shade700,
+                  backgroundColor: AppStatusColors.onErrorContainer,
                   foregroundColor: Colors.white,
                   minimumSize: const Size.fromHeight(42),
                 ),
@@ -1648,12 +1649,12 @@ class _SubscriptionDetailPanel extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppSpacing.medium),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: AppStatusColors.neutralContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
                 'الاشتراك منتهي أو تم إلغاؤه مسبقاً، ولا يمكن إجراء تعديلات عليه.',
-                style: TextStyle(fontSize: 12, color: Colors.grey, fontStyle: FontStyle.italic),
+                style: TextStyle(fontSize: 12, color: AppStatusColors.onNeutralContainer, fontStyle: FontStyle.italic),
               ),
             ),
           ],
@@ -1670,9 +1671,9 @@ class _SubscriptionStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      SubscriptionStatus.active => (Colors.green.shade50, Colors.green.shade900),
-      SubscriptionStatus.expired => (Colors.grey.shade100, Colors.grey.shade700),
-      SubscriptionStatus.cancelled => (Colors.red.shade50, Colors.red.shade900),
+      SubscriptionStatus.active => (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer),
+      SubscriptionStatus.expired => (AppStatusColors.neutralContainer, AppStatusColors.onNeutralContainer),
+      SubscriptionStatus.cancelled => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
     };
 
     return Container(
@@ -1790,10 +1791,10 @@ class _MethodBreakdownItem extends StatelessWidget {
     final double percentage = methodTotal / total;
 
     final color = switch (method) {
-      FinancePaymentMethod.instapay => Colors.purple,
-      FinancePaymentMethod.vodafoneCash => Colors.red,
-      FinancePaymentMethod.card => Colors.blue,
-      FinancePaymentMethod.cash => Colors.amber,
+      FinancePaymentMethod.instapay => AppStatusColors.onSpecialContainer,
+      FinancePaymentMethod.vodafoneCash => AppStatusColors.onErrorContainer,
+      FinancePaymentMethod.card => AppStatusColors.onInfoContainer,
+      FinancePaymentMethod.cash => AppStatusColors.onWarningContainer,
     };
 
     return Padding(
@@ -1834,7 +1835,7 @@ class _RevenueMetricSummaryRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+          Text(label, style: const TextStyle(fontSize: 12, color: AppStatusColors.onNeutralContainer)),
           Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
         ],
       ),
@@ -1884,7 +1885,7 @@ class _RevenueChartWidget extends StatelessWidget {
             final double value = maxCeiling * (4 - index) / 4;
             return Text(
               '${value.toStringAsFixed(0)} ج',
-              style: const TextStyle(fontSize: 9, color: Colors.grey),
+              style: const TextStyle(fontSize: 9, color: AppStatusColors.onNeutralContainer),
             );
           }),
         ),

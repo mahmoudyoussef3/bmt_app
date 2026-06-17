@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fle
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_table_shell.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/cubit/fleet_drivers_cubit.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
@@ -37,13 +38,53 @@ class FleetDriversTable extends StatelessWidget {
     return match.first.vehicleNumber;
   }
 
-  Color _healthColor(BuildContext context, DriverHealthLevel health) {
-    final scheme = Theme.of(context).colorScheme;
-    return switch (health) {
-      DriverHealthLevel.healthy => scheme.primary,
-      DriverHealthLevel.warning => scheme.tertiary,
-      DriverHealthLevel.critical => scheme.error,
-    };
+  static (Color bg, Color fg) _healthColors(DriverHealthLevel health) =>
+      switch (health) {
+        DriverHealthLevel.healthy => (
+          AppStatusColors.successContainer,
+          AppStatusColors.onSuccessContainer,
+        ),
+        DriverHealthLevel.warning => (
+          AppStatusColors.warningContainer,
+          AppStatusColors.onWarningContainer,
+        ),
+        DriverHealthLevel.critical => (
+          AppStatusColors.errorContainer,
+          AppStatusColors.onErrorContainer,
+        ),
+      };
+
+  static Future<void> _archiveWithConfirmation(
+    BuildContext context,
+    FleetDriver driver,
+    FleetDriversCubit cubit,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تأكيد الأرشفة'),
+        content: Text(
+          'هل تريد أرشفة السائق "${driver.name}"؟\n'
+          'لن يظهر في القوائم العادية ويمكن استعادته لاحقاً.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('أرشفة'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      cubit.updateDriverStatus(driver.id, FleetDriverStatus.archived);
+    }
   }
 
   @override
@@ -65,6 +106,7 @@ class FleetDriversTable extends StatelessWidget {
         'الرخصة',
         'إجراءات',
       ],
+      columnFlexes: const [1, 3, 2, 2, 2, 2, 2],
       total: drivers.length,
       currentPage: page,
       pageSize: pageSize,
@@ -72,7 +114,7 @@ class FleetDriversTable extends StatelessWidget {
       rows: paged.map((driver) {
         final vehicle = _vehicleName(driver.currentVehicleId);
         final snapshot = DriverOperations.snapshot(driver, workspace);
-        final healthColor = _healthColor(context, snapshot.health);
+        final (healthBg, healthFg) = _healthColors(snapshot.health);
         return [
           Checkbox(
             value: selectedIds.contains(driver.id),
@@ -110,8 +152,8 @@ class FleetDriversTable extends StatelessWidget {
             message: snapshot.primaryReason,
             child: StatusChip(
               label: snapshot.health.label,
-              color: healthColor.withAlpha(24),
-              textColor: healthColor,
+              color: healthBg,
+              textColor: healthFg,
             ),
           ),
           StatusChip(label: snapshot.status.label),
@@ -121,8 +163,8 @@ class FleetDriversTable extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
-          Wrap(
-            spacing: AppSpacing.xSmall,
+          Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
                 tooltip: 'عرض جاهزية السائق',
@@ -134,33 +176,66 @@ class FleetDriversTable extends StatelessWidget {
                 onPressed: () => onEdit(driver),
                 icon: const Icon(Icons.edit_outlined),
               ),
-              IconButton(
-                tooltip: 'إيقاف السائق',
-                onPressed: driver.status == FleetDriverStatus.active
-                    ? () => cubit.updateDriverStatus(
-                        driver.id,
-                        FleetDriverStatus.suspended,
-                      )
-                    : null,
-                icon: const Icon(Icons.pause_circle_outline_rounded),
-              ),
-              IconButton(
-                tooltip: 'تفعيل السائق',
-                onPressed: driver.status == FleetDriverStatus.suspended
-                    ? () => cubit.updateDriverStatus(
-                        driver.id,
-                        FleetDriverStatus.active,
-                      )
-                    : null,
-                icon: const Icon(Icons.play_circle_outline_rounded),
-              ),
-              IconButton(
-                tooltip: 'أرشفة السائق',
-                onPressed: () => cubit.updateDriverStatus(
-                  driver.id,
-                  FleetDriverStatus.archived,
-                ),
-                icon: const Icon(Icons.archive_outlined),
+              PopupMenuButton<String>(
+                tooltip: 'المزيد من الإجراءات',
+                icon: const Icon(Icons.more_vert_rounded),
+                onSelected: (value) {
+                  if (value == 'suspend') {
+                    cubit.updateDriverStatus(
+                      driver.id,
+                      FleetDriverStatus.suspended,
+                    );
+                  } else if (value == 'activate') {
+                    cubit.updateDriverStatus(
+                      driver.id,
+                      FleetDriverStatus.active,
+                    );
+                  } else if (value == 'archive') {
+                    _archiveWithConfirmation(context, driver, cubit);
+                  }
+                },
+                itemBuilder: (ctx) => [
+                  if (driver.status == FleetDriverStatus.active)
+                    const PopupMenuItem(
+                      value: 'suspend',
+                      child: Row(
+                        children: [
+                          Icon(Icons.pause_circle_outline_rounded),
+                          SizedBox(width: AppSpacing.small),
+                          Text('إيقاف السائق'),
+                        ],
+                      ),
+                    ),
+                  if (driver.status == FleetDriverStatus.suspended)
+                    const PopupMenuItem(
+                      value: 'activate',
+                      child: Row(
+                        children: [
+                          Icon(Icons.play_circle_outline_rounded),
+                          SizedBox(width: AppSpacing.small),
+                          Text('تفعيل السائق'),
+                        ],
+                      ),
+                    ),
+                  PopupMenuItem(
+                    value: 'archive',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.archive_outlined,
+                          color: Theme.of(ctx).colorScheme.error,
+                        ),
+                        const SizedBox(width: AppSpacing.small),
+                        Text(
+                          'أرشفة السائق',
+                          style: TextStyle(
+                            color: Theme.of(ctx).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

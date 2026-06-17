@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -309,11 +310,11 @@ class _StopDot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      LivePointStatus.completed => Colors.green,
-      LivePointStatus.current => Colors.blue,
-      LivePointStatus.arrived => Colors.teal,
-      LivePointStatus.skipped => Colors.grey,
-      LivePointStatus.pending => Colors.orange,
+      LivePointStatus.completed => AppStatusColors.onSuccessContainer,
+      LivePointStatus.current => AppStatusColors.onInfoContainer,
+      LivePointStatus.arrived => AppStatusColors.onSpecialContainer,
+      LivePointStatus.skipped => AppStatusColors.onNeutralContainer,
+      LivePointStatus.pending => AppStatusColors.onWarningContainer,
     };
     return Container(
       width: 14,
@@ -783,7 +784,7 @@ class _PassengerTile extends StatelessWidget {
                   Switch.adaptive(
                     value: passenger.checkedIn,
                     onChanged: (_) => onTap(),
-                    activeColor: scheme.primary,
+                    activeThumbColor: scheme.primary,
                   ),
                 ],
               ),

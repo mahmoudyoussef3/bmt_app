@@ -302,7 +302,7 @@ class FleetBreadcrumbs extends StatelessWidget {
       children: [
         IconButton(
           onPressed: onBack,
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(Icons.arrow_forward_rounded),
           tooltip: 'رجوع',
         ),
         const SizedBox(width: AppSpacing.small),
@@ -314,7 +314,7 @@ class FleetBreadcrumbs extends StatelessWidget {
           ),
         ),
         Icon(
-          Icons.chevron_left_rounded,
+          Icons.chevron_right_rounded,
           size: 16,
           color: scheme.onSurfaceVariant,
         ),

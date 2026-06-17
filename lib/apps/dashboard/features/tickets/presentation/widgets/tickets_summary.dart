@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../cubit/tickets_state.dart';
@@ -14,36 +15,36 @@ class SummaryStats extends StatelessWidget {
       children: [
         Expanded(
           child: StatCard(
-            title: 'New Tickets',
+            title: 'تذاكر جديدة',
             value: state.newCount,
-            color: Colors.blue,
+            color: AppStatusColors.onInfoContainer,
             icon: Icons.mark_email_unread_outlined,
           ),
         ),
         const SizedBox(width: AppSpacing.small),
         Expanded(
           child: StatCard(
-            title: 'Under Review',
+            title: 'قيد المراجعة',
             value: state.underReviewCount,
-            color: Colors.orange,
+            color: AppStatusColors.onWarningContainer,
             icon: Icons.pending_actions_outlined,
           ),
         ),
         const SizedBox(width: AppSpacing.small),
         Expanded(
           child: StatCard(
-            title: 'Resolved',
+            title: 'تم الحل',
             value: state.resolvedCount,
-            color: Colors.green,
+            color: AppStatusColors.onSuccessContainer,
             icon: Icons.check_circle_outline_rounded,
           ),
         ),
         const SizedBox(width: AppSpacing.small),
         Expanded(
           child: StatCard(
-            title: 'Delayed (>24h)',
+            title: 'متأخرة (>24 ساعة)',
             value: state.delayedCount,
-            color: Colors.red,
+            color: AppStatusColors.onErrorContainer,
             icon: Icons.running_with_errors_outlined,
             isAlert: state.delayedCount > 0,
           ),

@@ -1,7 +1,5 @@
 import 'dart:math';
 import '../../domain/entities/finance_entities.dart';
-
-import '../../domain/entities/finance_entities.dart';
 import 'finance_datasource.dart';
 
 class MockFinanceDatasource implements FinanceDatasource {

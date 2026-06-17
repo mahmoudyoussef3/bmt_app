@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -77,7 +78,7 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: Colors.red),
+            const Icon(Icons.error_outline_rounded, size: 48, color: AppStatusColors.onErrorContainer),
             const SizedBox(height: 12),
             Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),

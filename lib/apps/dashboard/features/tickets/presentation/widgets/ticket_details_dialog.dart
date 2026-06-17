@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 
 import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_cubit.dart';
@@ -105,7 +106,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                               Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: Colors.grey[100],
+                                  color: AppStatusColors.neutralContainer,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Text(ticket.description),
@@ -163,7 +164,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                     onPressed: () => cubit.updateStatus(TicketStatus.resolved),
                                     icon: const Icon(Icons.check_circle),
                                     label: const Text('تم الحل'),
-                                    style: FilledButton.styleFrom(backgroundColor: Colors.green[100], foregroundColor: Colors.green[900]),
+                                    style: FilledButton.styleFrom(backgroundColor: AppStatusColors.successContainer, foregroundColor: AppStatusColors.onSuccessContainer),
                                   ),
                                 ],
 
@@ -174,7 +175,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                     onPressed: () => cubit.closeTicket(),
                                     icon: const Icon(Icons.close),
                                     label: const Text('إغلاق التذكرة'),
-                                    style: TextButton.styleFrom(foregroundColor: Colors.grey[700]),
+                                    style: TextButton.styleFrom(foregroundColor: AppStatusColors.onNeutralContainer),
                                   ),
                                 ],
 
@@ -182,7 +183,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                               const Text('تعيين مسؤول', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
                               const SizedBox(height: 8),
                               if (state.agents.isEmpty)
-                                const Text('لا يوجد مسؤولون', style: TextStyle(color: Colors.grey, fontSize: 12))
+                                const Text('لا يوجد مسؤولون', style: TextStyle(color: AppStatusColors.onNeutralContainer, fontSize: 12))
                               else
                                 DropdownButtonFormField<String>(
                                   key: ValueKey(ticket.assignedAgentId),
@@ -214,15 +215,15 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: Colors.orange[50],
+                                    color: AppStatusColors.warningContainer,
                                     borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: Colors.orange[200]!),
+                                    border: Border.all(color: AppStatusColors.onWarningContainer),
                                   ),
                                   child: Text(ticket.internalNote!),
                                 ),
                                 const SizedBox(height: 12),
                               ],
-                              const Text('قوالب سريعة', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                              const Text('قوالب سريعة', style: TextStyle(fontSize: 12, color: AppStatusColors.onNeutralContainer)),
                               const SizedBox(height: 6),
                               Wrap(
                                 spacing: 6,

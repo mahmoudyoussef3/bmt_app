@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -223,17 +224,17 @@ class _SummaryCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      _SummaryItem('جديدة', state.countByStatus(BookingStatus.newRequest), Icons.fiber_new_rounded, Colors.blue),
+      _SummaryItem('جديدة', state.countByStatus(BookingStatus.newRequest), Icons.fiber_new_rounded, AppStatusColors.onInfoContainer),
       _SummaryItem(
         'تحت المراجعة',
         state.countByStatus(BookingStatus.underReview) + state.countByStatus(BookingStatus.paymentUploaded),
         Icons.hourglass_top_rounded,
-        Colors.orange,
+        AppStatusColors.onWarningContainer,
       ),
-      _SummaryItem('مقبولة', state.countByStatus(BookingStatus.approved), Icons.check_circle_outline, Colors.green),
-      _SummaryItem('مؤكدة', state.countByStatus(BookingStatus.confirmed), Icons.verified_outlined, Colors.teal),
-      _SummaryItem('مرفوضة', state.countByStatus(BookingStatus.rejected), Icons.cancel_outlined, Colors.red),
-      _SummaryItem('ملغاة', state.countByStatus(BookingStatus.cancelled), Icons.block_outlined, Colors.grey),
+      _SummaryItem('مقبولة', state.countByStatus(BookingStatus.approved), Icons.check_circle_outline, AppStatusColors.onSuccessContainer),
+      _SummaryItem('مؤكدة', state.countByStatus(BookingStatus.confirmed), Icons.verified_outlined, AppStatusColors.onSpecialContainer),
+      _SummaryItem('مرفوضة', state.countByStatus(BookingStatus.rejected), Icons.cancel_outlined, AppStatusColors.onErrorContainer),
+      _SummaryItem('ملغاة', state.countByStatus(BookingStatus.cancelled), Icons.block_outlined, AppStatusColors.onNeutralContainer),
     ];
 
     return LayoutBuilder(
@@ -905,9 +906,9 @@ class _PriorityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, bg) = switch (priority) {
-      BookingPriority.normal => (Colors.grey, Colors.grey.withAlpha(20)),
-      BookingPriority.urgent => (Colors.orange, Colors.orange.withAlpha(24)),
-      BookingPriority.vip => (Colors.amber.shade800, Colors.amber.withAlpha(24)),
+      BookingPriority.normal => (AppStatusColors.onNeutralContainer, AppStatusColors.neutralContainer),
+      BookingPriority.urgent => (AppStatusColors.onWarningContainer, AppStatusColors.warningContainer),
+      BookingPriority.vip => (AppStatusColors.onSpecialContainer, AppStatusColors.specialContainer),
     };
 
     return Container(
@@ -948,19 +949,19 @@ class _RowActions extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.check_rounded, size: 18),
             tooltip: 'قبول',
-            color: Colors.green,
+            color: AppStatusColors.onSuccessContainer,
             onPressed: () => _openApprovalDialog(context, booking, cubit),
           ),
           IconButton(
             icon: const Icon(Icons.close_rounded, size: 18),
             tooltip: 'رفض',
-            color: Colors.red,
+            color: AppStatusColors.onErrorContainer,
             onPressed: () => _openRejectionDialog(context, booking, cubit),
           ),
           IconButton(
             icon: const Icon(Icons.refresh_rounded, size: 18),
             tooltip: 'طلب إعادة رفع',
-            color: Colors.orange,
+            color: AppStatusColors.onWarningContainer,
             onPressed: () => _openReuploadDialog(context, booking, cubit),
           ),
         ],
@@ -1126,8 +1127,8 @@ class _BookingDetailsPanel extends StatelessWidget {
   Color _priorityColor(BookingPriority priority, ColorScheme scheme) {
     return switch (priority) {
       BookingPriority.normal => scheme.surfaceContainerHighest,
-      BookingPriority.urgent => Colors.orange.withAlpha(30),
-      BookingPriority.vip => Colors.amber.withAlpha(30),
+      BookingPriority.urgent => AppStatusColors.warningContainer,
+      BookingPriority.vip => AppStatusColors.specialContainer,
     };
   }
 }
@@ -1467,7 +1468,7 @@ class _BookingApprovalDialogState extends State<_BookingApprovalDialog> {
     return _ActionDialogShell(
       title: 'تأكيد قبول الدفع',
       icon: Icons.check_circle_outline,
-      color: Colors.green,
+      color: AppStatusColors.onSuccessContainer,
       message: 'سيتم قبول دفع ${widget.passengerName} وتأكيد الحجز ${widget.bookingId}.',
       content: TextField(
         controller: _note,
@@ -1608,7 +1609,7 @@ class _BookingReuploadDialogState extends State<_BookingReuploadDialog> {
     return _ActionDialogShell(
       title: 'طلب إعادة رفع الإيصال',
       icon: Icons.refresh_rounded,
-      color: Colors.orange,
+      color: AppStatusColors.onWarningContainer,
       message: 'سيُطلب من ${widget.passengerName} إعادة رفع إيصال الدفع.',
       content: Column(
         mainAxisSize: MainAxisSize.min,

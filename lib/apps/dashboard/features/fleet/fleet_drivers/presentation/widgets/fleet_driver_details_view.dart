@@ -3,6 +3,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/dri
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/widgets/fleet_document_manager.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
@@ -34,9 +35,10 @@ class FleetDriverDetailsView extends StatelessWidget {
     final vehicle = _vehicleName(driver.currentVehicleId);
     final snapshot = DriverOperations.snapshot(driver, workspace);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    return SingleChildScrollView(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
         FleetBreadcrumbs(
           currentLabel: 'تفاصيل السائق: ${driver.name}',
           onBack: onBack,
@@ -193,6 +195,7 @@ class FleetDriverDetailsView extends StatelessWidget {
           },
         ),
       ],
+      ),
     );
   }
 
@@ -256,7 +259,7 @@ class FleetDriverDetailsView extends StatelessWidget {
               label,
               style: const TextStyle(
                 fontWeight: FontWeight.w500,
-                color: Colors.grey,
+                color: AppStatusColors.onNeutralContainer,
               ),
             ),
           ),
@@ -285,19 +288,26 @@ class _ReadinessPanel extends StatelessWidget {
   final String vehicleLabel;
   final VoidCallback onEdit;
 
-  Color _healthColor(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return switch (snapshot.health) {
-      DriverHealthLevel.healthy => scheme.primary,
-      DriverHealthLevel.warning => scheme.tertiary,
-      DriverHealthLevel.critical => scheme.error,
-    };
-  }
+  static (Color bg, Color fg) _healthColors(DriverHealthLevel health) =>
+      switch (health) {
+        DriverHealthLevel.healthy => (
+          AppStatusColors.successContainer,
+          AppStatusColors.onSuccessContainer,
+        ),
+        DriverHealthLevel.warning => (
+          AppStatusColors.warningContainer,
+          AppStatusColors.onWarningContainer,
+        ),
+        DriverHealthLevel.critical => (
+          AppStatusColors.errorContainer,
+          AppStatusColors.onErrorContainer,
+        ),
+      };
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final healthColor = _healthColor(context);
+    final (healthBg, healthFg) = _healthColors(snapshot.health);
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.large),
@@ -313,7 +323,7 @@ class _ReadinessPanel extends StatelessWidget {
               icon: Icons.verified_user_outlined,
               label: 'قرار التشغيل',
               value: verdict,
-              color: snapshot.canAssign ? scheme.primary : healthColor,
+              color: snapshot.canAssign ? scheme.primary : healthFg,
             ),
             _ReadinessMetric(
               icon: Icons.directions_bus_filled_outlined,
@@ -325,7 +335,7 @@ class _ReadinessPanel extends StatelessWidget {
               icon: Icons.badge_outlined,
               label: 'الرخصة',
               value: driver.licenseExpiryDate,
-              color: healthColor,
+              color: healthFg,
             ),
           ];
 
@@ -348,7 +358,7 @@ class _ReadinessPanel extends StatelessWidget {
                           snapshot.primaryReason,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(
-                                color: healthColor,
+                                color: healthFg,
                                 fontWeight: FontWeight.w800,
                               ),
                         ),
@@ -357,8 +367,8 @@ class _ReadinessPanel extends StatelessWidget {
                   ),
                   StatusChip(
                     label: snapshot.health.label,
-                    color: healthColor.withAlpha(24),
-                    textColor: healthColor,
+                    color: healthBg,
+                    textColor: healthFg,
                   ),
                   const SizedBox(width: AppSpacing.small),
                   StatusChip(label: snapshot.status.label),
@@ -388,8 +398,8 @@ class _ReadinessPanel extends StatelessWidget {
                       .map(
                         (reason) => StatusChip(
                           label: reason,
-                          color: healthColor.withAlpha(18),
-                          textColor: healthColor,
+                          color: healthBg,
+                          textColor: healthFg,
                         ),
                       )
                       .toList(),
@@ -501,60 +511,56 @@ class _HistoryTimeline extends StatelessWidget {
           if (items.isEmpty)
             const Text('لا توجد سجلات حالياً.')
           else
-            ListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: items.length,
-              itemBuilder: (context, index) {
-                final item = items[index];
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Column(
-                      children: [
+            ...items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: iconColor,
+                        ),
+                      ),
+                      if (index < items.length - 1)
                         Container(
-                          width: 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: iconColor,
+                          width: 2,
+                          height: 40,
+                          color: scheme.outlineVariant,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: AppSpacing.medium),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.title,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13,
                           ),
                         ),
-                        if (index < items.length - 1)
-                          Container(
-                            width: 2,
-                            height: 40,
-                            color: scheme.outlineVariant,
+                        Text(
+                          '${item.date} - ${item.description}',
+                          style: TextStyle(
+                            color: scheme.onSurfaceVariant,
+                            fontSize: 12,
                           ),
+                        ),
+                        const SizedBox(height: AppSpacing.small),
                       ],
                     ),
-                    const SizedBox(width: AppSpacing.medium),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            item.title,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
-                            ),
-                          ),
-                          Text(
-                            '${item.date} - ${item.description}',
-                            style: TextStyle(
-                              color: scheme.onSurfaceVariant,
-                              fontSize: 12,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.small),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              },
-            ),
+                  ),
+                ],
+              );
+            }),
         ],
       ),
     );

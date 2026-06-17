@@ -38,6 +38,23 @@ import '../theme/dashboard_theme_cubit.dart';
 import 'dashboard_routes.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
+// Sidebar section labels (dashboard is Arabic-only, consistent with the
+// literal-Arabic convention already used on the home screen).
+const String _navOperations = 'التشغيل';
+const String _navFleet = 'الأسطول';
+const String _navFinance = 'المالية';
+const String _navSupport = 'الدعم';
+const String _navSystem = 'النظام';
+
+/// Order groups appear in the sidebar.
+const List<String> _navGroupOrder = [
+  _navOperations,
+  _navFleet,
+  _navFinance,
+  _navSupport,
+  _navSystem,
+];
+
 class DashboardShell extends StatefulWidget {
   const DashboardShell({super.key});
 
@@ -75,13 +92,15 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.event_seat_outlined,
       selectedIcon: Icons.event_seat_rounded,
       permission: DashboardPermission.bookings,
+      group: _navOperations,
     ),
     _DashboardNavItem(
       label: AppLocalizations.of(context)!.dashboard_trips,
       route: DashboardRoutes.trips,
-      icon: Icons.event_seat_outlined,
-      selectedIcon: Icons.event_seat_rounded,
+      icon: Icons.directions_bus_outlined,
+      selectedIcon: Icons.directions_bus_rounded,
       permission: DashboardPermission.trips,
+      group: _navOperations,
     ),
     _DashboardNavItem(
       label: AppLocalizations.of(context)!.dashboard_liveTrips,
@@ -89,13 +108,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.near_me_outlined,
       selectedIcon: Icons.near_me_rounded,
       permission: DashboardPermission.liveTrips,
-    ),
-    _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_fleet,
-      route: DashboardRoutes.fleet,
-      icon: Icons.local_shipping_outlined,
-      selectedIcon: Icons.local_shipping_rounded,
-      permission: DashboardPermission.fleet,
+      group: _navOperations,
     ),
     _DashboardNavItem(
       label: AppLocalizations.of(context)!.dashboard_routes,
@@ -103,13 +116,15 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.alt_route_outlined,
       selectedIcon: Icons.alt_route_rounded,
       permission: DashboardPermission.routes,
+      group: _navOperations,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_subscriptions,
-      route: DashboardRoutes.subscriptions,
-      icon: Icons.event_seat_outlined,
-      selectedIcon: Icons.text_snippet,
-      permission: DashboardPermission.subscriptions,
+      label: AppLocalizations.of(context)!.dashboard_fleet,
+      route: DashboardRoutes.fleet,
+      icon: Icons.local_shipping_outlined,
+      selectedIcon: Icons.local_shipping_rounded,
+      permission: DashboardPermission.fleet,
+      group: _navFleet,
     ),
     _DashboardNavItem(
       label: AppLocalizations.of(context)!.dashboard_payments,
@@ -117,13 +132,15 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.account_balance_wallet_outlined,
       selectedIcon: Icons.account_balance_wallet_rounded,
       permission: DashboardPermission.payments,
+      group: _navFinance,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_tickets,
-      route: DashboardRoutes.tickets,
-      icon: Icons.support_agent_outlined,
-      selectedIcon: Icons.support_agent_rounded,
-      permission: DashboardPermission.tickets,
+      label: AppLocalizations.of(context)!.dashboard_subscriptions,
+      route: DashboardRoutes.subscriptions,
+      icon: Icons.workspace_premium_outlined,
+      selectedIcon: Icons.workspace_premium_rounded,
+      permission: DashboardPermission.subscriptions,
+      group: _navFinance,
     ),
     _DashboardNavItem(
       label: AppLocalizations.of(context)!.dashboard_reports,
@@ -131,13 +148,15 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.description_outlined,
       selectedIcon: Icons.description_rounded,
       permission: DashboardPermission.reports,
+      group: _navFinance,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_settings,
-      route: DashboardRoutes.settings,
-      icon: Icons.settings_outlined,
-      selectedIcon: Icons.settings_rounded,
-      permission: DashboardPermission.settings,
+      label: AppLocalizations.of(context)!.dashboard_tickets,
+      route: DashboardRoutes.tickets,
+      icon: Icons.support_agent_outlined,
+      selectedIcon: Icons.support_agent_rounded,
+      permission: DashboardPermission.tickets,
+      group: _navSupport,
     ),
     _DashboardNavItem(
       label: AppLocalizations.of(context)!.dashboard_permissions,
@@ -145,6 +164,15 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.admin_panel_settings_outlined,
       selectedIcon: Icons.admin_panel_settings_rounded,
       permission: DashboardPermission.permissions,
+      group: _navSystem,
+    ),
+    _DashboardNavItem(
+      label: AppLocalizations.of(context)!.dashboard_settings,
+      route: DashboardRoutes.settings,
+      icon: Icons.settings_outlined,
+      selectedIcon: Icons.settings_rounded,
+      permission: DashboardPermission.settings,
+      group: _navSystem,
     ),
   ];
 
@@ -348,12 +376,17 @@ class _DashboardNavItem {
   final IconData selectedIcon;
   final DashboardPermission? permission;
 
+  /// Section this item belongs to in the grouped sidebar. `null` = top-level
+  /// (rendered above all groups, e.g. the command center home).
+  final String? group;
+
   const _DashboardNavItem({
     required this.label,
     required this.route,
     required this.icon,
     required this.selectedIcon,
     this.permission,
+    this.group,
   });
 }
 
@@ -404,23 +437,64 @@ class _DashboardSidebar extends StatelessWidget {
                 _RoleSelector(role: role, onChanged: onRoleChanged),
                 const SizedBox(height: AppSpacing.large),
               ],
-              Expanded(
-                child: ListView.separated(
-                  itemCount: items.length,
-                  separatorBuilder: (context, index) =>
-                      const SizedBox(height: AppSpacing.xSmall),
-                  itemBuilder: (context, index) {
-                    final item = items[index];
-                    return _NavButton(
-                      item: item,
-                      selected: item.route == route,
-                      onTap: () => onRouteChanged(item.route),
-                    );
-                  },
-                ),
-              ),
+              Expanded(child: _buildNavList(context)),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavList(BuildContext context) {
+    final topLevel = items.where((i) => i.group == null);
+    final children = <Widget>[
+      for (final item in topLevel) _navButton(item),
+    ];
+
+    for (final group in _navGroupOrder) {
+      final groupItems = items.where((i) => i.group == group).toList();
+      if (groupItems.isEmpty) continue;
+      children
+        ..add(_NavSectionHeader(label: group))
+        ..addAll(groupItems.map(_navButton));
+    }
+
+    return ListView.separated(
+      itemCount: children.length,
+      separatorBuilder: (context, index) =>
+          const SizedBox(height: AppSpacing.xSmall),
+      itemBuilder: (context, index) => children[index],
+    );
+  }
+
+  Widget _navButton(_DashboardNavItem item) => _NavButton(
+    item: item,
+    selected: item.route == route,
+    onTap: () => onRouteChanged(item.route),
+  );
+}
+
+class _NavSectionHeader extends StatelessWidget {
+  final String label;
+
+  const _NavSectionHeader({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.medium,
+        AppSpacing.medium,
+        AppSpacing.medium,
+        AppSpacing.xSmall,
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: scheme.onSurfaceVariant,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.4,
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 class FleetTableShell extends StatelessWidget {
   final List<String> headers;
   final List<List<Widget>> rows;
+  final List<int>? columnFlexes;
   final int total;
   final int currentPage;
   final int pageSize;
@@ -14,6 +15,7 @@ class FleetTableShell extends StatelessWidget {
     super.key,
     required this.headers,
     required this.rows,
+    this.columnFlexes,
     required this.total,
     required this.currentPage,
     required this.pageSize,
@@ -39,10 +41,13 @@ class FleetTableShell extends StatelessWidget {
                     padding: const EdgeInsets.all(AppSpacing.small),
                     child: Row(
                       children: headers
+                          .asMap()
+                          .entries
                           .map(
-                            (header) => Expanded(
+                            (e) => Expanded(
+                              flex: columnFlexes?[e.key] ?? 1,
                               child: Text(
-                                header,
+                                e.value,
                                 style: Theme.of(context).textTheme.labelLarge
                                     ?.copyWith(fontWeight: FontWeight.bold),
                               ),
@@ -70,7 +75,14 @@ class FleetTableShell extends StatelessWidget {
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.center,
                           children: cells
-                              .map((cell) => Expanded(child: cell))
+                              .asMap()
+                              .entries
+                              .map(
+                                (e) => Expanded(
+                                  flex: columnFlexes?[e.key] ?? 1,
+                                  child: e.value,
+                                ),
+                              )
                               .toList(),
                         ),
                       ),

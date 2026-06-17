@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
@@ -22,7 +23,7 @@ class ReportDataTable extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text('سجل البيانات المفصلة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-              Text('عدد السجلات: ${rows.length}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+              Text('عدد السجلات: ${rows.length}', style: const TextStyle(fontSize: 11, color: AppStatusColors.onNeutralContainer)),
             ],
           ),
           const SizedBox(height: AppSpacing.medium),
@@ -72,7 +73,7 @@ class ReportDataTable extends StatelessWidget {
                 DataCell(Text('${(r.occupancyRate * 100).toStringAsFixed(0)}%')),
                 DataCell(Text('${r.revenue.toStringAsFixed(0)} ج.م')),
                 DataCell(Text(r.date.toString().substring(0, 10))),
-                DataCell(Text(r.status, style: TextStyle(color: r.status == 'مكتملة' ? Colors.green : Colors.red, fontWeight: FontWeight.bold))),
+                DataCell(Text(r.status, style: TextStyle(color: r.status == 'مكتملة' ? AppStatusColors.onSuccessContainer : AppStatusColors.onErrorContainer, fontWeight: FontWeight.bold))),
               ]);
             }).toList(),
           ),
@@ -93,7 +94,7 @@ class ReportDataTable extends StatelessWidget {
                 DataCell(Text(r.tripId)),
                 DataCell(Text('${r.amount.toStringAsFixed(0)} ج.م')),
                 DataCell(Text(r.paymentMethod)),
-                DataCell(Text(r.status, style: TextStyle(color: r.status == 'مؤكدة' ? Colors.green : Colors.red, fontWeight: FontWeight.bold))),
+                DataCell(Text(r.status, style: TextStyle(color: r.status == 'مؤكدة' ? AppStatusColors.onSuccessContainer : AppStatusColors.onErrorContainer, fontWeight: FontWeight.bold))),
                 DataCell(Text(r.date.toString().substring(0, 16))),
               ]);
             }).toList(),
@@ -114,7 +115,7 @@ class ReportDataTable extends StatelessWidget {
                 DataCell(Text('${r.bookingsRevenue.toStringAsFixed(0)} ج.م')),
                 DataCell(Text('${r.subscriptionsRevenue.toStringAsFixed(0)} ج.م')),
                 DataCell(Text('${r.refundsCount} عمليات')),
-                DataCell(Text('${r.netRevenue.toStringAsFixed(0)} ج.م', style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold))),
+                DataCell(Text('${r.netRevenue.toStringAsFixed(0)} ج.م', style: const TextStyle(color: AppStatusColors.onSuccessContainer, fontWeight: FontWeight.bold))),
               ]);
             }).toList(),
           ),
@@ -134,9 +135,9 @@ class ReportDataTable extends StatelessWidget {
                 DataCell(Text(r.name)),
                 DataCell(Text('${r.completedTrips} رحلة')),
                 DataCell(Text('${r.totalWorkingHours.toStringAsFixed(0)} ساعة')),
-                DataCell(Text('${r.rating.toStringAsFixed(1)} ★', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold))),
+                DataCell(Text('${r.rating.toStringAsFixed(1)} ★', style: const TextStyle(color: AppStatusColors.onWarningContainer, fontWeight: FontWeight.bold))),
                 DataCell(Text('${r.totalRevenue.toStringAsFixed(0)} ج.م')),
-                DataCell(Text(r.status, style: TextStyle(color: r.status == 'نشط' ? Colors.green : Colors.orange, fontWeight: FontWeight.bold))),
+                DataCell(Text(r.status, style: TextStyle(color: r.status == 'نشط' ? AppStatusColors.onSuccessContainer : AppStatusColors.onWarningContainer, fontWeight: FontWeight.bold))),
               ]);
             }).toList(),
           ),
@@ -157,7 +158,7 @@ class ReportDataTable extends StatelessWidget {
                 DataCell(Text(r.model)),
                 DataCell(Text('${r.completedTrips} رحلة')),
                 DataCell(Text('${r.fuelConsumption.toStringAsFixed(1)} لتر/100كم')),
-                DataCell(Text(r.maintenanceStatus, style: TextStyle(color: r.maintenanceStatus == 'جاهزة' ? Colors.green : Colors.red, fontWeight: FontWeight.bold))),
+                DataCell(Text(r.maintenanceStatus, style: TextStyle(color: r.maintenanceStatus == 'جاهزة' ? AppStatusColors.onSuccessContainer : AppStatusColors.onErrorContainer, fontWeight: FontWeight.bold))),
                 DataCell(Text(r.status)),
               ]);
             }).toList(),
@@ -194,7 +195,7 @@ class ReportDataTable extends StatelessWidget {
                 DataCell(Text('${r.totalComplaints} شكوى')),
                 DataCell(Text('${r.resolvedComplaints} شكوى')),
                 DataCell(Text('${r.avgResolutionTime.toStringAsFixed(1)} ساعة')),
-                DataCell(Text('${r.pendingComplaints} شكوى معلقة', style: TextStyle(color: r.pendingComplaints > 0 ? Colors.red : Colors.grey))),
+                DataCell(Text('${r.pendingComplaints} شكوى معلقة', style: TextStyle(color: r.pendingComplaints > 0 ? AppStatusColors.onErrorContainer : AppStatusColors.onNeutralContainer))),
               ]);
             }).toList(),
           ),

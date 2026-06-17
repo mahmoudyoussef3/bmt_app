@@ -135,9 +135,11 @@ class AppDialogs {
     required String message,
     String? confirmText,
     String? cancelText,
+    bool isDestructive = false,
   }) {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
+    final accent = isDestructive ? scheme.error : scheme.primary;
 
     return showDialog<bool>(
       context: context,
@@ -154,9 +156,11 @@ class AppDialogs {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(
-                  Icons.help_outline_rounded,
+                  isDestructive
+                      ? Icons.warning_amber_rounded
+                      : Icons.help_outline_rounded,
                   size: 42,
-                  color: scheme.primary,
+                  color: accent,
                 ),
 
                 const SizedBox(
@@ -203,12 +207,31 @@ class AppDialogs {
                     ),
 
                     Expanded(
-                      child: AppButton.primary(
-                        text: confirmText ?? l10n.common_confirm,
-                        onPressed: () {
-                          Navigator.of(dialogContext).pop(true);
-                        },
-                      ),
+                      child: isDestructive
+                          ? SizedBox(
+                              height: 48,
+                              child: FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: scheme.error,
+                                  foregroundColor: scheme.onError,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(16),
+                                  ),
+                                ),
+                                onPressed: () {
+                                  Navigator.of(dialogContext).pop(true);
+                                },
+                                child: Text(
+                                  confirmText ?? l10n.common_confirm,
+                                ),
+                              ),
+                            )
+                          : AppButton.primary(
+                              text: confirmText ?? l10n.common_confirm,
+                              onPressed: () {
+                                Navigator.of(dialogContext).pop(true);
+                              },
+                            ),
                     ),
                   ],
                 ),

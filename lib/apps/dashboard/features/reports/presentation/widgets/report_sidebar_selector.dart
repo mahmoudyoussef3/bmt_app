@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import '../../domain/entities/report_entities.dart';
 
@@ -31,7 +32,7 @@ class ReportSidebarSelector extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('فئات التقارير', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: Colors.grey)),
+          const Text('فئات التقارير', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppStatusColors.onNeutralContainer)),
           const SizedBox(height: AppSpacing.medium),
           Expanded(
             child: ListView.separated(

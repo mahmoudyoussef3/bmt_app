@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -37,7 +38,7 @@ class ReportFiltersBar extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.date_range_outlined, size: 20, color: Colors.grey),
+                            const Icon(Icons.date_range_outlined, size: 20, color: AppStatusColors.onNeutralContainer),
                             const SizedBox(width: AppSpacing.small),
                             Expanded(
                               child: OutlinedButton(
@@ -72,7 +73,7 @@ class ReportFiltersBar extends StatelessWidget {
                   else
                     Row(
                       children: [
-                        const Icon(Icons.date_range_outlined, size: 20, color: Colors.grey),
+                        const Icon(Icons.date_range_outlined, size: 20, color: AppStatusColors.onNeutralContainer),
                         const SizedBox(width: AppSpacing.small),
                         OutlinedButton(
                           onPressed: () => _pickCustomDateRange(context),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import '../cubit/reports_state.dart';
@@ -59,7 +60,7 @@ class _BarChart extends StatelessWidget {
                     final double val = computedCeiling * (3 - index) / 3;
                     return Text(
                       '${val.toStringAsFixed(0)}$suffix',
-                      style: const TextStyle(fontSize: 8, color: Colors.grey),
+                      style: const TextStyle(fontSize: 8, color: AppStatusColors.onNeutralContainer),
                     );
                   }),
                 ),
@@ -100,7 +101,7 @@ class _BarChart extends StatelessWidget {
                               const SizedBox(height: 4),
                               Text(
                                 e.key.length > 6 ? e.key.substring(0, 6) : e.key,
-                                style: const TextStyle(fontSize: 8, color: Colors.grey),
+                                style: const TextStyle(fontSize: 8, color: AppStatusColors.onNeutralContainer),
                               ),
                             ],
                           );

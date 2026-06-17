@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -34,7 +35,7 @@ class TripCreationWizardDialog extends StatelessWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('تم إنشاء الرحلة بنجاح'),
-              backgroundColor: Colors.green,
+              backgroundColor: AppStatusColors.onSuccessContainer,
               duration: Duration(seconds: 4),
             ),
           );
@@ -202,8 +203,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   final _arrivalController = TextEditingController();
   final _priceController = TextEditingController();
   Map<String, int> _stopWaits = {}; // stationId -> wait minutes
-  Map<String, String> _customArrivals = {}; // stationId -> custom HH:MM
-  Map<String, String> _customDepartures = {}; // stationId -> custom HH:MM
+  final Map<String, String> _customArrivals = {}; // stationId -> custom HH:MM
+  final Map<String, String> _customDepartures = {}; // stationId -> custom HH:MM
 
   // Pricing values
   // Matrix format: fromPointId_toPointId -> prices

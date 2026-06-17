@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fle
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -12,6 +13,7 @@ class FleetDriverFormView extends StatefulWidget {
   final FleetWorkspace workspace;
   final VoidCallback onBack;
   final ValueChanged<FleetDriver> onSave;
+  final bool saving;
 
   const FleetDriverFormView({
     super.key,
@@ -19,6 +21,7 @@ class FleetDriverFormView extends StatefulWidget {
     required this.workspace,
     required this.onBack,
     required this.onSave,
+    this.saving = false,
   });
 
   @override
@@ -42,6 +45,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
 
   int _currentStep = 0;
   String _globalError = '';
+  bool _hasChanges = false;
 
   @override
   void initState() {
@@ -97,6 +101,31 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
     super.dispose();
   }
 
+  Future<void> _handleBack() async {
+    if (!_hasChanges) {
+      widget.onBack();
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تخلٍّ عن التغييرات؟'),
+        content: const Text('لديك تغييرات غير محفوظة. هل تريد الخروج؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('متابعة التعديل'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('خروج بدون حفظ'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) widget.onBack();
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -109,18 +138,26 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
       'مراجعة وحفظ البيانات',
     ];
 
-    return Form(
-      key: _formKey,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FleetBreadcrumbs(
-            currentLabel: isEdit
-                ? 'تعديل السائق: ${widget.driver!.name}'
-                : 'إضافة سائق جديد',
-            onBack: widget.onBack,
-          ),
+    return PopScope(
+      canPop: !_hasChanges,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleBack();
+      },
+      child: Form(
+        key: _formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        onChanged: () {
+          if (!_hasChanges) setState(() => _hasChanges = true);
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            FleetBreadcrumbs(
+              currentLabel: isEdit
+                  ? 'تعديل السائق: ${widget.driver!.name}'
+                  : 'إضافة سائق جديد',
+              onBack: _handleBack,
+            ),
           const SizedBox(height: AppSpacing.large),
           AppCard(
             padding: const EdgeInsets.all(AppSpacing.medium),
@@ -242,9 +279,16 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                 ),
                 const SizedBox(width: AppSpacing.medium),
               ],
-              FilledButton(
-                onPressed: _onNext,
-                child: Text(
+              FilledButton.icon(
+                onPressed: widget.saving ? null : _onNext,
+                icon: widget.saving && _currentStep == steps.length - 1
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const SizedBox.shrink(),
+                label: Text(
                   _currentStep == steps.length - 1
                       ? 'تأكيد وحفظ السائق'
                       : 'التالي',
@@ -253,6 +297,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
             ],
           ),
         ],
+        ),
       ),
     );
   }
@@ -337,6 +382,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
               _dateFormField(
                 controller: expiry,
                 label: 'تاريخ انتهاء صلاحية الرخصة (YYYY-MM-DD)',
+                firstDate: DateTime.now(),
                 validator: (v) => FleetValidators.validateDate(
                   v ?? '',
                   'تاريخ انتهاء الرخصة',
@@ -479,7 +525,15 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
     required TextEditingController controller,
     required String label,
     String? Function(String?)? validator,
+    DateTime? firstDate,
   }) {
+    final effectiveFirstDate =
+        firstDate ?? DateTime.now().subtract(const Duration(days: 3650));
+    final parsedInitial = DateTime.tryParse(controller.text);
+    final initialDate = parsedInitial != null &&
+            parsedInitial.isAfter(effectiveFirstDate)
+        ? parsedInitial
+        : DateTime.now().add(const Duration(days: 365));
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
@@ -492,8 +546,8 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
       onTap: () async {
         final date = await showDatePicker(
           context: context,
-          initialDate: DateTime.now().add(const Duration(days: 365)),
-          firstDate: DateTime.now().subtract(const Duration(days: 365)),
+          initialDate: initialDate,
+          firstDate: effectiveFirstDate,
           lastDate: DateTime.now().add(const Duration(days: 3650)),
         );
         if (date != null) {
@@ -516,7 +570,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
               '$label:',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: AppStatusColors.onNeutralContainer,
               ),
             ),
           ),
