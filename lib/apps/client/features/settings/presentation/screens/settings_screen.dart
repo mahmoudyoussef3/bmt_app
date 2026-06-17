@@ -2,7 +2,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/core/widgets/switch_widget.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
 
 import '../cubit/settings_cubit.dart';
@@ -167,9 +170,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
     return BlocBuilder<SettingsCubit, SettingsState>(
       builder: (context, state) {
         if (state is SettingsLoaded) {
@@ -178,7 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         if (state is SettingsError && !_settingsDataApplied) {
           return Scaffold(
-            backgroundColor: scheme.surfaceContainerHighest,
+            backgroundColor: ClientColors.surfaceMutedFor(context),
             body: SafeArea(
               child: Center(
                 child: Padding(
@@ -209,7 +209,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             return true;
           },
           child: Scaffold(
-            backgroundColor: scheme.surfaceContainerHighest,
+            backgroundColor: ClientColors.surfaceMutedFor(context),
             appBar: AppBar(
               title: Text(
                 _getViewTitle(),
@@ -227,7 +227,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             body: SafeArea(
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 200),
-                child: _buildCurrentView(scheme),
+                child: _buildCurrentView(context),
               ),
             ),
           ),
@@ -236,39 +236,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildCurrentView(ColorScheme scheme) {
+  Widget _buildCurrentView(BuildContext context) {
     return switch (_currentView) {
-      1 => _buildHomeSettingsView(scheme),
-      2 => _buildLanguageSettingsView(scheme),
-      3 => _buildAppearanceSettingsView(scheme),
-      4 => _buildPrivacySettingsView(scheme),
-      5 => _buildSecurityCenterView(scheme),
-      6 => _buildActiveSessionsView(scheme),
-      7 => _buildBiometricLoginView(scheme),
-      8 => _buildNotificationSettingsView(scheme),
-      9 => _buildSupportHubView(scheme),
-      10 => _buildFAQView(scheme),
-      11 => _buildTermsView(scheme),
-      12 => _buildPrivacyPolicyView(scheme),
-      13 => _buildContactUsView(scheme),
-      14 => _buildAboutAppView(scheme),
-      15 => _buildAppVersionView(scheme),
+      1 => _buildHomeSettingsView(context),
+      2 => _buildLanguageSettingsView(context),
+      3 => _buildAppearanceSettingsView(context),
+      4 => _buildPrivacySettingsView(context),
+      5 => _buildSecurityCenterView(context),
+      6 => _buildActiveSessionsView(context),
+      7 => _buildBiometricLoginView(context),
+      8 => _buildNotificationSettingsView(context),
+      9 => _buildSupportHubView(context),
+      10 => _buildFAQView(context),
+      11 => _buildTermsView(context),
+      12 => _buildPrivacyPolicyView(context),
+      13 => _buildContactUsView(context),
+      14 => _buildAboutAppView(context),
+      15 => _buildAppVersionView(context),
       _ => const SizedBox.shrink(),
     };
   }
 
   // --- SCREEN 1: SETTINGS HOME SCREEN ---
-  Widget _buildHomeSettingsView(ColorScheme scheme) {
+  Widget _buildHomeSettingsView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       children: [
         // User Profile Header
-    //    _buildProfileHeaderCard(scheme),
+    //    _buildProfileHeaderCard(context),
       //  const SizedBox(height: 18),
 
         // Quick Actions
-        _buildProfileQuickActionsRow(scheme),
+        _buildProfileQuickActionsRow(context),
         const SizedBox(height: 24),
 
         // Settings Groups
@@ -282,8 +282,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        AppSurface(
-          padding: EdgeInsets.zero,
+        Container(
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               _buildSettingsTile(
@@ -293,9 +297,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ? 'English (Save Option)'
                     : 'العربية (خيار الحفظ)',
                 onTap: () => _navigateTo(2),
-                scheme: scheme,
+                context: context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildSettingsTile(
                 icon: Icons.dark_mode_rounded,
                 title: 'Appearance & Theme',
@@ -305,7 +309,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? 'Light Mode Active'
                           : 'System Default'),
                 onTap: () => _navigateTo(3),
-                scheme: scheme,
+                context: context,
               ),
             ],
           ),
@@ -322,8 +326,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        AppSurface(
-          padding: EdgeInsets.zero,
+        Container(
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               _buildSettingsTile(
@@ -331,7 +339,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Privacy Center & Data',
                 subtitle: 'Manage sharing and location tracking',
                 onTap: () => _navigateTo(4),
-                scheme: scheme,
+                context: context,
               ),
             ],
           ),
@@ -348,8 +356,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        AppSurface(
-          padding: EdgeInsets.zero,
+        Container(
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               _buildSettingsTile(
@@ -357,16 +369,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Security Center',
                 subtitle: 'Two-step check and device protection',
                 onTap: () => _navigateTo(5),
-                scheme: scheme,
+                context: context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildSettingsTile(
                 icon: Icons.devices_rounded,
                 title: 'Active Sessions',
                 subtitle:
                     '${_activeSessions.length} connected device authorizations',
                 onTap: () => _navigateTo(6),
-                scheme: scheme,
+                context: context,
               ),
             ],
           ),
@@ -383,8 +395,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        AppSurface(
-          padding: EdgeInsets.zero,
+        Container(
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               _buildSettingsTile(
@@ -392,7 +408,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Notification Settings',
                 subtitle: 'Customize push, SMS, and email alerts',
                 onTap: () => _navigateTo(8),
-                scheme: scheme,
+                context: context,
               ),
             ],
           ),
@@ -409,8 +425,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        AppSurface(
-          padding: EdgeInsets.zero,
+        Container(
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               _buildSettingsTile(
@@ -418,23 +438,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Support & Help Hub',
                 subtitle: 'Live Chat, FAQ, and Ticket submissions',
                 onTap: () => _navigateTo(9),
-                scheme: scheme,
+                context: context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildSettingsTile(
                 icon: Icons.description_rounded,
                 title: 'Terms & Conditions',
                 subtitle: 'Usage guidelines and legal agreement',
                 onTap: () => _navigateTo(11),
-                scheme: scheme,
+                context: context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildSettingsTile(
                 icon: Icons.policy_rounded,
                 title: 'Privacy Policy',
                 subtitle: 'How we collect and utilize your data',
                 onTap: () => _navigateTo(12),
-                scheme: scheme,
+                context: context,
               ),
             ],
           ),
@@ -451,8 +471,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        AppSurface(
-          padding: EdgeInsets.zero,
+        Container(
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               _buildSettingsTile(
@@ -460,15 +484,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'About Application',
                 subtitle: 'Mega Commute mission and user stats',
                 onTap: () => _navigateTo(14),
-                scheme: scheme,
+                context: context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildSettingsTile(
                 icon: Icons.system_update_rounded,
                 title: 'App Version & Release Notes',
                 subtitle: 'v2.4.0 (Latest update changelogs)',
                 onTap: () => _navigateTo(15),
-                scheme: scheme,
+                context: context,
               ),
             ],
           ),
@@ -476,29 +500,29 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 30),
 
         // Logout Danger Button
-        AppButton(
+        ClientButton.secondary(
           label: 'Log Out of Account',
-          outline: true,
-          onPressed: () => _showLogoutConfirmationDialog(scheme),
+          expand: true,
+          onPressed: () => _showLogoutConfirmationDialog(context),
         ),
         const SizedBox(height: 40),
       ],
     );
   }
 /*
-  Widget _buildProfileHeaderCard(ColorScheme scheme) {
+  Widget _buildProfileHeaderCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [scheme.primary, scheme.secondary],
+          colors: [ClientColors.primary, ClientColors.journeyGreen],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: scheme.primary.withAlpha(50),
+            color: ClientColors.primary.withAlpha(50),
             blurRadius: 18,
             offset: const Offset(0, 8),
           ),
@@ -506,9 +530,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       child: Row(
         children: [
-          AppAvatar(
-            initials: _userName.split(' ').map((e) => e[0]).join(),
+          CircleAvatar(
             radius: 32,
+            backgroundColor: ClientColors.primaryLight,
+            child: Text(
+              _userName.split(' ').map((e) => e[0]).join(),
+              style: const TextStyle(color: ClientColors.primary, fontWeight: FontWeight.w700),
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -573,7 +601,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
   */
 
-  Widget _buildProfileQuickActionsRow(ColorScheme scheme) {
+  Widget _buildProfileQuickActionsRow(BuildContext context) {
     return Row(
       children: [
         Expanded(
@@ -581,8 +609,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.edit_note_rounded,
             label: 'Edit Profile',
             color: Colors.teal,
-            onTap: () => _showEditProfileBottomSheet(scheme),
-            scheme: scheme,
+            onTap: () => _showEditProfileBottomSheet(context),
+            context: context,
           ),
         ),
         const SizedBox(width: 8),
@@ -592,7 +620,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: 'Subscription',
             color: Colors.indigo,
             onTap: () => Navigator.of(context).pushNamed('/subscription'),
-            scheme: scheme,
+            context: context,
           ),
         ),
     /*    const SizedBox(width: 8),
@@ -602,7 +630,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             label: 'Rewards',
             color: Colors.orange,
             onTap: () => Navigator.of(context).pushNamed('/rewards'),
-            scheme: scheme,
+            context: context,
           ),
         ),
         */
@@ -615,13 +643,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String label,
     required Color color,
     required VoidCallback onTap,
-    required ColorScheme scheme,
+    required BuildContext context,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: ClientColors.surfaceFor(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outline.withAlpha(45)),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
@@ -656,14 +684,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
-    required ColorScheme scheme,
+    required BuildContext context,
   }) {
     return ListTile(
       onTap: onTap,
       leading: CircleAvatar(
         radius: 18,
-        backgroundColor: scheme.primary.withAlpha(24),
-        child: Icon(icon, color: scheme.primary, size: 18),
+        backgroundColor: ClientColors.primary.withAlpha(24),
+        child: Icon(icon, color: ClientColors.primary, size: 18),
       ),
       title: Text(
         title,
@@ -682,7 +710,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 2: LANGUAGE SETTINGS SCREEN ---
-  Widget _buildLanguageSettingsView(ColorScheme scheme) {
+  Widget _buildLanguageSettingsView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -698,7 +726,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           langCode: 'en',
           title: 'English',
           nativeName: 'English (US)',
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 12),
 
@@ -707,7 +735,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           langCode: 'ar',
           title: 'Arabic',
           nativeName: 'العربية (EG)',
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 30),
 
@@ -721,8 +749,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 10),
-        AppSurface(
-          color: scheme.surface,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -738,10 +771,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  AppBadge(
-                    text: _selectedLanguage == 'en'
-                        ? 'English translation'
-                        : 'مترجم للعربية',
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: ClientColors.surfaceMutedFor(context),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: ClientColors.borderFor(context)),
+                    ),
+                    child: Text(
+                      _selectedLanguage == 'en'
+                          ? 'English translation'
+                          : 'مترجم للعربية',
+                      style: ClientTypography.labelSmall(context),
+                    ),
                   ),
                 ],
               ),
@@ -772,8 +814,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: AppButton(
+              child: ClientButton(
                 label: 'Save Language',
+                expand: true,
                 onPressed: () {
                   _showSuccessSnack(
                     'Language updated to ${_selectedLanguage == 'en' ? 'English' : 'Arabic'} successfully!',
@@ -792,70 +835,80 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String langCode,
     required String title,
     required String nativeName,
-    required ColorScheme scheme,
+    required BuildContext context,
   }) {
     final isSelected = _selectedLanguage == langCode;
-    return AppSurface(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      border: Border.all(
-        color: isSelected ? scheme.primary : scheme.outline.withAlpha(45),
-        width: isSelected ? 1.5 : 1.0,
-      ),
-      onTap: () => setState(() => _selectedLanguage = langCode),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
+    return Material(
+      color: ClientColors.surfaceFor(context),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => setState(() => _selectedLanguage = langCode),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? ClientColors.primary : ClientColors.borderFor(context),
+              width: isSelected ? 1.5 : 1.0,
+            ),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: isSelected
-                    ? scheme.primary.withAlpha(24)
-                    : Colors.grey.withAlpha(24),
-                child: Text(
-                  langCode.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: isSelected ? scheme.primary : Colors.grey,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 14),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              Row(
                 children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                  CircleAvatar(
+                    radius: 16,
+                    backgroundColor: isSelected
+                        ? ClientColors.primary.withAlpha(24)
+                        : Colors.grey.withAlpha(24),
+                    child: Text(
+                      langCode.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: isSelected ? ClientColors.primary : Colors.grey,
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    nativeName,
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
+                  const SizedBox(width: 14),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        nativeName,
+                        style: const TextStyle(fontSize: 10, color: Colors.grey),
+                      ),
+                    ],
                   ),
                 ],
               ),
+              Radio<String>(
+                value: langCode,
+                groupValue: _selectedLanguage,
+                onChanged: (val) {
+                  if (val != null) setState(() => _selectedLanguage = val);
+                },
+                activeColor: ClientColors.primary,
+              ),
             ],
           ),
-          Radio<String>(
-            value: langCode,
-            groupValue: _selectedLanguage,
-            onChanged: (val) {
-              if (val != null) setState(() => _selectedLanguage = val);
-            },
-            activeColor: scheme.primary,
-          ),
-        ],
+        ),
       ),
     );
   }
 
   // --- SCREEN 3: APPEARANCE SETTINGS SCREEN ---
-  Widget _buildAppearanceSettingsView(ColorScheme scheme) {
+  Widget _buildAppearanceSettingsView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -874,7 +927,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'system',
                 'System',
                 Icons.settings_brightness_rounded,
-                scheme,
+                context,
               ),
             ),
             const SizedBox(width: 8),
@@ -883,7 +936,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'light',
                 'Light Mode',
                 Icons.light_mode_rounded,
-                scheme,
+                context,
               ),
             ),
             const SizedBox(width: 8),
@@ -892,7 +945,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'dark',
                 'Dark Mode',
                 Icons.dark_mode_rounded,
-                scheme,
+                context,
               ),
             ),
           ],
@@ -915,7 +968,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           decoration: BoxDecoration(
             color: _selectedTheme == 'light' ? Colors.white : Colors.grey[900],
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: scheme.outline.withAlpha(50)),
+            border: Border.all(color: ClientColors.borderFor(context)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -949,7 +1002,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       height: 36,
                       alignment: Alignment.center,
                       decoration: BoxDecoration(
-                        color: scheme.primary,
+                        color: ClientColors.primary,
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: const Text(
@@ -970,14 +1023,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       decoration: BoxDecoration(
                         color: Colors.transparent,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: scheme.primary),
+                        border: Border.all(color: ClientColors.primary),
                       ),
                       child: Text(
                         'Outline',
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
-                          color: scheme.primary,
+                          color: ClientColors.primary,
                         ),
                       ),
                     ),
@@ -993,13 +1046,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ? Colors.grey[100]
                       : Colors.grey[800],
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: scheme.outline.withAlpha(30)),
+                  border: Border.all(color: ClientColors.borderFor(context)),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.directions_bus_rounded,
-                      color: scheme.secondary,
+                      color: ClientColors.journeyGreen,
                       size: 18,
                     ),
                     const SizedBox(width: 10),
@@ -1039,8 +1092,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 40),
 
-        AppButton(
+        ClientButton(
           label: 'Apply Appearance Change',
+          expand: true,
           onPressed: () {
             ClientAppTheme.maybeOf(
               context,
@@ -1057,47 +1111,57 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String themeKey,
     String label,
     IconData icon,
-    ColorScheme scheme,
+    BuildContext context,
   ) {
     final isSelected = _selectedTheme == themeKey;
-    return AppSurface(
-      padding: const EdgeInsets.all(14),
-      border: Border.all(
-        color: isSelected ? scheme.primary : scheme.outline.withAlpha(45),
-        width: isSelected ? 1.5 : 1.0,
-      ),
-      onTap: () => setState(() => _selectedTheme = themeKey),
-      child: Column(
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? scheme.primary : Colors.grey,
-            size: 24,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.bold,
-              color: isSelected ? scheme.primary : Colors.grey,
+    return Material(
+      color: ClientColors.surfaceFor(context),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: () => setState(() => _selectedTheme = themeKey),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isSelected ? ClientColors.primary : ClientColors.borderFor(context),
+              width: isSelected ? 1.5 : 1.0,
             ),
           ),
-          const SizedBox(height: 6),
-          CircleAvatar(
-            radius: 8,
-            backgroundColor: isSelected ? scheme.primary : Colors.transparent,
-            child: isSelected
-                ? const Icon(Icons.check, size: 10, color: Colors.white)
-                : null,
+          child: Column(
+            children: [
+              Icon(
+                icon,
+                color: isSelected ? ClientColors.primary : Colors.grey,
+                size: 24,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: isSelected ? ClientColors.primary : Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 6),
+              CircleAvatar(
+                radius: 8,
+                backgroundColor: isSelected ? ClientColors.primary : Colors.transparent,
+                child: isSelected
+                    ? const Icon(Icons.check, size: 10, color: Colors.white)
+                    : null,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   // --- SCREEN 4: PRIVACY SETTINGS SCREEN ---
-  Widget _buildPrivacySettingsView(ColorScheme scheme) {
+  Widget _buildPrivacySettingsView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -1124,7 +1188,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Required to locate close pickup hubs and trace real-time tracking navigation correctly.',
           value: _allowLocation,
           onChanged: (val) => setState(() => _allowLocation = val),
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 10),
         _buildPrivacyToggleCard(
@@ -1134,7 +1198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Tracks vehicle distance relative to your position even when app is closed to trigger delay updates.',
           value: _allowBackgroundLocation,
           onChanged: (val) => setState(() => _allowBackgroundLocation = val),
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 20),
 
@@ -1147,7 +1211,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        AppSurface(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               _buildVisibilityRadioTile(
@@ -1155,15 +1225,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Public Profile Visibility',
                 description:
                     'Other subscribers sharing the same vehicle can view your avatar name in group logs.',
-                scheme: scheme,
+                context: context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildVisibilityRadioTile(
                 value: 'private',
                 title: 'Private Profile Visibility',
                 description:
                     'Stops other passengers from viewing your profile details. Recommended for complete anonymity.',
-                scheme: scheme,
+                context: context,
               ),
             ],
           ),
@@ -1186,7 +1256,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Help us improve by sending anonymous logs of performance and interface interactions.',
           value: _dataSharing,
           onChanged: (val) => setState(() => _dataSharing = val),
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 10),
         _buildPrivacyToggleCard(
@@ -1197,12 +1267,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           value: _personalizedRecommendations,
           onChanged: (val) =>
               setState(() => _personalizedRecommendations = val),
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 30),
 
-        AppButton(
+        ClientButton(
           label: 'Save Privacy Settings',
+          expand: true,
           onPressed: () {
             _showSuccessSnack('Privacy preferences saved successfully!');
             _navigateBack();
@@ -1218,14 +1289,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String description,
     required bool value,
     required ValueChanged<bool> onChanged,
-    required ColorScheme scheme,
+    required BuildContext context,
   }) {
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: scheme.primary, size: 20),
+          Icon(icon, color: ClientColors.primary, size: 20),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1261,7 +1337,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String value,
     required String title,
     required String description,
-    required ColorScheme scheme,
+    required BuildContext context,
   }) {
     return InkWell(
       onTap: () => setState(() => _profileVisibility = value),
@@ -1276,7 +1352,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (val) {
                 if (val != null) setState(() => _profileVisibility = val);
               },
-              activeColor: scheme.primary,
+              activeColor: ClientColors.primary,
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1309,13 +1385,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 5: SECURITY CENTER SCREEN ---
-  Widget _buildSecurityCenterView(ColorScheme scheme) {
+  Widget _buildSecurityCenterView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
         // Security score card
-        _buildSecurityScoreCard(scheme),
+        _buildSecurityScoreCard(context),
         const SizedBox(height: 20),
 
         const Text(
@@ -1327,26 +1403,30 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        AppSurface(
-          padding: EdgeInsets.zero,
+        Container(
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               _buildSettingsTile(
                 icon: Icons.lock_outline_rounded,
                 title: 'Change Password',
                 subtitle: 'Update credentials frequently',
-                onTap: () => _showChangePasswordDialog(scheme),
-                scheme: scheme,
+                onTap: () => _showChangePasswordDialog(context),
+                context: context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildSettingsTile(
                 icon: Icons.phone_android_rounded,
                 title: 'Change Phone Number',
                 subtitle: 'Active: $_userPhone',
-                onTap: () => _showChangePhoneDialog(scheme),
-                scheme: scheme,
+                onTap: () => _showChangePhoneDialog(context),
+                context: context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildSettingsTile(
                 icon: Icons.fingerprint_rounded,
                 title: 'Biometric Access Settings',
@@ -1354,7 +1434,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ? 'Enabled (Face ID / Touch ID)'
                     : 'Disabled',
                 onTap: () => _navigateTo(7),
-                scheme: scheme,
+                context: context,
               ),
             ],
           ),
@@ -1377,23 +1457,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
               'Require SMS OTP confirmation whenever logging in from a new unrecognized device.',
           value: _twoStepVerification,
           onChanged: (val) => setState(() => _twoStepVerification = val),
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 20),
 
-        AppButton(
+        ClientButton.secondary(
           label: 'View Connected Sessions',
+          expand: true,
           onPressed: () => _navigateTo(6),
-          outline: true,
         ),
       ],
     );
   }
 
-  Widget _buildSecurityScoreCard(ColorScheme scheme) {
+  Widget _buildSecurityScoreCard(BuildContext context) {
     // 90% logic score
-    return AppSurface(
-      color: scheme.surface,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         children: [
           // Circular Canvas representation
@@ -1407,7 +1492,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: CircularProgressIndicator(
                     value: 0.9,
                     strokeWidth: 8,
-                    backgroundColor: scheme.outline.withAlpha(40),
+                    backgroundColor: ClientColors.borderFor(context),
                     valueColor: const AlwaysStoppedAnimation(
                       Colors.greenAccent,
                     ),
@@ -1446,7 +1531,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showChangePasswordDialog(ColorScheme scheme) {
+  void _showChangePasswordDialog(BuildContext context) {
     final oldCtrl = TextEditingController();
     final newCtrl = TextEditingController();
     final confCtrl = TextEditingController();
@@ -1498,8 +1583,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () => Navigator.pop(context),
               child: const Text('Cancel'),
             ),
-            AppButton(
-              height: 38,
+            ClientButton(
               label: 'Update',
               onPressed: () {
                 if (oldCtrl.text.isEmpty || newCtrl.text.isEmpty) {
@@ -1515,7 +1599,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showChangePhoneDialog(ColorScheme scheme) {
+  void _showChangePhoneDialog(BuildContext context) {
     final phoneCtrl = TextEditingController(text: _userPhone);
     int step = 1; // 1 = input phone, 2 = input OTP
 
@@ -1568,8 +1652,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   onPressed: () => Navigator.pop(context),
                   child: const Text('Cancel'),
                 ),
-                AppButton(
-                  height: 38,
+                ClientButton(
                   label: step == 1 ? 'Send OTP' : 'Verify & Save',
                   onPressed: () {
                     if (step == 1) {
@@ -1592,7 +1675,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 6: ACTIVE SESSIONS SCREEN ---
-  Widget _buildActiveSessionsView(ColorScheme scheme) {
+  Widget _buildActiveSessionsView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -1610,12 +1693,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             margin: const EdgeInsets.only(bottom: 12),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: scheme.surface,
+              color: ClientColors.surfaceFor(context),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isCurrent
-                    ? scheme.primary.withAlpha(140)
-                    : scheme.outline.withAlpha(45),
+                    ? ClientColors.primary.withAlpha(140)
+                    : ClientColors.borderFor(context),
               ),
             ),
             child: Row(
@@ -1626,14 +1709,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     CircleAvatar(
                       radius: 20,
                       backgroundColor: isCurrent
-                          ? scheme.primary.withAlpha(24)
+                          ? ClientColors.primary.withAlpha(24)
                           : Colors.grey.withAlpha(24),
                       child: Icon(
                         session['device']!.contains('MacBook') ||
                                 session['device']!.contains('Windows')
                             ? Icons.laptop_mac_rounded
                             : Icons.phone_iphone_rounded,
-                        color: isCurrent ? scheme.primary : Colors.grey,
+                        color: isCurrent ? ClientColors.primary : Colors.grey,
                         size: 20,
                       ),
                     ),
@@ -1704,9 +1787,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 30),
 
         if (_activeSessions.length > 1)
-          AppButton(
+          ClientButton.secondary(
             label: 'Logout of All Other Devices',
-            outline: true,
+            expand: true,
             onPressed: () {
               setState(() {
                 _activeSessions.removeWhere((s) => s['current'] != 'true');
@@ -1721,7 +1804,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 7: BIOMETRIC LOGIN SCREEN ---
-  Widget _buildBiometricLoginView(ColorScheme scheme) {
+  Widget _buildBiometricLoginView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -1745,8 +1828,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 24),
 
-        AppSurface(
+        Container(
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               Row(
@@ -1786,7 +1874,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ],
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -1864,7 +1952,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 8: NOTIFICATION SETTINGS SCREEN ---
-  Widget _buildNotificationSettingsView(ColorScheme scheme) {
+  Widget _buildNotificationSettingsView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -1879,40 +1967,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'TRIPS & RIDES',
           'trips',
           'Booking confirmations, reminders, and route delays.',
-          scheme,
+          context,
         ),
         const SizedBox(height: 18),
         _buildNotificationChannelGroup(
           'PAYMENT & BILLING',
           'payments',
           'Invoices, transaction updates, and cashback alerts.',
-          scheme,
+          context,
         ),
         const SizedBox(height: 18),
         _buildNotificationChannelGroup(
           'PACKAGES & SUBSCRIPTIONS',
           'packages',
           'Package renewal alerts and seat confirmations.',
-          scheme,
+          context,
         ),
         const SizedBox(height: 18),
         _buildNotificationChannelGroup(
           'OFFERS & REFERRALS',
           'promotions',
           'Discount codes, referral bonuses, and milestones.',
-          scheme,
+          context,
         ),
         const SizedBox(height: 18),
         _buildNotificationChannelGroup(
           'CUSTOMER SUPPORT',
           'support',
           'Support responses and live driver chat updates.',
-          scheme,
+          context,
         ),
 
         const SizedBox(height: 30),
-        AppButton(
+        ClientButton(
           label: 'Save Notification Preferences',
+          expand: true,
           onPressed: () {
             _showSuccessSnack(
               'Notification configurations updated successfully.',
@@ -1928,9 +2017,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String label,
     String key,
     String description,
-    ColorScheme scheme,
+    BuildContext context,
   ) {
-    return AppSurface(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1939,7 +2034,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.bold,
-              color: scheme.primary,
+              color: ClientColors.primary,
             ),
           ),
           const SizedBox(height: 4),
@@ -2001,7 +2096,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 9: SUPPORT HUB SCREEN ---
-  Widget _buildSupportHubView(ColorScheme scheme) {
+  Widget _buildSupportHubView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -2020,7 +2115,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           description:
               'Search solutions to booking, refunds, and technical issues.',
           onTap: () => _navigateTo(10),
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 12),
 
@@ -2031,7 +2126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           description:
               'Chat instantly with one of our desk agents in real-time.',
           onTap: () => Navigator.of(context).pushNamed('/communication'),
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 12),
 
@@ -2042,7 +2137,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           description:
               'Submit an issue ticket (driver, refund, or booking errors).',
           onTap: () => Navigator.of(context).pushNamed('/support'),
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 12),
 
@@ -2053,7 +2148,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           description:
               'Get support phone hotlines, WhatsApp, and operating hours.',
           onTap: () => _navigateTo(13),
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 24),
 
@@ -2068,7 +2163,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         const SizedBox(height: 10),
 
         // Feedback Text inputs
-        AppSurface(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               const Text(
@@ -2086,9 +2187,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              AppButton(
-                height: 38,
+              ClientButton(
                 label: 'Submit Feedback',
+                expand: true,
                 onPressed: () {
                   _showSuccessSnack(
                     'Thank you! Your feedback has been received.',
@@ -2108,49 +2209,61 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required String description,
     required VoidCallback onTap,
-    required ColorScheme scheme,
+    required BuildContext context,
   }) {
-    return AppSurface(
-      onTap: onTap,
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundColor: scheme.primary.withAlpha(24),
-            child: Icon(icon, color: scheme.primary, size: 20),
+    return Material(
+      color: ClientColors.surfaceFor(context),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
+          child: Row(
+            children: [
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: ClientColors.primary.withAlpha(24),
+                child: Icon(icon, color: ClientColors.primary, size: 20),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: const TextStyle(fontSize: 9, color: Colors.grey),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  description,
-                  style: const TextStyle(fontSize: 9, color: Colors.grey),
-                ),
-              ],
-            ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios_rounded,
+                size: 12,
+                color: Colors.grey,
+              ),
+            ],
           ),
-          const Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 12,
-            color: Colors.grey,
-          ),
-        ],
+        ),
       ),
     );
   }
 
   // --- SCREEN 10: FAQ SCREEN ---
-  Widget _buildFAQView(ColorScheme scheme) {
+  Widget _buildFAQView(BuildContext context) {
     final filteredFaqs = _faqs.where((faq) {
       if (_faqSearch.isEmpty) return true;
       final q = faq['question']!.toLowerCase();
@@ -2184,12 +2297,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         Expanded(
           child: filteredFaqs.isEmpty
-              ? const Center(
-                  child: EmptyState(
-                    title: 'No FAQ matches found',
-                    subtitle:
-                        'Try searching other keywords like booking, payments, or wallets.',
-                    emoji: '🔍',
+              ? Center(
+                  child: ClientErrorCard.fullScreen(
+                    message:
+                        'No FAQ matches found\nTry searching other keywords like booking, payments, or wallets.',
                   ),
                 )
               : ListView.builder(
@@ -2206,9 +2317,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       decoration: BoxDecoration(
-                        color: scheme.surface,
+                        color: ClientColors.surfaceFor(context),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: scheme.outline.withAlpha(30)),
+                        border: Border.all(color: ClientColors.borderFor(context)),
                       ),
                       child: Column(
                         children: [
@@ -2230,14 +2341,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: scheme.secondary.withAlpha(24),
+                                    color: ClientColors.journeyGreen.withAlpha(24),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
                                     faq['category']!,
                                     style: TextStyle(
                                       fontSize: 8,
-                                      color: scheme.secondary,
+                                      color: ClientColors.journeyGreen,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -2290,20 +2401,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 11: TERMS & CONDITIONS SCREEN ---
-  Widget _buildTermsView(ColorScheme scheme) {
+  Widget _buildTermsView(BuildContext context) {
     return Column(
       children: [
         // Horizontal scroll progress bar
         LinearProgressIndicator(
           value: _termsScrollProgress,
-          backgroundColor: scheme.outline.withAlpha(30),
-          valueColor: AlwaysStoppedAnimation(scheme.primary),
+          backgroundColor: ClientColors.borderFor(context),
+          valueColor: AlwaysStoppedAnimation(ClientColors.primary),
         ),
 
         // TOC list layout
         Container(
           height: 44,
-          color: scheme.surface,
+          color: ClientColors.surfaceFor(context),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -2442,7 +2553,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 12: PRIVACY POLICY SCREEN ---
-  Widget _buildPrivacyPolicyView(ColorScheme scheme) {
+  Widget _buildPrivacyPolicyView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -2463,7 +2574,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: 'Data Collection',
           content:
               'We collect phone numbers, profile names, payment transaction metadata, and live device geo-coordinates during rides to offer route tracking and secure payouts verification.',
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 12),
 
@@ -2472,7 +2583,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: 'Data Usage',
           content:
               'We use your telemetry data to map optimal shuttles pathways, identify high utilization routes, verify package billing validity, and distribute seat release compensations instantly.',
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 12),
 
@@ -2481,7 +2592,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: 'Security Measures',
           content:
               'Account files, passwords, and sessions are encrypted using industry-standard TLS protocols. Offline telemetry logs are anonymized and stored inside secure clouds keys.',
-          scheme: scheme,
+          context: context,
         ),
         const SizedBox(height: 12),
 
@@ -2490,7 +2601,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           title: 'User Rights',
           content:
               'You retain the right to download a copy of all shared usage logs, request immediate data anonymization, or permanently delete your account visages from Settings hub.',
-          scheme: scheme,
+          context: context,
         ),
       ],
     );
@@ -2500,15 +2611,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required IconData icon,
     required String title,
     required String content,
-    required ColorScheme scheme,
+    required BuildContext context,
   }) {
-    return AppSurface(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: scheme.primary, size: 18),
+              Icon(icon, color: ClientColors.primary, size: 18),
               const SizedBox(width: 10),
               Text(
                 title,
@@ -2534,7 +2651,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 13: CONTACT US SCREEN ---
-  Widget _buildContactUsView(ColorScheme scheme) {
+  Widget _buildContactUsView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -2545,35 +2662,41 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 20),
 
-        AppSurface(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
               _buildContactDetailItem(
                 Icons.headset_mic_rounded,
                 'Hotline Support',
                 '19876 (24/7 Toll Free)',
-                scheme,
+                context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildContactDetailItem(
                 Icons.email_outlined,
                 'Email Support',
                 'support@megacommute.com',
-                scheme,
+                context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildContactDetailItem(
                 Icons.chat_outlined,
                 'WhatsApp Chatbot',
                 '+20 10 9988 7766',
-                scheme,
+                context,
               ),
-              const AppSeparator(),
+              Divider(color: ClientColors.borderFor(context)),
               _buildContactDetailItem(
                 Icons.schedule_rounded,
                 'Support Hours',
                 'Daily: 6:00 AM - 12:00 AM',
-                scheme,
+                context,
               ),
             ],
           ),
@@ -2581,14 +2704,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
         const SizedBox(height: 30),
 
-        AppButton(
+        ClientButton(
           label: 'Call Support Hotline',
-          onPressed: () => _simulateCall(scheme),
+          expand: true,
+          onPressed: () => _simulateCall(context),
         ),
         const SizedBox(height: 10),
-        AppButton(
+        ClientButton.secondary(
           label: 'Start WhatsApp Chat',
-          outline: true,
+          expand: true,
           onPressed: () {
             _showSuccessSnack('Opening WhatsApp chat portal...');
           },
@@ -2601,13 +2725,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
     IconData icon,
     String label,
     String value,
-    ColorScheme scheme,
+    BuildContext context,
   ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, color: scheme.primary, size: 16),
+          Icon(icon, color: ClientColors.primary, size: 16),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -2633,7 +2757,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _simulateCall(ColorScheme scheme) {
+  void _simulateCall(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
@@ -2664,8 +2788,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style: TextStyle(fontSize: 11, color: Colors.grey),
               ),
               const SizedBox(height: 20),
-              AppButton(
+              ClientButton(
                 label: 'Hang Up',
+                expand: true,
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -2676,7 +2801,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 14: ABOUT APPLICATION SCREEN ---
-  Widget _buildAboutAppView(ColorScheme scheme) {
+  Widget _buildAboutAppView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
@@ -2690,7 +2815,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 height: 80,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [scheme.primary, scheme.secondary],
+                    colors: [ClientColors.primary, ClientColors.journeyGreen],
                   ),
                   borderRadius: BorderRadius.circular(22),
                 ),
@@ -2733,7 +2858,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Total Trips',
                 '148',
                 Icons.directions_bus_rounded,
-                scheme,
+                context,
               ),
             ),
             const SizedBox(width: 8),
@@ -2742,7 +2867,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Active Tier',
                 'Gold Level',
                 Icons.stars_rounded,
-                scheme,
+                context,
               ),
             ),
             const SizedBox(width: 8),
@@ -2751,7 +2876,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'Subscriber',
                 '2 Years',
                 Icons.history_toggle_off_rounded,
-                scheme,
+                context,
               ),
             ),
           ],
@@ -2767,8 +2892,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        const AppSurface(
-          child: Column(
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
+          child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -2791,13 +2922,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String label,
     String value,
     IconData icon,
-    ColorScheme scheme,
+    BuildContext context,
   ) {
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: [
-          Icon(icon, color: scheme.primary, size: 18),
+          Icon(icon, color: ClientColors.primary, size: 18),
           const SizedBox(height: 6),
           Text(
             value,
@@ -2811,15 +2947,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- SCREEN 15: APP VERSION SCREEN ---
-  Widget _buildAppVersionView(ColorScheme scheme) {
+  Widget _buildAppVersionView(BuildContext context) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
         // Update Card status
-        AppSurface(
-          color: Colors.greenAccent.withAlpha(20),
-          border: Border.all(color: Colors.greenAccent.withAlpha(60)),
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: Colors.greenAccent.withAlpha(20),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.greenAccent.withAlpha(60)),
+          ),
           child: const Row(
             children: [
               Icon(
@@ -2865,17 +3005,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'Added complete Seat Release Management Module.',
           'Stateful timelines and fintech rebooking trackers.',
           'Subtle micro-animations and confetti celebrations.',
-        ], scheme),
+        ], context),
         const SizedBox(height: 14),
         _buildReleaseLogItem('Version 2.3.0', 'May 2026', [
           'Enhanced Live Trip Tracking widgets.',
           'Integrated custom map layouts with moving shuttle icons.',
           'Introduced Loyalty level progressions and perks.',
-        ], scheme),
+        ], context),
 
         const SizedBox(height: 30),
-        AppButton(
+        ClientButton(
           label: 'Force Update Checks',
+          expand: true,
           onPressed: () {
             _showSuccessSnack(
               'Checking servers... You already have the latest build.',
@@ -2890,9 +3031,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     String version,
     String date,
     List<String> notes,
-    ColorScheme scheme,
+    BuildContext context,
   ) {
-    return AppSurface(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -2922,7 +3069,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     '• ',
                     style: TextStyle(
-                      color: scheme.primary,
+                      color: ClientColors.primary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -2946,7 +3093,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- LOGOUT FLOW DIALOG ---
-  void _showLogoutConfirmationDialog(ColorScheme scheme) {
+  void _showLogoutConfirmationDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
@@ -2984,8 +3131,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: AppButton(
+                    child: ClientButton(
                       label: 'Log Out',
+                      expand: true,
                       onPressed: () {
                         Navigator.pop(context);
                         // Redirect to welcome screen route
@@ -3003,7 +3151,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   // --- EDIT PROFILE SHEET ---
-  void _showEditProfileBottomSheet(ColorScheme scheme) {
+  void _showEditProfileBottomSheet(BuildContext context) {
     final nameCtrl = TextEditingController(text: _userName);
     final emailCtrl = TextEditingController(text: _userEmail);
     final phoneCtrl = TextEditingController(text: _userPhone);
@@ -3015,7 +3163,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (context) {
         return Container(
           decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest,
+            color: ClientColors.surfaceMutedFor(context),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           padding: EdgeInsets.fromLTRB(
@@ -3069,8 +3217,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: AppButton(
+                    child: ClientButton(
                       label: 'Save Changes',
+                      expand: true,
                       onPressed: () {
                         setState(() {
                           _userName = nameCtrl.text;
@@ -3104,7 +3253,7 @@ class _OtpBox extends StatelessWidget {
       width: 40,
       height: 48,
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
+        color: ClientColors.surfaceFor(context),
         borderRadius: BorderRadius.circular(10),
         border: Border.all(color: Colors.grey[700]!),
       ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 /// Modern seat status legend for the seat selection screen.
 class SeatLegend extends StatelessWidget {
@@ -6,16 +8,14 @@ class SeatLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Seat legend',
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+          style: ClientTypography.labelMedium(context).copyWith(
             fontWeight: FontWeight.w700,
-            color: scheme.onSurface.withAlpha(210),
+            color: ClientColors.textSecondaryFor(context),
           ),
         ),
         const SizedBox(height: 10),
@@ -26,24 +26,24 @@ class SeatLegend extends StatelessWidget {
               _LegendChip(
                 label: 'Available',
                 icon: Icons.event_seat_outlined,
-                color: scheme.surface,
-                borderColor: scheme.outline.withAlpha(140),
-                iconColor: scheme.onSurface,
+                color: ClientColors.surfaceFor(context),
+                borderColor: ClientColors.borderFor(context),
+                iconColor: ClientColors.textPrimaryFor(context),
               ),
               _LegendChip(
                 label: 'Selected',
                 icon: Icons.check_circle_rounded,
-                color: scheme.primary,
-                borderColor: scheme.primary,
-                iconColor: scheme.onPrimary,
-                textColor: scheme.onPrimary,
+                color: ClientColors.primary,
+                borderColor: ClientColors.primary,
+                iconColor: ClientColors.textInverse,
+                textColor: ClientColors.textInverse,
               ),
               _LegendChip(
                 label: 'Reserved',
                 icon: Icons.lock_rounded,
-                color: scheme.surfaceContainerHighest,
-                borderColor: scheme.outline.withAlpha(100),
-                iconColor: scheme.onSurface.withAlpha(120),
+                color: ClientColors.surfaceMutedFor(context),
+                borderColor: ClientColors.borderFor(context),
+                iconColor: ClientColors.textTertiaryFor(context),
                 muted: true,
               ),
             ];
@@ -91,10 +91,8 @@ class _LegendChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final labelColor =
-        textColor ??
-        (muted ? scheme.onSurface.withAlpha(130) : scheme.onSurface);
+        textColor ?? (muted ? ClientColors.textTertiaryFor(context) : ClientColors.textPrimaryFor(context));
 
     return Opacity(
       opacity: muted ? 0.75 : 1,
@@ -123,10 +121,9 @@ class _LegendChip extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                style: ClientTypography.labelSmall(context).copyWith(
                   fontWeight: FontWeight.w700,
                   color: labelColor,
-                  fontSize: 11,
                 ),
               ),
             ),

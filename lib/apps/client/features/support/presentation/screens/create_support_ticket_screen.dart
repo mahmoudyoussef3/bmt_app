@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
-import 'package:bmt_app/core/widgets/app_button.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 class CreateSupportTicketScreen extends StatefulWidget {
   final String? initialCategory;
@@ -207,8 +207,10 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
                 ),
                 const SizedBox(height: 32),
                 
-                AppButton.primary(
-                  text: isLoading ? 'Submitting...' : 'Submit Ticket',
+                ClientButton(
+                  label: isLoading ? 'Submitting...' : 'Submit Ticket',
+                  isLoading: isLoading,
+                  expand: true,
                   onPressed: isLoading ? () {} : _submit,
                 ),
               ],

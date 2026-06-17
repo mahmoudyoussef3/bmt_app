@@ -69,20 +69,18 @@ class OpsDataTable extends StatelessWidget {
               child: Text(emptyLabel),
             )
           else
-            Flexible(
-              child: ListView.separated(
-                shrinkWrap: true,
-                itemCount: rows.length,
-                separatorBuilder: (_, _) => Divider(
+            // Rows are pre-paginated by the host, so we render the current page
+            // inline (no internal scroll). This keeps the table valid under both
+            // bounded and unbounded (SingleChildScrollView) height constraints.
+            ...rows.asMap().entries.expand((entry) sync* {
+              if (entry.key > 0) {
+                yield Divider(
                   height: 1,
                   color: Theme.of(context).colorScheme.outline.withAlpha(60),
-                ),
-                itemBuilder: (context, i) => _OpsBodyRow(
-                  columns: columns,
-                  cells: rows[i],
-                ),
-              ),
-            ),
+                );
+              }
+              yield _OpsBodyRow(columns: columns, cells: entry.value);
+            }),
           _OpsPaginationBar(
             total: total,
             currentPage: currentPage,

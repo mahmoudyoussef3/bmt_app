@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 /// Multi-passenger presentation placeholder (UI only, no booking logic).
 class SeatPassengerPreviewCard extends StatelessWidget {
@@ -14,30 +15,45 @@ class SeatPassengerPreviewCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     if (selectedSeat == null) {
       return const SizedBox.shrink();
     }
 
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(16),
-      radius: 20,
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.groups_rounded, size: 20, color: scheme.primary),
+              const Icon(Icons.groups_rounded, size: 20, color: ClientColors.primary),
               const SizedBox(width: 8),
               Text(
                 'Passengers',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                style: ClientTypography.bodyMedium(context).copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
               const Spacer(),
-              AppBadge(text: '1 seat'),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: ClientColors.primaryLight,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  '1 seat',
+                  style: ClientTypography.labelSmall(context).copyWith(
+                    color: ClientColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -57,8 +73,8 @@ class SeatPassengerPreviewCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               'Select another seat to add a passenger (UI preview)',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                color: scheme.onSurface.withAlpha(140),
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: ClientColors.textTertiaryFor(context),
                 fontStyle: FontStyle.italic,
               ),
             ),
@@ -84,34 +100,34 @@ class _PassengerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: highlighted
-            ? scheme.primary.withAlpha(28)
-            : scheme.surfaceContainerHighest.withAlpha(120),
+            ? ClientColors.primaryLight
+            : ClientColors.surfaceMutedFor(context),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: highlighted
-              ? scheme.primary.withAlpha(100)
-              : scheme.outline.withAlpha(80),
+              ? ClientColors.primaryMuted
+              : ClientColors.borderFor(context),
         ),
       ),
       child: Row(
         children: [
           CircleAvatar(
             radius: 16,
-            backgroundColor: scheme.primary.withAlpha(placeholder ? 30 : 60),
+            backgroundColor: highlighted
+                ? ClientColors.primaryMuted
+                : ClientColors.borderFor(context),
             child: Text(
               '$index',
               style: TextStyle(
                 fontWeight: FontWeight.w800,
                 fontSize: 12,
-                color: placeholder
-                    ? scheme.onSurface.withAlpha(100)
-                    : scheme.onSurface,
+                color: highlighted
+                    ? ClientColors.primary
+                    : ClientColors.textTertiaryFor(context),
               ),
             ),
           ),
@@ -122,22 +138,25 @@ class _PassengerRow extends StatelessWidget {
               children: [
                 Text(
                   'Passenger $index',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  style: ClientTypography.bodySmall(context).copyWith(
                     fontWeight: FontWeight.w700,
-                    color: placeholder ? scheme.onSurface.withAlpha(120) : null,
+                    color: placeholder
+                        ? ClientColors.textTertiaryFor(context)
+                        : ClientColors.textPrimaryFor(context),
                   ),
                 ),
                 Text(
                   placeholder ? 'Awaiting seat selection' : 'Seat $seatLabel',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: ClientColors.textSecondaryFor(context),
+                  ),
                 ),
               ],
             ),
           ),
-          if (!placeholder)
-            Icon(Icons.check_circle_rounded, color: scheme.secondary, size: 20),
+          if (!highlighted)
+            const Icon(Icons.check_circle_rounded, color: ClientColors.primary, size: 20),
         ],
       ),
     );

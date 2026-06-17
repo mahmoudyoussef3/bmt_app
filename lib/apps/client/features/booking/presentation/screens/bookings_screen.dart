@@ -1,4 +1,5 @@
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -39,7 +40,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
               padding: const EdgeInsets.all(20),
               child: Text(
                 state.message,
-                style: Theme.of(context).textTheme.bodyMedium,
+                style: ClientTypography.bodyMedium(context),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -65,21 +66,29 @@ class _BookingHubContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        AppCard(
+        // Header card
+        Container(
           padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(AppLocalizations.of(context)!.booking_title, style: Theme.of(context).textTheme.displayLarge),
+              Text(
+                AppLocalizations.of(context)!.booking_title,
+                style: ClientTypography.headingLarge(context),
+              ),
               const SizedBox(height: 6),
               Text(
                 AppLocalizations.of(context)!.booking_subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.onSurface.withAlpha(175),
+                style: ClientTypography.bodySmall(context).copyWith(
+                  color: ClientColors.textSecondaryFor(context),
                 ),
               ),
               const SizedBox(height: 14),
@@ -93,7 +102,10 @@ class _BookingHubContent extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Expanded(
-                    child: _BookingChip(label: AppLocalizations.of(context)!.booking_month, value: data.monthPlans),
+                    child: _BookingChip(
+                      label: AppLocalizations.of(context)!.booking_month,
+                      value: data.monthPlans,
+                    ),
                   ),
                 ],
               ),
@@ -101,93 +113,45 @@ class _BookingHubContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 16),
-        AppCard(
+
+        // Daily booking option
+        _NavCard(
           onTap: () => onOpenRoute('/daily-booking'),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.primary.withAlpha(26),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  Icons.directions_bus_rounded,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.booking_dailyBooking,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      AppLocalizations.of(context)!.booking_dailyBookingDesc,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(165),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded),
-            ],
-          ),
+          icon: Icons.directions_bus_rounded,
+          title: AppLocalizations.of(context)!.booking_dailyBooking,
+          subtitle: AppLocalizations.of(context)!.booking_dailyBookingDesc,
         ),
         const SizedBox(height: 12),
-        AppCard(
+
+        // Monthly subscription option
+        _NavCard(
           onTap: () => onOpenRoute('/subscription'),
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.secondary.withAlpha(26),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(
-                  Icons.calendar_month_rounded,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.booking_monthlySubscription,
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      AppLocalizations.of(context)!.booking_monthlySubscriptionDesc,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(165),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(Icons.chevron_right_rounded),
-            ],
-          ),
+          icon: Icons.calendar_month_rounded,
+          title: AppLocalizations.of(context)!.booking_monthlySubscription,
+          subtitle: AppLocalizations.of(context)!.booking_monthlySubscriptionDesc,
         ),
         const SizedBox(height: 20),
-        Text(AppLocalizations.of(context)!.booking_summary, style: Theme.of(context).textTheme.displaySmall),
+
+        Text(
+          AppLocalizations.of(context)!.booking_summary,
+          style: ClientTypography.headingSmall(context),
+        ),
         const SizedBox(height: 12),
-        AppCard(
+
+        // Metrics card
+        Container(
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             children: [
-              _BookingMetric(label: AppLocalizations.of(context)!.booking_activeTrips, value: data.activeTrips),
+              _BookingMetric(
+                label: AppLocalizations.of(context)!.booking_activeTrips,
+                value: data.activeTrips,
+              ),
               const SizedBox(height: 12),
               _BookingMetric(
                 label: AppLocalizations.of(context)!.booking_upcomingBookings,
@@ -206,6 +170,76 @@ class _BookingHubContent extends StatelessWidget {
   }
 }
 
+class _NavCard extends StatelessWidget {
+  const _NavCard({
+    required this.onTap,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  final VoidCallback onTap;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: ClientColors.surfaceFor(context),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: ClientColors.primaryLight,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(icon, color: ClientColors.primary),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: ClientTypography.bodyMedium(context).copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle,
+                      style: ClientTypography.bodySmall(context).copyWith(
+                        color: ClientColors.textSecondaryFor(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: ClientColors.textTertiaryFor(context),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _BookingChip extends StatelessWidget {
   const _BookingChip({required this.label, required this.value});
 
@@ -214,29 +248,28 @@ class _BookingChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: scheme.surface.withAlpha(62),
+        color: ClientColors.surfaceMutedFor(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outline.withAlpha(100)),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: scheme.onSurface.withAlpha(160),
+            style: ClientTypography.labelSmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
             ),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: ClientTypography.bodyMedium(context).copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -255,12 +288,15 @@ class _BookingMetric extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
+        Text(
+          label,
+          style: ClientTypography.bodySmall(context).copyWith(
+            color: ClientColors.textSecondaryFor(context),
+          ),
+        ),
         Text(
           value,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+          style: ClientTypography.headingSmall(context),
         ),
       ],
     );

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/theme/text_themes.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 /// Promotional banner for home booking screen.
 class PromoBanner extends StatelessWidget {
@@ -9,8 +10,6 @@ class PromoBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -22,15 +21,15 @@ class PromoBanner extends StatelessWidget {
             borderRadius: BorderRadius.circular(22),
             gradient: LinearGradient(
               colors: [
-                scheme.tertiary.withAlpha(200),
-                scheme.primary.withAlpha(180),
+                ClientColors.primary.withAlpha(200),
+                ClientColors.primaryMuted.withAlpha(220),
               ],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             boxShadow: [
               BoxShadow(
-                color: scheme.primary.withAlpha(40),
+                color: ClientColors.primary.withAlpha(40),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -53,7 +52,7 @@ class PromoBanner extends StatelessWidget {
                       ),
                       child: Text(
                         'LIMITED OFFER',
-                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        style: ClientTypography.labelSmall(context).copyWith(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 0.6,
@@ -63,14 +62,15 @@ class PromoBanner extends StatelessWidget {
                     const SizedBox(height: 10),
                     Text(
                       '20% off your first\nmonthly package',
-                      style: AppTextThemes.headlineStrong(
-                        scheme,
-                      ).copyWith(color: Colors.white, fontSize: 20),
+                      style: ClientTypography.headingLarge(context).copyWith(
+                        color: Colors.white,
+                        fontSize: 20,
+                      ),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Use code COMMUTE20 at checkout',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: ClientTypography.bodySmall(context).copyWith(
                         color: Colors.white.withAlpha(220),
                       ),
                     ),

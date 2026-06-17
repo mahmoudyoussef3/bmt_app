@@ -8,8 +8,10 @@ import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/interactive_seat.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/passenger_info_bottom_sheet.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_booking_summary_panel.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_legend.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/core/widgets/seat_widget.dart';
 
 class SeatSelectionScreen extends StatefulWidget {
   const SeatSelectionScreen({super.key});
@@ -81,8 +83,8 @@ class _SeatSelectionContent extends StatelessWidget {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [
-              Theme.of(context).colorScheme.surface,
-              Theme.of(context).colorScheme.surfaceContainerLowest,
+              ClientColors.surfaceFor(context),
+              ClientColors.surfaceMutedFor(context),
             ],
           ),
         ),
@@ -176,18 +178,13 @@ class _SeatSelectionContent extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [scheme.primary.withAlpha(28), scheme.primary.withAlpha(28)],
-        ),
+        color: ClientColors.primaryLight,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: scheme.outline.withAlpha(55)),
+        border: Border.all(color: ClientColors.primaryMuted),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(18),
@@ -201,11 +198,9 @@ class _SeatSelectionContent extends StatelessWidget {
           Container(
             width: 52,
             height: 52,
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [scheme.primary, scheme.primary],
-              ),
+              color: ClientColors.primary,
             ),
             child: const Icon(
               Icons.directions_bus_rounded,
@@ -222,11 +217,10 @@ class _SeatSelectionContent extends StatelessWidget {
                     Expanded(
                       child: Text(
                         'Select Your Seat',
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              height: 1.1,
-                            ),
+                        style: ClientTypography.headingSmall(context).copyWith(
+                          color: ClientColors.textPrimaryFor(context),
+                          height: 1.1,
+                        ),
                       ),
                     ),
                     Container(
@@ -235,13 +229,16 @@ class _SeatSelectionContent extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(24),
+                        color: ClientColors.primary.withAlpha(24),
                         borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: Colors.white.withAlpha(28)),
+                        border: Border.all(
+                          color: ClientColors.primary.withAlpha(60),
+                        ),
                       ),
                       child: Text(
                         '${data.availableCount} free',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        style: ClientTypography.labelSmall(context).copyWith(
+                          color: ClientColors.primary,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -251,9 +248,8 @@ class _SeatSelectionContent extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   data.route,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurface.withAlpha(180),
-                    fontWeight: FontWeight.w500,
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
                   ),
                 ),
               ],
@@ -266,12 +262,13 @@ class _SeatSelectionContent extends StatelessWidget {
 
   // ignore: unused_element
   Widget _buildTripOverview(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(20),
-      radius: 24,
-      color: scheme.surfaceContainerHigh,
-      border: Border.all(color: scheme.outline.withAlpha(55)),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -280,18 +277,9 @@ class _SeatSelectionContent extends StatelessWidget {
               Container(
                 width: 56,
                 height: 56,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    colors: [scheme.primary, scheme.secondary],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: scheme.primary.withAlpha(45),
-                      blurRadius: 18,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
+                  color: ClientColors.primary,
                 ),
                 child: const Icon(
                   Icons.directions_bus_rounded,
@@ -305,15 +293,16 @@ class _SeatSelectionContent extends StatelessWidget {
                   children: [
                     Text(
                       'Choose a seat',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        height: 1.1,
+                      style: ClientTypography.headingSmall(context).copyWith(
+                        color: ClientColors.textPrimaryFor(context),
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Tap an available seat to continue',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: ClientTypography.bodySmall(context).copyWith(
+                        color: ClientColors.textSecondaryFor(context),
+                      ),
                     ),
                   ],
                 ),
@@ -324,15 +313,16 @@ class _SeatSelectionContent extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(16),
+                  color: ClientColors.primaryLight,
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: scheme.primary.withAlpha(35)),
+                  border: Border.all(color: ClientColors.primaryMuted),
                 ),
                 child: Text(
                   '${data.availableCount} open',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: ClientTypography.labelSmall(context).copyWith(
+                    color: ClientColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ],
@@ -364,12 +354,13 @@ class _SeatSelectionContent extends StatelessWidget {
     required double aisleGap,
     required double rowGap,
   }) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(18),
-      radius: 28,
-      color: scheme.surfaceContainerHighest,
-      border: Border.all(color: scheme.outline.withAlpha(55)),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceMutedFor(context),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -382,22 +373,24 @@ class _SeatSelectionContent extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(22),
+                  color: ClientColors.primaryLight,
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: scheme.primary.withAlpha(35)),
+                  border: Border.all(color: ClientColors.primaryMuted),
                 ),
                 child: Text(
                   'FRONT OF VEHICLE',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                  style: ClientTypography.labelSmall(context).copyWith(
+                    color: ClientColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
               Text(
                 'Cabin layout',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                style: ClientTypography.bodySmall(context).copyWith(
+                  color: ClientColors.textSecondaryFor(context),
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
@@ -406,26 +399,24 @@ class _SeatSelectionContent extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
             decoration: BoxDecoration(
-              color: scheme.surface.withAlpha(230),
+              color: ClientColors.surfaceFor(context),
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(
-                color: Theme.of(context).dividerColor.withAlpha(55),
-              ),
+              border: Border.all(color: ClientColors.borderFor(context)),
             ),
             child: Column(
               children: [
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.tire_repair_rounded,
                       size: 18,
-                      color: scheme.primary,
+                      color: ClientColors.primary,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       'Driver',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: ClientTypography.bodySmall(context).copyWith(
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.4,
                       ),
@@ -435,8 +426,8 @@ class _SeatSelectionContent extends StatelessWidget {
                 const SizedBox(height: 12),
                 Text(
                   'Seats 1 and 2 are reserved for the driver cabin',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurface.withAlpha(170),
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textTertiaryFor(context),
                     fontWeight: FontWeight.w500,
                   ),
                   textAlign: TextAlign.center,
@@ -446,14 +437,9 @@ class _SeatSelectionContent extends StatelessWidget {
                   width: 150,
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        scheme.surfaceContainerHigh,
-                        scheme.surfaceContainerHighest,
-                      ],
-                    ),
+                    color: ClientColors.surfaceSubtleFor(context),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: scheme.outline.withAlpha(30)),
+                    border: Border.all(color: ClientColors.borderFor(context)),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -461,14 +447,14 @@ class _SeatSelectionContent extends StatelessWidget {
                       Icon(
                         Icons.airline_seat_recline_normal_rounded,
                         size: 14,
-                        color: scheme.primary.withAlpha(170),
+                        color: ClientColors.primary.withAlpha(170),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         'Driver Cabin',
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        style: ClientTypography.bodySmall(context).copyWith(
                           fontWeight: FontWeight.w700,
-                          color: scheme.onSurface.withAlpha(190),
+                          color: ClientColors.textSecondaryFor(context),
                         ),
                       ),
                     ],
@@ -491,40 +477,42 @@ class _SeatSelectionContent extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
-      radius: 22,
-      color: scheme.surfaceContainerLow,
-      border: Border.all(color: scheme.outline.withAlpha(70)),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               shape: BoxShape.circle,
-              color: scheme.primary.withAlpha(30),
+              color: ClientColors.primaryLight,
             ),
-            child: Icon(
+            child: const Icon(
               Icons.event_seat_outlined,
               size: 36,
-              color: scheme.primary.withAlpha(200),
+              color: ClientColors.primary,
             ),
           ),
           const SizedBox(height: 14),
           Text(
             'Select one or more seats to continue',
             textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: ClientTypography.bodyMedium(context).copyWith(
+              fontWeight: FontWeight.w700,
+              color: ClientColors.textPrimaryFor(context),
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'Tap any available seat on the layout above. Your fare updates instantly below.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurface.withAlpha(170),
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
               height: 1.45,
             ),
           ),
@@ -534,7 +522,6 @@ class _SeatSelectionContent extends StatelessWidget {
   }
 
   Widget _buildSelectedSeatsSummary(BuildContext context, String seatId) {
-    final scheme = Theme.of(context).colorScheme;
     final seatNum = data.seats
         .firstWhere(
           (s) => s.id == seatId,
@@ -546,20 +533,22 @@ class _SeatSelectionContent extends StatelessWidget {
         )
         .seatNumber;
 
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(16),
-      radius: 20,
-      color: scheme.primary.withAlpha(22),
-      border: Border.all(color: scheme.primary.withAlpha(90), width: 1.5),
+      decoration: BoxDecoration(
+        color: ClientColors.primaryLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: ClientColors.primaryMuted, width: 1.5),
+      ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: scheme.primary,
+              color: ClientColors.primary,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(Icons.check_rounded, color: scheme.onPrimary),
+            child: const Icon(Icons.check_rounded, color: Colors.white),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -568,14 +557,17 @@ class _SeatSelectionContent extends StatelessWidget {
               children: [
                 Text(
                   'Seat $seatNum selected',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+                  style: ClientTypography.bodyMedium(context).copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: ClientColors.textPrimaryFor(context),
+                  ),
                 ),
                 Text(
                   '1 seat · EGP ${data.pricePerSeat.toStringAsFixed(2)} each · '
                   'Total EGP ${loaded.total.toStringAsFixed(2)}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
+                  ),
                 ),
               ],
             ),
@@ -587,24 +579,23 @@ class _SeatSelectionContent extends StatelessWidget {
 
   // ignore: unused_element
   Widget _buildHintCard(BuildContext context) {
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(14),
-      radius: 20,
-      color: Theme.of(context).colorScheme.surfaceContainerLow,
-      border: Border.all(
-        color: Theme.of(context).colorScheme.outline.withAlpha(55),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.touch_app_rounded,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          const Icon(Icons.touch_app_rounded, color: ClientColors.primary),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Middle rows use a pair on the left and a single seat on the right for a more realistic shuttle layout.',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
+              ),
             ),
           ),
         ],
@@ -620,10 +611,10 @@ class _SeatSelectionContent extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface.withAlpha(245),
+        color: ClientColors.surfaceFor(context).withAlpha(245),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         border: Border(
-          top: BorderSide(color: Theme.of(context).dividerColor.withAlpha(70)),
+          top: BorderSide(color: ClientColors.borderFor(context)),
         ),
         boxShadow: [
           BoxShadow(
@@ -782,24 +773,24 @@ class _InfoPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(170),
+        color: ClientColors.surfaceMutedFor(context),
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: scheme.outline.withAlpha(70)),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 16, color: scheme.primary),
+          Icon(icon, size: 16, color: ClientColors.primary),
           const SizedBox(width: 8),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            style: ClientTypography.bodySmall(context).copyWith(
+              fontWeight: FontWeight.w600,
+              color: ClientColors.textPrimaryFor(context),
+            ),
           ),
         ],
       ),

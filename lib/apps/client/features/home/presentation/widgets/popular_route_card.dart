@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
-
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
-import 'package:bmt_app/core/theme/app_layout.dart';
-import 'package:bmt_app/core/theme/app_typography.dart';
-import 'package:bmt_app/core/theme/text_themes.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
 
 /// Route discovery card for the client Home screen.
 class PopularRouteCard extends StatelessWidget {
@@ -26,110 +23,110 @@ class PopularRouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return SizedBox(
       width: width,
       height: listHeight,
-      child: AppCard(
-        onTap: onTap,
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: scheme.primary.withAlpha(22),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    Icons.route_rounded,
-                    size: 21,
-                    color: scheme.primary,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    route.routeName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      height: 1.1,
-                    ),
-                  ),
-                ),
-              ],
+      child: Material(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ClientColors.borderFor(context)),
             ),
-            const SizedBox(height: 14),
-            Expanded(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _RouteTimeline(scheme: scheme),
-                  const SizedBox(width: AppLayout.spaceMd),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _EndpointLabel(label: route.pickup, scheme: scheme),
-                        const Spacer(),
-                        _EndpointLabel(
-                          label: route.destination,
-                          scheme: scheme,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: ClientColors.primaryLight,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.route_rounded,
+                        size: 21,
+                        color: ClientColors.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        route.routeName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: ClientTypography.headingSmall(context),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _RouteTimeline(context: context),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _EndpointLabel(label: route.pickup),
+                            const Spacer(),
+                            _EndpointLabel(label: route.destination),
+                          ],
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Divider(height: 1, color: ClientColors.borderFor(context)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _RouteMetric(
+                        label: 'From',
+                        value: route.startingPrice,
+                        emphasize: true,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Divider(height: 1, color: scheme.outline.withAlpha(60)),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(
-                  child: _RouteMetric(
-                    label: 'From',
-                    value: route.startingPrice,
-                    scheme: scheme,
-                    emphasize: true,
-                  ),
-                ),
-                _RouteMetric(
-                  label: 'Duration',
-                  value: route.duration.isEmpty ? 'Not set' : route.duration,
-                  scheme: scheme,
-                ),
-                const SizedBox(width: 14),
-                _RouteMetric(
-                  label: 'Trips',
-                  value: route.tripsAvailable.toString(),
-                  scheme: scheme,
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: scheme.primary.withAlpha(28),
-                    borderRadius: BorderRadius.circular(11),
-                  ),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 19,
-                    color: scheme.primary,
-                  ),
+                    _RouteMetric(
+                      label: 'Duration',
+                      value: route.duration.isEmpty ? 'Not set' : route.duration,
+                    ),
+                    const SizedBox(width: 14),
+                    _RouteMetric(
+                      label: 'Trips',
+                      value: route.tripsAvailable.toString(),
+                    ),
+                    const SizedBox(width: 12),
+                    Container(
+                      width: 34,
+                      height: 34,
+                      decoration: BoxDecoration(
+                        color: ClientColors.primaryLight,
+                        borderRadius: BorderRadius.circular(11),
+                      ),
+                      child: const Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 19,
+                        color: ClientColors.primary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -140,13 +137,11 @@ class _RouteMetric extends StatelessWidget {
   const _RouteMetric({
     required this.label,
     required this.value,
-    required this.scheme,
     this.emphasize = false,
   });
 
   final String label;
   final String value;
-  final ColorScheme scheme;
   final bool emphasize;
 
   @override
@@ -157,9 +152,9 @@ class _RouteMetric extends StatelessWidget {
       children: [
         Text(
           label,
-          style: AppTypography.caption(
-            scheme,
-          ).copyWith(color: scheme.onSurface.withAlpha(150), fontSize: 11),
+          style: ClientTypography.labelSmall(context).copyWith(
+            color: ClientColors.textTertiaryFor(context),
+          ),
         ),
         const SizedBox(height: 2),
         Text(
@@ -167,12 +162,10 @@ class _RouteMetric extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: emphasize
-              ? AppTextThemes.priceEmphasis(
-                  scheme,
-                ).copyWith(fontSize: 16, height: 1.1)
-              : Theme.of(context).textTheme.labelLarge?.copyWith(
+              ? ClientTypography.priceMedium(context)
+              : ClientTypography.labelLarge(context).copyWith(
                   fontWeight: FontWeight.w800,
-                  color: scheme.onSurface,
+                  color: ClientColors.textPrimaryFor(context),
                 ),
         ),
       ],
@@ -181,10 +174,9 @@ class _RouteMetric extends StatelessWidget {
 }
 
 class _EndpointLabel extends StatelessWidget {
-  const _EndpointLabel({required this.label, required this.scheme});
+  const _EndpointLabel({required this.label});
 
   final String label;
-  final ColorScheme scheme;
 
   @override
   Widget build(BuildContext context) {
@@ -195,10 +187,7 @@ class _EndpointLabel extends StatelessWidget {
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w800,
-              height: 1.15,
-            ),
+            style: ClientTypography.headingSmall(context),
           ),
         ),
       ],
@@ -207,23 +196,26 @@ class _EndpointLabel extends StatelessWidget {
 }
 
 class _RouteTimeline extends StatelessWidget {
-  const _RouteTimeline({required this.scheme});
+  const _RouteTimeline({required this.context});
 
-  final ColorScheme scheme;
+  final BuildContext context;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext _) {
     return SizedBox(
       width: 14,
       child: Column(
         children: [
-          _TimelineDot(color: scheme.secondary),
+          _TimelineDot(color: ClientColors.journeyGreen),
           Expanded(
             child: Center(
-              child: Container(width: 2, color: scheme.outline.withAlpha(80)),
+              child: Container(
+                width: 2,
+                color: ClientColors.borderFor(context),
+              ),
             ),
           ),
-          _TimelineDot(color: scheme.error),
+          _TimelineDot(color: ClientColors.journeyAmber),
         ],
       ),
     );

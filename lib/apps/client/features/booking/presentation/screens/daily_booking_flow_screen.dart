@@ -1,4 +1,4 @@
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -153,9 +153,13 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
           primary: false,
           padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
           children: [
-            AppSurface(
+            Container(
               padding: const EdgeInsets.all(16),
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
+              decoration: BoxDecoration(
+                color: ClientColors.surfaceSubtleFor(context),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: ClientColors.borderFor(context)),
+              ),
               child: Row(
                 children: [
                   Container(

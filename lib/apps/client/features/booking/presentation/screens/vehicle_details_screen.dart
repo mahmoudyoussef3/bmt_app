@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_image_strip.dart';
-import 'package:bmt_app/core/theme/text_themes.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Full vehicle profile for informed booking decisions.
@@ -83,7 +84,8 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                   vehicle: vehicle,
                   galleryController: _galleryController,
                   galleryIndex: _galleryIndex,
-                  onPageChanged: (index) => setState(() => _galleryIndex = index),
+                  onPageChanged: (index) =>
+                      setState(() => _galleryIndex = index),
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
@@ -91,28 +93,35 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                    //    _VehicleSummaryCard(vehicle: vehicle),
-                      //  const SizedBox(height: 16),
                         _QuickStatsCard(vehicle: vehicle),
                         const SizedBox(height: 20),
-                    
                         _DetailSection(
-                          title: AppLocalizations.of(context)!.booking_comfortAndAmenities,
-                          subtitle: AppLocalizations.of(context)!.booking_comfortDesc,
+                          title: AppLocalizations.of(
+                            context,
+                          )!.booking_comfortAndAmenities,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          )!.booking_comfortDesc,
                           icon: Icons.airline_seat_recline_extra_rounded,
                           child: _ComfortCard(vehicle: vehicle),
                         ),
                         const SizedBox(height: 20),
                         _DetailSection(
                           title: AppLocalizations.of(context)!.booking_driver,
-                          subtitle: AppLocalizations.of(context)!.booking_driverDesc,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          )!.booking_driverDesc,
                           icon: Icons.person_pin_circle_rounded,
                           child: _DriverCard(vehicle: vehicle),
                         ),
                         const SizedBox(height: 20),
                         _DetailSection(
-                          title: AppLocalizations.of(context)!.booking_priceAndAvailability,
-                          subtitle: AppLocalizations.of(context)!.booking_priceDesc,
+                          title: AppLocalizations.of(
+                            context,
+                          )!.booking_priceAndAvailability,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          )!.booking_priceDesc,
                           icon: Icons.payments_rounded,
                           child: _PricingAvailabilityCard(vehicle: vehicle),
                         ),
@@ -189,21 +198,20 @@ class _VehicleGalleryAppBar extends StatelessWidget {
                     vehicle.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          height: 1.2,
-                        ),
+                    style: ClientTypography.headingLarge(context).copyWith(
+                      color: ClientColors.textInverse,
+                      height: 1.2,
+                    ),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     vehicle.model,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withAlpha(220),
-                          fontWeight: FontWeight.w700,
-                        ),
+                    style: ClientTypography.bodyMedium(context).copyWith(
+                      color: ClientColors.textInverse.withAlpha(220),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   VehicleImageDots(
@@ -220,99 +228,6 @@ class _VehicleGalleryAppBar extends StatelessWidget {
   }
 }
 
-/*class _VehicleSummaryCard extends StatelessWidget {
-  const _VehicleSummaryCard({required this.vehicle});
-
-  final dynamic vehicle;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [
-            scheme.primary,
-            scheme.secondary,
-          ],
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withAlpha(45),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          PositionedDirectional(
-            top: -32,
-            end: -20,
-            child: Icon(
-              Icons.directions_bus_filled_rounded,
-              size: 132,
-              color: Colors.white.withAlpha(28),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _WhitePill(
-                icon: Icons.verified_rounded,
-                label: vehicle.vehicleType,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'اختيار مناسب لرحلتك',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'راجع تفاصيل العربية، مستوى الراحة، تقييم السائق، وعدد المقاعد قبل تأكيد الحجز.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withAlpha(225),
-                      height: 1.7,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _HeroInfoChip(
-                    icon: Icons.event_seat_rounded,
-                    label: '${vehicle.availableSeats} مقاعد متاحة',
-                  ),
-                  _HeroInfoChip(
-                    icon: Icons.star_rounded,
-                    label: vehicle.driverRating.toStringAsFixed(1),
-                  ),
-                  _HeroInfoChip(
-                    icon: Icons.payments_rounded,
-                    label: vehicle.price,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-*/
-
 class _QuickStatsCard extends StatelessWidget {
   const _QuickStatsCard({required this.vehicle});
 
@@ -320,8 +235,13 @@ class _QuickStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -366,27 +286,24 @@ class _QuickStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Column(
       children: [
-        Icon(icon, color: scheme.primary, size: 21),
+        Icon(icon, color: ClientColors.primary, size: 21),
         const SizedBox(height: 6),
         Text(
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: ClientTypography.headingSmall(context).copyWith(
+            color: ClientColors.textPrimaryFor(context),
+          ),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onSurface.withAlpha(150),
-                fontWeight: FontWeight.w700,
-              ),
+          style: ClientTypography.bodySmall(context).copyWith(
+            color: ClientColors.textSecondaryFor(context),
+          ),
         ),
       ],
     );
@@ -408,13 +325,12 @@ class _DetailSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            _SoftIcon(icon: icon, color: scheme.primary, size: 36),
+            _SoftIcon(icon: icon, color: ClientColors.primary, size: 36),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -422,14 +338,16 @@ class _DetailSection extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: AppTextThemes.subtitle(scheme),
+                    style: ClientTypography.headingSmall(context).copyWith(
+                      color: ClientColors.textPrimaryFor(context),
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurface.withAlpha(150),
-                        ),
+                    style: ClientTypography.bodySmall(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context),
+                    ),
                   ),
                 ],
               ),
@@ -450,8 +368,13 @@ class _InfoGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: [
           for (var i = 0; i < items.length; i++) ...[
@@ -477,10 +400,9 @@ class _InfoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        _SoftIcon(icon: icon, color: scheme.primary, size: 42),
+        _SoftIcon(icon: icon, color: ClientColors.primary, size: 42),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -488,17 +410,18 @@ class _InfoItem extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface.withAlpha(145),
-                      fontWeight: FontWeight.w700,
-                    ),
+                style: ClientTypography.bodySmall(context).copyWith(
+                  color: ClientColors.textSecondaryFor(context),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: 3),
               Text(
                 value,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
+                style: ClientTypography.bodyMedium(context).copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: ClientColors.textPrimaryFor(context),
+                ),
               ),
             ],
           ),
@@ -515,14 +438,21 @@ class _ComfortCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: [
           _ComfortTile(
             icon: Icons.ac_unit_rounded,
             label: AppLocalizations.of(context)!.booking_ac,
-            value: vehicle.hasAirConditioning ? AppLocalizations.of(context)!.booking_available : AppLocalizations.of(context)!.booking_unavailable,
+            value: vehicle.hasAirConditioning
+                ? AppLocalizations.of(context)!.booking_available
+                : AppLocalizations.of(context)!.booking_unavailable,
             positive: vehicle.hasAirConditioning,
           ),
           _ComfortTile(
@@ -541,15 +471,6 @@ class _ComfortCard extends StatelessWidget {
       ),
     );
   }
-
-  String _vehicleConditionLabel(BuildContext context, String condition) {
-    return switch (condition) {
-      'Excellent' => AppLocalizations.of(context)!.booking_ratingExcellent,
-      'Very good' => AppLocalizations.of(context)!.booking_ratingVeryGood,
-      'Good' => AppLocalizations.of(context)!.booking_ratingGood,
-      _ => condition,
-    };
-  }
 }
 
 class _ComfortTile extends StatelessWidget {
@@ -567,8 +488,9 @@ class _ComfortTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = positive ? scheme.secondary : scheme.onSurface.withAlpha(130);
+    final color = positive
+        ? ClientColors.journeyGreen
+        : ClientColors.textTertiaryFor(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -582,17 +504,18 @@ class _ComfortTile extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(145),
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   value,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                  style: ClientTypography.bodyMedium(context).copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: ClientColors.textPrimaryFor(context),
+                  ),
                 ),
               ],
             ),
@@ -615,7 +538,6 @@ class _LegRoomTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final label = rating >= 4.5
         ? AppLocalizations.of(context)!.booking_ratingExcellent
         : rating >= 3.5
@@ -633,24 +555,25 @@ class _LegRoomTile extends StatelessWidget {
             children: [
               _SoftIcon(
                 icon: Icons.straighten_rounded,
-                color: scheme.primary,
+                color: ClientColors.primary,
                 size: 42,
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   AppLocalizations.of(context)!.booking_legRoom,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                  style: ClientTypography.bodyMedium(context).copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: ClientColors.textPrimaryFor(context),
+                  ),
                 ),
               ),
               Text(
                 '$label (${rating.toStringAsFixed(1)}/5)',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w900,
-                    ),
+                style: ClientTypography.bodySmall(context).copyWith(
+                  color: ClientColors.primary,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ],
           ),
@@ -660,8 +583,8 @@ class _LegRoomTile extends StatelessWidget {
             child: LinearProgressIndicator(
               value: (rating / 5).clamp(0, 1),
               minHeight: 8,
-              backgroundColor: scheme.outline.withAlpha(80),
-              color: scheme.primary,
+              backgroundColor: ClientColors.borderFor(context),
+              color: ClientColors.primary,
             ),
           ),
         ],
@@ -677,32 +600,43 @@ class _DriverCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(16),
-      child: Column(
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
+      child: Row(
         children: [
-          Row(
-            children: [
-              AppAvatar(initials: vehicle.driverInitials, radius: 30),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      vehicle.driverName,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
-                    ),
-                    const SizedBox(height: 6),
-                  ],
-                ),
+          CircleAvatar(
+            radius: 30,
+            backgroundColor: ClientColors.primaryLight,
+            child: Text(
+              vehicle.driverInitials,
+              style: ClientTypography.headingSmall(context).copyWith(
+                color: ClientColors.primary,
               ),
-              StatusChip(label: AppLocalizations.of(context)!.booking_certified),
-            ],
+            ),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  vehicle.driverName,
+                  style: ClientTypography.headingSmall(context).copyWith(
+                    color: ClientColors.textPrimaryFor(context),
+                  ),
+                ),
+                const SizedBox(height: 6),
+              ],
+            ),
+          ),
+          ClientStatusBadge(
+            status: ClientJourneyStatus.active,
+            label: AppLocalizations.of(context)!.booking_certified,
           ),
         ],
       ),
@@ -717,10 +651,13 @@ class _PricingAvailabilityCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -728,16 +665,17 @@ class _PricingAvailabilityCard extends StatelessWidget {
               label: AppLocalizations.of(context)!.booking_tripPrice,
               value: vehicle.price,
               icon: Icons.payments_rounded,
-              color: scheme.primary,
+              color: ClientColors.primary,
             ),
           ),
           const _VerticalDivider(),
           Expanded(
             child: _PriceSeatColumn(
               label: AppLocalizations.of(context)!.booking_availableSeats,
-              value: '${vehicle.availableSeats} ${AppLocalizations.of(context)!.booking_remaining}',
+              value:
+                  '${vehicle.availableSeats} ${AppLocalizations.of(context)!.booking_remaining}',
               icon: Icons.event_seat_rounded,
-              color: scheme.secondary,
+              color: ClientColors.journeyGreen,
             ),
           ),
         ],
@@ -768,17 +706,17 @@ class _PriceSeatColumn extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           label,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(145),
-              ),
+          style: ClientTypography.bodySmall(context).copyWith(
+            fontWeight: FontWeight.w700,
+            color: ClientColors.textSecondaryFor(context),
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+          style: ClientTypography.headingSmall(context).copyWith(
+            color: ClientColors.textPrimaryFor(context),
+          ),
         ),
       ],
     );
@@ -792,13 +730,20 @@ class _RouteSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         children: [
-          _SoftIcon(icon: Icons.route_rounded, color: scheme.primary, size: 42),
+          _SoftIcon(
+            icon: Icons.route_rounded,
+            color: ClientColors.primary,
+            size: 42,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -806,17 +751,18 @@ class _RouteSummaryCard extends StatelessWidget {
               children: [
                 Text(
                   'ملخص خط السير',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(145),
-                        fontWeight: FontWeight.w700,
-                      ),
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   summary,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                  style: ClientTypography.bodyMedium(context).copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: ClientColors.textPrimaryFor(context),
+                  ),
                 ),
               ],
             ),
@@ -834,15 +780,13 @@ class _VehicleBottomBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.fromLTRB(16, 10, 16, 16),
         decoration: BoxDecoration(
-          color: Theme.of(context).scaffoldBackgroundColor.withAlpha(245),
+          color: ClientColors.surfaceFor(context),
           border: Border(
-            top: BorderSide(color: scheme.outline.withAlpha(80)),
+            top: BorderSide(color: ClientColors.borderFor(context)),
           ),
           boxShadow: [
             BoxShadow(
@@ -861,14 +805,17 @@ class _VehicleBottomBar extends StatelessWidget {
                 children: [
                   Text(
                     vehicle.price,
-                    style: AppTextThemes.priceEmphasis(scheme).copyWith(fontSize: 20),
+                    style: ClientTypography.priceMedium(context).copyWith(
+                      color: ClientColors.textPrimaryFor(context),
+                    ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     '${vehicle.availableSeats} مقاعد متاحة',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                    style: ClientTypography.bodySmall(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context),
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ],
               ),
@@ -876,10 +823,13 @@ class _VehicleBottomBar extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               flex: 2,
-              child: AppButton(
+              child: ClientButton(
                 label: 'اختيار المقعد',
-                height: 52,
-                onPressed: () => Navigator.pushNamed(context, '/seat-selection', arguments: {'tripId': vehicle.id}),
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  '/seat-selection',
+                  arguments: {'tripId': vehicle.id},
+                ),
               ),
             ),
           ],
@@ -907,12 +857,12 @@ class _WhitePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 16),
+          Icon(icon, color: ClientColors.textInverse, size: 16),
           const SizedBox(width: 7),
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white,
+              color: ClientColors.textInverse,
               fontWeight: FontWeight.w900,
               fontSize: 12,
             ),
@@ -940,12 +890,12 @@ class _HeroInfoChip extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: Colors.white, size: 15),
+          Icon(icon, color: ClientColors.textInverse, size: 15),
           const SizedBox(width: 6),
           Text(
             label,
             style: const TextStyle(
-              color: Colors.white,
+              color: ClientColors.textInverse,
               fontWeight: FontWeight.w800,
               fontSize: 12,
             ),
@@ -986,7 +936,7 @@ class _VerticalDivider extends StatelessWidget {
       width: 1,
       height: 54,
       margin: const EdgeInsets.symmetric(horizontal: 12),
-      color: Theme.of(context).colorScheme.outline.withAlpha(90),
+      color: ClientColors.borderFor(context),
     );
   }
 }
@@ -998,7 +948,9 @@ class _VehicleLoadingView extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Scaffold(
       appBar: _StaticVehicleAppBar(title: 'تفاصيل العربية'),
-      body: Center(child: CircularProgressIndicator()),
+      body: Center(
+        child: CircularProgressIndicator(color: ClientColors.primary),
+      ),
     );
   }
 }
@@ -1010,29 +962,42 @@ class _VehicleErrorView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
       appBar: const _StaticVehicleAppBar(title: 'تفاصيل العربية'),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
-          child: AppSurface(
+          child: Container(
             padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ClientColors.borderFor(context)),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.error_outline_rounded, color: scheme.error, size: 44),
+                const Icon(
+                  Icons.error_outline_rounded,
+                  color: ClientColors.journeyRed,
+                  size: 44,
+                ),
                 const SizedBox(height: 12),
                 Text(
                   'لم نتمكن من تحميل تفاصيل العربية',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                  style: ClientTypography.headingSmall(context).copyWith(
+                    color: ClientColors.textPrimaryFor(context),
+                  ),
                 ),
                 const SizedBox(height: 8),
-                Text(message, textAlign: TextAlign.center),
+                Text(
+                  message,
+                  textAlign: TextAlign.center,
+                  style: ClientTypography.bodyMedium(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
+                  ),
+                ),
               ],
             ),
           ),
@@ -1047,14 +1012,22 @@ class _VehicleEmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: _StaticVehicleAppBar(title: 'تفاصيل العربية'),
-      body: Center(child: Text('لم يتم العثور على العربية')),
+    return Scaffold(
+      appBar: const _StaticVehicleAppBar(title: 'تفاصيل العربية'),
+      body: Center(
+        child: Text(
+          'لم يتم العثور على العربية',
+          style: ClientTypography.bodyMedium(context).copyWith(
+            color: ClientColors.textSecondaryFor(context),
+          ),
+        ),
+      ),
     );
   }
 }
 
-class _StaticVehicleAppBar extends StatelessWidget implements PreferredSizeWidget {
+class _StaticVehicleAppBar extends StatelessWidget
+    implements PreferredSizeWidget {
   const _StaticVehicleAppBar({required this.title});
 
   final String title;

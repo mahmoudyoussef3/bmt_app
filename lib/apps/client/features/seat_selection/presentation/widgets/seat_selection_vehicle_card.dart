@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 /// Compact vehicle + driver summary for seat selection.
 class SeatSelectionVehicleCard extends StatelessWidget {
@@ -26,13 +27,13 @@ class SeatSelectionVehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(16),
-      radius: 22,
-      color: scheme.surfaceContainerHigh,
-      border: Border.all(color: scheme.outline.withAlpha(60)),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceSubtleFor(context),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -42,17 +43,12 @@ class SeatSelectionVehicleCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      scheme.primary.withAlpha(80),
-                      scheme.secondary.withAlpha(50),
-                    ],
-                  ),
+                  color: ClientColors.primaryLight,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.directions_bus_filled_rounded,
-                  color: scheme.onSurface,
+                  color: ClientColors.primary,
                 ),
               ),
               const SizedBox(width: 12),
@@ -60,18 +56,31 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    StatusChip(label: vehicleType),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: ClientColors.primaryLight,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        vehicleType,
+                        style: ClientTypography.labelSmall(context).copyWith(
+                          color: ClientColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 6),
                     Text(
                       vehicleName,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      style: ClientTypography.bodyMedium(context).copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
                     Text(
                       vehicleModel,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(170),
+                      style: ClientTypography.bodySmall(context).copyWith(
+                        color: ClientColors.textSecondaryFor(context),
                       ),
                     ),
                   ],
@@ -82,37 +91,45 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                 children: [
                   Text(
                     '$availableSeats',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: scheme.primary,
+                    style: ClientTypography.headingLarge(context).copyWith(
+                      color: ClientColors.primary,
                     ),
                   ),
                   Text(
                     'seats left',
-                    style: Theme.of(context).textTheme.titleSmall,
+                    style: ClientTypography.bodySmall(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context),
+                    ),
                   ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 12),
-          const AppSeparator(),
+          Divider(color: ClientColors.borderFor(context)),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
             runSpacing: 8,
             children: [
-              _MetaChip(
-                icon: Icons.ac_unit_rounded,
-                label: 'A/C · $airConditioning',
-              ),
+              _MetaChip(icon: Icons.ac_unit_rounded, label: 'A/C · $airConditioning'),
               _MetaChip(icon: Icons.chair_rounded, label: seatType),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              const AppAvatar(initials: 'AM', radius: 18),
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: ClientColors.primaryLight,
+                child: Text(
+                  driverName.isNotEmpty ? driverName[0].toUpperCase() : '?',
+                  style: const TextStyle(
+                    color: ClientColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(
@@ -120,26 +137,29 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                   children: [
                     Text(
                       driverName,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: ClientTypography.bodySmall(context).copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.star_rounded,
                           size: 14,
-                          color: scheme.tertiary,
+                          color: ClientColors.journeyAmber,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           driverRating.toStringAsFixed(1),
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: ClientTypography.bodySmall(context).copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         Text(
                           ' · Captain',
-                          style: Theme.of(context).textTheme.titleSmall,
+                          style: ClientTypography.bodySmall(context).copyWith(
+                            color: ClientColors.textSecondaryFor(context),
+                          ),
                         ),
                       ],
                     ),
@@ -162,24 +182,23 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
+        color: ClientColors.surfaceMutedFor(context),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: scheme.outline.withAlpha(90)),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: scheme.primary),
+          Icon(icon, size: 14, color: ClientColors.primary),
           const SizedBox(width: 6),
           Text(
             label,
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+            style: ClientTypography.bodySmall(context).copyWith(
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),

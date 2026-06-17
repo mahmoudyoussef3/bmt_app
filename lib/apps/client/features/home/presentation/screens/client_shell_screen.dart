@@ -10,13 +10,13 @@ class ClientShellScreen extends StatefulWidget {
   const ClientShellScreen({
     super.key,
     required this.routesBuilder,
-    required this.trackingBuilder,
+    required this.tripsBuilder,
     required this.profileBuilder,
     required this.notificationsBuilder,
   });
 
   final WidgetBuilder routesBuilder;
-  final WidgetBuilder trackingBuilder;
+  final WidgetBuilder tripsBuilder;
   final WidgetBuilder profileBuilder;
   final WidgetBuilder notificationsBuilder;
 
@@ -49,7 +49,7 @@ class _ClientShellScreenState extends State<ClientShellScreen> {
         ),
       ),
       widget.routesBuilder(context),
-      widget.trackingBuilder(context),
+      widget.tripsBuilder(context),
       widget.profileBuilder(context),
     ];
 
@@ -68,7 +68,7 @@ class _ClientShellScreenState extends State<ClientShellScreen> {
     switch (tab) {
       case 'routes':
         return 1;
-      case 'live':
+      case 'trips':
         return 2;
       case 'profile':
         return 3;
@@ -83,7 +83,7 @@ class _ClientShellScreenState extends State<ClientShellScreen> {
       case 1:
         return 'routes';
       case 2:
-        return 'live';
+        return 'trips';
       case 3:
         return 'profile';
       case 0:

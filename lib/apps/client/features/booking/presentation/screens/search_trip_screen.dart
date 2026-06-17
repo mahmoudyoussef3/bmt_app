@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/search_trip_card.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
-import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
@@ -72,7 +72,9 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
     if (!_query.isComplete) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.booking_selectPickupDestination),
+          content: Text(
+            AppLocalizations.of(context)!.booking_selectPickupDestination,
+          ),
         ),
       );
       return;
@@ -86,8 +88,6 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return BookingFlowScaffold(
       title: AppLocalizations.of(context)!.booking_searchTrip,
       body: ListView(
@@ -137,45 +137,76 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             onSearch: _search,
           ),
           const SizedBox(height: 20),
-          SectionHeader(
+          ClientSectionHeader(
             title: AppLocalizations.of(context)!.booking_otherWaysToSearch,
             subtitle: AppLocalizations.of(context)!.booking_browseOrPickMap,
           ),
           const SizedBox(height: 12),
-          AppSurface(
-            padding: const EdgeInsets.all(4),
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                BookingRoutes.popularRoutes,
-                arguments: _query.toArguments(),
-              );
-            },
-            child: ListTile(
-              leading: Icon(Icons.trending_up_rounded, color: scheme.primary),
-              title: Text(AppLocalizations.of(context)!.booking_popularRoutes),
-              subtitle: Text(AppLocalizations.of(context)!.booking_popularRoutesSubtitle),
-              trailing: const Icon(Icons.chevron_right_rounded),
+          _SearchOptionTile(
+            icon: Icons.trending_up_rounded,
+            iconColor: ClientColors.primary,
+            title: AppLocalizations.of(context)!.booking_popularRoutes,
+            subtitle: AppLocalizations.of(context)!.booking_popularRoutesSubtitle,
+            onTap: () => Navigator.pushNamed(
+              context,
+              BookingRoutes.popularRoutes,
+              arguments: _query.toArguments(),
             ),
           ),
           const SizedBox(height: 10),
-          AppSurface(
-            padding: const EdgeInsets.all(4),
-            onTap: () {
-              Navigator.pushNamed(
-                context,
-                BookingRoutes.mapSelection,
-                arguments: _query.toArguments(),
-              );
-            },
-            child: ListTile(
-              leading: Icon(Icons.map_rounded, color: scheme.secondary),
-              title: Text(AppLocalizations.of(context)!.booking_selectOnMap),
-              subtitle: Text(AppLocalizations.of(context)!.booking_selectOnMapSubtitle),
-              trailing: const Icon(Icons.chevron_right_rounded),
+          _SearchOptionTile(
+            icon: Icons.map_rounded,
+            iconColor: ClientColors.journeySlate,
+            title: AppLocalizations.of(context)!.booking_selectOnMap,
+            subtitle: AppLocalizations.of(context)!.booking_selectOnMapSubtitle,
+            onTap: () => Navigator.pushNamed(
+              context,
+              BookingRoutes.mapSelection,
+              arguments: _query.toArguments(),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _SearchOptionTile extends StatelessWidget {
+  const _SearchOptionTile({
+    required this.icon,
+    required this.iconColor,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color iconColor;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: ClientColors.surfaceFor(context),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(4),
+          decoration: BoxDecoration(
+            border: Border.all(color: ClientColors.borderFor(context)),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: ListTile(
+            leading: Icon(icon, color: iconColor),
+            title: Text(title),
+            subtitle: Text(subtitle),
+            trailing: const Icon(Icons.chevron_right_rounded),
+          ),
+        ),
       ),
     );
   }

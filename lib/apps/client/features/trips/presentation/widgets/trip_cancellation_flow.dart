@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_support_data.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
 
 /// Cancellation reason picker + confirmation dialog (UI only).
 Future<bool> showTripCancellationFlow(
@@ -13,7 +14,7 @@ Future<bool> showTripCancellationFlow(
   final reason = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Theme.of(context).cardColor,
+    backgroundColor: ClientColors.surfaceFor(context),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -32,7 +33,7 @@ Future<bool> showTripCancellationFlow(
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Theme.of(ctx).colorScheme.outline,
+                        color: ClientColors.borderFor(ctx),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -40,13 +41,13 @@ Future<bool> showTripCancellationFlow(
                   const SizedBox(height: 16),
                   Text(
                     'Cancellation reason',
-                    style: Theme.of(ctx).textTheme.displaySmall,
+                    style: ClientTypography.headingMedium(ctx),
                   ),
                   const SizedBox(height: 6),
                   Text(
                     'Trip $tripReference',
-                    style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(ctx).colorScheme.onSurface.withAlpha(170),
+                    style: ClientTypography.bodySmall(ctx).copyWith(
+                      color: ClientColors.textSecondaryFor(ctx),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -54,44 +55,57 @@ Future<bool> showTripCancellationFlow(
                     final selected = selectedReason == r;
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: AppSurface(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        radius: 14,
-                        onTap: () => setModalState(() => selectedReason = r),
-                        border: selected
-                            ? Border.all(
-                                color: Theme.of(ctx).colorScheme.primary,
-                                width: 2,
-                              )
-                            : null,
-                        child: Row(
-                          children: [
-                            Icon(
-                              selected
-                                  ? Icons.radio_button_checked_rounded
-                                  : Icons.radio_button_off_rounded,
-                              color: Theme.of(ctx).colorScheme.primary,
-                              size: 20,
+                      child: Material(
+                        color: selected
+                            ? ClientColors.primaryLight
+                            : ClientColors.surfaceSubtleFor(ctx),
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          onTap: () => setModalState(() => selectedReason = r),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                r,
-                                style: Theme.of(ctx).textTheme.bodyMedium,
-                              ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              border: selected
+                                  ? Border.all(
+                                      color: ClientColors.primary,
+                                      width: 2,
+                                    )
+                                  : Border.all(
+                                      color: ClientColors.borderFor(ctx),
+                                    ),
                             ),
-                          ],
+                            child: Row(
+                              children: [
+                                Icon(
+                                  selected
+                                      ? Icons.radio_button_checked_rounded
+                                      : Icons.radio_button_off_rounded,
+                                  color: ClientColors.primary,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    r,
+                                    style: ClientTypography.bodyMedium(ctx),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     );
                   }),
                   const SizedBox(height: 16),
-                  AppButton(
+                  ClientButton(
                     label: 'Continue',
-                    height: 50,
+                    expand: true,
                     onPressed: () => Navigator.pop(ctx, selectedReason),
                   ),
                 ],
@@ -117,27 +131,27 @@ Future<bool> showTripCancellationFlow(
           Text(
             'Your booking will be cancelled and a refund will be processed '
             'according to policy (demo UI).',
-            style: Theme.of(ctx).textTheme.bodySmall,
+            style: ClientTypography.bodySmall(ctx),
           ),
           const SizedBox(height: 12),
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Theme.of(ctx).colorScheme.surfaceContainerHighest,
+              color: ClientColors.surfaceSubtleFor(ctx),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.info_outline_rounded,
                   size: 18,
-                  color: Theme.of(ctx).colorScheme.primary,
+                  color: ClientColors.primary,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Reason: $reason',
-                    style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
+                    style: ClientTypography.bodySmall(ctx).copyWith(
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -154,6 +168,7 @@ Future<bool> showTripCancellationFlow(
         ),
         FilledButton(
           onPressed: () => Navigator.pop(ctx, true),
+          style: FilledButton.styleFrom(backgroundColor: ClientColors.primary),
           child: const Text('Confirm cancellation'),
         ),
       ],

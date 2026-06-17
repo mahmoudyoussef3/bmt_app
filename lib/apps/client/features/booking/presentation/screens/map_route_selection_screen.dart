@@ -8,7 +8,8 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Map-based pickup and destination selection (static UI, no map SDK).
@@ -213,9 +214,9 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                       subtitle: _destination?.subtitle ?? '',
                     ),
                     const SizedBox(height: 16),
-                    AppButton(
+                    ClientButton(
                       label: AppLocalizations.of(context)!.booking_confirmRoute,
-                      height: 50,
+                      expand: true,
                       onPressed: _continue,
                     ),
                   ],

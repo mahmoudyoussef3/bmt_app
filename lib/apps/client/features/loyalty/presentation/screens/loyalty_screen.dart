@@ -5,7 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/features/loyalty/domain/entities/loyalty_data.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_state.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 // Particle physics for celebration confetti
 class ConfettiParticle {
@@ -159,10 +160,13 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                 ),
               ),
               const SizedBox(height: 14),
-              AppSurface(
-                color: scheme.surfaceContainerHighest.withAlpha(120),
+              Container(
                 padding: const EdgeInsets.all(12),
-                radius: 18,
+                decoration: BoxDecoration(
+                  color: ClientColors.surfaceSubtleFor(context),
+                  borderRadius: BorderRadius.circular(18),
+                  border: Border.all(color: ClientColors.borderFor(context)),
+                ),
                 child: Row(
                   children: [
                     Icon(
@@ -340,8 +344,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
           ),
           actions: [
             Center(
-              child: AppButton(
+              child: ClientButton(
                 label: 'Copy & Close',
+                expand: true,
                 onPressed: () {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -390,9 +395,8 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
               LoyaltyLoading() => const Center(
                 child: CircularProgressIndicator(),
               ),
-              LoyaltyError(:final message) => EmptyState(
-                title: 'Loyalty unavailable',
-                subtitle: message,
+              LoyaltyError(:final message) => ClientErrorCard.fullScreen(
+                message: message,
               ),
               LoyaltyLoaded() => Stack(
                 children: [
@@ -920,8 +924,13 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
       padding: const EdgeInsets.all(20),
       children: [
         // Balance Banner
-        AppCard(
+        Container(
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [

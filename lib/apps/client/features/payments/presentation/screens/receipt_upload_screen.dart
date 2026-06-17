@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_processing_screen.dart';
 
@@ -53,7 +55,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
     });
   }
 
-  void _proceedToPaymentProcessing({required bool simulateFailure}) {
+  void _proceed() {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => PaymentProcessingScreen(
@@ -61,7 +63,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
           paymentMethod: widget.paymentMethod,
           promoCode: widget.promoCode,
           promoDiscount: widget.promoDiscount,
-          simulateFailure: simulateFailure,
+          simulateFailure: false,
         ),
       ),
     );
@@ -69,116 +71,114 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final total = widget.checkoutData.totalForDiscount(widget.promoDiscount);
     final isInstaPay = widget.paymentMethod.type == PaymentMethodType.instapay;
 
     return Scaffold(
+      backgroundColor: ClientColors.surfaceSubtleFor(context),
       appBar: AppBar(
-        title: const Text('Attach receipt'),
+        backgroundColor: ClientColors.surfaceFor(context),
+        title: Text(
+          'Attach Receipt',
+          style: ClientTypography.headingSmall(context).copyWith(
+            color: ClientColors.textPrimaryFor(context),
+          ),
+        ),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
           icon: const Icon(Icons.arrow_back_rounded),
         ),
+        elevation: 0,
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [scheme.surface, scheme.surfaceContainerLowest],
+      body: Column(
+        children: [
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.all(20),
+              children: [
+                _buildInstructionsCard(context, total, isInstaPay),
+                const SizedBox(height: 20),
+                _buildUploadArea(context),
+                const SizedBox(height: 20),
+                if (_receiptFile != null) _buildReceiptReadyBox(context),
+              ],
+            ),
           ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.all(20),
-                  children: [
-                    // Transfer instructions card
-                    _buildInstructionsCard(scheme, total, isInstaPay),
-                    const SizedBox(height: 20),
-
-                    // Dashed upload zone or preview card
-                    _buildUploadArea(scheme),
-                    const SizedBox(height: 20),
-
-                    if (_receiptFile != null) _buildReceiptReadyBox(scheme),
-                  ],
-                ),
-              ),
-
-              // Sticky Bottom CTA Panel
-              _buildStickyBottomPanel(scheme),
-            ],
-          ),
-        ),
+          _buildStickyBottomPanel(context),
+        ],
       ),
     );
   }
 
   Widget _buildInstructionsCard(
-    ColorScheme scheme,
+    BuildContext context,
     int total,
     bool isInstaPay,
   ) {
-    return AppSurface(
-      radius: 24,
+    return Container(
       padding: const EdgeInsets.all(18),
-      color: scheme.surfaceContainerHigh,
-      border: Border.all(color: scheme.outline.withAlpha(55)),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.info_outline_rounded, color: scheme.primary),
+              const Icon(
+                Icons.info_outline_rounded,
+                color: ClientColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
-              const Text(
+              Text(
                 'Transfer Instructions',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style: ClientTypography.headingSmall(context).copyWith(
+                  color: ClientColors.textPrimaryFor(context),
+                ),
               ),
             ],
           ),
-          const Divider(height: 24),
-          const Text(
-            'Please transfer the exact booking amount to the following address and upload the transaction screenshot below:',
-            style: TextStyle(fontSize: 12, height: 1.4),
+          const SizedBox(height: 12),
+          Divider(height: 1, color: ClientColors.borderFor(context)),
+          const SizedBox(height: 12),
+          Text(
+            'Transfer the exact booking amount to the address below and upload the transaction screenshot.',
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
+              height: 1.4,
+            ),
           ),
           const SizedBox(height: 14),
-          _buildInfoRow(
-            'Amount to send:',
-            '$total EGP',
-            isBold: true,
-            color: scheme.primary,
-          ),
+          _buildInfoRow(context, 'Amount to send:', '$total EGP', isBold: true),
           const SizedBox(height: 10),
           if (isInstaPay) ...[
             _buildInfoRow(
+              context,
               'InstaPay IPA:',
               'megatrans@instapay',
               showCopy: true,
-              color: scheme.secondary,
             ),
             const SizedBox(height: 10),
             _buildInfoRow(
+              context,
               'Account Holder:',
               'Mega Transportation Services',
-              color: scheme.onSurface,
             ),
           ] else ...[
             _buildInfoRow(
+              context,
               'Mobile Wallet No:',
               '0100 123 4567',
               showCopy: true,
-              color: scheme.secondary,
             ),
             const SizedBox(height: 10),
             _buildInfoRow(
+              context,
               'Wallet Type:',
               'Vodafone / Orange / Etisalat Cash',
-              color: scheme.onSurface,
             ),
           ],
         ],
@@ -187,26 +187,28 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
   }
 
   Widget _buildInfoRow(
+    BuildContext context,
     String label,
     String value, {
     bool isBold = false,
-    Color? color,
     bool showCopy = false,
   }) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(
+          label,
+          style: ClientTypography.bodySmall(context).copyWith(
+            color: ClientColors.textSecondaryFor(context),
+          ),
+        ),
         Row(
           children: [
             Text(
               value,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isBold || showCopy
-                    ? FontWeight.w900
-                    : FontWeight.bold,
-                color: color,
+              style: ClientTypography.bodySmall(context).copyWith(
+                fontWeight: isBold || showCopy ? FontWeight.w900 : FontWeight.w700,
+                color: isBold ? ClientColors.primary : ClientColors.textPrimaryFor(context),
               ),
             ),
             if (showCopy) ...[
@@ -220,10 +222,10 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                     ),
                   );
                 },
-                child: const Icon(
+                child: Icon(
                   Icons.copy_rounded,
                   size: 14,
-                  color: Colors.grey,
+                  color: ClientColors.textTertiaryFor(context),
                 ),
               ),
             ],
@@ -233,25 +235,27 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
     );
   }
 
-  Widget _buildUploadArea(ColorScheme scheme) {
+  Widget _buildUploadArea(BuildContext context) {
     if (_receiptFile != null) {
-      return AppSurface(
-        radius: 24,
+      return Container(
         padding: const EdgeInsets.all(16),
-        color: scheme.primary.withAlpha(15),
-        border: Border.all(color: scheme.primary.withAlpha(80)),
+        decoration: BoxDecoration(
+          color: ClientColors.primaryLight,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: ClientColors.primaryMuted),
+        ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: scheme.surface,
+                color: ClientColors.surfaceFor(context),
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
+              child: const Icon(
                 Icons.image_outlined,
                 size: 28,
-                color: scheme.primary,
+                color: ClientColors.primary,
               ),
             ),
             const SizedBox(width: 14),
@@ -263,21 +267,25 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                     _receiptName ?? _receiptFile!.path.split('/').last,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
+                    style: ClientTypography.bodySmall(context).copyWith(
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _formatFileSize(_receiptSize ?? _receiptFile!.lengthSync()),
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    style: ClientTypography.labelSmall(context).copyWith(
+                      color: ClientColors.textTertiaryFor(context),
+                    ),
                   ),
                 ],
               ),
             ),
             IconButton(
-              icon: Icon(Icons.delete_outline_rounded, color: scheme.error),
+              icon: const Icon(
+                Icons.delete_outline_rounded,
+                color: ClientColors.journeyRed,
+              ),
               onPressed: _removeReceipt,
             ),
           ],
@@ -285,18 +293,15 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
       );
     }
 
-    // Default upload area with dashed borders
     return GestureDetector(
       onTap: _pickReceipt,
       child: Container(
         height: 180,
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withAlpha(120),
+          color: ClientColors.surfaceMutedFor(context),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: scheme.outline.withAlpha(90),
-            style:
-                BorderStyle.solid, // Simulated dashed border using simple style
+            color: ClientColors.borderFor(context),
             width: 1.5,
           ),
         ),
@@ -306,25 +311,30 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
             children: [
               Container(
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(20),
+                decoration: const BoxDecoration(
+                  color: ClientColors.primaryLight,
                   shape: BoxShape.circle,
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.cloud_upload_outlined,
                   size: 32,
-                  color: scheme.primary,
+                  color: ClientColors.primary,
                 ),
               ),
               const SizedBox(height: 12),
-              const Text(
+              Text(
                 'Upload Receipt Screenshot',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                style: ClientTypography.bodyMedium(context).copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: ClientColors.textPrimaryFor(context),
+                ),
               ),
               const SizedBox(height: 4),
-              const Text(
+              Text(
                 'Tap to select a file (PNG, JPG)',
-                style: TextStyle(color: Colors.grey, fontSize: 11),
+                style: ClientTypography.bodySmall(context).copyWith(
+                  color: ClientColors.textTertiaryFor(context),
+                ),
               ),
             ],
           ),
@@ -333,37 +343,39 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
     );
   }
 
-  Widget _buildReceiptReadyBox(ColorScheme scheme) {
+  Widget _buildReceiptReadyBox(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.green.withAlpha(15),
+        color: ClientColors.journeyGreenLight,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.green.withAlpha(60)),
+        border: Border.all(color: ClientColors.journeyGreen.withAlpha(80)),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle_rounded, color: Colors.green, size: 22),
-          SizedBox(width: 12),
+          const Icon(
+            Icons.check_circle_rounded,
+            color: ClientColors.journeyGreen,
+            size: 22,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Receipt Verification Submitted',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
+                  'Receipt Attached',
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: ClientColors.onJourneyGreen,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'Receipt attached. Submit payment to reserve your selected seat and send the receipt for verification.',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey,
+                  'Submit payment to reserve your selected seat and send the receipt for verification.',
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.onJourneyGreen,
                     height: 1.35,
                   ),
                 ),
@@ -375,15 +387,14 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
     );
   }
 
-  Widget _buildStickyBottomPanel(ColorScheme scheme) {
+  Widget _buildStickyBottomPanel(BuildContext context) {
     final hasReceipt = _receiptFile != null;
-
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
       decoration: BoxDecoration(
-        color: scheme.surface.withAlpha(246),
+        color: ClientColors.surfaceFor(context).withAlpha(246),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(top: BorderSide(color: scheme.outline.withAlpha(40))),
+        border: Border(top: BorderSide(color: ClientColors.borderFor(context))),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(18),
@@ -392,23 +403,13 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
           ),
         ],
       ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: hasReceipt ? 'Submit payment' : 'Attach receipt',
-                  onPressed: hasReceipt
-                      ? () =>
-                            _proceedToPaymentProcessing(simulateFailure: false)
-                      : _pickReceipt,
-                ),
-              ),
-            ],
-          ),
-        ],
+      child: SafeArea(
+        top: false,
+        child: ClientButton(
+          label: hasReceipt ? 'Submit Payment' : 'Attach Receipt',
+          expand: true,
+          onPressed: hasReceipt ? _proceed : _pickReceipt,
+        ),
       ),
     );
   }

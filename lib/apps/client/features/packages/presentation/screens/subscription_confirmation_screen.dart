@@ -2,7 +2,8 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 class SubscriptionConfirmationScreen extends StatefulWidget {
   final String pickup;
@@ -96,17 +97,18 @@ class _SubscriptionConfirmationScreenState
               child: Row(
                 children: [
                   Expanded(
-                    child: AppButton(
+                    child: ClientButton.secondary(
                       label: 'Back to Home',
-                      outline: true,
+                      expand: true,
                       onPressed: () =>
                           Navigator.of(context).popUntil((r) => r.isFirst),
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: AppButton(
+                    child: ClientButton(
                       label: 'Done',
+                      expand: true,
                       onPressed: () =>
                           Navigator.of(context).popUntil((r) => r.isFirst),
                     ),
@@ -194,8 +196,13 @@ class _SubscriptionConfirmationScreenState
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 18),
-          AppSurface(
+          Container(
             padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ClientColors.borderFor(context)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

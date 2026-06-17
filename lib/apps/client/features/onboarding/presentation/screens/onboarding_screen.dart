@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import '../widgets/onboarding_page_content.dart';
 import '../widgets/onboarding_bottom_controls.dart';
@@ -47,15 +48,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background Blobs
           AnimatedBackgroundBlob(
-            color: const Color(0xFF2563EB), // Primary Blue
+            color: ClientColors.primary,
             size: 400,
             initialPosition: Offset(-100, -100),
             animationDuration: const Duration(seconds: 12),
@@ -79,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     child: TextButton(
                       onPressed: _onSkip,
                       style: TextButton.styleFrom(
-                        foregroundColor: theme.colorScheme.onSurfaceVariant,
+                        foregroundColor: ClientColors.textSecondaryFor(context),
                       ),
                       child: const Text('Skip', style: TextStyle(fontWeight: FontWeight.w600)),
                     ),

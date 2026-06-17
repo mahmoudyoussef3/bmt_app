@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_cubit.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_state.dart';
@@ -89,7 +91,6 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final width = MediaQuery.sizeOf(context).width;
     final contentPadding = width < 380 ? 16.0 : 20.0;
 
@@ -115,7 +116,10 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [scheme.surface, scheme.surfaceContainerLowest],
+                colors: [
+                  ClientColors.surfaceFor(context),
+                  ClientColors.surfaceMutedFor(context),
+                ],
               ),
             ),
             child: SafeArea(
@@ -136,21 +140,39 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                             children: [
                               Text(
                                 'Payment',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w900),
+                                style: ClientTypography.headingSmall(context)
+                                    .copyWith(
+                                      color: ClientColors.textPrimaryFor(
+                                        context,
+                                      ),
+                                    ),
                               ),
                               Text(
                                 'Review, choose method, confirm',
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: scheme.secondary,
-                                      fontWeight: FontWeight.w600,
+                                style: ClientTypography.bodySmall(context)
+                                    .copyWith(
+                                      color: ClientColors.textSecondaryFor(
+                                        context,
+                                      ),
                                     ),
                               ),
                             ],
                           ),
                         ),
-                        const StatusChip(label: 'Secure'),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: ClientColors.journeyGreenLight,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: Text(
+                            'Secure',
+                            style: ClientTypography.labelSmall(context).copyWith(
+                              color: ClientColors.journeyGreen,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -180,20 +202,26 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                           ),
                         ),
                         const SizedBox(height: 14),
-                        AppSurface(
-                          radius: 24,
+                        Container(
                           padding: const EdgeInsets.all(18),
-                          color: scheme.surfaceContainerHigh,
-                          border: Border.all(
-                            color: scheme.outline.withAlpha(50),
+                          decoration: BoxDecoration(
+                            color: ClientColors.surfaceFor(context),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: ClientColors.borderFor(context),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Choose payment method',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w900),
+                                style: ClientTypography.headingSmall(context)
+                                    .copyWith(
+                                      color: ClientColors.textPrimaryFor(
+                                        context,
+                                      ),
+                                    ),
                               ),
                               const SizedBox(height: 12),
                               if (checkoutState.methods.isEmpty)
@@ -228,34 +256,45 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                           promoDiscount: checkoutState.promoDiscount,
                           onApply: _applyPromo,
                         ),
-                        AppSurface(
-                          radius: 20,
+                        Container(
                           padding: const EdgeInsets.all(18),
-                          color: scheme.surfaceContainerHigh,
-                          border: Border.all(
-                            color: scheme.outline.withAlpha(50),
+                          decoration: BoxDecoration(
+                            color: ClientColors.surfaceFor(context),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: ClientColors.borderFor(context),
+                            ),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 'Before you pay',
-                                style: Theme.of(context).textTheme.titleMedium
-                                    ?.copyWith(fontWeight: FontWeight.w900),
+                                style: ClientTypography.headingSmall(context)
+                                    .copyWith(
+                                      color: ClientColors.textPrimaryFor(
+                                        context,
+                                      ),
+                                    ),
                               ),
                               const SizedBox(height: 10),
                               Text(
                                 'Your seat is reserved only after confirmation. Please check the route, vehicle, time, seat, and total before continuing.',
-                                style: Theme.of(context).textTheme.bodySmall,
+                                style: ClientTypography.bodySmall(context)
+                                    .copyWith(
+                                      color: ClientColors.textSecondaryFor(
+                                        context,
+                                      ),
+                                    ),
                               ),
                               const SizedBox(height: 12),
                               Wrap(
                                 spacing: 10,
                                 runSpacing: 10,
-                                children: const [
-                                  StatusChip(label: 'Booking details checked'),
-                                  StatusChip(label: 'Secure confirmation'),
-                                  StatusChip(label: 'Support available'),
+                                children: [
+                                  _InfoPill(label: 'Booking details checked'),
+                                  _InfoPill(label: 'Secure confirmation'),
+                                  _InfoPill(label: 'Support available'),
                                 ],
                               ),
                             ],
@@ -268,12 +307,14 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                   Container(
                     padding: const EdgeInsets.fromLTRB(20, 14, 20, 20),
                     decoration: BoxDecoration(
-                      color: scheme.surface.withAlpha(246),
+                      color: ClientColors.surfaceFor(context).withAlpha(246),
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(28),
                       ),
                       border: Border(
-                        top: BorderSide(color: scheme.outline.withAlpha(40)),
+                        top: BorderSide(
+                          color: ClientColors.borderFor(context),
+                        ),
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -288,28 +329,30 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: AppButton(
-                                  label: checkoutState.requiresReceipt
-                                      ? 'Continue to receipt'
-                                      : 'Pay Now • $totalAmount EGP',
-                                  onPressed: () => _onPayPressed(checkoutState),
-                                ),
-                              ),
-                            ],
+                          ClientButton(
+                            label: checkoutState.requiresReceipt
+                                ? 'Continue to receipt'
+                                : 'Pay Now • $totalAmount EGP',
+                            onPressed: () => _onPayPressed(checkoutState),
                           ),
                           const SizedBox(height: 8),
                           if (checkoutState.selectedMethod ==
                               PaymentMethodType.walletBalance)
                             Align(
                               alignment: Alignment.centerRight,
-                              child: StatusChip(
-                                label:
-                                    'Wallet: ${widget.checkoutData.walletBalance} EGP',
-                                color: scheme.secondary.withAlpha(24),
-                                textColor: scheme.secondary,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: ClientColors.primaryLight,
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  'Wallet: ${widget.checkoutData.walletBalance} EGP',
+                                  style: ClientTypography.labelSmall(context).copyWith(
+                                    color: ClientColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
                               ),
                             )
                           else
@@ -318,10 +361,9 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                                   ? 'You will attach a receipt before confirmation.'
                                   : 'You can review the result before leaving checkout.',
                               textAlign: TextAlign.center,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: scheme.onSurface.withAlpha(145),
-                                    fontWeight: FontWeight.w600,
+                              style: ClientTypography.bodySmall(context)
+                                  .copyWith(
+                                    color: ClientColors.textTertiaryFor(context),
                                   ),
                             ),
                         ],
@@ -343,28 +385,33 @@ class _PaymentLoadingScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: SafeArea(
         child: Center(
-          child: AppSurface(
-            radius: 22,
+          child: Container(
             padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(color: ClientColors.borderFor(context)),
+            ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(color: scheme.primary),
+                const CircularProgressIndicator(color: ClientColors.primary),
                 const SizedBox(height: 16),
                 Text(
                   'Preparing secure payment',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
+                  style: ClientTypography.headingSmall(context).copyWith(
+                    color: ClientColors.textPrimaryFor(context),
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Loading available methods and checking your booking.',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
+                  ),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -384,34 +431,42 @@ class _PaymentErrorScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       body: SafeArea(
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(20),
-            child: AppSurface(
-              radius: 22,
+            child: Container(
               padding: const EdgeInsets.all(22),
+              decoration: BoxDecoration(
+                color: ClientColors.surfaceFor(context),
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: ClientColors.borderFor(context)),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.error_outline_rounded, color: scheme.error),
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    color: ClientColors.journeyRed,
+                  ),
                   const SizedBox(height: 12),
                   Text(
                     'Payment methods unavailable',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
+                    style: ClientTypography.headingSmall(context).copyWith(
+                      color: ClientColors.textPrimaryFor(context),
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     message,
                     textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: ClientTypography.bodySmall(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context),
+                    ),
                   ),
                   const SizedBox(height: 14),
-                  AppButton(label: 'Try again', onPressed: onRetry),
+                  ClientButton(label: 'Try again', onPressed: onRetry),
                 ],
               ),
             ),
@@ -429,21 +484,25 @@ class _ValidationBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppSurface(
-      radius: 18,
+    return Container(
       padding: const EdgeInsets.all(14),
-      color: scheme.errorContainer.withAlpha(70),
-      border: Border.all(color: scheme.error.withAlpha(55)),
+      decoration: BoxDecoration(
+        color: ClientColors.journeyRedLight.withAlpha(70),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ClientColors.journeyRed.withAlpha(55)),
+      ),
       child: Row(
         children: [
-          Icon(Icons.info_outline_rounded, color: scheme.error),
+          const Icon(
+            Icons.info_outline_rounded,
+            color: ClientColors.journeyRed,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Complete missing details before payment: ${missing.join(', ')}.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onErrorContainer,
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: ClientColors.onJourneyRed,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -459,25 +518,53 @@ class _NoPaymentMethodsState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(80),
+        color: ClientColors.surfaceMutedFor(context),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outline.withAlpha(55)),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Row(
         children: [
-          Icon(Icons.payments_outlined, color: scheme.onSurfaceVariant),
+          Icon(
+            Icons.payments_outlined,
+            color: ClientColors.textSecondaryFor(context),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'No payment methods are currently enabled. Please try again later or contact support.',
-              style: Theme.of(context).textTheme.bodySmall,
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
+              ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _InfoPill extends StatelessWidget {
+  const _InfoPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceSubtleFor(context),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
+      child: Text(
+        label,
+        style: ClientTypography.labelSmall(context).copyWith(
+          color: ClientColors.textSecondaryFor(context),
+        ),
       ),
     );
   }

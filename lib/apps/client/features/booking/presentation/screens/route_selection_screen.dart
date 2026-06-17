@@ -8,8 +8,9 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
-import 'package:bmt_app/core/theme/text_themes.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 /// Route details and decision screen for the current search.
 class RouteSelectionScreen extends StatefulWidget {
@@ -67,11 +68,11 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
           bottomBar: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: AppButton(
+              child: ClientButton(
                 label: selectedRoute == null
                     ? 'Select route'
                     : 'Continue with this route',
-                height: 52,
+                expand: true,
                 onPressed: selectedRoute == null ? () {} : _continueToVehicles,
               ),
             ),
@@ -201,9 +202,13 @@ class _RouteOverviewCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return AppSurface(
-      radius: 18,
+    return Container(
       padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -213,10 +218,10 @@ class _RouteOverviewCard extends StatelessWidget {
                 width: 46,
                 height: 46,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(22),
+                  color: ClientColors.primaryLight,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: Icon(Icons.route_rounded, color: scheme.primary),
+                child: const Icon(Icons.route_rounded, color: ClientColors.primary),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -345,9 +350,13 @@ class _RouteTimelineCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return AppSurface(
-      radius: 18,
+    return Container(
       padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -516,9 +525,13 @@ class _PricingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return AppSurface(
-      radius: 18,
+    return Container(
       padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -572,7 +585,7 @@ class _PriceBlock extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: highlighted
-              ? AppTextThemes.priceEmphasis(scheme).copyWith(fontSize: 21)
+              ? ClientTypography.priceMedium(context).copyWith(fontSize: 21)
               : Theme.of(
                   context,
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
@@ -595,9 +608,13 @@ class _AvailableTripsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppSurface(
-      radius: 18,
+    return Container(
       padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -745,33 +762,49 @@ class _AlternativeRoutesSection extends StatelessWidget {
         ...alternatives.map(
           (route) => Padding(
             padding: const EdgeInsets.only(bottom: 10),
-            child: AppSurface(
-              radius: 14,
-              padding: const EdgeInsets.all(14),
-              onTap: () => onSelectRoute(route),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          route.routeName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '${route.duration} · ${route.startingPrice}',
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
+            child: Material(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(14),
+              child: InkWell(
+                onTap: () => onSelectRoute(route),
+                borderRadius: BorderRadius.circular(14),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: ClientColors.borderFor(context)),
                   ),
-                  const Icon(Icons.chevron_right_rounded),
-                ],
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              route.routeName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: ClientTypography.bodyMedium(context).copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              '${route.duration} · ${route.startingPrice}',
+                              style: ClientTypography.bodySmall(context).copyWith(
+                                color: ClientColors.textSecondaryFor(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(
+                        Icons.chevron_right_rounded,
+                        color: ClientColors.textTertiaryFor(context),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -841,15 +874,15 @@ class _RouteDetailsLoading extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       children: [
-        const SkeletonBox(height: 30, width: 220),
+        const ClientSkeleton(height: 30, width: 220),
         const SizedBox(height: 14),
-        SkeletonBox(height: 176, borderRadius: BorderRadius.circular(18)),
+        ClientSkeleton(height: 176, borderRadius: 18),
         const SizedBox(height: 14),
-        SkeletonBox(height: 220, borderRadius: BorderRadius.circular(18)),
+        ClientSkeleton(height: 220, borderRadius: 18),
         const SizedBox(height: 14),
-        SkeletonBox(height: 100, borderRadius: BorderRadius.circular(18)),
+        ClientSkeleton(height: 100, borderRadius: 18),
         const SizedBox(height: 14),
-        SkeletonBox(height: 190, borderRadius: BorderRadius.circular(18)),
+        ClientSkeleton(height: 190, borderRadius: 18),
       ],
     );
   }

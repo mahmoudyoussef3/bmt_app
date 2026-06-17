@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 /// Boarding QR placeholder (UI only).
 class TripQrCard extends StatelessWidget {
@@ -10,24 +11,26 @@ class TripQrCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(20),
-      radius: 22,
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: [
           Text(
             'Boarding pass',
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
+            style: ClientTypography.bodyMedium(context).copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 4),
           Text(
             reference,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurface.withAlpha(170),
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
               letterSpacing: 0.8,
             ),
           ),
@@ -38,15 +41,17 @@ class TripQrCard extends StatelessWidget {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: scheme.outline.withAlpha(80)),
+              border: Border.all(color: ClientColors.borderFor(context)),
             ),
             child: CustomPaint(
-              painter: _QrPlaceholderPainter(color: scheme.onSurface),
+              painter: _QrPlaceholderPainter(
+                color: ClientColors.textPrimaryFor(context),
+              ),
               child: Center(
                 child: Icon(
                   Icons.qr_code_2_rounded,
                   size: 48,
-                  color: scheme.onSurface.withAlpha(200),
+                  color: ClientColors.textSecondaryFor(context),
                 ),
               ),
             ),
@@ -54,8 +59,8 @@ class TripQrCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Show this code when boarding',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurface.withAlpha(160),
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
             ),
           ),
         ],

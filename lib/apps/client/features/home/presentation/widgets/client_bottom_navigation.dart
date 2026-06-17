@@ -18,7 +18,7 @@ class ClientBottomNavigation extends StatelessWidget {
     final tabs = <({String id, String label, IconData icon})>[
       (id: 'home', label: 'Home', icon: Icons.home_rounded),
       (id: 'routes', label: 'Routes', icon: Icons.route_rounded),
-      (id: 'live', label: 'Live Trip', icon: Icons.near_me_rounded),
+      (id: 'trips', label: 'My Trips', icon: Icons.receipt_long_rounded),
       (id: 'profile', label: 'Profile', icon: Icons.person_rounded),
     ];
 

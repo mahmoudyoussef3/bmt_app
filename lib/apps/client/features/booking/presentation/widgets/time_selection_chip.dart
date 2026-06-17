@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 class TimeSelectionChip extends StatelessWidget {
   final String time;
@@ -15,27 +16,42 @@ class TimeSelectionChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return AppSurface(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-      radius: 12,
-      border: active
-          ? Border.all(color: cs.primary, width: 2)
-          : Border.all(color: cs.outline.withAlpha(80)),
+    return Material(
+      color: active ? ClientColors.primaryLight : ClientColors.surfaceFor(context),
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.schedule_rounded, size: 18, color: cs.onSurface),
-            const SizedBox(width: 8),
-            Text(
-              time,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ],
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(12),
+            border: active
+                ? Border.all(color: ClientColors.primary, width: 2)
+                : Border.all(color: ClientColors.borderFor(context)),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                Icons.schedule_rounded,
+                size: 18,
+                color: active
+                    ? ClientColors.primary
+                    : ClientColors.textSecondaryFor(context),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                time,
+                style: ClientTypography.bodyMedium(context).copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: active
+                      ? ClientColors.primary
+                      : ClientColors.textPrimaryFor(context),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

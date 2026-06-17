@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/theme/text_themes.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 /// Premium booking summary before continue (UI only).
 class SeatBookingSummaryPanel extends StatelessWidget {
@@ -25,31 +25,23 @@ class SeatBookingSummaryPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final hasSelection = selectedSeat != null;
 
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Booking summary',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              /*
-              if (onPassengerDetailsTap != null && hasSelection)
-                TextButton(
-                  onPressed: onPassengerDetailsTap,
-                  child: const Text('Passenger details'),
-                ),
-                */
-            ],
+          Text(
+            'Booking summary',
+            style: ClientTypography.bodyMedium(context).copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
           const SizedBox(height: 12),
           _SummaryRow(label: 'Vehicle', value: vehicleName),
@@ -60,7 +52,7 @@ class SeatBookingSummaryPanel extends StatelessWidget {
             emphasized: hasSelection,
           ),
           const SizedBox(height: 10),
-          const AppSeparator(),
+          Divider(color: ClientColors.borderFor(context)),
           const SizedBox(height: 10),
           _SummaryRow(
             label: 'Price per seat',
@@ -72,13 +64,15 @@ class SeatBookingSummaryPanel extends StatelessWidget {
             children: [
               Text(
                 'Total amount',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                style: ClientTypography.bodyMedium(context).copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               Text(
                 'EGP ${total.toStringAsFixed(2)}',
-                style: AppTextThemes.priceEmphasis(scheme),
+                style: ClientTypography.priceMedium(context).copyWith(
+                  color: ClientColors.primary,
+                ),
               ),
             ],
           ),
@@ -108,17 +102,20 @@ class _SummaryRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 110,
-            child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+            child: Text(
+              label,
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
+              ),
+            ),
           ),
           Expanded(
             child: Text(
               value,
               textAlign: TextAlign.end,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              style: ClientTypography.bodySmall(context).copyWith(
                 fontWeight: emphasized ? FontWeight.w800 : FontWeight.w600,
-                color: emphasized
-                    ? Theme.of(context).colorScheme.primary
-                    : null,
+                color: emphasized ? ClientColors.primary : null,
               ),
             ),
           ),

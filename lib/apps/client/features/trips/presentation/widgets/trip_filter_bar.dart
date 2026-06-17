@@ -1,5 +1,5 @@
-import 'package:bmt_app/core/theme/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 
 class TripFilterBar extends StatelessWidget {
@@ -16,8 +16,6 @@ class TripFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -33,12 +31,13 @@ class TripFilterBar extends StatelessWidget {
               ),
               selected: active,
               onSelected: (_) => onSelected(filter),
-              selectedColor: scheme.primary,
-              checkmarkColor: AppColors.accentForeground,
+              selectedColor: ClientColors.primary,
+              checkmarkColor: ClientColors.textInverse,
               side: BorderSide(
-                color: active ? scheme.primary : scheme.outline.withAlpha(120),
+                color: active ? ClientColors.primary : ClientColors.borderFor(context),
               ),
               labelStyle: TextStyle(
+                color: active ? ClientColors.textInverse : ClientColors.textPrimaryFor(context),
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
               ),
             ),

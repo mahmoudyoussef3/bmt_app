@@ -9,7 +9,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/popular_route_list_card.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 /// Full list of routes for quick client discovery.
 class PopularRoutesScreen extends StatefulWidget {
@@ -667,20 +667,17 @@ class _RoutesLoadingSkeleton extends StatelessWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SkeletonBox(height: 30, width: 220),
+              const ClientSkeleton(height: 30, width: 220),
               const SizedBox(height: 10),
-              const SkeletonBox(height: 18, width: 280),
+              const ClientSkeleton(height: 18, width: 280),
               const SizedBox(height: 16),
-              SkeletonBox(height: 54, borderRadius: BorderRadius.circular(16)),
+              ClientSkeleton(height: 54, borderRadius: 16),
               const SizedBox(height: 12),
-              SkeletonBox(height: 48, borderRadius: BorderRadius.circular(12)),
+              ClientSkeleton(height: 48, borderRadius: 12),
             ],
           );
         }
-        return SkeletonBox(
-          height: 292,
-          borderRadius: BorderRadius.circular(18),
-        );
+        return ClientSkeleton(height: 292, borderRadius: 18);
       },
     );
   }

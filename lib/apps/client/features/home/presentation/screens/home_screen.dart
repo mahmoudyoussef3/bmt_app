@@ -11,8 +11,10 @@ import 'package:bmt_app/core/localization/failure_l10n_ext.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/app_dialogs.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
-import 'package:bmt_app/core/widgets/skeleton.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -54,10 +56,9 @@ class _HomeScreenState extends State<HomeScreen> {
             onOpenNotifications: widget.onOpenNotifications,
             onOpenSearch: _openSearch,
           ),
-          HomeError(:final failure) => EmptyState(
-            title: 'Home is unavailable',
-            subtitle: failure.localizedMessage(context),
-            emoji: '',
+          HomeError(:final failure) => ClientErrorCard.fullScreen(
+            message: failure.localizedMessage(context),
+            onRetry: () => context.read<HomeCubit>().load(),
           ),
           HomeLoading() => const _HomeLoadingSkeleton(),
         };
@@ -202,10 +203,8 @@ class _WelcomeSection extends StatelessWidget {
             children: [
               Text(
                 'Hi $firstName',
-                style: AppTypography.display(scheme).copyWith(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w900,
-                  height: 1.05,
+                style: ClientTypography.headingLarge(context).copyWith(
+                  color: ClientColors.textPrimaryFor(context),
                 ),
               ),
               const SizedBox(height: 8),
@@ -819,17 +818,17 @@ class _HomeLoadingSkeleton extends StatelessWidget {
         child: ListView(
           padding: const EdgeInsets.all(AppLayout.spaceLg),
           children: [
-            const SkeletonBox(height: 32, width: 180),
+            const ClientSkeleton(height: 32, width: 180, borderRadius: 8),
             const SizedBox(height: 10),
-            const SkeletonBox(height: 18, width: 260),
+            const ClientSkeleton(height: 18, width: 260, borderRadius: 8),
             const SizedBox(height: 22),
-            SkeletonBox(height: 210, borderRadius: BorderRadius.circular(18)),
+            const ClientSkeleton(height: 210, borderRadius: 18),
             const SizedBox(height: 26),
-            const SkeletonBox(height: 24, width: 150),
+            const ClientSkeleton(height: 24, width: 150, borderRadius: 8),
             const SizedBox(height: 12),
-            SkeletonBox(height: 204, borderRadius: BorderRadius.circular(18)),
+            const ClientSkeleton(height: 204, borderRadius: 18),
             const SizedBox(height: 18),
-            SkeletonBox(height: 178, borderRadius: BorderRadius.circular(18)),
+            const ClientSkeleton(height: 178, borderRadius: 18),
           ],
         ),
       ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 class SupportCategoryCard extends StatelessWidget {
   const SupportCategoryCard({
@@ -27,22 +29,26 @@ class SupportCategoryCard extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: ClientColors.surfaceFor(context),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          border: Border.all(color: ClientColors.borderFor(context)),
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(_getIconForCategory(title), color: Theme.of(context).primaryColor, size: 20),
+            Icon(
+              _getIconForCategory(title),
+              color: ClientColors.primary,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Flexible(
               child: Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.black87,
+                style: ClientTypography.bodySmall(context).copyWith(
+                  fontWeight: FontWeight.w600,
+                  color: ClientColors.textPrimaryFor(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,

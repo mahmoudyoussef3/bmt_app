@@ -5,7 +5,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_state.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -126,9 +127,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
     if (state is PackagesError) {
       return Center(
-        child: EmptyState(
-          title: 'Packages unavailable',
-          subtitle: state.message,
+        child: ClientErrorCard.fullScreen(
+          message: state.message,
         ),
       );
     }
@@ -501,8 +501,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 ),
               ),
               const SizedBox(height: 10),
-              AppCard(
+              Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: ClientColors.surfaceFor(context),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ClientColors.borderFor(context)),
+                ),
                 child: Column(
                   children: [
                     _buildRowDetailText(
@@ -538,8 +543,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 ),
               ),
               const SizedBox(height: 10),
-              AppCard(
+              Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: ClientColors.surfaceFor(context),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ClientColors.borderFor(context)),
+                ),
                 child: Text(
                   '${AppLocalizations.of(context)!.packages_termsText1}\n'
                   '${AppLocalizations.of(context)!.packages_termsText2}\n'
@@ -597,7 +607,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   fontWeight: FontWeight.w900,
                 ),
               ),
-              StatusChip(label: package.durationLabel),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: ClientColors.primaryLight,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  package.durationLabel,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    color: ClientColors.primary,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -1008,8 +1032,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   Widget _buildSeatMapGrid(PackagesLoaded loaded, ColorScheme scheme) {
     // 5 Rows of seats. Standard 4 seats per row (2-gap-2 layout)
     final rows = 5;
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: [
           // Frontend Driver indicator
@@ -1227,8 +1256,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             Row(
               children: [
                 Expanded(
-                  child: AppButton(
+                  child: ClientButton(
                     label: 'Continue to Summary',
+                    expand: true,
                     onPressed: loaded.selectedSeats.isEmpty
                         ? () {
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -1268,8 +1298,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             padding: const EdgeInsets.all(20),
             children: [
               // Booking Review Summary Card
-              AppCard(
+              Container(
                 padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: ClientColors.surfaceFor(context),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ClientColors.borderFor(context)),
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1347,8 +1382,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 ),
               ),
               const SizedBox(height: 10),
-              AppCard(
+              Container(
                 padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: ClientColors.surfaceFor(context),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ClientColors.borderFor(context)),
+                ),
                 child: Column(
                   children: [
                     _buildPricingRow(
@@ -1547,11 +1587,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           const SizedBox(height: 24),
 
           // Subscription ticket receipt summary
-          AppSurface(
-            radius: 24,
+          Container(
             padding: const EdgeInsets.all(20),
-            color: scheme.surface,
-            border: Border.all(color: scheme.outline.withAlpha(50)),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: ClientColors.borderFor(context)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -1645,8 +1687,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           Row(
             children: [
               Expanded(
-                child: AppButton(
+                child: ClientButton(
                   label: 'Back to Home',
+                  expand: true,
                   onPressed: () {
                     Navigator.of(context).popUntil((route) => route.isFirst);
                   },
@@ -1694,7 +1737,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         child: Row(
           children: [
             Expanded(
-              child: AppButton(label: label, onPressed: onPressed),
+              child: ClientButton(label: label, expand: true, onPressed: onPressed),
             ),
           ],
         ),
@@ -1704,11 +1747,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
   Widget _buildActivationLoader(ColorScheme scheme) {
     return Center(
-      child: AppSurface(
-        radius: 28,
+      child: Container(
         padding: const EdgeInsets.all(24),
-        color: scheme.surfaceContainerHigh,
-        border: Border.all(color: scheme.outline.withAlpha(50)),
+        decoration: BoxDecoration(
+          color: ClientColors.surfaceFor(context),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: ClientColors.borderFor(context)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

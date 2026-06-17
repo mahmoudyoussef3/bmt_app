@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/vehicle_detail.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_cubit.dart';
@@ -8,7 +11,6 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_compare_card.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Trip and vehicle selection screen.
@@ -164,22 +166,25 @@ class _CompactHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         children: [
           Container(
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: scheme.primary.withAlpha(22),
+              color: ClientColors.primaryLight,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
+            child: const Icon(
               Icons.directions_bus_filled_rounded,
-              color: scheme.primary,
+              color: ClientColors.primary,
               size: 22,
             ),
           ),
@@ -190,16 +195,15 @@ class _CompactHeader extends StatelessWidget {
               children: [
                 Text(
                   'Available trips',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                  style: ClientTypography.headingSmall(context).copyWith(
+                    color: ClientColors.textPrimaryFor(context),
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   '$vehiclesCount trip options with assigned vehicles',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurface.withAlpha(150),
-                    fontWeight: FontWeight.w600,
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
                   ),
                 ),
               ],
@@ -260,8 +264,6 @@ class _SortChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(999),
@@ -269,10 +271,10 @@ class _SortChip extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? scheme.primary.withAlpha(26) : scheme.surface,
+          color: active ? ClientColors.primaryLight : ClientColors.surfaceFor(context),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: active ? scheme.primary.withAlpha(120) : scheme.outline,
+            color: active ? ClientColors.primaryMuted : ClientColors.borderFor(context),
           ),
         ),
         child: Row(
@@ -281,13 +283,17 @@ class _SortChip extends StatelessWidget {
             Icon(
               icon,
               size: 16,
-              color: active ? scheme.primary : scheme.onSurface.withAlpha(160),
+              color: active
+                  ? ClientColors.primary
+                  : ClientColors.textTertiaryFor(context),
             ),
             const SizedBox(width: 6),
             Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: active ? scheme.primary : scheme.onSurface,
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: active
+                    ? ClientColors.primary
+                    : ClientColors.textPrimaryFor(context),
                 fontWeight: active ? FontWeight.w900 : FontWeight.w700,
               ),
             ),
@@ -306,8 +312,6 @@ class _VehicleItemShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       curve: Curves.easeOutCubic,
@@ -315,7 +319,7 @@ class _VehicleItemShell extends StatelessWidget {
       decoration: selected
           ? BoxDecoration(
               borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: scheme.primary, width: 1.6),
+              border: Border.all(color: ClientColors.primary, width: 1.6),
             )
           : null,
       child: child,
@@ -334,14 +338,15 @@ class _BookingLoadingState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const CircularProgressIndicator(),
+            const CircularProgressIndicator(color: ClientColors.primary),
             const SizedBox(height: 14),
             Text(
               AppLocalizations.of(context)!.booking_searchingBestOptions,
               textAlign: TextAlign.center,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+              style: ClientTypography.bodyMedium(context).copyWith(
+                fontWeight: FontWeight.w700,
+                color: ClientColors.textPrimaryFor(context),
+              ),
             ),
           ],
         ),
@@ -358,38 +363,43 @@ class _BookingErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: AppSurface(
+        child: Container(
           padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline_rounded, color: scheme.error, size: 44),
+              const Icon(
+                Icons.error_outline_rounded,
+                color: ClientColors.journeyRed,
+                size: 44,
+              ),
               const SizedBox(height: 12),
               Text(
                 AppLocalizations.of(context)!.booking_errorLoadingVehicles,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                style: ClientTypography.headingSmall(context),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(height: 1.6),
+                style: ClientTypography.bodyMedium(context).copyWith(
+                  color: ClientColors.textSecondaryFor(context),
+                ),
               ),
               const SizedBox(height: 14),
-              FilledButton.icon(
+              ClientButton(
+                label: AppLocalizations.of(context)!.common_tryAgain,
                 onPressed: onRetry,
-                icon: const Icon(Icons.refresh_rounded),
-                label: Text(AppLocalizations.of(context)!.common_tryAgain),
+                icon: const Icon(Icons.refresh_rounded, size: 18),
               ),
             ],
           ),
@@ -406,42 +416,43 @@ class _BookingEmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: AppSurface(
+        child: Container(
           padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.directions_bus_outlined,
-                color: scheme.primary,
+                color: ClientColors.primary,
                 size: 46,
               ),
               const SizedBox(height: 12),
               Text(
                 AppLocalizations.of(context)!.booking_noVehiclesAvailable,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                style: ClientTypography.headingSmall(context),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 AppLocalizations.of(context)!.booking_noVehiclesDesc,
                 textAlign: TextAlign.center,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(height: 1.6),
+                style: ClientTypography.bodyMedium(context).copyWith(
+                  color: ClientColors.textSecondaryFor(context),
+                ),
               ),
               const SizedBox(height: 14),
-              FilledButton.icon(
+              ClientButton(
+                label: AppLocalizations.of(context)!.booking_searchAgain,
                 onPressed: () => Navigator.of(context).pop(),
-                icon: const Icon(Icons.search_rounded),
-                label: Text(AppLocalizations.of(context)!.booking_searchAgain),
+                icon: const Icon(Icons.search_rounded, size: 18),
               ),
             ],
           ),

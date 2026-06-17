@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 class VehicleCard extends StatelessWidget {
   final String id;
@@ -21,10 +22,15 @@ class VehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppSurface(
+    final isFull = seatsLeft <= 0;
+
+    return Container(
       padding: const EdgeInsets.all(14),
-      color: scheme.surfaceContainerHighest,
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceSubtleFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -36,33 +42,50 @@ class VehicleCard extends StatelessWidget {
                 children: [
                   Text(
                     'Vehicle $id',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    style: ClientTypography.bodyMedium(context).copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
                     driver,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface.withAlpha(160),
+                    style: ClientTypography.bodySmall(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context),
                     ),
                   ),
                 ],
               ),
-              StatusChip(label: seatsLeft > 0 ? 'Available' : 'Full'),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: isFull
+                      ? ClientColors.journeyRedLight
+                      : ClientColors.journeyGreenLight,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Text(
+                  isFull ? 'Full' : 'Available',
+                  style: ClientTypography.labelSmall(context).copyWith(
+                    color: isFull
+                        ? ClientColors.onJourneyRed
+                        : ClientColors.onJourneyGreen,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.schedule_rounded, size: 16, color: scheme.primary),
+              Icon(Icons.schedule_rounded, size: 16, color: ClientColors.primary),
               const SizedBox(width: 6),
-              Text(time, style: Theme.of(context).textTheme.bodySmall),
+              Text(time, style: ClientTypography.bodySmall(context)),
               const SizedBox(width: 14),
-              Icon(Icons.event_seat_rounded, size: 16, color: scheme.primary),
+              Icon(Icons.event_seat_rounded, size: 16, color: ClientColors.primary),
               const SizedBox(width: 6),
               Text(
                 '$seatsLeft seats left',
-                style: Theme.of(context).textTheme.bodySmall,
+                style: ClientTypography.bodySmall(context),
               ),
             ],
           ),
@@ -70,24 +93,36 @@ class VehicleCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Occupancy',
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
-                  const SizedBox(height: 6),
-                  AppProgressBar(progress: occupancy),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Occupancy',
+                      style: ClientTypography.bodySmall(context).copyWith(
+                        color: ClientColors.textSecondaryFor(context),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: LinearProgressIndicator(
+                        value: occupancy.clamp(0, 1),
+                        minHeight: 8,
+                        backgroundColor: ClientColors.surfaceMutedFor(context),
+                        valueColor: AlwaysStoppedAnimation<Color>(ClientColors.primary),
+                      ),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 16),
               ElevatedButton(
                 onPressed: onBook,
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 12,
-                  ),
+                  backgroundColor: ClientColors.primary,
+                  foregroundColor: ClientColors.textInverse,
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

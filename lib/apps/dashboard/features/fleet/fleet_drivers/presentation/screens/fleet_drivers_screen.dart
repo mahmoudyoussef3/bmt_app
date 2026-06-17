@@ -10,8 +10,11 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_driver_form_view.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
+import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/async_state_view.dart';
 
 enum _DriversViewState { list, details, form }
 
@@ -39,6 +42,7 @@ class FleetDriversScreen extends StatefulWidget {
 class _FleetDriversScreenState extends State<FleetDriversScreen> {
   _DriversViewState _viewState = _DriversViewState.list;
   FleetDriver? _activeDriver;
+  FleetDriver? _selectedDriver;
   int _page = 0;
   final int _pageSize = 8;
   FleetSortField _sortField = FleetSortField.name;
@@ -89,6 +93,27 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     }).toList();
   }
 
+  /// Sets the sort field; tapping the active field flips direction.
+  void _applySort(FleetSortField field) {
+    setState(() {
+      if (_sortField == field) {
+        _sortAscending = !_sortAscending;
+      } else {
+        _sortField = field;
+        _sortAscending = true;
+      }
+    });
+  }
+
+  /// Opens a driver: side-by-side detail pane on desktop, full screen on narrow.
+  void _openDriver(FleetDriver driver, bool isSplit) {
+    if (isSplit) {
+      setState(() => _selectedDriver = driver);
+    } else {
+      _setView(_DriversViewState.details, driver);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final overviewState = context.watch<FleetOverviewCubit>().state;
@@ -100,112 +125,146 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
 
     return BlocBuilder<FleetDriversCubit, FleetDriversState>(
       builder: (context, state) {
-        if (state is FleetDriversLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
+        final status = switch (state) {
+          FleetDriversLoading() => AsyncViewStatus.loading,
+          FleetDriversError() => AsyncViewStatus.error,
+          FleetDriversLoaded() => AsyncViewStatus.data,
+        };
 
-        if (state is FleetDriversError) {
-          return Center(
-            child: AppCard(
-              padding: const EdgeInsets.all(AppSpacing.large),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    state.message,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  FilledButton(
-                    onPressed: () => context.read<FleetDriversCubit>().load(),
-                    child: const Text('إعادة المحاولة'),
-                  ),
-                ],
-              ),
-            ),
-          );
-        }
+        return AsyncStateView(
+          status: status,
+          errorMessage: state is FleetDriversError
+              ? state.message
+              : 'تعذّر تحميل بيانات السائقين',
+          onRetry: () => context.read<FleetDriversCubit>().load(),
+          child: state is FleetDriversLoaded
+              ? _buildLoaded(context, state, workspace)
+              : const SizedBox.shrink(),
+        );
+      },
+    );
+  }
 
-        if (state is FleetDriversLoaded) {
-          final cubit = context.read<FleetDriversCubit>();
-          final workspaceDrivers = _applyOperationsFilter(
-            state.filteredDrivers,
-            workspace,
-          );
-          final sorted = _sortDrivers(workspaceDrivers);
+  Widget _buildLoaded(
+    BuildContext context,
+    FleetDriversLoaded state,
+    FleetWorkspace workspace,
+  ) {
+    final cubit = context.read<FleetDriversCubit>();
 
-          switch (_viewState) {
-            case _DriversViewState.details:
-              if (_activeDriver == null) {
-                return const Text('حدث خطأ في عرض تفاصيل السائق');
-              }
-              // Find latest driver state from workspace/state
-              final updatedDriver = state.drivers.firstWhere(
-                (d) => d.id == _activeDriver!.id,
-                orElse: () => _activeDriver!,
-              );
-              return FleetDriverDetailsView(
-                driver: updatedDriver,
-                workspace: workspace,
-                onBack: () => _setView(_DriversViewState.list),
-                onEdit: () => _setView(_DriversViewState.form, updatedDriver),
-              );
-
-            case _DriversViewState.form:
-              return FleetDriverFormView(
-                driver: _activeDriver,
-                workspace: workspace,
-                onBack: () => _setView(_DriversViewState.list),
-                onSave: (savedDriver) async {
-                  await cubit.saveDriver(savedDriver);
-                  // Refresh workspace as well
-                  if (context.mounted) {
-                    await context.read<FleetOverviewCubit>().loadWorkspace();
-                    _setView(_DriversViewState.list);
-                  }
-                },
-              );
-
-            case _DriversViewState.list:
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildToolbar(context, state, cubit, workspace),
-                  const SizedBox(height: AppSpacing.medium),
-                  LayoutBuilder(
-                    builder: (context, constraints) {
-                      final isMobile = constraints.maxWidth < 800;
-                      if (isMobile) {
-                        return FleetDriversCardList(
-                          drivers: sorted,
-                          workspace: workspace,
-                          onViewDetails: (d) =>
-                              _setView(_DriversViewState.details, d),
-                          onEdit: (d) => _setView(_DriversViewState.form, d),
-                          page: _page,
-                          pageSize: _pageSize,
-                        );
-                      } else {
-                        return FleetDriversTable(
-                          drivers: sorted,
-                          workspace: workspace,
-                          onView: (d) => _setView(_DriversViewState.details, d),
-                          onEdit: (d) => _setView(_DriversViewState.form, d),
-                          selectedIds: state.selectedIds,
-                          page: _page,
-                          pageSize: _pageSize,
-                          onPageChanged: (newPage) =>
-                              setState(() => _page = newPage),
-                        );
-                      }
-                    },
-                  ),
-                ],
-              );
+    // The add/edit wizard takes over the full width in every breakpoint.
+    if (_viewState == _DriversViewState.form) {
+      return FleetDriverFormView(
+        driver: _activeDriver,
+        workspace: workspace,
+        onBack: () => _setView(_DriversViewState.list),
+        onSave: (savedDriver) async {
+          await cubit.saveDriver(savedDriver);
+          if (context.mounted) {
+            await context.read<FleetOverviewCubit>().loadWorkspace();
+            _setView(_DriversViewState.list);
           }
+        },
+      );
+    }
+
+    final sorted = _sortDrivers(
+      _applyOperationsFilter(state.filteredDrivers, workspace),
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isSplit = constraints.maxWidth >= AppLayout.breakpointTablet;
+
+        // Narrow screens push a full-screen detail view (legacy behaviour).
+        if (!isSplit &&
+            _viewState == _DriversViewState.details &&
+            _activeDriver != null) {
+          return _detailsView(context, state, workspace, _activeDriver!,
+              onBack: () => _setView(_DriversViewState.list));
         }
 
-        return const SizedBox.shrink();
+        final master = Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildToolbar(context, state, cubit, workspace),
+            const SizedBox(height: AppSpacing.medium),
+            _buildListBody(context, state, sorted, workspace, isSplit),
+          ],
+        );
+
+        if (!isSplit) return master;
+
+        // Desktop: keep the list in view alongside the readiness detail pane.
+        final detail = _selectedDriver == null
+            ? null
+            : _detailsView(context, state, workspace, _selectedDriver!,
+                onBack: () => setState(() => _selectedDriver = null));
+
+        return MasterDetailLayout(
+          master: master,
+          detail: detail,
+          placeholderTitle: 'اختر سائقاً لعرض الجاهزية',
+          placeholderSubtitle:
+              'حدد سائقاً من القائمة لمراجعة حالته التشغيلية وتفاصيله.',
+        );
+      },
+    );
+  }
+
+  Widget _detailsView(
+    BuildContext context,
+    FleetDriversLoaded state,
+    FleetWorkspace workspace,
+    FleetDriver driver, {
+    required VoidCallback onBack,
+  }) {
+    final updatedDriver = state.drivers.firstWhere(
+      (d) => d.id == driver.id,
+      orElse: () => driver,
+    );
+    return FleetDriverDetailsView(
+      driver: updatedDriver,
+      workspace: workspace,
+      onBack: onBack,
+      onEdit: () => _setView(_DriversViewState.form, updatedDriver),
+    );
+  }
+
+  Widget _buildListBody(
+    BuildContext context,
+    FleetDriversLoaded state,
+    List<FleetDriver> sorted,
+    FleetWorkspace workspace,
+    bool isSplit,
+  ) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useCards = constraints.maxWidth < 800;
+        if (useCards) {
+          return FleetDriversCardList(
+            drivers: sorted,
+            workspace: workspace,
+            onViewDetails: (d) => _openDriver(d, isSplit),
+            onEdit: (d) => _setView(_DriversViewState.form, d),
+            page: _page,
+            pageSize: _pageSize,
+          );
+        }
+        return FleetDriversTable(
+          drivers: sorted,
+          workspace: workspace,
+          onView: (d) => _openDriver(d, isSplit),
+          onEdit: (d) => _setView(_DriversViewState.form, d),
+          selectedIds: state.selectedIds,
+          selectedId: _selectedDriver?.id,
+          page: _page,
+          pageSize: _pageSize,
+          onPageChanged: (newPage) => setState(() => _page = newPage),
+          sortField: _sortField,
+          sortAscending: _sortAscending,
+          onSortField: _applySort,
+        );
       },
     );
   }

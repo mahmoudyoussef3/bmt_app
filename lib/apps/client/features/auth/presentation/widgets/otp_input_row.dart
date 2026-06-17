@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 /// Six-digit OTP input row with focus chaining (visual only).
 class OtpInputRow extends StatefulWidget {
@@ -26,9 +27,12 @@ class OtpInputRow extends StatefulWidget {
 class _OtpInputRowState extends State<OtpInputRow> {
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final borderColor = widget.hasError ? scheme.error : scheme.outline;
-    final focusedColor = widget.hasError ? scheme.error : scheme.primary;
+    final borderColor = widget.hasError
+        ? Theme.of(context).colorScheme.error
+        : ClientColors.borderFor(context);
+    final focusedColor = widget.hasError
+        ? Theme.of(context).colorScheme.error
+        : ClientColors.primary;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -43,8 +47,7 @@ class _OtpInputRowState extends State<OtpInputRow> {
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             maxLength: 1,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+            style: ClientTypography.headingMedium(context).copyWith(
               letterSpacing: 0,
             ),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -52,13 +55,10 @@ class _OtpInputRowState extends State<OtpInputRow> {
               counterText: '',
               contentPadding: EdgeInsets.zero,
               filled: true,
-              fillColor: scheme.surfaceContainerHighest,
+              fillColor: ClientColors.surfaceMutedFor(context),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(
-                  color: borderColor.withAlpha(180),
-                  width: 1.5,
-                ),
+                borderSide: BorderSide(color: borderColor, width: 1.5),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -66,11 +66,17 @@ class _OtpInputRowState extends State<OtpInputRow> {
               ),
               errorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: scheme.error, width: 2),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.error,
+                  width: 2,
+                ),
               ),
               focusedErrorBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: scheme.error, width: 2),
+                borderSide: BorderSide(
+                  color: Theme.of(context).colorScheme.error,
+                  width: 2,
+                ),
               ),
             ),
             onChanged: (value) {
@@ -105,7 +111,10 @@ class OtpStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSuccess ? AppColors.secondary : AppColors.destructive;
+    final color = isSuccess ? ClientColors.journeyGreen : ClientColors.journeyRed;
+    final bgColor = isSuccess
+        ? ClientColors.journeyGreenLight
+        : ClientColors.journeyRedLight;
     final icon = isSuccess
         ? Icons.check_circle_outline_rounded
         : Icons.error_outline_rounded;
@@ -114,7 +123,7 @@ class OtpStatusBanner extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: color.withAlpha(28),
+        color: bgColor,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: color.withAlpha(120)),
       ),
@@ -125,9 +134,7 @@ class OtpStatusBanner extends StatelessWidget {
           Expanded(
             child: Text(
               message,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Theme.of(context).colorScheme.onSurface,
-              ),
+              style: ClientTypography.bodyMedium(context),
             ),
           ),
         ],

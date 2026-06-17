@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -265,9 +266,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
               ),
               const SizedBox(height: 20),
-              AppSurface(
-                color: scheme.surface,
+              Container(
                 padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: ClientColors.surfaceFor(context),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ClientColors.borderFor(context)),
+                ),
                 child: Column(
                   children: [
                     _buildConfirmationRow(
@@ -326,8 +331,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                   ),
                   const SizedBox(width: 14),
                   Expanded(
-                    child: AppButton(
+                    child: ClientButton(
                       label: 'Confirm Release',
+                      expand: true,
                       onPressed: () {
                         Navigator.of(context).pop();
                         _submitRelease();
@@ -740,8 +746,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     IconData icon,
     Color color,
   ) {
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.center,
@@ -836,10 +847,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
   Widget _buildUpcomingTripsList(ColorScheme scheme) {
     if (_showEmptyState || _upcomingTrips.isEmpty) {
-      return const EmptyState(
-        title: 'No upcoming package trips',
-        subtitle: 'All upcoming seats are active, or no remaining days remain.',
-        emoji: '📅',
+      return ClientErrorCard.fullScreen(
+        message:
+            'No upcoming package trips\nAll upcoming seats are active, or no remaining days remain.',
       );
     }
 
@@ -1099,8 +1109,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   }
 
   Widget _buildTripSummaryCard(UpcomingTrip trip, ColorScheme scheme) {
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1352,8 +1367,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: AppButton(
+              child: ClientButton(
                 label: 'Release Seat',
+                expand: true,
                 onPressed: _openConfirmationSheet,
               ),
             ),
@@ -1396,8 +1412,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           const SizedBox(height: 24),
 
           // Released details card
-          AppCard(
+          Container(
             padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: ClientColors.borderFor(context)),
+            ),
             child: Column(
               children: [
                 _buildConfirmationRow('Released Date', rec.tripDate),
@@ -1440,8 +1461,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           const SizedBox(height: 30),
 
           // Actions
-          AppButton(
+          ClientButton(
             label: 'View Release Details',
+            expand: true,
             onPressed: () => setState(() => _currentView = 5),
           ),
           const SizedBox(height: 10),
@@ -1465,8 +1487,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       padding: const EdgeInsets.all(20),
       children: [
         // Main details info card
-        AppCard(
+        Container(
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1524,8 +1551,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
         const SizedBox(height: 30),
         // Go back CTA
-        AppButton(
+        ClientButton(
           label: 'Back to Dashboard',
+          expand: true,
           onPressed: () => setState(() => _currentView = 1),
         ),
       ],
@@ -1585,8 +1613,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     if (activeStatus == 'Rebooked') activeIdx = 2;
     if (activeStatus == 'Rewarded' || activeStatus == 'Closed') activeIdx = 3;
 
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: List.generate(steps.length, (idx) {
           final isDone = idx < activeIdx;
@@ -1700,8 +1733,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       padding: const EdgeInsets.all(20),
       children: [
         // Header
-        AppCard(
+        Container(
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1729,8 +1767,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         _buildCompensationDetailsCard(rec, scheme),
         const SizedBox(height: 24),
 
-        AppButton(
+        ClientButton(
           label: 'Back to Dashboard',
+          expand: true,
           onPressed: () => setState(() => _currentView = 1),
         ),
       ],
@@ -1934,16 +1973,16 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         // List
         Expanded(
           child: filtered.isEmpty
-              ? const EmptyState(
-                  title: 'No release records found',
-                  subtitle: 'Try adjusting your filters or search query.',
-                  emoji: '📂',
+              ? ClientErrorCard.fullScreen(
+                  message:
+                      'No release records found\nTry adjusting your filters or search query.',
                 )
               : ListView.separated(
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
                   itemCount: filtered.length,
-                  separatorBuilder: (context, index) => const AppSeparator(),
+                  separatorBuilder: (context, index) =>
+                      Divider(color: ClientColors.borderFor(context)),
                   itemBuilder: (context, idx) {
                     final log = filtered[idx];
                     return _buildHistoryLogTile(log, scheme);
@@ -2098,10 +2137,8 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         const SizedBox(height: 10),
 
         if (_notifications.isEmpty)
-          const EmptyState(
-            title: 'No new notifications',
-            subtitle: 'You are completely caught up.',
-            emoji: '🔔',
+          ClientErrorCard.fullScreen(
+            message: 'No new notifications\nYou are completely caught up.',
           )
         else
           ..._notifications.map((n) {

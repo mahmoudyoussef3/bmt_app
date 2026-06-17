@@ -2,7 +2,9 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
   final String seat;
@@ -41,7 +43,6 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    // Simulate processing then show success
     Timer(const Duration(milliseconds: 900), () {
       if (!mounted) return;
       setState(() => _processing = false);
@@ -64,11 +65,12 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: ClientColors.surfaceSubtleFor(context),
       body: SafeArea(
         child: Column(
           children: [
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
                   IconButton(
@@ -78,7 +80,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                   const SizedBox(width: 8),
                   Text(
                     'Booking',
-                    style: Theme.of(context).textTheme.titleMedium,
+                    style: ClientTypography.headingSmall(context).copyWith(
+                      color: ClientColors.textPrimaryFor(context),
+                    ),
                   ),
                 ],
               ),
@@ -98,16 +102,15 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
               child: Row(
                 children: [
                   Expanded(
-                    child: AppButton(
+                    child: ClientButton.secondary(
                       label: 'Back to Home',
                       onPressed: () =>
                           Navigator.of(context).popUntil((r) => r.isFirst),
-                      outline: true,
                     ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                    child: AppButton(
+                    child: ClientButton(
                       label: 'Track Vehicle',
                       onPressed: () =>
                           Navigator.of(context).pushNamed('/tracking'),
@@ -127,29 +130,40 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
       key: const ValueKey('processing'),
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(height: 8),
         const SizedBox(
           width: 120,
           height: 120,
-          child: CircularProgressIndicator(strokeWidth: 6),
+          child: CircularProgressIndicator(
+            strokeWidth: 6,
+            color: ClientColors.primary,
+          ),
         ),
         const SizedBox(height: 18),
         Text(
           'Processing your booking...',
-          style: Theme.of(context).textTheme.titleSmall,
+          style: ClientTypography.headingSmall(context).copyWith(
+            color: ClientColors.textPrimaryFor(context),
+          ),
         ),
         const SizedBox(height: 6),
         Text(
           'This should only take a moment',
-          style: Theme.of(context).textTheme.bodySmall,
+          style: ClientTypography.bodySmall(context).copyWith(
+            color: ClientColors.textSecondaryFor(context),
+          ),
         ),
       ],
     );
   }
 
   Widget _buildSuccess(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final bookingReference = widget.bookingReference ?? _bookingId;
+    final driverInitials = widget.driver
+        .split(' ')
+        .map((s) => s.isEmpty ? '' : s[0])
+        .take(2)
+        .join();
+
     return SingleChildScrollView(
       key: const ValueKey('success'),
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -168,13 +182,13 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  colors: [scheme.primary, scheme.primary.withAlpha(180)],
+                gradient: const LinearGradient(
+                  colors: [ClientColors.primary, Color(0xFF1554C8)],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: scheme.primary.withAlpha(40),
-                    blurRadius: 20,
+                    color: ClientColors.primary.withAlpha(55),
+                    blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
                 ],
@@ -187,18 +201,25 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
           const SizedBox(height: 18),
           Text(
             'Booking Confirmed',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            style: ClientTypography.headingLarge(context).copyWith(
+              color: ClientColors.textPrimaryFor(context),
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'Your seat is reserved — confirmation below',
-            style: Theme.of(context).textTheme.bodySmall,
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
+            ),
           ),
           const SizedBox(height: 18),
-          AppSurface(
-            padding: const EdgeInsets.all(14),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: ClientColors.borderFor(context)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -207,17 +228,20 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                   children: [
                     Text(
                       'Booking Reference',
-                      style: Theme.of(context).textTheme.bodySmall,
+                      style: ClientTypography.bodySmall(context).copyWith(
+                        color: ClientColors.textSecondaryFor(context),
+                      ),
                     ),
                     Text(
                       bookingReference,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      style: ClientTypography.labelMedium(context).copyWith(
+                        color: ClientColors.primary,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -226,13 +250,15 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                       children: [
                         Text(
                           widget.destination,
-                          style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: ClientTypography.headingSmall(context)
+                              .copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           'Seat ${widget.seat}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: ClientTypography.bodySmall(context).copyWith(
+                            color: ClientColors.textSecondaryFor(context),
+                          ),
                         ),
                       ],
                     ),
@@ -241,29 +267,33 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                       children: [
                         Text(
                           'Departs',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: ClientTypography.bodySmall(context).copyWith(
+                            color: ClientColors.textSecondaryFor(context),
+                          ),
                         ),
                         Text(
                           widget.departureTime,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: ClientTypography.bodyMedium(context).copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                const Divider(),
-                const SizedBox(height: 8),
+                const SizedBox(height: 14),
+                Divider(height: 1, color: ClientColors.borderFor(context)),
+                const SizedBox(height: 14),
                 Row(
                   children: [
                     CircleAvatar(
+                      radius: 22,
+                      backgroundColor: ClientColors.primaryLight,
                       child: Text(
-                        widget.driver
-                            .split(' ')
-                            .map((s) => s.isEmpty ? '' : s[0])
-                            .take(2)
-                            .join(),
+                        driverInitials,
+                        style: ClientTypography.labelMedium(context).copyWith(
+                          color: ClientColors.primary,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -272,24 +302,37 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                       children: [
                         Text(
                           widget.driver,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: ClientTypography.bodyMedium(context).copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
                           'Vehicle ${widget.vehicleId}',
-                          style: Theme.of(context).textTheme.bodySmall,
+                          style: ClientTypography.bodySmall(context).copyWith(
+                            color: ClientColors.textSecondaryFor(context),
+                          ),
                         ),
                       ],
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Text('Notes', style: Theme.of(context).textTheme.bodySmall),
+                const SizedBox(height: 14),
+                Divider(height: 1, color: ClientColors.borderFor(context)),
+                const SizedBox(height: 10),
+                Text(
+                  'Notes',
+                  style: ClientTypography.labelSmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   'Please arrive 10 minutes before departure. Cancellation allowed up to 1 hour before departure.',
-                  style: Theme.of(context).textTheme.bodySmall,
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
+                    height: 1.4,
+                  ),
                 ),
               ],
             ),

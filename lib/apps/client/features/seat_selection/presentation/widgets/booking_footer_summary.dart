@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/theme/text_themes.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 class BookingFooterSummary extends StatelessWidget {
   final String? selectedSeat;
@@ -15,12 +16,10 @@ class BookingFooterSummary extends StatelessWidget {
   });
 
   int get _seatCount => selectedSeat == null ? 0 : 1;
-
   double get _total => _seatCount * pricePerSeat;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final hasSeat = selectedSeat != null;
 
     return Column(
@@ -28,19 +27,24 @@ class BookingFooterSummary extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (!hasSeat)
-          _EmptySelectionBanner(scheme: scheme)
+          _EmptySelectionBanner()
         else
-          AppSurface(
+          Container(
             padding: const EdgeInsets.all(14),
-            radius: 18,
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: ClientColors.borderFor(context)),
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Selected seats',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+                  style: ClientTypography.labelMedium(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: ClientColors.textPrimaryFor(context),
+                  ),
                 ),
                 const SizedBox(height: 10),
                 Row(
@@ -78,13 +82,15 @@ class BookingFooterSummary extends StatelessWidget {
                         children: [
                           Text(
                             'Total',
-                            style: Theme.of(context).textTheme.titleSmall,
+                            style: ClientTypography.labelSmall(context).copyWith(
+                              color: ClientColors.textSecondaryFor(context),
+                            ),
                           ),
                           Text(
                             'EGP ${_total.toStringAsFixed(2)}',
-                            style: AppTextThemes.priceEmphasis(
-                              scheme,
-                            ).copyWith(fontSize: 18),
+                            style: ClientTypography.priceMedium(context).copyWith(
+                              color: ClientColors.primary,
+                            ),
                           ),
                         ],
                       ),
@@ -104,22 +110,23 @@ class BookingFooterSummary extends StatelessWidget {
                 children: [
                   Text(
                     'EGP ${_total.toStringAsFixed(2)}',
-                    style: AppTextThemes.priceEmphasis(
-                      scheme,
-                    ).copyWith(fontSize: 20),
+                    style: ClientTypography.priceMedium(context).copyWith(
+                      color: ClientColors.primary,
+                    ),
                   ),
                   Text(
                     '$_seatCount seat selected',
-                    style: Theme.of(context).textTheme.bodySmall,
+                    style: ClientTypography.bodySmall(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context),
+                    ),
                   ),
                 ],
               ),
               const SizedBox(width: 12),
             ],
             Expanded(
-              child: AppButton(
+              child: ClientButton(
                 label: hasSeat ? 'Continue Booking' : 'Select a Seat',
-                height: 52,
                 onPressed: onConfirm ?? () {},
               ),
             ),
@@ -131,32 +138,28 @@ class BookingFooterSummary extends StatelessWidget {
 }
 
 class _EmptySelectionBanner extends StatelessWidget {
-  const _EmptySelectionBanner({required this.scheme});
-
-  final ColorScheme scheme;
-
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest,
+        color: ClientColors.surfaceMutedFor(context),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outline.withAlpha(90)),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Row(
         children: [
           Icon(
             Icons.event_seat_outlined,
-            color: scheme.onSurface.withAlpha(140),
+            color: ClientColors.textTertiaryFor(context),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'Select one or more seats to continue',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              style: ClientTypography.bodySmall(context).copyWith(
                 fontWeight: FontWeight.w600,
-                color: scheme.onSurface.withAlpha(180),
+                color: ClientColors.textSecondaryFor(context),
               ),
             ),
           ),
@@ -179,23 +182,28 @@ class _PriceStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Row(
       children: [
-        Icon(icon, size: 16, color: scheme.primary),
+        Icon(icon, size: 16, color: ClientColors.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label, style: Theme.of(context).textTheme.titleSmall),
+              Text(
+                label,
+                style: ClientTypography.labelSmall(context).copyWith(
+                  color: ClientColors.textSecondaryFor(context),
+                ),
+              ),
               Text(
                 value,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w800),
+                style: ClientTypography.bodySmall(context).copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: ClientColors.textPrimaryFor(context),
+                ),
               ),
             ],
           ),

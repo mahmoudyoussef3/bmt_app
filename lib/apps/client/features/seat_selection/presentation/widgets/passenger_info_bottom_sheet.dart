@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 /// Passenger details bottom sheet (UI placeholder — no validation logic).
 Future<void> showPassengerInfoBottomSheet(
@@ -9,7 +11,7 @@ Future<void> showPassengerInfoBottomSheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Theme.of(context).cardColor,
+    backgroundColor: ClientColors.surfaceFor(context),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -27,8 +29,6 @@ class _PassengerInfoSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -41,7 +41,7 @@ class _PassengerInfoSheet extends StatelessWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: scheme.outline,
+                  color: ClientColors.borderFor(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -49,14 +49,14 @@ class _PassengerInfoSheet extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               'Passenger information',
-              style: Theme.of(context).textTheme.displaySmall,
+              style: ClientTypography.headingMedium(context),
             ),
             if (seatLabel != null) ...[
               const SizedBox(height: 6),
               Text(
                 'Seat $seatLabel',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: scheme.primary,
+                style: ClientTypography.bodySmall(context).copyWith(
+                  color: ClientColors.primary,
                   fontWeight: FontWeight.w700,
                 ),
               ),
@@ -64,9 +64,9 @@ class _PassengerInfoSheet extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Contact details',
-              style: Theme.of(
-                context,
-              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
+              style: ClientTypography.labelLarge(context).copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
             const SizedBox(height: 12),
             const _PassengerField(
@@ -85,26 +85,26 @@ class _PassengerInfoSheet extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.info_outline_rounded,
                   size: 16,
-                  color: scheme.secondary,
+                  color: ClientColors.primary,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     'We will use this number for trip updates (demo UI only).',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: scheme.onSurface.withAlpha(160),
+                    style: ClientTypography.bodySmall(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context),
                     ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 20),
-            AppButton(
+            ClientButton(
               label: 'Save details',
-              height: 50,
+              expand: true,
               onPressed: () => Navigator.pop(context),
             ),
           ],
@@ -131,15 +131,13 @@ class _PassengerField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: scheme.onSurface.withAlpha(200),
+          style: ClientTypography.labelLarge(context).copyWith(
+            color: ClientColors.textSecondaryFor(context),
           ),
         ),
         const SizedBox(height: 8),
@@ -147,17 +145,17 @@ class _PassengerField extends StatelessWidget {
           keyboardType: keyboardType,
           decoration: InputDecoration(
             hintText: hint,
-            prefixIcon: Icon(icon, color: scheme.primary),
+            prefixIcon: Icon(icon, color: ClientColors.primary),
             suffixIcon: showValid
-                ? Icon(Icons.check_circle_rounded, color: scheme.secondary)
+                ? const Icon(Icons.check_circle_rounded, color: ClientColors.primary)
                 : null,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: scheme.outline.withAlpha(120)),
+              borderSide: BorderSide(color: ClientColors.borderFor(context)),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: scheme.primary, width: 2),
+              borderSide: const BorderSide(color: ClientColors.primary, width: 2),
             ),
           ),
         ),

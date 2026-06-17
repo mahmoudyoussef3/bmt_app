@@ -62,6 +62,7 @@ import 'package:bmt_app/apps/client/features/seat_selection/presentation/screens
 import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/seat_release_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/screens/client_splash_screen.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -116,12 +117,7 @@ class _ClientAppState extends State<ClientApp> {
                 builder: (context, onboardingState) {
                   if (onboardingState is OnboardingLoading ||
                       onboardingState is OnboardingInitial) {
-                    return Scaffold(
-                      backgroundColor: Theme.of(
-                        context,
-                      ).scaffoldBackgroundColor,
-                      body: const Center(child: CircularProgressIndicator()),
-                    );
+                    return const ClientSplashScreen();
                   }
 
                   if (onboardingState is OnboardingLoaded &&
@@ -333,8 +329,13 @@ class _ClientAppState extends State<ClientApp> {
           },
         ),
       ),
-      trackingBuilder: (context) =>
-          _buildTrackingScope(const TrackingScreen(shellMode: true)),
+      tripsBuilder: (context) => _buildTripsScope(
+        MyTripsScreen(
+          onOpenRoute: (route, [arguments]) {
+            Navigator.of(context).pushNamed(route, arguments: arguments);
+          },
+        ),
+      ),
       profileBuilder: (context) => _buildProfileScope(
         ProfileScreen(
           onOpenRoute: (route, [arguments]) {

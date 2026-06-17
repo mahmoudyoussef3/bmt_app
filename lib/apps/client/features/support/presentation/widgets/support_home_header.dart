@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 class SupportHomeHeader extends StatelessWidget {
   const SupportHomeHeader({super.key});
@@ -9,7 +10,7 @@ class SupportHomeHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+        color: ClientColors.primaryLight,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -17,14 +18,16 @@ class SupportHomeHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.support_agent, color: Theme.of(context).primaryColor, size: 32),
+              const Icon(
+                Icons.support_agent,
+                color: ClientColors.primary,
+                size: 32,
+              ),
               const SizedBox(width: 12),
               Text(
                 'How can we help?',
-                style: GoogleFonts.outfit(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.black87,
+                style: ClientTypography.headingMedium(context).copyWith(
+                  color: ClientColors.textPrimaryFor(context),
                 ),
               ),
             ],
@@ -32,9 +35,8 @@ class SupportHomeHeader extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Our support team is available 24/7 to assist you with any issues related to your bookings, trips, or account.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[700],
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
               height: 1.5,
             ),
           ),

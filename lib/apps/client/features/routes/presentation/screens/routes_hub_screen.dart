@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_section_header.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
 import 'package:bmt_app/apps/client/features/routes/domain/entities/routes_hub_data.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_hub_cubit.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_hub_state.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
-import 'package:bmt_app/core/theme/app_typography.dart';
-import 'package:bmt_app/core/widgets/app_button.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
-import 'package:bmt_app/core/widgets/section_header.dart';
 
-/// Routes tab — focused entry into the booking search flow.
+/// Routes tab — premium route discovery entry into the booking search flow.
 class RoutesHubScreen extends StatefulWidget {
   const RoutesHubScreen({super.key, required this.onOpenRoute});
 
@@ -30,7 +31,6 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final width = MediaQuery.sizeOf(context).width;
     final maxW = AppLayout.maxContentWidth(width);
 
@@ -40,80 +40,15 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxW),
             child: switch (state) {
-              RoutesHubLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              RoutesHubError(:final message) => EmptyState(
-                title: 'Routes unavailable',
-                subtitle: message,
-              ),
-              RoutesHubLoaded(:final data) => ListView(
-                padding: AppLayout.pagePaddingWithTop,
-                children: [
-                  Text(data.title, style: AppTypography.display(scheme)),
-                  const SizedBox(height: AppLayout.spaceSm),
-                  Text(
-                    data.subtitle,
-                    style: AppTypography.caption(
-                      scheme,
-                    ).copyWith(color: scheme.onSurface.withAlpha(180)),
-                  ),
-                  const SizedBox(height: AppLayout.spaceXl),
-                  AppCard(
-                    padding: const EdgeInsets.all(AppLayout.spaceLg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Icon(
-                          Icons.search_rounded,
-                          size: 40,
-                          color: scheme.primary,
-                        ),
-                        const SizedBox(height: AppLayout.spaceMd),
-                        Text(
-                          data.searchTitle,
-                          style: AppTypography.heading(scheme),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: AppLayout.spaceSm),
-                        Text(
-                          data.searchDescription,
-                          textAlign: TextAlign.center,
-                          style: AppTypography.caption(
-                            scheme,
-                          ).copyWith(color: scheme.onSurface.withAlpha(170)),
-                        ),
-                        const SizedBox(height: AppLayout.spaceLg),
-                        AppButton(
-                          label: 'Search Trip',
-                          height: 52,
-                          onPressed: () => _openAction(data.searchAction),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppLayout.spaceXl),
-                  const SectionHeader(
-                    title: 'How booking works',
-                    subtitle: 'A simple path from search to seat',
-                  ),
-                  const SizedBox(height: AppLayout.spaceMd),
-                  for (final step in data.flowSteps)
-                    _FlowStep(
-                      step: step.step,
-                      title: step.title,
-                      subtitle: step.subtitle,
-                      isLast: step.step == data.flowSteps.length,
-                    ),
-                  const SizedBox(height: AppLayout.spaceLg),
-                  OutlinedButton.icon(
-                    onPressed: () => _openAction(data.popularRoutesAction),
-                    icon: const Icon(Icons.trending_up_rounded),
-                    label: const Text('Browse popular routes'),
-                  ),
-                  const SizedBox(height: 120),
-                ],
-              ),
+              RoutesHubLoading() => _LoadingBody(),
+              RoutesHubError(:final message) => ClientErrorCard.fullScreen(
+                  message: message,
+                  onRetry: () => context.read<RoutesHubCubit>().load(),
+                ),
+              RoutesHubLoaded(:final data) => _LoadedBody(
+                  data: data,
+                  onOpenAction: _openAction,
+                ),
             },
           ),
         );
@@ -128,6 +63,185 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
     );
   }
 }
+
+// ── Loading body ─────────────────────────────────────────────────────────────
+
+class _LoadingBody extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      children: [
+        ClientSkeleton.routeCard(),
+        const SizedBox(height: 16),
+        ClientSkeleton.routeCard(),
+        const SizedBox(height: 16),
+        ClientSkeleton.routeCard(),
+      ],
+    );
+  }
+}
+
+// ── Loaded body ──────────────────────────────────────────────────────────────
+
+class _LoadedBody extends StatelessWidget {
+  const _LoadedBody({required this.data, required this.onOpenAction});
+
+  final RoutesHubData data;
+  final void Function(RoutesHubAction) onOpenAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      children: [
+        _GradientHeader(title: data.title, subtitle: data.subtitle),
+        const SizedBox(height: 24),
+        _SearchCtaCard(
+          searchTitle: data.searchTitle,
+          searchDescription: data.searchDescription,
+          onSearch: () => onOpenAction(data.searchAction),
+        ),
+        const SizedBox(height: 32),
+        ClientSectionHeader(title: 'How it works'),
+        const SizedBox(height: 16),
+        for (final step in data.flowSteps)
+          _FlowStep(
+            step: step.step,
+            title: step.title,
+            subtitle: step.subtitle,
+            isLast: step.step == data.flowSteps.length,
+          ),
+        const SizedBox(height: 28),
+        ClientButton.secondary(
+          label: 'Browse popular routes',
+          icon: const Icon(Icons.trending_up_rounded, size: 18),
+          onPressed: () => onOpenAction(data.popularRoutesAction),
+        ),
+        const SizedBox(height: 120),
+      ],
+    );
+  }
+}
+
+// ── Gradient header ───────────────────────────────────────────────────────────
+
+class _GradientHeader extends StatelessWidget {
+  const _GradientHeader({required this.title, required this.subtitle});
+
+  final String title;
+  final String subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            ClientColors.primaryLight,
+            ClientColors.surfaceFor(context),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: ClientTypography.headingLarge(context).copyWith(
+                color: ClientColors.textPrimaryFor(context),
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              subtitle,
+              style: ClientTypography.bodyMedium(context).copyWith(
+                color: ClientColors.textTertiaryFor(context),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Search CTA card ───────────────────────────────────────────────────────────
+
+class _SearchCtaCard extends StatelessWidget {
+  const _SearchCtaCard({
+    required this.searchTitle,
+    required this.searchDescription,
+    required this.onSearch,
+  });
+
+  final String searchTitle;
+  final String searchDescription;
+  final VoidCallback onSearch;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: ClientColors.primaryLight,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: ClientColors.primary.withAlpha(40),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Center(
+            child: Container(
+              width: 56,
+              height: 56,
+              decoration: const BoxDecoration(
+                color: ClientColors.primary,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.search_rounded,
+                size: 28,
+                color: ClientColors.textInverse,
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            searchTitle,
+            style: ClientTypography.headingSmall(context).copyWith(
+              color: ClientColors.textPrimaryFor(context),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 8),
+          Text(
+            searchDescription,
+            style: ClientTypography.bodyMedium(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          ClientButton(
+            label: 'Search trips',
+            onPressed: onSearch,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Flow step ─────────────────────────────────────────────────────────────────
 
 class _FlowStep extends StatelessWidget {
   const _FlowStep({
@@ -144,23 +258,25 @@ class _FlowStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Column(
             children: [
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: scheme.primary.withAlpha(50),
-                child: Text(
-                  '$step',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: scheme.primary,
+              Container(
+                width: 28,
+                height: 28,
+                decoration: const BoxDecoration(
+                  color: ClientColors.primary,
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Text(
+                    '$step',
+                    style: ClientTypography.labelMedium(context).copyWith(
+                      color: ClientColors.textInverse,
+                    ),
                   ),
                 ),
               ),
@@ -169,20 +285,31 @@ class _FlowStep extends StatelessWidget {
                   child: Container(
                     width: 2,
                     margin: const EdgeInsets.symmetric(vertical: 4),
-                    color: scheme.outline.withAlpha(100),
+                    color: ClientColors.borderFor(context),
                   ),
                 ),
             ],
           ),
-          const SizedBox(width: AppLayout.spaceMd),
+          const SizedBox(width: 16),
           Expanded(
             child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : AppLayout.spaceMd),
+              padding: EdgeInsets.only(bottom: isLast ? 0 : 20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(title, style: AppTypography.subheading(scheme)),
-                  Text(subtitle, style: AppTypography.caption(scheme)),
+                  Text(
+                    title,
+                    style: ClientTypography.headingSmall(context).copyWith(
+                      color: ClientColors.textPrimaryFor(context),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle,
+                    style: ClientTypography.bodySmall(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context),
+                    ),
+                  ),
                 ],
               ),
             ),

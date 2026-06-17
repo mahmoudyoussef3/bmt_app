@@ -6,7 +6,8 @@ import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_t
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_state.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/widgets/live_status_badge.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 typedef TripState = TrackingTripState;
 
@@ -121,25 +122,22 @@ class _TrackingScreenState extends State<TrackingScreen>
       builder: (context, state) {
         if (state is TrackingLoading) {
           return Scaffold(
-            backgroundColor: scheme.surfaceContainerHighest,
+            backgroundColor: ClientColors.surfaceMutedFor(context),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
 
         if (state is TrackingError) {
           return Scaffold(
-            backgroundColor: scheme.surfaceContainerHighest,
-            body: EmptyState(
-              title: 'Tracking unavailable',
-              subtitle: state.message,
-            ),
+            backgroundColor: ClientColors.surfaceMutedFor(context),
+            body: ClientErrorCard.fullScreen(message: state.message),
           );
         }
 
         _tracking = state as TrackingLoaded;
 
         return Scaffold(
-          backgroundColor: scheme.surfaceContainerHighest,
+          backgroundColor: ClientColors.surfaceMutedFor(context),
           appBar: AppBar(
             title: Text(
               _stateTitle,
@@ -161,7 +159,7 @@ class _TrackingScreenState extends State<TrackingScreen>
               ),
             ],
             elevation: 0,
-            backgroundColor: scheme.surface,
+            backgroundColor: ClientColors.surfaceFor(context),
           ),
           body: Stack(
             children: [
@@ -170,7 +168,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 top: -100,
                 right: -100,
                 child: _BackgroundGlow(
-                  color: scheme.primary.withAlpha(20),
+                  color: ClientColors.primary.withAlpha(20),
                   size: 300,
                 ),
               ),
@@ -178,7 +176,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 bottom: -50,
                 left: -100,
                 child: _BackgroundGlow(
-                  color: scheme.secondary.withAlpha(15),
+                  color: ClientColors.journeyGreen.withAlpha(15),
                   size: 250,
                 ),
               ),
@@ -195,7 +193,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                   left: 16,
                   right: 16,
                   top: 16,
-                  child: _buildDemoStateController(scheme),
+                  child: _buildDemoStateController(context),
                 ),
             ],
           ),
@@ -251,19 +249,19 @@ class _TrackingScreenState extends State<TrackingScreen>
         physics: const BouncingScrollPhysics(),
         padding: EdgeInsets.fromLTRB(16, widget.shellMode ? 16 : 84, 16, 24),
         children: [
-          _buildCountdownCard(scheme),
+          _buildCountdownCard(context, scheme),
           const SizedBox(height: 16),
-          _buildQuickActions(scheme),
+          _buildQuickActions(context, scheme),
           const SizedBox(height: 20),
           _buildSectionTitle('Trip Status Timeline', Icons.linear_scale),
-          _buildStatusTimeline(scheme),
+          _buildStatusTimeline(context, scheme),
           const SizedBox(height: 20),
           _buildSectionTitle('Trip Details', Icons.info_outline),
-          _buildRouteInfoCard(scheme),
+          _buildRouteInfoCard(context, scheme),
           const SizedBox(height: 16),
-          _buildVehicleInfoCard(scheme),
+          _buildVehicleInfoCard(context, scheme),
           const SizedBox(height: 16),
-          _buildDriverInfoCard(scheme),
+          _buildDriverInfoCard(context, scheme),
         ],
       );
     }
@@ -280,7 +278,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           ),
         ),
         // Scrollable/Swipeable bottom details panel
-        Expanded(flex: 4, child: _buildActiveStateDetails(scheme)),
+        Expanded(flex: 4, child: _buildActiveStateDetails(context, scheme)),
       ],
     );
   }
@@ -301,11 +299,11 @@ class _TrackingScreenState extends State<TrackingScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _buildCountdownCard(scheme),
+                        _buildCountdownCard(context, scheme),
                         const SizedBox(height: 20),
-                        _buildRouteInfoCard(scheme),
+                        _buildRouteInfoCard(context, scheme),
                         const SizedBox(height: 20),
-                        _buildQuickActions(scheme),
+                        _buildQuickActions(context, scheme),
                       ],
                     ),
                   )
@@ -330,24 +328,24 @@ class _TrackingScreenState extends State<TrackingScreen>
                           'Trip Status Timeline',
                           Icons.linear_scale,
                         ),
-                        _buildStatusTimeline(scheme),
+                        _buildStatusTimeline(context, scheme),
                         const SizedBox(height: 24),
-                        _buildDriverInfoCard(scheme),
+                        _buildDriverInfoCard(context, scheme),
                         const SizedBox(height: 16),
-                        _buildVehicleInfoCard(scheme),
+                        _buildVehicleInfoCard(context, scheme),
                       ],
                     ),
                   )
                 : Container(
                     margin: const EdgeInsets.fromLTRB(12, 0, 24, 24),
                     decoration: BoxDecoration(
-                      color: scheme.surface,
+                      color: ClientColors.surfaceFor(context),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: scheme.outline.withAlpha(50)),
+                      border: Border.all(color: ClientColors.borderFor(context)),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
-                      child: _buildActiveStateDetails(scheme),
+                      child: _buildActiveStateDetails(context, scheme),
                     ),
                   ),
           ),
@@ -373,22 +371,27 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // --- FLOATING STATE SWITCHER PANEL ---
-  Widget _buildDemoStateController(ColorScheme scheme) {
-    return AppCard(
+  Widget _buildDemoStateController(BuildContext context) {
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(Icons.tune_rounded, color: scheme.primary, size: 18),
+              Icon(Icons.tune_rounded, color: ClientColors.primary, size: 18),
               const SizedBox(width: 8),
               Text(
                 'Demo Controller (Simulate Trip States)',
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
-                  color: scheme.onSurface.withAlpha(200),
+                  color: ClientColors.textSecondaryFor(context),
                 ),
               ),
             ],
@@ -399,11 +402,31 @@ class _TrackingScreenState extends State<TrackingScreen>
             physics: const BouncingScrollPhysics(),
             child: Row(
               children: [
-                _buildStateTab('1. Waiting', TripState.notStarted, scheme),
-                _buildStateTab('2. Heading', TripState.driverOnWay, scheme),
-                _buildStateTab('3. Arrived', TripState.boarding, scheme),
-                _buildStateTab('4. In Route', TripState.inProgress, scheme),
-                _buildStateTab('5. Arrived/Done', TripState.completed, scheme),
+                _buildStateTab(
+                  '1. Waiting',
+                  TripState.notStarted,
+                  Theme.of(context).colorScheme,
+                ),
+                _buildStateTab(
+                  '2. Heading',
+                  TripState.driverOnWay,
+                  Theme.of(context).colorScheme,
+                ),
+                _buildStateTab(
+                  '3. Arrived',
+                  TripState.boarding,
+                  Theme.of(context).colorScheme,
+                ),
+                _buildStateTab(
+                  '4. In Route',
+                  TripState.inProgress,
+                  Theme.of(context).colorScheme,
+                ),
+                _buildStateTab(
+                  '5. Arrived/Done',
+                  TripState.completed,
+                  Theme.of(context).colorScheme,
+                ),
               ],
             ),
           ),
@@ -422,11 +445,13 @@ class _TrackingScreenState extends State<TrackingScreen>
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected
-              ? scheme.primary
-              : scheme.surfaceContainerHighest.withAlpha(100),
+              ? ClientColors.primary
+              : ClientColors.surfaceMutedFor(context).withAlpha(100),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? scheme.primary : scheme.outline.withAlpha(60),
+            color: isSelected
+                ? ClientColors.primary
+                : ClientColors.borderFor(context),
           ),
         ),
         child: Text(
@@ -435,8 +460,8 @@ class _TrackingScreenState extends State<TrackingScreen>
             fontSize: 11,
             fontWeight: FontWeight.w700,
             color: isSelected
-                ? scheme.onPrimary
-                : scheme.onSurface.withAlpha(170),
+                ? Colors.white
+                : ClientColors.textSecondaryFor(context),
           ),
         ),
       ),
@@ -446,23 +471,26 @@ class _TrackingScreenState extends State<TrackingScreen>
   // --- SCREEN 1 COMPONENTS ---
 
   // Countdown Card
-  Widget _buildCountdownCard(ColorScheme scheme) {
+  Widget _buildCountdownCard(BuildContext context, ColorScheme scheme) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [
-            scheme.primary.withAlpha(45),
-            scheme.secondary.withAlpha(25),
+            ClientColors.primary.withAlpha(45),
+            ClientColors.journeyGreen.withAlpha(25),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.primary.withAlpha(90), width: 1.5),
+        border: Border.all(
+          color: ClientColors.primary.withAlpha(90),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
-            color: scheme.primary.withAlpha(30),
+            color: ClientColors.primary.withAlpha(30),
             blurRadius: 20,
             spreadRadius: 2,
           ),
@@ -473,7 +501,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _buildPulseIndicator(scheme.primary),
+              _buildPulseIndicator(ClientColors.primary),
               const SizedBox(width: 8),
               Text(
                 'UPCOMING RIDE',
@@ -481,7 +509,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                   fontSize: 12,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 2,
-                  color: scheme.primary,
+                  color: ClientColors.primary,
                 ),
               ),
             ],
@@ -493,7 +521,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: scheme.onSurface,
+              color: ClientColors.textPrimaryFor(context),
             ),
           ),
           const SizedBox(height: 8),
@@ -501,7 +529,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             'Scheduled departure at 08:30 AM',
             style: TextStyle(
               fontSize: 13,
-              color: scheme.onSurface.withAlpha(180),
+              color: ClientColors.textSecondaryFor(context),
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -509,7 +537,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: scheme.surface.withAlpha(180),
+              color: ClientColors.surfaceFor(context).withAlpha(180),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Row(
@@ -518,7 +546,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 Icon(
                   Icons.access_time_filled_rounded,
                   size: 16,
-                  color: scheme.secondary,
+                  color: ClientColors.journeyGreen,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -526,7 +554,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: scheme.secondary,
+                    color: ClientColors.journeyGreen,
                   ),
                 ),
               ],
@@ -538,23 +566,28 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // Quick Actions Card
-  Widget _buildQuickActions(ColorScheme scheme) {
-    return AppCard(
+  Widget _buildQuickActions(BuildContext context, ColorScheme scheme) {
+    return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           _buildQuickActionItem(
             Icons.map_outlined,
             'View Route',
-            scheme.primary,
+            ClientColors.primary,
             () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
                   content: const Text(
                     'Showing full route layout. Set to "Heading" state to track!',
                   ),
-                  backgroundColor: scheme.primary,
+                  backgroundColor: ClientColors.primary,
                 ),
               );
             },
@@ -562,7 +595,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           _buildQuickActionItem(
             Icons.chat_bubble_outline_rounded,
             'Contact Driver',
-            scheme.secondary,
+            ClientColors.journeyGreen,
             () {
               _showMockContactDialog(context, scheme, 'Driver');
             },
@@ -614,7 +647,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // Trip Timeline Component
-  Widget _buildStatusTimeline(ColorScheme scheme) {
+  Widget _buildStatusTimeline(BuildContext context, ColorScheme scheme) {
     final timelineSteps = [
       'Booking Confirmed',
       'Driver Assigned',
@@ -627,8 +660,13 @@ class _TrackingScreenState extends State<TrackingScreen>
     // We are currently in "Booking Confirmed" or "Driver Assigned" stage
     const currentActiveStep = 1;
 
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: List.generate(timelineSteps.length, (index) {
           final isCompleted = index < currentActiveStep;
@@ -637,11 +675,11 @@ class _TrackingScreenState extends State<TrackingScreen>
 
           Color stepColor;
           if (isCompleted) {
-            stepColor = scheme.secondary;
+            stepColor = ClientColors.journeyGreen;
           } else if (isActive) {
-            stepColor = scheme.primary;
+            stepColor = ClientColors.primary;
           } else {
-            stepColor = scheme.outline.withAlpha(120);
+            stepColor = ClientColors.borderFor(context);
           }
 
           return IntrinsicHeight(
@@ -680,8 +718,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                         child: Container(
                           width: 2,
                           color: isCompleted
-                              ? scheme.secondary
-                              : scheme.outline.withAlpha(80),
+                              ? ClientColors.journeyGreen
+                              : ClientColors.borderFor(context),
                         ),
                       ),
                   ],
@@ -701,10 +739,10 @@ class _TrackingScreenState extends State<TrackingScreen>
                                 ? FontWeight.bold
                                 : FontWeight.normal,
                             color: isActive
-                                ? scheme.primary
+                                ? ClientColors.primary
                                 : isRemaining
-                                ? scheme.onSurface.withAlpha(120)
-                                : scheme.onSurface,
+                                ? ClientColors.textSecondaryFor(context)
+                                : ClientColors.textPrimaryFor(context),
                           ),
                         ),
                         if (isActive) ...[
@@ -713,7 +751,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                             'Driver Ahmed Mohamed is scheduled for your pickup.',
                             style: TextStyle(
                               fontSize: 11,
-                              color: scheme.onSurface.withAlpha(160),
+                              color: ClientColors.textSecondaryFor(context),
                             ),
                           ),
                         ],
@@ -730,9 +768,14 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // Route Info
-  Widget _buildRouteInfoCard(ColorScheme scheme) {
-    return AppCard(
+  Widget _buildRouteInfoCard(BuildContext context, ColorScheme scheme) {
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -740,7 +783,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             children: [
               Icon(
                 Icons.directions_bus_rounded,
-                color: scheme.primary,
+                color: ClientColors.primary,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -750,7 +793,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: scheme.onSurface,
+                    color: ClientColors.textPrimaryFor(context),
                   ),
                 ),
               ),
@@ -759,12 +802,12 @@ class _TrackingScreenState extends State<TrackingScreen>
           const Divider(height: 24),
           _buildMapTimelineRow(
             Icons.trip_origin_rounded,
-            scheme.secondary,
+            ClientColors.journeyGreen,
             'Pickup Location',
             'Banha Station',
             'Scheduled departure: 08:30 AM',
           ),
-          _buildLineConnector(scheme),
+          _buildLineConnector(context),
           _buildMapTimelineRow(
             Icons.location_on_rounded,
             scheme.tertiary,
@@ -825,32 +868,54 @@ class _TrackingScreenState extends State<TrackingScreen>
     );
   }
 
-  Widget _buildLineConnector(ColorScheme scheme) {
+  Widget _buildLineConnector(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 8.0),
       child: Container(
         width: 2,
         height: 24,
-        color: scheme.outline.withAlpha(60),
+        color: ClientColors.borderFor(context),
       ),
     );
   }
 
   // Vehicle Info
-  Widget _buildVehicleInfoCard(ColorScheme scheme) {
-    return AppCard(
+  Widget _buildVehicleInfoCard(BuildContext context, ColorScheme scheme) {
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              StatusChip(label: 'Premium Shuttle'),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: ClientColors.primaryLight,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Premium Shuttle',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: ClientColors.primary,
+                  ),
+                ),
+              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: scheme.outline.withAlpha(100),
+                  color: ClientColors.borderFor(context),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 child: const Text(
@@ -866,7 +931,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
-              color: scheme.onSurface,
+              color: ClientColors.textPrimaryFor(context),
             ),
           ),
           const SizedBox(height: 10),
@@ -875,16 +940,16 @@ class _TrackingScreenState extends State<TrackingScreen>
               _buildFeatureIconBadge(
                 Icons.ac_unit_rounded,
                 'A/C Active',
-                scheme,
+                context,
               ),
               const SizedBox(width: 8),
               _buildFeatureIconBadge(
                 Icons.airline_seat_recline_extra_rounded,
                 'Leather Seats',
-                scheme,
+                context,
               ),
               const SizedBox(width: 8),
-              _buildFeatureIconBadge(Icons.wifi_rounded, 'WiFi', scheme),
+              _buildFeatureIconBadge(Icons.wifi_rounded, 'WiFi', context),
             ],
           ),
         ],
@@ -895,19 +960,19 @@ class _TrackingScreenState extends State<TrackingScreen>
   Widget _buildFeatureIconBadge(
     IconData icon,
     String label,
-    ColorScheme scheme,
+    BuildContext context,
   ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(100),
+        color: ClientColors.surfaceMutedFor(context).withAlpha(100),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: scheme.outline.withAlpha(50)),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: scheme.primary),
+          Icon(icon, size: 13, color: ClientColors.primary),
           const SizedBox(width: 4),
           Text(
             label,
@@ -919,12 +984,27 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // Driver Info
-  Widget _buildDriverInfoCard(ColorScheme scheme) {
-    return AppCard(
+  Widget _buildDriverInfoCard(BuildContext context, ColorScheme scheme) {
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         children: [
-          const AppAvatar(initials: 'AM', radius: 24),
+          CircleAvatar(
+            radius: 24,
+            backgroundColor: ClientColors.primaryLight,
+            child: Text(
+              'AM',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: ClientColors.primary,
+              ),
+            ),
+          ),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -935,27 +1015,31 @@ class _TrackingScreenState extends State<TrackingScreen>
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: scheme.onSurface,
+                    color: ClientColors.textPrimaryFor(context),
                   ),
                 ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Icon(Icons.star_rounded, size: 14, color: scheme.tertiary),
+                    Icon(
+                      Icons.star_rounded,
+                      size: 14,
+                      color: scheme.tertiary,
+                    ),
                     const SizedBox(width: 4),
                     Text(
                       '4.9',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
-                        color: scheme.onSurface,
+                        color: ClientColors.textPrimaryFor(context),
                       ),
                     ),
                     Text(
                       ' (1,200+ rides)',
                       style: TextStyle(
                         fontSize: 12,
-                        color: scheme.onSurface.withAlpha(150),
+                        color: ClientColors.textSecondaryFor(context),
                       ),
                     ),
                   ],
@@ -964,7 +1048,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             ),
           ),
           IconButton(
-            icon: Icon(Icons.phone_in_talk_rounded, color: scheme.primary),
+            icon: Icon(Icons.phone_in_talk_rounded, color: ClientColors.primary),
             onPressed: () =>
                 _showMockContactDialog(context, scheme, 'Ahmed Mohamed'),
           ),
@@ -976,21 +1060,21 @@ class _TrackingScreenState extends State<TrackingScreen>
   // --- SCREEN 2 COMPONENTS ---
 
   // Live Bottom details widget containing status description, buttons, cards, etc.
-  Widget _buildActiveStateDetails(ColorScheme scheme) {
+  Widget _buildActiveStateDetails(BuildContext context, ColorScheme scheme) {
     Widget stateContent;
 
     switch (_currentState) {
       case TripState.driverOnWay:
-        stateContent = _buildDriverOnWayView(scheme);
+        stateContent = _buildDriverOnWayView(context, scheme);
         break;
       case TripState.boarding:
-        stateContent = _buildBoardingView(scheme);
+        stateContent = _buildBoardingView(context, scheme);
         break;
       case TripState.inProgress:
-        stateContent = _buildInProgressView(scheme);
+        stateContent = _buildInProgressView(context, scheme);
         break;
       case TripState.completed:
-        stateContent = _buildCompletedView(scheme);
+        stateContent = _buildCompletedView(context, scheme);
         break;
       default:
         stateContent = const SizedBox.shrink();
@@ -1000,7 +1084,7 @@ class _TrackingScreenState extends State<TrackingScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        _buildSheetStatusIndicator(scheme),
+        _buildSheetStatusIndicator(context, scheme),
         const SizedBox(height: 16),
         AnimatedSize(
           duration: const Duration(milliseconds: 300),
@@ -1010,31 +1094,31 @@ class _TrackingScreenState extends State<TrackingScreen>
     );
   }
 
-  Widget _buildSheetStatusIndicator(ColorScheme scheme) {
+  Widget _buildSheetStatusIndicator(BuildContext context, ColorScheme scheme) {
     String title = '';
     String subtitle = '';
-    Color toneColor = scheme.primary;
+    Color toneColor = ClientColors.primary;
 
     switch (_currentState) {
       case TripState.driverOnWay:
         title = 'Driver On The Way';
         subtitle = 'Captain Ahmed is driving towards Banha Station';
-        toneColor = scheme.secondary;
+        toneColor = ClientColors.journeyGreen;
         break;
       case TripState.boarding:
         title = 'Boarding Started';
         subtitle = 'Shuttle is at the station. Board now.';
-        toneColor = scheme.primary;
+        toneColor = ClientColors.primary;
         break;
       case TripState.inProgress:
         title = 'Trip In Progress';
         subtitle = 'Heading to next stop: Nasr City';
-        toneColor = scheme.primary;
+        toneColor = ClientColors.primary;
         break;
       case TripState.completed:
         title = 'Arrived Safely';
         subtitle = 'Trip completed at 09:22 AM';
-        toneColor = scheme.secondary;
+        toneColor = ClientColors.journeyGreen;
         break;
       default:
         break;
@@ -1070,21 +1154,27 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // STATE 2: Driver on the way UI
-  Widget _buildDriverOnWayView(ColorScheme scheme) {
+  Widget _buildDriverOnWayView(BuildContext context, ColorScheme scheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildETACard('12', 'minutes away', 'Pickup distance: 2.1 km', scheme),
+        _buildETACard(
+          '12',
+          'minutes away',
+          'Pickup distance: 2.1 km',
+          context,
+          scheme,
+        ),
         const SizedBox(height: 16),
-        _buildDriverActionCard(scheme),
+        _buildDriverActionCard(context, scheme),
         const SizedBox(height: 16),
-        _buildVehicleInfoCard(scheme),
+        _buildVehicleInfoCard(context, scheme),
       ],
     );
   }
 
   // STATE 3: Boarding started UI
-  Widget _buildBoardingView(ColorScheme scheme) {
+  Widget _buildBoardingView(BuildContext context, ColorScheme scheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1092,6 +1182,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           '4',
           'minutes left to board',
           'Departure: 08:30 AM',
+          context,
           scheme,
         ),
         const SizedBox(height: 16),
@@ -1099,9 +1190,9 @@ class _TrackingScreenState extends State<TrackingScreen>
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: scheme.primary.withAlpha(15),
+            color: ClientColors.primary.withAlpha(15),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: scheme.primary.withAlpha(50)),
+            border: Border.all(color: ClientColors.primary.withAlpha(50)),
           ),
           child: Column(
             children: [
@@ -1120,7 +1211,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: CustomPaint(painter: MockQRCodePainter(scheme.primary)),
+                child: CustomPaint(
+                  painter: MockQRCodePainter(ClientColors.primary),
+                ),
               ),
               const SizedBox(height: 12),
               Container(
@@ -1129,7 +1222,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: scheme.surface,
+                  color: ClientColors.surfaceFor(context),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
@@ -1138,7 +1231,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2,
-                    color: scheme.primary,
+                    color: ClientColors.primary,
                   ),
                 ),
               ),
@@ -1146,13 +1239,13 @@ class _TrackingScreenState extends State<TrackingScreen>
           ),
         ),
         const SizedBox(height: 16),
-        _buildDriverActionCard(scheme),
+        _buildDriverActionCard(context, scheme),
       ],
     );
   }
 
   // STATE 4: Trip in progress UI
-  Widget _buildInProgressView(ColorScheme scheme) {
+  Widget _buildInProgressView(BuildContext context, ColorScheme scheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1160,17 +1253,23 @@ class _TrackingScreenState extends State<TrackingScreen>
           '28',
           'minutes remaining',
           'Expected Arrival: 09:20 AM',
+          context,
           scheme,
         ),
         const SizedBox(height: 16),
         // Remaining Stops section
-        _buildRemainingStopsHeader(scheme),
+        _buildRemainingStopsHeader(context, scheme),
         const SizedBox(height: 8),
-        _buildStopsProgressTimeline(scheme),
+        _buildStopsProgressTimeline(context, scheme),
         const SizedBox(height: 16),
         // Live Speed/Metric Card
-        AppCard(
+        Container(
           padding: const EdgeInsets.all(14),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -1178,13 +1277,13 @@ class _TrackingScreenState extends State<TrackingScreen>
                 Icons.speed_rounded,
                 'Speed',
                 '58 km/h',
-                scheme.primary,
+                ClientColors.primary,
               ),
               _buildMetricItem(
                 Icons.ac_unit_rounded,
                 'Climate',
                 '22°C',
-                scheme.secondary,
+                ClientColors.journeyGreen,
               ),
               _buildMetricItem(
                 Icons.network_wifi_3_bar_rounded,
@@ -1200,7 +1299,7 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // STATE 5: Trip completed UI
-  Widget _buildCompletedView(ColorScheme scheme) {
+  Widget _buildCompletedView(BuildContext context, ColorScheme scheme) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1240,8 +1339,13 @@ class _TrackingScreenState extends State<TrackingScreen>
         ),
         const SizedBox(height: 16),
         // Summary
-        AppCard(
+        Container(
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1259,8 +1363,13 @@ class _TrackingScreenState extends State<TrackingScreen>
         ),
         const SizedBox(height: 16),
         // Rating Controls
-        AppCard(
+        Container(
           padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -1293,8 +1402,9 @@ class _TrackingScreenState extends State<TrackingScreen>
           ),
         ),
         const SizedBox(height: 20),
-        AppButton(
+        ClientButton(
           label: 'Book Another Trip',
+          expand: true,
           onPressed: () {
             Navigator.of(context).pushReplacementNamed('/home');
           },
@@ -1310,10 +1420,16 @@ class _TrackingScreenState extends State<TrackingScreen>
     String boldValue,
     String label,
     String details,
+    BuildContext context,
     ColorScheme scheme,
   ) {
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Row(
         children: [
           Expanded(
@@ -1329,7 +1445,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                       style: TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.w900,
-                        color: scheme.primary,
+                        color: ClientColors.primary,
                         height: 1,
                       ),
                     ),
@@ -1350,7 +1466,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                   details,
                   style: TextStyle(
                     fontSize: 12,
-                    color: scheme.onSurface.withAlpha(160),
+                    color: ClientColors.textSecondaryFor(context),
                   ),
                 ),
               ],
@@ -1359,13 +1475,13 @@ class _TrackingScreenState extends State<TrackingScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
-              color: scheme.primary.withAlpha(20),
+              color: ClientColors.primary.withAlpha(20),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
               Icons.av_timer_rounded,
               size: 28,
-              color: scheme.primary,
+              color: ClientColors.primary,
             ),
           ),
         ],
@@ -1428,14 +1544,29 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // Driver Card with Actions for Active screen
-  Widget _buildDriverActionCard(ColorScheme scheme) {
-    return AppCard(
+  Widget _buildDriverActionCard(BuildContext context, ColorScheme scheme) {
+    return Container(
       padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: [
           Row(
             children: [
-              const AppAvatar(initials: 'AM', radius: 24),
+              CircleAvatar(
+                radius: 24,
+                backgroundColor: ClientColors.primaryLight,
+                child: Text(
+                  'AM',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: ClientColors.primary,
+                  ),
+                ),
+              ),
               const SizedBox(width: 14),
               Expanded(
                 child: Column(
@@ -1446,7 +1577,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
-                        color: scheme.onSurface,
+                        color: ClientColors.textPrimaryFor(context),
                       ),
                     ),
                     Row(
@@ -1475,10 +1606,9 @@ class _TrackingScreenState extends State<TrackingScreen>
           Row(
             children: [
               Expanded(
-                child: AppButton(
+                child: ClientButton.secondary(
                   label: 'Call Driver',
-                  outline: true,
-                  height: 40,
+                  expand: true,
                   onPressed: () => _showMockContactDialog(
                     context,
                     scheme,
@@ -1488,9 +1618,9 @@ class _TrackingScreenState extends State<TrackingScreen>
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: AppButton(
+                child: ClientButton(
                   label: 'Chat Driver',
-                  height: 40,
+                  expand: true,
                   onPressed: () => _showMockContactDialog(
                     context,
                     scheme,
@@ -1506,13 +1636,17 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // Stops progress section
-  Widget _buildRemainingStopsHeader(ColorScheme scheme) {
+  Widget _buildRemainingStopsHeader(BuildContext context, ColorScheme scheme) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Row(
           children: [
-            Icon(Icons.event_seat_rounded, size: 18, color: scheme.primary),
+            Icon(
+              Icons.event_seat_rounded,
+              size: 18,
+              color: ClientColors.primary,
+            ),
             const SizedBox(width: 6),
             const Text(
               '3 Stops Remaining',
@@ -1524,7 +1658,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           'Next stop: Nasr City',
           style: TextStyle(
             fontSize: 12,
-            color: scheme.secondary,
+            color: ClientColors.journeyGreen,
             fontWeight: FontWeight.bold,
           ),
         ),
@@ -1532,7 +1666,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     );
   }
 
-  Widget _buildStopsProgressTimeline(ColorScheme scheme) {
+  Widget _buildStopsProgressTimeline(BuildContext context, ColorScheme scheme) {
     final stops = [
       'Banha Station',
       'Nasr City Station',
@@ -1542,8 +1676,13 @@ class _TrackingScreenState extends State<TrackingScreen>
     // Index representing where we are
     const currentStopIndex = 1;
 
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         children: List.generate(stops.length, (index) {
           final isPast = index < currentStopIndex;
@@ -1552,11 +1691,11 @@ class _TrackingScreenState extends State<TrackingScreen>
 
           Color dotColor;
           if (isPast) {
-            dotColor = scheme.secondary;
+            dotColor = ClientColors.journeyGreen;
           } else if (isCurrent) {
-            dotColor = scheme.primary;
+            dotColor = ClientColors.primary;
           } else {
-            dotColor = scheme.outline.withAlpha(120);
+            dotColor = ClientColors.borderFor(context);
           }
 
           return IntrinsicHeight(
@@ -1581,8 +1720,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                         child: Container(
                           width: 2,
                           color: isPast
-                              ? scheme.secondary
-                              : scheme.outline.withAlpha(80),
+                              ? ClientColors.journeyGreen
+                              : ClientColors.borderFor(context),
                         ),
                       ),
                   ],
@@ -1602,10 +1741,10 @@ class _TrackingScreenState extends State<TrackingScreen>
                                 ? FontWeight.bold
                                 : FontWeight.normal,
                             color: isCurrent
-                                ? scheme.primary
+                                ? ClientColors.primary
                                 : isFuture
                                 ? Colors.grey
-                                : scheme.onSurface,
+                                : ClientColors.textPrimaryFor(context),
                           ),
                         ),
                         if (isCurrent)
@@ -1615,14 +1754,14 @@ class _TrackingScreenState extends State<TrackingScreen>
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: scheme.primary.withAlpha(20),
+                              color: ClientColors.primary.withAlpha(20),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               'Current Loc',
                               style: TextStyle(
                                 fontSize: 9,
-                                color: scheme.primary,
+                                color: ClientColors.primary,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -1709,7 +1848,7 @@ class _TrackingScreenState extends State<TrackingScreen>
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: scheme.surface,
+          backgroundColor: ClientColors.surfaceFor(context),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
@@ -1724,7 +1863,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 'This is a mock UI component. Contact channels (VOIP, chat, phone dialer) will trigger here in production.',
                 style: TextStyle(
                   fontSize: 13,
-                  color: scheme.onSurface.withAlpha(200),
+                  color: ClientColors.textSecondaryFor(context),
                 ),
               ),
             ],
@@ -1732,7 +1871,10 @@ class _TrackingScreenState extends State<TrackingScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Close', style: TextStyle(color: scheme.primary)),
+              child: Text(
+                'Close',
+                style: TextStyle(color: ClientColors.primary),
+              ),
             ),
           ],
         );
@@ -1787,7 +1929,7 @@ class PremiumMap extends StatelessWidget {
         children: [
           // Background grids & streets painting
           Positioned.fill(
-            child: CustomPaint(painter: _MapGridAndStreetsPainter(scheme)),
+            child: CustomPaint(painter: _MapGridAndStreetsPainter(context)),
           ),
           // Route path drawing
           Positioned.fill(
@@ -1837,7 +1979,7 @@ class PremiumMap extends StatelessWidget {
                     top: pickupOffset.dy - 32,
                     child: _buildMapPin(
                       Icons.trip_origin_rounded,
-                      scheme.secondary,
+                      ClientColors.journeyGreen,
                       'Pickup',
                       pulseValue,
                     ),
@@ -1846,12 +1988,18 @@ class PremiumMap extends StatelessWidget {
                   Positioned(
                     left: stop1Offset.dx - 6,
                     top: stop1Offset.dy - 6,
-                    child: _buildMapStopCircle(scheme.outline, 'Nasr City'),
+                    child: _buildMapStopCircle(
+                      ClientColors.borderFor(context),
+                      'Nasr City',
+                    ),
                   ),
                   Positioned(
                     left: stop2Offset.dx - 6,
                     top: stop2Offset.dy - 6,
-                    child: _buildMapStopCircle(scheme.outline, 'Heliopolis'),
+                    child: _buildMapStopCircle(
+                      ClientColors.borderFor(context),
+                      'Heliopolis',
+                    ),
                   ),
                   // Destination Pin
                   Positioned(
@@ -1870,7 +2018,7 @@ class PremiumMap extends StatelessWidget {
                     Positioned(
                       left: driverOffset.dx - 18,
                       top: driverOffset.dy - 18,
-                      child: _buildDriverMarker(scheme, pulseValue),
+                      child: _buildDriverMarker(context, scheme, pulseValue),
                     ),
                 ],
               );
@@ -1946,7 +2094,11 @@ class PremiumMap extends StatelessWidget {
     );
   }
 
-  Widget _buildDriverMarker(ColorScheme scheme, double pulse) {
+  Widget _buildDriverMarker(
+    BuildContext context,
+    ColorScheme scheme,
+    double pulse,
+  ) {
     final alpha = (80 + 100 * math.sin(pulse * math.pi)).toInt().clamp(0, 255);
     return Stack(
       alignment: Alignment.center,
@@ -1957,7 +2109,7 @@ class PremiumMap extends StatelessWidget {
           height: 36,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: scheme.primary.withAlpha(alpha),
+            color: ClientColors.primary.withAlpha(alpha),
           ),
         ),
         // Driver Shuttle Card
@@ -1965,9 +2117,9 @@ class PremiumMap extends StatelessWidget {
           width: 26,
           height: 26,
           decoration: BoxDecoration(
-            color: scheme.surface,
+            color: ClientColors.surfaceFor(context),
             shape: BoxShape.circle,
-            border: Border.all(color: scheme.primary, width: 2),
+            border: Border.all(color: ClientColors.primary, width: 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withAlpha(150),
@@ -1980,7 +2132,7 @@ class PremiumMap extends StatelessWidget {
             child: Icon(
               Icons.directions_bus_rounded,
               size: 14,
-              color: scheme.primary,
+              color: ClientColors.primary,
             ),
           ),
         ),
@@ -1991,17 +2143,18 @@ class PremiumMap extends StatelessWidget {
 
 // Painting grids, background color, block streets for city simulation
 class _MapGridAndStreetsPainter extends CustomPainter {
-  final ColorScheme scheme;
-  _MapGridAndStreetsPainter(this.scheme);
+  final BuildContext _context;
+  _MapGridAndStreetsPainter(this._context);
 
   @override
   void paint(Canvas canvas, Size size) {
     // Fill background with elegant charcoal color
-    final bgPaint = Paint()..color = scheme.surfaceContainerHighest;
+    final bgPaint = Paint()
+      ..color = ClientColors.surfaceMutedFor(_context);
     canvas.drawRect(Offset.zero & size, bgPaint);
 
     final streetPaint = Paint()
-      ..color = scheme.surface.withAlpha(60)
+      ..color = ClientColors.surfaceFor(_context).withAlpha(60)
       ..strokeWidth = 22
       ..strokeCap = StrokeCap.round
       ..style = PaintingStyle.stroke;
@@ -2032,7 +2185,7 @@ class _MapGridAndStreetsPainter extends CustomPainter {
 
     // Draw minor grid overlays
     final gridPaint = Paint()
-      ..color = scheme.outline.withAlpha(12)
+      ..color = ClientColors.borderFor(_context).withAlpha(12)
       ..strokeWidth = 0.5;
 
     const spacing = 30.0;
@@ -2075,7 +2228,7 @@ class _MapRouteLinePainter extends CustomPainter {
 
     // 1. Draw Remaining Route (Dotted/Dashed Line or Dim Line)
     final remainingPaint = Paint()
-      ..color = scheme.outline.withAlpha(120)
+      ..color = ClientColors.primaryMuted.withAlpha(120)
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;
@@ -2088,7 +2241,7 @@ class _MapRouteLinePainter extends CustomPainter {
 
     // 2. Draw Traveled Route (Highlighted neon line up to Driver position)
     final traveledPaint = Paint()
-      ..color = scheme.primary
+      ..color = ClientColors.primary
       ..strokeWidth = 4.5
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;

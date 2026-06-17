@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/booking_confirmation_screen.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
@@ -70,7 +72,6 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
       duration: const Duration(seconds: 2),
     )..repeat();
 
-    // Rotate step text during loading
     _stepTimer = Timer.periodic(const Duration(milliseconds: 900), (timer) {
       if (!mounted) return;
       if (_currentStepIndex < _progressSteps.length - 1) {
@@ -99,8 +100,6 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
 
     try {
       final bookTripSeat = clientGetIt<BookTripSeatUseCase>();
-
-      // Get the payment amount
       final total = widget.checkoutData.totalForDiscount(widget.promoDiscount);
 
       final bookingId = await bookTripSeat({
@@ -110,7 +109,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
         'p_pricing_id': null,
         'p_pickup_point_id': null,
         'p_dropoff_point_id': null,
-        'p_passenger_name': 'Me', // Assuming current user
+        'p_passenger_name': 'Me',
         'p_phone': '',
         'p_route': widget.checkoutData.route,
         'p_trip_time': widget.checkoutData.departureTime,
@@ -159,7 +158,6 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final total = widget.checkoutData.totalForDiscount(widget.promoDiscount);
 
     return Scaffold(
@@ -168,13 +166,15 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [scheme.surface, scheme.surfaceContainerLowest],
+            colors: [
+              ClientColors.surfaceFor(context),
+              ClientColors.surfaceMutedFor(context),
+            ],
           ),
         ),
         child: SafeArea(
           child: Column(
             children: [
-              // Screen Header
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
                 child: Row(
@@ -186,8 +186,8 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     const SizedBox(width: 8),
                     Text(
                       'Secure Checkout',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
+                      style: ClientTypography.headingSmall(context).copyWith(
+                        color: ClientColors.textPrimaryFor(context),
                       ),
                     ),
                   ],
@@ -198,10 +198,10 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 350),
                     child: _loading
-                        ? _buildProcessingView(context, scheme, total)
+                        ? _buildProcessingView(context, total)
                         : _failed
-                        ? _buildFailureView(context, scheme)
-                        : _buildSuccessView(context, scheme, total),
+                        ? _buildFailureView(context)
+                        : _buildSuccessView(context, total),
                   ),
                 ),
               ),
@@ -212,23 +212,19 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
     );
   }
 
-  // --- SCREEN 3: PAYMENT PROCESSING VIEW ---
-  Widget _buildProcessingView(
-    BuildContext context,
-    ColorScheme scheme,
-    int total,
-  ) {
+  Widget _buildProcessingView(BuildContext context, int total) {
     return _stateShell(
       key: const ValueKey('processing'),
-      child: AppSurface(
-        radius: 28,
+      child: Container(
         padding: const EdgeInsets.all(22),
-        color: scheme.surfaceContainerHigh,
-        border: Border.all(color: scheme.outline.withAlpha(55)),
+        decoration: BoxDecoration(
+          color: ClientColors.surfaceFor(context),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(color: ClientColors.borderFor(context)),
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Rotating Fintech Loader
             Stack(
               alignment: Alignment.center,
               children: [
@@ -237,8 +233,8 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                   child: CustomPaint(
                     size: const Size(120, 120),
                     painter: LoaderRingPainter(
-                      scheme.primary,
-                      scheme.secondary,
+                      ClientColors.primary,
+                      ClientColors.primaryMuted,
                     ),
                   ),
                 ),
@@ -246,61 +242,60 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                   width: 90,
                   height: 90,
                   decoration: BoxDecoration(
-                    color: scheme.surface,
+                    color: ClientColors.surfaceFor(context),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(
+                  child: const Icon(
                     Icons.security_rounded,
-                    color: scheme.primary,
+                    color: ClientColors.primary,
                     size: 38,
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 24),
-            const Text(
+            Text(
               'Processing Payment',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+              style: ClientTypography.headingMedium(context).copyWith(
+                color: ClientColors.textPrimaryFor(context),
+              ),
             ),
             const SizedBox(height: 6),
             Text(
               'Please do not close this screen or press back button.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: scheme.onSurface.withAlpha(160),
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
               ),
             ),
             const SizedBox(height: 20),
-
-            // Step-by-step Status Indicator
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(14),
               decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest.withAlpha(120),
+                color: ClientColors.surfaceSubtleFor(context),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: scheme.outline.withAlpha(45)),
+                border: Border.all(color: ClientColors.borderFor(context)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
                     children: [
-                      SizedBox(
+                      const SizedBox(
                         width: 14,
                         height: 14,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: scheme.primary,
+                          color: ClientColors.primary,
                         ),
                       ),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           _progressSteps[_currentStepIndex],
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: ClientTypography.bodySmall(context).copyWith(
+                            color: ClientColors.textPrimaryFor(context),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -308,26 +303,27 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     ],
                   ),
                   const SizedBox(height: 12),
-                  const Divider(height: 1),
+                  Divider(color: ClientColors.borderFor(context), height: 1),
                   const SizedBox(height: 12),
-                  _buildDetailTextRow('Method:', widget.paymentMethod.title),
+                  _buildDetailTextRow(context, 'Method:', widget.paymentMethod.title),
                   const SizedBox(height: 6),
-                  _buildDetailTextRow('Transaction ID:', _transactionId),
+                  _buildDetailTextRow(context, 'Transaction ID:', _transactionId),
                 ],
               ),
             ),
             const SizedBox(height: 16),
-
-            // Booking summary summary
-            AppSurface(
-              radius: 16,
+            Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              color: scheme.surfaceContainerLow,
+              decoration: BoxDecoration(
+                color: ClientColors.surfaceSubtleFor(context),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: ClientColors.borderFor(context)),
+              ),
               child: Row(
                 children: [
                   Icon(
                     Icons.directions_bus_rounded,
-                    color: scheme.secondary,
+                    color: ClientColors.textSecondaryFor(context),
                     size: 20,
                   ),
                   const SizedBox(width: 12),
@@ -339,16 +335,15 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                           '${widget.checkoutData.pickupPoint} → ${widget.checkoutData.destination}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
+                          style: ClientTypography.bodySmall(context).copyWith(
+                            color: ClientColors.textPrimaryFor(context),
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                         Text(
                           'Driver: ${widget.checkoutData.driverName} • Seat: ${widget.checkoutData.selectedSeat}',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            color: Colors.grey,
+                          style: ClientTypography.bodySmall(context).copyWith(
+                            color: ClientColors.textTertiaryFor(context),
                           ),
                         ),
                       ],
@@ -356,10 +351,9 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                   ),
                   Text(
                     '$total EGP',
-                    style: TextStyle(
+                    style: ClientTypography.bodyMedium(context).copyWith(
                       fontWeight: FontWeight.w900,
-                      fontSize: 14,
-                      color: scheme.primary,
+                      color: ClientColors.primary,
                     ),
                   ),
                 ],
@@ -371,25 +365,23 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
     );
   }
 
-  // --- SCREEN 4: PAYMENT SUCCESS VIEW ---
-  Widget _buildSuccessView(
-    BuildContext context,
-    ColorScheme scheme,
-    int total,
-  ) {
+  Widget _buildSuccessView(BuildContext context, int total) {
     return _stateShell(
       key: const ValueKey('success'),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AppSurface(
-            radius: 28,
+          Container(
             padding: const EdgeInsets.all(22),
-            color: scheme.surfaceContainerHigh,
-            border: Border.all(color: Colors.green.withAlpha(60)),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: ClientColors.journeyGreen.withAlpha(60),
+              ),
+            ),
             child: Column(
               children: [
-                // Custom Confetti & Expanding checkmark animation
                 Stack(
                   alignment: Alignment.center,
                   children: [
@@ -406,11 +398,14 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: const LinearGradient(
-                            colors: [Colors.green, Colors.teal],
+                            colors: [
+                              ClientColors.journeyGreen,
+                              Color(0xFF14B8A6),
+                            ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.green.withAlpha(45),
+                              color: ClientColors.journeyGreen.withAlpha(45),
                               blurRadius: 18,
                               spreadRadius: 2,
                             ),
@@ -420,12 +415,11 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                           child: Icon(
                             Icons.check_rounded,
                             size: 50,
-                            color: Colors.white,
+                            color: ClientColors.textInverse,
                           ),
                         ),
                       ),
                     ),
-                    // Confetti Particles
                     CustomPaint(
                       size: const Size(120, 120),
                       painter: ConfettiPainter(progress: _checkController),
@@ -433,49 +427,46 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                   ],
                 ),
                 const SizedBox(height: 20),
-                const Text(
+                Text(
                   'Payment Successful',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.green,
+                  style: ClientTypography.headingMedium(context).copyWith(
+                    color: ClientColors.journeyGreen,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Your booking reference has been confirmed',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: scheme.onSurface.withAlpha(160),
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Transaction confirmation card
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: scheme.surfaceContainerLowest,
+                    color: ClientColors.surfaceSubtleFor(context),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: scheme.outline.withAlpha(45)),
+                    border: Border.all(color: ClientColors.borderFor(context)),
                   ),
                   child: Column(
                     children: [
                       _buildDetailTextRow(
+                        context,
                         'Booking Ref:',
                         _bookingReference,
                         isBoldValue: true,
-                        valueColor: scheme.primary,
+                        valueColor: ClientColors.primary,
                       ),
                       const SizedBox(height: 10),
-                      _buildDetailTextRow('Paid Amount:', '$total EGP'),
+                      _buildDetailTextRow(context, 'Paid Amount:', '$total EGP'),
                       const SizedBox(height: 6),
                       _buildDetailTextRow(
+                        context,
                         'Payment Method:',
                         widget.paymentMethod.title,
                       ),
                       const SizedBox(height: 6),
-                      _buildDetailTextRow('Transaction ID:', _transactionId),
+                      _buildDetailTextRow(context, 'Transaction ID:', _transactionId),
                     ],
                   ),
                 ),
@@ -483,132 +474,114 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
             ),
           ),
           const SizedBox(height: 24),
-
-          // Action Buttons: View Ticket & Back to Home
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: 'View Ticket',
-                  onPressed: () {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(
-                        builder: (_) => BookingConfirmationScreen(
-                          seat: widget.checkoutData.selectedSeat,
-                          vehicleId: widget.checkoutData.vehicleNumber,
-                          driver: widget.checkoutData.driverName,
-                          departureTime: widget.checkoutData.departureTime,
-                          destination: widget.checkoutData.destination,
-                          bookingReference: _bookingReference,
-                        ),
-                      ),
-                    );
-                  },
+          ClientButton(
+            label: 'View Ticket',
+            onPressed: () {
+              Navigator.of(context).pushReplacement(
+                MaterialPageRoute(
+                  builder: (_) => BookingConfirmationScreen(
+                    seat: widget.checkoutData.selectedSeat,
+                    vehicleId: widget.checkoutData.vehicleNumber,
+                    driver: widget.checkoutData.driverName,
+                    departureTime: widget.checkoutData.departureTime,
+                    destination: widget.checkoutData.destination,
+                    bookingReference: _bookingReference,
+                  ),
                 ),
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: 'Back to Home',
-                  outline: true,
-                  onPressed: () {
-                    Navigator.of(context).popUntil((route) => route.isFirst);
-                  },
-                ),
-              ),
-            ],
+          ClientButton.secondary(
+            label: 'Back to Home',
+            onPressed: () {
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            },
           ),
         ],
       ),
     );
   }
 
-  // --- SCREEN 5: PAYMENT FAILURE VIEW ---
-  Widget _buildFailureView(BuildContext context, ColorScheme scheme) {
+  Widget _buildFailureView(BuildContext context) {
     return _stateShell(
       key: const ValueKey('failure'),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          AppSurface(
-            radius: 28,
+          Container(
             padding: const EdgeInsets.all(22),
-            color: scheme.surfaceContainerHigh,
-            border: Border.all(color: scheme.error.withAlpha(60)),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: ClientColors.journeyRed.withAlpha(60),
+              ),
+            ),
             child: Column(
               children: [
-                // Error Illustration
                 Container(
                   width: 90,
                   height: 90,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: scheme.error.withAlpha(15),
-                    border: Border.all(color: scheme.error.withAlpha(45)),
+                    color: ClientColors.journeyRed.withAlpha(15),
+                    border: Border.all(
+                      color: ClientColors.journeyRed.withAlpha(45),
+                    ),
                   ),
-                  child: Center(
+                  child: const Center(
                     child: Icon(
                       Icons.gpp_bad_rounded,
                       size: 48,
-                      color: scheme.error,
+                      color: ClientColors.journeyRed,
                     ),
                   ),
                 ),
                 const SizedBox(height: 20),
                 Text(
                   'Payment Failed',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w900,
-                    color: scheme.error,
+                  style: ClientTypography.headingMedium(context).copyWith(
+                    color: ClientColors.journeyRed,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Your transaction could not be processed.',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: scheme.onSurface.withAlpha(160),
+                  style: ClientTypography.bodySmall(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
                   ),
                 ),
                 const SizedBox(height: 20),
-
-                // Failure Reason Card
                 Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: scheme.surfaceContainerLowest,
+                    color: ClientColors.surfaceSubtleFor(context),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: scheme.outline.withAlpha(55)),
+                    border: Border.all(color: ClientColors.borderFor(context)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
+                      Text(
                         'Reason for Failure',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
+                        style: ClientTypography.labelSmall(context).copyWith(
+                          color: ClientColors.textTertiaryFor(context),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         _getMockFailureReason(),
-                        style: const TextStyle(
-                          fontSize: 13,
+                        style: ClientTypography.bodyMedium(context).copyWith(
+                          color: ClientColors.textPrimaryFor(context),
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      const Divider(height: 1),
+                      Divider(color: ClientColors.borderFor(context), height: 1),
                       const SizedBox(height: 12),
-                      _buildDetailTextRow('Transaction ID:', _transactionId),
+                      _buildDetailTextRow(context, 'Transaction ID:', _transactionId),
                     ],
                   ),
                 ),
@@ -616,34 +589,14 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
             ),
           ),
           const SizedBox(height: 24),
-
-          // Action Buttons: Retry & Contact Support
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: 'Retry Payment',
-                  onPressed: () {
-                    // Navigate back to checkout screen to let them retry
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ),
-            ],
+          ClientButton(
+            label: 'Retry Payment',
+            onPressed: () => Navigator.of(context).pop(),
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: AppButton(
-                  label: 'Contact Support',
-                  outline: true,
-                  onPressed: () {
-                    _showSupportDialog(context, scheme);
-                  },
-                ),
-              ),
-            ],
+          ClientButton.secondary(
+            label: 'Contact Support',
+            onPressed: () => _showSupportDialog(context),
           ),
         ],
       ),
@@ -666,6 +619,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
   }
 
   Widget _buildDetailTextRow(
+    BuildContext context,
     String label,
     String value, {
     bool isBoldValue = false,
@@ -674,13 +628,17 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+        Text(
+          label,
+          style: ClientTypography.bodySmall(context).copyWith(
+            color: ClientColors.textTertiaryFor(context),
+          ),
+        ),
         Text(
           value,
-          style: TextStyle(
-            fontSize: 12,
+          style: ClientTypography.bodySmall(context).copyWith(
             fontWeight: isBoldValue ? FontWeight.w900 : FontWeight.bold,
-            color: valueColor,
+            color: valueColor ?? ClientColors.textPrimaryFor(context),
           ),
         ),
       ],
@@ -697,27 +655,28 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
     return 'Verification error. The receipt upload screenshot was rejected / invalid transaction reference.';
   }
 
-  void _showSupportDialog(BuildContext context, ColorScheme scheme) {
+  void _showSupportDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          backgroundColor: scheme.surface,
+          backgroundColor: ClientColors.surfaceFor(context),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'Contact Customer Support',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: ClientTypography.headingSmall(context).copyWith(
+              color: ClientColors.textPrimaryFor(context),
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Our customer support agents are ready to assist you. Reference ticket number: $_transactionId',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: scheme.onSurface.withAlpha(200),
+                style: ClientTypography.bodySmall(context).copyWith(
+                  color: ClientColors.textSecondaryFor(context),
                 ),
               ),
             ],
@@ -725,7 +684,10 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: Text('Close', style: TextStyle(color: scheme.primary)),
+              child: const Text(
+                'Close',
+                style: TextStyle(color: ClientColors.primary),
+              ),
             ),
           ],
         );
@@ -734,7 +696,6 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
   }
 }
 
-// --- CUSTOM PAINTER: ROTATING LOADER ARC ---
 class LoaderRingPainter extends CustomPainter {
   final Color primaryColor;
   final Color secondaryColor;
@@ -750,11 +711,9 @@ class LoaderRingPainter extends CustomPainter {
 
     final rect = Rect.fromLTWH(3, 3, size.width - 6, size.height - 6);
 
-    // Draw background dim track
     paint.color = primaryColor.withAlpha(30);
     canvas.drawArc(rect, 0, 2 * math.pi, false, paint);
 
-    // Draw active gradient arc
     paint.color = primaryColor;
     canvas.drawArc(rect, 0, 1.2 * math.pi, false, paint);
   }
@@ -763,7 +722,6 @@ class LoaderRingPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-// --- CUSTOM PAINTER: CONFETTI PARTICLES ---
 class ConfettiPainter extends CustomPainter {
   final Animation<double> progress;
 
@@ -775,7 +733,7 @@ class ConfettiPainter extends CustomPainter {
 
     final random = math.Random(42);
     final center = Offset(size.width / 2, size.height / 2);
-    final count = 28;
+    const count = 28;
     final maxRadius = size.width * 0.7;
 
     for (var i = 0; i < count; i++) {
@@ -804,13 +762,13 @@ class ConfettiPainter extends CustomPainter {
   Color _getConfettiColor(int index) {
     switch (index) {
       case 0:
-        return Colors.blue;
+        return ClientColors.primary;
       case 1:
-        return Colors.green;
+        return ClientColors.journeyGreen;
       case 2:
-        return Colors.amber;
+        return ClientColors.journeyAmber;
       default:
-        return Colors.pink;
+        return ClientColors.journeyRed;
     }
   }
 

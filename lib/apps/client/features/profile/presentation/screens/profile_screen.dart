@@ -4,8 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/app_mode/app_mode.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
-import 'package:bmt_app/core/theme/app_typography.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/profile/domain/entities/client_profile.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_state.dart';
@@ -29,7 +30,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final width = MediaQuery.sizeOf(context).width;
     final maxW = AppLayout.maxContentWidth(width);
 
@@ -39,38 +39,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxW),
             child: switch (state) {
-              ProfileLoading() => const Center(
-                child: CircularProgressIndicator(),
+              ProfileLoading() => ListView(
+                padding: const EdgeInsets.all(20),
+                children: [
+                  ClientSkeleton(height: 100, borderRadius: 24),
+                  const SizedBox(height: 24),
+                  ClientSkeleton(height: 56, borderRadius: 14),
+                  const SizedBox(height: 8),
+                  ClientSkeleton(height: 56, borderRadius: 14),
+                  const SizedBox(height: 8),
+                  ClientSkeleton(height: 56, borderRadius: 14),
+                ],
               ),
-              ProfileError(:final message) => EmptyState(
-                title: 'Profile unavailable',
-                subtitle: message,
+              ProfileError(:final message) => ClientErrorCard.fullScreen(
+                message: message,
+                onRetry: () => context.read<ProfileCubit>().load(),
               ),
               ProfileLoaded(:final data) => ListView(
                 padding: AppLayout.pagePaddingWithTop,
                 children: [
-                  AppCard(
-                    padding: const EdgeInsets.all(AppLayout.spaceLg),
+                  // ── Premium profile header ──────────────────────────────
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [ClientColors.primary, Color(0xFF1554C8)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                    ),
                     child: Row(
                       children: [
-                        AppAvatar(
-                          initials: data.profile.initials,
-                          radius: 28,
-                          backgroundColor: scheme.primary,
+                        Container(
+                          width: 60,
+                          height: 60,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withAlpha(40),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Center(
+                            child: Text(
+                              data.profile.initials,
+                              style: ClientTypography.headingMedium(
+                                context,
+                              ).copyWith(color: Colors.white),
+                            ),
+                          ),
                         ),
-                        const SizedBox(width: AppLayout.spaceMd),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
                                 data.profile.name,
-                                style: AppTypography.heading(scheme),
+                                style: ClientTypography.headingSmall(
+                                  context,
+                                ).copyWith(color: Colors.white),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 data.profile.email,
-                                style: AppTypography.caption(scheme),
+                                style: ClientTypography.bodySmall(
+                                  context,
+                                ).copyWith(
+                                  color: Colors.white.withAlpha(200),
+                                ),
                               ),
                             ],
                           ),
@@ -78,9 +113,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ],
                     ),
                   ),
+                  // ── Sections ────────────────────────────────────────────
                   for (final section in data.sections) ...[
                     const SizedBox(height: AppLayout.spaceXl),
-                    SectionHeader(title: section.title),
+                    ClientSectionHeader(title: section.title),
                     const SizedBox(height: AppLayout.spaceSm),
                     for (final item in section.items) ...[
                       ProfileHubTile(
@@ -134,15 +170,21 @@ class _DevVersionSwitcher extends StatelessWidget {
         final cubit = context.read<AppModeCubit>();
         final current = state.mode;
 
-        return AppCard(
+        return Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: ClientColors.borderFor(context)),
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Developer',
-                style: AppTypography.caption(
-                  Theme.of(context).colorScheme,
-                ).copyWith(fontWeight: FontWeight.w700),
+                style: ClientTypography.bodySmall(context).copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const SizedBox(height: AppLayout.spaceSm),
               Text(

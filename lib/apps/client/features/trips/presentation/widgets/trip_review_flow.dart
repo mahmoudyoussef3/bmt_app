@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 /// Post-trip review sheet: driver, vehicle, route ratings (UI only).
 Future<void> showTripReviewFlow(
@@ -9,7 +11,7 @@ Future<void> showTripReviewFlow(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Theme.of(context).cardColor,
+    backgroundColor: ClientColors.surfaceFor(context),
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
@@ -33,8 +35,6 @@ class _TripReviewSheetState extends State<_TripReviewSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return SafeArea(
       child: Padding(
         padding: EdgeInsets.only(
@@ -52,21 +52,18 @@ class _TripReviewSheetState extends State<_TripReviewSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: scheme.outline,
+                  color: ClientColors.borderFor(context),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              'Rate your trip',
-              style: Theme.of(context).textTheme.displaySmall,
-            ),
+            Text('Rate your trip', style: ClientTypography.headingMedium(context)),
             const SizedBox(height: 6),
             Text(
               widget.tripReference,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onSurface.withAlpha(170),
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
               ),
             ),
             const SizedBox(height: 20),
@@ -101,15 +98,13 @@ class _TripReviewSheetState extends State<_TripReviewSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            AppButton(
+            ClientButton(
               label: 'Submit review',
-              height: 50,
+              expand: true,
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Thank you for your review (demo)'),
-                  ),
+                  const SnackBar(content: Text('Thank you for your review (demo)')),
                 );
               },
             ),
@@ -135,24 +130,26 @@ class _RatingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppSurface(
+    return Container(
       padding: const EdgeInsets.all(14),
-      radius: 16,
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: Theme.of(
-              context,
-            ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+            style: ClientTypography.bodyMedium(context).copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
           Text(
             subtitle,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurface.withAlpha(160),
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
             ),
           ),
           const SizedBox(height: 10),
@@ -167,7 +164,7 @@ class _RatingRow extends StatelessWidget {
                   star <= value
                       ? Icons.star_rounded
                       : Icons.star_outline_rounded,
-                  color: scheme.tertiary,
+                  color: ClientColors.journeyAmber,
                   size: 28,
                 ),
               );
