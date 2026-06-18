@@ -160,10 +160,10 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         onBack: () => _setView(_DriversViewState.list),
         onSave: (savedDriver) async {
           await cubit.saveDriver(savedDriver);
-          if (context.mounted) {
-            await context.read<FleetOverviewCubit>().loadWorkspace();
-            _setView(_DriversViewState.list);
-          }
+          if (!context.mounted) return;
+          if (cubit.state is FleetDriversError) return;
+          await context.read<FleetOverviewCubit>().loadWorkspace();
+          if (context.mounted) _setView(_DriversViewState.list);
         },
       );
     }

@@ -178,9 +178,8 @@ LANGUAGE sql STABLE SECURITY DEFINER AS $$
     SELECT 1 FROM public.subscriptions
     WHERE id = p_subscription_id
       AND status = 'active'
-      AND trips_used < total_trips_allowed
-      AND valid_from <= current_date
-      AND valid_to >= current_date
+      AND start_date <= current_date
+      AND end_date >= current_date
   );
 $$;
 

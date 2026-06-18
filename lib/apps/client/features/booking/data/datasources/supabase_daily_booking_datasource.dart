@@ -71,9 +71,9 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
       final passengers = data['passenger_count'] as int? ?? 0;
 
       return DailyBookingVehicle(
-        id: data['vehicle_id']?.toString() ?? '',
+        id: data['id']?.toString() ?? '',
         driver: driver?['full_name']?.toString() ?? 'Unknown Driver',
-        time: data['trip_date']?.toString() ?? '',
+        time: data['departure_time']?.toString() ?? '',
         seatsLeft: capacity - passengers,
         occupancy: capacity > 0 ? passengers / capacity : 0,
       );
