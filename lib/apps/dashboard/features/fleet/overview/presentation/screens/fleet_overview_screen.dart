@@ -12,10 +12,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/screens/fleet_drivers_screen.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/cubit/fleet_vehicles_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/screens/fleet_vehicles_screen.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presentation/cubit/fleet_assignments_cubit.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presentation/screens/fleet_assignments_screen.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/screens/fleet_documents_screen.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -114,17 +111,6 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                           onViewStateChanged: (isList) =>
                               setState(() => _isListMode = isList),
                         ),
-                      ),
-                      FleetTab.assignments =>
-                        BlocProvider<FleetAssignmentsCubit>(
-                          create: (_) =>
-                              dashboardDi<FleetAssignmentsCubit>()..load(),
-                          child: const FleetAssignmentsScreen(),
-                        ),
-                      FleetTab.documents => BlocProvider<FleetDocumentsCubit>(
-                        create: (_) =>
-                            dashboardDi<FleetDocumentsCubit>()..load(),
-                        child: const FleetDocumentsScreen(),
                       ),
                     },
                   ),

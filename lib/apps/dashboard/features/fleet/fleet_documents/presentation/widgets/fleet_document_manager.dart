@@ -1,5 +1,3 @@
-import 'dart:io' as io;
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
@@ -8,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fle
 import 'package:bmt_app/apps/dashboard/features/fleet/data/models/fleet_models.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_upload_helpers.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -43,41 +42,6 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
     super.dispose();
   }
 
-  Future<List<int>?> _readPickedFileBytes(PlatformFile file) async {
-    if (file.bytes != null) return file.bytes;
-    if (!kIsWeb && file.path != null) {
-      return io.File(file.path!).readAsBytes();
-    }
-    return null;
-  }
-
-  String _safeStorageFileName(String input) {
-    final extension = input.contains('.') ? '.${input.split('.').last}' : '';
-    final nameWithoutExtension = input.contains('.')
-        ? input.substring(0, input.lastIndexOf('.'))
-        : input;
-
-    final safeName = nameWithoutExtension
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9_\-]+'), '-')
-        .replaceAll(RegExp(r'-+'), '-')
-        .replaceAll(RegExp(r'^-|-$'), '');
-
-    return '${safeName.isEmpty ? 'file' : safeName}$extension';
-  }
-
-  String? _storagePathFromPublicUrl(String url, {required String bucket}) {
-    final uri = Uri.tryParse(url);
-    if (uri == null) return null;
-
-    final segments = uri.pathSegments;
-    final bucketIndex = segments.indexOf(bucket);
-    if (bucketIndex == -1 || bucketIndex + 1 >= segments.length) return null;
-
-    return segments.skip(bucketIndex + 1).join('/');
-  }
-
   Future<bool> _confirmDelete(
     BuildContext context,
     FleetDocument document,
@@ -109,35 +73,15 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
 
   Future<void> _pickFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],
-        allowMultiple: false,
-        withData: kIsWeb,
-      );
-
-      if (result == null || result.files.isEmpty) return;
-
-      final file = result.files.single;
-      final bytes = await _readPickedFileBytes(file);
-
-      if (bytes == null || bytes.isEmpty) {
-        setState(() => error = 'تعذر قراءة محتوى الملف. جرّب ملف آخر.');
-        return;
-      }
-
-      if (bytes.length > 10 * 1024 * 1024) {
-        setState(() => error = 'حجم الملف كبير. الحد الأقصى 10MB.');
-        return;
-      }
-
+      final picked = await FleetUploadHelpers.pickDocumentFile();
+      if (picked == null) return;
       setState(() {
-        pickedFile = file;
-        pickedFileBytes = bytes;
+        pickedFile = picked.file;
+        pickedFileBytes = picked.bytes;
         error = '';
       });
     } catch (e) {
-      setState(() => error = 'تعذر اختيار الملف: $e');
+      setState(() => error = e.toString().replaceAll('Exception: ', ''));
     }
   }
 
@@ -172,7 +116,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
       final cubit = context.read<FleetDocumentsCubit>();
       final ownerFolder = widget.isDriver ? 'drivers' : 'vehicles';
       final typeFolder = documentTypeToDbString(selectedType!);
-      final fileName = _safeStorageFileName(pickedFile!.name);
+      final fileName = FleetUploadHelpers.safeStorageFileName(pickedFile!.name);
       final path =
           '$ownerFolder/${widget.ownerId}/$typeFolder/${DateTime.now().millisecondsSinceEpoch}_$fileName';
 
@@ -224,7 +168,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
     });
 
     try {
-      final storagePath = _storagePathFromPublicUrl(
+      final storagePath = FleetUploadHelpers.storagePathFromPublicUrl(
         doc.fileUrl,
         bucket: 'documents',
       );

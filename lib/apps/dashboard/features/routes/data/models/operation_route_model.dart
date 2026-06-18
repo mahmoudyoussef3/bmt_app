@@ -133,7 +133,7 @@ class RouteStationModel extends RouteStation {
 
   Map<String, dynamic> toJson({String? routeId}) {
     return {
-      ?'route_id': routeId,
+      'route_id': ?routeId,
       'name': name,
       'area': area,
       'arrival_offset': arrivalOffset,

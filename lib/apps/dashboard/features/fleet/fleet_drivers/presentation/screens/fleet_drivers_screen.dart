@@ -8,6 +8,8 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_drivers_card_list.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_driver_details_view.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_driver_form_view.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/utils/fleet_pending_docs_uploader.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
@@ -158,11 +160,28 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         driver: _activeDriver,
         workspace: workspace,
         onBack: () => _setView(_DriversViewState.list),
-        onSave: (savedDriver) async {
-          await cubit.saveDriver(savedDriver);
-          if (!context.mounted) return;
-          if (cubit.state is FleetDriversError) return;
-          await context.read<FleetOverviewCubit>().loadWorkspace();
+        onSave: (savedDriver, pendingDocs) async {
+          final docsCubit = context.read<FleetDocumentsCubit>();
+          final overviewCubit = context.read<FleetOverviewCubit>();
+          final messenger = ScaffoldMessenger.of(context);
+          final saved = await cubit.saveDriver(savedDriver);
+          if (saved == null) return; // error state already emitted
+
+          final failed = await FleetPendingDocsUploader.upload(
+            docsCubit,
+            ownerId: saved.id,
+            isDriver: true,
+            docs: pendingDocs,
+          );
+          if (failed.isNotEmpty) {
+            messenger.showSnackBar(
+              SnackBar(
+                content: Text('تم حفظ السائق، لكن تعذّر رفع: ${failed.join('، ')}'),
+              ),
+            );
+          }
+
+          await overviewCubit.loadWorkspace();
           if (context.mounted) _setView(_DriversViewState.list);
         },
       );

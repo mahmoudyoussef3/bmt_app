@@ -30,19 +30,6 @@ class FleetTabBar extends StatelessWidget {
         count: summary.vehiclesCount,
         subtitle: 'حالة المركبات والتراخيص',
       ),
-      _FleetNavItem(
-        tab: FleetTab.assignments,
-        icon: Icons.link_rounded,
-        count: summary.activeAssignmentsCount,
-        subtitle: 'ربط السائق بالمركبة',
-      ),
-      _FleetNavItem(
-        tab: FleetTab.documents,
-        icon: Icons.fact_check_outlined,
-        count: summary.documentsNeedFollowUpCount,
-        subtitle: 'وثائق تحتاج متابعة',
-        urgent: summary.documentsNeedFollowUpCount > 0,
-      ),
     ];
 
     return AppCard(
@@ -100,14 +87,12 @@ class _FleetNavItem {
     required this.icon,
     required this.count,
     required this.subtitle,
-    this.urgent = false,
   });
 
   final FleetTab tab;
   final IconData icon;
   final int count;
   final String subtitle;
-  final bool urgent;
 }
 
 class _DashboardTabButton extends StatelessWidget {
@@ -124,7 +109,7 @@ class _DashboardTabButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final color = item.urgent ? scheme.error : scheme.primary;
+    final color = scheme.primary;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),

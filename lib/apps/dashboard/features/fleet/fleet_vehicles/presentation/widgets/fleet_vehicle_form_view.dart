@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
-import 'dart:io' as io;
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/pending_fleet_document.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_documents_inline_section.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_upload_helpers.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/cubit/fleet_vehicles_cubit.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -16,7 +18,8 @@ class FleetVehicleFormView extends StatefulWidget {
   final FleetVehicle? vehicle;
   final FleetWorkspace workspace;
   final VoidCallback onBack;
-  final ValueChanged<FleetVehicle> onSave;
+  final void Function(FleetVehicle vehicle, List<PendingFleetDocument> docs)
+  onSave;
 
   const FleetVehicleFormView({
     super.key,
@@ -49,6 +52,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
   List<String> _existingImageUrls = [];
   final List<PlatformFile> _newPickedFiles = [];
   final List<List<int>> _newPickedBytes = [];
+  List<PendingFleetDocument> _pendingDocs = const [];
 
   String _globalError = '';
   bool _saving = false;
@@ -105,6 +109,12 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     }).toList();
   }
 
+  List<FleetDocument> _vehicleDocuments() {
+    final id = widget.vehicle?.id;
+    if (id == null || id.isEmpty) return const [];
+    return widget.workspace.documents.where((d) => d.ownerId == id).toList();
+  }
+
   @override
   void dispose() {
     code.dispose();
@@ -116,30 +126,6 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     color.dispose();
     notes.dispose();
     super.dispose();
-  }
-
-  Future<List<int>?> _readPickedFileBytes(PlatformFile file) async {
-    if (file.bytes != null) return file.bytes;
-    if (!kIsWeb && file.path != null) {
-      return io.File(file.path!).readAsBytes();
-    }
-    return null;
-  }
-
-  String _safeStorageFileName(String input) {
-    final extension = input.contains('.') ? '.${input.split('.').last}' : '';
-    final nameWithoutExtension = input.contains('.')
-        ? input.substring(0, input.lastIndexOf('.'))
-        : input;
-
-    final safeName = nameWithoutExtension
-        .trim()
-        .toLowerCase()
-        .replaceAll(RegExp(r'[^a-z0-9_\-]+'), '-')
-        .replaceAll(RegExp(r'-+'), '-')
-        .replaceAll(RegExp(r'^-|-$'), '');
-
-    return '${safeName.isEmpty ? 'file' : safeName}$extension';
   }
 
   @override
@@ -230,6 +216,12 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
                 ],
               );
             },
+          ),
+          const SizedBox(height: AppSpacing.large),
+          FleetDocumentsInlineSection(
+            isDriver: false,
+            existingDocuments: _vehicleDocuments(),
+            onChanged: (docs) => _pendingDocs = docs,
           ),
           if (_globalError.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.medium),
@@ -454,7 +446,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
       final List<List<int>> validBytes = [];
 
       for (final file in result.files) {
-        final bytes = await _readPickedFileBytes(file);
+        final bytes = await FleetUploadHelpers.readPickedFileBytes(file);
         if (bytes == null || bytes.isEmpty) {
           continue;
         }
@@ -511,7 +503,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         final file = _newPickedFiles[i];
         final bytes = _newPickedBytes[i];
 
-        final fileName = _safeStorageFileName(file.name);
+        final fileName = FleetUploadHelpers.safeStorageFileName(file.name);
         final path =
             'vehicles/${existing?.id.isNotEmpty == true ? existing!.id : 'new'}/${DateTime.now().millisecondsSinceEpoch}_${i}_$fileName';
 
@@ -556,7 +548,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         timeline: existing?.timeline ?? const [],
       );
 
-      widget.onSave(finalVehicle);
+      widget.onSave(finalVehicle, _pendingDocs);
     } catch (e) {
       setState(() => _globalError = e.toString().replaceAll('Exception: ', ''));
     } finally {
@@ -823,34 +815,43 @@ class _VehicleDriverCard extends StatelessWidget {
           const FleetSectionTitle(
             icon: Icons.person_rounded,
             title: 'السائق المعين',
-            subtitle: 'اختياري. لا يظهر إلا السائقين المتاحين والنشطين.',
+            subtitle: 'مطلوب. لا يمكن إنشاء مركبة بدون سائق. يمكن تغييره لاحقاً.',
           ),
           const SizedBox(height: AppSpacing.medium),
           DropdownButtonFormField<String>(
             initialValue: selectedDriverId,
             isExpanded: true,
             decoration: const InputDecoration(
-              labelText: 'السائق',
+              labelText: 'السائق *',
               prefixIcon: Icon(Icons.person_rounded),
               border: OutlineInputBorder(),
             ),
-            items: [
-              const DropdownMenuItem<String>(
-                value: null,
-                child: Text('بدون سائق الآن'),
-              ),
-              ...drivers.map(
-                (d) => DropdownMenuItem<String>(
-                  value: d.id,
-                  child: Text(
-                    '${d.name} (${d.employeeCode})',
-                    overflow: TextOverflow.ellipsis,
+            items: drivers
+                .map(
+                  (d) => DropdownMenuItem<String>(
+                    value: d.id,
+                    child: Text(
+                      '${d.name} (${d.employeeCode})',
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ),
-                ),
-              ),
-            ],
+                )
+                .toList(),
+            validator: (v) =>
+                (v == null || v.isEmpty) ? 'يجب تعيين سائق للمركبة' : null,
             onChanged: onChanged,
           ),
+          if (drivers.isEmpty)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.small),
+              child: Text(
+                'لا يوجد سائقون متاحون. أضف سائقاً نشطاً أولاً.',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
         ],
       ),
     );

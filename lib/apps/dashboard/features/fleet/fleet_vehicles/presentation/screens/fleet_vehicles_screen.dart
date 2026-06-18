@@ -7,6 +7,8 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentatio
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/widgets/fleet_vehicles_card_list.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/widgets/fleet_vehicle_details_view.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/widgets/fleet_vehicle_form_view.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/utils/fleet_pending_docs_uploader.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -117,12 +119,31 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
                 vehicle: _activeVehicle,
                 workspace: workspace,
                 onBack: () => _setView(_VehiclesViewState.list),
-                onSave: (savedVehicle) async {
-                  await cubit.saveVehicle(savedVehicle);
-                  if (context.mounted) {
-                    await context.read<FleetOverviewCubit>().loadWorkspace();
-                    _setView(_VehiclesViewState.list);
+                onSave: (savedVehicle, pendingDocs) async {
+                  final docsCubit = context.read<FleetDocumentsCubit>();
+                  final overviewCubit = context.read<FleetOverviewCubit>();
+                  final messenger = ScaffoldMessenger.of(context);
+                  final saved = await cubit.saveVehicle(savedVehicle);
+                  if (saved == null) return; // error state already emitted
+
+                  final failed = await FleetPendingDocsUploader.upload(
+                    docsCubit,
+                    ownerId: saved.id,
+                    isDriver: false,
+                    docs: pendingDocs,
+                  );
+                  if (failed.isNotEmpty) {
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          'تم حفظ المركبة، لكن تعذّر رفع: ${failed.join('، ')}',
+                        ),
+                      ),
+                    );
                   }
+
+                  await overviewCubit.loadWorkspace();
+                  if (context.mounted) _setView(_VehiclesViewState.list);
                 },
               );
 

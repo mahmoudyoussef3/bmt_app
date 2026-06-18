@@ -63,21 +63,27 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
     emit(current.copyWith(selectedIds: next));
   }
 
-  Future<void> saveVehicle(FleetVehicle vehicle) async {
+  /// Creates or updates a vehicle and returns the persisted entity (with its
+  /// id) on success, or null on failure (an error state is emitted). The
+  /// returned id lets the screen upload any queued documents afterwards.
+  Future<FleetVehicle?> saveVehicle(FleetVehicle vehicle) async {
     try {
+      final FleetVehicle saved;
       if (vehicle.id.isEmpty) {
         debugPrint(
           '[FleetVehiclesCubit] Creating vehicle: ${vehicle.vehicleCode}',
         );
-        await _createVehicle(vehicle);
+        saved = await _createVehicle(vehicle);
       } else {
         debugPrint('[FleetVehiclesCubit] Updating vehicle: ${vehicle.id}');
-        await _updateVehicle(vehicle);
+        saved = await _updateVehicle(vehicle);
       }
       await _reload();
+      return saved;
     } catch (error) {
       debugPrint('[FleetVehiclesCubit] Error saving: $error');
       emit(FleetVehiclesError(error.toString().replaceAll('Exception: ', '')));
+      return null;
     }
   }
 

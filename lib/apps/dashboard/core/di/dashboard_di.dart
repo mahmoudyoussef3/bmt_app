@@ -110,7 +110,11 @@ import '../../features/routes/domain/usecases/get_operation_routes_usecase.dart'
 import '../../features/routes/domain/usecases/reorder_route_stations_usecase.dart';
 import '../../features/routes/domain/usecases/update_route_station_usecase.dart';
 import '../../features/routes/domain/usecases/update_route_usecase.dart';
+import '../../features/routes/domain/usecases/search_places_usecase.dart';
+import '../../features/routes/domain/usecases/get_route_geometry_usecase.dart';
 import '../../features/routes/presentation/cubit/routes_cubit.dart';
+import 'package:bmt_app/core/geo/geo_service.dart';
+import 'package:bmt_app/core/geo/ors_geo_service.dart';
 import '../../features/subscriptions/data/datasources/mock_subscriptions_datasource.dart';
 import '../../features/subscriptions/data/datasources/supabase_subscriptions_datasource.dart';
 import '../../features/subscriptions/data/repositories/subscriptions_repository_impl.dart';
@@ -867,6 +871,22 @@ void registerDashboardDependencies() {
   if (!dashboardDi.isRegistered<ReorderRouteStationsUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => ReorderRouteStationsUseCase(dashboardDi<RoutesRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GeoService>()) {
+    dashboardDi.registerLazySingleton<GeoService>(() => OrsGeoService());
+  }
+
+  if (!dashboardDi.isRegistered<SearchPlacesUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => SearchPlacesUseCase(dashboardDi<GeoService>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetRouteGeometryUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetRouteGeometryUseCase(dashboardDi<GeoService>()),
     );
   }
 

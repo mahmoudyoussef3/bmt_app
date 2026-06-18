@@ -318,7 +318,7 @@ class _DashboardShellState extends State<DashboardShell> {
       ),
       DashboardRoutes.assignments => BlocProvider(
         create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
-        child: const FleetOverviewScreen(initialTab: FleetTab.assignments),
+        child: const FleetOverviewScreen(initialTab: FleetTab.drivers),
       ),
       DashboardRoutes.vehicles => BlocProvider(
         create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),

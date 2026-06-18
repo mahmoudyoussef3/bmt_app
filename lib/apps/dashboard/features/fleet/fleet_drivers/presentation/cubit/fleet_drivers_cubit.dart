@@ -69,19 +69,25 @@ class FleetDriversCubit extends Cubit<FleetDriversState> {
     emit(current.copyWith(selectedIds: {}));
   }
 
-  Future<void> saveDriver(FleetDriver driver) async {
+  /// Creates or updates a driver and returns the persisted entity (with its
+  /// id) on success, or null on failure (an error state is emitted). The
+  /// returned id lets the screen upload any queued documents afterwards.
+  Future<FleetDriver?> saveDriver(FleetDriver driver) async {
     try {
+      final FleetDriver saved;
       if (driver.id.isEmpty) {
         debugPrint('[FleetDriversCubit] Creating driver: ${driver.fullName}');
-        await _createDriver(driver);
+        saved = await _createDriver(driver);
       } else {
         debugPrint('[FleetDriversCubit] Updating driver: ${driver.id}');
-        await _updateDriver(driver);
+        saved = await _updateDriver(driver);
       }
       await _reload();
+      return saved;
     } catch (error) {
       debugPrint('[FleetDriversCubit] Error saving driver: $error');
       emit(FleetDriversError(error.toString().replaceAll('Exception: ', '')));
+      return null;
     }
   }
 
