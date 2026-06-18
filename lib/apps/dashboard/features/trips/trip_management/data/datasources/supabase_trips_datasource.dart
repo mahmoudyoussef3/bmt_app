@@ -83,7 +83,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       final List<Map<String, dynamic>> routePoints = [];
       for (final station in stations) {
         final stId = station['id']?.toString();
-        String arrivalOffset   = station['arrival_offset']?.toString()   ?? '';
+        String arrivalOffset = station['arrival_offset']?.toString() ?? '';
         String departureOffset = station['departure_offset']?.toString() ?? '';
 
         if (input.customStationTimes.isNotEmpty) {
@@ -94,19 +94,19 @@ class SupabaseTripsDatasource implements TripsDatasource {
           if (override.isNotEmpty) {
             final ca = override['arrival_offset'];
             final cd = override['departure_offset'];
-            if (ca != null && ca.isNotEmpty) arrivalOffset   = ca;
+            if (ca != null && ca.isNotEmpty) arrivalOffset = ca;
             if (cd != null && cd.isNotEmpty) departureOffset = cd;
           }
         }
 
         routePoints.add({
-          'route_point_id':   stId,
-          'point_name':       station['name'],
-          'point_order':      station['sort_order'],
-          'arrival_offset':   arrivalOffset,
+          'route_point_id': stId,
+          'point_name': station['name'],
+          'point_order': station['sort_order'],
+          'arrival_offset': arrivalOffset,
           'departure_offset': departureOffset,
-          'latitude':         station['latitude'],
-          'longitude':        station['longitude'],
+          'latitude': station['latitude'],
+          'longitude': station['longitude'],
         });
       }
 
@@ -117,17 +117,18 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .eq('id', input.vehicleId)
           .single();
 
-      final config = vehicleResponse['seat_configuration'] as Map<String, dynamic>?;
+      final config =
+          vehicleResponse['seat_configuration'] as Map<String, dynamic>?;
       final List<Map<String, dynamic>> seats = [];
 
       if (config != null && config['seats'] != null) {
         for (final seatVal in config['seats'] as List) {
-          final s    = seatVal as Map<String, dynamic>;
+          final s = seatVal as Map<String, dynamic>;
           final type = s['seat_type'] as String? ?? 'passenger';
           if (type != 'passenger') continue;
           seats.add({
-            'seat_label':  s['seat_number'] as String,
-            'seat_row':    s['row']    as int? ?? 0,
+            'seat_label': s['seat_number'] as String,
+            'seat_row': s['row'] as int? ?? 0,
             'seat_column': s['column'] as int? ?? 0,
           });
         }
@@ -135,14 +136,14 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
       if (seats.isEmpty) {
         const colCount = 3;
-        var curRow  = 1;
+        var curRow = 1;
         var seatNum = 1;
         while (seatNum <= input.capacity) {
           for (var col = 1; col <= colCount; col++) {
             if (seatNum > input.capacity) break;
             seats.add({
-              'seat_label':  '$seatNum',
-              'seat_row':    curRow,
+              'seat_label': '$seatNum',
+              'seat_row': curRow,
               'seat_column': col,
             });
             seatNum++;
@@ -155,21 +156,24 @@ class SupabaseTripsDatasource implements TripsDatasource {
       //    If any insert fails the entire trip creation rolls back.
       final tripCode = 'TR-${DateTime.now().millisecondsSinceEpoch % 1000000}';
 
-      final rpcResult = await _client.rpc('create_trip', params: {
-        'p_trip_code':      tripCode,
-        'p_route_id':       input.routeId,
-        'p_driver_id':      input.driverId,
-        'p_vehicle_id':     input.vehicleId,
-        'p_trip_date':      input.date,
-        'p_departure_time': input.departure,
-        'p_arrival_time':   input.arrival,
-        'p_capacity':       input.capacity,
-        'p_ticket_price':   input.ticketPrice,
-        'p_currency':       input.currency,
-        'p_notes':          ['تم إنشاء الرحلة ونمذجة المحطات والمقاعد تلقائياً'],
-        'p_route_points':   routePoints,
-        'p_seats':          seats,
-      });
+      final rpcResult = await _client.rpc(
+        'create_trip',
+        params: {
+          'p_trip_code': tripCode,
+          'p_route_id': input.routeId,
+          'p_driver_id': input.driverId,
+          'p_vehicle_id': input.vehicleId,
+          'p_trip_date': input.date,
+          'p_departure_time': input.departure,
+          'p_arrival_time': input.arrival,
+          'p_capacity': input.capacity,
+          'p_ticket_price': input.ticketPrice,
+          'p_currency': input.currency,
+          'p_notes': ['تم إنشاء الرحلة ونمذجة المحطات والمقاعد تلقائياً'],
+          'p_route_points': routePoints,
+          'p_seats': seats,
+        },
+      );
 
       final tripId = (rpcResult as Map<String, dynamic>)['trip_id'] as String;
 
@@ -204,6 +208,15 @@ class SupabaseTripsDatasource implements TripsDatasource {
       );
 
       return await fetchTripById(trip.id);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<void> deleteTrip(String tripId) async {
+    try {
+      await _client.from('operation_trips').delete().eq('id', tripId);
     } catch (e) {
       throw _handleError(e);
     }

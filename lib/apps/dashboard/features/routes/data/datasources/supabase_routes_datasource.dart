@@ -110,6 +110,18 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
     }
   }
 
+  @override
+  Future<void> deleteRoute(String routeId) async {
+    try {
+      await _client.from('route_stations').delete().eq('route_id', routeId);
+      await _client.from('operation_routes').delete().eq('id', routeId);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected delete route error: $e');
+    }
+  }
+
   // ── Add Station ──────────────────────────────────────────────────────
 
   @override

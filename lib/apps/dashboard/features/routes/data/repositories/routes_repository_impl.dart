@@ -41,6 +41,15 @@ class RoutesRepositoryImpl implements RoutesRepository {
   }
 
   @override
+  Future<void> deleteRoute(String routeId) async {
+    try {
+      await _datasource.deleteRoute(routeId);
+    } catch (e) {
+      throw Exception('تعذر حذف المسار: $e');
+    }
+  }
+
+  @override
   Future<List<OperationRoute>> getRoutes() async {
     try {
       return await _datasource.fetchRoutes();

@@ -132,6 +132,18 @@ class FleetAssignmentsCardList extends StatelessWidget {
                         tooltip: 'عرض السجل',
                         onPressed: () => onViewHistory(assignment.history),
                       ),
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          color: Theme.of(context).colorScheme.error,
+                        ),
+                        tooltip: 'حذف من قاعدة البيانات',
+                        onPressed: () => _confirmDeleteAssignment(
+                          context,
+                          assignment,
+                          cubit,
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -160,5 +172,38 @@ class FleetAssignmentsCardList extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Future<void> _confirmDeleteAssignment(
+    BuildContext context,
+    FleetAssignment assignment,
+    FleetAssignmentsCubit cubit,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف التعيين نهائياً'),
+        content: const Text(
+          'سيتم حذف سجل التعيين من قاعدة البيانات. لا يمكن التراجع عن هذا الإجراء.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      cubit.deleteAssignment(assignment.id);
+    }
   }
 }

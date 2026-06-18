@@ -236,6 +236,8 @@ class _VehicleRowActions extends StatelessWidget {
                 vehicle.id,
                 FleetVehicleStatus.archived,
               );
+            } else if (value == 'delete') {
+              _deleteWithConfirmation(context);
             }
           },
           itemBuilder: (ctx) => [
@@ -277,9 +279,54 @@ class _VehicleRowActions extends StatelessWidget {
                 ],
               ),
             ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.delete_outline_rounded,
+                    color: Theme.of(ctx).colorScheme.error,
+                  ),
+                  const SizedBox(width: AppSpacing.small),
+                  Text(
+                    'حذف من قاعدة البيانات',
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ],
     );
+  }
+
+  Future<void> _deleteWithConfirmation(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف المركبة نهائياً'),
+        content: Text(
+          'سيتم حذف المركبة "${vehicle.vehicleNumber}" من قاعدة البيانات مع وثائقها وتعييناتها. لا يمكن التراجع عن هذا الإجراء.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      cubit.deleteVehicle(vehicle.id);
+    }
   }
 }

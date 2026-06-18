@@ -11,6 +11,7 @@ class FleetDocumentsCardList extends StatelessWidget {
   final int page;
   final int pageSize;
   final ValueChanged<int> onPageChanged;
+  final ValueChanged<FleetDocument> onDelete;
 
   const FleetDocumentsCardList({
     super.key,
@@ -18,6 +19,7 @@ class FleetDocumentsCardList extends StatelessWidget {
     required this.page,
     required this.pageSize,
     required this.onPageChanged,
+    required this.onDelete,
   });
 
   Color _documentColor(BuildContext context, FleetDocumentStatus status) {
@@ -100,13 +102,54 @@ class FleetDocumentsCardList extends StatelessWidget {
                     const SizedBox(height: AppSpacing.small),
                     Align(
                       alignment: Alignment.centerLeft,
+                      child: Wrap(
+                        spacing: AppSpacing.small,
+                        children: [
+                          TextButton.icon(
+                            icon: const Icon(
+                              Icons.open_in_new_rounded,
+                              size: 16,
+                            ),
+                            label: const Text('فتح الملف'),
+                            onPressed: () => launchUrl(
+                              Uri.parse(document.fileUrl),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                          ),
+                          TextButton.icon(
+                            icon: Icon(
+                              Icons.delete_outline_rounded,
+                              size: 16,
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                            label: Text(
+                              'حذف',
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.error,
+                              ),
+                            ),
+                            onPressed: () => onDelete(document),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else ...[
+                    const SizedBox(height: AppSpacing.small),
+                    Align(
+                      alignment: Alignment.centerLeft,
                       child: TextButton.icon(
-                        icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                        label: const Text('فتح الملف'),
-                        onPressed: () => launchUrl(
-                          Uri.parse(document.fileUrl),
-                          mode: LaunchMode.externalApplication,
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          size: 16,
+                          color: Theme.of(context).colorScheme.error,
                         ),
+                        label: Text(
+                          'حذف',
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.error,
+                          ),
+                        ),
+                        onPressed: () => onDelete(document),
                       ),
                     ),
                   ],

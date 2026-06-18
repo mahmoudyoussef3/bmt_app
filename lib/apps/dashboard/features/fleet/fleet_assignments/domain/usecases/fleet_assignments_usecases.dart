@@ -41,3 +41,10 @@ class RemoveFleetAssignmentUseCase {
   Future<FleetAssignment> call(String assignmentId) =>
       _repository.removeAssignment(assignmentId);
 }
+
+class DeleteFleetAssignmentUseCase {
+  final FleetAssignmentsRepository _repository;
+  const DeleteFleetAssignmentUseCase(this._repository);
+  Future<void> call(String assignmentId) =>
+      _repository.deleteAssignment(assignmentId);
+}

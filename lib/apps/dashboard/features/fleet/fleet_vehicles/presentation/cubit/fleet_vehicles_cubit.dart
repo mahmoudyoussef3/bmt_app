@@ -10,6 +10,7 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
   final CreateFleetVehicleUseCase _createVehicle;
   final UpdateFleetVehicleUseCase _updateVehicle;
   final UpdateFleetVehicleStatusUseCase _updateVehicleStatus;
+  final DeleteFleetVehicleUseCase _deleteVehicle;
   final UploadVehicleFileUseCase _uploadFile;
   final DeleteVehicleFileUseCase _deleteFile;
 
@@ -18,12 +19,14 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
     required CreateFleetVehicleUseCase createVehicle,
     required UpdateFleetVehicleUseCase updateVehicle,
     required UpdateFleetVehicleStatusUseCase updateVehicleStatus,
+    required DeleteFleetVehicleUseCase deleteVehicle,
     required UploadVehicleFileUseCase uploadFile,
     required DeleteVehicleFileUseCase deleteFile,
   }) : _getVehicles = getVehicles,
        _createVehicle = createVehicle,
        _updateVehicle = updateVehicle,
        _updateVehicleStatus = updateVehicleStatus,
+       _deleteVehicle = deleteVehicle,
        _uploadFile = uploadFile,
        _deleteFile = deleteFile,
        super(const FleetVehiclesLoading());
@@ -97,6 +100,15 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
       await _updateVehicleStatus(id, FleetVehicleStatus.suspended);
     }
     await _reload();
+  }
+
+  Future<void> deleteVehicle(String vehicleId) async {
+    try {
+      await _deleteVehicle(vehicleId);
+      await _reload();
+    } catch (error) {
+      emit(FleetVehiclesError(error.toString().replaceAll('Exception: ', '')));
+    }
   }
 
   Future<String?> uploadVehicleFile(

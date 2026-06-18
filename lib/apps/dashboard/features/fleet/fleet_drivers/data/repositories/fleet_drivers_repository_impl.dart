@@ -101,6 +101,17 @@ class FleetDriversRepositoryImpl implements FleetDriversRepository {
   }
 
   @override
+  Future<void> deleteDriver(String driverId) async {
+    try {
+      await _datasource.deleteDriver(driverId);
+    } on Exception catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    } catch (_) {
+      throw Exception('تعذر حذف السائق');
+    }
+  }
+
+  @override
   Future<String> uploadFile(String bucket, String path, List<int> bytes) async {
     try {
       final datasource = _datasource;

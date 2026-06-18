@@ -133,6 +133,15 @@ class TripsRepositoryImpl implements TripsRepository {
   }
 
   @override
+  Future<void> deleteTrip(String tripId) async {
+    try {
+      await _datasource.deleteTrip(tripId);
+    } catch (e) {
+      throw Exception('تعذر حذف الرحلة: ${e.toString()}');
+    }
+  }
+
+  @override
   Future<OperationTrip> updateTripInfo(OperationTrip trip) async {
     try {
       if (trip.driverId.trim().isEmpty ||

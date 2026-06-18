@@ -11,6 +11,7 @@ class FleetVehiclesCardList extends StatelessWidget {
   final FleetWorkspace workspace;
   final ValueChanged<FleetVehicle> onViewDetails;
   final ValueChanged<FleetVehicle> onEdit;
+  final ValueChanged<FleetVehicle> onDelete;
   final int page;
   final int pageSize;
 
@@ -20,6 +21,7 @@ class FleetVehiclesCardList extends StatelessWidget {
     required this.workspace,
     required this.onViewDetails,
     required this.onEdit,
+    required this.onDelete,
     required this.page,
     required this.pageSize,
   });
@@ -95,34 +97,66 @@ class FleetVehiclesCardList extends StatelessWidget {
                   if (vehicle.hasExpiredDocument) ...[
                     const SizedBox(height: AppSpacing.small),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppStatusColors.errorContainer,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppStatusColors.onErrorContainer),
+                        border: Border.all(
+                          color: AppStatusColors.onErrorContainer,
+                        ),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.warning_rounded, color: AppStatusColors.onErrorContainer, size: 16),
+                          Icon(
+                            Icons.warning_rounded,
+                            color: AppStatusColors.onErrorContainer,
+                            size: 16,
+                          ),
                           const SizedBox(width: 6),
-                          Text('وثيقة منتهية', style: TextStyle(color: AppStatusColors.onErrorContainer, fontSize: 12, fontWeight: FontWeight.bold)),
+                          Text(
+                            'وثيقة منتهية',
+                            style: TextStyle(
+                              color: AppStatusColors.onErrorContainer,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
                   ] else if (vehicle.hasDocumentExpiringSoon) ...[
                     const SizedBox(height: AppSpacing.small),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: AppStatusColors.warningContainer,
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AppStatusColors.onWarningContainer),
+                        border: Border.all(
+                          color: AppStatusColors.onWarningContainer,
+                        ),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.schedule_rounded, color: AppStatusColors.onWarningContainer, size: 16),
+                          Icon(
+                            Icons.schedule_rounded,
+                            color: AppStatusColors.onWarningContainer,
+                            size: 16,
+                          ),
                           const SizedBox(width: 6),
-                          Text('وثيقة تنتهي قريباً', style: TextStyle(color: AppStatusColors.onWarningContainer, fontSize: 12, fontWeight: FontWeight.bold)),
+                          Text(
+                            'وثيقة تنتهي قريباً',
+                            style: TextStyle(
+                              color: AppStatusColors.onWarningContainer,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -163,6 +197,18 @@ class FleetVehiclesCardList extends StatelessWidget {
                         onPressed: () => onEdit(vehicle),
                         icon: const Icon(Icons.edit_outlined, size: 18),
                         label: const Text('تعديل'),
+                      ),
+                      TextButton.icon(
+                        onPressed: () => onDelete(vehicle),
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18,
+                          color: scheme.error,
+                        ),
+                        label: Text(
+                          'حذف',
+                          style: TextStyle(color: scheme.error),
+                        ),
                       ),
                     ],
                   ),

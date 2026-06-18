@@ -280,6 +280,19 @@ class SupabaseFleetDatasource implements FleetDatasource {
   }
 
   @override
+  Future<void> deleteDriver(String driverId) async {
+    try {
+      await _client.from('assignments').delete().eq('driver_id', driverId);
+      await _client.from('driver_documents').delete().eq('driver_id', driverId);
+      await _client.from('drivers').delete().eq('id', driverId);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected delete driver error: $e');
+    }
+  }
+
+  @override
   Future<FleetVehicleModel> createVehicle(FleetVehicle vehicle) async {
     try {
       final payload = _vehiclePayload(vehicle);
@@ -359,6 +372,22 @@ class SupabaseFleetDatasource implements FleetDatasource {
       throw Exception(_formatPostgrestError(e));
     } catch (e) {
       throw Exception('Unexpected update vehicle status error: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteVehicle(String vehicleId) async {
+    try {
+      await _client.from('assignments').delete().eq('vehicle_id', vehicleId);
+      await _client
+          .from('vehicle_documents')
+          .delete()
+          .eq('vehicle_id', vehicleId);
+      await _client.from('vehicles').delete().eq('id', vehicleId);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected delete vehicle error: $e');
     }
   }
 
@@ -468,6 +497,17 @@ class SupabaseFleetDatasource implements FleetDatasource {
       throw Exception(_formatPostgrestError(e));
     } catch (e) {
       throw Exception('Unexpected remove assignment error: $e');
+    }
+  }
+
+  @override
+  Future<void> deleteAssignment(String assignmentId) async {
+    try {
+      await _client.from('assignments').delete().eq('id', assignmentId);
+    } on PostgrestException catch (e) {
+      throw Exception(_formatPostgrestError(e));
+    } catch (e) {
+      throw Exception('Unexpected delete assignment error: $e');
     }
   }
 

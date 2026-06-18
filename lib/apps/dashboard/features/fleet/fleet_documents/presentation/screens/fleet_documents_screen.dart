@@ -78,6 +78,7 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
                       pageSize: _pageSize,
                       onPageChanged: (newPage) =>
                           setState(() => _page = newPage),
+                      onDelete: _deleteDocument,
                     );
                   } else {
                     return FleetDocumentsTable(
@@ -86,6 +87,7 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
                       pageSize: _pageSize,
                       onPageChanged: (newPage) =>
                           setState(() => _page = newPage),
+                      onDelete: _deleteDocument,
                     );
                   }
                 },
@@ -97,6 +99,52 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
         return const SizedBox.shrink();
       },
     );
+  }
+
+  Future<void> _deleteDocument(FleetDocument document) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف الوثيقة نهائياً'),
+        content: Text(
+          'سيتم حذف وثيقة "${document.type.label}" من قاعدة البيانات. لا يمكن التراجع عن هذا الإجراء.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    await context.read<FleetDocumentsCubit>().deleteDocument(
+      documentId: document.id,
+      isDriver: _isDriverDocument(document),
+    );
+  }
+
+  bool _isDriverDocument(FleetDocument document) {
+    return switch (document.type) {
+      FleetDocumentType.driverLicense ||
+      FleetDocumentType.nationalIdFront ||
+      FleetDocumentType.nationalIdBack ||
+      FleetDocumentType.criminalRecord ||
+      FleetDocumentType.employmentContract => true,
+      FleetDocumentType.vehicleLicense ||
+      FleetDocumentType.insurance ||
+      FleetDocumentType.inspection ||
+      FleetDocumentType.other => false,
+    };
   }
 
   Widget _buildToolbar(

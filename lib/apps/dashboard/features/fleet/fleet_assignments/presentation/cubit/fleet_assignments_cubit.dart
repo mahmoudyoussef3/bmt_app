@@ -11,6 +11,7 @@ class FleetAssignmentsCubit extends Cubit<FleetAssignmentsState> {
   final AssignFleetVehicleUseCase _assignVehicle;
   final ReassignFleetVehicleUseCase _reassignVehicle;
   final RemoveFleetAssignmentUseCase _removeAssignment;
+  final DeleteFleetAssignmentUseCase _deleteAssignment;
 
   FleetAssignmentsCubit({
     required GetFleetAssignmentsUseCase getAssignments,
@@ -19,12 +20,14 @@ class FleetAssignmentsCubit extends Cubit<FleetAssignmentsState> {
     required AssignFleetVehicleUseCase assignVehicle,
     required ReassignFleetVehicleUseCase reassignVehicle,
     required RemoveFleetAssignmentUseCase removeAssignment,
+    required DeleteFleetAssignmentUseCase deleteAssignment,
   }) : _getAssignments = getAssignments,
        _getDrivers = getDrivers,
        _getVehicles = getVehicles,
        _assignVehicle = assignVehicle,
        _reassignVehicle = reassignVehicle,
        _removeAssignment = removeAssignment,
+       _deleteAssignment = deleteAssignment,
        super(const FleetAssignmentsLoading());
 
   Future<void> load() async {
@@ -93,6 +96,18 @@ class FleetAssignmentsCubit extends Cubit<FleetAssignmentsState> {
     try {
       debugPrint('[FleetAssignmentsCubit] Removing assignment $assignmentId');
       await _removeAssignment(assignmentId);
+      await _reload();
+    } catch (error) {
+      emit(
+        FleetAssignmentsError(error.toString().replaceAll('Exception: ', '')),
+      );
+    }
+  }
+
+  Future<void> deleteAssignment(String assignmentId) async {
+    try {
+      debugPrint('[FleetAssignmentsCubit] Deleting assignment $assignmentId');
+      await _deleteAssignment(assignmentId);
       await _reload();
     } catch (error) {
       emit(

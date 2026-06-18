@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/operation_route.dart';
 import '../../domain/usecases/add_route_station_usecase.dart';
 import '../../domain/usecases/create_route_usecase.dart';
+import '../../domain/usecases/delete_route_usecase.dart';
 import '../../domain/usecases/delete_route_station_usecase.dart';
 import '../../domain/usecases/get_operation_routes_usecase.dart';
 import '../../domain/usecases/reorder_route_stations_usecase.dart';
@@ -14,6 +15,7 @@ class RoutesCubit extends Cubit<RoutesState> {
   final GetOperationRoutesUseCase _getRoutes;
   final CreateRouteUseCase _createRoute;
   final UpdateRouteUseCase _updateRoute;
+  final DeleteRouteUseCase _deleteRoute;
   final AddRouteStationUseCase _addStation;
   final UpdateRouteStationUseCase _updateStation;
   final DeleteRouteStationUseCase _deleteStation;
@@ -23,6 +25,7 @@ class RoutesCubit extends Cubit<RoutesState> {
     required GetOperationRoutesUseCase getRoutes,
     required CreateRouteUseCase createRoute,
     required UpdateRouteUseCase updateRoute,
+    required DeleteRouteUseCase deleteRoute,
     required AddRouteStationUseCase addStation,
     required UpdateRouteStationUseCase updateStation,
     required DeleteRouteStationUseCase deleteStation,
@@ -30,6 +33,7 @@ class RoutesCubit extends Cubit<RoutesState> {
   }) : _getRoutes = getRoutes,
        _createRoute = createRoute,
        _updateRoute = updateRoute,
+       _deleteRoute = deleteRoute,
        _addStation = addStation,
        _updateStation = updateStation,
        _deleteStation = deleteStation,
@@ -206,6 +210,28 @@ class RoutesCubit extends Cubit<RoutesState> {
         route.copyWith(status: OperationRouteStatus.archived),
       );
       _emitUpdatedRoute(current, updated, view: RoutesView.list);
+    } catch (error) {
+      emit(RoutesError(error.toString()));
+    }
+  }
+
+  Future<void> deleteRoute(OperationRoute route) async {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    try {
+      await _deleteRoute(route.id);
+      final routes = current.routes
+          .where((candidate) => candidate.id != route.id)
+          .toList();
+      emit(
+        current.copyWith(
+          routes: routes,
+          selectedRouteId: routes.isNotEmpty ? routes.first.id : '',
+          view: RoutesView.list,
+          clearEditingRoute: true,
+          clearSuccessRoute: true,
+        ),
+      );
     } catch (error) {
       emit(RoutesError(error.toString()));
     }

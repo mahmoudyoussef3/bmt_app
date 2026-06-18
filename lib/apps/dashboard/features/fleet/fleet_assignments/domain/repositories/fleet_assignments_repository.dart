@@ -16,4 +16,5 @@ abstract class FleetAssignmentsRepository {
     String newVehicleId,
   );
   Future<FleetAssignment> removeAssignment(String assignmentId);
+  Future<void> deleteAssignment(String assignmentId);
 }

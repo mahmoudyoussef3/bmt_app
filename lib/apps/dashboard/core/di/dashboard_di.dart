@@ -104,6 +104,7 @@ import '../../features/routes/data/repositories/routes_repository_impl.dart';
 import '../../features/routes/domain/repositories/routes_repository.dart';
 import '../../features/routes/domain/usecases/add_route_station_usecase.dart';
 import '../../features/routes/domain/usecases/create_route_usecase.dart';
+import '../../features/routes/domain/usecases/delete_route_usecase.dart';
 import '../../features/routes/domain/usecases/delete_route_station_usecase.dart';
 import '../../features/routes/domain/usecases/get_operation_routes_usecase.dart';
 import '../../features/routes/domain/usecases/reorder_route_stations_usecase.dart';
@@ -282,6 +283,11 @@ void registerDashboardDependencies() {
           UpdateFleetDriverStatusUseCase(dashboardDi<FleetDriversRepository>()),
     );
   }
+  if (!dashboardDi.isRegistered<DeleteFleetDriverUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => DeleteFleetDriverUseCase(dashboardDi<FleetDriversRepository>()),
+    );
+  }
   if (!dashboardDi.isRegistered<UploadDriverFileUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => UploadDriverFileUseCase(dashboardDi<FleetDriversRepository>()),
@@ -299,6 +305,7 @@ void registerDashboardDependencies() {
         createDriver: dashboardDi<CreateFleetDriverUseCase>(),
         updateDriver: dashboardDi<UpdateFleetDriverUseCase>(),
         updateDriverStatus: dashboardDi<UpdateFleetDriverStatusUseCase>(),
+        deleteDriver: dashboardDi<DeleteFleetDriverUseCase>(),
         uploadFile: dashboardDi<UploadDriverFileUseCase>(),
         deleteFile: dashboardDi<DeleteDriverFileUseCase>(),
       ),
@@ -333,6 +340,11 @@ void registerDashboardDependencies() {
       ),
     );
   }
+  if (!dashboardDi.isRegistered<DeleteFleetVehicleUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => DeleteFleetVehicleUseCase(dashboardDi<FleetVehiclesRepository>()),
+    );
+  }
   if (!dashboardDi.isRegistered<UploadVehicleFileUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => UploadVehicleFileUseCase(dashboardDi<FleetVehiclesRepository>()),
@@ -350,6 +362,7 @@ void registerDashboardDependencies() {
         createVehicle: dashboardDi<CreateFleetVehicleUseCase>(),
         updateVehicle: dashboardDi<UpdateFleetVehicleUseCase>(),
         updateVehicleStatus: dashboardDi<UpdateFleetVehicleStatusUseCase>(),
+        deleteVehicle: dashboardDi<DeleteFleetVehicleUseCase>(),
         uploadFile: dashboardDi<UploadVehicleFileUseCase>(),
         deleteFile: dashboardDi<DeleteVehicleFileUseCase>(),
       ),
@@ -402,6 +415,13 @@ void registerDashboardDependencies() {
       ),
     );
   }
+  if (!dashboardDi.isRegistered<DeleteFleetAssignmentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => DeleteFleetAssignmentUseCase(
+        dashboardDi<FleetAssignmentsRepository>(),
+      ),
+    );
+  }
   if (!dashboardDi.isRegistered<FleetAssignmentsCubit>()) {
     dashboardDi.registerFactory(
       () => FleetAssignmentsCubit(
@@ -411,6 +431,7 @@ void registerDashboardDependencies() {
         assignVehicle: dashboardDi<AssignFleetVehicleUseCase>(),
         reassignVehicle: dashboardDi<ReassignFleetVehicleUseCase>(),
         removeAssignment: dashboardDi<RemoveFleetAssignmentUseCase>(),
+        deleteAssignment: dashboardDi<DeleteFleetAssignmentUseCase>(),
       ),
     );
   }
@@ -723,7 +744,9 @@ void registerDashboardDependencies() {
 
   if (!dashboardDi.isRegistered<BookingPaymentVerificationDatasource>()) {
     dashboardDi.registerLazySingleton<BookingPaymentVerificationDatasource>(
-      () => SupabaseBookingPaymentVerificationDatasource(dashboardDi<SupabaseClient>()),
+      () => SupabaseBookingPaymentVerificationDatasource(
+        dashboardDi<SupabaseClient>(),
+      ),
     );
   }
 
@@ -817,6 +840,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<DeleteRouteUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => DeleteRouteUseCase(dashboardDi<RoutesRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<AddRouteStationUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => AddRouteStationUseCase(dashboardDi<RoutesRepository>()),
@@ -847,6 +876,7 @@ void registerDashboardDependencies() {
         getRoutes: dashboardDi<GetOperationRoutesUseCase>(),
         createRoute: dashboardDi<CreateRouteUseCase>(),
         updateRoute: dashboardDi<UpdateRouteUseCase>(),
+        deleteRoute: dashboardDi<DeleteRouteUseCase>(),
         addStation: dashboardDi<AddRouteStationUseCase>(),
         updateStation: dashboardDi<UpdateRouteStationUseCase>(),
         deleteStation: dashboardDi<DeleteRouteStationUseCase>(),

@@ -9,12 +9,14 @@ abstract class FleetDatasource {
     String driverId,
     FleetDriverStatus status,
   );
+  Future<void> deleteDriver(String driverId);
   Future<FleetVehicleModel> createVehicle(FleetVehicle vehicle);
   Future<FleetVehicleModel> updateVehicle(FleetVehicle vehicle);
   Future<FleetVehicleModel> updateVehicleStatus(
     String vehicleId,
     FleetVehicleStatus status,
   );
+  Future<void> deleteVehicle(String vehicleId);
   Future<FleetAssignmentModel> assignDriverToVehicle(
     String driverId,
     String vehicleId,
@@ -24,6 +26,7 @@ abstract class FleetDatasource {
     String newVehicleId,
   );
   Future<FleetAssignmentModel> removeAssignment(String assignmentId);
+  Future<void> deleteAssignment(String assignmentId);
 
   Future<FleetDocumentModel> createDocument({
     required String ownerId,

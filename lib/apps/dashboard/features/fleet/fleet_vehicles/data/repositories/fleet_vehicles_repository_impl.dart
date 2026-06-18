@@ -87,6 +87,17 @@ class FleetVehiclesRepositoryImpl implements FleetVehiclesRepository {
   }
 
   @override
+  Future<void> deleteVehicle(String vehicleId) async {
+    try {
+      await _datasource.deleteVehicle(vehicleId);
+    } on Exception catch (e) {
+      throw Exception(e.toString().replaceAll('Exception: ', ''));
+    } catch (_) {
+      throw Exception('تعذر حذف المركبة');
+    }
+  }
+
+  @override
   Future<String> uploadFile(String bucket, String path, List<int> bytes) async {
     try {
       final datasource = _datasource;

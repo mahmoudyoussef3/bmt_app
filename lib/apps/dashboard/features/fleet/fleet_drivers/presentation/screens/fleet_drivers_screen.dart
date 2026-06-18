@@ -180,8 +180,13 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         if (!isSplit &&
             _viewState == _DriversViewState.details &&
             _activeDriver != null) {
-          return _detailsView(context, state, workspace, _activeDriver!,
-              onBack: () => _setView(_DriversViewState.list));
+          return _detailsView(
+            context,
+            state,
+            workspace,
+            _activeDriver!,
+            onBack: () => _setView(_DriversViewState.list),
+          );
         }
 
         final master = Column(
@@ -198,8 +203,13 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         // Desktop: keep the list in view alongside the readiness detail pane.
         final detail = _selectedDriver == null
             ? null
-            : _detailsView(context, state, workspace, _selectedDriver!,
-                onBack: () => setState(() => _selectedDriver = null));
+            : _detailsView(
+                context,
+                state,
+                workspace,
+                _selectedDriver!,
+                onBack: () => setState(() => _selectedDriver = null),
+              );
 
         return MasterDetailLayout(
           master: master,
@@ -247,6 +257,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
             workspace: workspace,
             onViewDetails: (d) => _openDriver(d, isSplit),
             onEdit: (d) => _setView(_DriversViewState.form, d),
+            onDelete: _confirmDeleteDriver,
             page: _page,
             pageSize: _pageSize,
           );
@@ -399,6 +410,40 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDeleteDriver(FleetDriver driver) async {
+    final driversCubit = context.read<FleetDriversCubit>();
+    final overviewCubit = context.read<FleetOverviewCubit>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف السائق نهائياً'),
+        content: Text(
+          'سيتم حذف السائق "${driver.name}" من قاعدة البيانات مع وثائقه وتعييناته. لا يمكن التراجع عن هذا الإجراء.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    if (_selectedDriver?.id == driver.id) {
+      setState(() => _selectedDriver = null);
+    }
+    await driversCubit.deleteDriver(driver.id);
+    await overviewCubit.loadWorkspace();
   }
 
   Widget _buildReadinessSummary(

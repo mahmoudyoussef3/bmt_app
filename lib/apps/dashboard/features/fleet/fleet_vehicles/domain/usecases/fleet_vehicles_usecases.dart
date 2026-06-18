@@ -28,6 +28,12 @@ class UpdateFleetVehicleStatusUseCase {
       _repository.updateVehicleStatus(vehicleId, status);
 }
 
+class DeleteFleetVehicleUseCase {
+  final FleetVehiclesRepository _repository;
+  const DeleteFleetVehicleUseCase(this._repository);
+  Future<void> call(String vehicleId) => _repository.deleteVehicle(vehicleId);
+}
+
 class UploadVehicleFileUseCase {
   final FleetVehiclesRepository _repository;
   const UploadVehicleFileUseCase(this._repository);

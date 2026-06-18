@@ -164,4 +164,13 @@ class FleetAssignmentsRepositoryImpl implements FleetAssignmentsRepository {
       throw Exception('تعذر فك التعيين');
     }
   }
+
+  @override
+  Future<void> deleteAssignment(String assignmentId) async {
+    try {
+      await _datasource.deleteAssignment(assignmentId);
+    } catch (_) {
+      throw Exception('تعذر حذف التعيين');
+    }
+  }
 }

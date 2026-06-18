@@ -8,6 +8,7 @@ class FleetDocumentsTable extends StatelessWidget {
   final int page;
   final int pageSize;
   final ValueChanged<int> onPageChanged;
+  final ValueChanged<FleetDocument> onDelete;
 
   const FleetDocumentsTable({
     super.key,
@@ -15,6 +16,7 @@ class FleetDocumentsTable extends StatelessWidget {
     required this.page,
     required this.pageSize,
     required this.onPageChanged,
+    required this.onDelete,
   });
 
   Color _documentColor(BuildContext context, FleetDocumentStatus status) {
@@ -40,6 +42,7 @@ class FleetDocumentsTable extends StatelessWidget {
         OpsColumn('صاحب الوثيقة', flex: 3),
         OpsColumn('تاريخ الانتهاء', flex: 2),
         OpsColumn('الحالة', flex: 2),
+        OpsColumn('إجراءات', flex: 1),
       ],
       total: documents.length,
       currentPage: page,
@@ -63,6 +66,14 @@ class FleetDocumentsTable extends StatelessWidget {
             label: document.status.label,
             color: docColor.withAlpha(30),
             textColor: docColor,
+          ),
+          IconButton(
+            tooltip: 'حذف الوثيقة',
+            onPressed: () => onDelete(document),
+            icon: Icon(
+              Icons.delete_outline_rounded,
+              color: Theme.of(context).colorScheme.error,
+            ),
           ),
         ];
       }).toList(),

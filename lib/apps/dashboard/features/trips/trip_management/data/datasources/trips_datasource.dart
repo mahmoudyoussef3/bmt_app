@@ -8,6 +8,7 @@ abstract class TripsDatasource {
   Future<OperationTripModel> fetchTripById(String tripId);
   Future<OperationTripModel> createTrip(CreateTripInput input);
   Future<OperationTripModel> updateTripInfo(OperationTrip trip);
+  Future<void> deleteTrip(String tripId);
   Future<OperationTripModel> updateTripStatus(
     String tripId,
     OperationTripStatus status,

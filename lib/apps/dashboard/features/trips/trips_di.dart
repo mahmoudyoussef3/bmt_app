@@ -46,6 +46,7 @@ void registerTripsDependencies(GetIt di) {
     () => UpdateTripStatusUseCase(di<TripsRepository>()),
   );
   di.registerLazySingleton(() => UpdateTripInfoUseCase(di<TripsRepository>()));
+  di.registerLazySingleton(() => DeleteTripUseCase(di<TripsRepository>()));
 
   // Trip Creation
   di.registerLazySingleton(() => CreateTripUseCase(di<TripsRepository>()));
@@ -76,7 +77,10 @@ void registerTripsDependencies(GetIt di) {
   di.registerLazySingleton(() => GetTripEventsUseCase(di<TripsRepository>()));
 
   // 4. Cubits (Factory registration is standard practice for cubits used on specific screens)
-  di.registerFactory(() => TripsListCubit(di<GetOperationTripsUseCase>()));
+  di.registerFactory(
+    () =>
+        TripsListCubit(di<GetOperationTripsUseCase>(), di<DeleteTripUseCase>()),
+  );
   di.registerFactory(
     () => TripDetailsCubit(
       getTripDetails: di<GetTripDetailsUseCase>(),

@@ -172,8 +172,10 @@ class TripsListLoaded extends TripsListState {
 
 class TripsListCubit extends Cubit<TripsListState> {
   final GetOperationTripsUseCase _getTrips;
+  final DeleteTripUseCase _deleteTrip;
 
-  TripsListCubit(this._getTrips) : super(const TripsListInitial());
+  TripsListCubit(this._getTrips, this._deleteTrip)
+    : super(const TripsListInitial());
 
   Future<void> load() async {
     emit(const TripsListLoading());
@@ -251,5 +253,20 @@ class TripsListCubit extends Cubit<TripsListState> {
             .toList(),
       ),
     );
+  }
+
+  Future<void> deleteTrip(String tripId) async {
+    final current = state;
+    if (current is! TripsListLoaded) return;
+    try {
+      await _deleteTrip(tripId);
+      emit(
+        current.copyWith(
+          trips: current.trips.where((trip) => trip.id != tripId).toList(),
+        ),
+      );
+    } catch (e) {
+      emit(TripsListError(e.toString().replaceAll('Exception: ', '')));
+    }
   }
 }

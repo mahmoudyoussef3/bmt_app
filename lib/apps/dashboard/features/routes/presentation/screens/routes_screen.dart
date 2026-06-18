@@ -55,6 +55,7 @@ class _RoutesListView extends StatelessWidget {
           onEdit: cubit.showEditRoute,
           onPause: cubit.pauseRoute,
           onArchive: (route) => _confirmArchive(context, route),
+          onDelete: (route) => _confirmDeleteRoute(context, route),
         ),
       ],
     );
@@ -225,6 +226,7 @@ class _RoutesTable extends StatelessWidget {
   final ValueChanged<OperationRoute> onEdit;
   final ValueChanged<OperationRoute> onPause;
   final ValueChanged<OperationRoute> onArchive;
+  final ValueChanged<OperationRoute> onDelete;
 
   const _RoutesTable({
     required this.routes,
@@ -232,6 +234,7 @@ class _RoutesTable extends StatelessWidget {
     required this.onEdit,
     required this.onPause,
     required this.onArchive,
+    required this.onDelete,
   });
 
   @override
@@ -277,6 +280,7 @@ class _RoutesTable extends StatelessWidget {
                     onEdit: () => onEdit(route),
                     onPause: () => onPause(route),
                     onArchive: () => onArchive(route),
+                    onDelete: () => onDelete(route),
                   ),
                 ),
             ],
@@ -323,6 +327,7 @@ class _RouteTableRow extends StatelessWidget {
   final VoidCallback onEdit;
   final VoidCallback onPause;
   final VoidCallback onArchive;
+  final VoidCallback onDelete;
 
   const _RouteTableRow({
     required this.route,
@@ -330,6 +335,7 @@ class _RouteTableRow extends StatelessWidget {
     required this.onEdit,
     required this.onPause,
     required this.onArchive,
+    required this.onDelete,
   });
 
   @override
@@ -371,6 +377,19 @@ class _RouteTableRow extends StatelessWidget {
                       ? null
                       : onArchive,
                   child: const Text('أرشفة'),
+                ),
+                TextButton.icon(
+                  onPressed: onDelete,
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    color: Theme.of(context).colorScheme.error,
+                  ),
+                  label: Text(
+                    'حذف',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -467,6 +486,12 @@ class _DetailsHeader extends StatelessWidget {
                     : () => _confirmArchive(context, route),
                 icon: const Icon(Icons.archive_outlined),
                 label: const Text('أرشفة'),
+              ),
+              OutlinedButton.icon(
+                style: OutlinedButton.styleFrom(foregroundColor: scheme.error),
+                onPressed: () => _confirmDeleteRoute(context, route),
+                icon: const Icon(Icons.delete_outline_rounded),
+                label: const Text('حذف'),
               ),
             ],
           ),
@@ -1417,6 +1442,35 @@ void _confirmArchive(BuildContext context, OperationRoute route) {
           ),
         ],
       ),
+    ),
+  );
+}
+
+void _confirmDeleteRoute(BuildContext context, OperationRoute route) {
+  showDialog<void>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      title: const Text('حذف المسار نهائياً'),
+      content: Text(
+        'سيتم حذف "${route.name}" ومحطاته من قاعدة البيانات. الرحلات القديمة قد تبقى محفوظة بدون ربط بهذا المسار.',
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext),
+          child: const Text('إلغاء'),
+        ),
+        FilledButton.icon(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(dialogContext).colorScheme.error,
+          ),
+          onPressed: () {
+            Navigator.pop(dialogContext);
+            context.read<RoutesCubit>().deleteRoute(route);
+          },
+          icon: const Icon(Icons.delete_outline_rounded),
+          label: const Text('حذف'),
+        ),
+      ],
     ),
   );
 }

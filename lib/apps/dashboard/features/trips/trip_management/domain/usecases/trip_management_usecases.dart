@@ -40,3 +40,13 @@ class UpdateTripInfoUseCase {
     return _repository.updateTripInfo(trip);
   }
 }
+
+class DeleteTripUseCase {
+  final TripsRepository _repository;
+
+  const DeleteTripUseCase(this._repository);
+
+  Future<void> call(String tripId) {
+    return _repository.deleteTrip(tripId);
+  }
+}

@@ -101,6 +101,8 @@ class FleetAssignmentsTable extends StatelessWidget {
                 onSelected: (value) {
                   if (value == 'remove') {
                     cubit.removeAssignment(assignment.id);
+                  } else if (value == 'delete') {
+                    _confirmDeleteAssignment(context, assignment, cubit);
                   }
                 },
                 itemBuilder: (ctx) => [
@@ -127,6 +129,24 @@ class FleetAssignmentsTable extends StatelessWidget {
                       ],
                     ),
                   ),
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.delete_outline_rounded,
+                          color: Theme.of(ctx).colorScheme.error,
+                        ),
+                        const SizedBox(width: AppSpacing.small),
+                        Text(
+                          'حذف من قاعدة البيانات',
+                          style: TextStyle(
+                            color: Theme.of(ctx).colorScheme.error,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -134,5 +154,38 @@ class FleetAssignmentsTable extends StatelessWidget {
         ];
       }).toList(),
     );
+  }
+
+  Future<void> _confirmDeleteAssignment(
+    BuildContext context,
+    FleetAssignment assignment,
+    FleetAssignmentsCubit cubit,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف التعيين نهائياً'),
+        content: const Text(
+          'سيتم حذف سجل التعيين من قاعدة البيانات. لا يمكن التراجع عن هذا الإجراء.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      cubit.deleteAssignment(assignment.id);
+    }
   }
 }

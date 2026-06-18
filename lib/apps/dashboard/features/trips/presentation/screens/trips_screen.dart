@@ -145,6 +145,7 @@ class _TripsViewState extends State<_TripsView> {
                       listState: listState,
                       onOpenTrip: _openTrip,
                       onDuplicateTrip: _duplicateTrip,
+                      onDeleteTrip: _deleteTrip,
                     ),
                   ],
                 );
@@ -182,6 +183,40 @@ class _TripsViewState extends State<_TripsView> {
         ),
       ),
     ).then((_) => tripsCubit.load());
+  }
+
+  Future<void> _deleteTrip(OperationTrip trip) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('حذف الرحلة نهائياً'),
+        content: Text(
+          'سيتم حذف الرحلة "${trip.route}" من قاعدة البيانات. لا يمكن التراجع عن هذا الإجراء.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(dialogContext).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final detailsCubit = context.read<TripDetailsCubit>();
+    final detailsState = detailsCubit.state;
+    if (detailsState is TripDetailsLoaded && detailsState.trip.id == trip.id) {
+      detailsCubit.closeDetails();
+    }
+    await context.read<TripsListCubit>().deleteTrip(trip.id);
   }
 }
 
@@ -530,10 +565,12 @@ class _TripsTable extends StatelessWidget {
   final TripsListLoaded listState;
   final ValueChanged<OperationTrip> onOpenTrip;
   final ValueChanged<OperationTrip> onDuplicateTrip;
+  final ValueChanged<OperationTrip> onDeleteTrip;
   const _TripsTable({
     required this.listState,
     required this.onOpenTrip,
     required this.onDuplicateTrip,
+    required this.onDeleteTrip,
   });
   @override
   Widget build(BuildContext context) {
@@ -609,6 +646,7 @@ class _TripsTable extends StatelessWidget {
                         selected: selectedId == trip.id,
                         onOpen: () => onOpenTrip(trip),
                         onDuplicate: () => onDuplicateTrip(trip),
+                        onDelete: () => onDeleteTrip(trip),
                       );
                     },
                   );
@@ -626,12 +664,14 @@ class _TripOperationCard extends StatelessWidget {
   final bool selected;
   final VoidCallback onOpen;
   final VoidCallback onDuplicate;
+  final VoidCallback onDelete;
 
   const _TripOperationCard({
     required this.trip,
     required this.selected,
     required this.onOpen,
     required this.onDuplicate,
+    required this.onDelete,
   });
 
   @override
@@ -723,6 +763,15 @@ class _TripOperationCard extends StatelessWidget {
                       child: IconButton(
                         onPressed: onDuplicate,
                         icon: const Icon(Icons.copy_rounded),
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    Tooltip(
+                      message: 'حذف الرحلة',
+                      child: IconButton(
+                        onPressed: onDelete,
+                        icon: const Icon(Icons.delete_outline_rounded),
+                        color: scheme.error,
                         visualDensity: VisualDensity.compact,
                       ),
                     ),

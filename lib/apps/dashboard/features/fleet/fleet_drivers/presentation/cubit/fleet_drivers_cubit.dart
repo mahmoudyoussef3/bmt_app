@@ -10,6 +10,7 @@ class FleetDriversCubit extends Cubit<FleetDriversState> {
   final CreateFleetDriverUseCase _createDriver;
   final UpdateFleetDriverUseCase _updateDriver;
   final UpdateFleetDriverStatusUseCase _updateDriverStatus;
+  final DeleteFleetDriverUseCase _deleteDriver;
   final UploadDriverFileUseCase _uploadFile;
   final DeleteDriverFileUseCase _deleteFile;
 
@@ -18,12 +19,14 @@ class FleetDriversCubit extends Cubit<FleetDriversState> {
     required CreateFleetDriverUseCase createDriver,
     required UpdateFleetDriverUseCase updateDriver,
     required UpdateFleetDriverStatusUseCase updateDriverStatus,
+    required DeleteFleetDriverUseCase deleteDriver,
     required UploadDriverFileUseCase uploadFile,
     required DeleteDriverFileUseCase deleteFile,
   }) : _getDrivers = getDrivers,
        _createDriver = createDriver,
        _updateDriver = updateDriver,
        _updateDriverStatus = updateDriverStatus,
+       _deleteDriver = deleteDriver,
        _uploadFile = uploadFile,
        _deleteFile = deleteFile,
        super(const FleetDriversLoading());
@@ -104,6 +107,15 @@ class FleetDriversCubit extends Cubit<FleetDriversState> {
       await _updateDriverStatus(id, FleetDriverStatus.archived);
     }
     await _reload();
+  }
+
+  Future<void> deleteDriver(String driverId) async {
+    try {
+      await _deleteDriver(driverId);
+      await _reload();
+    } catch (error) {
+      emit(FleetDriversError(error.toString().replaceAll('Exception: ', '')));
+    }
   }
 
   Future<String?> uploadDriverFile(

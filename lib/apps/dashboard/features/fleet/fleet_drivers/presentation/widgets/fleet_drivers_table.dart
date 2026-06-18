@@ -115,6 +115,39 @@ class FleetDriversTable extends StatelessWidget {
     }
   }
 
+  static Future<void> _deleteWithConfirmation(
+    BuildContext context,
+    FleetDriver driver,
+    FleetDriversCubit cubit,
+  ) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف السائق نهائياً'),
+        content: Text(
+          'سيتم حذف السائق "${driver.name}" من قاعدة البيانات مع وثائقه وتعييناته. لا يمكن التراجع عن هذا الإجراء.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true) {
+      cubit.deleteDriver(driver.id);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<FleetDriversCubit>();
@@ -267,6 +300,8 @@ class _DriverRowActions extends StatelessWidget {
                 driver,
                 cubit,
               );
+            } else if (value == 'delete') {
+              FleetDriversTable._deleteWithConfirmation(context, driver, cubit);
             }
           },
           itemBuilder: (ctx) => [
@@ -303,6 +338,22 @@ class _DriverRowActions extends StatelessWidget {
                   const SizedBox(width: AppSpacing.small),
                   Text(
                     'أرشفة السائق',
+                    style: TextStyle(color: Theme.of(ctx).colorScheme.error),
+                  ),
+                ],
+              ),
+            ),
+            PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.delete_outline_rounded,
+                    color: Theme.of(ctx).colorScheme.error,
+                  ),
+                  const SizedBox(width: AppSpacing.small),
+                  Text(
+                    'حذف من قاعدة البيانات',
                     style: TextStyle(color: Theme.of(ctx).colorScheme.error),
                   ),
                 ],

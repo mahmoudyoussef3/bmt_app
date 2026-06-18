@@ -142,6 +142,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
                           onViewDetails: (v) =>
                               _setView(_VehiclesViewState.details, v),
                           onEdit: (v) => _setView(_VehiclesViewState.form, v),
+                          onDelete: _confirmDeleteVehicle,
                           page: _page,
                           pageSize: _pageSize,
                         );
@@ -276,5 +277,36 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _confirmDeleteVehicle(FleetVehicle vehicle) async {
+    final vehiclesCubit = context.read<FleetVehiclesCubit>();
+    final overviewCubit = context.read<FleetOverviewCubit>();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('حذف المركبة نهائياً'),
+        content: Text(
+          'سيتم حذف المركبة "${vehicle.vehicleNumber}" من قاعدة البيانات مع وثائقها وتعييناتها. لا يمكن التراجع عن هذا الإجراء.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
+            icon: const Icon(Icons.delete_outline_rounded),
+            label: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    await vehiclesCubit.deleteVehicle(vehicle.id);
+    await overviewCubit.loadWorkspace();
   }
 }

@@ -28,6 +28,12 @@ class UpdateFleetDriverStatusUseCase {
       _repository.updateDriverStatus(driverId, status);
 }
 
+class DeleteFleetDriverUseCase {
+  final FleetDriversRepository _repository;
+  const DeleteFleetDriverUseCase(this._repository);
+  Future<void> call(String driverId) => _repository.deleteDriver(driverId);
+}
+
 class UploadDriverFileUseCase {
   final FleetDriversRepository _repository;
   const UploadDriverFileUseCase(this._repository);

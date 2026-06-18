@@ -15,6 +15,7 @@ abstract class TripsRepository {
   );
   Future<OperationTrip> createTrip(CreateTripInput input);
   Future<OperationTrip> updateTripInfo(OperationTrip trip);
+  Future<void> deleteTrip(String tripId);
   Future<OperationTrip> updatePassenger(String tripId, TripPassenger passenger);
   Future<OperationTrip> cancelPassenger(String tripId, String passengerId);
   Future<OperationTrip> movePassenger(
