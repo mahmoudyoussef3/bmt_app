@@ -1,34 +1,62 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_common.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
 class FleetTabBar extends StatelessWidget {
   final FleetTab active;
+  final FleetSummary summary;
   final ValueChanged<FleetTab> onTabChanged;
 
   const FleetTabBar({
     super.key,
     required this.active,
+    required this.summary,
     required this.onTabChanged,
   });
 
   @override
   Widget build(BuildContext context) {
-    final tabs = FleetTab.values;
+    final tabs = [
+      _FleetNavItem(
+        tab: FleetTab.drivers,
+        icon: Icons.badge_outlined,
+        count: summary.driversCount,
+        subtitle: 'بيانات وجاهزية السائقين',
+      ),
+      _FleetNavItem(
+        tab: FleetTab.vehicles,
+        icon: Icons.directions_bus_outlined,
+        count: summary.vehiclesCount,
+        subtitle: 'حالة المركبات والتراخيص',
+      ),
+      _FleetNavItem(
+        tab: FleetTab.assignments,
+        icon: Icons.link_rounded,
+        count: summary.activeAssignmentsCount,
+        subtitle: 'ربط السائق بالمركبة',
+      ),
+      _FleetNavItem(
+        tab: FleetTab.documents,
+        icon: Icons.fact_check_outlined,
+        count: summary.documentsNeedFollowUpCount,
+        subtitle: 'وثائق تحتاج متابعة',
+        urgent: summary.documentsNeedFollowUpCount > 0,
+      ),
+    ];
 
     return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.xSmall),
+      padding: const EdgeInsets.all(AppSpacing.small),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 720;
+          final isCompact = constraints.maxWidth < 920;
 
           final children = tabs.map((tab) {
-            final selected = tab == active;
+            final selected = tab.tab == active;
             return _DashboardTabButton(
-              label: tab.label,
+              item: tab,
               selected: selected,
-              onTap: () => onTabChanged(tab),
+              onTap: () => onTabChanged(tab.tab),
             );
           }).toList();
 
@@ -40,7 +68,7 @@ class FleetTabBar extends StatelessWidget {
                     .map(
                       (child) => Padding(
                         padding: const EdgeInsetsDirectional.only(end: 8),
-                        child: SizedBox(width: 132, child: child),
+                        child: SizedBox(width: 224, child: child),
                       ),
                     )
                     .toList(),
@@ -66,45 +94,105 @@ class FleetTabBar extends StatelessWidget {
   }
 }
 
+class _FleetNavItem {
+  const _FleetNavItem({
+    required this.tab,
+    required this.icon,
+    required this.count,
+    required this.subtitle,
+    this.urgent = false,
+  });
+
+  final FleetTab tab;
+  final IconData icon;
+  final int count;
+  final String subtitle;
+  final bool urgent;
+}
+
 class _DashboardTabButton extends StatelessWidget {
   const _DashboardTabButton({
-    required this.label,
+    required this.item,
     required this.selected,
     required this.onTap,
   });
 
-  final String label;
+  final _FleetNavItem item;
   final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final color = item.urgent ? scheme.error : scheme.primary;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
       decoration: BoxDecoration(
-        color: selected ? scheme.primary : Colors.transparent,
+        color: selected ? color.withAlpha(22) : Colors.transparent,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: selected ? color.withAlpha(120) : scheme.outline.withAlpha(60),
+        ),
       ),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.medium,
+            horizontal: AppSpacing.small,
             vertical: 12,
           ),
-          child: Center(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: selected ? scheme.onPrimary : scheme.onSurface,
-                fontWeight: FontWeight.w900,
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? color.withAlpha(26)
+                      : scheme.surfaceContainerHighest.withAlpha(90),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(item.icon, color: color, size: 22),
               ),
-            ),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      item.tab.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurface,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      item.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.xSmall),
+              Text(
+                '${item.count}',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ],
           ),
         ),
       ),

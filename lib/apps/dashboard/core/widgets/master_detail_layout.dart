@@ -39,32 +39,29 @@ class MasterDetailLayout extends StatelessWidget {
         }
 
         final scheme = Theme.of(context).colorScheme;
-        // IntrinsicHeight bounds the Row's cross-axis so `stretch` and the
-        // VerticalDivider resolve even when the host imposes unbounded height
-        // (e.g. inside a SingleChildScrollView page).
-        return IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(flex: masterFlex, child: master),
-              VerticalDivider(
-                width: 1,
-                color: scheme.outline.withAlpha(60),
-              ),
-              Expanded(
-                flex: detailFlex,
-                child: detail ??
-                    Padding(
-                      padding: const EdgeInsets.all(AppSpacing.large),
-                      child: EmptyState(
-                        title: placeholderTitle,
-                        subtitle: placeholderSubtitle,
-                        emoji: '👈',
-                      ),
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: masterFlex, child: master),
+            Container(
+              width: 1,
+              height: 640,
+              color: scheme.outline.withAlpha(60),
+            ),
+            Expanded(
+              flex: detailFlex,
+              child:
+                  detail ??
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.large),
+                    child: EmptyState(
+                      title: placeholderTitle,
+                      subtitle: placeholderSubtitle,
+                      emoji: '👈',
                     ),
-              ),
-            ],
-          ),
+                  ),
+            ),
+          ],
         );
       },
     );

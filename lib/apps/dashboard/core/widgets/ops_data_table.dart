@@ -12,12 +12,14 @@ class OpsColumn {
   final int flex;
   final bool numeric;
   final bool sortable;
+  final double minWidth;
 
   const OpsColumn(
     this.label, {
     this.flex = 1,
     this.numeric = false,
     this.sortable = false,
+    this.minWidth = 72,
   });
 }
 
@@ -53,41 +55,97 @@ class OpsDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final pages = (total / pageSize).ceil().clamp(1, 9999);
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          _OpsHeaderRow(
-            columns: columns,
-            sortColumnIndex: sortColumnIndex,
-            sortDirection: sortDirection,
-            onSort: onSort,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final contentMinWidth = columns.fold<double>(
+          0,
+          (sum, column) => sum + column.minWidth,
+        );
+        final availableWidth = constraints.maxWidth.isFinite
+            ? constraints.maxWidth
+            : contentMinWidth;
+        final tableWidth = availableWidth < contentMinWidth
+            ? contentMinWidth
+            : availableWidth;
+
+        return AppCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: SizedBox(
+                  width: tableWidth,
+                  child: Column(
+                    children: [
+                      _OpsHeaderRow(
+                        columns: columns,
+                        sortColumnIndex: sortColumnIndex,
+                        sortDirection: sortDirection,
+                        onSort: onSort,
+                      ),
+                      if (rows.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.xLarge),
+                          child: Text(emptyLabel),
+                        )
+                      else
+                        // Rows are pre-paginated by the host, so we render the
+                        // current page inline under unbounded scroll parents.
+                        ...rows.asMap().entries.expand((entry) sync* {
+                          if (entry.key > 0) {
+                            yield Divider(
+                              height: 1,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.outline.withAlpha(60),
+                            );
+                          }
+                          yield _OpsBodyRow(
+                            columns: columns,
+                            cells: entry.value,
+                          );
+                        }),
+                    ],
+                  ),
+                ),
+              ),
+              _OpsPaginationBar(
+                total: total,
+                currentPage: currentPage,
+                pages: pages,
+                onPageChanged: onPageChanged,
+              ),
+            ],
           ),
-          if (rows.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.xLarge),
-              child: Text(emptyLabel),
-            )
-          else
-            // Rows are pre-paginated by the host, so we render the current page
-            // inline (no internal scroll). This keeps the table valid under both
-            // bounded and unbounded (SingleChildScrollView) height constraints.
-            ...rows.asMap().entries.expand((entry) sync* {
-              if (entry.key > 0) {
-                yield Divider(
-                  height: 1,
-                  color: Theme.of(context).colorScheme.outline.withAlpha(60),
-                );
-              }
-              yield _OpsBodyRow(columns: columns, cells: entry.value);
-            }),
-          _OpsPaginationBar(
-            total: total,
-            currentPage: currentPage,
-            pages: pages,
-            onPageChanged: onPageChanged,
-          ),
-        ],
+        );
+      },
+    );
+  }
+}
+
+class _OpsCell extends StatelessWidget {
+  const _OpsCell({
+    required this.flex,
+    required this.child,
+    required this.trailingGap,
+    required this.alignment,
+  });
+
+  final int flex;
+  final Widget child;
+  final bool trailingGap;
+  final AlignmentGeometry alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      flex: flex,
+      child: Padding(
+        padding: EdgeInsetsDirectional.only(
+          end: trailingGap ? AppSpacing.small : 0,
+        ),
+        child: Align(alignment: alignment, child: child),
       ),
     );
   }
@@ -135,8 +193,12 @@ class _OpsHeaderRow extends StatelessWidget {
                 ),
             ],
           );
-          return Expanded(
+          return _OpsCell(
             flex: col.flex,
+            trailingGap: e.key < columns.length - 1,
+            alignment: col.numeric
+                ? AlignmentDirectional.centerEnd
+                : AlignmentDirectional.centerStart,
             child: col.sortable && onSort != null
                 ? InkWell(onTap: () => onSort!(e.key), child: header)
                 : header,
@@ -163,8 +225,12 @@ class _OpsBodyRow extends StatelessWidget {
             .asMap()
             .entries
             .map(
-              (e) => Expanded(
+              (e) => _OpsCell(
                 flex: e.key < columns.length ? columns[e.key].flex : 1,
+                trailingGap: e.key < cells.length - 1,
+                alignment: e.key < columns.length && columns[e.key].numeric
+                    ? AlignmentDirectional.centerEnd
+                    : AlignmentDirectional.centerStart,
                 child: e.value,
               ),
             )

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_table_shell.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 class FleetDocumentsTable extends StatelessWidget {
@@ -34,13 +34,12 @@ class FleetDocumentsTable extends StatelessWidget {
         ? <FleetDocument>[]
         : documents.sublist(start, end);
 
-    return FleetTableShell(
-      headers: const [
-        'الفئة',
-        'صاحب الوثيقة',
-        'رقم المرجع',
-        'تاريخ الانتهاء',
-        'الحالة',
+    return OpsDataTable(
+      columns: const [
+        OpsColumn('الوثيقة', flex: 4),
+        OpsColumn('صاحب الوثيقة', flex: 3),
+        OpsColumn('تاريخ الانتهاء', flex: 2),
+        OpsColumn('الحالة', flex: 2),
       ],
       total: documents.length,
       currentPage: page,
@@ -49,13 +48,17 @@ class FleetDocumentsTable extends StatelessWidget {
       rows: paged.map((document) {
         final docColor = _documentColor(context, document.status);
         return [
+          _DocumentIdentityCell(document: document),
           Text(
-            document.type.label,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            document.ownerName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
-          Text(document.ownerName),
-          Text(document.referenceNumber),
-          Text(document.expiryDate),
+          Text(
+            document.expiryDate,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
           StatusChip(
             label: document.status.label,
             color: docColor.withAlpha(30),
@@ -63,6 +66,51 @@ class FleetDocumentsTable extends StatelessWidget {
           ),
         ];
       }).toList(),
+    );
+  }
+}
+
+class _DocumentIdentityCell extends StatelessWidget {
+  const _DocumentIdentityCell({required this.document});
+
+  final FleetDocument document;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: scheme.primary.withAlpha(18),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(Icons.description_outlined, color: scheme.primary),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                document.type.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                document.referenceNumber,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

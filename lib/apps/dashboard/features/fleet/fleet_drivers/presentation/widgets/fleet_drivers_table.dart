@@ -133,13 +133,13 @@ class FleetDriversTable extends StatelessWidget {
       sortDirection: sortAscending ? OpsSort.asc : OpsSort.desc,
       onSort: _handleSort,
       columns: const [
-        OpsColumn('تحديد', flex: 1),
-        OpsColumn('السائق', flex: 3, sortable: true),
-        OpsColumn('الصحة', flex: 2),
-        OpsColumn('التوفر', flex: 2),
-        OpsColumn('المركبة', flex: 2),
-        OpsColumn('الرخصة', flex: 2, sortable: true),
-        OpsColumn('إجراءات', flex: 2),
+        OpsColumn('تحديد', flex: 1, minWidth: 64),
+        OpsColumn('السائق', flex: 4, sortable: true, minWidth: 240),
+        OpsColumn('الصحة', flex: 2, minWidth: 116),
+        OpsColumn('التوفر', flex: 2, minWidth: 120),
+        OpsColumn('المركبة', flex: 2, minWidth: 120),
+        OpsColumn('الرخصة', flex: 2, sortable: true, minWidth: 132),
+        OpsColumn('إجراءات', flex: 2, minWidth: 112),
       ],
       rows: paged.map((driver) {
         final vehicle = _vehicleName(driver.currentVehicleId);
@@ -150,7 +150,10 @@ class FleetDriversTable extends StatelessWidget {
             value: selectedIds.contains(driver.id),
             onChanged: (_) => cubit.toggleSelection(driver.id),
           ),
-          _DriverIdentityCell(driver: driver, selected: driver.id == selectedId),
+          _DriverIdentityCell(
+            driver: driver,
+            selected: driver.id == selectedId,
+          ),
           Tooltip(
             message: snapshot.primaryReason,
             child: StatusChip(

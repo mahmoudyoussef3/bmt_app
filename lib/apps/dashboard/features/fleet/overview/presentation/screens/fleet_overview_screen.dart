@@ -71,7 +71,11 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                   const SizedBox(height: AppSpacing.large),
                   FleetSummaryCards(summary: workspace.summary),
                   const SizedBox(height: AppSpacing.large),
-                  FleetTabBar(active: _activeTab, onTabChanged: _changeTab),
+                  FleetTabBar(
+                    active: _activeTab,
+                    summary: workspace.summary,
+                    onTabChanged: _changeTab,
+                  ),
                   const SizedBox(height: AppSpacing.medium),
                 ],
                 AnimatedSwitcher(
