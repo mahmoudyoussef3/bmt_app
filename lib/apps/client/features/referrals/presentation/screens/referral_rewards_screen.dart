@@ -66,16 +66,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
 
   int get _walletBalance => _data?.walletBalance ?? 0;
 
-  List<MockContact> get _contacts => _data?.contacts ?? const [];
-
   List<ReferralHistoryItem> get _history => _data?.history ?? const [];
 
   List<ScratchVoucher> get _vouchers => _data?.vouchers ?? const [];
-
-  // Filters / Search
-  final TextEditingController _contactsSearchController =
-      TextEditingController();
-  String _contactsQuery = '';
 
   // Confetti Animation Controller & loop
   late AnimationController _confettiController;
@@ -100,7 +93,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
 
   @override
   void dispose() {
-    _contactsSearchController.dispose();
     _confettiController.dispose();
     _confettiTimer?.cancel();
     super.dispose();
@@ -142,16 +134,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
   void _shareReferralLink() {
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Sharing link via System Share...')),
-    );
-  }
-
-  void _inviteContact(MockContact contact) {
-    context.read<ReferralRewardsCubit>().invite(contact);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Invite sent to ${contact.name}!'),
-        backgroundColor: Colors.green,
-      ),
     );
   }
 
@@ -551,11 +533,30 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
     );
   }
 
+  static int _nextMilestone(int current) {
+    if (current < 3) return 3;
+    if (current < 5) return 5;
+    if (current < 10) return 10;
+    return ((current ~/ 10) + 1) * 10;
+  }
+
   Widget _buildMilestoneProgressCard(ColorScheme scheme) {
-    // 5 referrals successful. Next level needs 8.
-    const current = 5;
-    const target = 8;
-    const progress = current / target;
+    final current = _successfulReferrals;
+    final target = _nextMilestone(current);
+    final remaining = (target - current).clamp(0, target);
+    final progress = (current / target).clamp(0.0, 1.0);
+
+    final milestoneLabel = current == 0
+        ? 'First Referral Milestone'
+        : remaining == 0
+            ? 'Milestone Reached!'
+            : 'Next Referral Milestone';
+
+    final milestoneDesc = current == 0
+        ? 'Invite $target friends to unlock your first referral bonus.'
+        : remaining == 0
+            ? 'Great work! You have reached the current milestone.'
+            : 'Invite $remaining more friend${remaining == 1 ? '' : 's'} to unlock your next reward.';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -568,7 +569,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
       ),
       child: Row(
         children: [
-          // Circular Progress Wheel
           Stack(
             alignment: Alignment.center,
             children: [
@@ -582,8 +582,10 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                   color: Colors.orangeAccent,
                 ),
               ),
-              const Icon(
-                Icons.emoji_events_rounded,
+              Icon(
+                remaining == 0
+                    ? Icons.emoji_events_rounded
+                    : Icons.people_alt_rounded,
                 color: Colors.orangeAccent,
                 size: 28,
               ),
@@ -594,9 +596,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Gold Tier Milestone',
-                  style: TextStyle(
+                Text(
+                  milestoneLabel,
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -604,7 +606,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Invite 3 more friends to unlock a EGP 100 Gold commute voucher.',
+                  milestoneDesc,
                   style: TextStyle(
                     fontSize: 11,
                     color: scheme.onSurface.withAlpha(180),
@@ -613,7 +615,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'Progress: $current/$target invites',
+                  'Progress: $current / $target referrals',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -963,56 +965,198 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
 
   // --- SCREEN 2: INVITE FRIENDS ---
   Widget _buildInviteView(ColorScheme scheme) {
-    final filtered = _contacts.where((c) {
-      return c.name.toLowerCase().contains(_contactsQuery.toLowerCase()) ||
-          c.detail.toLowerCase().contains(_contactsQuery.toLowerCase());
-    }).toList();
-
-    return Column(
+    return ListView(
       key: const ValueKey('view2'),
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
       children: [
         // Quick Share Header Card
         _buildInviteShareHeader(scheme),
+        const SizedBox(height: 16),
 
-        // Contacts list search
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-          child: TextField(
-            controller: _contactsSearchController,
-            onChanged: (val) => setState(() => _contactsQuery = val),
-            decoration: InputDecoration(
-              hintText: 'Search contacts...',
-              prefixIcon: const Icon(Icons.search_rounded, size: 20),
-              fillColor: scheme.surface,
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 0,
-                horizontal: 16,
+        // Referral code highlight
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: scheme.outline.withAlpha(50)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Your referral code',
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
               ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(16),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: scheme.surfaceContainerHighest,
+                        borderRadius: BorderRadius.circular(12),
+                        border:
+                            Border.all(color: scheme.outline.withAlpha(45)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            _referralCode,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                          GestureDetector(
+                            onTap: _copyReferralCode,
+                            child: Icon(
+                              Icons.copy_rounded,
+                              color: scheme.primary,
+                              size: 18,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  GestureDetector(
+                    onTap: _showQRDialog,
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.qr_code_2_rounded,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                    ),
+                  ),
+                ],
               ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // How it works
+        Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: scheme.outline.withAlpha(50)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'How it works',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _buildHowItWorksStep(
+                scheme,
+                number: '1',
+                title: 'Share your code',
+                subtitle:
+                    'Send your unique code to friends via any channel.',
+                color: scheme.primary,
+              ),
+              const SizedBox(height: 12),
+              _buildHowItWorksStep(
+                scheme,
+                number: '2',
+                title: 'Friend registers',
+                subtitle:
+                    'They sign up and complete their first trip using your code.',
+                color: Colors.orangeAccent,
+              ),
+              const SizedBox(height: 12),
+              _buildHowItWorksStep(
+                scheme,
+                number: '3',
+                title: 'You both earn',
+                subtitle:
+                    'You receive a referral reward credited to your wallet.',
+                color: Colors.green,
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHowItWorksStep(
+    ColorScheme scheme, {
+    required String number,
+    required String title,
+    required String subtitle,
+    required Color color,
+  }) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            color: color.withAlpha(22),
+            shape: BoxShape.circle,
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            number,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: color,
             ),
           ),
         ),
-
-        // Contacts list
+        const SizedBox(width: 12),
         Expanded(
-          child: filtered.isEmpty
-              ? const EmptyState(
-                  title: 'No contacts found',
-                  subtitle: 'Try searching another name.',
-                  emoji: '👤',
-                )
-              : ListView.separated(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 30),
-                  itemCount: filtered.length,
-                  separatorBuilder: (context, index) => const AppSeparator(),
-                  itemBuilder: (context, idx) {
-                    final contact = filtered[idx];
-                    return _buildContactTile(contact, scheme);
-                  },
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
                 ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  fontSize: 10,
+                  color: Colors.grey,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -1082,83 +1226,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
             label,
             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildContactTile(MockContact contact, ColorScheme scheme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
-      child: Row(
-        children: [
-          AppAvatar(
-            initials: contact.name.split(' ').map((e) => e[0]).join(),
-            radius: 18,
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  contact.name,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  contact.detail,
-                  style: const TextStyle(fontSize: 10, color: Colors.grey),
-                ),
-              ],
-            ),
-          ),
-          contact.isInvited
-              ? Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.green.withAlpha(30),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: const Row(
-                    children: [
-                      Icon(Icons.check, color: Colors.green, size: 12),
-                      SizedBox(width: 4),
-                      Text(
-                        'Invited',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              : ElevatedButton(
-                  onPressed: () => _inviteContact(contact),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    backgroundColor: scheme.primary,
-                  ),
-                  child: const Text(
-                    'Invite',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
         ],
       ),
     );
@@ -1304,90 +1371,97 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
   }
 
   Widget _buildWalletBalancesCard(ColorScheme scheme) {
+    final hasBalance = _walletBalance > 0;
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: scheme.surface,
+        gradient: LinearGradient(
+          colors: [
+            scheme.primary.withAlpha(18),
+            scheme.secondaryContainer.withAlpha(22),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.outline.withAlpha(50)),
+        border: Border.all(color: scheme.primary.withAlpha(50)),
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Available to Redeem',
-                      style: TextStyle(fontSize: 10, color: Colors.grey),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'EGP $_walletBalance',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w900,
-                        color: scheme.primary,
-                      ),
-                    ),
-                  ],
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withAlpha(20),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.account_balance_wallet_rounded,
+                  color: scheme.primary,
+                  size: 20,
                 ),
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'Pending Clearance',
-                      style: TextStyle(fontSize: 10, color: Colors.grey),
+              const SizedBox(width: 12),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Referral Wallet',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'EGP 50',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.amber[700],
-                      ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    hasBalance ? 'EGP $_walletBalance available' : 'No balance yet',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.w900,
+                      color: hasBalance ? scheme.primary : Colors.grey,
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ],
           ),
-          const Divider(height: 30),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Redeem rewards instantly to BMT wallet balance.',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: scheme.onSurface.withAlpha(150),
+          const SizedBox(height: 16),
+          Text(
+            hasBalance
+                ? 'You can transfer this balance to your main wallet.'
+                : 'Earn balance by inviting friends with your referral code.',
+            style: TextStyle(
+              fontSize: 11,
+              color: scheme.onSurface.withAlpha(155),
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: hasBalance ? _redeemRewards : null,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: scheme.primary,
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                disabledBackgroundColor: scheme.outline.withAlpha(50),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              ElevatedButton(
-                onPressed: _walletBalance > 0 ? _redeemRewards : null,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: scheme.primary,
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 8,
-                  ),
-                  disabledBackgroundColor: scheme.outline.withAlpha(50),
-                ),
-                child: const Text(
-                  'Redeem',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
+              child: Text(
+                hasBalance ? 'Redeem to Wallet' : 'No balance to redeem',
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),

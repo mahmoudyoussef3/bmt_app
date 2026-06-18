@@ -19,30 +19,51 @@ class SupabaseProfileDatasource implements ProfileDatasource {
   @override
   Future<ClientProfileDataModel> getProfileData() async {
     final user = _supabase.auth.currentUser;
-    if (user == null) {
-      throw Exception('User is not authenticated');
-    }
+    if (user == null) throw Exception('User is not authenticated');
 
-    final response = await _supabase
+    // Fetch profile and loyalty account in parallel.
+    final profileFuture = _supabase
         .from('clients')
         .select()
         .eq('id', user.id)
         .limit(1)
         .maybeSingle();
+    final accountFuture = _supabase
+        .from('loyalty_accounts')
+        .select()
+        .eq('client_id', user.id)
+        .maybeSingle();
 
-    final name = response?['full_name']?.toString() ?? 'Unknown User';
-    final email = response?['email']?.toString() ?? user.email ?? 'No email';
+    final profileResponse = await profileFuture;
+    final accountResponse = await accountFuture;
+
+    final name =
+        profileResponse?['full_name']?.toString() ?? 'Unknown User';
+    final email =
+        profileResponse?['email']?.toString() ?? user.email ?? 'No email';
     final initials = _getInitials(name);
+
+    final points = accountResponse?['points'] as int? ?? 0;
+    final walletBalance =
+        accountResponse?['wallet_balance'] as int? ?? 0;
+
+    final walletSubtitle = walletBalance > 0
+        ? 'EGP $walletBalance.00 available'
+        : 'View wallet & balance';
+
+    final rewardsSubtitle = points > 0
+        ? '$points points · Refer friends'
+        : 'Earn points & refer friends';
 
     return ClientProfileDataModel(
       profile: ClientProfileModel(
         initials: initials,
         name: name,
         email: email,
-        badge: 'Premium', // You can load this from subscriptions later
+        badge: 'Premium',
       ),
-      sections: const [
-        ProfileMenuSectionModel(
+      sections: [
+        const ProfileMenuSectionModel(
           title: 'Travel',
           items: [
             ProfileMenuItemModel(
@@ -59,16 +80,16 @@ class SupabaseProfileDatasource implements ProfileDatasource {
             ProfileMenuItemModel(
               iconKey: 'wallet',
               title: 'Wallet',
-              subtitle: 'EGP 240.00 available',
-              route: '/payment-demo',
+              subtitle: walletSubtitle,
+              route: '/loyalty',
             ),
             ProfileMenuItemModel(
               iconKey: 'rewards',
               title: 'Rewards',
-              subtitle: '1,250 points · Refer friends',
+              subtitle: rewardsSubtitle,
               route: '/rewards',
             ),
-            ProfileMenuItemModel(
+            const ProfileMenuItemModel(
               iconKey: 'loyalty',
               title: 'Loyalty',
               subtitle: 'Tier benefits & perks',
@@ -76,7 +97,7 @@ class SupabaseProfileDatasource implements ProfileDatasource {
             ),
           ],
         ),
-        ProfileMenuSectionModel(
+        const ProfileMenuSectionModel(
           title: 'Support',
           items: [
             ProfileMenuItemModel(
@@ -93,7 +114,7 @@ class SupabaseProfileDatasource implements ProfileDatasource {
             ),
           ],
         ),
-        ProfileMenuSectionModel(
+        const ProfileMenuSectionModel(
           title: 'Settings & legal',
           items: [
             ProfileMenuItemModel(

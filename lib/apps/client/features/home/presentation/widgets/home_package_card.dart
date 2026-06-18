@@ -104,36 +104,55 @@ class HomePackageCard extends StatelessWidget {
                   ),
                 ),
                 const Spacer(),
-                Text(
-                  plan.badge.isEmpty ? 'Savings vary by route' : plan.badge,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.primary,
-                    fontWeight: FontWeight.w800,
-                  ),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
+                      decoration: BoxDecoration(
+                        color: ClientColors.primaryLight,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.local_offer_rounded,
+                            size: 11,
+                            color: ClientColors.primary,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            plan.badge.isEmpty
+                                ? 'Save on rides'
+                                : plan.badge,
+                            style: ClientTypography.labelSmall(context).copyWith(
+                              color: ClientColors.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Expanded(
-                      child: Text(
-                        plan.price,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: ClientTypography.priceMedium(context).copyWith(
-                          color: ClientColors.primary,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
                     Text(
                       'View plan',
                       style: ClientTypography.bodySmall(context).copyWith(
                         color: ClientColors.primary,
                         fontWeight: FontWeight.w900,
                       ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 12,
+                      color: ClientColors.primary,
                     ),
                   ],
                 ),

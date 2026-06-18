@@ -84,7 +84,7 @@ import '../../features/routes/data/repositories/routes_hub_repository_impl.dart'
 import '../../features/routes/domain/repositories/routes_hub_repository.dart';
 import '../../features/routes/domain/usecases/get_routes_hub_data_usecase.dart';
 import '../../features/routes/presentation/cubit/routes_hub_cubit.dart';
-import '../../features/referrals/data/datasources/mock_referral_rewards_datasource.dart';
+import '../../features/referrals/data/datasources/supabase_referral_rewards_datasource.dart';
 import '../../features/referrals/data/repositories/referral_rewards_repository_impl.dart';
 import '../../features/referrals/domain/repositories/referral_rewards_repository.dart';
 import '../../features/referrals/domain/usecases/get_referral_rewards_data_usecase.dart';
@@ -774,16 +774,16 @@ void _registerCommunicationDependencies() {
 }
 
 void _registerReferralRewardsDependencies() {
-  if (!clientGetIt.isRegistered<MockReferralRewardsDatasource>()) {
-    clientGetIt.registerLazySingleton<MockReferralRewardsDatasource>(
-      () => const MockReferralRewardsDatasource(),
+  if (!clientGetIt.isRegistered<SupabaseReferralRewardsDatasource>()) {
+    clientGetIt.registerLazySingleton<SupabaseReferralRewardsDatasource>(
+      () => SupabaseReferralRewardsDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<ReferralRewardsRepository>()) {
     clientGetIt.registerLazySingleton<ReferralRewardsRepository>(
       () => ReferralRewardsRepositoryImpl(
-        clientGetIt<MockReferralRewardsDatasource>(),
+        clientGetIt<SupabaseReferralRewardsDatasource>(),
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_state.dart';
@@ -10,7 +11,12 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 class SubscriptionScreen extends StatefulWidget {
-  const SubscriptionScreen({super.key});
+  const SubscriptionScreen({
+    super.key,
+    this.hasActiveSubscription = false,
+  });
+
+  final bool hasActiveSubscription;
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
@@ -349,55 +355,84 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   const SizedBox(height: 16),
                   const Divider(height: 1),
                   const SizedBox(height: 14),
-                  // Price Tag & CTA Arrow
+                  // Price / Discount Row
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppLocalizations.of(
-                              context,
-                            )!.packages_originalPrice(
-                              package.basePrice.toString(),
-                            ),
-                            style: const TextStyle(
-                              fontSize: 10,
-                              decoration: TextDecoration.lineThrough,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          Row(
-                            crossAxisAlignment: CrossAxisAlignment.baseline,
-                            textBaseline: TextBaseline.alphabetic,
-                            children: [
-                              Text(
-                                AppLocalizations.of(
-                                  context,
-                                )!.packages_egpAmount(
-                                  package.startingPrice.toString(),
-                                ),
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w900,
-                                  color: scheme.primary,
-                                ),
+                      if (widget.hasActiveSubscription) ...[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.packages_originalPrice(
+                                package.basePrice.toString(),
                               ),
-                              const SizedBox(width: 4),
-                              Text(
-                                AppLocalizations.of(
-                                  context,
-                                )!.packages_startingPrice,
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  color: Colors.grey,
-                                ),
+                              style: const TextStyle(
+                                fontSize: 10,
+                                decoration: TextDecoration.lineThrough,
+                                color: Colors.grey,
                               ),
-                            ],
-                          ),
-                        ],
-                      ),
+                            ),
+                            Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              children: [
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.packages_egpAmount(
+                                    package.startingPrice.toString(),
+                                  ),
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w900,
+                                    color: scheme.primary,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.packages_startingPrice,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ] else ...[
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.packages_packageDiscount,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Colors.grey,
+                              ),
+                            ),
+                            Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.packages_percentOff(
+                                package.discountPercent.toInt(),
+                              ),
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w900,
+                                color: scheme.primary,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
@@ -569,9 +604,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         _buildStickyCTA(
           label: AppLocalizations.of(context)!.packages_chooseRouteConfig,
           onPressed: () {
-            setState(() {
-              _currentStep = 3;
-            });
+            Navigator.of(
+              context,
+            ).pushNamed(ClientRoutes.bookingPopularRoutes);
           },
           scheme: scheme,
         ),
@@ -634,68 +669,94 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             ),
           ),
           const Divider(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.packages_basePrice,
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                  Text(
-                    AppLocalizations.of(
-                      context,
-                    )!.packages_egpAmount(package.basePrice.toString()),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      decoration: TextDecoration.lineThrough,
-                      color: Colors.grey,
+          if (widget.hasActiveSubscription)
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.packages_basePrice,
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.packages_packageDiscount,
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                  Text(
-                    AppLocalizations.of(
-                      context,
-                    )!.packages_percentOff(package.discountPercent.toInt()),
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: scheme.primary,
+                    Text(
+                      AppLocalizations.of(
+                        context,
+                      )!.packages_egpAmount(package.basePrice.toString()),
+                      style: const TextStyle(
+                        fontSize: 13,
+                        decoration: TextDecoration.lineThrough,
+                        color: Colors.grey,
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    AppLocalizations.of(context)!.packages_subscriptionCost,
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                  Text(
-                    AppLocalizations.of(
-                      context,
-                    )!.packages_egpAmount(package.startingPrice.toString()),
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: scheme.primary,
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.packages_packageDiscount,
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
-                  ),
-                ],
-              ),
-            ],
-          ),
+                    Text(
+                      AppLocalizations.of(
+                        context,
+                      )!.packages_percentOff(package.discountPercent.toInt()),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.packages_subscriptionCost,
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                    Text(
+                      AppLocalizations.of(
+                        context,
+                      )!.packages_egpAmount(package.startingPrice.toString()),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            )
+          else
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.packages_packageDiscount,
+                      style: const TextStyle(fontSize: 10, color: Colors.grey),
+                    ),
+                    Text(
+                      AppLocalizations.of(
+                        context,
+                      )!.packages_percentOff(package.discountPercent.toInt()),
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.w900,
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
         ],
       ),
     );

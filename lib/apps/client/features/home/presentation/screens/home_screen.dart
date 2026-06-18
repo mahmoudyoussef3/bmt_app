@@ -147,8 +147,10 @@ class _HomeContentState extends State<_HomeContent> {
                   if (widget.data.activePackage == null)
                     _SubscriptionPromo(
                       scheme: scheme,
-                      onTap: () =>
-                          widget.onOpenRoute(ClientRoutes.subscription),
+                      onTap: () => widget.onOpenRoute(
+                        ClientRoutes.subscription,
+                        {'hasActiveSubscription': false},
+                      ),
                     ),
                   if (widget.data.activePackage == null)
                     const SizedBox(height: 26),
@@ -156,8 +158,13 @@ class _HomeContentState extends State<_HomeContent> {
                     plans: widget.data.packagePlans,
                     activePackage: widget.data.activePackage,
                     previewCount: 4,
-                    onOpenSubscription: () =>
-                        widget.onOpenRoute(ClientRoutes.subscription),
+                    onOpenSubscription: () => widget.onOpenRoute(
+                      ClientRoutes.subscription,
+                      {
+                        'hasActiveSubscription':
+                            widget.data.activePackage != null,
+                      },
+                    ),
                   ),
                   const SizedBox(height: 26),
                   _SupportLink(
@@ -193,44 +200,124 @@ class _WelcomeSection extends StatelessWidget {
       0,
       (sum, route) => sum + route.tripsAvailable,
     );
+    final greeting = _greeting();
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Hi $firstName',
-                style: ClientTypography.headingLarge(context).copyWith(
-                  color: ClientColors.textPrimaryFor(context),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Book reliable rides in minutes',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: scheme.onSurface,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                routeCount == 0
-                    ? 'Search live routes, compare prices, and reserve your seat when routes are available.'
-                    : '$routeCount active routes and $tripCount upcoming trips are ready to explore.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurface.withAlpha(155),
-                  height: 1.35,
-                ),
-              ),
-            ],
-          ),
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            scheme.primary.withAlpha(22),
+            scheme.secondaryContainer.withAlpha(28),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
-        const SizedBox(width: 12),
-        _NotificationButton(onTap: onOpenNotifications),
-      ],
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: scheme.primary.withAlpha(45), width: 1),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(22),
+        child: Stack(
+          children: [
+            PositionedDirectional(
+              top: -40,
+              end: -40,
+              child: Container(
+                width: 130,
+                height: 130,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: scheme.primary.withAlpha(14),
+                ),
+              ),
+            ),
+            PositionedDirectional(
+              bottom: -50,
+              start: -30,
+              child: Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: scheme.secondary.withAlpha(10),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              greeting,
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: scheme.primary,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.4,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            Text(
+                              firstName,
+                              style: ClientTypography.headingLarge(context).copyWith(
+                                color: ClientColors.textPrimaryFor(context),
+                                height: 1.05,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      _NotificationButton(onTap: onOpenNotifications),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Book reliable rides in minutes',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: scheme.onSurface.withAlpha(200),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  if (routeCount == 0)
+                    Text(
+                      'Search live routes, compare prices, and reserve your seat when routes are available.',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(155),
+                        height: 1.35,
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 6,
+                      children: [
+                        _WelcomeStatChip(
+                          icon: Icons.route_rounded,
+                          label: '$routeCount active routes',
+                          scheme: scheme,
+                        ),
+                        _WelcomeStatChip(
+                          icon: Icons.directions_bus_rounded,
+                          label: '$tripCount upcoming trips',
+                          scheme: scheme,
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -240,6 +327,51 @@ class _WelcomeSection extends StatelessWidget {
       return 'there';
     }
     return cleaned.split(RegExp(r'\s+')).first;
+  }
+
+  static String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning,';
+    if (hour < 17) return 'Good afternoon,';
+    return 'Good evening,';
+  }
+}
+
+class _WelcomeStatChip extends StatelessWidget {
+  const _WelcomeStatChip({
+    required this.icon,
+    required this.label,
+    required this.scheme,
+  });
+
+  final IconData icon;
+  final String label;
+  final ColorScheme scheme;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: scheme.surface.withAlpha(190),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: scheme.primary.withAlpha(30)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: scheme.primary),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: scheme.onSurface.withAlpha(210),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -331,11 +463,40 @@ class _RouteSearchSectionState extends State<_RouteSearchSection> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'Where are you heading?',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          Row(
+            children: [
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: scheme.primary.withAlpha(18),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.my_location_rounded,
+                  size: 16,
+                  color: scheme.primary,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  'Where are you heading?',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              TextButton(
+                onPressed: widget.onBrowseAll,
+                style: TextButton.styleFrom(
+                  padding: EdgeInsets.zero,
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: const Text('Browse all'),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           TextField(
@@ -456,12 +617,18 @@ class _RouteSuggestionTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Destination',
+                    'from',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: scheme.onSurface.withAlpha(125),
                     ),
                   ),
                 ],
+              ),
+              const SizedBox(width: 6),
+              Icon(
+                Icons.chevron_right_rounded,
+                size: 18,
+                color: scheme.onSurface.withAlpha(100),
               ),
             ],
           ),

@@ -1,11 +1,11 @@
 import '../../domain/entities/referral_rewards.dart';
 import '../../domain/repositories/referral_rewards_repository.dart';
-import '../datasources/mock_referral_rewards_datasource.dart';
+import '../datasources/supabase_referral_rewards_datasource.dart';
 
 class ReferralRewardsRepositoryImpl implements ReferralRewardsRepository {
   const ReferralRewardsRepositoryImpl(this._datasource);
 
-  final MockReferralRewardsDatasource _datasource;
+  final SupabaseReferralRewardsDatasource _datasource;
 
   @override
   Future<ReferralRewardsData> getReferralRewardsData() {
