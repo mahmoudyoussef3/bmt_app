@@ -53,10 +53,14 @@ class _TrackingScreenState extends State<TrackingScreen>
 
     if (latRange == 0 && lngRange == 0) return const [Offset(0.5, 0.5)];
 
-    return points.map((p) => Offset(
-      lngRange == 0 ? 0.5 : (p.longitude - minLng) / lngRange,
-      latRange == 0 ? 0.5 : 1.0 - (p.latitude - minLat) / latRange,
-    )).toList();
+    return points
+        .map(
+          (p) => Offset(
+            lngRange == 0 ? 0.5 : (p.longitude - minLng) / lngRange,
+            latRange == 0 ? 0.5 : 1.0 - (p.latitude - minLat) / latRange,
+          ),
+        )
+        .toList();
   }
 
   @override
@@ -355,7 +359,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                     decoration: BoxDecoration(
                       color: ClientColors.surfaceFor(context),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: ClientColors.borderFor(context)),
+                      border: Border.all(
+                        color: ClientColors.borderFor(context),
+                      ),
                     ),
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(24),
@@ -1035,11 +1041,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 const SizedBox(height: 2),
                 Row(
                   children: [
-                    Icon(
-                      Icons.star_rounded,
-                      size: 14,
-                      color: scheme.tertiary,
-                    ),
+                    Icon(Icons.star_rounded, size: 14, color: scheme.tertiary),
                     const SizedBox(width: 4),
                     Text(
                       '4.9',
@@ -1062,7 +1064,10 @@ class _TrackingScreenState extends State<TrackingScreen>
             ),
           ),
           IconButton(
-            icon: Icon(Icons.phone_in_talk_rounded, color: ClientColors.primary),
+            icon: Icon(
+              Icons.phone_in_talk_rounded,
+              color: ClientColors.primary,
+            ),
             onPressed: () =>
                 _showMockContactDialog(context, scheme, 'Ahmed Mohamed'),
           ),
@@ -2163,8 +2168,7 @@ class _MapGridAndStreetsPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     // Fill background with elegant charcoal color
-    final bgPaint = Paint()
-      ..color = ClientColors.surfaceMutedFor(_context);
+    final bgPaint = Paint()..color = ClientColors.surfaceMutedFor(_context);
     canvas.drawRect(Offset.zero & size, bgPaint);
 
     final streetPaint = Paint()

@@ -18,7 +18,8 @@ class CaptainNotificationReceived extends CaptainNotificationState {
 }
 
 class CaptainNotificationCubit extends Cubit<CaptainNotificationState> {
-  CaptainNotificationCubit(this._repository) : super(const CaptainNotificationIdle());
+  CaptainNotificationCubit(this._repository)
+    : super(const CaptainNotificationIdle());
 
   final CommunicationRepository _repository;
   StreamSubscription<String>? _subscription;

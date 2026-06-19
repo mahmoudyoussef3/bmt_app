@@ -1,10 +1,7 @@
 import '../../domain/entities/tracking_trip.dart';
 
 class TrackingPointModel {
-  const TrackingPointModel({
-    required this.latitude,
-    required this.longitude,
-  });
+  const TrackingPointModel({required this.latitude, required this.longitude});
 
   final double latitude;
   final double longitude;

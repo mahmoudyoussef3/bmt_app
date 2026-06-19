@@ -46,10 +46,7 @@ class SeatWidget extends StatelessWidget {
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: borderColor,
-          width: isSelected ? 2 : 1,
-        ),
+        border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
         boxShadow: [
           if (isSelected)
             BoxShadow(

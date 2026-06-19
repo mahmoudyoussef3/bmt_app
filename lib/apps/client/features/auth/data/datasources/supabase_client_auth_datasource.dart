@@ -12,10 +12,7 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     required String password,
   }) async {
     try {
-      await _supabase.auth.signInWithPassword(
-        email: email,
-        password: password,
-      );
+      await _supabase.auth.signInWithPassword(email: email, password: password);
     } on AuthException catch (e) {
       throw Exception(e.message);
     } catch (e) {
@@ -39,10 +36,7 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
-        data: {
-          'full_name': fullName.trim(),
-          'phone': phone.trim(),
-        },
+        data: {'full_name': fullName.trim(), 'phone': phone.trim()},
       );
 
       final user = response.user;
@@ -85,7 +79,8 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
       );
     } on AuthException catch (e) {
       // Map common Supabase errors like rate limit to generic messages
-      if (e.message.contains('rate limit') || e.message.contains('security purposes')) {
+      if (e.message.contains('rate limit') ||
+          e.message.contains('security purposes')) {
         throw Exception('RateLimit');
       }
       throw Exception(e.message);

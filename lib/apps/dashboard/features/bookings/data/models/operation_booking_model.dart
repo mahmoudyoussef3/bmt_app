@@ -68,18 +68,18 @@ class OperationBookingModel extends OperationBooking {
       orElse: () => BookingPriority.normal,
     );
 
-    final attachmentsList = (json['attachments'] as List?)
-            ?.map((e) => e.toString())
-            .toList() ??
-        [];
+    final attachmentsList =
+        (json['attachments'] as List?)?.map((e) => e.toString()).toList() ?? [];
 
-    final notesList = (json['notes'] as List?)
-            ?.map((e) => e.toString())
-            .toList() ??
-        [];
+    final notesList =
+        (json['notes'] as List?)?.map((e) => e.toString()).toList() ?? [];
 
-    final timelineList = (json['timeline'] as List?)
-            ?.map((e) => BookingTimelineEventModel.fromJson(e as Map<String, dynamic>))
+    final timelineList =
+        (json['timeline'] as List?)
+            ?.map(
+              (e) =>
+                  BookingTimelineEventModel.fromJson(e as Map<String, dynamic>),
+            )
             .toList() ??
         [];
 
@@ -95,16 +95,20 @@ class OperationBookingModel extends OperationBooking {
       status: status,
       priority: priority,
       assignedTrip: json['assigned_trip'] as String? ?? 'غير مسند',
-      createdAt: json['created_at'] != null 
+      createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String).toLocal()
           : DateTime.now(),
       reviewerName: json['reviewer_name'] as String?,
       rejectionReason: json['rejection_reason'] as String?,
       customerProfile: json['customer_profile'] != null
-          ? BookingCustomerProfileModel.fromJson(json['customer_profile'] as Map<String, dynamic>)
+          ? BookingCustomerProfileModel.fromJson(
+              json['customer_profile'] as Map<String, dynamic>,
+            )
           : BookingCustomerProfileModel.empty(),
       tripDetails: json['trip_details'] != null
-          ? BookingTripDetailsModel.fromJson(json['trip_details'] as Map<String, dynamic>)
+          ? BookingTripDetailsModel.fromJson(
+              json['trip_details'] as Map<String, dynamic>,
+            )
           : BookingTripDetailsModel.empty(),
       paymentDetails: BookingPaymentDetailsModel.fromJson({
         if (json['payment_details'] != null)
@@ -133,12 +137,16 @@ class OperationBookingModel extends OperationBooking {
       'created_at': createdAt.toUtc().toIso8601String(),
       'reviewer_name': reviewerName,
       'rejection_reason': rejectionReason,
-      'customer_profile': (customerProfile as BookingCustomerProfileModel).toJson(),
+      'customer_profile': (customerProfile as BookingCustomerProfileModel)
+          .toJson(),
       'trip_details': (tripDetails as BookingTripDetailsModel).toJson(),
-      'payment_details': (paymentDetails as BookingPaymentDetailsModel).toJson(),
+      'payment_details': (paymentDetails as BookingPaymentDetailsModel)
+          .toJson(),
       'attachments': attachments,
       'notes': notes,
-      'timeline': timeline.map((e) => (e as BookingTimelineEventModel).toJson()).toList(),
+      'timeline': timeline
+          .map((e) => (e as BookingTimelineEventModel).toJson())
+          .toList(),
     };
   }
 }

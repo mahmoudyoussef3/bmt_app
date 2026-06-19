@@ -80,9 +80,9 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
         backgroundColor: ClientColors.surfaceFor(context),
         title: Text(
           'Attach Receipt',
-          style: ClientTypography.headingSmall(context).copyWith(
-            color: ClientColors.textPrimaryFor(context),
-          ),
+          style: ClientTypography.headingSmall(
+            context,
+          ).copyWith(color: ClientColors.textPrimaryFor(context)),
         ),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
@@ -135,9 +135,9 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
               const SizedBox(width: 8),
               Text(
                 'Transfer Instructions',
-                style: ClientTypography.headingSmall(context).copyWith(
-                  color: ClientColors.textPrimaryFor(context),
-                ),
+                style: ClientTypography.headingSmall(
+                  context,
+                ).copyWith(color: ClientColors.textPrimaryFor(context)),
               ),
             ],
           ),
@@ -198,17 +198,21 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
       children: [
         Text(
           label,
-          style: ClientTypography.bodySmall(context).copyWith(
-            color: ClientColors.textSecondaryFor(context),
-          ),
+          style: ClientTypography.bodySmall(
+            context,
+          ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
         Row(
           children: [
             Text(
               value,
               style: ClientTypography.bodySmall(context).copyWith(
-                fontWeight: isBold || showCopy ? FontWeight.w900 : FontWeight.w700,
-                color: isBold ? ClientColors.primary : ClientColors.textPrimaryFor(context),
+                fontWeight: isBold || showCopy
+                    ? FontWeight.w900
+                    : FontWeight.w700,
+                color: isBold
+                    ? ClientColors.primary
+                    : ClientColors.textPrimaryFor(context),
               ),
             ),
             if (showCopy) ...[
@@ -267,16 +271,16 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                     _receiptName ?? _receiptFile!.path.split('/').last,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     _formatFileSize(_receiptSize ?? _receiptFile!.lengthSync()),
-                    style: ClientTypography.labelSmall(context).copyWith(
-                      color: ClientColors.textTertiaryFor(context),
-                    ),
+                    style: ClientTypography.labelSmall(
+                      context,
+                    ).copyWith(color: ClientColors.textTertiaryFor(context)),
                   ),
                 ],
               ),
@@ -332,9 +336,9 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
               const SizedBox(height: 4),
               Text(
                 'Tap to select a file (PNG, JPG)',
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: ClientColors.textTertiaryFor(context),
-                ),
+                style: ClientTypography.bodySmall(
+                  context,
+                ).copyWith(color: ClientColors.textTertiaryFor(context)),
               ),
             ],
           ),
@@ -374,10 +378,9 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                 const SizedBox(height: 4),
                 Text(
                   'Submit payment to reserve your selected seat and send the receipt for verification.',
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.onJourneyGreen,
-                    height: 1.35,
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.onJourneyGreen, height: 1.35),
                 ),
               ],
             ),

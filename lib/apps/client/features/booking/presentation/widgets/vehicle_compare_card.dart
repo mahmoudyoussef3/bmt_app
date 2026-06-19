@@ -19,7 +19,9 @@ class VehicleCompareCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: selected ? ClientColors.primaryLight : ClientColors.surfaceFor(context),
+      color: selected
+          ? ClientColors.primaryLight
+          : ClientColors.surfaceFor(context),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
         onTap: onSelect,
@@ -29,7 +31,9 @@ class VehicleCompareCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-              color: selected ? ClientColors.primary : ClientColors.borderFor(context),
+              color: selected
+                  ? ClientColors.primary
+                  : ClientColors.borderFor(context),
               width: selected ? 2 : 1,
             ),
           ),
@@ -46,7 +50,10 @@ class VehicleCompareCard extends StatelessWidget {
                       color: ClientColors.primaryLight,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(Icons.schedule_rounded, color: ClientColors.primary),
+                    child: const Icon(
+                      Icons.schedule_rounded,
+                      color: ClientColors.primary,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -72,10 +79,9 @@ class VehicleCompareCard extends StatelessWidget {
                   ),
                   Text(
                     vehicle.price,
-                    style: ClientTypography.priceMedium(context).copyWith(
-                      fontSize: 17,
-                      height: 1.1,
-                    ),
+                    style: ClientTypography.priceMedium(
+                      context,
+                    ).copyWith(fontSize: 17, height: 1.1),
                   ),
                 ],
               ),
@@ -91,7 +97,10 @@ class VehicleCompareCard extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.directions_bus_rounded, color: ClientColors.primary),
+                    const Icon(
+                      Icons.directions_bus_rounded,
+                      color: ClientColors.primary,
+                    ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -169,9 +178,9 @@ class _OccupancyBlock extends StatelessWidget {
             ),
             Text(
               '$occupancyPercent% full',
-              style: ClientTypography.labelMedium(context).copyWith(
-                fontWeight: FontWeight.w900,
-              ),
+              style: ClientTypography.labelMedium(
+                context,
+              ).copyWith(fontWeight: FontWeight.w900),
             ),
           ],
         ),
@@ -212,7 +221,9 @@ class _SeatsBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: lowSeats ? ClientColors.journeyAmberLight : ClientColors.primaryLight,
+        color: lowSeats
+            ? ClientColors.journeyAmberLight
+            : ClientColors.primaryLight,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(

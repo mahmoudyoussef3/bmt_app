@@ -17,12 +17,12 @@ class SubscriptionPlansCubit extends Cubit<SubscriptionPlansState> {
     required UpdateSubscriptionPlanUseCase updatePlan,
     required SetSubscriptionPlanStatusUseCase setStatus,
     required DeleteSubscriptionPlanUseCase deletePlan,
-  })  : _getPlans = getPlans,
-        _createPlan = createPlan,
-        _updatePlan = updatePlan,
-        _setStatus = setStatus,
-        _deletePlan = deletePlan,
-        super(const SubscriptionPlansLoading());
+  }) : _getPlans = getPlans,
+       _createPlan = createPlan,
+       _updatePlan = updatePlan,
+       _setStatus = setStatus,
+       _deletePlan = deletePlan,
+       super(const SubscriptionPlansLoading());
 
   Future<void> load() async {
     emit(const SubscriptionPlansLoading());

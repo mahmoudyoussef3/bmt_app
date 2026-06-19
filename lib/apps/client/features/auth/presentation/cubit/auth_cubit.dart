@@ -8,17 +8,14 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
   ClientAuthCubit({
     required SignInWithEmailUseCase signInWithEmail,
     required SignUpWithEmailUseCase signUpWithEmail,
-  })  : _signInWithEmail = signInWithEmail,
-        _signUpWithEmail = signUpWithEmail,
-        super(const ClientAuthState());
+  }) : _signInWithEmail = signInWithEmail,
+       _signUpWithEmail = signUpWithEmail,
+       super(const ClientAuthState());
 
   final SignInWithEmailUseCase _signInWithEmail;
   final SignUpWithEmailUseCase _signUpWithEmail;
 
-  Future<void> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<void> signIn({required String email, required String password}) async {
     emit(
       state.copyWith(
         signInStatus: AuthSubmissionStatus.loading,
@@ -27,11 +24,7 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
     );
     try {
       await _signInWithEmail(email: email, password: password);
-      emit(
-        state.copyWith(
-          signInStatus: AuthSubmissionStatus.success,
-        ),
-      );
+      emit(state.copyWith(signInStatus: AuthSubmissionStatus.success));
     } catch (error) {
       emit(
         state.copyWith(

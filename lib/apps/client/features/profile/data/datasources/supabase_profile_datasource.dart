@@ -37,15 +37,13 @@ class SupabaseProfileDatasource implements ProfileDatasource {
     final profileResponse = await profileFuture;
     final accountResponse = await accountFuture;
 
-    final name =
-        profileResponse?['full_name']?.toString() ?? 'Unknown User';
+    final name = profileResponse?['full_name']?.toString() ?? 'Unknown User';
     final email =
         profileResponse?['email']?.toString() ?? user.email ?? 'No email';
     final initials = _getInitials(name);
 
     final points = accountResponse?['points'] as int? ?? 0;
-    final walletBalance =
-        accountResponse?['wallet_balance'] as int? ?? 0;
+    final walletBalance = accountResponse?['wallet_balance'] as int? ?? 0;
 
     final walletSubtitle = walletBalance > 0
         ? 'EGP $walletBalance.00 available'

@@ -15,17 +15,19 @@ class AppInterceptors extends Interceptor {
     if (session != null) {
       options.headers['Authorization'] = 'Bearer ${session.accessToken}';
     }
-    
+
     super.onRequest(options, handler);
   }
 
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     if (kDebugMode) {
-      debugPrint('✅ [API Response] [${response.statusCode}] ${response.requestOptions.uri}');
+      debugPrint(
+        '✅ [API Response] [${response.statusCode}] ${response.requestOptions.uri}',
+      );
       debugPrint('📦 [Response Data]\n${_formatData(response.data)}');
     }
-    
+
     // Continue processing the response
     super.onResponse(response, handler);
   }
@@ -33,7 +35,9 @@ class AppInterceptors extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
     if (kDebugMode) {
-      debugPrint('❌ [API Error] [${err.response?.statusCode ?? 'N/A'}] ${err.requestOptions.uri}');
+      debugPrint(
+        '❌ [API Error] [${err.response?.statusCode ?? 'N/A'}] ${err.requestOptions.uri}',
+      );
       debugPrint('❗ [Error Message] ${err.message}');
       if (err.response?.data != null) {
         debugPrint('❗ [Error Data]\n${_formatData(err.response?.data)}');
@@ -42,7 +46,9 @@ class AppInterceptors extends Interceptor {
 
     // Handle global authentication failures (e.g., token expired)
     if (err.response?.statusCode == 401) {
-      debugPrint('⚠️ [Auth Warning] Unauthorized request! Token might be expired.');
+      debugPrint(
+        '⚠️ [Auth Warning] Unauthorized request! Token might be expired.',
+      );
       // Future logic: Trigger global logout or token refresh here.
     }
 

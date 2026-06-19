@@ -16,80 +16,81 @@ class AppTextThemes {
   static TextTheme textThemeFor(ColorScheme colorScheme) {
     final onSurface = colorScheme.onSurface;
 
-    final baseTextTheme = TextTheme(
-      // Page / Section titles
-      displayLarge: TextStyle(
-        fontSize: 28 * _scale,
-        fontWeight: _b,
-        height: 1.2,
-        letterSpacing: -0.4,
-      ), // H1
-      displayMedium: TextStyle(
-        fontSize: 22 * _scale,
-        fontWeight: _sb,
-        height: 1.25,
-      ), // H2
-      displaySmall: TextStyle(
-        fontSize: 18 * _scale,
-        fontWeight: _sb,
-        height: 1.3,
-      ), // H3 / Card titles
-      // Body
-      bodyLarge: TextStyle(
-        fontSize: 16 * _scale,
-        fontWeight: _r,
-        height: 1.6,
-      ), // comfortable reading
-      bodyMedium: TextStyle(
-        fontSize: 14 * _scale,
-        fontWeight: _m,
-        height: 1.5,
-        letterSpacing: 0.2,
-      ),
-      bodySmall: TextStyle(
-        fontSize: 13 * _scale,
-        fontWeight: _r,
-        height: 1.45,
-        letterSpacing: 0.2,
-      ),
+    final baseTextTheme =
+        TextTheme(
+          // Page / Section titles
+          displayLarge: TextStyle(
+            fontSize: 28 * _scale,
+            fontWeight: _b,
+            height: 1.2,
+            letterSpacing: -0.4,
+          ), // H1
+          displayMedium: TextStyle(
+            fontSize: 22 * _scale,
+            fontWeight: _sb,
+            height: 1.25,
+          ), // H2
+          displaySmall: TextStyle(
+            fontSize: 18 * _scale,
+            fontWeight: _sb,
+            height: 1.3,
+          ), // H3 / Card titles
+          // Body
+          bodyLarge: TextStyle(
+            fontSize: 16 * _scale,
+            fontWeight: _r,
+            height: 1.6,
+          ), // comfortable reading
+          bodyMedium: TextStyle(
+            fontSize: 14 * _scale,
+            fontWeight: _m,
+            height: 1.5,
+            letterSpacing: 0.2,
+          ),
+          bodySmall: TextStyle(
+            fontSize: 13 * _scale,
+            fontWeight: _r,
+            height: 1.45,
+            letterSpacing: 0.2,
+          ),
 
-      // Labels / badges
-      labelLarge: TextStyle(
-        fontSize: 13 * _scale,
-        fontWeight: _m,
-        height: 1.4,
-        letterSpacing: 0.4,
-      ),
-      labelSmall: TextStyle(
-        fontSize: 12 * _scale,
-        fontWeight: _r,
-        height: 1.4,
-        letterSpacing: 0.4,
-      ),
+          // Labels / badges
+          labelLarge: TextStyle(
+            fontSize: 13 * _scale,
+            fontWeight: _m,
+            height: 1.4,
+            letterSpacing: 0.4,
+          ),
+          labelSmall: TextStyle(
+            fontSize: 12 * _scale,
+            fontWeight: _r,
+            height: 1.4,
+            letterSpacing: 0.4,
+          ),
 
-      // Buttons / action labels
-      titleLarge: TextStyle(
-        fontSize: 16 * _scale,
-        fontWeight: _sb,
-        height: 1.3,
-      ),
+          // Buttons / action labels
+          titleLarge: TextStyle(
+            fontSize: 16 * _scale,
+            fontWeight: _sb,
+            height: 1.3,
+          ),
 
-      // Captions / small helper text
-      titleMedium: TextStyle(
-        fontSize: 12 * _scale,
-        fontWeight: _r,
-        height: 1.4,
-      ),
-      titleSmall: TextStyle(
-        fontSize: 11 * _scale,
-        fontWeight: _m,
-        height: 1.3,
-      ),
-    ).apply(
-      bodyColor: onSurface,
-      displayColor: onSurface,
-      decorationColor: onSurface,
-    );
+          // Captions / small helper text
+          titleMedium: TextStyle(
+            fontSize: 12 * _scale,
+            fontWeight: _r,
+            height: 1.4,
+          ),
+          titleSmall: TextStyle(
+            fontSize: 11 * _scale,
+            fontWeight: _m,
+            height: 1.3,
+          ),
+        ).apply(
+          bodyColor: onSurface,
+          displayColor: onSurface,
+          decorationColor: onSurface,
+        );
 
     return GoogleFonts.outfitTextTheme(baseTextTheme);
   }

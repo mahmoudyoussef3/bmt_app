@@ -146,7 +146,9 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             icon: Icons.trending_up_rounded,
             iconColor: ClientColors.primary,
             title: AppLocalizations.of(context)!.booking_popularRoutes,
-            subtitle: AppLocalizations.of(context)!.booking_popularRoutesSubtitle,
+            subtitle: AppLocalizations.of(
+              context,
+            )!.booking_popularRoutesSubtitle,
             onTap: () => Navigator.pushNamed(
               context,
               BookingRoutes.popularRoutes,

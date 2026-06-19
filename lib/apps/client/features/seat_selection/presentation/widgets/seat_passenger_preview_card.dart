@@ -31,13 +31,17 @@ class SeatPassengerPreviewCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.groups_rounded, size: 20, color: ClientColors.primary),
+              const Icon(
+                Icons.groups_rounded,
+                size: 20,
+                color: ClientColors.primary,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Passengers',
-                style: ClientTypography.bodyMedium(context).copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+                style: ClientTypography.bodyMedium(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w800),
               ),
               const Spacer(),
               Container(
@@ -156,7 +160,11 @@ class _PassengerRow extends StatelessWidget {
             ),
           ),
           if (!highlighted)
-            const Icon(Icons.check_circle_rounded, color: ClientColors.primary, size: 20),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: ClientColors.primary,
+              size: 20,
+            ),
         ],
       ),
     );

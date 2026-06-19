@@ -7,10 +7,10 @@ enum PlanStatus {
   const PlanStatus(this.label);
 
   static PlanStatus fromDb(String? value) => switch (value) {
-        'paused' => PlanStatus.paused,
-        'archived' => PlanStatus.archived,
-        _ => PlanStatus.active,
-      };
+    'paused' => PlanStatus.paused,
+    'archived' => PlanStatus.archived,
+    _ => PlanStatus.active,
+  };
 
   String get db => name;
 }
@@ -42,14 +42,14 @@ class SubscriptionPlan {
   });
 
   Map<String, dynamic> toInsert() => {
-        'title': title,
-        'subtitle': subtitle,
-        'price': price,
-        'days': days,
-        'trips_count': tripsCount,
-        'discount_percent': discountPercent,
-        'savings_amount': savingsAmount,
-        'description': description,
-        'status': status.db,
-      };
+    'title': title,
+    'subtitle': subtitle,
+    'price': price,
+    'days': days,
+    'trips_count': tripsCount,
+    'discount_percent': discountPercent,
+    'savings_amount': savingsAmount,
+    'description': description,
+    'status': status.db,
+  };
 }

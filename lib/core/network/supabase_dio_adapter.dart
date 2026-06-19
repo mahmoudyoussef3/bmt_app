@@ -4,9 +4,9 @@ import 'package:dio/dio.dart';
 
 /// An adapter that bridges the standard Dart `http.Client` (which Supabase uses)
 /// to our custom `Dio` instance.
-/// 
-/// By providing this to `Supabase.initialize(httpClient: ...)` we force all 
-/// Supabase requests to flow through `DioFactory`, meaning they trigger the 
+///
+/// By providing this to `Supabase.initialize(httpClient: ...)` we force all
+/// Supabase requests to flow through `DioFactory`, meaning they trigger the
 /// `PrettyDioLogger` and any custom interceptors.
 class DioHttpClientAdapter extends http.BaseClient {
   final Dio dio;
@@ -20,8 +20,9 @@ class DioHttpClientAdapter extends http.BaseClient {
       method: request.method,
       headers: request.headers,
       // Buffer the response so we can log it fully
-      responseType: ResponseType.bytes, 
-      validateStatus: (status) => true, // Let the caller (Supabase) handle status errors
+      responseType: ResponseType.bytes,
+      validateStatus: (status) =>
+          true, // Let the caller (Supabase) handle status errors
     );
 
     // 2. Prepare the body if present
@@ -47,8 +48,11 @@ class DioHttpClientAdapter extends http.BaseClient {
       return http.StreamedResponse(
         stream,
         dioResponse.statusCode ?? 200,
-        contentLength: dioResponse.headers.value(Headers.contentLengthHeader) != null
-            ? int.tryParse(dioResponse.headers.value(Headers.contentLengthHeader)!)
+        contentLength:
+            dioResponse.headers.value(Headers.contentLengthHeader) != null
+            ? int.tryParse(
+                dioResponse.headers.value(Headers.contentLengthHeader)!,
+              )
             : null,
         request: request,
         headers: dioResponse.headers.map.map(

@@ -39,7 +39,10 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
     final tiersFuture = _supabase
         .from('loyalty_tiers')
         .select()
-        .order('points_required_val', ascending: true); // Assuming a numeric field for sorting
+        .order(
+          'points_required_val',
+          ascending: true,
+        ); // Assuming a numeric field for sorting
 
     // 4. Fetch redeemable rewards
     final rewardsFuture = _supabase
@@ -65,23 +68,31 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
     final transactions = txResponse.map((tx) {
       return PointsTransaction(
         title: tx['title']?.toString() ?? 'Transaction',
-        date: tx['created_at'] != null ? tx['created_at'].toString().split('T')[0] : 'Unknown',
+        date: tx['created_at'] != null
+            ? tx['created_at'].toString().split('T')[0]
+            : 'Unknown',
         points: tx['points'] as int? ?? 0,
         isEarned: tx['is_earned'] as bool? ?? true,
       );
     }).toList();
 
     final tiers = tiersResponse.map((tier) {
-      final colors = (tier['gradient_colors'] as List<dynamic>?)
-          ?.map((c) => int.tryParse(c.toString()) ?? 0xFFB0BEC5)
-          .toList() ?? [0xFFB0BEC5, 0xFF607D8B];
+      final colors =
+          (tier['gradient_colors'] as List<dynamic>?)
+              ?.map((c) => int.tryParse(c.toString()) ?? 0xFFB0BEC5)
+              .toList() ??
+          [0xFFB0BEC5, 0xFF607D8B];
 
       return LoyaltyTier(
         name: tier['name']?.toString() ?? 'Tier',
         pointsRequired: tier['points_required']?.toString() ?? '0 pts',
         iconKey: tier['icon_key']?.toString() ?? 'stars',
         gradientColors: colors,
-        perks: (tier['perks'] as List<dynamic>?)?.map((p) => p.toString()).toList() ?? [],
+        perks:
+            (tier['perks'] as List<dynamic>?)
+                ?.map((p) => p.toString())
+                .toList() ??
+            [],
       );
     }).toList();
 

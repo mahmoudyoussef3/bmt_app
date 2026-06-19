@@ -8,7 +8,6 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
@@ -75,7 +74,9 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
     if (_pickup == null || _destination == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(AppLocalizations.of(context)!.booking_selectPickupDestMap),
+          content: Text(
+            AppLocalizations.of(context)!.booking_selectPickupDestMap,
+          ),
         ),
       );
       return;
@@ -95,13 +96,17 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
       builder: (context, state) {
         if (state is BookingLoading) {
           return Scaffold(
-            appBar: AppBar(title: Text(AppLocalizations.of(context)!.booking_selectOnMap)),
+            appBar: AppBar(
+              title: Text(AppLocalizations.of(context)!.booking_selectOnMap),
+            ),
             body: const Center(child: CircularProgressIndicator()),
           );
         }
         if (state is BookingError) {
           return Scaffold(
-            appBar: AppBar(title: Text(AppLocalizations.of(context)!.booking_selectOnMap)),
+            appBar: AppBar(
+              title: Text(AppLocalizations.of(context)!.booking_selectOnMap),
+            ),
             body: Center(child: Text(state.message)),
           );
         }
@@ -149,7 +154,9 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: _ModeToggle(
-                        label: AppLocalizations.of(context)!.booking_destination,
+                        label: AppLocalizations.of(
+                          context,
+                        )!.booking_destination,
                         icon: Icons.location_on_rounded,
                         color: scheme.error,
                         selected: _mode == MapSelectionMode.destination,
@@ -194,7 +201,9 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      _mode == MapSelectionMode.pickup ? AppLocalizations.of(context)!.booking_tapMapPickup : AppLocalizations.of(context)!.booking_tapMapDest,
+                      _mode == MapSelectionMode.pickup
+                          ? AppLocalizations.of(context)!.booking_tapMapPickup
+                          : AppLocalizations.of(context)!.booking_tapMapDest,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: scheme.onSurface.withAlpha(160),
                       ),
@@ -203,14 +212,20 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                     _LocationRow(
                       color: scheme.secondary,
                       label: AppLocalizations.of(context)!.booking_pickupPoint,
-                      value: _pickup?.label ?? AppLocalizations.of(context)!.booking_notSet,
+                      value:
+                          _pickup?.label ??
+                          AppLocalizations.of(context)!.booking_notSet,
                       subtitle: _pickup?.subtitle ?? '',
                     ),
                     const SizedBox(height: 10),
                     _LocationRow(
                       color: scheme.error,
-                      label: AppLocalizations.of(context)!.booking_destinationPoint,
-                      value: _destination?.label ?? AppLocalizations.of(context)!.booking_notSet,
+                      label: AppLocalizations.of(
+                        context,
+                      )!.booking_destinationPoint,
+                      value:
+                          _destination?.label ??
+                          AppLocalizations.of(context)!.booking_notSet,
                       subtitle: _destination?.subtitle ?? '',
                     ),
                     const SizedBox(height: 16),

@@ -34,10 +34,14 @@ class TripFilterBar extends StatelessWidget {
               selectedColor: ClientColors.primary,
               checkmarkColor: ClientColors.textInverse,
               side: BorderSide(
-                color: active ? ClientColors.primary : ClientColors.borderFor(context),
+                color: active
+                    ? ClientColors.primary
+                    : ClientColors.borderFor(context),
               ),
               labelStyle: TextStyle(
-                color: active ? ClientColors.textInverse : ClientColors.textPrimaryFor(context),
+                color: active
+                    ? ClientColors.textInverse
+                    : ClientColors.textPrimaryFor(context),
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
               ),
             ),

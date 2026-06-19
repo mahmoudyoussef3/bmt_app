@@ -69,10 +69,9 @@ class RouteOptionCard extends StatelessWidget {
                     const Spacer(),
                     Text(
                       route.startingPrice,
-                      style: ClientTypography.priceMedium(context).copyWith(
-                        color: ClientColors.primary,
-                        fontSize: 16,
-                      ),
+                      style: ClientTypography.priceMedium(
+                        context,
+                      ).copyWith(color: ClientColors.primary, fontSize: 16),
                     ),
                   ],
                 ),
@@ -157,7 +156,9 @@ class _Header extends StatelessWidget {
         const Spacer(),
         Icon(
           selected ? Icons.check_circle_rounded : Icons.circle_outlined,
-          color: selected ? ClientColors.primary : ClientColors.borderFor(context),
+          color: selected
+              ? ClientColors.primary
+              : ClientColors.borderFor(context),
         ),
       ],
     );
@@ -176,12 +177,16 @@ class _MainRouteLine extends StatelessWidget {
 
     return Row(
       children: [
-        Expanded(child: _PointBlock(label: 'من', value: start)),
+        Expanded(
+          child: _PointBlock(label: 'من', value: start),
+        ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10),
           child: Icon(Icons.arrow_back_rounded),
         ),
-        Expanded(child: _PointBlock(label: 'إلى', value: end)),
+        Expanded(
+          child: _PointBlock(label: 'إلى', value: end),
+        ),
       ],
     );
   }
@@ -200,18 +205,18 @@ class _PointBlock extends StatelessWidget {
       children: [
         Text(
           label,
-          style: ClientTypography.bodySmall(context).copyWith(
-            color: ClientColors.textSecondaryFor(context),
-          ),
+          style: ClientTypography.bodySmall(
+            context,
+          ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
         const SizedBox(height: 4),
         Text(
           value,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: ClientTypography.bodyMedium(context).copyWith(
-            fontWeight: FontWeight.w900,
-          ),
+          style: ClientTypography.bodyMedium(
+            context,
+          ).copyWith(fontWeight: FontWeight.w900),
         ),
       ],
     );
@@ -251,9 +256,9 @@ class _CompactPointsPreview extends StatelessWidget {
                 : previewPoints.isEmpty
                 ? 'رحلة مباشرة بدون محطات مرور'
                 : '${previewPoints.length} محطات مرور',
-            style: ClientTypography.bodySmall(context).copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
           if (previewPoints.isNotEmpty) ...[
             const SizedBox(height: 10),
@@ -268,9 +273,9 @@ class _CompactPointsPreview extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 '+ ${previewPoints.length - 4} محطات أخرى',
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                ),
+                style: ClientTypography.bodySmall(
+                  context,
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
             ],
           ],
@@ -295,10 +300,9 @@ class _StopChip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: ClientTypography.bodySmall(context).copyWith(
-          color: ClientColors.primary,
-          fontWeight: FontWeight.w700,
-        ),
+        style: ClientTypography.bodySmall(
+          context,
+        ).copyWith(color: ClientColors.primary, fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -319,9 +323,9 @@ class _MetaItem extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: ClientTypography.bodySmall(context).copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: ClientTypography.bodySmall(
+            context,
+          ).copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     );

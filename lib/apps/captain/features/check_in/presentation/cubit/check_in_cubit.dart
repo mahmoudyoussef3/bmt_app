@@ -7,7 +7,7 @@ import 'check_in_state.dart';
 
 class CheckInCubit extends Cubit<CheckInState> {
   CheckInCubit(this._checkPassenger, this._repository)
-      : super(const CheckInReady());
+    : super(const CheckInReady());
 
   final CheckPassengerUseCase _checkPassenger;
   final CheckInRepository _repository;

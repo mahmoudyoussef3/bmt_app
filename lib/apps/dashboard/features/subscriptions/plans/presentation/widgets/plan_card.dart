@@ -108,10 +108,9 @@ class PlanCard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: scheme.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: 2),
         Text(value, style: Theme.of(context).textTheme.titleSmall),

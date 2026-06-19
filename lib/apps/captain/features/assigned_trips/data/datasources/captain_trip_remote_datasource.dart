@@ -37,7 +37,12 @@ class CaptainTripRemoteDataSource {
           trip_passengers(id, status)
         ''')
         .eq('driver_id', driverId)
-        .inFilter('status', ['scheduled', 'open_for_booking', 'boarding', 'in_progress'])
+        .inFilter('status', [
+          'scheduled',
+          'open_for_booking',
+          'boarding',
+          'in_progress',
+        ])
         .order('trip_date')
         .order('departure_time');
 

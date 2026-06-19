@@ -76,11 +76,11 @@ class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
 
     final fillColor = _isFocused
         ? isDark
-            ? const Color(0xFF0F172A)
-            : Colors.white
+              ? const Color(0xFF0F172A)
+              : Colors.white
         : isDark
-            ? const Color(0xFF1E293B)
-            : const Color(0xFFF8FAFC);
+        ? const Color(0xFF1E293B)
+        : const Color(0xFFF8FAFC);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
@@ -91,14 +91,14 @@ class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
         boxShadow: _isFocused
             ? [
                 BoxShadow(
-                  color: scheme.primary.withOpacity(0.16),
+                  color: scheme.primary.withValues(alpha: 0.16),
                   blurRadius: 18,
                   offset: const Offset(0, 8),
                 ),
               ]
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(isDark ? 0.12 : 0.04),
+                  color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.04),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -115,23 +115,20 @@ class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
         onChanged: widget.onChanged,
         onFieldSubmitted: widget.onFieldSubmitted,
         cursorColor: scheme.primary,
-        style: TextStyle(
-          fontWeight: FontWeight.w700,
-          color: scheme.onSurface,
-        ),
+        style: TextStyle(fontWeight: FontWeight.w700, color: scheme.onSurface),
         decoration: InputDecoration(
           labelText: widget.labelText,
           labelStyle: TextStyle(
             color: _isFocused
                 ? scheme.primary
-                : scheme.onSurfaceVariant.withOpacity(0.75),
+                : scheme.onSurfaceVariant.withValues(alpha: 0.75),
             fontWeight: _isFocused ? FontWeight.w800 : FontWeight.w600,
           ),
           prefixIcon: Icon(
             widget.prefixIcon,
             color: _isFocused
                 ? scheme.primary
-                : scheme.onSurfaceVariant.withOpacity(0.65),
+                : scheme.onSurfaceVariant.withValues(alpha: 0.65),
           ),
           suffixIcon: widget.isPassword
               ? IconButton(
@@ -142,7 +139,7 @@ class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
                         : Icons.visibility_off_outlined,
                     color: _isFocused
                         ? scheme.primary
-                        : scheme.onSurfaceVariant.withOpacity(0.65),
+                        : scheme.onSurfaceVariant.withValues(alpha: 0.65),
                   ),
                   onPressed: () {
                     setState(() {
@@ -159,7 +156,7 @@ class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
           ),
           border: _border(Colors.transparent),
           enabledBorder: _border(
-            isDark ? Colors.white10 : Colors.black.withOpacity(0.06),
+            isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
           ),
           focusedBorder: _border(scheme.primary, width: 2),
           errorBorder: _border(scheme.error),
@@ -172,10 +169,7 @@ class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
   OutlineInputBorder _border(Color color, {double width = 1}) {
     return OutlineInputBorder(
       borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(
-        color: color,
-        width: width,
-      ),
+      borderSide: BorderSide(color: color, width: width),
     );
   }
 }

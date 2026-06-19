@@ -528,9 +528,7 @@ void _registerSettingsDependencies() {
 
   if (!clientGetIt.isRegistered<SettingsRepository>()) {
     clientGetIt.registerLazySingleton<SettingsRepository>(
-      () => SettingsRepositoryImpl(
-        clientGetIt<SupabaseSettingsDatasource>(),
-      ),
+      () => SettingsRepositoryImpl(clientGetIt<SupabaseSettingsDatasource>()),
     );
   }
 
@@ -598,9 +596,7 @@ void _registerTrackingDependencies() {
 
   if (!clientGetIt.isRegistered<TrackingRepository>()) {
     clientGetIt.registerLazySingleton<TrackingRepository>(
-      () => TrackingRepositoryImpl(
-        clientGetIt<SupabaseTrackingDatasource>(),
-      ),
+      () => TrackingRepositoryImpl(clientGetIt<SupabaseTrackingDatasource>()),
     );
   }
 

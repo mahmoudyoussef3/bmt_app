@@ -46,9 +46,9 @@ Future<bool> showTripCancellationFlow(
                   const SizedBox(height: 6),
                   Text(
                     'Trip $tripReference',
-                    style: ClientTypography.bodySmall(ctx).copyWith(
-                      color: ClientColors.textSecondaryFor(ctx),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      ctx,
+                    ).copyWith(color: ClientColors.textSecondaryFor(ctx)),
                   ),
                   const SizedBox(height: 16),
                   ...kCancellationReasons.map((r) {
@@ -151,9 +151,9 @@ Future<bool> showTripCancellationFlow(
                 Expanded(
                   child: Text(
                     'Reason: $reason',
-                    style: ClientTypography.bodySmall(ctx).copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: ClientTypography.bodySmall(
+                      ctx,
+                    ).copyWith(fontWeight: FontWeight.w600),
                   ),
                 ),
               ],

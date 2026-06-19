@@ -4,10 +4,9 @@ import '../models/routes_hub_data_model.dart';
 import 'routes_hub_datasource.dart';
 
 class SupabaseRoutesHubDatasource implements RoutesHubDatasource {
-  final SupabaseClient _supabase;
+  const SupabaseRoutesHubDatasource(SupabaseClient _);
 
-  const SupabaseRoutesHubDatasource(this._supabase);
-
+  @override
   Future<RoutesHubDataModel> getRoutesHubData() async {
     // The RoutesHubDataModel configures the UI for the routes tab.
     // While the text is static, the actual route searching and mapping

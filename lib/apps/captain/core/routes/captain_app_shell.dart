@@ -17,7 +17,8 @@ class CaptainAppShell extends StatelessWidget {
           create: (_) => captainGetIt<AssignedTripsCubit>(),
         ),
         BlocProvider<CaptainNotificationCubit>(
-          create: (_) => captainGetIt<CaptainNotificationCubit>()..startListening(),
+          create: (_) =>
+              captainGetIt<CaptainNotificationCubit>()..startListening(),
         ),
       ],
       child: BlocListener<CaptainNotificationCubit, CaptainNotificationState>(
@@ -27,9 +28,15 @@ class CaptainAppShell extends StatelessWidget {
               SnackBar(
                 content: Row(
                   children: [
-                    const Icon(Icons.notifications_active_rounded, color: Colors.white, size: 18),
+                    const Icon(
+                      Icons.notifications_active_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: Text('رسالة من العمليات: ${state.message}')),
+                    Expanded(
+                      child: Text('رسالة من العمليات: ${state.message}'),
+                    ),
                   ],
                 ),
                 duration: const Duration(seconds: 5),
@@ -37,7 +44,9 @@ class CaptainAppShell extends StatelessWidget {
                 action: SnackBarAction(
                   label: 'إغلاق',
                   textColor: Colors.white,
-                  onPressed: () => context.read<CaptainNotificationCubit>().clearNotification(),
+                  onPressed: () => context
+                      .read<CaptainNotificationCubit>()
+                      .clearNotification(),
                 ),
               ),
             );

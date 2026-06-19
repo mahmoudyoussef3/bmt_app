@@ -164,11 +164,7 @@ class BookingsCubit extends Cubit<BookingsState> {
     final current = state;
     if (current is! BookingsLoaded) return;
     try {
-      final updated = await _requestReupload(
-        bookingId,
-        'خدمة العملاء',
-        reason,
-      );
+      final updated = await _requestReupload(bookingId, 'خدمة العملاء', reason);
       _emitUpdated(current, [updated]);
     } catch (error) {
       emit(BookingsError(error.toString()));

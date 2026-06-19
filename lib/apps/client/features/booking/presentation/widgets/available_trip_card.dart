@@ -49,26 +49,25 @@ class AvailableTripCard extends StatelessWidget {
                   children: [
                     Text(
                       trip.vehicleType,
-                      style: ClientTypography.bodyMedium(context).copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: ClientTypography.bodyMedium(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Vehicle ${trip.vehicleId}',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                   ],
                 ),
               ),
               Text(
                 trip.startingPrice,
-                style: ClientTypography.priceMedium(context).copyWith(
-                  color: ClientColors.primary,
-                  fontSize: 16,
-                ),
+                style: ClientTypography.priceMedium(
+                  context,
+                ).copyWith(color: ClientColors.primary, fontSize: 16),
               ),
             ],
           ),
@@ -95,21 +94,24 @@ class AvailableTripCard extends StatelessWidget {
                   children: [
                     Text(
                       trip.driverName,
-                      style: ClientTypography.bodyMedium(context).copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: ClientTypography.bodyMedium(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w600),
                     ),
                     Text(
                       'Licensed captain',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: lowSeats
                       ? ClientColors.journeyAmberLight
@@ -153,11 +155,7 @@ class AvailableTripCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          ClientButton(
-            label: 'Book Now',
-            expand: true,
-            onPressed: onBook,
-          ),
+          ClientButton(label: 'Book Now', expand: true, onPressed: onBook),
         ],
       ),
     );
@@ -183,15 +181,15 @@ class _Info extends StatelessWidget {
           children: [
             Text(
               label,
-              style: ClientTypography.labelSmall(context).copyWith(
-                color: ClientColors.textTertiaryFor(context),
-              ),
+              style: ClientTypography.labelSmall(
+                context,
+              ).copyWith(color: ClientColors.textTertiaryFor(context)),
             ),
             Text(
               value,
-              style: ClientTypography.bodySmall(context).copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(fontWeight: FontWeight.w600),
             ),
           ],
         ),

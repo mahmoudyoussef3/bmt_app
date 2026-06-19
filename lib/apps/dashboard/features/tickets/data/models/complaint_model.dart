@@ -28,7 +28,7 @@ class SupportTicketModel extends SupportTicket {
     // Determine client details gracefully from the nested client object if available
     String clientName = 'Unknown User';
     String clientPhone = '';
-    
+
     if (json['clients'] != null) {
       clientName = json['clients']['full_name'] as String? ?? 'Unknown User';
       clientPhone = json['clients']['phone'] as String? ?? '';
@@ -48,12 +48,20 @@ class SupportTicketModel extends SupportTicket {
       assignedAgentName: json['assigned_agent_name'] as String?,
       assignedAgentId: json['assigned_agent_id'] as String?,
       internalNote: json['internal_note'] as String?,
-      customerContactedAt: json['customer_contacted_at'] != null ? DateTime.parse(json['customer_contacted_at'] as String).toLocal() : null,
+      customerContactedAt: json['customer_contacted_at'] != null
+          ? DateTime.parse(json['customer_contacted_at'] as String).toLocal()
+          : null,
       createdAt: DateTime.parse(json['created_at'] as String).toLocal(),
       updatedAt: DateTime.parse(json['updated_at'] as String).toLocal(),
-      resolvedAt: json['resolved_at'] != null ? DateTime.parse(json['resolved_at'] as String).toLocal() : null,
-      closedAt: json['closed_at'] != null ? DateTime.parse(json['closed_at'] as String).toLocal() : null,
-      slaDueAt: json['sla_due_at'] != null ? DateTime.parse(json['sla_due_at'] as String).toLocal() : null,
+      resolvedAt: json['resolved_at'] != null
+          ? DateTime.parse(json['resolved_at'] as String).toLocal()
+          : null,
+      closedAt: json['closed_at'] != null
+          ? DateTime.parse(json['closed_at'] as String).toLocal()
+          : null,
+      slaDueAt: json['sla_due_at'] != null
+          ? DateTime.parse(json['sla_due_at'] as String).toLocal()
+          : null,
       slaBreached: json['sla_breached'] as bool? ?? false,
     );
   }

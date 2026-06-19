@@ -30,7 +30,10 @@ class SubscriptionsAnalytics extends StatelessWidget {
       icon: Icons.show_chart_rounded,
       title: 'اتجاه إيراد الاشتراكات',
       subtitle: 'إجمالي قيمة الاشتراكات حسب الشهر',
-      child: DashboardLineChart(data: _revenueTrend(), lineColor: scheme.primary),
+      child: DashboardLineChart(
+        data: _revenueTrend(),
+        lineColor: scheme.primary,
+      ),
     );
     final plans = DashboardPanel(
       icon: Icons.leaderboard_rounded,

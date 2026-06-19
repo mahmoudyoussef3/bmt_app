@@ -38,7 +38,11 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
-  Future<void> reviewReceipt(String id, ReceiptReviewStatus action, {String? notes}) async {
+  Future<void> reviewReceipt(
+    String id,
+    ReceiptReviewStatus action, {
+    String? notes,
+  }) async {
     _datasource.reviewReceipt(id, action, notes: notes);
   }
 

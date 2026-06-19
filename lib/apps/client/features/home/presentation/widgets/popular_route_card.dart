@@ -101,7 +101,9 @@ class PopularRouteCard extends StatelessWidget {
                     ),
                     _RouteMetric(
                       label: 'Duration',
-                      value: route.duration.isEmpty ? 'Not set' : route.duration,
+                      value: route.duration.isEmpty
+                          ? 'Not set'
+                          : route.duration,
                     ),
                     const SizedBox(width: 14),
                     _RouteMetric(
@@ -152,9 +154,9 @@ class _RouteMetric extends StatelessWidget {
       children: [
         Text(
           label,
-          style: ClientTypography.labelSmall(context).copyWith(
-            color: ClientColors.textTertiaryFor(context),
-          ),
+          style: ClientTypography.labelSmall(
+            context,
+          ).copyWith(color: ClientColors.textTertiaryFor(context)),
         ),
         const SizedBox(height: 2),
         Text(

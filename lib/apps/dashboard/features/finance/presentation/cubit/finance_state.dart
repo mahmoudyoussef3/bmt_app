@@ -21,7 +21,8 @@ class FinanceLoaded extends FinanceState {
   final RevenueMetrics metrics;
   final List<RevenueTrendPoint> revenueTrend;
 
-  final int selectedSectionIndex; // 0: المدفوعات, 1: طلبات المراجعة, 2: المرتجعات, 3: الاشتراكات, 4: الإيرادات
+  final int
+  selectedSectionIndex; // 0: المدفوعات, 1: طلبات المراجعة, 2: المرتجعات, 3: الاشتراكات, 4: الإيرادات
   final String? selectedPaymentId;
   final String? selectedReceiptId;
   final String? selectedRefundId;
@@ -168,18 +169,38 @@ class FinanceLoaded extends FinanceState {
       metrics: metrics ?? this.metrics,
       revenueTrend: revenueTrend ?? this.revenueTrend,
       selectedSectionIndex: selectedSectionIndex ?? this.selectedSectionIndex,
-      selectedPaymentId: clearPaymentSelection ? null : (selectedPaymentId ?? this.selectedPaymentId),
-      selectedReceiptId: clearReceiptSelection ? null : (selectedReceiptId ?? this.selectedReceiptId),
-      selectedRefundId: clearRefundSelection ? null : (selectedRefundId ?? this.selectedRefundId),
-      selectedSubscriptionId: clearSubscriptionSelection ? null : (selectedSubscriptionId ?? this.selectedSubscriptionId),
-      paymentMethodFilter: clearPaymentMethodFilter ? null : (paymentMethodFilter ?? this.paymentMethodFilter),
-      paymentStatusFilter: clearPaymentStatusFilter ? null : (paymentStatusFilter ?? this.paymentStatusFilter),
-      receiptStatusFilter: clearReceiptStatusFilter ? null : (receiptStatusFilter ?? this.receiptStatusFilter),
-      refundStatusFilter: clearRefundStatusFilter ? null : (refundStatusFilter ?? this.refundStatusFilter),
-      subscriptionStatusFilter: clearSubscriptionStatusFilter ? null : (subscriptionStatusFilter ?? this.subscriptionStatusFilter),
+      selectedPaymentId: clearPaymentSelection
+          ? null
+          : (selectedPaymentId ?? this.selectedPaymentId),
+      selectedReceiptId: clearReceiptSelection
+          ? null
+          : (selectedReceiptId ?? this.selectedReceiptId),
+      selectedRefundId: clearRefundSelection
+          ? null
+          : (selectedRefundId ?? this.selectedRefundId),
+      selectedSubscriptionId: clearSubscriptionSelection
+          ? null
+          : (selectedSubscriptionId ?? this.selectedSubscriptionId),
+      paymentMethodFilter: clearPaymentMethodFilter
+          ? null
+          : (paymentMethodFilter ?? this.paymentMethodFilter),
+      paymentStatusFilter: clearPaymentStatusFilter
+          ? null
+          : (paymentStatusFilter ?? this.paymentStatusFilter),
+      receiptStatusFilter: clearReceiptStatusFilter
+          ? null
+          : (receiptStatusFilter ?? this.receiptStatusFilter),
+      refundStatusFilter: clearRefundStatusFilter
+          ? null
+          : (refundStatusFilter ?? this.refundStatusFilter),
+      subscriptionStatusFilter: clearSubscriptionStatusFilter
+          ? null
+          : (subscriptionStatusFilter ?? this.subscriptionStatusFilter),
       searchQuery: searchQuery ?? this.searchQuery,
       actionLoading: actionLoading ?? this.actionLoading,
-      actionMessage: clearActionMessage ? null : (actionMessage ?? this.actionMessage),
+      actionMessage: clearActionMessage
+          ? null
+          : (actionMessage ?? this.actionMessage),
       receiptZoom: receiptZoom ?? this.receiptZoom,
       receiptRotation: receiptRotation ?? this.receiptRotation,
     );

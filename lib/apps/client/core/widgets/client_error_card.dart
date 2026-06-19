@@ -27,7 +27,7 @@ class ClientErrorCard extends StatelessWidget {
     required this.message,
     this.onRetry,
     this.retryLabel = 'Try again',
-  })  : compact = false;
+  }) : compact = false;
 
   final String message;
   final VoidCallback? onRetry;
@@ -77,9 +77,9 @@ class _FullError extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               widget.message,
-              style: ClientTypography.bodyMedium(context).copyWith(
-                color: ClientColors.textSecondaryFor(context),
-              ),
+              style: ClientTypography.bodyMedium(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
               textAlign: TextAlign.center,
             ),
             if (widget.onRetry != null) ...[
@@ -120,9 +120,7 @@ class _CompactError extends StatelessWidget {
       decoration: BoxDecoration(
         color: ClientColors.journeyRedLight,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: ClientColors.journeyRed.withAlpha(50),
-        ),
+        border: Border.all(color: ClientColors.journeyRed.withAlpha(50)),
       ),
       child: Row(
         children: [
@@ -135,9 +133,9 @@ class _CompactError extends StatelessWidget {
           Expanded(
             child: Text(
               widget.message,
-              style: ClientTypography.bodySmall(context).copyWith(
-                color: ClientColors.onJourneyRed,
-              ),
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.onJourneyRed),
             ),
           ),
           if (widget.onRetry != null) ...[

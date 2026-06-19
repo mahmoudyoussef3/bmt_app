@@ -62,17 +62,16 @@ class PromoBanner extends StatelessWidget {
                     const SizedBox(height: 10),
                     Text(
                       '20% off your first\nmonthly package',
-                      style: ClientTypography.headingLarge(context).copyWith(
-                        color: Colors.white,
-                        fontSize: 20,
-                      ),
+                      style: ClientTypography.headingLarge(
+                        context,
+                      ).copyWith(color: Colors.white, fontSize: 20),
                     ),
                     const SizedBox(height: 6),
                     Text(
                       'Use code COMMUTE20 at checkout',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: Colors.white.withAlpha(220),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: Colors.white.withAlpha(220)),
                     ),
                   ],
                 ),

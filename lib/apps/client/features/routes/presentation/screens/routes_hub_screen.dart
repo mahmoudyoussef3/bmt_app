@@ -42,13 +42,13 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
             child: switch (state) {
               RoutesHubLoading() => _LoadingBody(),
               RoutesHubError(:final message) => ClientErrorCard.fullScreen(
-                  message: message,
-                  onRetry: () => context.read<RoutesHubCubit>().load(),
-                ),
+                message: message,
+                onRetry: () => context.read<RoutesHubCubit>().load(),
+              ),
               RoutesHubLoaded(:final data) => _LoadedBody(
-                  data: data,
-                  onOpenAction: _openAction,
-                ),
+                data: data,
+                onOpenAction: _openAction,
+              ),
             },
           ),
         );
@@ -140,10 +140,7 @@ class _GradientHeader extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            ClientColors.primaryLight,
-            ClientColors.surfaceFor(context),
-          ],
+          colors: [ClientColors.primaryLight, ClientColors.surfaceFor(context)],
         ),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -154,16 +151,16 @@ class _GradientHeader extends StatelessWidget {
           children: [
             Text(
               title,
-              style: ClientTypography.headingLarge(context).copyWith(
-                color: ClientColors.textPrimaryFor(context),
-              ),
+              style: ClientTypography.headingLarge(
+                context,
+              ).copyWith(color: ClientColors.textPrimaryFor(context)),
             ),
             const SizedBox(height: 6),
             Text(
               subtitle,
-              style: ClientTypography.bodyMedium(context).copyWith(
-                color: ClientColors.textTertiaryFor(context),
-              ),
+              style: ClientTypography.bodyMedium(
+                context,
+              ).copyWith(color: ClientColors.textTertiaryFor(context)),
             ),
           ],
         ),
@@ -192,9 +189,7 @@ class _SearchCtaCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: ClientColors.primaryLight,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: ClientColors.primary.withAlpha(40),
-        ),
+        border: Border.all(color: ClientColors.primary.withAlpha(40)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -217,24 +212,21 @@ class _SearchCtaCard extends StatelessWidget {
           const SizedBox(height: 16),
           Text(
             searchTitle,
-            style: ClientTypography.headingSmall(context).copyWith(
-              color: ClientColors.textPrimaryFor(context),
-            ),
+            style: ClientTypography.headingSmall(
+              context,
+            ).copyWith(color: ClientColors.textPrimaryFor(context)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
           Text(
             searchDescription,
-            style: ClientTypography.bodyMedium(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
-          ClientButton(
-            label: 'Search trips',
-            onPressed: onSearch,
-          ),
+          ClientButton(label: 'Search trips', onPressed: onSearch),
         ],
       ),
     );
@@ -274,9 +266,9 @@ class _FlowStep extends StatelessWidget {
                 child: Center(
                   child: Text(
                     '$step',
-                    style: ClientTypography.labelMedium(context).copyWith(
-                      color: ClientColors.textInverse,
-                    ),
+                    style: ClientTypography.labelMedium(
+                      context,
+                    ).copyWith(color: ClientColors.textInverse),
                   ),
                 ),
               ),
@@ -299,16 +291,16 @@ class _FlowStep extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: ClientTypography.headingSmall(context).copyWith(
-                      color: ClientColors.textPrimaryFor(context),
-                    ),
+                    style: ClientTypography.headingSmall(
+                      context,
+                    ).copyWith(color: ClientColors.textPrimaryFor(context)),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                 ],
               ),

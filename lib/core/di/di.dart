@@ -7,6 +7,4 @@ final GetIt getIt = GetIt.instance;
 void setupLocator() {
   // Secure storage for tokens
   getIt.registerLazySingleton<SecureStorage>(() => SecureStorage());
-
-
 }

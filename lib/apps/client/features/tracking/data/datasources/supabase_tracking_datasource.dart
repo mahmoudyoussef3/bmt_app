@@ -2,11 +2,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/tracking_trip_model.dart';
 import '../../domain/entities/tracking_trip.dart';
 
-class SupabaseTrackingDatasource {
+abstract class TrackingDatasource {
+  Future<TrackingTripDataModel> getTrackingTrip();
+}
+
+class SupabaseTrackingDatasource implements TrackingDatasource {
   const SupabaseTrackingDatasource(this._client);
 
   final SupabaseClient _client;
 
+  @override
   Future<TrackingTripDataModel> getTrackingTrip() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return _emptyModel();

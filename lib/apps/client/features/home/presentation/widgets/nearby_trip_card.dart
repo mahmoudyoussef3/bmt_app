@@ -54,24 +54,28 @@ class NearbyTripCard extends StatelessWidget {
                             '${trip.pickup} → ${trip.destination}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: ClientTypography.bodyMedium(context).copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: ClientTypography.bodyMedium(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
                         if (trip.isLive)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: ClientColors.journeyGreenLight,
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
                               'Live',
-                              style: ClientTypography.labelSmall(context).copyWith(
-                                color: ClientColors.onJourneyGreen,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              style: ClientTypography.labelSmall(context)
+                                  .copyWith(
+                                    color: ClientColors.onJourneyGreen,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                             ),
                           ),
                       ],

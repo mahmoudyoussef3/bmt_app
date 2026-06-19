@@ -23,7 +23,8 @@ class DioFactory {
       headers: {
         'Content-Type': ApiConstants.contentType,
         'Accept': ApiConstants.accept,
-        'apikey': ApiConstants.anonKey, // Needed if querying Supabase REST endpoints via Retrofit
+        'apikey': ApiConstants
+            .anonKey, // Needed if querying Supabase REST endpoints via Retrofit
       },
     );
 
@@ -36,7 +37,8 @@ class DioFactory {
           requestHeader: true,
           requestBody: true,
           responseHeader: true,
-          responseBody: false, // Turned off here because AppInterceptors prints it beautifully as JSON
+          responseBody:
+              false, // Turned off here because AppInterceptors prints it beautifully as JSON
           error: true,
           compact: true,
           maxWidth: 120,

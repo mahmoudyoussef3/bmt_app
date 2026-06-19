@@ -186,9 +186,9 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     const SizedBox(width: 8),
                     Text(
                       'Secure Checkout',
-                      style: ClientTypography.headingSmall(context).copyWith(
-                        color: ClientColors.textPrimaryFor(context),
-                      ),
+                      style: ClientTypography.headingSmall(
+                        context,
+                      ).copyWith(color: ClientColors.textPrimaryFor(context)),
                     ),
                   ],
                 ),
@@ -256,17 +256,17 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
             const SizedBox(height: 24),
             Text(
               'Processing Payment',
-              style: ClientTypography.headingMedium(context).copyWith(
-                color: ClientColors.textPrimaryFor(context),
-              ),
+              style: ClientTypography.headingMedium(
+                context,
+              ).copyWith(color: ClientColors.textPrimaryFor(context)),
             ),
             const SizedBox(height: 6),
             Text(
               'Please do not close this screen or press back button.',
               textAlign: TextAlign.center,
-              style: ClientTypography.bodySmall(context).copyWith(
-                color: ClientColors.textSecondaryFor(context),
-              ),
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
             ),
             const SizedBox(height: 20),
             Container(
@@ -305,9 +305,17 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                   const SizedBox(height: 12),
                   Divider(color: ClientColors.borderFor(context), height: 1),
                   const SizedBox(height: 12),
-                  _buildDetailTextRow(context, 'Method:', widget.paymentMethod.title),
+                  _buildDetailTextRow(
+                    context,
+                    'Method:',
+                    widget.paymentMethod.title,
+                  ),
                   const SizedBox(height: 6),
-                  _buildDetailTextRow(context, 'Transaction ID:', _transactionId),
+                  _buildDetailTextRow(
+                    context,
+                    'Transaction ID:',
+                    _transactionId,
+                  ),
                 ],
               ),
             ),
@@ -429,16 +437,16 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                 const SizedBox(height: 20),
                 Text(
                   'Payment Successful',
-                  style: ClientTypography.headingMedium(context).copyWith(
-                    color: ClientColors.journeyGreen,
-                  ),
+                  style: ClientTypography.headingMedium(
+                    context,
+                  ).copyWith(color: ClientColors.journeyGreen),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Your booking reference has been confirmed',
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
                 const SizedBox(height: 20),
                 Container(
@@ -458,7 +466,11 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                         valueColor: ClientColors.primary,
                       ),
                       const SizedBox(height: 10),
-                      _buildDetailTextRow(context, 'Paid Amount:', '$total EGP'),
+                      _buildDetailTextRow(
+                        context,
+                        'Paid Amount:',
+                        '$total EGP',
+                      ),
                       const SizedBox(height: 6),
                       _buildDetailTextRow(
                         context,
@@ -466,7 +478,11 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                         widget.paymentMethod.title,
                       ),
                       const SizedBox(height: 6),
-                      _buildDetailTextRow(context, 'Transaction ID:', _transactionId),
+                      _buildDetailTextRow(
+                        context,
+                        'Transaction ID:',
+                        _transactionId,
+                      ),
                     ],
                   ),
                 ),
@@ -514,9 +530,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
             decoration: BoxDecoration(
               color: ClientColors.surfaceFor(context),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: ClientColors.journeyRed.withAlpha(60),
-              ),
+              border: Border.all(color: ClientColors.journeyRed.withAlpha(60)),
             ),
             child: Column(
               children: [
@@ -541,16 +555,16 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                 const SizedBox(height: 20),
                 Text(
                   'Payment Failed',
-                  style: ClientTypography.headingMedium(context).copyWith(
-                    color: ClientColors.journeyRed,
-                  ),
+                  style: ClientTypography.headingMedium(
+                    context,
+                  ).copyWith(color: ClientColors.journeyRed),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Your transaction could not be processed.',
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
                 const SizedBox(height: 20),
                 Container(
@@ -579,9 +593,16 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Divider(color: ClientColors.borderFor(context), height: 1),
+                      Divider(
+                        color: ClientColors.borderFor(context),
+                        height: 1,
+                      ),
                       const SizedBox(height: 12),
-                      _buildDetailTextRow(context, 'Transaction ID:', _transactionId),
+                      _buildDetailTextRow(
+                        context,
+                        'Transaction ID:',
+                        _transactionId,
+                      ),
                     ],
                   ),
                 ),
@@ -630,9 +651,9 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
       children: [
         Text(
           label,
-          style: ClientTypography.bodySmall(context).copyWith(
-            color: ClientColors.textTertiaryFor(context),
-          ),
+          style: ClientTypography.bodySmall(
+            context,
+          ).copyWith(color: ClientColors.textTertiaryFor(context)),
         ),
         Text(
           value,
@@ -666,18 +687,18 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
           ),
           title: Text(
             'Contact Customer Support',
-            style: ClientTypography.headingSmall(context).copyWith(
-              color: ClientColors.textPrimaryFor(context),
-            ),
+            style: ClientTypography.headingSmall(
+              context,
+            ).copyWith(color: ClientColors.textPrimaryFor(context)),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 'Our customer support agents are ready to assist you. Reference ticket number: $_transactionId',
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                ),
+                style: ClientTypography.bodySmall(
+                  context,
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
             ],
           ),

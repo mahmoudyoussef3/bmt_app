@@ -1,5 +1,3 @@
-
-
 enum ForgotPasswordStatus { initial, loading, success, failure }
 
 class ForgotPasswordState {

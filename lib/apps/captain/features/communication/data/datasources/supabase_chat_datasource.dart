@@ -31,8 +31,7 @@ class SupabaseChatDatasource implements ChatDatasource {
           .order('sent_at', ascending: true);
     }
 
-    final messages =
-        rows.map<CaptainMessageModel>(_rowToMessage).toList();
+    final messages = rows.map<CaptainMessageModel>(_rowToMessage).toList();
     final broadcast = passengerId == null;
 
     return CaptainConversationModel(
@@ -72,6 +71,7 @@ class SupabaseChatDatasource implements ChatDatasource {
     );
   }
 
+  @override
   Stream<String> watchIncomingOpsMessages() {
     return _supabase
         .from('captain_messages')
@@ -79,13 +79,16 @@ class SupabaseChatDatasource implements ChatDatasource {
         .eq('sender_type', 'operations')
         .order('sent_at', ascending: false)
         .limit(1)
-        .map((rows) => rows.isNotEmpty ? (rows.first['body'] as String? ?? '') : '')
+        .map(
+          (rows) =>
+              rows.isNotEmpty ? (rows.first['body'] as String? ?? '') : '',
+        )
         .where((body) => body.isNotEmpty);
   }
 
   CaptainMessageType _typeFromDb(String t) => switch (t) {
     'image' => CaptainMessageType.image,
     'voice' => CaptainMessageType.voice,
-    _       => CaptainMessageType.text,
+    _ => CaptainMessageType.text,
   };
 }

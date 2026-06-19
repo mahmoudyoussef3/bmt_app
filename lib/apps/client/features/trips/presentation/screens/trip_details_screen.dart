@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -80,7 +79,8 @@ class _TripDetailsView extends StatelessWidget {
     final canReview = trip.status == TripStatus.completed;
     final canTrack = trip.status == TripStatus.inProgress;
     final showQr =
-        trip.status == TripStatus.upcoming || trip.status == TripStatus.inProgress;
+        trip.status == TripStatus.upcoming ||
+        trip.status == TripStatus.inProgress;
 
     return Directionality(
       textDirection: TextDirection.ltr,
@@ -91,9 +91,9 @@ class _TripDetailsView extends StatelessWidget {
           backgroundColor: ClientColors.surfaceFor(context),
           title: Text(
             'تفاصيل الرحلة',
-            style: ClientTypography.headingSmall(context).copyWith(
-              color: ClientColors.textPrimaryFor(context),
-            ),
+            style: ClientTypography.headingSmall(
+              context,
+            ).copyWith(color: ClientColors.textPrimaryFor(context)),
           ),
           centerTitle: false,
           actions: [
@@ -244,9 +244,9 @@ class _TripEmptyView extends StatelessWidget {
         body: Center(
           child: Text(
             'لم يتم العثور على الرحلة',
-            style: ClientTypography.bodyMedium(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
         ),
       ),
@@ -328,10 +328,9 @@ class _TripHeroCard extends StatelessWidget {
               const SizedBox(height: 18),
               Text(
                 trip.routeLine,
-                style: ClientTypography.headingLarge(context).copyWith(
-                  color: Colors.white,
-                  height: 1.25,
-                ),
+                style: ClientTypography.headingLarge(
+                  context,
+                ).copyWith(color: Colors.white, height: 1.25),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -500,7 +499,10 @@ class _LiveTrackingCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _SoftIcon(icon: Icons.location_searching_rounded, color: ClientColors.primary),
+          _SoftIcon(
+            icon: Icons.location_searching_rounded,
+            color: ClientColors.primary,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -508,16 +510,16 @@ class _LiveTrackingCard extends StatelessWidget {
               children: [
                 Text(
                   'الرحلة بدأت بالفعل',
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'تابع مكان العربية ووقت الوصول المتوقع.',
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
               ],
             ),
@@ -547,10 +549,7 @@ class _CompletedTripCard extends StatelessWidget {
     return _PremiumPanel(
       child: Row(
         children: [
-          _SoftIcon(
-            icon: Icons.star_rounded,
-            color: ClientColors.journeyAmber,
-          ),
+          _SoftIcon(icon: Icons.star_rounded, color: ClientColors.journeyAmber),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -595,16 +594,16 @@ class _DetailSection extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: ClientTypography.headingSmall(context).copyWith(
-                      color: ClientColors.textPrimaryFor(context),
-                    ),
+                    style: ClientTypography.headingSmall(
+                      context,
+                    ).copyWith(color: ClientColors.textPrimaryFor(context)),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                 ],
               ),
@@ -701,10 +700,9 @@ class _RouteTimelinePoint extends StatelessWidget {
               const SizedBox(height: 3),
               Text(
                 time,
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w800,
-                ),
+                style: ClientTypography.bodySmall(
+                  context,
+                ).copyWith(color: color, fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -758,14 +756,18 @@ class _DriverCard extends StatelessWidget {
                   children: [
                     Text(
                       trip.driverName,
-                      style: ClientTypography.headingSmall(context).copyWith(
-                        color: ClientColors.textPrimaryFor(context),
-                      ),
+                      style: ClientTypography.headingSmall(
+                        context,
+                      ).copyWith(color: ClientColors.textPrimaryFor(context)),
                     ),
                     const SizedBox(height: 5),
                     Row(
                       children: [
-                        const Icon(Icons.star_rounded, size: 17, color: ClientColors.journeyAmber),
+                        const Icon(
+                          Icons.star_rounded,
+                          size: 17,
+                          color: ClientColors.journeyAmber,
+                        ),
                         const SizedBox(width: 4),
                         Text(
                           trip.driverRating.toStringAsFixed(1),
@@ -822,9 +824,9 @@ class _DriverCard extends StatelessWidget {
   }
 
   void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$feature سيتم تفعيله قريبًا')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('$feature سيتم تفعيله قريبًا')));
   }
 }
 
@@ -840,9 +842,9 @@ class _DriverAvatar extends StatelessWidget {
       backgroundColor: ClientColors.primaryLight,
       child: Text(
         initials,
-        style: ClientTypography.headingSmall(context).copyWith(
-          color: ClientColors.primary,
-        ),
+        style: ClientTypography.headingSmall(
+          context,
+        ).copyWith(color: ClientColors.primary),
       ),
     );
   }
@@ -881,20 +883,23 @@ class _VehicleCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _StatusBadge(label: trip.vehicleType, color: ClientColors.primary),
+                _StatusBadge(
+                  label: trip.vehicleType,
+                  color: ClientColors.primary,
+                ),
                 const SizedBox(height: 8),
                 Text(
                   trip.vehicleName,
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'كود العربية: ${trip.vehicleId}',
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
               ],
             ),
@@ -918,14 +923,17 @@ class _SeatsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _SoftIcon(icon: Icons.event_seat_rounded, color: ClientColors.primary),
+              _SoftIcon(
+                icon: Icons.event_seat_rounded,
+                color: ClientColors.primary,
+              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   trip.seats.isEmpty ? 'لا يوجد مقعد محدد' : _selectedSeatsText,
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
               ),
             ],
@@ -960,9 +968,7 @@ class _MiniSeatLayout extends StatelessWidget {
       decoration: BoxDecoration(
         color: ClientColors.surfaceMutedFor(context),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: ClientColors.borderFor(context),
-        ),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Column(
         children: [
@@ -994,10 +1000,7 @@ class _MiniSeatLayout extends StatelessWidget {
             spacing: 12,
             runSpacing: 8,
             children: [
-              _SeatLegend(
-                color: ClientColors.journeyGreen,
-                label: 'مقعدك',
-              ),
+              _SeatLegend(color: ClientColors.journeyGreen, label: 'مقعدك'),
               _SeatLegend(
                 color: ClientColors.primary.withAlpha(100),
                 label: 'مقعد آخر',
@@ -1011,7 +1014,9 @@ class _MiniSeatLayout extends StatelessWidget {
 
   int _safeTotalSeats() {
     final numbers = selectedSeats.map(int.tryParse).whereType<int>().toList();
-    final maxSelected = numbers.isEmpty ? 6 : numbers.reduce((a, b) => a > b ? a : b);
+    final maxSelected = numbers.isEmpty
+        ? 6
+        : numbers.reduce((a, b) => a > b ? a : b);
     return maxSelected < 12 ? 12 : maxSelected;
   }
 }
@@ -1024,7 +1029,9 @@ class _MiniSeatBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? ClientColors.journeyGreen : ClientColors.primary.withAlpha(92);
+    final color = selected
+        ? ClientColors.journeyGreen
+        : ClientColors.primary.withAlpha(92);
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 180),
@@ -1047,7 +1054,9 @@ class _MiniSeatBox extends StatelessWidget {
         child: Text(
           number,
           style: TextStyle(
-            color: selected ? ClientColors.textInverse : ClientColors.textInverse,
+            color: selected
+                ? ClientColors.textInverse
+                : ClientColors.textInverse,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -1100,9 +1109,9 @@ class _PaymentCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   trip.paymentLabel,
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: color,
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: color),
                 ),
               ),
               _StatusBadge(
@@ -1123,17 +1132,16 @@ class _PaymentCard extends StatelessWidget {
               Expanded(
                 child: Text(
                   'الإجمالي',
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
               ),
               Text(
                 trip.fare,
-                style: ClientTypography.priceHero(context).copyWith(
-                  fontSize: 20,
-                  color: ClientColors.primary,
-                ),
+                style: ClientTypography.priceHero(
+                  context,
+                ).copyWith(fontSize: 20, color: ClientColors.primary),
               ),
             ],
           ),
@@ -1203,7 +1211,10 @@ class _CancellationReasonCard extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _SoftIcon(icon: Icons.cancel_outlined, color: ClientColors.journeyRed),
+          _SoftIcon(
+            icon: Icons.cancel_outlined,
+            color: ClientColors.journeyRed,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -1211,9 +1222,9 @@ class _CancellationReasonCard extends StatelessWidget {
               children: [
                 Text(
                   'سبب الإلغاء',
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 5),
                 Text(
@@ -1257,9 +1268,7 @@ class _TripActionsBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: ClientColors.surfaceFor(context).withAlpha(245),
           border: Border(
-            top: BorderSide(
-              color: ClientColors.borderFor(context),
-            ),
+            top: BorderSide(color: ClientColors.borderFor(context)),
           ),
           boxShadow: [
             BoxShadow(
@@ -1283,7 +1292,8 @@ class _TripActionsBar extends StatelessWidget {
                   Expanded(
                     child: ClientButton(
                       label: 'تتبع العربية',
-                      onPressed: () => Navigator.pushNamed(context, '/tracking'),
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/tracking'),
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -1327,7 +1337,10 @@ class _TripActionsBar extends StatelessWidget {
 }
 
 class _PremiumPanel extends StatelessWidget {
-  const _PremiumPanel({required this.child, this.padding = const EdgeInsets.all(16)});
+  const _PremiumPanel({
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+  });
 
   final Widget child;
   final EdgeInsets padding;

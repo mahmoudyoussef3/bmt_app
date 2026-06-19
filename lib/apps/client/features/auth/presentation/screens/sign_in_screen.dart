@@ -43,9 +43,9 @@ class _SignInScreenState extends State<SignInScreen> {
     if (!valid) return;
 
     context.read<ClientAuthCubit>().signIn(
-          email: _emailController.text.trim().toLowerCase(),
-          password: _passwordController.text,
-        );
+      email: _emailController.text.trim().toLowerCase(),
+      password: _passwordController.text,
+    );
   }
 
   void _goToForgotPassword() {
@@ -156,8 +156,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         Align(
                           alignment: AlignmentDirectional.centerStart,
                           child: TextButton.icon(
-                            onPressed:
-                                isLoading ? null : _goToForgotPassword,
+                            onPressed: isLoading ? null : _goToForgotPassword,
                             icon: const Icon(
                               Icons.help_outline_rounded,
                               size: 18,
@@ -174,9 +173,7 @@ class _SignInScreenState extends State<SignInScreen> {
                         const SizedBox(height: 24),
 
                         PremiumAuthButton(
-                          text: isLoading
-                              ? 'Signing in...'
-                              : l10n.auth_signIn,
+                          text: isLoading ? 'Signing in...' : l10n.auth_signIn,
                           onPressed: isLoading ? null : _submit,
                           isLoading: isLoading,
                         ),
@@ -227,20 +224,18 @@ class _AuthLogo extends StatelessWidget {
           child: Image.asset(
             'assets/images/app_icon.png',
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Icon(
-              Icons.directions_bus_rounded,
-              color: scheme.primary,
-            ),
+            errorBuilder: (_, _, _) =>
+                Icon(Icons.directions_bus_rounded, color: scheme.primary),
           ),
         ),
         const SizedBox(width: 12),
         Text(
           'EasyWay',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: scheme.primary,
-                letterSpacing: -0.3,
-              ),
+            fontWeight: FontWeight.w900,
+            color: scheme.primary,
+            letterSpacing: -0.3,
+          ),
         ),
       ],
     );
@@ -270,21 +265,17 @@ class _WelcomeBackCard extends StatelessWidget {
               color: scheme.primary.withAlpha(22),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: Icon(
-              Icons.route_rounded,
-              color: scheme.primary,
-              size: 21,
-            ),
+            child: Icon(Icons.route_rounded, color: scheme.primary, size: 21),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'All your trips and bookings in one place — log in and follow your day easily.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    height: 1.55,
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
+                height: 1.55,
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -315,9 +306,9 @@ class _CreateAccountLink extends StatelessWidget {
         Text(
           text,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         TextButton(
           onPressed: onTap,
@@ -342,10 +333,10 @@ class _SecurityNote extends StatelessWidget {
       'Make sure to use the email associated with your account to access your bookings and subscriptions.',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            height: 1.55,
-            color: scheme.onSurfaceVariant.withAlpha(190),
-            fontWeight: FontWeight.w500,
-          ),
+        height: 1.55,
+        color: scheme.onSurfaceVariant.withAlpha(190),
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 }

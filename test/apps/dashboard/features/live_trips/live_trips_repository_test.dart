@@ -142,4 +142,8 @@ class _FailingLiveTripsDatasource implements LiveTripsDatasource {
   @override
   Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId) =>
       throw UnimplementedError();
+
+  @override
+  Stream<VehiclePosition> watchVehiclePosition(String tripId) =>
+      throw UnimplementedError();
 }

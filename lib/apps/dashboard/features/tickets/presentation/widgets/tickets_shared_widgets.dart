@@ -10,12 +10,30 @@ class StatusBadge extends StatelessWidget {
   const StatusBadge({super.key, required this.status});
 
   (Color bg, Color fg) get _colors => switch (status) {
-    TicketStatus.submitted    => (AppStatusColors.infoContainer,    AppStatusColors.onInfoContainer),
-    TicketStatus.underReview  => (AppStatusColors.warningContainer,  AppStatusColors.onWarningContainer),
-    TicketStatus.contacted    => (AppStatusColors.specialContainer,  AppStatusColors.onSpecialContainer),
-    TicketStatus.resolved     => (AppStatusColors.successContainer,  AppStatusColors.onSuccessContainer),
-    TicketStatus.closed       => (AppStatusColors.neutralContainer,  AppStatusColors.onNeutralContainer),
-    TicketStatus.rejected     => (AppStatusColors.errorContainer,    AppStatusColors.onErrorContainer),
+    TicketStatus.submitted => (
+      AppStatusColors.infoContainer,
+      AppStatusColors.onInfoContainer,
+    ),
+    TicketStatus.underReview => (
+      AppStatusColors.warningContainer,
+      AppStatusColors.onWarningContainer,
+    ),
+    TicketStatus.contacted => (
+      AppStatusColors.specialContainer,
+      AppStatusColors.onSpecialContainer,
+    ),
+    TicketStatus.resolved => (
+      AppStatusColors.successContainer,
+      AppStatusColors.onSuccessContainer,
+    ),
+    TicketStatus.closed => (
+      AppStatusColors.neutralContainer,
+      AppStatusColors.onNeutralContainer,
+    ),
+    TicketStatus.rejected => (
+      AppStatusColors.errorContainer,
+      AppStatusColors.onErrorContainer,
+    ),
   };
 
   @override
@@ -41,10 +59,22 @@ class PriorityBadge extends StatelessWidget {
   const PriorityBadge({super.key, required this.priority});
 
   (Color bg, Color fg) get _colors => switch (priority) {
-    TicketPriority.low    => (AppStatusColors.neutralContainer, AppStatusColors.onNeutralContainer),
-    TicketPriority.medium => (AppStatusColors.infoContainer,    AppStatusColors.onInfoContainer),
-    TicketPriority.high   => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
-    TicketPriority.urgent => (AppStatusColors.errorContainer,   AppStatusColors.onErrorContainer),
+    TicketPriority.low => (
+      AppStatusColors.neutralContainer,
+      AppStatusColors.onNeutralContainer,
+    ),
+    TicketPriority.medium => (
+      AppStatusColors.infoContainer,
+      AppStatusColors.onInfoContainer,
+    ),
+    TicketPriority.high => (
+      AppStatusColors.warningContainer,
+      AppStatusColors.onWarningContainer,
+    ),
+    TicketPriority.urgent => (
+      AppStatusColors.errorContainer,
+      AppStatusColors.onErrorContainer,
+    ),
   };
 
   @override
@@ -123,7 +153,12 @@ class StatCard extends StatelessWidget {
       child: Container(
         decoration: isAlert
             ? BoxDecoration(
-                border: Border.all(color: AppStatusColors.onErrorContainer.withValues(alpha: 0.4), width: 1.5),
+                border: Border.all(
+                  color: AppStatusColors.onErrorContainer.withValues(
+                    alpha: 0.4,
+                  ),
+                  width: 1.5,
+                ),
                 borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
               )
             : null,
@@ -142,16 +177,18 @@ class StatCard extends StatelessWidget {
                 Text(
                   '$value',
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: isAlert ? AppStatusColors.onErrorContainer : scheme.onSurface,
-                      ),
+                    fontWeight: FontWeight.w900,
+                    color: isAlert
+                        ? AppStatusColors.onErrorContainer
+                        : scheme.onSurface,
+                  ),
                 ),
                 Text(
                   title,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),

@@ -66,9 +66,11 @@ class TripExecutionPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 14),
-                if (status == TripExecutionStatus.inProgress && trip.stops.isNotEmpty)
+                if (status == TripExecutionStatus.inProgress &&
+                    trip.stops.isNotEmpty)
                   _NextStopBanner(stops: trip.stops),
-                if (status == TripExecutionStatus.inProgress && trip.stops.isNotEmpty)
+                if (status == TripExecutionStatus.inProgress &&
+                    trip.stops.isNotEmpty)
                   const SizedBox(height: 14),
                 _ActionTile(
                   label: 'قائمة الركاب',
@@ -134,11 +136,11 @@ class TripExecutionPage extends StatelessWidget {
 
   String _statusLabel(TripExecutionStatus status) {
     return switch (status) {
-      TripExecutionStatus.scheduled  => 'مجدولة',
-      TripExecutionStatus.boarding   => 'صعود الركاب',
+      TripExecutionStatus.scheduled => 'مجدولة',
+      TripExecutionStatus.boarding => 'صعود الركاب',
       TripExecutionStatus.inProgress => 'جارية',
-      TripExecutionStatus.completed  => 'مكتملة',
-      TripExecutionStatus.cancelled  => 'ملغاة',
+      TripExecutionStatus.completed => 'مكتملة',
+      TripExecutionStatus.cancelled => 'ملغاة',
     };
   }
 
@@ -157,10 +159,8 @@ class TripExecutionPage extends StatelessWidget {
         outline: true,
         onPressed: () => context.read<TripExecutionCubit>().complete(trip.id),
       ),
-      TripExecutionStatus.completed || TripExecutionStatus.cancelled => AppButton(
-        label: _statusLabel(status),
-        onPressed: () {},
-      ),
+      TripExecutionStatus.completed || TripExecutionStatus.cancelled =>
+        AppButton(label: _statusLabel(status), onPressed: () {}),
     };
   }
 }
@@ -284,7 +284,9 @@ class _NextStopBannerState extends State<_NextStopBanner> {
               const SizedBox(width: 6),
               Text(
                 isLast ? 'تم الوصول إلى الوجهة النهائية' : 'المحطة القادمة',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(color: scheme.primary),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelMedium?.copyWith(color: scheme.primary),
               ),
               const Spacer(),
               if (!isLast)
@@ -298,7 +300,9 @@ class _NextStopBannerState extends State<_NextStopBanner> {
             const SizedBox(height: 6),
             Text(
               widget.stops[_currentIndex],
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 10),
             SizedBox(

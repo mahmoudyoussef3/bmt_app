@@ -53,24 +53,28 @@ class PackagePlanCard extends StatelessWidget {
                         Expanded(
                           child: Text(
                             plan.title,
-                            style: ClientTypography.bodyMedium(context).copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: ClientTypography.bodyMedium(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w700),
                           ),
                         ),
                         if (plan.badge.isNotEmpty)
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
                             decoration: BoxDecoration(
                               color: ClientColors.primaryLight,
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Text(
                               plan.badge,
-                              style: ClientTypography.labelSmall(context).copyWith(
-                                color: ClientColors.primary,
-                                fontWeight: FontWeight.w700,
-                              ),
+                              style: ClientTypography.labelSmall(context)
+                                  .copyWith(
+                                    color: ClientColors.primary,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                             ),
                           ),
                       ],
@@ -78,16 +82,16 @@ class PackagePlanCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       plan.subtitle,
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       plan.price,
-                      style: ClientTypography.priceMedium(context).copyWith(
-                        color: ClientColors.primary,
-                      ),
+                      style: ClientTypography.priceMedium(
+                        context,
+                      ).copyWith(color: ClientColors.primary),
                     ),
                   ],
                 ),

@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:bmt_app/apps/dashboard/features/routes/data/datasources/supabase_routes_datasource.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -36,8 +36,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (!valid) return;
 
     context.read<ForgotPasswordCubit>().emailChanged(
-          _emailController.text.trim().toLowerCase(),
-        );
+      _emailController.text.trim().toLowerCase(),
+    );
 
     context.read<ForgotPasswordCubit>().submitEmail();
   }
@@ -117,8 +117,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                         autofillHints: const [AutofillHints.email],
                         onChanged: (value) {
                           context.read<ForgotPasswordCubit>().emailChanged(
-                                value.trim().toLowerCase(),
-                              );
+                            value.trim().toLowerCase(),
+                          );
                         },
                         onFieldSubmitted: (_) => _submit(),
                         validator: (value) {
@@ -204,10 +204,7 @@ class _ForgotPasswordSuccessView extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _SuccessMailCard(
-            scheme: scheme,
-            email: state.email,
-          ),
+          _SuccessMailCard(scheme: scheme, email: state.email),
           const SizedBox(height: 24),
           PremiumAuthButton(
             text: l10n.auth_backToLogin,
@@ -263,20 +260,18 @@ class _AuthLogo extends StatelessWidget {
           child: Image.asset(
             'assets/images/app_icon.png',
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Icon(
-              Icons.directions_bus_rounded,
-              color: scheme.primary,
-            ),
+            errorBuilder: (_, _, _) =>
+                Icon(Icons.directions_bus_rounded, color: scheme.primary),
           ),
         ),
         const SizedBox(width: 12),
         Text(
           'EasyWay',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: scheme.primary,
-                letterSpacing: -0.3,
-              ),
+            fontWeight: FontWeight.w900,
+            color: scheme.primary,
+            letterSpacing: -0.3,
+          ),
         ),
       ],
     );
@@ -317,10 +312,10 @@ class _ResetInfoCard extends StatelessWidget {
             child: Text(
               'We will send a temporary link to your email. Open it soon to set a new password.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    height: 1.55,
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
+                height: 1.55,
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -330,10 +325,7 @@ class _ResetInfoCard extends StatelessWidget {
 }
 
 class _SuccessMailCard extends StatelessWidget {
-  const _SuccessMailCard({
-    required this.scheme,
-    required this.email,
-  });
+  const _SuccessMailCard({required this.scheme, required this.email});
 
   final ColorScheme scheme;
   final String email;
@@ -367,28 +359,28 @@ class _SuccessMailCard extends StatelessWidget {
             'Recovery link sent',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: scheme.onSurface,
-                ),
+              fontWeight: FontWeight.w900,
+              color: scheme.onSurface,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             email,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: scheme.primary,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             'Open the email and click the link to reset your password.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  height: 1.55,
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
+              height: 1.55,
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
@@ -422,10 +414,10 @@ class _EmailHelpCard extends StatelessWidget {
             child: Text(
               'Did not find the email? Check your spam folder or wait a bit before resending.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    height: 1.55,
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+                height: 1.55,
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -445,10 +437,10 @@ class _SecurityNote extends StatelessWidget {
       'For your security, the system may prevent sending multiple links in a short period.',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            height: 1.55,
-            color: scheme.onSurfaceVariant.withAlpha(190),
-            fontWeight: FontWeight.w500,
-          ),
+        height: 1.55,
+        color: scheme.onSurfaceVariant.withAlpha(190),
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 }

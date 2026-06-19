@@ -5,9 +5,9 @@ import '../entities/support_workspace.dart';
 
 abstract class SupportRepository {
   Future<SupportWorkspace> getWorkspace();
-  
+
   Future<List<SupportTicket>> getMyTickets();
-  
+
   Future<SupportTicket> createTicket({
     required String category,
     required String title,
@@ -18,7 +18,7 @@ abstract class SupportRepository {
   });
 
   Future<SupportTicket> getTicketDetails(String ticketId);
-  
+
   Future<List<SupportAttachment>> getTicketAttachments(String ticketId);
 
   Future<SupportAttachment> uploadAttachment({

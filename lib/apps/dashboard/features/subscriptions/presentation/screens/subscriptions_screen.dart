@@ -263,10 +263,7 @@ class _SubscriptionCard extends StatelessWidget {
             children: [
               _Info(label: 'الباقة', value: subscription.routeName),
               _Info(label: 'السعر', value: _money(subscription)),
-              _Info(
-                label: 'المدفوع',
-                value: _amount(subscription.paidAmount),
-              ),
+              _Info(label: 'المدفوع', value: _amount(subscription.paidAmount)),
               _Info(
                 label: 'المتبقي',
                 value: _amount(subscription.remainingAmount),
@@ -479,7 +476,9 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                       const SizedBox(height: AppSpacing.small),
                       _Info(
                         label: 'تاريخ النهاية المحسوب',
-                        value: _endDate == null ? 'لم يحدد بعد' : _date(_endDate!),
+                        value: _endDate == null
+                            ? 'لم يحدد بعد'
+                            : _date(_endDate!),
                       ),
                     ],
                   ),

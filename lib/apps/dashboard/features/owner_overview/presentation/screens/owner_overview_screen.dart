@@ -22,10 +22,12 @@ class OwnerOverviewScreen extends StatelessWidget {
         return switch (state) {
           OwnerOverviewLoading() => const DashboardLoading(),
           OwnerOverviewError(:final message) => DashboardErrorState(
-              message: message,
-              onRetry: () => context.read<OwnerOverviewCubit>().load(),
-            ),
-          OwnerOverviewLoaded(:final overview) => _LoadedView(overview: overview),
+            message: message,
+            onRetry: () => context.read<OwnerOverviewCubit>().load(),
+          ),
+          OwnerOverviewLoaded(:final overview) => _LoadedView(
+            overview: overview,
+          ),
         };
       },
     );
@@ -45,7 +47,8 @@ class _LoadedView extends StatelessWidget {
         DashboardModuleHeader(
           icon: Icons.insights_rounded,
           title: 'نظرة المالك على الإيرادات',
-          subtitle: 'ملخص تنفيذي للإيرادات والعملاء والاشتراكات من بيانات حقيقية.',
+          subtitle:
+              'ملخص تنفيذي للإيرادات والعملاء والاشتراكات من بيانات حقيقية.',
           actions: [
             OutlinedButton.icon(
               onPressed: () => context.read<OwnerOverviewCubit>().load(),
@@ -138,10 +141,9 @@ class _SaasGapNote extends StatelessWidget {
             child: Text(
               'مقاييس SaaS متعددة المستأجرين (الشركات، MRR، معدل التسرب) تتطلب '
               'بنية خلفية غير متوفرة حاليًا، لذا لا تُعرض بدلاً من تقديم أرقام غير حقيقية.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ),
         ],

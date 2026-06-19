@@ -37,7 +37,10 @@ class FleetUploadHelpers {
   }
 
   /// Extracts the storage object path from a Supabase public URL for deletion.
-  static String? storagePathFromPublicUrl(String url, {required String bucket}) {
+  static String? storagePathFromPublicUrl(
+    String url, {
+    required String bucket,
+  }) {
     final uri = Uri.tryParse(url);
     if (uri == null) return null;
 
@@ -51,7 +54,8 @@ class FleetUploadHelpers {
   /// Opens the file picker for fleet documents (pdf/image) and returns the
   /// picked file together with its bytes, or null if cancelled/unreadable.
   /// Throws a localized message string when the file exceeds the 10MB limit.
-  static Future<({PlatformFile file, List<int> bytes})?> pickDocumentFile() async {
+  static Future<({PlatformFile file, List<int> bytes})?>
+  pickDocumentFile() async {
     final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: const ['pdf', 'png', 'jpg', 'jpeg'],

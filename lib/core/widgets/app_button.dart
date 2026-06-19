@@ -25,8 +25,8 @@ class AppButton extends StatelessWidget {
     this.height,
     this.icon,
     this.isLoading = false,
-  })  : label = text,
-        outline = false;
+  }) : label = text,
+       outline = false;
 
   const AppButton.secondary({
     super.key,
@@ -35,8 +35,8 @@ class AppButton extends StatelessWidget {
     this.height,
     this.icon,
     this.isLoading = false,
-  })  : label = text,
-        outline = true;
+  }) : label = text,
+       outline = true;
 
   @override
   Widget build(BuildContext context) {
@@ -48,17 +48,12 @@ class AppButton extends StatelessWidget {
         ? const SizedBox(
             width: 18,
             height: 18,
-            child: CircularProgressIndicator(
-              strokeWidth: 2,
-            ),
+            child: CircularProgressIndicator(strokeWidth: 2),
           )
         : Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              if (icon != null) ...[
-                icon!,
-                const SizedBox(width: 8),
-              ],
+              if (icon != null) ...[icon!, const SizedBox(width: 8)],
               Text(label),
             ],
           );
@@ -68,9 +63,7 @@ class AppButton extends StatelessWidget {
         height: height ?? 48,
         child: OutlinedButton(
           onPressed: isLoading ? null : onPressed,
-          style: OutlinedButton.styleFrom(
-            shape: shape,
-          ),
+          style: OutlinedButton.styleFrom(shape: shape),
           child: child,
         ),
       );
@@ -80,9 +73,7 @@ class AppButton extends StatelessWidget {
       height: height ?? 48,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          shape: shape,
-        ),
+        style: ElevatedButton.styleFrom(shape: shape),
         child: child,
       ),
     );

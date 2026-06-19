@@ -29,16 +29,12 @@ class AppDialogs {
             vertical: 24,
           ),
           child: ConstrainedBox(
-            constraints: const BoxConstraints(
-              maxWidth: 450,
-            ),
+            constraints: const BoxConstraints(maxWidth: 450),
             child: Container(
               padding: const EdgeInsets.all(AppLayout.spaceLg),
               decoration: BoxDecoration(
                 color: scheme.surface,
-                borderRadius: BorderRadius.circular(
-                  AppLayout.radiusLg,
-                ),
+                borderRadius: BorderRadius.circular(AppLayout.radiusLg),
                 boxShadow: [
                   BoxShadow(
                     color: scheme.shadow.withAlpha(25),
@@ -72,9 +68,7 @@ class AppDialogs {
                     textAlign: TextAlign.center,
                     style: AppTypography.heading3(
                       scheme,
-                    ).copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    ).copyWith(fontWeight: FontWeight.w700),
                   ),
 
                   const SizedBox(height: AppLayout.spaceMd),
@@ -84,9 +78,7 @@ class AppDialogs {
                     textAlign: TextAlign.center,
                     style: AppTypography.body(
                       scheme,
-                    ).copyWith(
-                      color: scheme.onSurface.withAlpha(180),
-                    ),
+                    ).copyWith(color: scheme.onSurface.withAlpha(180)),
                   ),
 
                   const SizedBox(height: AppLayout.spaceXl),
@@ -103,9 +95,7 @@ class AppDialogs {
                       ),
 
                       if (onRetry != null) ...[
-                        const SizedBox(
-                          width: AppLayout.spaceMd,
-                        ),
+                        const SizedBox(width: AppLayout.spaceMd),
 
                         Expanded(
                           child: AppButton.primary(
@@ -146,12 +136,8 @@ class AppDialogs {
       builder: (dialogContext) {
         return Dialog(
           child: Container(
-            constraints: const BoxConstraints(
-              maxWidth: 450,
-            ),
-            padding: const EdgeInsets.all(
-              AppLayout.spaceLg,
-            ),
+            constraints: const BoxConstraints(maxWidth: 450),
+            padding: const EdgeInsets.all(AppLayout.spaceLg),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -163,33 +149,23 @@ class AppDialogs {
                   color: accent,
                 ),
 
-                const SizedBox(
-                  height: AppLayout.spaceLg,
-                ),
+                const SizedBox(height: AppLayout.spaceLg),
 
                 Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: AppTypography.heading3(
-                    scheme,
-                  ),
+                  style: AppTypography.heading3(scheme),
                 ),
 
-                const SizedBox(
-                  height: AppLayout.spaceMd,
-                ),
+                const SizedBox(height: AppLayout.spaceMd),
 
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: AppTypography.body(
-                    scheme,
-                  ),
+                  style: AppTypography.body(scheme),
                 ),
 
-                const SizedBox(
-                  height: AppLayout.spaceXl,
-                ),
+                const SizedBox(height: AppLayout.spaceXl),
 
                 Row(
                   children: [
@@ -202,9 +178,7 @@ class AppDialogs {
                       ),
                     ),
 
-                    const SizedBox(
-                      width: AppLayout.spaceMd,
-                    ),
+                    const SizedBox(width: AppLayout.spaceMd),
 
                     Expanded(
                       child: isDestructive
@@ -221,9 +195,7 @@ class AppDialogs {
                                 onPressed: () {
                                   Navigator.of(dialogContext).pop(true);
                                 },
-                                child: Text(
-                                  confirmText ?? l10n.common_confirm,
-                                ),
+                                child: Text(confirmText ?? l10n.common_confirm),
                               ),
                             )
                           : AppButton.primary(

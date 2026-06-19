@@ -105,79 +105,79 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
             return RefreshIndicator(
               onRefresh: () => context.read<AssignedTripsCubit>().refresh(),
               child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'لوحة السائق',
-                            style: Theme.of(context).textTheme.displaySmall,
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'الرحلات المعينة فقط',
-                            style: Theme.of(context).textTheme.bodySmall,
-                          ),
-                        ],
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: () => _showDevModeSwitcher(context),
-                      child: const AppAvatar(initials: 'AM'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                AppCard(
-                  padding: const EdgeInsets.all(14),
-                  child: Row(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+                children: [
+                  Row(
                     children: [
                       Expanded(
-                        child: _Metric(
-                          label: 'الرحلات',
-                          value: trips.length.toString(),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'لوحة السائق',
+                              style: Theme.of(context).textTheme.displaySmall,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'الرحلات المعينة فقط',
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _Metric(
-                          label: 'الركاب',
-                          value: trips
-                              .fold<int>(
-                                0,
-                                (int total, trip) =>
-                                    total + trip.passengerCount,
-                              )
-                              .toString(),
-                        ),
+                      GestureDetector(
+                        onTap: () => _showDevModeSwitcher(context),
+                        child: const AppAvatar(initials: 'AM'),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                Text('اليوم', style: Theme.of(context).textTheme.titleMedium),
-                const SizedBox(height: 10),
-                for (final trip in trips) ...[
-                  AssignedTripCard(
-                    trip: trip,
-                    onOpen: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => TripExecutionPage(trip: trip),
-                      ),
-                    ),
-                    onManifest: () => Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (_) => PassengerListPage(tripId: trip.id),
-                      ),
+                  const SizedBox(height: 16),
+                  AppCard(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _Metric(
+                            label: 'الرحلات',
+                            value: trips.length.toString(),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _Metric(
+                            label: 'الركاب',
+                            value: trips
+                                .fold<int>(
+                                  0,
+                                  (int total, trip) =>
+                                      total + trip.passengerCount,
+                                )
+                                .toString(),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                  const SizedBox(height: 16),
+                  Text('اليوم', style: Theme.of(context).textTheme.titleMedium),
                   const SizedBox(height: 10),
+                  for (final trip in trips) ...[
+                    AssignedTripCard(
+                      trip: trip,
+                      onOpen: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => TripExecutionPage(trip: trip),
+                        ),
+                      ),
+                      onManifest: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PassengerListPage(tripId: trip.id),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
                 ],
-              ],
               ),
             );
           },

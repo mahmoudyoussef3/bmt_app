@@ -5,7 +5,7 @@ import '../datasources/supabase_tracking_datasource.dart';
 class TrackingRepositoryImpl implements TrackingRepository {
   const TrackingRepositoryImpl(this._datasource);
 
-  final SupabaseTrackingDatasource _datasource;
+  final TrackingDatasource _datasource;
 
   @override
   Future<TrackingTripData> getTrackingTrip() async {

@@ -64,9 +64,9 @@ class _PassengerInfoSheet extends StatelessWidget {
             const SizedBox(height: 20),
             Text(
               'Contact details',
-              style: ClientTypography.labelLarge(context).copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: ClientTypography.labelLarge(
+                context,
+              ).copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             const _PassengerField(
@@ -94,9 +94,9 @@ class _PassengerInfoSheet extends StatelessWidget {
                 Expanded(
                   child: Text(
                     'We will use this number for trip updates (demo UI only).',
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                 ),
               ],
@@ -136,9 +136,9 @@ class _PassengerField extends StatelessWidget {
       children: [
         Text(
           label,
-          style: ClientTypography.labelLarge(context).copyWith(
-            color: ClientColors.textSecondaryFor(context),
-          ),
+          style: ClientTypography.labelLarge(
+            context,
+          ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
         const SizedBox(height: 8),
         TextField(
@@ -147,7 +147,10 @@ class _PassengerField extends StatelessWidget {
             hintText: hint,
             prefixIcon: Icon(icon, color: ClientColors.primary),
             suffixIcon: showValid
-                ? const Icon(Icons.check_circle_rounded, color: ClientColors.primary)
+                ? const Icon(
+                    Icons.check_circle_rounded,
+                    color: ClientColors.primary,
+                  )
                 : null,
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -155,7 +158,10 @@ class _PassengerField extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: ClientColors.primary, width: 2),
+              borderSide: const BorderSide(
+                color: ClientColors.primary,
+                width: 2,
+              ),
             ),
           ),
         ),

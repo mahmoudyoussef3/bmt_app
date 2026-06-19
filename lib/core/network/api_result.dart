@@ -1,5 +1,5 @@
 /// A clean wrapper for all API responses ensuring UI layers never handle raw exceptions.
-/// 
+///
 /// Dart 3 features sealed classes which allows for exhaustive pattern matching
 /// when consuming the result in a Cubit or UseCase.
 sealed class ApiResult<T> {

@@ -10,9 +10,9 @@ class AssignedTripsCubit extends Cubit<AssignedTripsState> {
   AssignedTripsCubit({
     required GetAssignedTripsUseCase getAssignedTrips,
     required WatchAssignedTripsUseCase watchAssignedTrips,
-  })  : _getAssignedTrips = getAssignedTrips,
-        _watchAssignedTrips = watchAssignedTrips,
-        super(const AssignedTripsLoading());
+  }) : _getAssignedTrips = getAssignedTrips,
+       _watchAssignedTrips = watchAssignedTrips,
+       super(const AssignedTripsLoading());
 
   final GetAssignedTripsUseCase _getAssignedTrips;
   final WatchAssignedTripsUseCase _watchAssignedTrips;

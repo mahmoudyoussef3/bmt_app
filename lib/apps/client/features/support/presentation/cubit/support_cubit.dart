@@ -20,21 +20,23 @@ class SupportCubit extends Cubit<SupportState> {
     required CreateSupportTicketUseCase createSupportTicket,
     required GetTicketDetailsUseCase getTicketDetails,
     required SupportRepository supportRepository,
-  })  : _getSupportWorkspace = getSupportWorkspace,
-        _getMySupportTickets = getMySupportTickets,
-        _createSupportTicket = createSupportTicket,
-        _getTicketDetails = getTicketDetails,
-        _supportRepository = supportRepository,
-        super(SupportInitial());
+  }) : _getSupportWorkspace = getSupportWorkspace,
+       _getMySupportTickets = getMySupportTickets,
+       _createSupportTicket = createSupportTicket,
+       _getTicketDetails = getTicketDetails,
+       _supportRepository = supportRepository,
+       super(SupportInitial());
 
   Future<void> loadWorkspace() async {
     emit(SupportLoading());
     try {
       final workspace = await _getSupportWorkspace();
-      emit(SupportLoaded(
-        categories: workspace.categories,
-        tickets: workspace.tickets,
-      ));
+      emit(
+        SupportLoaded(
+          categories: workspace.categories,
+          tickets: workspace.tickets,
+        ),
+      );
     } catch (e) {
       emit(SupportError(e.toString()));
     }
@@ -78,11 +80,13 @@ class SupportCubit extends Cubit<SupportState> {
         );
       }
 
-      emit(SupportSuccess(message: 'Ticket created successfully', ticket: ticket));
-      loadWorkspace(); 
+      emit(
+        SupportSuccess(message: 'Ticket created successfully', ticket: ticket),
+      );
+      loadWorkspace();
     } catch (e) {
       emit(SupportError(e.toString()));
-      loadWorkspace(); 
+      loadWorkspace();
     }
   }
 
@@ -91,12 +95,13 @@ class SupportCubit extends Cubit<SupportState> {
 
     try {
       final ticket = await _getTicketDetails(ticketId);
-      final attachments = await _supportRepository.getTicketAttachments(ticketId);
-      
-      emit(SupportTicketDetailsLoaded(
-        ticket: ticket,
-        attachments: attachments,
-      ));
+      final attachments = await _supportRepository.getTicketAttachments(
+        ticketId,
+      );
+
+      emit(
+        SupportTicketDetailsLoaded(ticket: ticket, attachments: attachments),
+      );
     } catch (e) {
       emit(SupportError(e.toString()));
     }

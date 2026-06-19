@@ -1,4 +1,12 @@
-enum TicketStatus { submitted, underReview, contacted, resolved, closed, rejected }
+enum TicketStatus {
+  submitted,
+  underReview,
+  contacted,
+  resolved,
+  closed,
+  rejected,
+}
+
 enum TicketPriority { low, medium, high, urgent }
 
 class SupportTicket {

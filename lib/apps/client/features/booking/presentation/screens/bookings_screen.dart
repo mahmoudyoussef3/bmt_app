@@ -87,9 +87,9 @@ class _BookingHubContent extends StatelessWidget {
               const SizedBox(height: 6),
               Text(
                 AppLocalizations.of(context)!.booking_subtitle,
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                ),
+                style: ClientTypography.bodySmall(
+                  context,
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
               const SizedBox(height: 14),
               Row(
@@ -128,7 +128,9 @@ class _BookingHubContent extends StatelessWidget {
           onTap: () => onOpenRoute('/subscription'),
           icon: Icons.calendar_month_rounded,
           title: AppLocalizations.of(context)!.booking_monthlySubscription,
-          subtitle: AppLocalizations.of(context)!.booking_monthlySubscriptionDesc,
+          subtitle: AppLocalizations.of(
+            context,
+          )!.booking_monthlySubscriptionDesc,
         ),
         const SizedBox(height: 20),
 
@@ -214,16 +216,16 @@ class _NavCard extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: ClientTypography.bodyMedium(context).copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: ClientTypography.bodyMedium(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                   ],
                 ),
@@ -260,16 +262,16 @@ class _BookingChip extends StatelessWidget {
         children: [
           Text(
             label,
-            style: ClientTypography.labelSmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.labelSmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
           const SizedBox(height: 4),
           Text(
             value,
-            style: ClientTypography.bodyMedium(context).copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -290,14 +292,11 @@ class _BookingMetric extends StatelessWidget {
       children: [
         Text(
           label,
-          style: ClientTypography.bodySmall(context).copyWith(
-            color: ClientColors.textSecondaryFor(context),
-          ),
+          style: ClientTypography.bodySmall(
+            context,
+          ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
-        Text(
-          value,
-          style: ClientTypography.headingSmall(context),
-        ),
+        Text(value, style: ClientTypography.headingSmall(context)),
       ],
     );
   }

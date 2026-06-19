@@ -264,8 +264,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       children: [
         // User Profile Header
-    //    _buildProfileHeaderCard(context),
-      //  const SizedBox(height: 18),
+        //    _buildProfileHeaderCard(context),
+        //  const SizedBox(height: 18),
 
         // Quick Actions
         _buildProfileQuickActionsRow(context),
@@ -509,7 +509,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ],
     );
   }
-/*
+  /*
   Widget _buildProfileHeaderCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
@@ -623,7 +623,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context: context,
           ),
         ),
-    /*    const SizedBox(width: 8),
+        /*    const SizedBox(width: 8),
         Expanded(
           child: _buildQuickActionCard(
             icon: Icons.card_giftcard_rounded,
@@ -772,11 +772,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: ClientColors.surfaceMutedFor(context),
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: ClientColors.borderFor(context)),
+                      border: Border.all(
+                        color: ClientColors.borderFor(context),
+                      ),
                     ),
                     child: Text(
                       _selectedLanguage == 'en'
@@ -849,7 +854,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? ClientColors.primary : ClientColors.borderFor(context),
+              color: isSelected
+                  ? ClientColors.primary
+                  : ClientColors.borderFor(context),
               width: isSelected ? 1.5 : 1.0,
             ),
           ),
@@ -886,7 +893,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const SizedBox(height: 2),
                       Text(
                         nativeName,
-                        style: const TextStyle(fontSize: 10, color: Colors.grey),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          color: Colors.grey,
+                        ),
                       ),
                     ],
                   ),
@@ -1125,7 +1135,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isSelected ? ClientColors.primary : ClientColors.borderFor(context),
+              color: isSelected
+                  ? ClientColors.primary
+                  : ClientColors.borderFor(context),
               width: isSelected ? 1.5 : 1.0,
             ),
           ),
@@ -1148,7 +1160,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
               const SizedBox(height: 6),
               CircleAvatar(
                 radius: 8,
-                backgroundColor: isSelected ? ClientColors.primary : Colors.transparent,
+                backgroundColor: isSelected
+                    ? ClientColors.primary
+                    : Colors.transparent,
                 child: isSelected
                     ? const Icon(Icons.check, size: 10, color: Colors.white)
                     : null,
@@ -2319,7 +2333,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       decoration: BoxDecoration(
                         color: ClientColors.surfaceFor(context),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: ClientColors.borderFor(context)),
+                        border: Border.all(
+                          color: ClientColors.borderFor(context),
+                        ),
                       ),
                       child: Column(
                         children: [
@@ -2341,7 +2357,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: ClientColors.journeyGreen.withAlpha(24),
+                                    color: ClientColors.journeyGreen.withAlpha(
+                                      24,
+                                    ),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(

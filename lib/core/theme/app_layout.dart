@@ -37,8 +37,8 @@ class AppLayout {
   );
 
   // Responsive breakpoints
-  static const double breakpointMobile  = 600;   // < 600 → mobile
-  static const double breakpointTablet  = 1024;  // 600–1024 → tablet
+  static const double breakpointMobile = 600; // < 600 → mobile
+  static const double breakpointTablet = 1024; // 600–1024 → tablet
   // > 1024 → desktop
 
   static bool isMobile(BuildContext context) =>
@@ -47,6 +47,7 @@ class AppLayout {
     final w = MediaQuery.sizeOf(context).width;
     return w >= breakpointMobile && w < breakpointTablet;
   }
+
   static bool isDesktop(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= breakpointTablet;
 

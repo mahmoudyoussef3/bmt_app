@@ -93,9 +93,9 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      PassengerBoardingStatus.boarded   => ('Boarded',   Colors.green),
-      PassengerBoardingStatus.pending   => ('Pending',   Colors.orange),
-      PassengerBoardingStatus.absent    => ('No-Show',   Colors.red),
+      PassengerBoardingStatus.boarded => ('Boarded', Colors.green),
+      PassengerBoardingStatus.pending => ('Pending', Colors.orange),
+      PassengerBoardingStatus.absent => ('No-Show', Colors.red),
       PassengerBoardingStatus.cancelled => ('Cancelled', Colors.grey),
     };
     return Container(

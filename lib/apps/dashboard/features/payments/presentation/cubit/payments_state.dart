@@ -62,7 +62,9 @@ class PaymentsLoaded extends PaymentsState {
       selectedPaymentId: selectedPaymentId ?? this.selectedPaymentId,
       receiptZoom: receiptZoom ?? this.receiptZoom,
       availableTrips: availableTrips ?? this.availableTrips,
-      reassignError: clearReassignError ? null : (reassignError ?? this.reassignError),
+      reassignError: clearReassignError
+          ? null
+          : (reassignError ?? this.reassignError),
     );
   }
 }

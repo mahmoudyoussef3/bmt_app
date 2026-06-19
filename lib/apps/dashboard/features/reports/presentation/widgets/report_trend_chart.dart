@@ -19,9 +19,17 @@ class ReportTrendChart extends StatelessWidget {
 
     return Column(
       children: [
-        if (trends.isNotEmpty) _BarChart(title: 'الاتجاهات', dataPoints: trends, suffix: ''),
-        if (trends.isNotEmpty && occupancy.isNotEmpty) const SizedBox(height: AppSpacing.medium),
-        if (occupancy.isNotEmpty) _BarChart(title: 'معدل الإشغال بالخط (%)', dataPoints: occupancy, suffix: '%', maxCeiling: 100),
+        if (trends.isNotEmpty)
+          _BarChart(title: 'الاتجاهات', dataPoints: trends, suffix: ''),
+        if (trends.isNotEmpty && occupancy.isNotEmpty)
+          const SizedBox(height: AppSpacing.medium),
+        if (occupancy.isNotEmpty)
+          _BarChart(
+            title: 'معدل الإشغال بالخط (%)',
+            dataPoints: occupancy,
+            suffix: '%',
+            maxCeiling: 100,
+          ),
       ],
     );
   }
@@ -33,20 +41,32 @@ class _BarChart extends StatelessWidget {
   final String suffix;
   final double? maxCeiling;
 
-  const _BarChart({required this.title, required this.dataPoints, required this.suffix, this.maxCeiling});
+  const _BarChart({
+    required this.title,
+    required this.dataPoints,
+    required this.suffix,
+    this.maxCeiling,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    final double maxVal = dataPoints.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-    final double computedCeiling = maxCeiling ?? (maxVal == 0 ? 1000 : ((maxVal / 50).ceil() * 50).toDouble());
+    final double maxVal = dataPoints
+        .map((e) => e.value)
+        .reduce((a, b) => a > b ? a : b);
+    final double computedCeiling =
+        maxCeiling ??
+        (maxVal == 0 ? 1000 : ((maxVal / 50).ceil() * 50).toDouble());
 
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            title,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
           const SizedBox(height: AppSpacing.large),
           SizedBox(
             height: 160,
@@ -60,7 +80,10 @@ class _BarChart extends StatelessWidget {
                     final double val = computedCeiling * (3 - index) / 3;
                     return Text(
                       '${val.toStringAsFixed(0)}$suffix',
-                      style: const TextStyle(fontSize: 8, color: AppStatusColors.onNeutralContainer),
+                      style: const TextStyle(
+                        fontSize: 8,
+                        color: AppStatusColors.onNeutralContainer,
+                      ),
                     );
                   }),
                 ),
@@ -74,13 +97,19 @@ class _BarChart extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceAround,
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: dataPoints.map((e) {
-                          final double barPct = computedCeiling == 0 ? 0.0 : e.value / computedCeiling;
+                          final double barPct = computedCeiling == 0
+                              ? 0.0
+                              : e.value / computedCeiling;
                           return Column(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Text(
                                 e.value.toStringAsFixed(0),
-                                style: TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: scheme.primary),
+                                style: TextStyle(
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.bold,
+                                  color: scheme.primary,
+                                ),
                               ),
                               const SizedBox(height: 2),
                               Container(
@@ -88,7 +117,10 @@ class _BarChart extends StatelessWidget {
                                 height: (box.maxHeight - 30) * barPct,
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
-                                    colors: [scheme.primary, scheme.primary.withValues(alpha: 0.47)], // ~120/255
+                                    colors: [
+                                      scheme.primary,
+                                      scheme.primary.withValues(alpha: 0.47),
+                                    ], // ~120/255
                                     begin: Alignment.bottomCenter,
                                     end: Alignment.topCenter,
                                   ),
@@ -100,8 +132,13 @@ class _BarChart extends StatelessWidget {
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                e.key.length > 6 ? e.key.substring(0, 6) : e.key,
-                                style: const TextStyle(fontSize: 8, color: AppStatusColors.onNeutralContainer),
+                                e.key.length > 6
+                                    ? e.key.substring(0, 6)
+                                    : e.key,
+                                style: const TextStyle(
+                                  fontSize: 8,
+                                  color: AppStatusColors.onNeutralContainer,
+                                ),
                               ),
                             ],
                           );

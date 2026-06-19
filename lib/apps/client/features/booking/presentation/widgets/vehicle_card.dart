@@ -42,20 +42,23 @@ class VehicleCard extends StatelessWidget {
                 children: [
                   Text(
                     'Vehicle $id',
-                    style: ClientTypography.bodyMedium(context).copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                    style: ClientTypography.bodyMedium(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w700),
                   ),
                   Text(
                     driver,
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: isFull
                       ? ClientColors.journeyRedLight
@@ -77,11 +80,19 @@ class VehicleCard extends StatelessWidget {
           const SizedBox(height: 12),
           Row(
             children: [
-              Icon(Icons.schedule_rounded, size: 16, color: ClientColors.primary),
+              Icon(
+                Icons.schedule_rounded,
+                size: 16,
+                color: ClientColors.primary,
+              ),
               const SizedBox(width: 6),
               Text(time, style: ClientTypography.bodySmall(context)),
               const SizedBox(width: 14),
-              Icon(Icons.event_seat_rounded, size: 16, color: ClientColors.primary),
+              Icon(
+                Icons.event_seat_rounded,
+                size: 16,
+                color: ClientColors.primary,
+              ),
               const SizedBox(width: 6),
               Text(
                 '$seatsLeft seats left',
@@ -99,9 +110,9 @@ class VehicleCard extends StatelessWidget {
                   children: [
                     Text(
                       'Occupancy',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                     const SizedBox(height: 6),
                     ClipRRect(
@@ -110,7 +121,9 @@ class VehicleCard extends StatelessWidget {
                         value: occupancy.clamp(0, 1),
                         minHeight: 8,
                         backgroundColor: ClientColors.surfaceMutedFor(context),
-                        valueColor: AlwaysStoppedAnimation<Color>(ClientColors.primary),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          ClientColors.primary,
+                        ),
                       ),
                     ),
                   ],
@@ -122,7 +135,10 @@ class VehicleCard extends StatelessWidget {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ClientColors.primary,
                   foregroundColor: ClientColors.textInverse,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),

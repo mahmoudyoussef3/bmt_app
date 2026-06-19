@@ -33,16 +33,16 @@ class FinanceCubit extends Cubit<FinanceState> {
     required ReviewReceiptUseCase reviewReceipt,
     required ProcessRefundUseCase processRefund,
     required CancelFinanceSubscriptionUseCase cancelSubscription,
-  })  : _getPayments = getPayments,
-        _getReceiptReviews = getReceiptReviews,
-        _getRefundRequests = getRefundRequests,
-        _getSubscriptions = getSubscriptions,
-        _getRevenueMetrics = getRevenueMetrics,
-        _getRevenueTrend = getRevenueTrend,
-        _reviewReceipt = reviewReceipt,
-        _processRefund = processRefund,
-        _cancelSubscription = cancelSubscription,
-        super(const FinanceLoading());
+  }) : _getPayments = getPayments,
+       _getReceiptReviews = getReceiptReviews,
+       _getRefundRequests = getRefundRequests,
+       _getSubscriptions = getSubscriptions,
+       _getRevenueMetrics = getRevenueMetrics,
+       _getRevenueTrend = getRevenueTrend,
+       _reviewReceipt = reviewReceipt,
+       _processRefund = processRefund,
+       _cancelSubscription = cancelSubscription,
+       super(const FinanceLoading());
 
   Future<void> load() async {
     emit(const FinanceLoading());
@@ -56,28 +56,32 @@ class FinanceCubit extends Cubit<FinanceState> {
 
       // Find first pending receipt review to pre-select it
       final firstPendingReceipt = receipts.cast<ReceiptReview?>().firstWhere(
-            (r) => r?.status == ReceiptReviewStatus.pending,
-            orElse: () => receipts.isNotEmpty ? receipts.first : null,
-          );
+        (r) => r?.status == ReceiptReviewStatus.pending,
+        orElse: () => receipts.isNotEmpty ? receipts.first : null,
+      );
 
       // Find first pending refund to pre-select it
       final firstPendingRefund = refunds.cast<RefundRequest?>().firstWhere(
-            (r) => r?.status == RefundStatus.pending,
-            orElse: () => refunds.isNotEmpty ? refunds.first : null,
-          );
+        (r) => r?.status == RefundStatus.pending,
+        orElse: () => refunds.isNotEmpty ? refunds.first : null,
+      );
 
-      emit(FinanceLoaded(
-        payments: payments,
-        receiptReviews: receipts,
-        refundRequests: refunds,
-        subscriptions: subscriptions,
-        metrics: metrics,
-        revenueTrend: revenueTrend,
-        selectedPaymentId: payments.isNotEmpty ? payments.first.id : null,
-        selectedReceiptId: firstPendingReceipt?.id,
-        selectedRefundId: firstPendingRefund?.id,
-        selectedSubscriptionId: subscriptions.isNotEmpty ? subscriptions.first.id : null,
-      ));
+      emit(
+        FinanceLoaded(
+          payments: payments,
+          receiptReviews: receipts,
+          refundRequests: refunds,
+          subscriptions: subscriptions,
+          metrics: metrics,
+          revenueTrend: revenueTrend,
+          selectedPaymentId: payments.isNotEmpty ? payments.first.id : null,
+          selectedReceiptId: firstPendingReceipt?.id,
+          selectedRefundId: firstPendingRefund?.id,
+          selectedSubscriptionId: subscriptions.isNotEmpty
+              ? subscriptions.first.id
+              : null,
+        ),
+      );
     } catch (error) {
       emit(FinanceError(error.toString()));
     }
@@ -86,7 +90,9 @@ class FinanceCubit extends Cubit<FinanceState> {
   void selectSection(int index) {
     final current = state;
     if (current is! FinanceLoaded) return;
-    emit(current.copyWith(selectedSectionIndex: index, clearActionMessage: true));
+    emit(
+      current.copyWith(selectedSectionIndex: index, clearActionMessage: true),
+    );
   }
 
   void selectPayment(String? id) {
@@ -105,11 +111,13 @@ class FinanceCubit extends Cubit<FinanceState> {
     if (id == null) {
       emit(current.copyWith(clearReceiptSelection: true));
     } else {
-      emit(current.copyWith(
-        selectedReceiptId: id,
-        receiptZoom: 1.0,
-        receiptRotation: 0.0,
-      ));
+      emit(
+        current.copyWith(
+          selectedReceiptId: id,
+          receiptZoom: 1.0,
+          receiptRotation: 0.0,
+        ),
+      );
     }
   }
 
@@ -207,7 +215,11 @@ class FinanceCubit extends Cubit<FinanceState> {
     emit(current.copyWith(clearActionMessage: true));
   }
 
-  Future<void> reviewReceipt(String id, ReceiptReviewStatus action, {String? notes}) async {
+  Future<void> reviewReceipt(
+    String id,
+    ReceiptReviewStatus action, {
+    String? notes,
+  }) async {
     final current = state;
     if (current is! FinanceLoaded) return;
 
@@ -236,17 +248,24 @@ class FinanceCubit extends Cubit<FinanceState> {
         }
       }
 
-      emit(current.copyWith(
-        payments: payments,
-        receiptReviews: receipts,
-        metrics: metrics,
-        selectedReceiptId: nextPending?.id,
-        clearReceiptSelection: nextPending == null,
-        actionLoading: false,
-        actionMessage: 'تم تحديث حالة الإيصال بنجاح إلى: ${action.label}',
-      ));
+      emit(
+        current.copyWith(
+          payments: payments,
+          receiptReviews: receipts,
+          metrics: metrics,
+          selectedReceiptId: nextPending?.id,
+          clearReceiptSelection: nextPending == null,
+          actionLoading: false,
+          actionMessage: 'تم تحديث حالة الإيصال بنجاح إلى: ${action.label}',
+        ),
+      );
     } catch (error) {
-      emit(current.copyWith(actionLoading: false, actionMessage: 'خطأ: ${error.toString()}'));
+      emit(
+        current.copyWith(
+          actionLoading: false,
+          actionMessage: 'خطأ: ${error.toString()}',
+        ),
+      );
     }
   }
 
@@ -262,15 +281,22 @@ class FinanceCubit extends Cubit<FinanceState> {
       final refunds = await _getRefundRequests();
       final metrics = await _getRevenueMetrics();
 
-      emit(current.copyWith(
-        payments: payments,
-        refundRequests: refunds,
-        metrics: metrics,
-        actionLoading: false,
-        actionMessage: 'تم تحديث طلب المرتجع بنجاح إلى: ${action.label}',
-      ));
+      emit(
+        current.copyWith(
+          payments: payments,
+          refundRequests: refunds,
+          metrics: metrics,
+          actionLoading: false,
+          actionMessage: 'تم تحديث طلب المرتجع بنجاح إلى: ${action.label}',
+        ),
+      );
     } catch (error) {
-      emit(current.copyWith(actionLoading: false, actionMessage: 'خطأ: ${error.toString()}'));
+      emit(
+        current.copyWith(
+          actionLoading: false,
+          actionMessage: 'خطأ: ${error.toString()}',
+        ),
+      );
     }
   }
 
@@ -285,14 +311,21 @@ class FinanceCubit extends Cubit<FinanceState> {
       final subscriptions = await _getSubscriptions();
       final metrics = await _getRevenueMetrics();
 
-      emit(current.copyWith(
-        subscriptions: subscriptions,
-        metrics: metrics,
-        actionLoading: false,
-        actionMessage: 'تم إلغاء الاشتراك بنجاح.',
-      ));
+      emit(
+        current.copyWith(
+          subscriptions: subscriptions,
+          metrics: metrics,
+          actionLoading: false,
+          actionMessage: 'تم إلغاء الاشتراك بنجاح.',
+        ),
+      );
     } catch (error) {
-      emit(current.copyWith(actionLoading: false, actionMessage: 'خطأ: ${error.toString()}'));
+      emit(
+        current.copyWith(
+          actionLoading: false,
+          actionMessage: 'خطأ: ${error.toString()}',
+        ),
+      );
     }
   }
 }

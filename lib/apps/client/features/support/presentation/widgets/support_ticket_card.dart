@@ -14,23 +14,35 @@ class SupportTicketCard extends StatelessWidget {
 
   Color _getStatusColor(TicketStatus status) {
     switch (status) {
-      case TicketStatus.submitted: return Colors.blue;
-      case TicketStatus.underReview: return Colors.orange;
-      case TicketStatus.contacted: return Colors.purple;
-      case TicketStatus.resolved: return Colors.green;
-      case TicketStatus.closed: return Colors.grey;
-      case TicketStatus.rejected: return Colors.red;
+      case TicketStatus.submitted:
+        return Colors.blue;
+      case TicketStatus.underReview:
+        return Colors.orange;
+      case TicketStatus.contacted:
+        return Colors.purple;
+      case TicketStatus.resolved:
+        return Colors.green;
+      case TicketStatus.closed:
+        return Colors.grey;
+      case TicketStatus.rejected:
+        return Colors.red;
     }
   }
 
   String _getStatusLabel(TicketStatus status) {
     switch (status) {
-      case TicketStatus.submitted: return 'Submitted';
-      case TicketStatus.underReview: return 'Under Review';
-      case TicketStatus.contacted: return 'Contacted';
-      case TicketStatus.resolved: return 'Resolved';
-      case TicketStatus.closed: return 'Closed';
-      case TicketStatus.rejected: return 'Rejected';
+      case TicketStatus.submitted:
+        return 'Submitted';
+      case TicketStatus.underReview:
+        return 'Under Review';
+      case TicketStatus.contacted:
+        return 'Contacted';
+      case TicketStatus.resolved:
+        return 'Resolved';
+      case TicketStatus.closed:
+        return 'Closed';
+      case TicketStatus.rejected:
+        return 'Rejected';
     }
   }
 
@@ -61,9 +73,14 @@ class SupportTicketCard extends StatelessWidget {
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(ticket.status).withValues(alpha: 0.1),
+                    color: _getStatusColor(
+                      ticket.status,
+                    ).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
@@ -91,10 +108,7 @@ class SupportTicketCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               ticket.category,
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.grey[600],
-              ),
+              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
             ),
             const SizedBox(height: 12),
             Row(
@@ -103,10 +117,7 @@ class SupportTicketCard extends StatelessWidget {
                 const SizedBox(width: 4),
                 Text(
                   DateFormat('MMM dd, yyyy HH:mm').format(ticket.createdAt),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[500],
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
                 ),
               ],
             ),

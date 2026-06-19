@@ -11,9 +11,6 @@ class UploadSupportAttachmentUseCase {
     required String ticketId,
     required File file,
   }) {
-    return _repository.uploadAttachment(
-      ticketId: ticketId,
-      file: file,
-    );
+    return _repository.uploadAttachment(ticketId: ticketId, file: file);
   }
 }

@@ -57,7 +57,9 @@ class _TicketsScreenState extends State<TicketsScreen> {
           },
           builder: (context, state) {
             return switch (state) {
-              TicketsLoading() => const Center(child: CircularProgressIndicator()),
+              TicketsLoading() => const Center(
+                child: CircularProgressIndicator(),
+              ),
               TicketsError(:final message) => _ErrorView(message: message),
               TicketsLoaded() => _LoadedView(state: state),
             };
@@ -79,7 +81,11 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: AppStatusColors.onErrorContainer),
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 48,
+              color: AppStatusColors.onErrorContainer,
+            ),
             const SizedBox(height: 12),
             Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 16),
@@ -131,7 +137,8 @@ class _LoadedView extends StatelessWidget {
               prefixIcon: Icon(Icons.search),
               border: OutlineInputBorder(),
             ),
-            onChanged: (val) => context.read<TicketsCubit>().setSearchQuery(val),
+            onChanged: (val) =>
+                context.read<TicketsCubit>().setSearchQuery(val),
           ),
         ),
         const SizedBox(width: 16),

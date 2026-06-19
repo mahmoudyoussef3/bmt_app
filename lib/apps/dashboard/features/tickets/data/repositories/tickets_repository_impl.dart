@@ -1,3 +1,5 @@
+import 'dart:developer' as developer;
+
 import '../../domain/entities/complaint.dart';
 import '../../domain/repositories/tickets_repository.dart';
 import '../datasources/supabase_tickets_datasource.dart';
@@ -12,14 +14,21 @@ class TicketsRepositoryImpl implements TicketsRepository {
     try {
       return await _datasource.getTickets();
     } catch (e, stack) {
-      print('Error loading tickets: $e');
-      print(stack);
+      developer.log(
+        'Error loading tickets',
+        error: e,
+        stackTrace: stack,
+        name: 'TicketsRepository',
+      );
       throw Exception('Failed to load tickets: $e');
     }
   }
 
   @override
-  Future<SupportTicket> updateTicketStatus(String id, TicketStatus status) async {
+  Future<SupportTicket> updateTicketStatus(
+    String id,
+    TicketStatus status,
+  ) async {
     try {
       return await _datasource.updateTicketStatus(id, status);
     } catch (_) {

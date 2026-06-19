@@ -61,7 +61,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           AnimatedBackgroundBlob(
             color: const Color(0xFF06B6D4), // Cyan
             size: 300,
-            initialPosition: Offset(MediaQuery.of(context).size.width - 150, MediaQuery.of(context).size.height - 300),
+            initialPosition: Offset(
+              MediaQuery.of(context).size.width - 150,
+              MediaQuery.of(context).size.height - 300,
+            ),
             animationDuration: const Duration(seconds: 15),
           ),
 
@@ -79,11 +82,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       style: TextButton.styleFrom(
                         foregroundColor: ClientColors.textSecondaryFor(context),
                       ),
-                      child: const Text('Skip', style: TextStyle(fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'Skip',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
                 ),
-                
+
                 // Page View
                 Expanded(
                   child: PageView(
@@ -98,7 +104,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       OnboardingPageContent(
                         isVisible: _currentPage == 0,
                         title: 'Move Smarter Every Day',
-                        subtitle: 'Book your daily rides in seconds and enjoy a smooth transportation experience built around your schedule.',
+                        subtitle:
+                            'Book your daily rides in seconds and enjoy a smooth transportation experience built around your schedule.',
                         heroImage: FloatingAnimation(
                           magnitude: 8,
                           duration: const Duration(seconds: 4),
@@ -111,7 +118,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       OnboardingPageContent(
                         isVisible: _currentPage == 1,
                         title: 'Track Every Journey Live',
-                        subtitle: 'Know exactly where your trip is, when it arrives, and stay updated throughout the entire journey.',
+                        subtitle:
+                            'Know exactly where your trip is, when it arrives, and stay updated throughout the entire journey.',
                         heroImage: FloatingAnimation(
                           magnitude: 12,
                           duration: const Duration(seconds: 5),
@@ -124,7 +132,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       OnboardingPageContent(
                         isVisible: _currentPage == 2,
                         title: 'Save More With Smart Passes',
-                        subtitle: 'Unlock monthly subscriptions, discounted packages, and a premium commuting experience.',
+                        subtitle:
+                            'Unlock monthly subscriptions, discounted packages, and a premium commuting experience.',
                         heroImage: FloatingAnimation(
                           magnitude: 10,
                           duration: const Duration(seconds: 3),
@@ -137,7 +146,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ],
                   ),
                 ),
-                
+
                 // Bottom Controls
                 OnboardingBottomControls(
                   currentPage: _currentPage,

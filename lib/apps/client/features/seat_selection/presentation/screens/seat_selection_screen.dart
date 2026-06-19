@@ -248,9 +248,9 @@ class _SeatSelectionContent extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   data.route,
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
               ],
             ),
@@ -293,16 +293,16 @@ class _SeatSelectionContent extends StatelessWidget {
                   children: [
                     Text(
                       'Choose a seat',
-                      style: ClientTypography.headingSmall(context).copyWith(
-                        color: ClientColors.textPrimaryFor(context),
-                      ),
+                      style: ClientTypography.headingSmall(
+                        context,
+                      ).copyWith(color: ClientColors.textPrimaryFor(context)),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Tap an available seat to continue',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                   ],
                 ),
@@ -565,9 +565,9 @@ class _SeatSelectionContent extends StatelessWidget {
                 Text(
                   '1 seat · EGP ${data.pricePerSeat.toStringAsFixed(2)} each · '
                   'Total EGP ${loaded.total.toStringAsFixed(2)}',
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
               ],
             ),
@@ -593,9 +593,9 @@ class _SeatSelectionContent extends StatelessWidget {
           Expanded(
             child: Text(
               'Middle rows use a pair on the left and a single seat on the right for a more realistic shuttle layout.',
-              style: ClientTypography.bodySmall(context).copyWith(
-                color: ClientColors.textSecondaryFor(context),
-              ),
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
             ),
           ),
         ],
@@ -613,9 +613,7 @@ class _SeatSelectionContent extends StatelessWidget {
       decoration: BoxDecoration(
         color: ClientColors.surfaceFor(context).withAlpha(245),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-        border: Border(
-          top: BorderSide(color: ClientColors.borderFor(context)),
-        ),
+        border: Border(top: BorderSide(color: ClientColors.borderFor(context))),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(28),

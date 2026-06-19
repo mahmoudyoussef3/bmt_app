@@ -82,15 +82,16 @@ class BookingFooterSummary extends StatelessWidget {
                         children: [
                           Text(
                             'Total',
-                            style: ClientTypography.labelSmall(context).copyWith(
-                              color: ClientColors.textSecondaryFor(context),
-                            ),
+                            style: ClientTypography.labelSmall(context)
+                                .copyWith(
+                                  color: ClientColors.textSecondaryFor(context),
+                                ),
                           ),
                           Text(
                             'EGP ${_total.toStringAsFixed(2)}',
-                            style: ClientTypography.priceMedium(context).copyWith(
-                              color: ClientColors.primary,
-                            ),
+                            style: ClientTypography.priceMedium(
+                              context,
+                            ).copyWith(color: ClientColors.primary),
                           ),
                         ],
                       ),
@@ -110,15 +111,15 @@ class BookingFooterSummary extends StatelessWidget {
                 children: [
                   Text(
                     'EGP ${_total.toStringAsFixed(2)}',
-                    style: ClientTypography.priceMedium(context).copyWith(
-                      color: ClientColors.primary,
-                    ),
+                    style: ClientTypography.priceMedium(
+                      context,
+                    ).copyWith(color: ClientColors.primary),
                   ),
                   Text(
                     '$_seatCount seat selected',
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                 ],
               ),
@@ -192,9 +193,9 @@ class _PriceStat extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: ClientTypography.labelSmall(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                ),
+                style: ClientTypography.labelSmall(
+                  context,
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
               Text(
                 value,

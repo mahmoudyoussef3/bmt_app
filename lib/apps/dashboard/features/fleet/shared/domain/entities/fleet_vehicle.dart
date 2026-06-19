@@ -202,9 +202,13 @@ class FleetVehicle {
   }
 
   bool get hasExpiredDocument =>
-      _isExpired(licenseExpiry) || _isExpired(insuranceExpiry) || _isExpired(inspectionExpiry);
+      _isExpired(licenseExpiry) ||
+      _isExpired(insuranceExpiry) ||
+      _isExpired(inspectionExpiry);
   bool get hasDocumentExpiringSoon =>
-      _isExpiringSoon(licenseExpiry) || _isExpiringSoon(insuranceExpiry) || _isExpiringSoon(inspectionExpiry);
+      _isExpiringSoon(licenseExpiry) ||
+      _isExpiringSoon(insuranceExpiry) ||
+      _isExpiringSoon(inspectionExpiry);
 
   FleetVehicle copyWith({
     String? id,

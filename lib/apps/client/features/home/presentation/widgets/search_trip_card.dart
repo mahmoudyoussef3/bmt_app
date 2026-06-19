@@ -48,7 +48,10 @@ class SearchTripCard extends StatelessWidget {
                   color: ClientColors.primaryLight,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.search_rounded, color: ClientColors.primary),
+                child: const Icon(
+                  Icons.search_rounded,
+                  color: ClientColors.primary,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -57,16 +60,16 @@ class SearchTripCard extends StatelessWidget {
                   children: [
                     Text(
                       'Search Trip',
-                      style: ClientTypography.labelLarge(context).copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: ClientTypography.labelLarge(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Find your next commute in seconds',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                   ],
                 ),
@@ -120,7 +123,11 @@ class SearchTripCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          ClientButton(label: 'Search Trips', expand: true, onPressed: onSearch),
+          ClientButton(
+            label: 'Search Trips',
+            expand: true,
+            onPressed: onSearch,
+          ),
         ],
       ),
     );
@@ -176,9 +183,9 @@ class _SearchFieldRow extends StatelessWidget {
                   children: [
                     Text(
                       label,
-                      style: ClientTypography.labelSmall(context).copyWith(
-                        color: ClientColors.textTertiaryFor(context),
-                      ),
+                      style: ClientTypography.labelSmall(
+                        context,
+                      ).copyWith(color: ClientColors.textTertiaryFor(context)),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -186,7 +193,9 @@ class _SearchFieldRow extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: ClientTypography.bodyMedium(context).copyWith(
-                        fontWeight: hasValue ? FontWeight.w600 : FontWeight.w400,
+                        fontWeight: hasValue
+                            ? FontWeight.w600
+                            : FontWeight.w400,
                         color: hasValue
                             ? ClientColors.textPrimaryFor(context)
                             : ClientColors.textTertiaryFor(context),
@@ -261,7 +270,10 @@ Future<String?> showHomePickerSheet({
                         decoration: BoxDecoration(
                           borderRadius: BorderRadius.circular(14),
                           border: isSelected
-                              ? Border.all(color: ClientColors.primary, width: 2)
+                              ? Border.all(
+                                  color: ClientColors.primary,
+                                  width: 2,
+                                )
                               : Border.all(color: ClientColors.borderFor(ctx)),
                         ),
                         child: Text(
@@ -270,7 +282,9 @@ Future<String?> showHomePickerSheet({
                             color: isSelected
                                 ? ClientColors.primary
                                 : ClientColors.textPrimaryFor(ctx),
-                            fontWeight: isSelected ? FontWeight.w600 : FontWeight.w400,
+                            fontWeight: isSelected
+                                ? FontWeight.w600
+                                : FontWeight.w400,
                           ),
                         ),
                       ),

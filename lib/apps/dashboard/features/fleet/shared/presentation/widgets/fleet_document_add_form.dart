@@ -67,7 +67,10 @@ class _FleetDocumentAddFormState extends State<FleetDocumentAddForm> {
       setState(() => _error = 'يرجى اختيار نوع الوثيقة');
       return;
     }
-    final dateErr = FleetValidators.validateDate(_expiry.text, 'تاريخ الانتهاء');
+    final dateErr = FleetValidators.validateDate(
+      _expiry.text,
+      'تاريخ الانتهاء',
+    );
     if (dateErr != null) {
       setState(() => _error = dateErr);
       return;
@@ -157,7 +160,10 @@ class _FleetDocumentAddFormState extends State<FleetDocumentAddForm> {
             const SizedBox(height: AppSpacing.small),
             Text(
               _error,
-              style: TextStyle(color: scheme.error, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                color: scheme.error,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ],
         ],

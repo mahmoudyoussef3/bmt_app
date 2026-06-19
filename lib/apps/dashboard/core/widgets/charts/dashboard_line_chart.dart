@@ -95,10 +95,7 @@ class DashboardLineChart extends StatelessWidget {
               color: color,
               barWidth: 3,
               dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                color: color.withAlpha(28),
-              ),
+              belowBarData: BarAreaData(show: true, color: color.withAlpha(28)),
             ),
           ],
         ),

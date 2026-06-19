@@ -15,7 +15,8 @@ class FleetDriverFormView extends StatefulWidget {
   final FleetDriver? driver;
   final FleetWorkspace workspace;
   final VoidCallback onBack;
-  final void Function(FleetDriver driver, List<PendingFleetDocument> docs) onSave;
+  final void Function(FleetDriver driver, List<PendingFleetDocument> docs)
+  onSave;
   final bool saving;
 
   const FleetDriverFormView({
@@ -64,8 +65,9 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
     employeeCode = TextEditingController(text: d?.employeeCode ?? '');
     hireDate = TextEditingController(text: d?.hireDate ?? '');
     notes = TextEditingController(text: d?.notes ?? '');
-    selectedVehicleId =
-        d?.currentVehicleId.isNotEmpty == true ? d!.currentVehicleId : null;
+    selectedVehicleId = d?.currentVehicleId.isNotEmpty == true
+        ? d!.currentVehicleId
+        : null;
   }
 
   List<FleetVehicle> _getAvailableVehicles() {
@@ -378,8 +380,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                 .toList(),
           );
         }
-        final itemWidth =
-            (constraints.maxWidth - AppSpacing.medium) / columns;
+        final itemWidth = (constraints.maxWidth - AppSpacing.medium) / columns;
         return Wrap(
           spacing: AppSpacing.medium,
           runSpacing: AppSpacing.medium,

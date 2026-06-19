@@ -24,13 +24,13 @@ class ReportsCubit extends Cubit<ReportsState> {
     required GetAvailableDriversUseCase getAvailableDrivers,
     required GetAvailableVehiclesUseCase getAvailableVehicles,
     required GetAvailablePackagesUseCase getAvailablePackages,
-  })  : _getReportData = getReportData,
-        _exportReport = exportReport,
-        _getAvailableRoutes = getAvailableRoutes,
-        _getAvailableDrivers = getAvailableDrivers,
-        _getAvailableVehicles = getAvailableVehicles,
-        _getAvailablePackages = getAvailablePackages,
-        super(const ReportsLoading());
+  }) : _getReportData = getReportData,
+       _exportReport = exportReport,
+       _getAvailableRoutes = getAvailableRoutes,
+       _getAvailableDrivers = getAvailableDrivers,
+       _getAvailableVehicles = getAvailableVehicles,
+       _getAvailablePackages = getAvailablePackages,
+       super(const ReportsLoading());
 
   Future<void> load() async {
     emit(const ReportsLoading());
@@ -44,22 +44,21 @@ class ReportsCubit extends Cubit<ReportsState> {
       final end = DateTime.now();
       final start = end.subtract(const Duration(days: 30));
 
-      final defaultFilter = ReportFilter(
-        startDate: start,
-        endDate: end,
-      );
+      final defaultFilter = ReportFilter(startDate: start, endDate: end);
 
       final reportData = await _getReportData(ReportType.trips, defaultFilter);
 
-      emit(ReportsLoaded(
-        activeReportType: ReportType.trips,
-        filter: defaultFilter,
-        reportData: reportData,
-        availableRoutes: routes,
-        availableDrivers: drivers,
-        availableVehicles: vehicles,
-        availablePackages: packages,
-      ));
+      emit(
+        ReportsLoaded(
+          activeReportType: ReportType.trips,
+          filter: defaultFilter,
+          reportData: reportData,
+          availableRoutes: routes,
+          availableDrivers: drivers,
+          availableVehicles: vehicles,
+          availablePackages: packages,
+        ),
+      );
     } catch (error) {
       emit(ReportsError(error.toString()));
     }
@@ -72,12 +71,14 @@ class ReportsCubit extends Cubit<ReportsState> {
     emit(const ReportsLoading());
     try {
       final reportData = await _getReportData(type, current.filter);
-      emit(current.copyWith(
-        activeReportType: type,
-        reportData: reportData,
-        clearExportingFormat: true,
-        clearExportedFileName: true,
-      ));
+      emit(
+        current.copyWith(
+          activeReportType: type,
+          reportData: reportData,
+          clearExportingFormat: true,
+          clearExportedFileName: true,
+        ),
+      );
     } catch (error) {
       emit(ReportsError(error.toString()));
     }
@@ -113,11 +114,11 @@ class ReportsCubit extends Cubit<ReportsState> {
 
     emit(const ReportsLoading());
     try {
-      final reportData = await _getReportData(current.activeReportType, updatedFilter);
-      emit(current.copyWith(
-        filter: updatedFilter,
-        reportData: reportData,
-      ));
+      final reportData = await _getReportData(
+        current.activeReportType,
+        updatedFilter,
+      );
+      emit(current.copyWith(filter: updatedFilter, reportData: reportData));
     } catch (error) {
       emit(ReportsError(error.toString()));
     }
@@ -130,18 +131,15 @@ class ReportsCubit extends Cubit<ReportsState> {
     final end = DateTime.now();
     final start = end.subtract(const Duration(days: 30));
 
-    final clearedFilter = ReportFilter(
-      startDate: start,
-      endDate: end,
-    );
+    final clearedFilter = ReportFilter(startDate: start, endDate: end);
 
     emit(const ReportsLoading());
     try {
-      final reportData = await _getReportData(current.activeReportType, clearedFilter);
-      emit(current.copyWith(
-        filter: clearedFilter,
-        reportData: reportData,
-      ));
+      final reportData = await _getReportData(
+        current.activeReportType,
+        clearedFilter,
+      );
+      emit(current.copyWith(filter: clearedFilter, reportData: reportData));
     } catch (error) {
       emit(ReportsError(error.toString()));
     }
@@ -153,12 +151,18 @@ class ReportsCubit extends Cubit<ReportsState> {
 
     emit(current.copyWith(actionLoading: true));
     try {
-      final fileName = await _exportReport(current.activeReportType, current.filter, format);
-      emit(current.copyWith(
-        actionLoading: false,
-        exportingFormat: format,
-        exportedFileName: fileName,
-      ));
+      final fileName = await _exportReport(
+        current.activeReportType,
+        current.filter,
+        format,
+      );
+      emit(
+        current.copyWith(
+          actionLoading: false,
+          exportingFormat: format,
+          exportedFileName: fileName,
+        ),
+      );
     } catch (error) {
       emit(current.copyWith(actionLoading: false));
     }
@@ -167,9 +171,8 @@ class ReportsCubit extends Cubit<ReportsState> {
   void clearExport() {
     final current = state;
     if (current is! ReportsLoaded) return;
-    emit(current.copyWith(
-      clearExportingFormat: true,
-      clearExportedFileName: true,
-    ));
+    emit(
+      current.copyWith(clearExportingFormat: true, clearExportedFileName: true),
+    );
   }
 }

@@ -34,7 +34,10 @@ class HomePackageCard extends StatelessWidget {
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: ClientColors.borderFor(context), width: 1),
+              border: Border.all(
+                color: ClientColors.borderFor(context),
+                width: 1,
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(8),
@@ -65,7 +68,10 @@ class HomePackageCard extends StatelessWidget {
                     const Spacer(),
                     if (plan.badge.isNotEmpty)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
                         decoration: BoxDecoration(
                           color: ClientColors.primaryLight,
                           borderRadius: BorderRadius.circular(999),
@@ -85,10 +91,9 @@ class HomePackageCard extends StatelessWidget {
                   plan.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(fontSize: 15, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -125,13 +130,12 @@ class HomePackageCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            plan.badge.isEmpty
-                                ? 'Save on rides'
-                                : plan.badge,
-                            style: ClientTypography.labelSmall(context).copyWith(
-                              color: ClientColors.primary,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            plan.badge.isEmpty ? 'Save on rides' : plan.badge,
+                            style: ClientTypography.labelSmall(context)
+                                .copyWith(
+                                  color: ClientColors.primary,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
                         ],
                       ),

@@ -62,8 +62,12 @@ class ReportsLoaded extends ReportsState {
       availableDrivers: availableDrivers ?? this.availableDrivers,
       availableVehicles: availableVehicles ?? this.availableVehicles,
       availablePackages: availablePackages ?? this.availablePackages,
-      exportingFormat: clearExportingFormat ? null : (exportingFormat ?? this.exportingFormat),
-      exportedFileName: clearExportedFileName ? null : (exportedFileName ?? this.exportedFileName),
+      exportingFormat: clearExportingFormat
+          ? null
+          : (exportingFormat ?? this.exportingFormat),
+      exportedFileName: clearExportedFileName
+          ? null
+          : (exportedFileName ?? this.exportedFileName),
       actionLoading: actionLoading ?? this.actionLoading,
     );
   }

@@ -47,9 +47,9 @@ class _OtpInputRowState extends State<OtpInputRow> {
             textAlign: TextAlign.center,
             keyboardType: TextInputType.number,
             maxLength: 1,
-            style: ClientTypography.headingMedium(context).copyWith(
-              letterSpacing: 0,
-            ),
+            style: ClientTypography.headingMedium(
+              context,
+            ).copyWith(letterSpacing: 0),
             inputFormatters: [FilteringTextInputFormatter.digitsOnly],
             decoration: InputDecoration(
               counterText: '',
@@ -111,7 +111,9 @@ class OtpStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSuccess ? ClientColors.journeyGreen : ClientColors.journeyRed;
+    final color = isSuccess
+        ? ClientColors.journeyGreen
+        : ClientColors.journeyRed;
     final bgColor = isSuccess
         ? ClientColors.journeyGreenLight
         : ClientColors.journeyRedLight;
@@ -132,10 +134,7 @@ class OtpStatusBanner extends StatelessWidget {
           Icon(icon, color: color, size: 24),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              message,
-              style: ClientTypography.bodyMedium(context),
-            ),
+            child: Text(message, style: ClientTypography.bodyMedium(context)),
           ),
         ],
       ),

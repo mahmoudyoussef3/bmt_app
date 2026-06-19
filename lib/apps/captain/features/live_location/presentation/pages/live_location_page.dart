@@ -94,7 +94,9 @@ class _LiveLocationPageState extends State<LiveLocationPage> {
                       const SizedBox(height: 10),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
+                          horizontal: 10,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.green.shade50,
                           borderRadius: BorderRadius.circular(8),
@@ -103,12 +105,19 @@ class _LiveLocationPageState extends State<LiveLocationPage> {
                         child: const Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Icon(Icons.location_on_rounded,
-                                color: Colors.green, size: 16),
+                            Icon(
+                              Icons.location_on_rounded,
+                              color: Colors.green,
+                              size: 16,
+                            ),
                             SizedBox(width: 6),
-                            Text('يعمل في الخلفية',
-                                style: TextStyle(
-                                    color: Colors.green, fontSize: 12)),
+                            Text(
+                              'يعمل في الخلفية',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontSize: 12,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -124,7 +133,8 @@ class _LiveLocationPageState extends State<LiveLocationPage> {
                                 icon: const Icon(Icons.location_off_rounded),
                                 label: const Text('إيقاف المشاركة'),
                                 style: OutlinedButton.styleFrom(
-                                    foregroundColor: Colors.red),
+                                  foregroundColor: Colors.red,
+                                ),
                                 onPressed: () => cubit.stop(widget.tripId),
                               )
                             : FilledButton.icon(
@@ -138,8 +148,9 @@ class _LiveLocationPageState extends State<LiveLocationPage> {
                       Text(
                         state.message,
                         style: TextStyle(
-                            color: Theme.of(context).colorScheme.error,
-                            fontSize: 12),
+                          color: Theme.of(context).colorScheme.error,
+                          fontSize: 12,
+                        ),
                       ),
                     ],
                   ],

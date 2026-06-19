@@ -58,13 +58,16 @@ class _TripReviewSheetState extends State<_TripReviewSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Text('Rate your trip', style: ClientTypography.headingMedium(context)),
+            Text(
+              'Rate your trip',
+              style: ClientTypography.headingMedium(context),
+            ),
             const SizedBox(height: 6),
             Text(
               widget.tripReference,
-              style: ClientTypography.bodySmall(context).copyWith(
-                color: ClientColors.textSecondaryFor(context),
-              ),
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
             ),
             const SizedBox(height: 20),
             _RatingRow(
@@ -104,7 +107,9 @@ class _TripReviewSheetState extends State<_TripReviewSheet> {
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Thank you for your review (demo)')),
+                  const SnackBar(
+                    content: Text('Thank you for your review (demo)'),
+                  ),
                 );
               },
             ),
@@ -142,15 +147,15 @@ class _RatingRow extends StatelessWidget {
         children: [
           Text(
             title,
-            style: ClientTypography.bodyMedium(context).copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w700),
           ),
           Text(
             subtitle,
-            style: ClientTypography.bodySmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
           const SizedBox(height: 10),
           Row(

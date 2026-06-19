@@ -6,7 +6,7 @@ import 'forgot_password_state.dart';
 
 class ForgotPasswordCubit extends Cubit<ForgotPasswordState> {
   ForgotPasswordCubit(this._sendPasswordResetEmailUseCase)
-      : super(const ForgotPasswordState());
+    : super(const ForgotPasswordState());
 
   final SendPasswordResetEmailUseCase _sendPasswordResetEmailUseCase;
   Timer? _cooldownTimer;
@@ -21,10 +21,7 @@ class ForgotPasswordCubit extends Cubit<ForgotPasswordState> {
     if (state.cooldownRemaining > 0) return;
 
     emit(
-      state.copyWith(
-        status: ForgotPasswordStatus.loading,
-        clearError: true,
-      ),
+      state.copyWith(status: ForgotPasswordStatus.loading, clearError: true),
     );
 
     try {

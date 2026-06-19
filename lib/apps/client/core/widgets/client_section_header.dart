@@ -35,9 +35,9 @@ class ClientSectionHeader extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle!,
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textTertiaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textTertiaryFor(context)),
                 ),
               ],
             ],

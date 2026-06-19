@@ -8,11 +8,11 @@ enum DashboardRole {
 
   static DashboardRole fromDb(String role) => switch (role) {
     'dashboard_admin' => DashboardRole.admin,
-    _                 => DashboardRole.supportAgent,
+    _ => DashboardRole.supportAgent,
   };
 
   String get dbValue => switch (this) {
-    DashboardRole.admin        => 'dashboard_admin',
+    DashboardRole.admin => 'dashboard_admin',
     DashboardRole.supportAgent => 'support_agent',
   };
 }

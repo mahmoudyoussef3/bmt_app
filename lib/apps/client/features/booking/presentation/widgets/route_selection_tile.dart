@@ -37,9 +37,9 @@ class RouteSelectionTile extends StatelessWidget {
               Expanded(
                 child: Text(
                   label,
-                  style: ClientTypography.bodyMedium(context).copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: ClientTypography.bodyMedium(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ],

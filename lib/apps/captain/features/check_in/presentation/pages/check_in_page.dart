@@ -72,11 +72,15 @@ class _CheckInPageState extends State<CheckInPage> {
                     content: Text(
                       'وضع بلا إنترنت — ${state.offlineQueueCount} تسجيل في الانتظار',
                     ),
-                    leading: const Icon(Icons.wifi_off_rounded, color: Colors.orange),
+                    leading: const Icon(
+                      Icons.wifi_off_rounded,
+                      color: Colors.orange,
+                    ),
                     backgroundColor: Colors.orange.shade50,
                     actions: [
                       TextButton(
-                        onPressed: () => context.read<CheckInCubit>().flushOfflineQueue(),
+                        onPressed: () =>
+                            context.read<CheckInCubit>().flushOfflineQueue(),
                         child: const Text('إرسال الآن'),
                       ),
                     ],
@@ -88,8 +92,7 @@ class _CheckInPageState extends State<CheckInPage> {
                       MobileScanner(
                         controller: _scanner,
                         onDetect: (capture) {
-                          final code =
-                              capture.barcodes.firstOrNull?.rawValue;
+                          final code = capture.barcodes.firstOrNull?.rawValue;
                           if (code != null &&
                               code.isNotEmpty &&
                               code != _lastScanned &&
@@ -169,9 +172,7 @@ class _ResultPanel extends StatelessWidget {
                 Text(
                   (state as CheckInError).message,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.error,
-                  ),
+                  style: TextStyle(color: Theme.of(context).colorScheme.error),
                 ),
               ],
             ),
@@ -201,9 +202,7 @@ class _ScanResult extends StatelessWidget {
     final color = isSuccess
         ? Colors.green
         : Theme.of(context).colorScheme.error;
-    final icon = isSuccess
-        ? Icons.check_circle_rounded
-        : Icons.cancel_rounded;
+    final icon = isSuccess ? Icons.check_circle_rounded : Icons.cancel_rounded;
 
     return AppCard(
       padding: const EdgeInsets.all(16),
@@ -238,9 +237,9 @@ class _ScanResult extends StatelessWidget {
   }
 
   String _statusLabel(CheckInStatus s) => switch (s) {
-    CheckInStatus.boarded          => 'تم الصعود',
-    CheckInStatus.absent           => 'غائب',
-    CheckInStatus.cancelled        => 'ملغي',
+    CheckInStatus.boarded => 'تم الصعود',
+    CheckInStatus.absent => 'غائب',
+    CheckInStatus.cancelled => 'ملغي',
     CheckInStatus.alreadyCheckedIn => 'تم التسجيل مسبقاً',
   };
 }

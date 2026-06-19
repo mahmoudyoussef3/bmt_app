@@ -18,114 +18,98 @@ abstract final class ClientTypography {
 
   static TextStyle displayLarge(BuildContext context) =>
       Theme.of(context).textTheme.displaySmall!.copyWith(
-            fontSize: 40,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -1.5,
-            height: 1.05,
-          );
+        fontSize: 40,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -1.5,
+        height: 1.05,
+      );
 
   static TextStyle displayMedium(BuildContext context) =>
       Theme.of(context).textTheme.displaySmall!.copyWith(
-            fontSize: 32,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -1.0,
-            height: 1.08,
-          );
+        fontSize: 32,
+        fontWeight: FontWeight.w900,
+        letterSpacing: -1.0,
+        height: 1.08,
+      );
 
   // ── Headings ───────────────────────────────────────────────────────────────
 
   static TextStyle headingLarge(BuildContext context) =>
       Theme.of(context).textTheme.headlineSmall!.copyWith(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.5,
-            height: 1.2,
-          );
+        fontSize: 24,
+        fontWeight: FontWeight.w800,
+        letterSpacing: -0.5,
+        height: 1.2,
+      );
 
   static TextStyle headingMedium(BuildContext context) =>
       Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontSize: 20,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
-            height: 1.25,
-          );
+        fontSize: 20,
+        fontWeight: FontWeight.w700,
+        letterSpacing: -0.3,
+        height: 1.25,
+      );
 
   static TextStyle headingSmall(BuildContext context) =>
       Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0,
-            height: 1.3,
-          );
+        fontSize: 17,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+        height: 1.3,
+      );
 
   // ── Body ───────────────────────────────────────────────────────────────────
 
-  static TextStyle bodyLarge(BuildContext context) =>
-      Theme.of(context).textTheme.bodyLarge!.copyWith(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-            height: 1.5,
-          );
+  static TextStyle bodyLarge(BuildContext context) => Theme.of(context)
+      .textTheme
+      .bodyLarge!
+      .copyWith(fontSize: 16, fontWeight: FontWeight.w500, height: 1.5);
 
-  static TextStyle bodyMedium(BuildContext context) =>
-      Theme.of(context).textTheme.bodyMedium!.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            height: 1.5,
-          );
+  static TextStyle bodyMedium(BuildContext context) => Theme.of(context)
+      .textTheme
+      .bodyMedium!
+      .copyWith(fontSize: 14, fontWeight: FontWeight.w500, height: 1.5);
 
   static TextStyle bodySmall(BuildContext context) =>
       Theme.of(context).textTheme.bodySmall!.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            letterSpacing: 0.2,
-            height: 1.45,
-          );
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        letterSpacing: 0.2,
+        height: 1.45,
+      );
 
   // ── Labels ─────────────────────────────────────────────────────────────────
 
-  static TextStyle labelLarge(BuildContext context) =>
-      Theme.of(context).textTheme.labelLarge!.copyWith(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-          );
+  static TextStyle labelLarge(BuildContext context) => Theme.of(context)
+      .textTheme
+      .labelLarge!
+      .copyWith(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.5);
 
-  static TextStyle labelMedium(BuildContext context) =>
-      Theme.of(context).textTheme.labelMedium!.copyWith(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 0.5,
-          );
+  static TextStyle labelMedium(BuildContext context) => Theme.of(context)
+      .textTheme
+      .labelMedium!
+      .copyWith(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5);
 
-  static TextStyle labelSmall(BuildContext context) =>
-      Theme.of(context).textTheme.labelSmall!.copyWith(
-            fontSize: 10,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.8,
-          );
+  static TextStyle labelSmall(BuildContext context) => Theme.of(context)
+      .textTheme
+      .labelSmall!
+      .copyWith(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.8);
 
   // ── Price ──────────────────────────────────────────────────────────────────
   // Dedicated price display styles — used on trip cards, checkout, packages
 
-  static TextStyle priceHero(BuildContext context) =>
-      Theme.of(context).textTheme.headlineMedium!.copyWith(
-            fontSize: 28,
-            fontWeight: FontWeight.w900,
-            letterSpacing: -0.5,
-          );
+  static TextStyle priceHero(BuildContext context) => Theme.of(context)
+      .textTheme
+      .headlineMedium!
+      .copyWith(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5);
 
-  static TextStyle priceMedium(BuildContext context) =>
-      Theme.of(context).textTheme.titleLarge!.copyWith(
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-            letterSpacing: -0.3,
-          );
+  static TextStyle priceMedium(BuildContext context) => Theme.of(context)
+      .textTheme
+      .titleLarge!
+      .copyWith(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.3);
 
-  static TextStyle priceSmall(BuildContext context) =>
-      Theme.of(context).textTheme.titleMedium!.copyWith(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.1,
-          );
+  static TextStyle priceSmall(BuildContext context) => Theme.of(context)
+      .textTheme
+      .titleMedium!
+      .copyWith(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: -0.1);
 }

@@ -40,7 +40,10 @@ class PopularRouteListCard extends StatelessWidget {
                       color: ClientColors.primaryLight,
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(Icons.route_rounded, color: ClientColors.primary),
+                    child: const Icon(
+                      Icons.route_rounded,
+                      color: ClientColors.primary,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -82,10 +85,9 @@ class PopularRouteListCard extends StatelessWidget {
                         route.startingPrice,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: ClientTypography.priceMedium(context).copyWith(
-                          fontSize: 17,
-                          height: 1.1,
-                        ),
+                        style: ClientTypography.priceMedium(
+                          context,
+                        ).copyWith(fontSize: 17, height: 1.1),
                       ),
                     ],
                   ),
@@ -103,7 +105,10 @@ class PopularRouteListCard extends StatelessWidget {
                       children: [
                         _Endpoint(label: 'Start', value: route.pickup),
                         const SizedBox(height: 14),
-                        _Endpoint(label: 'Destination', value: route.destination),
+                        _Endpoint(
+                          label: 'Destination',
+                          value: route.destination,
+                        ),
                       ],
                     ),
                   ),
@@ -114,8 +119,14 @@ class PopularRouteListCard extends StatelessWidget {
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _FactChip(icon: Icons.straighten_rounded, label: route.distance),
-                  _FactChip(icon: Icons.schedule_rounded, label: route.averageDuration),
+                  _FactChip(
+                    icon: Icons.straighten_rounded,
+                    label: route.distance,
+                  ),
+                  _FactChip(
+                    icon: Icons.schedule_rounded,
+                    label: route.averageDuration,
+                  ),
                   _FactChip(
                     icon: Icons.directions_bus_rounded,
                     label: '${route.dailyTrips} trips',
@@ -248,9 +259,9 @@ class _FactChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label.isEmpty ? 'Not set' : label,
-            style: ClientTypography.labelMedium(context).copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: ClientTypography.labelMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
         ],
       ),

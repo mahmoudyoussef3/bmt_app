@@ -21,8 +21,12 @@ class SortVehiclesUseCase {
       case VehicleSortOption.recommended:
         // Recommended field removed. Sort by time (earliest departure first)
         list.sort((a, b) {
-          final timeA = DateTime.tryParse('1970-01-01 ${a.departureTime}') ?? DateTime(1970);
-          final timeB = DateTime.tryParse('1970-01-01 ${b.departureTime}') ?? DateTime(1970);
+          final timeA =
+              DateTime.tryParse('1970-01-01 ${a.departureTime}') ??
+              DateTime(1970);
+          final timeB =
+              DateTime.tryParse('1970-01-01 ${b.departureTime}') ??
+              DateTime(1970);
           return timeA.compareTo(timeB);
         });
     }

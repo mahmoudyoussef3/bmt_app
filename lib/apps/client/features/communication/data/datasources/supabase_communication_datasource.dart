@@ -6,9 +6,16 @@ class SupabaseCommunicationDatasource {
 
   const SupabaseCommunicationDatasource(this._supabase);
 
-  @override
   Future<List<ConversationModel>> getConversations() async {
-    // For now, return an empty list or query a real table when it exists
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return const [];
+
+    await _supabase
+        .from('support_conversations')
+        .select('id')
+        .eq('client_id', userId)
+        .limit(1);
+
     return [];
   }
 }

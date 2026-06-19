@@ -10,21 +10,22 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 class CreateSupportTicketScreen extends StatefulWidget {
   final String? initialCategory;
-  
+
   const CreateSupportTicketScreen({super.key, this.initialCategory});
 
   @override
-  State<CreateSupportTicketScreen> createState() => _CreateSupportTicketScreenState();
+  State<CreateSupportTicketScreen> createState() =>
+      _CreateSupportTicketScreenState();
 }
 
 class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
   final _formKey = GlobalKey<FormState>();
-  
+
   late String _selectedCategory;
   String _selectedPriority = 'low';
   final _titleController = TextEditingController();
   final _descController = TextEditingController();
-  
+
   File? _attachment;
 
   final List<String> _categories = [
@@ -85,7 +86,10 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
       appBar: AppBar(
         title: Text(
           'New Ticket',
-          style: GoogleFonts.outfit(color: Colors.black87, fontWeight: FontWeight.w600),
+          style: GoogleFonts.outfit(
+            color: Colors.black87,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         backgroundColor: Colors.white,
         elevation: 0,
@@ -95,15 +99,25 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
         listener: (context, state) {
           if (state is SupportSuccess) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Ticket created successfully!'), backgroundColor: Colors.green),
+              const SnackBar(
+                content: Text('Ticket created successfully!'),
+                backgroundColor: Colors.green,
+              ),
             );
             Navigator.pop(context);
             if (state.ticket != null) {
-              Navigator.pushNamed(context, '/ticket_details', arguments: state.ticket!.id);
+              Navigator.pushNamed(
+                context,
+                '/ticket_details',
+                arguments: state.ticket!.id,
+              );
             }
           } else if (state is SupportError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
@@ -152,7 +166,8 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
                     border: OutlineInputBorder(),
                   ),
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Title is required';
+                    if (val == null || val.trim().isEmpty)
+                      return 'Title is required';
                     if (val.trim().length < 5) return 'Title too short';
                     return null;
                   },
@@ -166,13 +181,15 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
                   ),
                   maxLines: 5,
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty) return 'Description is required';
-                    if (val.trim().length < 10) return 'Please provide more details';
+                    if (val == null || val.trim().isEmpty)
+                      return 'Description is required';
+                    if (val.trim().length < 10)
+                      return 'Please provide more details';
                     return null;
                   },
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Attachment
                 InkWell(
                   onTap: _pickAttachment,
@@ -188,8 +205,8 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            _attachment != null 
-                                ? _attachment!.path.split('/').last 
+                            _attachment != null
+                                ? _attachment!.path.split('/').last
                                 : 'Attach an image or document (Optional)',
                             style: TextStyle(color: Colors.grey[600]),
                             maxLines: 1,
@@ -206,7 +223,7 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 ClientButton(
                   label: isLoading ? 'Submitting...' : 'Submit Ticket',
                   isLoading: isLoading,

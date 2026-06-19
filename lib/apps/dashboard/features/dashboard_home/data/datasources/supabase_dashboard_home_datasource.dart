@@ -276,7 +276,9 @@ class SupabaseDashboardHomeDatasource implements DashboardHomeDatasource {
         .from('operation_trips')
         .select('departure_time, status')
         .eq('trip_date', today)
-        .or('status.eq.open_for_booking,status.eq.boarding,status.eq.in_progress');
+        .or(
+          'status.eq.open_for_booking,status.eq.boarding,status.eq.in_progress',
+        );
 
     var late = 0;
     var dueSoon = 0;

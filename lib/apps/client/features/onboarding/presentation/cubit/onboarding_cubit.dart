@@ -8,7 +8,7 @@ class OnboardingCubit extends Cubit<OnboardingState> {
   final CompleteOnboardingUseCase _completeUseCase;
 
   OnboardingCubit(this._checkStatusUseCase, this._completeUseCase)
-      : super(OnboardingInitial());
+    : super(OnboardingInitial());
 
   Future<void> checkStatus() async {
     emit(OnboardingLoading());

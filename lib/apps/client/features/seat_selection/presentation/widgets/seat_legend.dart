@@ -92,7 +92,10 @@ class _LegendChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final labelColor =
-        textColor ?? (muted ? ClientColors.textTertiaryFor(context) : ClientColors.textPrimaryFor(context));
+        textColor ??
+        (muted
+            ? ClientColors.textTertiaryFor(context)
+            : ClientColors.textPrimaryFor(context));
 
     return Opacity(
       opacity: muted ? 0.75 : 1,
@@ -121,10 +124,9 @@ class _LegendChip extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: ClientTypography.labelSmall(context).copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: labelColor,
-                ),
+                style: ClientTypography.labelSmall(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w700, color: labelColor),
               ),
             ),
           ],

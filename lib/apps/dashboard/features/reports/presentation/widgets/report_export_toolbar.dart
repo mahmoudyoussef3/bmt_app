@@ -24,8 +24,17 @@ class ReportExportToolbar extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('تصدير التقرير التنفيذي', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
-                Text('توليد وتنزيل نسخ التقارير بتنسيقات مختلفة لحفظها ومشاركتها.', style: TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer)),
+                Text(
+                  'تصدير التقرير التنفيذي',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
+                Text(
+                  'توليد وتنزيل نسخ التقارير بتنسيقات مختلفة لحفظها ومشاركتها.',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppStatusColors.onNeutralContainer,
+                  ),
+                ),
               ],
             ),
           ),
@@ -34,19 +43,28 @@ class ReportExportToolbar extends StatelessWidget {
           else ...[
             OutlinedButton.icon(
               onPressed: () => cubit.triggerExport('pdf'),
-              icon: const Icon(Icons.picture_as_pdf, color: AppStatusColors.onErrorContainer),
+              icon: const Icon(
+                Icons.picture_as_pdf,
+                color: AppStatusColors.onErrorContainer,
+              ),
               label: const Text('PDF'),
             ),
             const SizedBox(width: AppSpacing.small),
             OutlinedButton.icon(
               onPressed: () => cubit.triggerExport('excel'),
-              icon: const Icon(Icons.grid_on, color: AppStatusColors.onSuccessContainer),
+              icon: const Icon(
+                Icons.grid_on,
+                color: AppStatusColors.onSuccessContainer,
+              ),
               label: const Text('Excel'),
             ),
             const SizedBox(width: AppSpacing.small),
             OutlinedButton.icon(
               onPressed: () => cubit.triggerExport('csv'),
-              icon: const Icon(Icons.description, color: AppStatusColors.onWarningContainer),
+              icon: const Icon(
+                Icons.description,
+                color: AppStatusColors.onWarningContainer,
+              ),
               label: const Text('CSV'),
             ),
           ],

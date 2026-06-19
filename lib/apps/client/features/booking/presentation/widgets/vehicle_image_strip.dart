@@ -135,7 +135,6 @@ class _ImagePlaceholder extends StatelessWidget {
               ],
             ),
           ),
-
         ],
       ),
     );

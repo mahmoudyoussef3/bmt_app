@@ -15,7 +15,7 @@ Future<void> main() async {
 
   await Supabase.initialize(
     url: 'https://nbwzourpbnmewwklewyr.supabase.co',
-    anonKey: 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z',
+    publishableKey: 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z',
     httpClient: DioHttpClientAdapter(DioFactory.getDio()),
   );
 
@@ -34,9 +34,7 @@ class DashboardWebApp extends StatelessWidget {
         BlocProvider<DashboardThemeCubit>(
           create: (_) => dashboardDi<DashboardThemeCubit>()..load(),
         ),
-        BlocProvider<LocaleCubit>(
-          create: (_) => LocaleCubit()..load(),
-        ),
+        BlocProvider<LocaleCubit>(create: (_) => LocaleCubit()..load()),
       ],
       child: BlocBuilder<DashboardThemeCubit, DashboardThemeState>(
         builder: (context, state) {

@@ -221,7 +221,10 @@ class _RouteOverviewCard extends StatelessWidget {
                   color: ClientColors.primaryLight,
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.route_rounded, color: ClientColors.primary),
+                child: const Icon(
+                  Icons.route_rounded,
+                  color: ClientColors.primary,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -784,16 +787,19 @@ class _AlternativeRoutesSection extends StatelessWidget {
                               route.routeName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: ClientTypography.bodyMedium(context).copyWith(
-                                fontWeight: FontWeight.w900,
-                              ),
+                              style: ClientTypography.bodyMedium(
+                                context,
+                              ).copyWith(fontWeight: FontWeight.w900),
                             ),
                             const SizedBox(height: 3),
                             Text(
                               '${route.duration} · ${route.startingPrice}',
-                              style: ClientTypography.bodySmall(context).copyWith(
-                                color: ClientColors.textSecondaryFor(context),
-                              ),
+                              style: ClientTypography.bodySmall(context)
+                                  .copyWith(
+                                    color: ClientColors.textSecondaryFor(
+                                      context,
+                                    ),
+                                  ),
                             ),
                           ],
                         ),

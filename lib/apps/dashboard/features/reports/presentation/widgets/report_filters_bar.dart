@@ -23,7 +23,10 @@ class ReportFiltersBar extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('فلاتر التقرير النشطة', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          const Text(
+            'فلاتر التقرير النشطة',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
           const SizedBox(height: AppSpacing.medium),
           LayoutBuilder(
             builder: (context, box) {
@@ -38,7 +41,11 @@ class ReportFiltersBar extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.date_range_outlined, size: 20, color: AppStatusColors.onNeutralContainer),
+                            const Icon(
+                              Icons.date_range_outlined,
+                              size: 20,
+                              color: AppStatusColors.onNeutralContainer,
+                            ),
                             const SizedBox(width: AppSpacing.small),
                             Expanded(
                               child: OutlinedButton(
@@ -58,7 +65,10 @@ class ReportFiltersBar extends StatelessWidget {
                           children: presetDateLabels.map((preset) {
                             final isSelected = _checkDatePreset(preset, filter);
                             return ChoiceChip(
-                              label: Text(preset, style: const TextStyle(fontSize: 11)),
+                              label: Text(
+                                preset,
+                                style: const TextStyle(fontSize: 11),
+                              ),
                               selected: isSelected,
                               onSelected: (sel) {
                                 if (sel) {
@@ -73,7 +83,11 @@ class ReportFiltersBar extends StatelessWidget {
                   else
                     Row(
                       children: [
-                        const Icon(Icons.date_range_outlined, size: 20, color: AppStatusColors.onNeutralContainer),
+                        const Icon(
+                          Icons.date_range_outlined,
+                          size: 20,
+                          color: AppStatusColors.onNeutralContainer,
+                        ),
                         const SizedBox(width: AppSpacing.small),
                         OutlinedButton(
                           onPressed: () => _pickCustomDateRange(context),
@@ -88,9 +102,15 @@ class ReportFiltersBar extends StatelessWidget {
                             spacing: 8,
                             runSpacing: 8,
                             children: presetDateLabels.map((preset) {
-                              final isSelected = _checkDatePreset(preset, filter);
+                              final isSelected = _checkDatePreset(
+                                preset,
+                                filter,
+                              );
                               return ChoiceChip(
-                                label: Text(preset, style: const TextStyle(fontSize: 11)),
+                                label: Text(
+                                  preset,
+                                  style: const TextStyle(fontSize: 11),
+                                ),
                                 selected: isSelected,
                                 onSelected: (sel) {
                                   if (sel) {
@@ -107,13 +127,20 @@ class ReportFiltersBar extends StatelessWidget {
 
                   // Row 2: Select drop-down selectors
                   if (isCompact)
-                    Column(
-                      children: _buildDropdownFilters(context),
-                    )
+                    Column(children: _buildDropdownFilters(context))
                   else
                     Row(
                       children: _buildDropdownFilters(context)
-                          .map((w) => Expanded(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 4.0), child: w)))
+                          .map(
+                            (w) => Expanded(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 4.0,
+                                ),
+                                child: w,
+                              ),
+                            ),
+                          )
                           .toList(),
                     ),
                 ],
@@ -133,45 +160,97 @@ class ReportFiltersBar extends StatelessWidget {
       DropdownButtonFormField<String>(
         initialValue: filter.routeCode,
         isExpanded: true,
-        decoration: const InputDecoration(labelText: 'المسار', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8)),
+        decoration: const InputDecoration(
+          labelText: 'المسار',
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        ),
         items: [
-          const DropdownMenuItem(value: null, child: Text('الكل (المسار)', overflow: TextOverflow.ellipsis)),
-          ...state.availableRoutes.map((r) => DropdownMenuItem(value: r, child: Text(r, overflow: TextOverflow.ellipsis))),
+          const DropdownMenuItem(
+            value: null,
+            child: Text('الكل (المسار)', overflow: TextOverflow.ellipsis),
+          ),
+          ...state.availableRoutes.map(
+            (r) => DropdownMenuItem(
+              value: r,
+              child: Text(r, overflow: TextOverflow.ellipsis),
+            ),
+          ),
         ],
-        onChanged: (val) => cubit.updateFilter(route: val, clearRoute: val == null),
+        onChanged: (val) =>
+            cubit.updateFilter(route: val, clearRoute: val == null),
       ),
       const SizedBox(height: AppSpacing.xSmall),
       DropdownButtonFormField<String>(
         initialValue: filter.driverName,
         isExpanded: true,
-        decoration: const InputDecoration(labelText: 'السائق', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8)),
+        decoration: const InputDecoration(
+          labelText: 'السائق',
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        ),
         items: [
-          const DropdownMenuItem(value: null, child: Text('الكل (السائق)', overflow: TextOverflow.ellipsis)),
-          ...state.availableDrivers.map((d) => DropdownMenuItem(value: d, child: Text(d, overflow: TextOverflow.ellipsis))),
+          const DropdownMenuItem(
+            value: null,
+            child: Text('الكل (السائق)', overflow: TextOverflow.ellipsis),
+          ),
+          ...state.availableDrivers.map(
+            (d) => DropdownMenuItem(
+              value: d,
+              child: Text(d, overflow: TextOverflow.ellipsis),
+            ),
+          ),
         ],
-        onChanged: (val) => cubit.updateFilter(driver: val, clearDriver: val == null),
+        onChanged: (val) =>
+            cubit.updateFilter(driver: val, clearDriver: val == null),
       ),
       const SizedBox(height: AppSpacing.xSmall),
       DropdownButtonFormField<String>(
         initialValue: filter.vehiclePlate,
         isExpanded: true,
-        decoration: const InputDecoration(labelText: 'المركبة', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8)),
+        decoration: const InputDecoration(
+          labelText: 'المركبة',
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        ),
         items: [
-          const DropdownMenuItem(value: null, child: Text('الكل (المركبة)', overflow: TextOverflow.ellipsis)),
-          ...state.availableVehicles.map((v) => DropdownMenuItem(value: v, child: Text(v, overflow: TextOverflow.ellipsis))),
+          const DropdownMenuItem(
+            value: null,
+            child: Text('الكل (المركبة)', overflow: TextOverflow.ellipsis),
+          ),
+          ...state.availableVehicles.map(
+            (v) => DropdownMenuItem(
+              value: v,
+              child: Text(v, overflow: TextOverflow.ellipsis),
+            ),
+          ),
         ],
-        onChanged: (val) => cubit.updateFilter(vehicle: val, clearVehicle: val == null),
+        onChanged: (val) =>
+            cubit.updateFilter(vehicle: val, clearVehicle: val == null),
       ),
       const SizedBox(height: AppSpacing.xSmall),
       DropdownButtonFormField<String>(
         initialValue: filter.packageName,
         isExpanded: true,
-        decoration: const InputDecoration(labelText: 'الاشتراك', border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8)),
+        decoration: const InputDecoration(
+          labelText: 'الاشتراك',
+          border: OutlineInputBorder(),
+          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        ),
         items: [
-          const DropdownMenuItem(value: null, child: Text('الكل (الاشتراك)', overflow: TextOverflow.ellipsis)),
-          ...state.availablePackages.map((p) => DropdownMenuItem(value: p, child: Text(p, overflow: TextOverflow.ellipsis))),
+          const DropdownMenuItem(
+            value: null,
+            child: Text('الكل (الاشتراك)', overflow: TextOverflow.ellipsis),
+          ),
+          ...state.availablePackages.map(
+            (p) => DropdownMenuItem(
+              value: p,
+              child: Text(p, overflow: TextOverflow.ellipsis),
+            ),
+          ),
         ],
-        onChanged: (val) => cubit.updateFilter(pkg: val, clearPackage: val == null),
+        onChanged: (val) =>
+            cubit.updateFilter(pkg: val, clearPackage: val == null),
       ),
     ];
   }
@@ -179,17 +258,27 @@ class ReportFiltersBar extends StatelessWidget {
   bool _checkDatePreset(String preset, ReportFilter filter) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
-    final filterStart = DateTime(filter.startDate.year, filter.startDate.month, filter.startDate.day);
-    final filterEnd = DateTime(filter.endDate.year, filter.endDate.month, filter.endDate.day);
+    final filterStart = DateTime(
+      filter.startDate.year,
+      filter.startDate.month,
+      filter.startDate.day,
+    );
+    final filterEnd = DateTime(
+      filter.endDate.year,
+      filter.endDate.month,
+      filter.endDate.day,
+    );
 
     if (preset == 'اليوم') {
       return filterStart == today && filterEnd == today;
     } else if (preset == 'آخر 7 أيام') {
       final sevenDaysAgo = today.subtract(const Duration(days: 7));
-      return filterStart.difference(sevenDaysAgo).inDays.abs() <= 1 && filterEnd.difference(today).inDays.abs() == 0;
+      return filterStart.difference(sevenDaysAgo).inDays.abs() <= 1 &&
+          filterEnd.difference(today).inDays.abs() == 0;
     } else if (preset == 'آخر 30 يوم') {
       final thirtyDaysAgo = today.subtract(const Duration(days: 30));
-      return filterStart.difference(thirtyDaysAgo).inDays.abs() <= 1 && filterEnd.difference(today).inDays.abs() == 0;
+      return filterStart.difference(thirtyDaysAgo).inDays.abs() <= 1 &&
+          filterEnd.difference(today).inDays.abs() == 0;
     }
     return false;
   }
@@ -199,9 +288,15 @@ class ReportFiltersBar extends StatelessWidget {
     if (preset == 'اليوم') {
       cubit.updateFilter(start: now, end: now);
     } else if (preset == 'آخر 7 أيام') {
-      cubit.updateFilter(start: now.subtract(const Duration(days: 7)), end: now);
+      cubit.updateFilter(
+        start: now.subtract(const Duration(days: 7)),
+        end: now,
+      );
     } else if (preset == 'آخر 30 يوم') {
-      cubit.updateFilter(start: now.subtract(const Duration(days: 30)), end: now);
+      cubit.updateFilter(
+        start: now.subtract(const Duration(days: 30)),
+        end: now,
+      );
     }
   }
 
@@ -211,12 +306,16 @@ class ReportFiltersBar extends StatelessWidget {
       context: context,
       firstDate: DateTime.now().subtract(const Duration(days: 365)),
       lastDate: DateTime.now(),
-      initialDateRange: DateTimeRange(start: state.filter.startDate, end: state.filter.endDate),
+      initialDateRange: DateTimeRange(
+        start: state.filter.startDate,
+        end: state.filter.endDate,
+      ),
     );
     if (range != null) {
       cubit.updateFilter(start: range.start, end: range.end);
     }
   }
 
-  String _formatDate(DateTime dt) => '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
+  String _formatDate(DateTime dt) =>
+      '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')}';
 }

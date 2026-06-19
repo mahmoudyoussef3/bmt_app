@@ -17,10 +17,7 @@ class SupportLoaded extends SupportState {
   final List<String> categories;
   final List<SupportTicket> tickets;
 
-  const SupportLoaded({
-    required this.categories,
-    required this.tickets,
-  });
+  const SupportLoaded({required this.categories, required this.tickets});
 
   @override
   List<Object?> get props => [categories, tickets];
@@ -47,7 +44,7 @@ class SupportError extends SupportState {
 
 class SupportActionLoading extends SupportState {
   final String message;
-  
+
   const SupportActionLoading(this.message);
 
   @override
@@ -79,8 +76,8 @@ class SupportTicketDetailsLoaded extends SupportState {
 
 class SupportSuccess extends SupportState {
   final String message;
-  final SupportTicket? ticket; 
-  
+  final SupportTicket? ticket;
+
   const SupportSuccess({required this.message, this.ticket});
 
   @override

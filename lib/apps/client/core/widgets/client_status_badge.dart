@@ -40,9 +40,9 @@ class ClientStatusBadge extends StatelessWidget {
           ],
           Text(
             label,
-            style: ClientTypography.labelMedium(context).copyWith(
-              color: colors.fg,
-            ),
+            style: ClientTypography.labelMedium(
+              context,
+            ).copyWith(color: colors.fg),
           ),
         ],
       ),
@@ -89,9 +89,7 @@ class _PulsingDotState extends State<_PulsingDot>
         height: 7,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: widget.color.withAlpha(
-            (128 + (_pulse.value * 127)).round(),
-          ),
+          color: widget.color.withAlpha((128 + (_pulse.value * 127)).round()),
         ),
       ),
     );

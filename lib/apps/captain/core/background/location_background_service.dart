@@ -64,7 +64,10 @@ void _onServiceStart(ServiceInstance service) async {
   }
 
   // Initialize Supabase in the background isolate.
-  await Supabase.initialize(url: _supabaseUrl, publishableKey: _supabaseAnonKey);
+  await Supabase.initialize(
+    url: _supabaseUrl,
+    publishableKey: _supabaseAnonKey,
+  );
   final supabase = Supabase.instance.client;
 
   // Open broadcast channel.
@@ -85,34 +88,35 @@ void _onServiceStart(ServiceInstance service) async {
   service.on('stopService').listen((_) => cleanup());
 
   // Start GPS stream.
-  positionSub = Geolocator.getPositionStream(
-    locationSettings: AndroidSettings(
-      accuracy: LocationAccuracy.high,
-      distanceFilter: 10,
-      intervalDuration: Duration(seconds: 5),
-      foregroundNotificationConfig: ForegroundNotificationConfig(
-        notificationText: 'BMT يتتبع موقعك',
-        notificationTitle: 'مشاركة الموقع',
-        enableWakeLock: true,
-      ),
-    ),
-  ).listen((pos) {
-    latest = pos;
-    channel.sendBroadcastMessage(
-      event: 'location',
-      payload: {
-        'lat': pos.latitude,
-        'lng': pos.longitude,
-        'accuracy': pos.accuracy,
-        'speed': pos.speed,
-      },
-    );
-    // Keep notification content current.
-    service.invoke('update', {
-      'lat': pos.latitude.toStringAsFixed(5),
-      'lng': pos.longitude.toStringAsFixed(5),
-    });
-  });
+  positionSub =
+      Geolocator.getPositionStream(
+        locationSettings: AndroidSettings(
+          accuracy: LocationAccuracy.high,
+          distanceFilter: 10,
+          intervalDuration: Duration(seconds: 5),
+          foregroundNotificationConfig: ForegroundNotificationConfig(
+            notificationText: 'BMT يتتبع موقعك',
+            notificationTitle: 'مشاركة الموقع',
+            enableWakeLock: true,
+          ),
+        ),
+      ).listen((pos) {
+        latest = pos;
+        channel.sendBroadcastMessage(
+          event: 'location',
+          payload: {
+            'lat': pos.latitude,
+            'lng': pos.longitude,
+            'accuracy': pos.accuracy,
+            'speed': pos.speed,
+          },
+        );
+        // Keep notification content current.
+        service.invoke('update', {
+          'lat': pos.latitude.toStringAsFixed(5),
+          'lng': pos.longitude.toStringAsFixed(5),
+        });
+      });
 
   // Persist to DB every 30 s.
   persistTimer = Timer.periodic(const Duration(seconds: 30), (_) async {

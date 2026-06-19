@@ -64,6 +64,7 @@ class FleetDriver {
     final d = _parsedLicenseExpiry;
     return d != null && d.isBefore(DateTime.now());
   }
+
   bool get isLicenseExpiringSoon {
     final d = _parsedLicenseExpiry;
     if (d == null) return false;

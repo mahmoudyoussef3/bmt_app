@@ -33,7 +33,9 @@ class SupportRefundRequestModel extends SupportRefundRequest {
       status: _parseRefundStatus(json['status'] as String?),
       evidenceUrl: json['evidence_url'] as String?,
       reviewedBy: json['reviewed_by'] as String?,
-      reviewedAt: json['reviewed_at'] != null ? DateTime.parse(json['reviewed_at'] as String) : null,
+      reviewedAt: json['reviewed_at'] != null
+          ? DateTime.parse(json['reviewed_at'] as String)
+          : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );

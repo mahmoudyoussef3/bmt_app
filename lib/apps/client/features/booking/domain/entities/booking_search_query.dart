@@ -39,7 +39,7 @@ class BookingSearchQuery {
   }
 
   Map<String, String> toArguments() => {
-    if (routeId != null) 'routeId': routeId!,
+    'routeId': ?routeId,
     'pickup': pickup,
     'destination': destination,
     'date': date,

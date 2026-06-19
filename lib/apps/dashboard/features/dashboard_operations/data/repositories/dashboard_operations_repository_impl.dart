@@ -61,8 +61,7 @@ class DashboardOperationsRepositoryImpl
       metrics: [
         DashboardWorkspaceMetric(label: 'رحلات اليوم', value: '—', note: ''),
         DashboardWorkspaceMetric(label: 'تحتاج تدخل', value: '—', note: ''),
-        DashboardWorkspaceMetric(
-            label: 'نسبة الالتزام', value: '—', note: ''),
+        DashboardWorkspaceMetric(label: 'نسبة الالتزام', value: '—', note: ''),
       ],
       tabs: _defaultTabs,
       columns: ['رقم الرحلة', 'المسار', 'السائق', 'الحالة'],
@@ -88,8 +87,7 @@ class DashboardOperationsRepositoryImpl
       metrics: [
         DashboardWorkspaceMetric(label: 'جارية الآن', value: '—', note: ''),
         DashboardWorkspaceMetric(label: 'متأخرة', value: '—', note: ''),
-        DashboardWorkspaceMetric(
-            label: 'مكتملة اليوم', value: '—', note: ''),
+        DashboardWorkspaceMetric(label: 'مكتملة اليوم', value: '—', note: ''),
       ],
       tabs: _defaultTabs,
       columns: ['رقم الرحلة', 'السائق', 'المركبة', 'الحالة'],
@@ -115,8 +113,7 @@ class DashboardOperationsRepositoryImpl
       metrics: [
         DashboardWorkspaceMetric(label: 'متاحون', value: '—', note: ''),
         DashboardWorkspaceMetric(label: 'في رحلة', value: '—', note: ''),
-        DashboardWorkspaceMetric(
-            label: 'يحتاجون متابعة', value: '—', note: ''),
+        DashboardWorkspaceMetric(label: 'يحتاجون متابعة', value: '—', note: ''),
       ],
       tabs: _defaultTabs,
       columns: ['السائق', 'الهاتف', 'الحالة', 'التقييم'],
@@ -167,8 +164,7 @@ class DashboardOperationsRepositoryImpl
       ],
       metrics: [
         DashboardWorkspaceMetric(label: 'نشطون', value: '—', note: ''),
-        DashboardWorkspaceMetric(
-            label: 'يحتاجون متابعة', value: '—', note: ''),
+        DashboardWorkspaceMetric(label: 'يحتاجون متابعة', value: '—', note: ''),
         DashboardWorkspaceMetric(label: 'مشتركون', value: '—', note: ''),
       ],
       tabs: _defaultTabs,
@@ -245,11 +241,9 @@ class DashboardOperationsRepositoryImpl
         DashboardWorkspaceAction(label: 'تصدير المدفوعات', message: ''),
       ],
       metrics: [
-        DashboardWorkspaceMetric(
-            label: 'تقارير جاهزة', value: '—', note: ''),
+        DashboardWorkspaceMetric(label: 'تقارير جاهزة', value: '—', note: ''),
         DashboardWorkspaceMetric(label: 'آخر تحديث', value: '—', note: ''),
-        DashboardWorkspaceMetric(
-            label: 'طلبات معلقة', value: '—', note: ''),
+        DashboardWorkspaceMetric(label: 'طلبات معلقة', value: '—', note: ''),
       ],
       tabs: _defaultTabs,
       columns: ['التقرير', 'الفترة', 'آخر تحديث', 'الحالة'],
@@ -271,10 +265,8 @@ class DashboardOperationsRepositoryImpl
       ],
       metrics: [
         DashboardWorkspaceMetric(label: 'أدوار', value: '٢', note: ''),
-        DashboardWorkspaceMetric(
-            label: 'مستخدمو لوحة', value: '—', note: ''),
-        DashboardWorkspaceMetric(
-            label: 'محظور عن CS', value: '٣', note: ''),
+        DashboardWorkspaceMetric(label: 'مستخدمو لوحة', value: '—', note: ''),
+        DashboardWorkspaceMetric(label: 'محظور عن CS', value: '٣', note: ''),
       ],
       tabs: _defaultTabs,
       columns: ['الدور', 'الوصول', 'الحالة'],
@@ -287,8 +279,7 @@ class DashboardOperationsRepositoryImpl
         DashboardWorkspaceRow(
           cells: ['خدمة العملاء', 'التشغيل والدعم والتقارير', 'نشط'],
           status: 'done',
-          details:
-              'لا يمكنه الوصول للصلاحيات أو الإعدادات أو إدارة المسؤولين.',
+          details: 'لا يمكنه الوصول للصلاحيات أو الإعدادات أو إدارة المسؤولين.',
         ),
       ],
       sections: [],
@@ -327,8 +318,7 @@ class DashboardOperationsRepositoryImpl
       metrics: [
         DashboardWorkspaceMetric(label: 'نشطة', value: '—', note: ''),
         DashboardWorkspaceMetric(label: 'تجديد اليوم', value: '—', note: ''),
-        DashboardWorkspaceMetric(
-            label: 'تحتاج متابعة', value: '—', note: ''),
+        DashboardWorkspaceMetric(label: 'تحتاج متابعة', value: '—', note: ''),
       ],
       tabs: _defaultTabs,
       columns: ['العميل', 'الباقة', 'الرصيد', 'الحالة'],
@@ -344,15 +334,15 @@ class DashboardOperationsRepositoryImpl
       id: 'settings',
       title: 'الإعدادات',
       subtitle: 'إعدادات عامة للوحة التشغيل.',
-      actions: [
-        DashboardWorkspaceAction(label: 'حفظ الإعدادات', message: ''),
-      ],
+      actions: [DashboardWorkspaceAction(label: 'حفظ الإعدادات', message: '')],
       metrics: [
         DashboardWorkspaceMetric(label: 'نمط العرض', value: '—', note: ''),
         DashboardWorkspaceMetric(
-            label: 'إشعارات التشغيل', value: '—', note: ''),
-        DashboardWorkspaceMetric(
-            label: 'تكاملات خارجية', value: '٠', note: ''),
+          label: 'إشعارات التشغيل',
+          value: '—',
+          note: '',
+        ),
+        DashboardWorkspaceMetric(label: 'تكاملات خارجية', value: '٠', note: ''),
       ],
       tabs: _defaultTabs,
       columns: ['الإعداد', 'القيمة', 'النطاق', 'الحالة'],

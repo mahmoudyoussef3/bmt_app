@@ -32,20 +32,20 @@ class ReportWorkspace extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                    // 3. KPIs
-                    ReportKpiGrid(state: state),
-                    const SizedBox(height: AppSpacing.medium),
+                  // 3. KPIs
+                  ReportKpiGrid(state: state),
+                  const SizedBox(height: AppSpacing.medium),
 
-                    // 4. Trends
-                    ReportTrendChart(state: state),
-                    const SizedBox(height: AppSpacing.medium),
+                  // 4. Trends
+                  ReportTrendChart(state: state),
+                  const SizedBox(height: AppSpacing.medium),
 
-                    // 5. Detailed Table
-                    ReportDataTable(state: state),
-                  ],
-                ),
+                  // 5. Detailed Table
+                  ReportDataTable(state: state),
+                ],
               ),
             ),
+          ),
         ],
       ),
     );

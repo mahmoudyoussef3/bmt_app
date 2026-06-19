@@ -99,7 +99,11 @@ class PaymentsCubit extends Cubit<PaymentsState> {
       await load();
       return true;
     } catch (e) {
-      emit(current.copyWith(reassignError: e.toString().replaceAll('Exception: ', '')));
+      emit(
+        current.copyWith(
+          reassignError: e.toString().replaceAll('Exception: ', ''),
+        ),
+      );
       return false;
     }
   }

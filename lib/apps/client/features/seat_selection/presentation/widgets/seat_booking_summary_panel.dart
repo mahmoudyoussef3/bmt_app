@@ -39,9 +39,9 @@ class SeatBookingSummaryPanel extends StatelessWidget {
         children: [
           Text(
             'Booking summary',
-            style: ClientTypography.bodyMedium(context).copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
           _SummaryRow(label: 'Vehicle', value: vehicleName),
@@ -64,15 +64,15 @@ class SeatBookingSummaryPanel extends StatelessWidget {
             children: [
               Text(
                 'Total amount',
-                style: ClientTypography.bodyMedium(context).copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: ClientTypography.bodyMedium(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w700),
               ),
               Text(
                 'EGP ${total.toStringAsFixed(2)}',
-                style: ClientTypography.priceMedium(context).copyWith(
-                  color: ClientColors.primary,
-                ),
+                style: ClientTypography.priceMedium(
+                  context,
+                ).copyWith(color: ClientColors.primary),
               ),
             ],
           ),
@@ -104,9 +104,9 @@ class _SummaryRow extends StatelessWidget {
             width: 110,
             child: Text(
               label,
-              style: ClientTypography.bodySmall(context).copyWith(
-                color: ClientColors.textSecondaryFor(context),
-              ),
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
             ),
           ),
           Expanded(

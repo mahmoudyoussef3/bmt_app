@@ -32,28 +32,45 @@ class ReportSidebarSelector extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text('فئات التقارير', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppStatusColors.onNeutralContainer)),
+          const Text(
+            'فئات التقارير',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+              color: AppStatusColors.onNeutralContainer,
+            ),
+          ),
           const SizedBox(height: AppSpacing.medium),
           Expanded(
             child: ListView.separated(
               itemCount: ReportType.values.length,
-              separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.xSmall),
+              separatorBuilder: (context, index) =>
+                  const SizedBox(height: AppSpacing.xSmall),
               itemBuilder: (context, index) {
                 final type = ReportType.values[index];
                 final isSelected = type == selectedType;
                 return Material(
-                  color: isSelected ? scheme.primaryContainer.withValues(alpha: 0.47) : Colors.transparent, // ~120/255
+                  color: isSelected
+                      ? scheme.primaryContainer.withValues(alpha: 0.47)
+                      : Colors.transparent, // ~120/255
                   borderRadius: BorderRadius.circular(8),
                   child: ListTile(
                     selected: isSelected,
                     onTap: () => onSelect(type),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                    leading: Icon(icons[type] ?? Icons.insert_chart_outlined, size: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    leading: Icon(
+                      icons[type] ?? Icons.insert_chart_outlined,
+                      size: 20,
+                    ),
                     title: Text(
                       type.label,
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                   ),

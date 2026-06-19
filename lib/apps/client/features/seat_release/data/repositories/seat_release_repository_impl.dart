@@ -5,7 +5,7 @@ import '../datasources/supabase_seat_release_datasource.dart';
 class SeatReleaseRepositoryImpl implements SeatReleaseRepository {
   const SeatReleaseRepositoryImpl(this._datasource);
 
-  final SupabaseSeatReleaseDatasource _datasource;
+  final SeatReleaseDatasource _datasource;
 
   @override
   Future<SeatReleaseData> getSeatReleaseData() {

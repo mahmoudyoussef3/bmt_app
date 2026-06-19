@@ -25,11 +25,17 @@ class BookingSummaryCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Expanded(child: _SummaryCell(label: 'From', value: pickup)),
+          Expanded(
+            child: _SummaryCell(label: 'From', value: pickup),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: _SummaryCell(label: 'To', value: destination)),
+          Expanded(
+            child: _SummaryCell(label: 'To', value: destination),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: _SummaryCell(label: 'Time', value: time)),
+          Expanded(
+            child: _SummaryCell(label: 'Time', value: time),
+          ),
         ],
       ),
     );
@@ -49,16 +55,16 @@ class _SummaryCell extends StatelessWidget {
       children: [
         Text(
           label,
-          style: ClientTypography.labelSmall(context).copyWith(
-            color: ClientColors.textTertiaryFor(context),
-          ),
+          style: ClientTypography.labelSmall(
+            context,
+          ).copyWith(color: ClientColors.textTertiaryFor(context)),
         ),
         const SizedBox(height: 6),
         Text(
           value.isEmpty ? '-' : value,
-          style: ClientTypography.bodyMedium(context).copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          style: ClientTypography.bodyMedium(
+            context,
+          ).copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     );

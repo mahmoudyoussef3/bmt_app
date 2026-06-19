@@ -37,7 +37,6 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
         );
       }
 
-
       // 2. Fetch trip details, vehicle details and driver.
       final tripResponse = await _supabase
           .from('operation_trips')
@@ -65,7 +64,9 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
           : <String, dynamic>{};
 
       if (seats.isEmpty) {
-        throw Exception('لا توجد مقاعد مسجلة لهذه الرحلة. يرجى التواصل مع خدمة العملاء.');
+        throw Exception(
+          'لا توجد مقاعد مسجلة لهذه الرحلة. يرجى التواصل مع خدمة العملاء.',
+        );
       }
 
       final ticketPrice = tripResponse['ticket_price'];
@@ -113,11 +114,14 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
     if (user == null) throw Exception('User not logged in');
 
     try {
-      final response = await _supabase.rpc('lock_trip_seat', params: {
-        'p_trip_id':   tripId,
-        'p_seat_id':   seatId,
-        'p_client_id': user.id,
-      });
+      final response = await _supabase.rpc(
+        'lock_trip_seat',
+        params: {
+          'p_trip_id': tripId,
+          'p_seat_id': seatId,
+          'p_client_id': user.id,
+        },
+      );
       return Map<String, dynamic>.from(response as Map);
     } on PostgrestException catch (e) {
       if (e.message.contains('seat_unavailable')) {

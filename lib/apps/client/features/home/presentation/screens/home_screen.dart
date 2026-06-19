@@ -158,13 +158,11 @@ class _HomeContentState extends State<_HomeContent> {
                     plans: widget.data.packagePlans,
                     activePackage: widget.data.activePackage,
                     previewCount: 4,
-                    onOpenSubscription: () => widget.onOpenRoute(
-                      ClientRoutes.subscription,
-                      {
-                        'hasActiveSubscription':
-                            widget.data.activePackage != null,
-                      },
-                    ),
+                    onOpenSubscription: () =>
+                        widget.onOpenRoute(ClientRoutes.subscription, {
+                          'hasActiveSubscription':
+                              widget.data.activePackage != null,
+                        }),
                   ),
                   const SizedBox(height: 26),
                   _SupportLink(
@@ -257,19 +255,21 @@ class _WelcomeSection extends StatelessWidget {
                           children: [
                             Text(
                               greeting,
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: scheme.primary,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.4,
-                              ),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    color: scheme.primary,
+                                    fontWeight: FontWeight.w700,
+                                    letterSpacing: 0.4,
+                                  ),
                             ),
                             const SizedBox(height: 3),
                             Text(
                               firstName,
-                              style: ClientTypography.headingLarge(context).copyWith(
-                                color: ClientColors.textPrimaryFor(context),
-                                height: 1.05,
-                              ),
+                              style: ClientTypography.headingLarge(context)
+                                  .copyWith(
+                                    color: ClientColors.textPrimaryFor(context),
+                                    height: 1.05,
+                                  ),
                             ),
                           ],
                         ),

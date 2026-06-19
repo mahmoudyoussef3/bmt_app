@@ -22,9 +22,9 @@ class TripQrCard extends StatelessWidget {
         children: [
           Text(
             'Boarding pass',
-            style: ClientTypography.bodyMedium(context).copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 4),
           Text(
@@ -59,9 +59,9 @@ class TripQrCard extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             'Show this code when boarding',
-            style: ClientTypography.bodySmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
         ],
       ),

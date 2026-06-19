@@ -44,9 +44,7 @@ class UsersCubit extends Cubit<UsersState> {
     final current = state;
     if (current is! UsersLoaded) return;
     try {
-      emit(UsersLoaded(
-        current.users.where((u) => u.id != user.id).toList(),
-      ));
+      emit(UsersLoaded(current.users.where((u) => u.id != user.id).toList()));
     } catch (e) {
       emit(UsersError(e.toString()));
     }

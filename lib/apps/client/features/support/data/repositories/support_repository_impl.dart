@@ -14,11 +14,8 @@ class SupportRepositoryImpl implements SupportRepository {
   Future<SupportWorkspace> getWorkspace() async {
     final categories = await _remoteDataSource.getCategories();
     final tickets = await _remoteDataSource.getMyTickets();
-    
-    return SupportWorkspace(
-      categories: categories,
-      tickets: tickets,
-    );
+
+    return SupportWorkspace(categories: categories, tickets: tickets);
   }
 
   @override
@@ -60,9 +57,6 @@ class SupportRepositoryImpl implements SupportRepository {
     required String ticketId,
     required File file,
   }) {
-    return _remoteDataSource.uploadAttachment(
-      ticketId: ticketId,
-      file: file,
-    );
+    return _remoteDataSource.uploadAttachment(ticketId: ticketId, file: file);
   }
 }

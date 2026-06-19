@@ -21,10 +21,7 @@ class LanguageSwitcherWidget extends StatelessWidget {
             onPressed: () {
               context.read<LocaleCubit>().changeLocale(isArabic ? 'en' : 'ar');
             },
-            icon: Icon(
-              Icons.language_rounded,
-              color: scheme.onSurface,
-            ),
+            icon: Icon(Icons.language_rounded, color: scheme.onSurface),
             tooltip: isArabic ? 'English' : 'العربية',
           );
         }

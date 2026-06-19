@@ -16,9 +16,9 @@ class SupportTimeline extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Text(
           'No timeline events available.',
-          style: ClientTypography.bodySmall(context).copyWith(
-            color: ClientColors.textTertiaryFor(context),
-          ),
+          style: ClientTypography.bodySmall(
+            context,
+          ).copyWith(color: ClientColors.textTertiaryFor(context)),
         ),
       );
     }
@@ -90,9 +90,9 @@ class SupportTimeline extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     event.description,
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                   const SizedBox(height: 16),
                 ],

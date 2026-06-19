@@ -26,9 +26,9 @@ class SupportHomeHeader extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 'How can we help?',
-                style: ClientTypography.headingMedium(context).copyWith(
-                  color: ClientColors.textPrimaryFor(context),
-                ),
+                style: ClientTypography.headingMedium(
+                  context,
+                ).copyWith(color: ClientColors.textPrimaryFor(context)),
               ),
             ],
           ),

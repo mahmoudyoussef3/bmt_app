@@ -1451,8 +1451,11 @@ class _ReceiptWorkspace extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.receipt_long_outlined,
-              size: 48, color: scheme.onSurfaceVariant),
+          Icon(
+            Icons.receipt_long_outlined,
+            size: 48,
+            color: scheme.onSurfaceVariant,
+          ),
           const SizedBox(height: AppSpacing.small),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium),

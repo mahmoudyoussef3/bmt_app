@@ -42,9 +42,9 @@ class TripCard extends StatelessWidget {
                 const Spacer(),
                 Text(
                   trip.fare,
-                  style: ClientTypography.priceSmall(context).copyWith(
-                    color: ClientColors.primary,
-                  ),
+                  style: ClientTypography.priceSmall(
+                    context,
+                  ).copyWith(color: ClientColors.primary),
                 ),
               ],
             ),
@@ -83,16 +83,16 @@ class TripCard extends StatelessWidget {
                     children: [
                       Text(
                         trip.pickup,
-                        style: ClientTypography.bodyMedium(context).copyWith(
-                          color: ClientColors.textPrimaryFor(context),
-                        ),
+                        style: ClientTypography.bodyMedium(
+                          context,
+                        ).copyWith(color: ClientColors.textPrimaryFor(context)),
                       ),
                       const SizedBox(height: 10),
                       Text(
                         trip.destination,
-                        style: ClientTypography.bodyMedium(context).copyWith(
-                          color: ClientColors.textPrimaryFor(context),
-                        ),
+                        style: ClientTypography.bodyMedium(
+                          context,
+                        ).copyWith(color: ClientColors.textPrimaryFor(context)),
                       ),
                     ],
                   ),
@@ -109,13 +109,17 @@ class TripCard extends StatelessWidget {
             // Date + time
             Row(
               children: [
-                const Icon(Icons.schedule_rounded, size: 14, color: ClientColors.primary),
+                const Icon(
+                  Icons.schedule_rounded,
+                  size: 14,
+                  color: ClientColors.primary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   '${trip.dateLabel} · ${trip.timeLabel}',
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
               ],
             ),
@@ -128,21 +132,24 @@ class TripCard extends StatelessWidget {
                   backgroundColor: ClientColors.primaryLight,
                   child: Text(
                     trip.driverInitials,
-                    style: ClientTypography.labelSmall(context).copyWith(
-                      color: ClientColors.primary,
-                    ),
+                    style: ClientTypography.labelSmall(
+                      context,
+                    ).copyWith(color: ClientColors.primary),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
                     trip.driverName,
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                 ),
-                _PaymentChip(label: trip.paymentLabel, status: trip.paymentStatus),
+                _PaymentChip(
+                  label: trip.paymentLabel,
+                  status: trip.paymentStatus,
+                ),
               ],
             ),
           ],
@@ -170,15 +177,30 @@ class _PaymentChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      PaymentStatus.paid => (ClientColors.journeyGreenLight, ClientColors.onJourneyGreen),
-      PaymentStatus.pending => (ClientColors.journeyAmberLight, ClientColors.onJourneyAmber),
-      PaymentStatus.failed => (ClientColors.journeyRedLight, ClientColors.onJourneyRed),
-      PaymentStatus.refunded => (ClientColors.journeySlateLight, ClientColors.onJourneySlate),
+      PaymentStatus.paid => (
+        ClientColors.journeyGreenLight,
+        ClientColors.onJourneyGreen,
+      ),
+      PaymentStatus.pending => (
+        ClientColors.journeyAmberLight,
+        ClientColors.onJourneyAmber,
+      ),
+      PaymentStatus.failed => (
+        ClientColors.journeyRedLight,
+        ClientColors.onJourneyRed,
+      ),
+      PaymentStatus.refunded => (
+        ClientColors.journeySlateLight,
+        ClientColors.onJourneySlate,
+      ),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(999)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+      ),
       child: Text(
         label,
         style: ClientTypography.labelSmall(context).copyWith(color: fg),

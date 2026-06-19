@@ -64,7 +64,8 @@ class TicketsLoaded extends TicketsState {
     // breached first, then near-breach, then by remaining SLA time
     result.sort((a, b) {
       if (a.slaBreached != b.slaBreached) return a.slaBreached ? -1 : 1;
-      if (a.isSlaNearBreach != b.isSlaNearBreach) return a.isSlaNearBreach ? -1 : 1;
+      if (a.isSlaNearBreach != b.isSlaNearBreach)
+        return a.isSlaNearBreach ? -1 : 1;
       if (a.slaDueAt != null && b.slaDueAt != null) {
         return a.slaDueAt!.compareTo(b.slaDueAt!);
       }
@@ -90,7 +91,8 @@ class TicketsLoaded extends TicketsState {
   int get delayedCount {
     final limit = DateTime.now().subtract(const Duration(hours: 24));
     return tickets.where((t) {
-      final isUnresolved = t.status != TicketStatus.resolved && t.status != TicketStatus.closed;
+      final isUnresolved =
+          t.status != TicketStatus.resolved && t.status != TicketStatus.closed;
       final isDelayed = t.createdAt.isBefore(limit);
       return isUnresolved && isDelayed;
     }).length;
@@ -112,12 +114,17 @@ class TicketsLoaded extends TicketsState {
     return TicketsLoaded(
       tickets: tickets ?? this.tickets,
       selectedTicketId: selectedTicketId ?? this.selectedTicketId,
-      filterStatus: clearFilterStatus ? null : (filterStatus ?? this.filterStatus),
-      filterPriority: clearFilterPriority ? null : (filterPriority ?? this.filterPriority),
+      filterStatus: clearFilterStatus
+          ? null
+          : (filterStatus ?? this.filterStatus),
+      filterPriority: clearFilterPriority
+          ? null
+          : (filterPriority ?? this.filterPriority),
       searchQuery: searchQuery ?? this.searchQuery,
       actionLoading: actionLoading ?? this.actionLoading,
       actionMessage: actionMessage,
-      selectedTicketAttachments: selectedTicketAttachments ?? this.selectedTicketAttachments,
+      selectedTicketAttachments:
+          selectedTicketAttachments ?? this.selectedTicketAttachments,
       agents: agents ?? this.agents,
     );
   }

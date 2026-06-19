@@ -48,13 +48,12 @@ class _MyTripsScreenState extends State<MyTripsScreen> {
               for (final filter in TripFilter.values)
                 filter: cubit.countForFilter(filter, allTrips),
             };
-        
+
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: maxWidth),
                 child: CustomScrollView(
                   slivers: [
-          
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
@@ -72,14 +71,18 @@ class _MyTripsScreenState extends State<MyTripsScreen> {
                         child: TripFilterBar(
                           selected: _filter,
                           counts: counts,
-                          onSelected: (filter) => setState(() => _filter = filter),
+                          onSelected: (filter) =>
+                              setState(() => _filter = filter),
                         ),
                       ),
                     ),
                     SliverToBoxAdapter(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: _SectionTitle(filter: _filter, count: trips.length),
+                        child: _SectionTitle(
+                          filter: _filter,
+                          count: trips.length,
+                        ),
                       ),
                     ),
                     if (state is TripsLoading)
@@ -104,7 +107,10 @@ class _MyTripsScreenState extends State<MyTripsScreen> {
                       SliverPadding(
                         padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
                         sliver: SliverList(
-                          delegate: SliverChildBuilderDelegate((context, index) {
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
                             final trip = trips[index];
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12),
@@ -147,10 +153,7 @@ class _TripsHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            ClientColors.primary,
-            Color(0xFF1554C8),
-          ],
+          colors: [ClientColors.primary, Color(0xFF1554C8)],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -168,9 +171,9 @@ class _TripsHeader extends StatelessWidget {
                   children: [
                     Text(
                       'My Trips',
-                      style: ClientTypography.headingLarge(context).copyWith(
-                        color: ClientColors.textInverse,
-                      ),
+                      style: ClientTypography.headingLarge(
+                        context,
+                      ).copyWith(color: ClientColors.textInverse),
                     ),
                     const SizedBox(height: 6),
                     Text(
@@ -184,7 +187,7 @@ class _TripsHeader extends StatelessWidget {
               ),
               IconButton.filled(
                 onPressed: onBookTrip,
-                icon: const Icon(Icons.add_rounded,color: Colors.white,),
+                icon: const Icon(Icons.add_rounded, color: Colors.white),
                 tooltip: 'Book new trip',
               ),
             ],
@@ -244,15 +247,15 @@ class _StatChip extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: ClientTypography.labelSmall(context).copyWith(
-                  color: ClientColors.textInverse,
-                ),
+                style: ClientTypography.labelSmall(
+                  context,
+                ).copyWith(color: ClientColors.textInverse),
               ),
               Text(
                 value,
-                style: ClientTypography.labelLarge(context).copyWith(
-                  color: ClientColors.textInverse,
-                ),
+                style: ClientTypography.labelLarge(
+                  context,
+                ).copyWith(color: ClientColors.textInverse),
               ),
             ],
           ),
@@ -344,9 +347,9 @@ class _TripsEmptyState extends StatelessWidget {
           Text(
             subtitle,
             textAlign: TextAlign.center,
-            style: ClientTypography.bodyMedium(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
         ],
       ),

@@ -60,42 +60,42 @@ class ClientButton extends StatelessWidget {
 
     Widget button = switch (_variant) {
       _ClientButtonVariant.primary => FilledButton(
-          onPressed: effective,
-          style: FilledButton.styleFrom(
-            backgroundColor: ClientColors.primary,
-            foregroundColor: ClientColors.textInverse,
-            disabledBackgroundColor: ClientColors.primary.withAlpha(100),
-            minimumSize: minSize,
-            shape: shape,
-            textStyle: ClientTypography.labelLarge(context),
-          ),
-          child: child,
+        onPressed: effective,
+        style: FilledButton.styleFrom(
+          backgroundColor: ClientColors.primary,
+          foregroundColor: ClientColors.textInverse,
+          disabledBackgroundColor: ClientColors.primary.withAlpha(100),
+          minimumSize: minSize,
+          shape: shape,
+          textStyle: ClientTypography.labelLarge(context),
         ),
+        child: child,
+      ),
       _ClientButtonVariant.secondary => OutlinedButton(
-          onPressed: effective,
-          style: OutlinedButton.styleFrom(
-            foregroundColor: ClientColors.primary,
-            side: BorderSide(
-              color: isLoading
-                  ? ClientColors.primary.withAlpha(80)
-                  : ClientColors.primary,
-            ),
-            minimumSize: minSize,
-            shape: shape,
-            textStyle: ClientTypography.labelLarge(context),
+        onPressed: effective,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: ClientColors.primary,
+          side: BorderSide(
+            color: isLoading
+                ? ClientColors.primary.withAlpha(80)
+                : ClientColors.primary,
           ),
-          child: child,
+          minimumSize: minSize,
+          shape: shape,
+          textStyle: ClientTypography.labelLarge(context),
         ),
+        child: child,
+      ),
       _ClientButtonVariant.text => TextButton(
-          onPressed: effective,
-          style: TextButton.styleFrom(
-            foregroundColor: ClientColors.primary,
-            minimumSize: const Size(0, 44),
-            shape: shape,
-            textStyle: ClientTypography.labelLarge(context),
-          ),
-          child: child,
+        onPressed: effective,
+        style: TextButton.styleFrom(
+          foregroundColor: ClientColors.primary,
+          minimumSize: const Size(0, 44),
+          shape: shape,
+          textStyle: ClientTypography.labelLarge(context),
         ),
+        child: child,
+      ),
     };
 
     return expand ? SizedBox(width: double.infinity, child: button) : button;

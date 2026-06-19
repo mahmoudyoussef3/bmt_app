@@ -41,22 +41,25 @@ class TripSummaryCard extends StatelessWidget {
                   children: [
                     Text(
                       'Review your booking',
-                      style: ClientTypography.bodyMedium(context).copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                      style: ClientTypography.bodyMedium(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w900),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Confirm every detail before payment',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                   ],
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: ClientColors.primaryLight,
                   borderRadius: BorderRadius.circular(999),
@@ -112,9 +115,9 @@ class FareBreakdownCard extends StatelessWidget {
         children: [
           Text(
             'Payment total',
-            style: ClientTypography.bodyMedium(context).copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 14),
           _PriceRow(label: 'Trip fare', value: data.baseFare),
@@ -133,18 +136,18 @@ class FareBreakdownCard extends StatelessWidget {
             children: [
               Text(
                 'Total',
-                style: ClientTypography.bodyMedium(context).copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
+                style: ClientTypography.bodyMedium(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w800),
               ),
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 220),
                 child: Text(
                   '$total EGP',
                   key: ValueKey(total),
-                  style: ClientTypography.priceMedium(context).copyWith(
-                    color: ClientColors.primary,
-                  ),
+                  style: ClientTypography.priceMedium(
+                    context,
+                  ).copyWith(color: ClientColors.primary),
                 ),
               ),
             ],
@@ -183,9 +186,9 @@ class PromoCodeCard extends StatelessWidget {
         children: [
           Text(
             'Promo code',
-            style: ClientTypography.bodyMedium(context).copyWith(
-              fontWeight: FontWeight.w800,
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
           Row(
@@ -207,7 +210,10 @@ class PromoCodeCard extends StatelessWidget {
               duration: const Duration(milliseconds: 220),
               child: Container(
                 key: ValueKey(appliedCode),
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: promoDiscount > 0
                       ? ClientColors.journeyGreenLight
@@ -260,7 +266,9 @@ class PaymentMethodCard extends StatelessWidget {
               ? ClientColors.primaryLight
               : ClientColors.surfaceMutedFor(context),
           border: Border.all(
-            color: selected ? ClientColors.primary : ClientColors.borderFor(context),
+            color: selected
+                ? ClientColors.primary
+                : ClientColors.borderFor(context),
             width: selected ? 1.4 : 1,
           ),
           boxShadow: selected
@@ -293,7 +301,9 @@ class PaymentMethodCard extends StatelessWidget {
                     ),
                     child: Icon(
                       _paymentMethodIcon(method.type),
-                      color: selected ? Colors.white : ClientColors.textSecondaryFor(context),
+                      color: selected
+                          ? Colors.white
+                          : ClientColors.textSecondaryFor(context),
                     ),
                   ),
                   const SizedBox(width: 14),
@@ -306,9 +316,9 @@ class PaymentMethodCard extends StatelessWidget {
                             Expanded(
                               child: Text(
                                 method.title,
-                                style: ClientTypography.bodyMedium(context).copyWith(
-                                  fontWeight: FontWeight.w800,
-                                ),
+                                style: ClientTypography.bodyMedium(
+                                  context,
+                                ).copyWith(fontWeight: FontWeight.w800),
                               ),
                             ),
                             if (method.recommended)
@@ -323,10 +333,11 @@ class PaymentMethodCard extends StatelessWidget {
                                 ),
                                 child: Text(
                                   'Recommended',
-                                  style: ClientTypography.labelSmall(context).copyWith(
-                                    color: ClientColors.journeyGreen,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                  style: ClientTypography.labelSmall(context)
+                                      .copyWith(
+                                        color: ClientColors.journeyGreen,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                 ),
                               ),
                           ],
@@ -356,7 +367,9 @@ class PaymentMethodCard extends StatelessWidget {
                     height: 22,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: selected ? ClientColors.primary : Colors.transparent,
+                      color: selected
+                          ? ClientColors.primary
+                          : Colors.transparent,
                       border: Border.all(
                         color: selected
                             ? ClientColors.primary
@@ -418,15 +431,15 @@ class _SummaryRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: ClientTypography.bodySmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
           Text(
             value,
-            style: ClientTypography.bodySmall(context).copyWith(
-              fontWeight: FontWeight.w700,
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -449,16 +462,15 @@ class _PriceRow extends StatelessWidget {
         children: [
           Text(
             label,
-            style: ClientTypography.bodySmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
           Text(
             '${value > 0 ? '+' : ''}$value EGP',
-            style: ClientTypography.bodySmall(context).copyWith(
-              fontWeight: FontWeight.w700,
-              color: valueColor,
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(fontWeight: FontWeight.w700, color: valueColor),
           ),
         ],
       ),

@@ -815,7 +815,8 @@ class _VehicleDriverCard extends StatelessWidget {
           const FleetSectionTitle(
             icon: Icons.person_rounded,
             title: 'السائق المعين',
-            subtitle: 'مطلوب. لا يمكن إنشاء مركبة بدون سائق. يمكن تغييره لاحقاً.',
+            subtitle:
+                'مطلوب. لا يمكن إنشاء مركبة بدون سائق. يمكن تغييره لاحقاً.',
           ),
           const SizedBox(height: AppSpacing.medium),
           DropdownButtonFormField<String>(

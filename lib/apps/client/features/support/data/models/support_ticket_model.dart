@@ -33,11 +33,17 @@ class SupportTicketModel extends SupportTicket {
       relatedBookingId: json['related_booking_id'] as String?,
       relatedTripId: json['related_trip_id'] as String?,
       internalNote: json['internal_note'] as String?,
-      customerContactedAt: json['customer_contacted_at'] != null ? DateTime.parse(json['customer_contacted_at'] as String) : null,
+      customerContactedAt: json['customer_contacted_at'] != null
+          ? DateTime.parse(json['customer_contacted_at'] as String)
+          : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
-      resolvedAt: json['resolved_at'] != null ? DateTime.parse(json['resolved_at'] as String) : null,
-      closedAt: json['closed_at'] != null ? DateTime.parse(json['closed_at'] as String) : null,
+      resolvedAt: json['resolved_at'] != null
+          ? DateTime.parse(json['resolved_at'] as String)
+          : null,
+      closedAt: json['closed_at'] != null
+          ? DateTime.parse(json['closed_at'] as String)
+          : null,
     );
   }
 

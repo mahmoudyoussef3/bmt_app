@@ -160,17 +160,21 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: ClientColors.journeyGreenLight,
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
                             'Secure',
-                            style: ClientTypography.labelSmall(context).copyWith(
-                              color: ClientColors.journeyGreen,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: ClientTypography.labelSmall(context)
+                                .copyWith(
+                                  color: ClientColors.journeyGreen,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
                         ),
                       ],
@@ -312,9 +316,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                         top: Radius.circular(28),
                       ),
                       border: Border(
-                        top: BorderSide(
-                          color: ClientColors.borderFor(context),
-                        ),
+                        top: BorderSide(color: ClientColors.borderFor(context)),
                       ),
                       boxShadow: [
                         BoxShadow(
@@ -341,17 +343,21 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                             Align(
                               alignment: Alignment.centerRight,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
                                 decoration: BoxDecoration(
                                   color: ClientColors.primaryLight,
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
                                   'Wallet: ${widget.checkoutData.walletBalance} EGP',
-                                  style: ClientTypography.labelSmall(context).copyWith(
-                                    color: ClientColors.primary,
-                                    fontWeight: FontWeight.w700,
-                                  ),
+                                  style: ClientTypography.labelSmall(context)
+                                      .copyWith(
+                                        color: ClientColors.primary,
+                                        fontWeight: FontWeight.w700,
+                                      ),
                                 ),
                               ),
                             )
@@ -363,7 +369,9 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
                               textAlign: TextAlign.center,
                               style: ClientTypography.bodySmall(context)
                                   .copyWith(
-                                    color: ClientColors.textTertiaryFor(context),
+                                    color: ClientColors.textTertiaryFor(
+                                      context,
+                                    ),
                                   ),
                             ),
                         ],
@@ -402,16 +410,16 @@ class _PaymentLoadingScaffold extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   'Preparing secure payment',
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Loading available methods and checking your booking.',
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -453,17 +461,17 @@ class _PaymentErrorScaffold extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     'Payment methods unavailable',
-                    style: ClientTypography.headingSmall(context).copyWith(
-                      color: ClientColors.textPrimaryFor(context),
-                    ),
+                    style: ClientTypography.headingSmall(
+                      context,
+                    ).copyWith(color: ClientColors.textPrimaryFor(context)),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     message,
                     textAlign: TextAlign.center,
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                   const SizedBox(height: 14),
                   ClientButton(label: 'Try again', onPressed: onRetry),
@@ -535,9 +543,9 @@ class _NoPaymentMethodsState extends StatelessWidget {
           Expanded(
             child: Text(
               'No payment methods are currently enabled. Please try again later or contact support.',
-              style: ClientTypography.bodySmall(context).copyWith(
-                color: ClientColors.textSecondaryFor(context),
-              ),
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
             ),
           ),
         ],
@@ -562,9 +570,9 @@ class _InfoPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: ClientTypography.labelSmall(context).copyWith(
-          color: ClientColors.textSecondaryFor(context),
-        ),
+        style: ClientTypography.labelSmall(
+          context,
+        ).copyWith(color: ClientColors.textSecondaryFor(context)),
       ),
     );
   }

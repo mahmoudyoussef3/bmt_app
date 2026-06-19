@@ -59,26 +59,45 @@ void main() {
       expect(state.selectedSectionIndex, 1);
     });
 
-    test('reviewReceipt() accepts receipt and updates payment status', () async {
-      await cubit.load();
-      await cubit.reviewReceipt('REC-1', ReceiptReviewStatus.accepted, notes: 'مقبول');
-      final state = cubit.state as FinanceLoaded;
-      expect(state.receiptReviews.firstWhere((r) => r.id == 'REC-1').status, ReceiptReviewStatus.accepted);
-      expect(state.payments.firstWhere((p) => p.id == 'TXN-1').status, PaymentStatus.success);
-    });
+    test(
+      'reviewReceipt() accepts receipt and updates payment status',
+      () async {
+        await cubit.load();
+        await cubit.reviewReceipt(
+          'REC-1',
+          ReceiptReviewStatus.accepted,
+          notes: 'مقبول',
+        );
+        final state = cubit.state as FinanceLoaded;
+        expect(
+          state.receiptReviews.firstWhere((r) => r.id == 'REC-1').status,
+          ReceiptReviewStatus.accepted,
+        );
+        expect(
+          state.payments.firstWhere((p) => p.id == 'TXN-1').status,
+          PaymentStatus.success,
+        );
+      },
+    );
 
     test('processRefund() approves refund request', () async {
       await cubit.load();
       await cubit.processRefund('REF-1', RefundStatus.approved);
       final state = cubit.state as FinanceLoaded;
-      expect(state.refundRequests.firstWhere((r) => r.id == 'REF-1').status, RefundStatus.approved);
+      expect(
+        state.refundRequests.firstWhere((r) => r.id == 'REF-1').status,
+        RefundStatus.approved,
+      );
     });
 
     test('cancelSubscription() cancels active subscription', () async {
       await cubit.load();
       await cubit.cancelSubscription('SUB-1');
       final state = cubit.state as FinanceLoaded;
-      expect(state.subscriptions.firstWhere((s) => s.id == 'SUB-1').status, SubscriptionStatus.cancelled);
+      expect(
+        state.subscriptions.firstWhere((s) => s.id == 'SUB-1').status,
+        SubscriptionStatus.cancelled,
+      );
     });
   });
 }
@@ -163,14 +182,22 @@ class _MockFinanceRepository implements FinanceRepository {
   Future<List<RevenueTrendPoint>> getRevenueTrend() async => const [];
 
   @override
-  Future<void> reviewReceipt(String id, ReceiptReviewStatus action, {String? notes}) async {
+  Future<void> reviewReceipt(
+    String id,
+    ReceiptReviewStatus action, {
+    String? notes,
+  }) async {
     final idx = receipts.indexWhere((r) => r.id == id);
     if (idx != -1) {
       receipts[idx] = receipts[idx].copyWith(status: action, notes: notes);
       if (action == ReceiptReviewStatus.accepted) {
-        final pIdx = payments.indexWhere((p) => p.id == receipts[idx].transactionId);
+        final pIdx = payments.indexWhere(
+          (p) => p.id == receipts[idx].transactionId,
+        );
         if (pIdx != -1) {
-          payments[pIdx] = payments[pIdx].copyWith(status: PaymentStatus.success);
+          payments[pIdx] = payments[pIdx].copyWith(
+            status: PaymentStatus.success,
+          );
         }
       }
     }
@@ -188,7 +215,9 @@ class _MockFinanceRepository implements FinanceRepository {
   Future<void> cancelSubscription(String id) async {
     final idx = subscriptions.indexWhere((s) => s.id == id);
     if (idx != -1) {
-      subscriptions[idx] = subscriptions[idx].copyWith(status: SubscriptionStatus.cancelled);
+      subscriptions[idx] = subscriptions[idx].copyWith(
+        status: SubscriptionStatus.cancelled,
+      );
     }
   }
 }

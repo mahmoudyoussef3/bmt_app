@@ -37,7 +37,8 @@ class OrsGeoService implements GeoService {
 
   @override
   Future<List<GeoPlace>> autocomplete(String query, {GeoPoint? focus}) async {
-    if (!enabled) throw const GeoException('خدمة الخرائط غير مفعّلة (لا يوجد مفتاح).');
+    if (!enabled)
+      throw const GeoException('خدمة الخرائط غير مفعّلة (لا يوجد مفتاح).');
     if (query.trim().length < 3) return const [];
 
     try {
@@ -65,7 +66,8 @@ class OrsGeoService implements GeoService {
 
   @override
   Future<RouteGeometry> directions(List<GeoPoint> orderedPoints) async {
-    if (!enabled) throw const GeoException('خدمة الخرائط غير مفعّلة (لا يوجد مفتاح).');
+    if (!enabled)
+      throw const GeoException('خدمة الخرائط غير مفعّلة (لا يوجد مفتاح).');
     if (orderedPoints.length < 2) {
       throw const GeoException('يلزم نقطتان على الأقل لحساب المسار.');
     }
@@ -75,12 +77,14 @@ class OrsGeoService implements GeoService {
         '/v2/directions/driving-car',
         options: Options(headers: {'Authorization': OrsConfig.apiKey}),
         data: {
-          'coordinates':
-              orderedPoints.map((p) => p.toLonLat()).toList(growable: false),
+          'coordinates': orderedPoints
+              .map((p) => p.toLonLat())
+              .toList(growable: false),
         },
       );
 
-      final route = ((response.data['routes'] as List?) ?? const []).firstOrNull;
+      final route =
+          ((response.data['routes'] as List?) ?? const []).firstOrNull;
       if (route == null) {
         throw const GeoException('لم يتم العثور على مسار بين النقاط.');
       }

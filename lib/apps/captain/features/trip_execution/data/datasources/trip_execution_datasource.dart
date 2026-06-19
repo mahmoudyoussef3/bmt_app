@@ -36,10 +36,10 @@ class TripExecutionDataSource {
   /// machine and logs a trip_events entry — all in one transaction.
   Future<void> _transitionStatus(String tripId, String newStatus) async {
     try {
-      await _supabase.rpc('update_trip_status', params: {
-        'p_trip_id':    tripId,
-        'p_new_status': newStatus,
-      });
+      await _supabase.rpc(
+        'update_trip_status',
+        params: {'p_trip_id': tripId, 'p_new_status': newStatus},
+      );
     } on PostgrestException catch (e) {
       if (e.message.contains('invalid_transition')) {
         throw Exception('حالة الرحلة لا تسمح بهذا الانتقال');

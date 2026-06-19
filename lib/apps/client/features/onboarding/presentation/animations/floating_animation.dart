@@ -24,14 +24,13 @@ class _FloatingAnimationState extends State<FloatingAnimation>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    )..repeat(reverse: true);
+    _controller = AnimationController(vsync: this, duration: widget.duration)
+      ..repeat(reverse: true);
 
-    _animation = Tween<double>(begin: -widget.magnitude, end: widget.magnitude).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
-    );
+    _animation = Tween<double>(begin: -widget.magnitude, end: widget.magnitude)
+        .animate(
+          CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
+        );
   }
 
   @override

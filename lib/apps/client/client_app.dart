@@ -234,15 +234,11 @@ class _ClientAppState extends State<ClientApp> {
                 },
 
                 '/subscription': (context) {
-                  final args =
-                      ModalRoute.of(context)?.settings.arguments;
+                  final args = ModalRoute.of(context)?.settings.arguments;
                   final hasActiveSub =
-                      args is Map &&
-                      args['hasActiveSubscription'] == true;
+                      args is Map && args['hasActiveSubscription'] == true;
                   return _buildPackagesScope(
-                    SubscriptionScreen(
-                      hasActiveSubscription: hasActiveSub,
-                    ),
+                    SubscriptionScreen(hasActiveSubscription: hasActiveSub),
                   );
                 },
 

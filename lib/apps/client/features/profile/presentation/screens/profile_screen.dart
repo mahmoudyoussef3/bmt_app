@@ -103,9 +103,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 data.profile.email,
                                 style: ClientTypography.bodySmall(
                                   context,
-                                ).copyWith(
-                                  color: Colors.white.withAlpha(200),
-                                ),
+                                ).copyWith(color: Colors.white.withAlpha(200)),
                               ),
                             ],
                           ),
@@ -182,9 +180,9 @@ class _DevVersionSwitcher extends StatelessWidget {
             children: [
               Text(
                 'Developer',
-                style: ClientTypography.bodySmall(context).copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: ClientTypography.bodySmall(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: AppLayout.spaceSm),
               Text(

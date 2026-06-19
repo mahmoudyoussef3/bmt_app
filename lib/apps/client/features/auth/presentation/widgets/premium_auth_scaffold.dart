@@ -37,7 +37,7 @@ class PremiumAuthScaffold extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    theme.primaryColor.withOpacity(isDark ? 0.15 : 0.08),
+                    theme.primaryColor.withValues(alpha: isDark ? 0.15 : 0.08),
                     theme.scaffoldBackgroundColor,
                   ],
                 ),
@@ -50,28 +50,31 @@ class PremiumAuthScaffold extends StatelessWidget {
               children: [
                 // Custom App Bar Area
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8.0,
+                    vertical: 8.0,
+                  ),
                   child: Row(
                     children: [
                       if (showBack)
                         IconButton(
-                          icon: Icon(Icons.arrow_back_ios_new_rounded, color: theme.iconTheme.color),
+                          icon: Icon(
+                            Icons.arrow_back_ios_new_rounded,
+                            color: theme.iconTheme.color,
+                          ),
                           onPressed: () => Navigator.maybePop(context),
                         ),
                     ],
                   ),
                 ),
-                
+
                 // Header Area
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (logo != null) ...[
-                        logo!,
-                        const SizedBox(height: 24),
-                      ],
+                      if (logo != null) ...[logo!, const SizedBox(height: 24)],
                       Text(
                         title,
                         style: theme.textTheme.headlineMedium?.copyWith(
@@ -94,12 +97,15 @@ class PremiumAuthScaffold extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 32),
-                
+
                 // Scrollable Content Form
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0).copyWith(bottom: 40),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24.0,
+                      vertical: 8.0,
+                    ).copyWith(bottom: 40),
                     child: child,
                   ),
                 ),

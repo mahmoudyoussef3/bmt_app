@@ -17,7 +17,9 @@ class TimeSelectionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: active ? ClientColors.primaryLight : ClientColors.surfaceFor(context),
+      color: active
+          ? ClientColors.primaryLight
+          : ClientColors.surfaceFor(context),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,

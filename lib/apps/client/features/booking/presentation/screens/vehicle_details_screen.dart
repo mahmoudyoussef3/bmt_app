@@ -198,10 +198,9 @@ class _VehicleGalleryAppBar extends StatelessWidget {
                     vehicle.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: ClientTypography.headingLarge(context).copyWith(
-                      color: ClientColors.textInverse,
-                      height: 1.2,
-                    ),
+                    style: ClientTypography.headingLarge(
+                      context,
+                    ).copyWith(color: ClientColors.textInverse, height: 1.2),
                   ),
                   const SizedBox(height: 6),
                   Text(
@@ -294,16 +293,16 @@ class _QuickStat extends StatelessWidget {
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: ClientTypography.headingSmall(context).copyWith(
-            color: ClientColors.textPrimaryFor(context),
-          ),
+          style: ClientTypography.headingSmall(
+            context,
+          ).copyWith(color: ClientColors.textPrimaryFor(context)),
         ),
         const SizedBox(height: 2),
         Text(
           label,
-          style: ClientTypography.bodySmall(context).copyWith(
-            color: ClientColors.textSecondaryFor(context),
-          ),
+          style: ClientTypography.bodySmall(
+            context,
+          ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
       ],
     );
@@ -338,16 +337,16 @@ class _DetailSection extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: ClientTypography.headingSmall(context).copyWith(
-                      color: ClientColors.textPrimaryFor(context),
-                    ),
+                    style: ClientTypography.headingSmall(
+                      context,
+                    ).copyWith(color: ClientColors.textPrimaryFor(context)),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                 ],
               ),
@@ -357,32 +356,6 @@ class _DetailSection extends StatelessWidget {
         const SizedBox(height: 12),
         child,
       ],
-    );
-  }
-}
-
-class _InfoGrid extends StatelessWidget {
-  const _InfoGrid({required this.items});
-
-  final List<_InfoItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      child: Column(
-        children: [
-          for (var i = 0; i < items.length; i++) ...[
-            items[i],
-            if (i != items.length - 1) const Divider(height: 22),
-          ],
-        ],
-      ),
     );
   }
 }
@@ -531,68 +504,6 @@ class _ComfortTile extends StatelessWidget {
   }
 }
 
-class _LegRoomTile extends StatelessWidget {
-  const _LegRoomTile({required this.rating});
-
-  final double rating;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = rating >= 4.5
-        ? AppLocalizations.of(context)!.booking_ratingExcellent
-        : rating >= 3.5
-            ? AppLocalizations.of(context)!.booking_ratingVeryGood
-            : rating >= 2.5
-                ? AppLocalizations.of(context)!.booking_ratingGood
-                : AppLocalizations.of(context)!.booking_ratingNormal;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              _SoftIcon(
-                icon: Icons.straighten_rounded,
-                color: ClientColors.primary,
-                size: 42,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  AppLocalizations.of(context)!.booking_legRoom,
-                  style: ClientTypography.bodyMedium(context).copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
-                ),
-              ),
-              Text(
-                '$label (${rating.toStringAsFixed(1)}/5)',
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: ClientColors.primary,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: (rating / 5).clamp(0, 1),
-              minHeight: 8,
-              backgroundColor: ClientColors.borderFor(context),
-              color: ClientColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _DriverCard extends StatelessWidget {
   const _DriverCard({required this.vehicle});
 
@@ -614,9 +525,9 @@ class _DriverCard extends StatelessWidget {
             backgroundColor: ClientColors.primaryLight,
             child: Text(
               vehicle.driverInitials,
-              style: ClientTypography.headingSmall(context).copyWith(
-                color: ClientColors.primary,
-              ),
+              style: ClientTypography.headingSmall(
+                context,
+              ).copyWith(color: ClientColors.primary),
             ),
           ),
           const SizedBox(width: 14),
@@ -626,9 +537,9 @@ class _DriverCard extends StatelessWidget {
               children: [
                 Text(
                   vehicle.driverName,
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 6),
               ],
@@ -714,9 +625,9 @@ class _PriceSeatColumn extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           value,
-          style: ClientTypography.headingSmall(context).copyWith(
-            color: ClientColors.textPrimaryFor(context),
-          ),
+          style: ClientTypography.headingSmall(
+            context,
+          ).copyWith(color: ClientColors.textPrimaryFor(context)),
         ),
       ],
     );
@@ -805,9 +716,9 @@ class _VehicleBottomBar extends StatelessWidget {
                 children: [
                   Text(
                     vehicle.price,
-                    style: ClientTypography.priceMedium(context).copyWith(
-                      color: ClientColors.textPrimaryFor(context),
-                    ),
+                    style: ClientTypography.priceMedium(
+                      context,
+                    ).copyWith(color: ClientColors.textPrimaryFor(context)),
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -834,73 +745,6 @@ class _VehicleBottomBar extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _WhitePill extends StatelessWidget {
-  const _WhitePill({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(40),
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: Colors.white.withAlpha(55)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: ClientColors.textInverse, size: 16),
-          const SizedBox(width: 7),
-          Text(
-            label,
-            style: const TextStyle(
-              color: ClientColors.textInverse,
-              fontWeight: FontWeight.w900,
-              fontSize: 12,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HeroInfoChip extends StatelessWidget {
-  const _HeroInfoChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(34),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: ClientColors.textInverse, size: 15),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: const TextStyle(
-              color: ClientColors.textInverse,
-              fontWeight: FontWeight.w800,
-              fontSize: 12,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -986,17 +830,17 @@ class _VehicleErrorView extends StatelessWidget {
                 Text(
                   'لم نتمكن من تحميل تفاصيل العربية',
                   textAlign: TextAlign.center,
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: ClientTypography.bodyMedium(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodyMedium(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
               ],
             ),
@@ -1017,9 +861,9 @@ class _VehicleEmptyView extends StatelessWidget {
       body: Center(
         child: Text(
           'لم يتم العثور على العربية',
-          style: ClientTypography.bodyMedium(context).copyWith(
-            color: ClientColors.textSecondaryFor(context),
-          ),
+          style: ClientTypography.bodyMedium(
+            context,
+          ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
       ),
     );

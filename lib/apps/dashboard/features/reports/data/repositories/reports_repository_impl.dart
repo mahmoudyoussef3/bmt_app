@@ -15,7 +15,11 @@ class ReportsRepositoryImpl implements ReportsRepository {
   }
 
   @override
-  Future<String> exportReport(ReportType type, ReportFilter filter, String format) async {
+  Future<String> exportReport(
+    ReportType type,
+    ReportFilter filter,
+    String format,
+  ) async {
     // 1. Get real data
     final data = await _datasource.getReportData(type, filter);
 
@@ -51,14 +55,18 @@ class ReportsRepositoryImpl implements ReportsRepository {
   }
 
   @override
-  Future<List<String>> getAvailableRoutes() async => _datasource.getAvailableRoutes();
+  Future<List<String>> getAvailableRoutes() async =>
+      _datasource.getAvailableRoutes();
 
   @override
-  Future<List<String>> getAvailableDrivers() async => _datasource.getAvailableDrivers();
+  Future<List<String>> getAvailableDrivers() async =>
+      _datasource.getAvailableDrivers();
 
   @override
-  Future<List<String>> getAvailableVehicles() async => _datasource.getAvailableVehicles();
+  Future<List<String>> getAvailableVehicles() async =>
+      _datasource.getAvailableVehicles();
 
   @override
-  Future<List<String>> getAvailablePackages() async => _datasource.getAvailablePackages();
+  Future<List<String>> getAvailablePackages() async =>
+      _datasource.getAvailablePackages();
 }

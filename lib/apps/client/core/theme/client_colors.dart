@@ -67,37 +67,29 @@ abstract final class ClientColors {
   // ── Theme-aware accessors ──────────────────────────────────────────────────
 
   /// Returns the theme-appropriate surface color.
-  static Color surfaceFor(BuildContext context) => _isDark(context)
-      ? _darkSurface
-      : surface;
+  static Color surfaceFor(BuildContext context) =>
+      _isDark(context) ? _darkSurface : surface;
 
-  static Color surfaceSubtleFor(BuildContext context) => _isDark(context)
-      ? _darkSurfaceSubtle
-      : surfaceSubtle;
+  static Color surfaceSubtleFor(BuildContext context) =>
+      _isDark(context) ? _darkSurfaceSubtle : surfaceSubtle;
 
-  static Color surfaceMutedFor(BuildContext context) => _isDark(context)
-      ? _darkSurfaceMuted
-      : surfaceMuted;
+  static Color surfaceMutedFor(BuildContext context) =>
+      _isDark(context) ? _darkSurfaceMuted : surfaceMuted;
 
-  static Color borderFor(BuildContext context) => _isDark(context)
-      ? _darkBorder
-      : border;
+  static Color borderFor(BuildContext context) =>
+      _isDark(context) ? _darkBorder : border;
 
-  static Color borderStrongFor(BuildContext context) => _isDark(context)
-      ? _darkBorderStrong
-      : borderStrong;
+  static Color borderStrongFor(BuildContext context) =>
+      _isDark(context) ? _darkBorderStrong : borderStrong;
 
-  static Color textPrimaryFor(BuildContext context) => _isDark(context)
-      ? _darkTextPrimary
-      : textPrimary;
+  static Color textPrimaryFor(BuildContext context) =>
+      _isDark(context) ? _darkTextPrimary : textPrimary;
 
-  static Color textSecondaryFor(BuildContext context) => _isDark(context)
-      ? _darkTextSecondary
-      : textSecondary;
+  static Color textSecondaryFor(BuildContext context) =>
+      _isDark(context) ? _darkTextSecondary : textSecondary;
 
-  static Color textTertiaryFor(BuildContext context) => _isDark(context)
-      ? _darkTextTertiary
-      : textTertiary;
+  static Color textTertiaryFor(BuildContext context) =>
+      _isDark(context) ? _darkTextTertiary : textTertiary;
 
   static bool _isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;
@@ -112,40 +104,34 @@ abstract final class ClientColors {
   ) {
     return switch (status) {
       ClientJourneyStatus.active => (
-          bg: journeyGreenLight,
-          fg: onJourneyGreen,
-          label: journeyGreen,
-        ),
+        bg: journeyGreenLight,
+        fg: onJourneyGreen,
+        label: journeyGreen,
+      ),
       ClientJourneyStatus.upcoming => (
-          bg: primaryLight,
-          fg: primary,
-          label: primary,
-        ),
+        bg: primaryLight,
+        fg: primary,
+        label: primary,
+      ),
       ClientJourneyStatus.departing => (
-          bg: journeyAmberLight,
-          fg: onJourneyAmber,
-          label: journeyAmber,
-        ),
+        bg: journeyAmberLight,
+        fg: onJourneyAmber,
+        label: journeyAmber,
+      ),
       ClientJourneyStatus.completed => (
-          bg: journeySlateLight,
-          fg: onJourneySlate,
-          label: journeySlate,
-        ),
+        bg: journeySlateLight,
+        fg: onJourneySlate,
+        label: journeySlate,
+      ),
       ClientJourneyStatus.cancelled => (
-          bg: journeyRedLight,
-          fg: onJourneyRed,
-          label: journeyRed,
-        ),
+        bg: journeyRedLight,
+        fg: onJourneyRed,
+        label: journeyRed,
+      ),
     };
   }
 }
 
 /// The five lifecycle states a trip or booking can be in from the passenger's
 /// perspective. Maps to the color pairs returned by [ClientColors.journeyBadge].
-enum ClientJourneyStatus {
-  active,
-  upcoming,
-  departing,
-  completed,
-  cancelled,
-}
+enum ClientJourneyStatus { active, upcoming, departing, completed, cancelled }

@@ -43,14 +43,24 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
     _price = TextEditingController(text: e?.price.toStringAsFixed(0) ?? '');
     _days = TextEditingController(text: (e?.days ?? 30).toString());
     _trips = TextEditingController(text: (e?.tripsCount ?? 0).toString());
-    _discount = TextEditingController(text: (e?.discountPercent ?? 0).toString());
+    _discount = TextEditingController(
+      text: (e?.discountPercent ?? 0).toString(),
+    );
     _description = TextEditingController(text: e?.description ?? '');
     _status = e?.status ?? PlanStatus.active;
   }
 
   @override
   void dispose() {
-    for (final c in [_title, _subtitle, _price, _days, _trips, _discount, _description]) {
+    for (final c in [
+      _title,
+      _subtitle,
+      _price,
+      _days,
+      _trips,
+      _discount,
+      _description,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -75,7 +85,9 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
                   children: [
                     Expanded(child: _field(_days, 'المدة (يوم)', number: true)),
                     const SizedBox(width: AppSpacing.small),
-                    Expanded(child: _field(_trips, 'عدد الرحلات', number: true)),
+                    Expanded(
+                      child: _field(_trips, 'عدد الرحلات', number: true),
+                    ),
                   ],
                 ),
                 _field(_discount, 'نسبة الخصم %', number: true),
@@ -121,7 +133,10 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
         controller: c,
         keyboardType: number ? TextInputType.number : TextInputType.text,
         maxLines: lines,
-        decoration: InputDecoration(labelText: label, border: const OutlineInputBorder()),
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
         validator: required
             ? (v) => (v == null || v.trim().isEmpty) ? 'مطلوب' : null
             : null,

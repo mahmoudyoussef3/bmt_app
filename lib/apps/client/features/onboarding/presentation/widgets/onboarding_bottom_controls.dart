@@ -42,7 +42,7 @@ class OnboardingBottomControls extends StatelessWidget {
               );
             }),
           ),
-          
+
           // Next/Get Started Button
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
@@ -50,7 +50,10 @@ class OnboardingBottomControls extends StatelessWidget {
                 ? ElevatedButton(
                     key: const ValueKey('get_started'),
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),

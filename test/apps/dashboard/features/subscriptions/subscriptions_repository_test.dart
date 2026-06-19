@@ -10,32 +10,32 @@ import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/ge
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/get_subscriptions_usecase.dart';
 
 UserSubscription _sub(String id, SubscriptionStatus status) => UserSubscription(
-      id: id,
-      userId: 'usr-$id',
-      userName: 'أحمد محمد',
-      userPhone: '01000000000',
-      tripId: '',
-      routeId: '',
-      routeName: 'الباقة الشهرية',
-      fromPointId: '',
-      fromPointName: '',
-      toPointId: '',
-      toPointName: '',
-      type: SubscriptionType.monthly,
-      price: 550,
-      currency: 'ج.م',
-      totalRides: 0,
-      usedRides: 0,
-      remainingRides: 0,
-      paidAmount: 550,
-      remainingAmount: 0,
-      renewalsCount: 1,
-      startDate: DateTime(2026, 6, 1),
-      endDate: DateTime(2026, 6, 30),
-      status: status,
-      createdAt: DateTime(2026, 6, 1),
-      updatedAt: DateTime(2026, 6, 1),
-    );
+  id: id,
+  userId: 'usr-$id',
+  userName: 'أحمد محمد',
+  userPhone: '01000000000',
+  tripId: '',
+  routeId: '',
+  routeName: 'الباقة الشهرية',
+  fromPointId: '',
+  fromPointName: '',
+  toPointId: '',
+  toPointName: '',
+  type: SubscriptionType.monthly,
+  price: 550,
+  currency: 'ج.م',
+  totalRides: 0,
+  usedRides: 0,
+  remainingRides: 0,
+  paidAmount: 550,
+  remainingAmount: 0,
+  renewalsCount: 1,
+  startDate: DateTime(2026, 6, 1),
+  endDate: DateTime(2026, 6, 30),
+  status: status,
+  createdAt: DateTime(2026, 6, 1),
+  updatedAt: DateTime(2026, 6, 1),
+);
 
 class _FakeSubscriptionsDatasource implements SubscriptionsDatasource {
   final List<UserSubscription> _items = [
@@ -61,20 +61,17 @@ class _FakeSubscriptionsDatasource implements SubscriptionsDatasource {
 
   @override
   Future<UserSubscription> cancelSubscription(String id) async {
-    final updated =
-        _items.firstWhere((s) => s.id == id).copyWith(
-              status: SubscriptionStatus.cancelled,
-            );
+    final updated = _items
+        .firstWhere((s) => s.id == id)
+        .copyWith(status: SubscriptionStatus.cancelled);
     _items[_items.indexWhere((s) => s.id == id)] = updated;
     return updated;
   }
 
   @override
-  Future<UserSubscription> renewSubscription(String id) async =>
-      _items.firstWhere((s) => s.id == id).copyWith(
-            status: SubscriptionStatus.active,
-            renewalsCount: 2,
-          );
+  Future<UserSubscription> renewSubscription(String id) async => _items
+      .firstWhere((s) => s.id == id)
+      .copyWith(status: SubscriptionStatus.active, renewalsCount: 2);
 
   @override
   Future<UserSubscription> markRideUsed(String id) async =>
@@ -117,7 +114,8 @@ class _FailingDatasource implements SubscriptionsDatasource {
   @override
   Future<UserSubscription> markRideUsed(String id) => throw StateError('x');
   @override
-  Future<UserSubscription> renewSubscription(String id) => throw StateError('x');
+  Future<UserSubscription> renewSubscription(String id) =>
+      throw StateError('x');
 }
 
 void main() {

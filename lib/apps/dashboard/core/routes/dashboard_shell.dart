@@ -286,7 +286,9 @@ class _DashboardShellState extends State<DashboardShell> {
   bool _openRoute(String route) {
     if (!_canOpenRoute(route)) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations.of(context)!.dashboard_unauthorized)),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.dashboard_unauthorized),
+        ),
       );
       return false;
     }
@@ -430,7 +432,9 @@ class _DashboardSidebar extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest.withAlpha(80),
-          border: BorderDirectional(end: BorderSide(color: scheme.outline.withAlpha(80))),
+          border: BorderDirectional(
+            end: BorderSide(color: scheme.outline.withAlpha(80)),
+          ),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.medium),
@@ -463,9 +467,7 @@ class _DashboardSidebar extends StatelessWidget {
 
   Widget _buildNavList(BuildContext context) {
     final topLevel = items.where((i) => i.group == null);
-    final children = <Widget>[
-      for (final item in topLevel) _navButton(item),
-    ];
+    final children = <Widget>[for (final item in topLevel) _navButton(item)];
 
     for (final group in _navGroupOrder) {
       final groupItems = items.where((i) => i.group == group).toList();
@@ -557,7 +559,9 @@ class _DashboardTopBar extends StatelessWidget {
             child: Text(title, style: Theme.of(context).textTheme.titleLarge),
           ),
           IconButton(
-            tooltip: isDark ? AppLocalizations.of(context)!.dashboard_lightMode : AppLocalizations.of(context)!.dashboard_darkMode,
+            tooltip: isDark
+                ? AppLocalizations.of(context)!.dashboard_lightMode
+                : AppLocalizations.of(context)!.dashboard_darkMode,
             onPressed: () {
               context.read<DashboardThemeCubit>().setThemeMode(
                 isDark ? ThemeMode.light : ThemeMode.dark,

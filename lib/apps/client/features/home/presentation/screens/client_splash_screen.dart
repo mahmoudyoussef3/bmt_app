@@ -73,10 +73,7 @@ class _ClientSplashScreenState extends State<ClientSplashScreen>
             // Wordmark
             FadeTransition(
               opacity: _wordmarkOpacity,
-              child: ScaleTransition(
-                scale: _wordmarkScale,
-                child: _Wordmark(),
-              ),
+              child: ScaleTransition(scale: _wordmarkScale, child: _Wordmark()),
             ),
 
             const SizedBox(height: 16),
@@ -151,10 +148,9 @@ class _Wordmark extends StatelessWidget {
               ),
               TextSpan(
                 text: 'Way',
-                style: ClientTypography.displayMedium(context).copyWith(
-                  color: ClientColors.primary,
-                  height: 1,
-                ),
+                style: ClientTypography.displayMedium(
+                  context,
+                ).copyWith(color: ClientColors.primary, height: 1),
               ),
             ],
           ),

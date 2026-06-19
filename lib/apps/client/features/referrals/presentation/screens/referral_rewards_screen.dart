@@ -549,14 +549,14 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
     final milestoneLabel = current == 0
         ? 'First Referral Milestone'
         : remaining == 0
-            ? 'Milestone Reached!'
-            : 'Next Referral Milestone';
+        ? 'Milestone Reached!'
+        : 'Next Referral Milestone';
 
     final milestoneDesc = current == 0
         ? 'Invite $target friends to unlock your first referral bonus.'
         : remaining == 0
-            ? 'Great work! You have reached the current milestone.'
-            : 'Invite $remaining more friend${remaining == 1 ? '' : 's'} to unlock your next reward.';
+        ? 'Great work! You have reached the current milestone.'
+        : 'Invite $remaining more friend${remaining == 1 ? '' : 's'} to unlock your next reward.';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -1005,8 +1005,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                       decoration: BoxDecoration(
                         color: scheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: scheme.outline.withAlpha(45)),
+                        border: Border.all(color: scheme.outline.withAlpha(45)),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1078,8 +1077,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                 scheme,
                 number: '1',
                 title: 'Share your code',
-                subtitle:
-                    'Send your unique code to friends via any channel.',
+                subtitle: 'Send your unique code to friends via any channel.',
                 color: scheme.primary,
               ),
               const SizedBox(height: 12),
@@ -1418,7 +1416,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    hasBalance ? 'EGP $_walletBalance available' : 'No balance yet',
+                    hasBalance
+                        ? 'EGP $_walletBalance available'
+                        : 'No balance yet',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,

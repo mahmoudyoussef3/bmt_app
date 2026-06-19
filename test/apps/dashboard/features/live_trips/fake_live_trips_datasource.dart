@@ -282,6 +282,20 @@ class FakeLiveTripsDatasource implements LiveTripsDatasource {
     );
   }
 
+  @override
+  Stream<VehiclePosition> watchVehiclePosition(String tripId) async* {
+    final trip = _findTrip(tripId);
+    final point = trip.routePoints.elementAt(
+      trip.currentPointIndex.clamp(0, trip.routePoints.length - 1),
+    );
+    yield VehiclePosition(
+      latitude: point.latitude,
+      longitude: point.longitude,
+      speed: 8,
+      updatedAt: DateTime.now(),
+    );
+  }
+
   LiveTrip _findTrip(String tripId) {
     return _trips.firstWhere(
       (trip) => trip.id == tripId,

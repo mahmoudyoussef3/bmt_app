@@ -30,8 +30,7 @@ class SupabaseReferralRewardsDatasource {
     final accountData = results[0] as Map<String, dynamic>?;
     final rewardsData = results[1] as List<dynamic>;
 
-    final walletBalance =
-        accountData?['wallet_balance'] as int? ?? 0;
+    final walletBalance = accountData?['wallet_balance'] as int? ?? 0;
 
     // Referral history — safe fetch; table may not exist yet.
     List<ReferralHistoryItem> history = [];
@@ -69,8 +68,7 @@ class SupabaseReferralRewardsDatasource {
     }
 
     // Derive a deterministic referral code from the user's UUID.
-    final codeBase =
-        user.id.replaceAll('-', '').toUpperCase().substring(0, 8);
+    final codeBase = user.id.replaceAll('-', '').toUpperCase().substring(0, 8);
     final referralCode = 'BMT-$codeBase';
 
     // Map loyalty_rewards catalog items to scratch vouchers so the
@@ -107,8 +105,18 @@ class SupabaseReferralRewardsDatasource {
     try {
       final dt = DateTime.parse(iso);
       const months = [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
       ];
       return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
     } catch (_) {

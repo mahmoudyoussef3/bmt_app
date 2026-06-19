@@ -16,26 +16,26 @@ void main() {
 
   testWidgets('loading shows a progress indicator', (tester) async {
     await tester.pumpWidget(
-      _host(const AsyncStateView(
-        status: AsyncViewStatus.loading,
-        child: data,
-      )),
+      _host(const AsyncStateView(status: AsyncViewStatus.loading, child: data)),
     );
 
     expect(find.byType(CircularProgressIndicator), findsOneWidget);
     expect(find.text('المحتوى'), findsNothing);
   });
 
-  testWidgets('error shows message and retry that fires callback',
-      (tester) async {
+  testWidgets('error shows message and retry that fires callback', (
+    tester,
+  ) async {
     var retried = false;
     await tester.pumpWidget(
-      _host(AsyncStateView(
-        status: AsyncViewStatus.error,
-        errorMessage: 'فشل التحميل',
-        onRetry: () => retried = true,
-        child: data,
-      )),
+      _host(
+        AsyncStateView(
+          status: AsyncViewStatus.error,
+          errorMessage: 'فشل التحميل',
+          onRetry: () => retried = true,
+          child: data,
+        ),
+      ),
     );
 
     expect(find.text('فشل التحميل'), findsOneWidget);
@@ -45,10 +45,7 @@ void main() {
 
   testWidgets('error without onRetry hides the retry button', (tester) async {
     await tester.pumpWidget(
-      _host(const AsyncStateView(
-        status: AsyncViewStatus.error,
-        child: data,
-      )),
+      _host(const AsyncStateView(status: AsyncViewStatus.error, child: data)),
     );
 
     expect(find.text('إعادة المحاولة'), findsNothing);
@@ -56,12 +53,17 @@ void main() {
 
   testWidgets('empty shows title and optional action', (tester) async {
     await tester.pumpWidget(
-      _host(AsyncStateView(
-        status: AsyncViewStatus.empty,
-        emptyTitle: 'لا توجد بيانات',
-        emptyAction: FilledButton(onPressed: () {}, child: const Text('إضافة')),
-        child: data,
-      )),
+      _host(
+        AsyncStateView(
+          status: AsyncViewStatus.empty,
+          emptyTitle: 'لا توجد بيانات',
+          emptyAction: FilledButton(
+            onPressed: () {},
+            child: const Text('إضافة'),
+          ),
+          child: data,
+        ),
+      ),
     );
 
     expect(find.text('لا توجد بيانات'), findsOneWidget);
@@ -70,10 +72,7 @@ void main() {
 
   testWidgets('data renders the child', (tester) async {
     await tester.pumpWidget(
-      _host(const AsyncStateView(
-        status: AsyncViewStatus.data,
-        child: data,
-      )),
+      _host(const AsyncStateView(status: AsyncViewStatus.data, child: data)),
     );
 
     expect(find.text('المحتوى'), findsOneWidget);

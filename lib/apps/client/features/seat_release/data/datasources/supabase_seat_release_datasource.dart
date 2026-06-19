@@ -1,26 +1,33 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/seat_release_data.dart';
 
-class SupabaseSeatReleaseDatasource {
+abstract class SeatReleaseDatasource {
+  Future<SeatReleaseData> getSeatReleaseData();
+}
+
+class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
   const SupabaseSeatReleaseDatasource(this._client);
 
   final SupabaseClient _client;
 
+  @override
   Future<SeatReleaseData> getSeatReleaseData() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return _empty();
 
     final today = DateTime.now();
     final todayStr = today.toIso8601String().substring(0, 10);
-    final monthStart =
-        DateTime(today.year, today.month, 1).toIso8601String().substring(0, 10);
+    final monthStart = DateTime(
+      today.year,
+      today.month,
+      1,
+    ).toIso8601String().substring(0, 10);
 
     final results = await Future.wait([
       // Active subscription
       _client
           .from('subscriptions')
-          .select(
-              'package_name, route_name, start_date, end_date, status')
+          .select('package_name, route_name, start_date, end_date, status')
           .eq('client_id', userId)
           .eq('status', 'active')
           .order('created_at', ascending: false)
@@ -30,7 +37,9 @@ class SupabaseSeatReleaseDatasource {
       // Upcoming confirmed bookings
       _client
           .from('operation_bookings')
-          .select('id, trip_date, trip_time, route, seat, status, assigned_trip')
+          .select(
+            'id, trip_date, trip_time, route, seat, status, assigned_trip',
+          )
           .eq('client_id', userId)
           .inFilter('status', [
             'confirmed',
@@ -115,7 +124,15 @@ class SupabaseSeatReleaseDatasource {
       final diff = target.difference(today).inDays;
       if (diff == 0) return 'اليوم';
       if (diff == 1) return 'غداً';
-      const days = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+      const days = [
+        'الأحد',
+        'الإثنين',
+        'الثلاثاء',
+        'الأربعاء',
+        'الخميس',
+        'الجمعة',
+        'السبت',
+      ];
       return '${days[d.weekday % 7]} ${d.day}/${d.month}';
     } catch (_) {
       return isoDate;

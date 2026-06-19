@@ -59,8 +59,9 @@ void main() {
     expect(find.text('لا يوجد سائقون'), findsOneWidget);
   });
 
-  testWidgets('renders without exception inside unbounded scroll host',
-      (tester) async {
+  testWidgets('renders without exception inside unbounded scroll host', (
+    tester,
+  ) async {
     await tester.pumpWidget(
       _host(
         scroll: true,

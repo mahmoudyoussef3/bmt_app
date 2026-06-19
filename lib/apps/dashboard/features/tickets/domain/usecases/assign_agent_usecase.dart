@@ -5,7 +5,11 @@ class AssignAgentUseCase {
   final TicketsRepository _repository;
   const AssignAgentUseCase(this._repository);
 
-  Future<SupportTicket> call(String ticketId, String agentId, String agentName) {
+  Future<SupportTicket> call(
+    String ticketId,
+    String agentId,
+    String agentName,
+  ) {
     return _repository.assignAgent(ticketId, agentId, agentName);
   }
 }

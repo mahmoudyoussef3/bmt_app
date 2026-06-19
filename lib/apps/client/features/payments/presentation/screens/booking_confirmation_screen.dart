@@ -80,9 +80,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                   const SizedBox(width: 8),
                   Text(
                     'Booking',
-                    style: ClientTypography.headingSmall(context).copyWith(
-                      color: ClientColors.textPrimaryFor(context),
-                    ),
+                    style: ClientTypography.headingSmall(
+                      context,
+                    ).copyWith(color: ClientColors.textPrimaryFor(context)),
                   ),
                 ],
               ),
@@ -141,16 +141,16 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
         const SizedBox(height: 18),
         Text(
           'Processing your booking...',
-          style: ClientTypography.headingSmall(context).copyWith(
-            color: ClientColors.textPrimaryFor(context),
-          ),
+          style: ClientTypography.headingSmall(
+            context,
+          ).copyWith(color: ClientColors.textPrimaryFor(context)),
         ),
         const SizedBox(height: 6),
         Text(
           'This should only take a moment',
-          style: ClientTypography.bodySmall(context).copyWith(
-            color: ClientColors.textSecondaryFor(context),
-          ),
+          style: ClientTypography.bodySmall(
+            context,
+          ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
       ],
     );
@@ -201,16 +201,16 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
           const SizedBox(height: 18),
           Text(
             'Booking Confirmed',
-            style: ClientTypography.headingLarge(context).copyWith(
-              color: ClientColors.textPrimaryFor(context),
-            ),
+            style: ClientTypography.headingLarge(
+              context,
+            ).copyWith(color: ClientColors.textPrimaryFor(context)),
           ),
           const SizedBox(height: 6),
           Text(
             'Your seat is reserved — confirmation below',
-            style: ClientTypography.bodySmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
           const SizedBox(height: 18),
           Container(
@@ -228,9 +228,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                   children: [
                     Text(
                       'Booking Reference',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                     Text(
                       bookingReference,
@@ -250,8 +250,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                       children: [
                         Text(
                           widget.destination,
-                          style: ClientTypography.headingSmall(context)
-                              .copyWith(fontWeight: FontWeight.w700),
+                          style: ClientTypography.headingSmall(
+                            context,
+                          ).copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 6),
                         Text(
@@ -273,9 +274,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                         ),
                         Text(
                           widget.departureTime,
-                          style: ClientTypography.bodyMedium(context).copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: ClientTypography.bodyMedium(
+                            context,
+                          ).copyWith(fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -291,9 +292,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                       backgroundColor: ClientColors.primaryLight,
                       child: Text(
                         driverInitials,
-                        style: ClientTypography.labelMedium(context).copyWith(
-                          color: ClientColors.primary,
-                        ),
+                        style: ClientTypography.labelMedium(
+                          context,
+                        ).copyWith(color: ClientColors.primary),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -302,9 +303,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                       children: [
                         Text(
                           widget.driver,
-                          style: ClientTypography.bodyMedium(context).copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: ClientTypography.bodyMedium(
+                            context,
+                          ).copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -322,9 +323,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                 const SizedBox(height: 10),
                 Text(
                   'Notes',
-                  style: ClientTypography.labelSmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.labelSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
                 const SizedBox(height: 6),
                 Text(

@@ -60,7 +60,9 @@ class SupabasePaymentsDatasource implements PaymentsDatasource {
     final currentNotes = (current['notes'] as List?)?.cast<String>() ?? [];
     await _client
         .from('operation_bookings')
-        .update({'notes': [note, ...currentNotes]})
+        .update({
+          'notes': [note, ...currentNotes],
+        })
         .eq('id', paymentId);
     final row = await _client
         .from('operation_bookings')
@@ -84,10 +86,10 @@ class SupabasePaymentsDatasource implements PaymentsDatasource {
 
   @override
   Future<void> reassignBooking(String bookingId, String newTripId) async {
-    await _client.rpc('reassign_booking', params: {
-      'p_booking_id': bookingId,
-      'p_new_trip_id': newTripId,
-    });
+    await _client.rpc(
+      'reassign_booking',
+      params: {'p_booking_id': bookingId, 'p_new_trip_id': newTripId},
+    );
   }
 
   FinancePaymentModel _fromRow(Map<String, dynamic> r) {
@@ -112,11 +114,10 @@ class SupabasePaymentsDatasource implements PaymentsDatasource {
       paidAt: _formatDate(r['created_at'] as String?),
       status: status,
       user: '${r['passenger_name'] ?? ''} - ${r['phone'] ?? ''}',
-      trip: routeName.isNotEmpty
-          ? '$routeName  $tripDate  $depTime'
-          : tripDate,
+      trip: routeName.isNotEmpty ? '$routeName  $tripDate  $depTime' : tripDate,
       packageName: 'رحلة مفردة',
-      referenceNumber: details['reference'] as String? ??
+      referenceNumber:
+          details['reference'] as String? ??
           (r['id'] as String).substring(0, 8).toUpperCase(),
       receiptLabel: _receiptLabel(method),
       receiptMeta: _receiptMeta(receiptUrl),
@@ -136,32 +137,32 @@ class SupabasePaymentsDatasource implements PaymentsDatasource {
 
   PaymentReviewStatus _statusFromDb(String s) => switch (s) {
     'paymentUploaded' || 'underReview' => PaymentReviewStatus.pendingReview,
-    'requestReupload'                  => PaymentReviewStatus.needsReview,
-    'approved' || 'confirmed'          => PaymentReviewStatus.accepted,
-    'rejected'                         => PaymentReviewStatus.rejected,
-    _                                  => PaymentReviewStatus.pendingReview,
+    'requestReupload' => PaymentReviewStatus.needsReview,
+    'approved' || 'confirmed' => PaymentReviewStatus.accepted,
+    'rejected' => PaymentReviewStatus.rejected,
+    _ => PaymentReviewStatus.pendingReview,
   };
 
   String _statusToDb(PaymentReviewStatus s) => switch (s) {
     PaymentReviewStatus.pendingReview => 'underReview',
-    PaymentReviewStatus.needsReview   => 'requestReupload',
-    PaymentReviewStatus.accepted      => 'approved',
-    PaymentReviewStatus.rejected      => 'rejected',
+    PaymentReviewStatus.needsReview => 'requestReupload',
+    PaymentReviewStatus.accepted => 'approved',
+    PaymentReviewStatus.rejected => 'rejected',
   };
 
   FinancePaymentMethod _methodFromDb(String m) => switch (m.toLowerCase()) {
     'card' || 'credit_card' || 'debit_card' => FinancePaymentMethod.card,
-    'wallet' || 'e_wallet'                  => FinancePaymentMethod.wallet,
-    'bank_transfer' || 'banktransfer'       => FinancePaymentMethod.bankTransfer,
-    'cash'                                  => FinancePaymentMethod.cash,
-    _                                       => FinancePaymentMethod.bankTransfer,
+    'wallet' || 'e_wallet' => FinancePaymentMethod.wallet,
+    'bank_transfer' || 'banktransfer' => FinancePaymentMethod.bankTransfer,
+    'cash' => FinancePaymentMethod.cash,
+    _ => FinancePaymentMethod.bankTransfer,
   };
 
   String _receiptLabel(FinancePaymentMethod m) => switch (m) {
-    FinancePaymentMethod.card         => 'إيصال دفع بطاقة',
-    FinancePaymentMethod.wallet       => 'لقطة شاشة محفظة',
+    FinancePaymentMethod.card => 'إيصال دفع بطاقة',
+    FinancePaymentMethod.wallet => 'لقطة شاشة محفظة',
     FinancePaymentMethod.bankTransfer => 'إيصال تحويل بنكي',
-    FinancePaymentMethod.cash         => 'إيصال نقدي',
+    FinancePaymentMethod.cash => 'إيصال نقدي',
   };
 
   String _receiptMeta(String? url) =>

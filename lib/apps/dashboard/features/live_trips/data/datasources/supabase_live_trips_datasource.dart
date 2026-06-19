@@ -96,7 +96,7 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
         results[0] as Map<String, dynamic>,
         includeDetails: true,
       );
-      final locRow = results[1] as Map<String, dynamic>?;
+      final locRow = results[1];
       if (locRow == null) return trip;
       return trip.copyWith(vehiclePosition: _mapPosition(locRow));
     } catch (e) {

@@ -5,7 +5,11 @@ class FormatUtil {
   const FormatUtil._();
 
   /// Formats currency based on the provided BuildContext's locale.
-  static String currency(BuildContext context, num value, {String symbol = 'EGP'}) {
+  static String currency(
+    BuildContext context,
+    num value, {
+    String symbol = 'EGP',
+  }) {
     final locale = Localizations.localeOf(context).languageCode;
     // Uses standard Arabic numerals (123) for standard formatting unless Eastern Arabic (١٢٣) is specifically requested later.
     final formatter = NumberFormat.currency(
@@ -31,6 +35,8 @@ class FormatUtil {
   /// Formats a number with appropriate thousands separators.
   static String number(BuildContext context, num value) {
     final locale = Localizations.localeOf(context).languageCode;
-    return NumberFormat.decimalPattern(locale == 'ar' ? 'ar_EG' : 'en_US').format(value);
+    return NumberFormat.decimalPattern(
+      locale == 'ar' ? 'ar_EG' : 'en_US',
+    ).format(value);
   }
 }

@@ -24,8 +24,9 @@ class SubscriptionPlansLoaded extends SubscriptionPlansState {
     this.actionMessage,
   });
 
-  double get monthlyRecurringRevenue =>
-      plans.where((p) => p.status == PlanStatus.active).fold(0, (s, p) => s + p.price);
+  double get monthlyRecurringRevenue => plans
+      .where((p) => p.status == PlanStatus.active)
+      .fold(0, (s, p) => s + p.price);
 
   SubscriptionPlansLoaded copyWith({
     List<SubscriptionPlan>? plans,
@@ -36,7 +37,9 @@ class SubscriptionPlansLoaded extends SubscriptionPlansState {
     return SubscriptionPlansLoaded(
       plans: plans ?? this.plans,
       mutating: mutating ?? this.mutating,
-      actionMessage: clearMessage ? null : (actionMessage ?? this.actionMessage),
+      actionMessage: clearMessage
+          ? null
+          : (actionMessage ?? this.actionMessage),
     );
   }
 }

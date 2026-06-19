@@ -28,7 +28,11 @@ class FleetPendingDocsUploader {
         final path =
             '$ownerFolder/$ownerId/$typeFolder/${DateTime.now().millisecondsSinceEpoch}_$fileName';
 
-        final url = await cubit.uploadDocumentFile('documents', path, doc.bytes);
+        final url = await cubit.uploadDocumentFile(
+          'documents',
+          path,
+          doc.bytes,
+        );
         if (url == null || url.isEmpty) {
           failed.add(doc.type.label);
           continue;

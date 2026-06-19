@@ -73,10 +73,7 @@ class _FleetDocumentsInlineSectionState
           ),
           const SizedBox(height: AppSpacing.medium),
           if (widget.existingDocuments.isNotEmpty) ...[
-            Text(
-              'وثائق محفوظة',
-              style: Theme.of(context).textTheme.labelLarge,
-            ),
+            Text('وثائق محفوظة', style: Theme.of(context).textTheme.labelLarge),
             const SizedBox(height: AppSpacing.small),
             Wrap(
               spacing: AppSpacing.small,
@@ -120,7 +117,9 @@ class _FleetDocumentsInlineSectionState
                           children: [
                             Text(
                               doc.type.label,
-                              style: const TextStyle(fontWeight: FontWeight.w900),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                             Text(
                               '${doc.fileName} · ${doc.expiryDate}',
@@ -134,10 +133,7 @@ class _FleetDocumentsInlineSectionState
                       IconButton(
                         tooltip: 'إزالة',
                         onPressed: () => _removeAt(i),
-                        icon: Icon(
-                          Icons.close_rounded,
-                          color: scheme.error,
-                        ),
+                        icon: Icon(Icons.close_rounded, color: scheme.error),
                       ),
                     ],
                   ),

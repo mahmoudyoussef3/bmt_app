@@ -28,10 +28,10 @@ class SupabaseIncidentDatasource implements IncidentDatasource {
 
   String _typeToDb(IncidentType type) => switch (type) {
     IncidentType.passengerIssue => 'passenger_issue',
-    IncidentType.vehicleIssue   => 'vehicle_issue',
-    IncidentType.delay          => 'delay',
-    IncidentType.emergency      => 'emergency',
-    IncidentType.routeBlockage  => 'route_blockage',
-    IncidentType.other          => 'other',
+    IncidentType.vehicleIssue => 'vehicle_issue',
+    IncidentType.delay => 'delay',
+    IncidentType.emergency => 'emergency',
+    IncidentType.routeBlockage => 'route_blockage',
+    IncidentType.other => 'other',
   };
 }

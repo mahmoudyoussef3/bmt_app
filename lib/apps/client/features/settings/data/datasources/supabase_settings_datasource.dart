@@ -1,11 +1,16 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/settings_data.dart';
 
-class SupabaseSettingsDatasource {
+abstract class SettingsDatasource {
+  Future<SettingsData> getSettingsData();
+}
+
+class SupabaseSettingsDatasource implements SettingsDatasource {
   const SupabaseSettingsDatasource(this._client);
 
   final SupabaseClient _client;
 
+  @override
   Future<SettingsData> getSettingsData() async {
     final user = _client.auth.currentUser;
     if (user == null) return _defaultSettings();
@@ -21,7 +26,8 @@ class SupabaseSettingsDatasource {
     return SettingsData(
       selectedLanguage: meta['language'] as String? ?? 'ar',
       selectedTheme: meta['theme'] as String? ?? 'system',
-      userName: profile?['full_name'] as String? ??
+      userName:
+          profile?['full_name'] as String? ??
           meta['full_name'] as String? ??
           '',
       userEmail: profile?['email'] as String? ?? user.email ?? '',
@@ -42,7 +48,8 @@ class SupabaseSettingsDatasource {
   }
 
   Map<String, Map<String, bool>> _extractNotificationSettings(
-      Map<String, dynamic> meta) {
+    Map<String, dynamic> meta,
+  ) {
     final raw = meta['notification_settings'];
     if (raw is Map) {
       try {

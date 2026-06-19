@@ -116,9 +116,21 @@ class BookingsAnalytics extends StatelessWidget {
       }
     }
     return [
-      ChartDatum(label: 'مدفوع', value: paid.toDouble(), color: const Color(0xFF16A34A)),
-      ChartDatum(label: 'قيد التحصيل', value: pending.toDouble(), color: const Color(0xFFF59E0B)),
-      ChartDatum(label: 'ملغي/مرفوض', value: cancelled.toDouble(), color: const Color(0xFFDC2626)),
+      ChartDatum(
+        label: 'مدفوع',
+        value: paid.toDouble(),
+        color: const Color(0xFF16A34A),
+      ),
+      ChartDatum(
+        label: 'قيد التحصيل',
+        value: pending.toDouble(),
+        color: const Color(0xFFF59E0B),
+      ),
+      ChartDatum(
+        label: 'ملغي/مرفوض',
+        value: cancelled.toDouble(),
+        color: const Color(0xFFDC2626),
+      ),
     ];
   }
 
@@ -158,13 +170,13 @@ class BookingsAnalytics extends StatelessWidget {
   }
 
   Color _statusColor(BookingStatus status) => switch (status) {
-        BookingStatus.newRequest => const Color(0xFF06B6D4),
-        BookingStatus.paymentUploaded => const Color(0xFF0EA5E9),
-        BookingStatus.underReview => const Color(0xFFF59E0B),
-        BookingStatus.approved => const Color(0xFF22C55E),
-        BookingStatus.confirmed => const Color(0xFF16A34A),
-        BookingStatus.requestReupload => const Color(0xFFA855F7),
-        BookingStatus.rejected => const Color(0xFFDC2626),
-        BookingStatus.cancelled => const Color(0xFF64748B),
-      };
+    BookingStatus.newRequest => const Color(0xFF06B6D4),
+    BookingStatus.paymentUploaded => const Color(0xFF0EA5E9),
+    BookingStatus.underReview => const Color(0xFFF59E0B),
+    BookingStatus.approved => const Color(0xFF22C55E),
+    BookingStatus.confirmed => const Color(0xFF16A34A),
+    BookingStatus.requestReupload => const Color(0xFFA855F7),
+    BookingStatus.rejected => const Color(0xFFDC2626),
+    BookingStatus.cancelled => const Color(0xFF64748B),
+  };
 }

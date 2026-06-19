@@ -26,8 +26,9 @@ void main() {
   const master = Text('قائمة السائقين');
   const detail = Text('تفاصيل السائق');
 
-  testWidgets('desktop width shows master and detail side by side',
-      (tester) async {
+  testWidgets('desktop width shows master and detail side by side', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -43,8 +44,9 @@ void main() {
     expect(find.text('تفاصيل السائق'), findsOneWidget);
   });
 
-  testWidgets('desktop with no detail shows placeholder + master',
-      (tester) async {
+  testWidgets('desktop with no detail shows placeholder + master', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
@@ -75,20 +77,19 @@ void main() {
     expect(find.text('قائمة السائقين'), findsNothing);
   });
 
-  testWidgets('narrow width without detail shows master full width',
-      (tester) async {
+  testWidgets('narrow width without detail shows master full width', (
+    tester,
+  ) async {
     await tester.pumpWidget(
-      _host(
-        width: 700,
-        child: const MasterDetailLayout(master: master),
-      ),
+      _host(width: 700, child: const MasterDetailLayout(master: master)),
     );
 
     expect(find.text('قائمة السائقين'), findsOneWidget);
   });
 
-  testWidgets('split renders without exception under unbounded height host',
-      (tester) async {
+  testWidgets('split renders without exception under unbounded height host', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1400, 1000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);

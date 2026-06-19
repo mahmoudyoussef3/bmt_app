@@ -23,17 +23,18 @@ class SubscriptionPlansScreen extends StatelessWidget {
           c is SubscriptionPlansLoaded && c.actionMessage != null,
       listener: (context, state) {
         if (state is SubscriptionPlansLoaded && state.actionMessage != null) {
-          ScaffoldMessenger.of(context)
-              .showSnackBar(SnackBar(content: Text(state.actionMessage!)));
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.actionMessage!)));
         }
       },
       builder: (context, state) {
         return switch (state) {
           SubscriptionPlansLoading() => const DashboardLoading(),
           SubscriptionPlansError(:final message) => DashboardErrorState(
-              message: message,
-              onRetry: () => context.read<SubscriptionPlansCubit>().load(),
-            ),
+            message: message,
+            onRetry: () => context.read<SubscriptionPlansCubit>().load(),
+          ),
           SubscriptionPlansLoaded() => _LoadedView(state: state),
         };
       },
@@ -48,7 +49,9 @@ class _LoadedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<SubscriptionPlansCubit>();
-    final active = state.plans.where((p) => p.status == PlanStatus.active).length;
+    final active = state.plans
+        .where((p) => p.status == PlanStatus.active)
+        .length;
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [

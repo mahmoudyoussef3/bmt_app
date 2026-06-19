@@ -87,8 +87,8 @@ class TripCreationCubit extends Cubit<TripCreationState> {
       final friendly = msg.contains('driver_conflict')
           ? 'السائق لديه رحلة مجدولة بالفعل في هذا اليوم. يرجى اختيار سائق آخر أو تاريخ مختلف.'
           : msg.contains('vehicle_conflict')
-              ? 'المركبة مخصصة لرحلة أخرى في هذا اليوم. يرجى اختيار مركبة أخرى أو تاريخ مختلف.'
-              : msg;
+          ? 'المركبة مخصصة لرحلة أخرى في هذا اليوم. يرجى اختيار مركبة أخرى أو تاريخ مختلف.'
+          : msg;
       emit(TripCreationError(friendly));
       if (prev is TripCreationWizardDataLoaded) emit(prev);
       return null;

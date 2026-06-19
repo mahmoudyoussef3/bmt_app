@@ -34,8 +34,7 @@ class AsyncStateView extends StatelessWidget {
   Widget build(BuildContext context) {
     return switch (status) {
       AsyncViewStatus.loading =>
-        loadingPlaceholder ??
-            const Center(child: CircularProgressIndicator()),
+        loadingPlaceholder ?? const Center(child: CircularProgressIndicator()),
       AsyncViewStatus.error => _ErrorView(
         message: errorMessage,
         onRetry: onRetry,

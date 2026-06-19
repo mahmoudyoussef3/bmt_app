@@ -41,9 +41,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.06),
       end: Offset.zero,
-    ).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
-    );
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
 
     _controller.forward();
   }
@@ -153,10 +151,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 }
 
 class _HeroContent extends StatelessWidget {
-  const _HeroContent({
-    required this.scheme,
-    required this.compact,
-  });
+  const _HeroContent({required this.scheme, required this.compact});
 
   final ColorScheme scheme;
   final bool compact;
@@ -245,7 +240,7 @@ class _BrandHeader extends StatelessWidget {
           child: Image.asset(
             'assets/images/app_icon.png',
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Icon(
+            errorBuilder: (_, _, _) => Icon(
               Icons.directions_bus_rounded,
               color: scheme.primary,
               size: 28,
@@ -256,10 +251,10 @@ class _BrandHeader extends StatelessWidget {
         Text(
           'EasyWay',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: scheme.primary,
-                letterSpacing: -0.3,
-              ),
+            fontWeight: FontWeight.w900,
+            color: scheme.primary,
+            letterSpacing: -0.3,
+          ),
         ),
       ],
     );
@@ -301,9 +296,7 @@ class _RouteVisualCard extends StatelessWidget {
         children: [
           Positioned.fill(
             child: CustomPaint(
-              painter: _RouteLinePainter(
-                color: scheme.primary.withAlpha(135),
-              ),
+              painter: _RouteLinePainter(color: scheme.primary.withAlpha(135)),
             ),
           ),
           Positioned(
@@ -386,9 +379,9 @@ class _RouteNamePill extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: scheme.onSurface,
-                  ),
+                fontWeight: FontWeight.w900,
+                color: scheme.onSurface,
+              ),
             ),
           ),
         ],
@@ -432,9 +425,9 @@ class _MiniStatusCard extends StatelessWidget {
                   title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -442,9 +435,9 @@ class _MiniStatusCard extends StatelessWidget {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ],
             ),
@@ -503,19 +496,19 @@ class _ActionPanel extends StatelessWidget {
             'Start your journey now',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: scheme.onSurface,
-                ),
+              fontWeight: FontWeight.w900,
+              color: scheme.onSurface,
+            ),
           ),
           const SizedBox(height: 6),
           Text(
             'Log in or create a new account to benefit from all mobility services.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  height: 1.6,
-                  fontWeight: FontWeight.w600,
-                  color: scheme.onSurfaceVariant,
-                ),
+              height: 1.6,
+              fontWeight: FontWeight.w600,
+              color: scheme.onSurfaceVariant,
+            ),
           ),
           const SizedBox(height: 20),
           FilledButton(
@@ -528,10 +521,7 @@ class _ActionPanel extends StatelessWidget {
             ),
             child: Text(
               loginText,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
             ),
           ),
           const SizedBox(height: 12),
@@ -558,10 +548,10 @@ class _ActionPanel extends StatelessWidget {
             textAlign: TextAlign.center,
             text: TextSpan(
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    height: 1.65,
-                    fontWeight: FontWeight.w500,
-                  ),
+                color: scheme.onSurfaceVariant,
+                height: 1.65,
+                fontWeight: FontWeight.w500,
+              ),
               children: [
                 TextSpan(text: termsPrefix),
                 TextSpan(
@@ -620,9 +610,9 @@ class _FeaturePill extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: scheme.primary,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ],
       ),
@@ -642,10 +632,7 @@ class _WelcomeBackground extends StatelessWidget {
         gradient: RadialGradient(
           center: Alignment.topLeft,
           radius: 1.15,
-          colors: [
-            scheme.primary.withAlpha(30),
-            scheme.surface,
-          ],
+          colors: [scheme.primary.withAlpha(30), scheme.surface],
         ),
       ),
       child: Stack(
@@ -676,10 +663,7 @@ class _WelcomeBackground extends StatelessWidget {
 }
 
 class _SoftCircle extends StatelessWidget {
-  const _SoftCircle({
-    required this.size,
-    required this.color,
-  });
+  const _SoftCircle({required this.size, required this.color});
 
   final double size;
   final Color color;

@@ -11,10 +11,7 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 class SubscriptionScreen extends StatefulWidget {
-  const SubscriptionScreen({
-    super.key,
-    this.hasActiveSubscription = false,
-  });
+  const SubscriptionScreen({super.key, this.hasActiveSubscription = false});
 
   final bool hasActiveSubscription;
 
@@ -132,11 +129,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     }
 
     if (state is PackagesError) {
-      return Center(
-        child: ClientErrorCard.fullScreen(
-          message: state.message,
-        ),
-      );
+      return Center(child: ClientErrorCard.fullScreen(message: state.message));
     }
 
     final loaded = state as PackagesLoaded;
@@ -419,9 +412,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                               ),
                             ),
                             Text(
-                              AppLocalizations.of(
-                                context,
-                              )!.packages_percentOff(
+                              AppLocalizations.of(context)!.packages_percentOff(
                                 package.discountPercent.toInt(),
                               ),
                               style: TextStyle(
@@ -598,9 +589,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         _buildStickyCTA(
           label: AppLocalizations.of(context)!.packages_chooseRouteConfig,
           onPressed: () {
-            Navigator.of(
-              context,
-            ).pushNamed(ClientRoutes.bookingPopularRoutes);
+            Navigator.of(context).pushNamed(ClientRoutes.bookingPopularRoutes);
           },
           scheme: scheme,
         ),
@@ -1792,7 +1781,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         child: Row(
           children: [
             Expanded(
-              child: ClientButton(label: label, expand: true, onPressed: onPressed),
+              child: ClientButton(
+                label: label,
+                expand: true,
+                onPressed: onPressed,
+              ),
             ),
           ],
         ),

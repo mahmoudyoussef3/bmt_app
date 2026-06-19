@@ -85,10 +85,7 @@ void main() {
     test('clearFilters() clears dropdown filters and resets dates', () async {
       await cubit.load();
       // First update it with some filters
-      await cubit.updateFilter(
-        route: 'ROUTE-2',
-        driver: 'DRIVER-2',
-      );
+      await cubit.updateFilter(route: 'ROUTE-2', driver: 'DRIVER-2');
       var state = cubit.state as ReportsLoaded;
       expect(state.filter.routeCode, 'ROUTE-2');
 
@@ -99,15 +96,18 @@ void main() {
       expect(state.filter.driverName, isNull);
     });
 
-    test('triggerExport() sets exporting format and exported file name', () async {
-      await cubit.load();
-      await cubit.triggerExport('pdf');
+    test(
+      'triggerExport() sets exporting format and exported file name',
+      () async {
+        await cubit.load();
+        await cubit.triggerExport('pdf');
 
-      expect(cubit.state, isA<ReportsLoaded>());
-      final state = cubit.state as ReportsLoaded;
-      expect(state.exportingFormat, 'pdf');
-      expect(state.exportedFileName, contains('.pdf'));
-    });
+        expect(cubit.state, isA<ReportsLoaded>());
+        final state = cubit.state as ReportsLoaded;
+        expect(state.exportingFormat, 'pdf');
+        expect(state.exportedFileName, contains('.pdf'));
+      },
+    );
 
     test('clearExport() resets export variables', () async {
       await cubit.load();
@@ -127,17 +127,18 @@ class _MockReportsRepository implements ReportsRepository {
   @override
   Future<ReportData> getReportData(ReportType type, ReportFilter filter) async {
     return ReportData(
-      kpis: {
-        'type': type.name,
-        'إجمالي': '100',
-      },
+      kpis: {'type': type.name, 'إجمالي': '100'},
       rows: const [],
       trends: const [],
     );
   }
 
   @override
-  Future<String> exportReport(ReportType type, ReportFilter filter, String format) async {
+  Future<String> exportReport(
+    ReportType type,
+    ReportFilter filter,
+    String format,
+  ) async {
     return 'report_${type.name}_export.$format';
   }
 
@@ -148,8 +149,14 @@ class _MockReportsRepository implements ReportsRepository {
   Future<List<String>> getAvailableDrivers() async => ['DRIVER-1', 'DRIVER-2'];
 
   @override
-  Future<List<String>> getAvailableVehicles() async => ['VEHICLE-1', 'VEHICLE-2'];
+  Future<List<String>> getAvailableVehicles() async => [
+    'VEHICLE-1',
+    'VEHICLE-2',
+  ];
 
   @override
-  Future<List<String>> getAvailablePackages() async => ['PACKAGE-1', 'PACKAGE-2'];
+  Future<List<String>> getAvailablePackages() async => [
+    'PACKAGE-1',
+    'PACKAGE-2',
+  ];
 }

@@ -45,7 +45,8 @@ class SupabaseSupportDatasource {
     String? relatedBookingId,
     String? relatedTripId,
   }) async {
-    final ticketNumber = '#TK-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
+    final ticketNumber =
+        '#TK-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
 
     final insertData = {
       'client_id': _currentUserId,
@@ -79,7 +80,9 @@ class SupabaseSupportDatasource {
     return SupportTicketModel.fromJson(response);
   }
 
-  Future<List<SupportAttachmentModel>> getTicketAttachments(String ticketId) async {
+  Future<List<SupportAttachmentModel>> getTicketAttachments(
+    String ticketId,
+  ) async {
     final response = await _supabase
         .from('support_attachments')
         .select()
@@ -98,7 +101,9 @@ class SupabaseSupportDatasource {
 
     await _supabase.storage.from('support-attachments').upload(filePath, file);
 
-    final fileUrl = _supabase.storage.from('support-attachments').getPublicUrl(filePath);
+    final fileUrl = _supabase.storage
+        .from('support-attachments')
+        .getPublicUrl(filePath);
 
     final insertData = {
       'ticket_id': ticketId,

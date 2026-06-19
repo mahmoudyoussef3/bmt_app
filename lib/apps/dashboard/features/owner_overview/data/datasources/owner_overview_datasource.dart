@@ -11,7 +11,9 @@ class OwnerOverviewDatasource {
   Future<OwnerOverview> getOverview() async {
     final subs = await _client
         .from('subscriptions')
-        .select('status, total_price, total_revenue, renewals_count, package_name');
+        .select(
+          'status, total_price, total_revenue, renewals_count, package_name',
+        );
     final bookings = await _client
         .from('operation_bookings')
         .select('payment_amount, status, created_at');
@@ -53,7 +55,8 @@ class OwnerOverviewDatasource {
     var total = 0.0;
     for (final r in rows.cast<Map<String, dynamic>>()) {
       if (r['status'] == 'rejected' || r['status'] == 'cancelled') continue;
-      final amount = double.tryParse(r['payment_amount']?.toString() ?? '0') ?? 0;
+      final amount =
+          double.tryParse(r['payment_amount']?.toString() ?? '0') ?? 0;
       final date = DateTime.tryParse(r['created_at']?.toString() ?? '');
       switch (range) {
         case _Range.all:
@@ -81,10 +84,12 @@ class OwnerOverviewDatasource {
   List<OwnerRevenuePoint> _trend(List rows) {
     return rows.cast<Map<String, dynamic>>().map((r) {
       return OwnerRevenuePoint(
-        date: DateTime.tryParse(r['report_date']?.toString() ?? '') ??
+        date:
+            DateTime.tryParse(r['report_date']?.toString() ?? '') ??
             DateTime.now(),
         amount:
-            double.tryParse(r['total_bookings_revenue']?.toString() ?? '0') ?? 0,
+            double.tryParse(r['total_bookings_revenue']?.toString() ?? '0') ??
+            0,
       );
     }).toList();
   }
@@ -98,14 +103,17 @@ class OwnerOverviewDatasource {
       clients[plan] = (clients[plan] ?? 0) + 1;
       revenue[plan] = (revenue[plan] ?? 0) + price;
     }
-    final stats = clients.keys
-        .map((p) => OwnerPlanStat(
-              plan: p,
-              clients: clients[p] ?? 0,
-              revenue: revenue[p] ?? 0,
-            ))
-        .toList()
-      ..sort((a, b) => b.clients.compareTo(a.clients));
+    final stats =
+        clients.keys
+            .map(
+              (p) => OwnerPlanStat(
+                plan: p,
+                clients: clients[p] ?? 0,
+                revenue: revenue[p] ?? 0,
+              ),
+            )
+            .toList()
+          ..sort((a, b) => b.clients.compareTo(a.clients));
     return stats;
   }
 }

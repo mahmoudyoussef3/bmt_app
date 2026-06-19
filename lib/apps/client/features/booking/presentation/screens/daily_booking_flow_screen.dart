@@ -182,7 +182,9 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.booking_availableVehicles,
+                          AppLocalizations.of(
+                            context,
+                          )!.booking_availableVehicles,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 4),

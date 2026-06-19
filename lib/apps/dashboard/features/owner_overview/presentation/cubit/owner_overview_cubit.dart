@@ -7,8 +7,8 @@ class OwnerOverviewCubit extends Cubit<OwnerOverviewState> {
   final GetOwnerOverviewUseCase _getOverview;
 
   OwnerOverviewCubit({required GetOwnerOverviewUseCase getOverview})
-      : _getOverview = getOverview,
-        super(const OwnerOverviewLoading());
+    : _getOverview = getOverview,
+      super(const OwnerOverviewLoading());
 
   Future<void> load() async {
     emit(const OwnerOverviewLoading());

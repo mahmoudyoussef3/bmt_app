@@ -23,8 +23,10 @@ class CheckInDataSource {
     if (driver == null) throw Exception('Driver not authenticated');
 
     final connectivity = await Connectivity().checkConnectivity();
-    final offline = connectivity.contains(ConnectivityResult.none) ||
-        (connectivity.length == 1 && connectivity.first == ConnectivityResult.none);
+    final offline =
+        connectivity.contains(ConnectivityResult.none) ||
+        (connectivity.length == 1 &&
+            connectivity.first == ConnectivityResult.none);
 
     if (offline) {
       await _enqueue(tripId: tripId, bookingId: bookingId);
@@ -36,7 +38,11 @@ class CheckInDataSource {
       );
     }
 
-    return _callRpc(tripId: tripId, bookingId: bookingId, driverUserId: driver.id);
+    return _callRpc(
+      tripId: tripId,
+      bookingId: bookingId,
+      driverUserId: driver.id,
+    );
   }
 
   Future<int> flushOfflineQueue() async {
@@ -73,14 +79,19 @@ class CheckInDataSource {
     return (prefs.getStringList(_kQueueKey) ?? []).length;
   }
 
-  Future<void> _enqueue({required String tripId, required String bookingId}) async {
+  Future<void> _enqueue({
+    required String tripId,
+    required String bookingId,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final queue = prefs.getStringList(_kQueueKey) ?? [];
-    queue.add(jsonEncode({
-      'tripId': tripId,
-      'bookingId': bookingId,
-      'timestamp': DateTime.now().toIso8601String(),
-    }));
+    queue.add(
+      jsonEncode({
+        'tripId': tripId,
+        'bookingId': bookingId,
+        'timestamp': DateTime.now().toIso8601String(),
+      }),
+    );
     await prefs.setStringList(_kQueueKey, queue);
   }
 
@@ -100,11 +111,14 @@ class CheckInDataSource {
     }
 
     try {
-      final response = await _supabase.rpc('scan_passenger_ticket', params: {
-        'p_trip_id':    tripId,
-        'p_booking_id': bookingId,
-        'p_driver_id':  driverRecord['id'] as String,
-      });
+      final response = await _supabase.rpc(
+        'scan_passenger_ticket',
+        params: {
+          'p_trip_id': tripId,
+          'p_booking_id': bookingId,
+          'p_driver_id': driverRecord['id'] as String,
+        },
+      );
 
       return CheckInModel.fromRpcResponse(
         tripId: tripId,

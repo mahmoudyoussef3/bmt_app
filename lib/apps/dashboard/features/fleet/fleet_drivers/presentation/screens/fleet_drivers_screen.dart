@@ -176,7 +176,9 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           if (failed.isNotEmpty) {
             messenger.showSnackBar(
               SnackBar(
-                content: Text('تم حفظ السائق، لكن تعذّر رفع: ${failed.join('، ')}'),
+                content: Text(
+                  'تم حفظ السائق، لكن تعذّر رفع: ${failed.join('، ')}',
+                ),
               ),
             );
           }

@@ -37,7 +37,7 @@ class GlassmorphismCard extends StatelessWidget {
                 color: Colors.black.withValues(alpha: 0.1),
                 blurRadius: 30,
                 offset: const Offset(0, 10),
-              )
+              ),
             ],
           ),
           child: child,

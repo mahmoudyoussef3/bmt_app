@@ -82,10 +82,12 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     return (rows as List).map((r) {
       final m = r as Map<String, dynamic>;
       return RevenueTrendPoint(
-        date: DateTime.tryParse(m['report_date']?.toString() ?? '') ??
+        date:
+            DateTime.tryParse(m['report_date']?.toString() ?? '') ??
             DateTime.now(),
         amount:
-            double.tryParse(m['total_bookings_revenue']?.toString() ?? '0') ?? 0,
+            double.tryParse(m['total_bookings_revenue']?.toString() ?? '0') ??
+            0,
         bookings: int.tryParse(m['total_bookings']?.toString() ?? '0') ?? 0,
       );
     }).toList();
@@ -107,10 +109,13 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
 
   @override
   Future<List<RefundRequest>> getRefundRequests() async {
-    final response = await _client.from('refund_requests').select('''
+    final response = await _client
+        .from('refund_requests')
+        .select('''
       *,
       client:clients(full_name)
-    ''').order('created_at', ascending: false);
+    ''')
+        .order('created_at', ascending: false);
 
     return (response as List).map((json) {
       final m = json as Map<String, dynamic>;
@@ -126,7 +131,8 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
         transactionId: m['booking_id']?.toString() ?? '',
         clientName: client['full_name']?.toString() ?? 'عميل غير معروف',
         amount: double.tryParse(m['amount']?.toString() ?? '0') ?? 0.0,
-        date: DateTime.tryParse(m['created_at']?.toString() ?? '') ??
+        date:
+            DateTime.tryParse(m['created_at']?.toString() ?? '') ??
             DateTime.now(),
         status: mappedStatus,
         reason: m['reason']?.toString() ?? '',
@@ -137,10 +143,13 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
 
   @override
   Future<List<SubscriptionRecord>> getSubscriptions() async {
-    final rows = await _client.from('subscriptions').select('''
+    final rows = await _client
+        .from('subscriptions')
+        .select('''
       *,
       client:clients(full_name)
-    ''').order('created_at', ascending: false);
+    ''')
+        .order('created_at', ascending: false);
 
     return (rows as List).map((json) {
       final m = json as Map<String, dynamic>;
@@ -152,14 +161,16 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
         _ => SubscriptionStatus.active,
       };
       final now = DateTime.now();
-      final endDate = DateTime.tryParse(m['end_date']?.toString() ?? '') ??
+      final endDate =
+          DateTime.tryParse(m['end_date']?.toString() ?? '') ??
           now.add(const Duration(days: 30));
       // No per-ride field exists in `subscriptions`; surface remaining days
       // (real, derived) instead of fabricating a ride count.
       final remainingDays = endDate.difference(now).inDays;
       return SubscriptionRecord(
         id: m['id'].toString(),
-        clientName: m['customer_name']?.toString() ??
+        clientName:
+            m['customer_name']?.toString() ??
             client['full_name']?.toString() ??
             'غير معروف',
         packageName: m['package_name']?.toString() ?? 'باقة',
@@ -200,17 +211,21 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
   @override
   Future<void> processRefund(String id, RefundStatus action) async {
     final dbStatus = action == RefundStatus.approved ? 'approved' : 'rejected';
-    await _client.from('refund_requests').update({
-      'status': dbStatus,
-      'reviewed_at': DateTime.now().toIso8601String(),
-    }).eq('id', id);
+    await _client
+        .from('refund_requests')
+        .update({
+          'status': dbStatus,
+          'reviewed_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', id);
   }
 
   @override
   Future<void> cancelSubscription(String id) async {
     await _client
         .from('subscriptions')
-        .update({'status': 'cancelled'}).eq('id', id);
+        .update({'status': 'cancelled'})
+        .eq('id', id);
   }
 
   // ----- mapping helpers -----
@@ -224,7 +239,8 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
       paymentMethod: _methodFromDb(r['payment_method']?.toString() ?? ''),
       status: _paymentStatusFromDb(r['status']?.toString() ?? ''),
       date:
-          DateTime.tryParse(r['created_at']?.toString() ?? '') ?? DateTime.now(),
+          DateTime.tryParse(r['created_at']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 
@@ -233,19 +249,22 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     final timeline = (r['timeline'] as List?) ?? const [];
     return ReceiptReview(
       id: r['id'].toString(),
-      transactionId: details['reference']?.toString() ??
+      transactionId:
+          details['reference']?.toString() ??
           r['id'].toString().substring(0, 8).toUpperCase(),
       clientName: r['passenger_name']?.toString() ?? 'غير معروف',
       tripCode: r['route']?.toString() ?? '',
       amount: double.tryParse(r['payment_amount']?.toString() ?? '0') ?? 0.0,
       date:
-          DateTime.tryParse(r['created_at']?.toString() ?? '') ?? DateTime.now(),
+          DateTime.tryParse(r['created_at']?.toString() ?? '') ??
+          DateTime.now(),
       receiptUrl: r['payment_receipt_url']?.toString() ?? '',
       status: _receiptStatusFromDb(r['status']?.toString() ?? ''),
       notes: (r['notes'] as List?)?.cast<dynamic>().join('\n'),
       history: timeline
-          .map((e) =>
-              '${(e as Map)['action'] ?? ''} — ${e['actor'] ?? ''}'.trim())
+          .map(
+            (e) => '${(e as Map)['action'] ?? ''} — ${e['actor'] ?? ''}'.trim(),
+          )
           .where((e) => e.isNotEmpty && e != '—')
           .cast<String>()
           .toList(),
@@ -253,28 +272,26 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
   }
 
   FinancePaymentMethod _methodFromDb(String m) => switch (m.toLowerCase()) {
-        'card' || 'credit_card' || 'debit_card' => FinancePaymentMethod.card,
-        'instapay' => FinancePaymentMethod.instapay,
-        'wallet' ||
-        'e_wallet' ||
-        'vodafone' ||
-        'vodafone_cash' =>
-          FinancePaymentMethod.vodafoneCash,
-        _ => FinancePaymentMethod.cash,
-      };
+    'card' || 'credit_card' || 'debit_card' => FinancePaymentMethod.card,
+    'instapay' => FinancePaymentMethod.instapay,
+    'wallet' ||
+    'e_wallet' ||
+    'vodafone' ||
+    'vodafone_cash' => FinancePaymentMethod.vodafoneCash,
+    _ => FinancePaymentMethod.cash,
+  };
 
   PaymentStatus _paymentStatusFromDb(String s) => switch (s) {
-        'confirmed' || 'approved' || 'completed' || 'paid' =>
-          PaymentStatus.success,
-        'cancelled' || 'rejected' => PaymentStatus.cancelled,
-        'refunded' => PaymentStatus.refunded,
-        _ => PaymentStatus.pending,
-      };
+    'confirmed' || 'approved' || 'completed' || 'paid' => PaymentStatus.success,
+    'cancelled' || 'rejected' => PaymentStatus.cancelled,
+    'refunded' => PaymentStatus.refunded,
+    _ => PaymentStatus.pending,
+  };
 
   ReceiptReviewStatus _receiptStatusFromDb(String s) => switch (s) {
-        'approved' => ReceiptReviewStatus.accepted,
-        'rejected' => ReceiptReviewStatus.rejected,
-        'requestReupload' => ReceiptReviewStatus.reuploadRequested,
-        _ => ReceiptReviewStatus.pending,
-      };
+    'approved' => ReceiptReviewStatus.accepted,
+    'rejected' => ReceiptReviewStatus.rejected,
+    'requestReupload' => ReceiptReviewStatus.reuploadRequested,
+    _ => ReceiptReviewStatus.pending,
+  };
 }

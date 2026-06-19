@@ -18,9 +18,7 @@ class PremiumAuthButton extends StatelessWidget {
       onPressed: isLoading ? null : onPressed,
       style: FilledButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: 18),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 0,
       ),
       child: AnimatedSwitcher(

@@ -31,22 +31,24 @@ class TicketsTable extends StatelessWidget {
               children: [
                 Text(
                   'التذاكر (${filtered.length})',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
                 Text(
                   'النتائج المفلترة',
-                  style: TextStyle(color: Theme.of(context).colorScheme.outline, fontSize: 12),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.outline,
+                    fontSize: 12,
+                  ),
                 ),
               ],
             ),
           ),
           const Divider(height: 1),
           if (filtered.isEmpty)
-            const Expanded(
-              child: Center(
-                child: Text('لا توجد تذاكر.'),
-              ),
-            )
+            const Expanded(child: Center(child: Text('لا توجد تذاكر.')))
           else
             Expanded(
               child: SingleChildScrollView(
@@ -56,20 +58,67 @@ class TicketsTable extends StatelessWidget {
                   child: DataTable(
                     showCheckboxColumn: false,
                     columns: const [
-                      DataColumn(label: Text('رقم التذكرة', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('العميل', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('الفئة', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('العنوان', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('تاريخ الإنشاء', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('الأولوية', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('SLA', style: TextStyle(fontWeight: FontWeight.bold))),
-                      DataColumn(label: Text('المسؤول', style: TextStyle(fontWeight: FontWeight.bold))),
+                      DataColumn(
+                        label: Text(
+                          'رقم التذكرة',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'العميل',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'الفئة',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'العنوان',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'تاريخ الإنشاء',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'الحالة',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'الأولوية',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'SLA',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      DataColumn(
+                        label: Text(
+                          'المسؤول',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
                     ],
                     rows: filtered.map((t) {
                       return DataRow(
                         color: t.slaBreached
-                            ? WidgetStateProperty.all(AppStatusColors.errorContainer)
+                            ? WidgetStateProperty.all(
+                                AppStatusColors.errorContainer,
+                              )
                             : null,
                         onSelectChanged: (_) {
                           cubit.selectTicket(t.id);
@@ -82,17 +131,31 @@ class TicketsTable extends StatelessWidget {
                           );
                         },
                         cells: [
-                          DataCell(Text(t.ticketNumber, style: const TextStyle(fontWeight: FontWeight.bold))),
+                          DataCell(
+                            Text(
+                              t.ticketNumber,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
                           DataCell(Text(t.clientName)),
                           DataCell(Text(t.category)),
                           DataCell(Text(t.title)),
-                          DataCell(Text(
-                            '${t.createdAt.year}/${t.createdAt.month}/${t.createdAt.day}',
-                          )),
+                          DataCell(
+                            Text(
+                              '${t.createdAt.year}/${t.createdAt.month}/${t.createdAt.day}',
+                            ),
+                          ),
                           DataCell(StatusBadge(status: t.status)),
                           DataCell(PriorityBadge(priority: t.priority)),
                           DataCell(_SlaBadge(ticket: t)),
-                          DataCell(Text(t.assignedAgentName ?? '—', style: const TextStyle(fontSize: 12))),
+                          DataCell(
+                            Text(
+                              t.assignedAgentName ?? '—',
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                          ),
                         ],
                       );
                     }).toList(),
@@ -136,15 +199,26 @@ class _SlaBadgeState extends State<_SlaBadge> {
   @override
   Widget build(BuildContext context) {
     final ticket = widget.ticket;
-    if (ticket.slaDueAt == null) return const Text('—', style: TextStyle(fontSize: 12));
+    if (ticket.slaDueAt == null)
+      return const Text('—', style: TextStyle(fontSize: 12));
 
     if (ticket.slaBreached) {
-      return _badge('BREACHED', AppStatusColors.errorContainer, AppStatusColors.onErrorContainer, bold: true);
+      return _badge(
+        'BREACHED',
+        AppStatusColors.errorContainer,
+        AppStatusColors.onErrorContainer,
+        bold: true,
+      );
     }
 
     final remaining = ticket.slaDueAt!.difference(DateTime.now());
     if (remaining.isNegative) {
-      return _badge('Overdue', AppStatusColors.errorContainer, AppStatusColors.onErrorContainer, bold: true);
+      return _badge(
+        'Overdue',
+        AppStatusColors.errorContainer,
+        AppStatusColors.onErrorContainer,
+        bold: true,
+      );
     }
 
     final label = remaining.inHours > 0
@@ -152,7 +226,10 @@ class _SlaBadgeState extends State<_SlaBadge> {
         : '${remaining.inMinutes}m left';
     final (bg, fg) = ticket.isSlaNearBreach
         ? (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer)
-        : (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer);
+        : (
+            AppStatusColors.successContainer,
+            AppStatusColors.onSuccessContainer,
+          );
     return _badge(label, bg, fg);
   }
 
@@ -166,7 +243,11 @@ class _SlaBadgeState extends State<_SlaBadge> {
       ),
       child: Text(
         label,
-        style: TextStyle(fontSize: 11, color: fg, fontWeight: bold ? FontWeight.bold : FontWeight.normal),
+        style: TextStyle(
+          fontSize: 11,
+          color: fg,
+          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+        ),
       ),
     );
   }

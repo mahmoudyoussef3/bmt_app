@@ -15,7 +15,7 @@ class AppAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final baseColor = backgroundColor ?? scheme.primary.withAlpha(48);
+    final avatarColor = backgroundColor ?? scheme.primary;
 
     return Container(
       width: radius * 2,
@@ -23,7 +23,7 @@ class AppAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         gradient: LinearGradient(
-          colors: [scheme.primary, scheme.primary],
+          colors: [avatarColor, avatarColor],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),

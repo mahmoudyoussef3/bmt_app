@@ -5,7 +5,7 @@ import '../datasources/supabase_notifications_datasource.dart';
 class NotificationsRepositoryImpl implements NotificationsRepository {
   const NotificationsRepositoryImpl(this._datasource);
 
-  final SupabaseNotificationsDatasource _datasource;
+  final NotificationsDatasource _datasource;
 
   @override
   Future<List<ClientNotification>> getNotifications() async {

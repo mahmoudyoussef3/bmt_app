@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/apps/client/features/tracking/data/datasources/mock_tracking_datasource.dart';
+import 'package:bmt_app/apps/client/features/tracking/data/datasources/supabase_tracking_datasource.dart';
+import 'package:bmt_app/apps/client/features/tracking/data/models/tracking_trip_model.dart';
 import 'package:bmt_app/apps/client/features/tracking/data/repositories/tracking_repository_impl.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_trip.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/get_tracking_title_usecase.dart';
@@ -13,14 +14,14 @@ void main() {
     late TrackingRepositoryImpl repository;
 
     setUp(() {
-      repository = const TrackingRepositoryImpl(MockTrackingDatasource());
+      repository = const TrackingRepositoryImpl(_FakeTrackingDatasource());
     });
 
     test('returns tracking route points and timeline data', () async {
       final data = await GetTrackingTripUseCase(repository)();
 
       expect(data.routePoints, hasLength(9));
-      expect(data.routePoints.first.x, 0.15);
+      expect(data.routePoints.first.latitude, 30.15);
       expect(data.timelineSteps, contains('Driver Assigned'));
       expect(data.stops.last, 'Smart Village');
     });
@@ -55,4 +56,40 @@ void main() {
       await cubit.close();
     });
   });
+}
+
+class _FakeTrackingDatasource implements TrackingDatasource {
+  const _FakeTrackingDatasource();
+
+  @override
+  Future<TrackingTripDataModel> getTrackingTrip() async {
+    return const TrackingTripDataModel(
+      routePoints: [
+        TrackingPointModel(latitude: 30.15, longitude: 31.85),
+        TrackingPointModel(latitude: 30.22, longitude: 31.72),
+        TrackingPointModel(latitude: 30.35, longitude: 31.65),
+        TrackingPointModel(latitude: 30.48, longitude: 31.58),
+        TrackingPointModel(latitude: 30.55, longitude: 31.45),
+        TrackingPointModel(latitude: 30.62, longitude: 31.38),
+        TrackingPointModel(latitude: 30.72, longitude: 31.30),
+        TrackingPointModel(latitude: 30.82, longitude: 31.22),
+        TrackingPointModel(latitude: 30.90, longitude: 31.12),
+      ],
+      timelineSteps: [
+        'Booking Confirmed',
+        'Driver Assigned',
+        'Driver Heading To Pickup',
+        'Boarding Started',
+        'Trip Started',
+        'Trip Completed',
+      ],
+      stops: [
+        'Banha Station',
+        'Nasr City Station',
+        'Heliopolis Station',
+        'Smart Village',
+      ],
+      tripState: TrackingTripState.notStarted,
+    );
+  }
 }

@@ -29,8 +29,11 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
   @override
   Future<UserSubscription> fetchSubscriptionDetails(String id) async {
-    final row =
-        await _client.from('subscriptions').select(_select).eq('id', id).single();
+    final row = await _client
+        .from('subscriptions')
+        .select(_select)
+        .eq('id', id)
+        .single();
     return _fromRow(row);
   }
 
@@ -79,8 +82,10 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
         .single();
     final currentEnd =
         DateTime.tryParse(current['end_date']?.toString() ?? '') ??
-            DateTime.now();
-    final base = currentEnd.isAfter(DateTime.now()) ? currentEnd : DateTime.now();
+        DateTime.now();
+    final base = currentEnd.isAfter(DateTime.now())
+        ? currentEnd
+        : DateTime.now();
     final newEnd = DateTime(base.year, base.month + 1, base.day);
     final renewals = (current['renewals_count'] as int? ?? 0) + 1;
     final row = await _client
@@ -153,15 +158,18 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     return UserSubscriptionModel(
       id: json['id'].toString(),
       userId: json['client_id']?.toString() ?? '',
-      userName: json['customer_name']?.toString() ??
+      userName:
+          json['customer_name']?.toString() ??
           client['full_name']?.toString() ??
           'غير معروف',
-      userPhone: json['customer_phone']?.toString() ??
+      userPhone:
+          json['customer_phone']?.toString() ??
           client['phone']?.toString() ??
           '',
       tripId: '',
       routeId: '',
-      routeName: json['route_name']?.toString() ??
+      routeName:
+          json['route_name']?.toString() ??
           json['package_name']?.toString() ??
           'باقة',
       fromPointId: '',
@@ -174,12 +182,15 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
       totalRides: 0,
       usedRides: 0,
       remainingRides: 0,
-      paidAmount: double.tryParse(json['paid_amount']?.toString() ?? '0') ?? 0.0,
+      paidAmount:
+          double.tryParse(json['paid_amount']?.toString() ?? '0') ?? 0.0,
       remainingAmount:
           double.tryParse(json['remaining_amount']?.toString() ?? '0') ?? 0.0,
-      renewalsCount: int.tryParse(json['renewals_count']?.toString() ?? '0') ?? 0,
+      renewalsCount:
+          int.tryParse(json['renewals_count']?.toString() ?? '0') ?? 0,
       startDate: DateTime.tryParse(json['start_date']?.toString() ?? '') ?? now,
-      endDate: DateTime.tryParse(json['end_date']?.toString() ?? '') ??
+      endDate:
+          DateTime.tryParse(json['end_date']?.toString() ?? '') ??
           now.add(const Duration(days: 30)),
       status: mappedStatus,
       createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? now,

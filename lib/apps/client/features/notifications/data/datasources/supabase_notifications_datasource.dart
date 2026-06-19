@@ -1,11 +1,16 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/client_notification_model.dart';
 
-class SupabaseNotificationsDatasource {
+abstract class NotificationsDatasource {
+  Future<List<ClientNotificationModel>> getNotifications();
+}
+
+class SupabaseNotificationsDatasource implements NotificationsDatasource {
   const SupabaseNotificationsDatasource(this._client);
 
   final SupabaseClient _client;
 
+  @override
   Future<List<ClientNotificationModel>> getNotifications() async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return const [];

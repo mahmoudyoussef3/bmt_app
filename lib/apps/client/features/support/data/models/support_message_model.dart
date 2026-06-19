@@ -22,8 +22,12 @@ class SupportMessageModel extends SupportMessage {
       senderName: json['sender_name'] as String,
       message: json['message'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
-      attachments: (json['attachments'] as List<dynamic>?)
-              ?.map((e) => SupportAttachmentModel.fromJson(e as Map<String, dynamic>))
+      attachments:
+          (json['attachments'] as List<dynamic>?)
+              ?.map(
+                (e) =>
+                    SupportAttachmentModel.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
     );

@@ -21,7 +21,7 @@ Future<void> main() async {
   try {
     await Supabase.initialize(
       url: 'https://nbwzourpbnmewwklewyr.supabase.co',
-      anonKey: 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z',
+      publishableKey: 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z',
       httpClient: DioHttpClientAdapter(DioFactory.getDio()),
     );
   } catch (_) {

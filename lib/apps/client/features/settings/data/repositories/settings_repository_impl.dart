@@ -5,7 +5,7 @@ import '../datasources/supabase_settings_datasource.dart';
 class SettingsRepositoryImpl implements SettingsRepository {
   const SettingsRepositoryImpl(this._datasource);
 
-  final SupabaseSettingsDatasource _datasource;
+  final SettingsDatasource _datasource;
 
   @override
   Future<SettingsData> getSettingsData() {

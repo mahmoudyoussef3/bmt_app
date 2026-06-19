@@ -57,7 +57,10 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
                       decoration: BoxDecoration(
                         color: ClientColors.primaryLight,
                         borderRadius: BorderRadius.circular(999),
@@ -73,15 +76,15 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       vehicleName,
-                      style: ClientTypography.bodyMedium(context).copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
+                      style: ClientTypography.bodyMedium(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w800),
                     ),
                     Text(
                       vehicleModel,
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                   ],
                 ),
@@ -91,15 +94,15 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                 children: [
                   Text(
                     '$availableSeats',
-                    style: ClientTypography.headingLarge(context).copyWith(
-                      color: ClientColors.primary,
-                    ),
+                    style: ClientTypography.headingLarge(
+                      context,
+                    ).copyWith(color: ClientColors.primary),
                   ),
                   Text(
                     'seats left',
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: ClientColors.textSecondaryFor(context),
-                    ),
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
                   ),
                 ],
               ),
@@ -112,7 +115,10 @@ class SeatSelectionVehicleCard extends StatelessWidget {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _MetaChip(icon: Icons.ac_unit_rounded, label: 'A/C · $airConditioning'),
+              _MetaChip(
+                icon: Icons.ac_unit_rounded,
+                label: 'A/C · $airConditioning',
+              ),
               _MetaChip(icon: Icons.chair_rounded, label: seatType),
             ],
           ),
@@ -137,9 +143,9 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                   children: [
                     Text(
                       driverName,
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w700),
                     ),
                     Row(
                       children: [
@@ -151,9 +157,9 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                         const SizedBox(width: 4),
                         Text(
                           driverRating.toStringAsFixed(1),
-                          style: ClientTypography.bodySmall(context).copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                          style: ClientTypography.bodySmall(
+                            context,
+                          ).copyWith(fontWeight: FontWeight.w700),
                         ),
                         Text(
                           ' · Captain',
@@ -196,9 +202,9 @@ class _MetaChip extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             label,
-            style: ClientTypography.bodySmall(context).copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),

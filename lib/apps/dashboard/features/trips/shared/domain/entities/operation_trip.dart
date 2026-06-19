@@ -23,9 +23,9 @@ enum OperationTripStatus {
       'in_progress' => OperationTripStatus.inProgress,
       'open_for_booking' => OperationTripStatus.openForBooking,
       _ => OperationTripStatus.values.firstWhere(
-          (e) => e.name == value,
-          orElse: () => OperationTripStatus.scheduled,
-        ),
+        (e) => e.name == value,
+        orElse: () => OperationTripStatus.scheduled,
+      ),
     };
   }
 }

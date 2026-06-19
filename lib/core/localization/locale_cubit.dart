@@ -8,8 +8,8 @@ class LocaleCubit extends Cubit<Locale> {
   final FlutterSecureStorage _storage;
 
   LocaleCubit({FlutterSecureStorage? storage})
-      : _storage = storage ?? const FlutterSecureStorage(),
-        super(const Locale('en'));
+    : _storage = storage ?? const FlutterSecureStorage(),
+      super(const Locale('en'));
 
   Future<void> load() async {
     try {

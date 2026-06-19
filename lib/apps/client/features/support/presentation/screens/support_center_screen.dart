@@ -58,7 +58,10 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
         listener: (context, state) {
           if (state is SupportError) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+              SnackBar(
+                content: Text(state.message),
+                backgroundColor: Colors.red,
+              ),
             );
           }
         },
@@ -73,12 +76,18 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
               child: state.tickets.isEmpty
                   ? ListView(
                       children: [
-                        SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+                        SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.3,
+                        ),
                         Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.inbox_outlined, size: 64, color: Colors.grey[400]),
+                              Icon(
+                                Icons.inbox_outlined,
+                                size: 64,
+                                color: Colors.grey[400],
+                              ),
                               const SizedBox(height: 16),
                               Text(
                                 'No active tickets',
@@ -101,14 +110,15 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
                   : ListView.separated(
                       padding: const EdgeInsets.all(16),
                       itemCount: state.tickets.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         return SupportTicketCard(
                           ticket: state.tickets[index],
                           onTap: () {
                             Navigator.pushNamed(
-                              context, 
-                              '/ticket_details', 
+                              context,
+                              '/ticket_details',
                               arguments: state.tickets[index].id,
                             );
                           },

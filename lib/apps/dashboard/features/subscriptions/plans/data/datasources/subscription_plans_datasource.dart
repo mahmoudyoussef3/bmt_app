@@ -16,7 +16,9 @@ class SubscriptionPlansDatasource {
         .from('packages')
         .select(_columns)
         .order('price', ascending: true);
-    return (rows as List).map((r) => _fromRow(r as Map<String, dynamic>)).toList();
+    return (rows as List)
+        .map((r) => _fromRow(r as Map<String, dynamic>))
+        .toList();
   }
 
   Future<void> createPlan(SubscriptionPlan plan) async {
@@ -43,8 +45,10 @@ class SubscriptionPlansDatasource {
       price: double.tryParse(r['price']?.toString() ?? '0') ?? 0,
       days: int.tryParse(r['days']?.toString() ?? '0') ?? 0,
       tripsCount: int.tryParse(r['trips_count']?.toString() ?? '0') ?? 0,
-      discountPercent: int.tryParse(r['discount_percent']?.toString() ?? '0') ?? 0,
-      savingsAmount: double.tryParse(r['savings_amount']?.toString() ?? '0') ?? 0,
+      discountPercent:
+          int.tryParse(r['discount_percent']?.toString() ?? '0') ?? 0,
+      savingsAmount:
+          double.tryParse(r['savings_amount']?.toString() ?? '0') ?? 0,
       description: r['description']?.toString() ?? '',
       status: PlanStatus.fromDb(r['status']?.toString()),
     );

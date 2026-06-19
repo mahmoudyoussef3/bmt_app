@@ -195,16 +195,16 @@ class _CompactHeader extends StatelessWidget {
               children: [
                 Text(
                   'Available trips',
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.headingSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   '$vehiclesCount trip options with assigned vehicles',
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
               ],
             ),
@@ -271,10 +271,14 @@ class _SortChip extends StatelessWidget {
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: active ? ClientColors.primaryLight : ClientColors.surfaceFor(context),
+          color: active
+              ? ClientColors.primaryLight
+              : ClientColors.surfaceFor(context),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
-            color: active ? ClientColors.primaryMuted : ClientColors.borderFor(context),
+            color: active
+                ? ClientColors.primaryMuted
+                : ClientColors.borderFor(context),
           ),
         ),
         child: Row(
@@ -391,9 +395,9 @@ class _BookingErrorState extends StatelessWidget {
               Text(
                 message,
                 textAlign: TextAlign.center,
-                style: ClientTypography.bodyMedium(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                ),
+                style: ClientTypography.bodyMedium(
+                  context,
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
               const SizedBox(height: 14),
               ClientButton(
@@ -444,9 +448,9 @@ class _BookingEmptyState extends StatelessWidget {
               Text(
                 AppLocalizations.of(context)!.booking_noVehiclesDesc,
                 textAlign: TextAlign.center,
-                style: ClientTypography.bodyMedium(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                ),
+                style: ClientTypography.bodyMedium(
+                  context,
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
               const SizedBox(height: 14),
               ClientButton(

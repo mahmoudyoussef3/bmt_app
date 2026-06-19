@@ -17,7 +17,10 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
           .order('created_at', ascending: false);
 
       return (response as List)
-          .map((json) => OperationBookingModel.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                OperationBookingModel.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       throw _handleError(e);
@@ -43,16 +46,14 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
           .select('timeline')
           .eq('id', bookingId)
           .single();
-          
-      final List<dynamic> currentTimeline = existing['timeline'] as List<dynamic>? ?? [];
+
+      final List<dynamic> currentTimeline =
+          existing['timeline'] as List<dynamic>? ?? [];
       currentTimeline.insert(0, event.toJson());
 
       final response = await _client
           .from('operation_bookings')
-          .update({
-            'status': status.name,
-            'timeline': currentTimeline,
-          })
+          .update({'status': status.name, 'timeline': currentTimeline})
           .eq('id', bookingId)
           .select()
           .single();
@@ -70,10 +71,10 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
   ) async {
     try {
       // Single UPDATE via RPC instead of N sequential round-trips
-      await _client.rpc('bulk_update_booking_status', params: {
-        'p_booking_ids': bookingIds,
-        'p_new_status':  status.name,
-      });
+      await _client.rpc(
+        'bulk_update_booking_status',
+        params: {'p_booking_ids': bookingIds, 'p_new_status': status.name},
+      );
 
       // Re-fetch the updated rows to return current state
       final response = await _client
@@ -82,7 +83,10 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
           .inFilter('id', bookingIds);
 
       return (response as List)
-          .map((json) => OperationBookingModel.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                OperationBookingModel.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       throw _handleError(e);
@@ -108,20 +112,18 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
             .select('timeline')
             .eq('id', id)
             .single();
-            
-        final List<dynamic> currentTimeline = existing['timeline'] as List<dynamic>? ?? [];
+
+        final List<dynamic> currentTimeline =
+            existing['timeline'] as List<dynamic>? ?? [];
         currentTimeline.insert(0, event.toJson());
 
         final response = await _client
             .from('operation_bookings')
-            .update({
-              'assigned_trip': tripId,
-              'timeline': currentTimeline,
-            })
+            .update({'assigned_trip': tripId, 'timeline': currentTimeline})
             .eq('id', id)
             .select()
             .single();
-            
+
         updated.add(OperationBookingModel.fromJson(response));
       }
       return updated;
@@ -139,10 +141,10 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
     try {
       // RPC atomically updates booking status AND transitions trip_seats to 'paid'.
       // This prevents the booking being approved while the seat stays 'reserved'.
-      await _client.rpc('approve_booking', params: {
-        'p_booking_id':    bookingId,
-        'p_reviewer_name': reviewer,
-      });
+      await _client.rpc(
+        'approve_booking',
+        params: {'p_booking_id': bookingId, 'p_reviewer_name': reviewer},
+      );
 
       // Append to timeline (non-critical audit trail, separate from atomic write)
       final event = BookingTimelineEventModel(
@@ -156,7 +158,8 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
           .select('timeline')
           .eq('id', bookingId)
           .single();
-      final List<dynamic> timeline = existing['timeline'] as List<dynamic>? ?? [];
+      final List<dynamic> timeline =
+          existing['timeline'] as List<dynamic>? ?? [];
       timeline.insert(0, event.toJson());
       await _client
           .from('operation_bookings')
@@ -185,11 +188,14 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
     try {
       // RPC atomically updates booking status, releases the seat, and decrements
       // the trip counter — all in one transaction.
-      await _client.rpc('reject_booking', params: {
-        'p_booking_id':       bookingId,
-        'p_rejection_reason': reason,
-        'p_reviewer_name':    reviewer,
-      });
+      await _client.rpc(
+        'reject_booking',
+        params: {
+          'p_booking_id': bookingId,
+          'p_rejection_reason': reason,
+          'p_reviewer_name': reviewer,
+        },
+      );
 
       // Append to timeline (non-critical)
       final event = BookingTimelineEventModel(
@@ -203,7 +209,8 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
           .select('timeline')
           .eq('id', bookingId)
           .single();
-      final List<dynamic> timeline = existing['timeline'] as List<dynamic>? ?? [];
+      final List<dynamic> timeline =
+          existing['timeline'] as List<dynamic>? ?? [];
       timeline.insert(0, event.toJson());
       await _client
           .from('operation_bookings')
@@ -241,8 +248,9 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
           .select('timeline')
           .eq('id', bookingId)
           .single();
-          
-      final List<dynamic> currentTimeline = existing['timeline'] as List<dynamic>? ?? [];
+
+      final List<dynamic> currentTimeline =
+          existing['timeline'] as List<dynamic>? ?? [];
       currentTimeline.insert(0, event.toJson());
 
       final response = await _client
@@ -269,9 +277,8 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
         .stream(primaryKey: ['id'])
         .order('created_at', ascending: false)
         .map(
-          (rows) => rows
-              .map((json) => OperationBookingModel.fromJson(json))
-              .toList(),
+          (rows) =>
+              rows.map((json) => OperationBookingModel.fromJson(json)).toList(),
         );
   }
 

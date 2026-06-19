@@ -54,11 +54,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (!valid) return;
 
     context.read<ClientAuthCubit>().signUp(
-          fullName: _nameController.text.trim(),
-          phone: _normalizeEgyptianPhone(_phoneController.text),
-          email: _emailController.text.trim().toLowerCase(),
-          password: _passwordController.text,
-        );
+      fullName: _nameController.text.trim(),
+      phone: _normalizeEgyptianPhone(_phoneController.text),
+      email: _emailController.text.trim().toLowerCase(),
+      password: _passwordController.text,
+    );
   }
 
   String _normalizeEgyptianPhone(String value) {
@@ -162,8 +162,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 _emailFocus.requestFocus();
                               },
                               validator: (value) {
-                                final digits = (value ?? '')
-                                    .replaceAll(RegExp(r'[^0-9]'), '');
+                                final digits = (value ?? '').replaceAll(
+                                  RegExp(r'[^0-9]'),
+                                  '',
+                                );
                                 if (digits.length < 10) {
                                   return l10n.auth_invalidPhone;
                                 }
@@ -282,20 +284,18 @@ class _AuthLogo extends StatelessWidget {
           child: Image.asset(
             'assets/images/app_icon.png',
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => Icon(
-              Icons.directions_bus_rounded,
-              color: scheme.primary,
-            ),
+            errorBuilder: (_, _, _) =>
+                Icon(Icons.directions_bus_rounded, color: scheme.primary),
           ),
         ),
         const SizedBox(width: 12),
         Text(
           'EasyWay',
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: scheme.primary,
-                letterSpacing: -0.3,
-              ),
+            fontWeight: FontWeight.w900,
+            color: scheme.primary,
+            letterSpacing: -0.3,
+          ),
         ),
       ],
     );
@@ -336,10 +336,10 @@ class _TrustBanner extends StatelessWidget {
             child: Text(
               'Your data is secure and used only to manage your trips and bookings.',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    height: 1.55,
-                    color: scheme.onSurface,
-                    fontWeight: FontWeight.w700,
-                  ),
+                height: 1.55,
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
@@ -370,9 +370,9 @@ class _SignInLink extends StatelessWidget {
         Text(
           text,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         TextButton(
           onPressed: onTap,
@@ -397,10 +397,10 @@ class _SecurityNote extends StatelessWidget {
       'By clicking Create Account, a confirmation will be sent to your email.',
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            height: 1.55,
-            color: scheme.onSurfaceVariant.withAlpha(190),
-            fontWeight: FontWeight.w500,
-          ),
+        height: 1.55,
+        color: scheme.onSurfaceVariant.withAlpha(190),
+        fontWeight: FontWeight.w500,
+      ),
     );
   }
 }

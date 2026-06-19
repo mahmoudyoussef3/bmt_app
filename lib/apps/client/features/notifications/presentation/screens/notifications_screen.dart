@@ -65,53 +65,59 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                 NotificationsLoaded(:final notifications) =>
                   notifications.isEmpty
                       ? SliverFillRemaining(
-                        child: Center(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 40),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.notifications_none_rounded,
-                                  size: 56,
-                                  color: ClientColors.textTertiaryFor(context),
-                                ),
-                                const SizedBox(height: 16),
-                                Text(
-                                  'No notifications yet',
-                                  style: ClientTypography.headingSmall(context),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Trip updates, booking confirmations and reminders appear here.',
-                                  style: ClientTypography.bodySmall(
-                                    context,
-                                  ).copyWith(
-                                    color:
-                                        ClientColors.textTertiaryFor(context),
+                          child: Center(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 40,
+                              ),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.notifications_none_rounded,
+                                    size: 56,
+                                    color: ClientColors.textTertiaryFor(
+                                      context,
+                                    ),
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No notifications yet',
+                                    style: ClientTypography.headingSmall(
+                                      context,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Trip updates, booking confirmations and reminders appear here.',
+                                    style: ClientTypography.bodySmall(context)
+                                        .copyWith(
+                                          color: ClientColors.textTertiaryFor(
+                                            context,
+                                          ),
+                                        ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      )
+                        )
                       : SliverPadding(
-                        padding: const EdgeInsets.all(16),
-                        sliver: SliverList.separated(
-                          itemCount: notifications.length,
-                          separatorBuilder: (_, _) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (context, index) {
-                            final notification = notifications[index];
-                            return _NotificationTile(
-                              notification: notification,
-                            );
-                          },
+                          padding: const EdgeInsets.all(16),
+                          sliver: SliverList.separated(
+                            itemCount: notifications.length,
+                            separatorBuilder: (_, _) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final notification = notifications[index];
+                              return _NotificationTile(
+                                notification: notification,
+                              );
+                            },
+                          ),
                         ),
-                      ),
               },
             ],
           );
@@ -162,23 +168,23 @@ class _NotificationTile extends StatelessWidget {
               children: [
                 Text(
                   notification.title,
-                  style: ClientTypography.labelLarge(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                  ),
+                  style: ClientTypography.labelLarge(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   notification.description,
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   notification.time,
-                  style: ClientTypography.labelSmall(context).copyWith(
-                    color: ClientColors.textTertiaryFor(context),
-                  ),
+                  style: ClientTypography.labelSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textTertiaryFor(context)),
                 ),
               ],
             ),

@@ -141,8 +141,8 @@ class _ReceiptPreview extends StatelessWidget {
               height: 330,
               width: double.infinity,
               color: scheme.surfaceContainerHighest,
-              child: payment.receiptUrl != null &&
-                      payment.receiptUrl!.isNotEmpty
+              child:
+                  payment.receiptUrl != null && payment.receiptUrl!.isNotEmpty
                   ? InteractiveViewer(
                       minScale: 0.8,
                       maxScale: 4.0,
@@ -169,9 +169,7 @@ class _ReceiptPreview extends StatelessWidget {
                                 const SizedBox(height: 8),
                                 Text(
                                   'تعذر تحميل الإيصال',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
+                                  style: Theme.of(context).textTheme.bodySmall
                                       ?.copyWith(color: scheme.error),
                                 ),
                               ],
@@ -295,7 +293,8 @@ class _ReassignDialogState extends State<_ReassignDialog> {
   String? _selectedTripId;
 
   String _tripLabel(Map<String, dynamic> t) {
-    final route = (t['operation_routes'] as Map<String, dynamic>?)?['name'] ?? '';
+    final route =
+        (t['operation_routes'] as Map<String, dynamic>?)?['name'] ?? '';
     final date = t['trip_date'] as String? ?? '';
     final time = t['departure_time'] as String? ?? '';
     return '$route · $date · $time';
@@ -305,7 +304,9 @@ class _ReassignDialogState extends State<_ReassignDialog> {
   Widget build(BuildContext context) {
     return BlocBuilder<PaymentsCubit, PaymentsState>(
       builder: (context, state) {
-        final trips = state is PaymentsLoaded ? state.availableTrips : <Map<String, dynamic>>[];
+        final trips = state is PaymentsLoaded
+            ? state.availableTrips
+            : <Map<String, dynamic>>[];
         final error = state is PaymentsLoaded ? state.reassignError : null;
 
         return AlertDialog(
@@ -328,24 +329,44 @@ class _ReassignDialogState extends State<_ReassignDialog> {
                     initialValue: _selectedTripId,
                     items: trips.map((t) {
                       final id = t['id'] as String;
-                      return DropdownMenuItem(value: id, child: Text(_tripLabel(t), style: const TextStyle(fontSize: 13)));
+                      return DropdownMenuItem(
+                        value: id,
+                        child: Text(
+                          _tripLabel(t),
+                          style: const TextStyle(fontSize: 13),
+                        ),
+                      );
                     }).toList(),
                     onChanged: (v) => setState(() => _selectedTripId = v),
                   ),
                 if (error != null) ...[
                   const SizedBox(height: 8),
-                  Text(error, style: TextStyle(color: Theme.of(context).colorScheme.error, fontSize: 13)),
+                  Text(
+                    error,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.error,
+                      fontSize: 13,
+                    ),
+                  ),
                 ],
               ],
             ),
           ),
           actions: [
-            TextButton(onPressed: () => Navigator.of(context).pop(), child: const Text('إلغاء')),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('إلغاء'),
+            ),
             FilledButton(
-              onPressed: _selectedTripId == null ? null : () async {
-                final success = await context.read<PaymentsCubit>().reassignBooking(widget.bookingId, _selectedTripId!);
-                if (success && context.mounted) Navigator.of(context).pop();
-              },
+              onPressed: _selectedTripId == null
+                  ? null
+                  : () async {
+                      final success = await context
+                          .read<PaymentsCubit>()
+                          .reassignBooking(widget.bookingId, _selectedTripId!);
+                      if (success && context.mounted)
+                        Navigator.of(context).pop();
+                    },
               child: const Text('تحويل'),
             ),
           ],
@@ -463,9 +484,17 @@ class _HistoryTimeline extends StatelessWidget {
             children: [
               const Icon(Icons.history_rounded, size: 18),
               const SizedBox(width: 6),
-              Text('سجل الإجراءات', style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'سجل الإجراءات',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const Spacer(),
-              Text('${items.length} إجراء', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+              Text(
+                '${items.length} إجراء',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.medium),
@@ -475,9 +504,18 @@ class _HistoryTimeline extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
                 child: Column(
                   children: [
-                    Icon(Icons.assignment_outlined, size: 36, color: scheme.onSurfaceVariant),
+                    Icon(
+                      Icons.assignment_outlined,
+                      size: 36,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(height: 8),
-                    Text('لا توجد إجراءات مسجلة', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                    Text(
+                      'لا توجد إجراءات مسجلة',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -493,25 +531,43 @@ class _HistoryTimeline extends StatelessWidget {
                     children: [
                       CircleAvatar(radius: 7, backgroundColor: scheme.primary),
                       if (!isLast)
-                        Container(width: 2, height: 54, color: scheme.outlineVariant),
+                        Container(
+                          width: 2,
+                          height: 54,
+                          color: scheme.outlineVariant,
+                        ),
                     ],
                   ),
                   const SizedBox(width: AppSpacing.small),
                   Expanded(
                     child: Padding(
-                      padding: EdgeInsets.only(bottom: isLast ? 0 : AppSpacing.medium),
+                      padding: EdgeInsets.only(
+                        bottom: isLast ? 0 : AppSpacing.medium,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
                             children: [
-                              Expanded(child: Text(item.title, style: Theme.of(context).textTheme.titleSmall)),
-                              Text(item.time, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant)),
+                              Expanded(
+                                child: Text(
+                                  item.title,
+                                  style: Theme.of(context).textTheme.titleSmall,
+                                ),
+                              ),
+                              Text(
+                                item.time,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
+                              ),
                             ],
                           ),
                           if (item.description.isNotEmpty) ...[
                             const SizedBox(height: AppSpacing.xSmall),
-                            Text(item.description, style: Theme.of(context).textTheme.bodySmall),
+                            Text(
+                              item.description,
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
                           ],
                         ],
                       ),

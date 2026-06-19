@@ -45,7 +45,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
     final pickup = routeParts.isNotEmpty ? routeParts[0] : 'Unknown';
     final destination = routeParts.length > 1 ? routeParts[1] : 'Unknown';
 
-    final paymentDetails = data['payment_details'] as Map<String, dynamic>? ?? {};
+    final paymentDetails =
+        data['payment_details'] as Map<String, dynamic>? ?? {};
     final fare = paymentDetails['amount']?.toString() ?? '85.00';
     final paymentStatusStr = paymentDetails['status']?.toString() ?? 'pending';
 
@@ -58,8 +59,12 @@ class SupabaseTripsDatasource implements TripsDatasource {
       dateLabel: data['trip_date']?.toString() ?? '',
       timeLabel: data['trip_time']?.toString() ?? '',
       driverName: driverObj?['full_name']?.toString() ?? 'Driver Pending',
-      driverInitials: (driverObj?['full_name']?.toString() ?? 'DP').substring(0, 2).toUpperCase(),
-      driverRating: driverObj?['rating'] != null ? (driverObj!['rating'] as num).toDouble() : 0.0,
+      driverInitials: (driverObj?['full_name']?.toString() ?? 'DP')
+          .substring(0, 2)
+          .toUpperCase(),
+      driverRating: driverObj?['rating'] != null
+          ? (driverObj!['rating'] as num).toDouble()
+          : 0.0,
       vehicleName: vehicleObj?['brand']?.toString() ?? 'Vehicle Pending',
       vehicleType: vehicleObj?['vehicle_type']?.toString() ?? 'Vehicle',
       vehicleId: vehicleObj?['id']?.toString() ?? '',

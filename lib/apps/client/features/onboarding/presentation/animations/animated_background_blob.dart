@@ -23,7 +23,7 @@ class _AnimatedBackgroundBlobState extends State<AnimatedBackgroundBlob>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-  
+
   late double _offsetX;
   late double _offsetY;
 
@@ -38,7 +38,10 @@ class _AnimatedBackgroundBlobState extends State<AnimatedBackgroundBlob>
       duration: widget.animationDuration,
     )..repeat(reverse: true);
 
-    _animation = CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine);
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeInOutSine,
+    );
 
     _controller.addListener(() {
       if (mounted) {
