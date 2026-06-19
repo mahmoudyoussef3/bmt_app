@@ -6,5 +6,6 @@ class GetLiveTripDetailsUseCase {
 
   const GetLiveTripDetailsUseCase(this._repository);
 
-  Future<LiveTrip> call(String tripId) => _repository.getLiveTripDetails(tripId);
+  Future<LiveTrip> call(String tripId) =>
+      _repository.getLiveTripDetails(tripId);
 }

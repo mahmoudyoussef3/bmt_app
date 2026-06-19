@@ -60,7 +60,7 @@ import '../../features/fleet/data/repositories/fleet_repository_impl.dart';
 import '../../features/fleet/domain/repositories/fleet_repository.dart';
 import '../../features/fleet/domain/usecases/fleet_usecases.dart';
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
-import '../../features/live_trips/data/datasources/mock_live_trips_datasource.dart';
+import '../../features/live_trips/data/datasources/live_trips_datasource.dart';
 import '../../features/live_trips/data/datasources/supabase_live_trips_datasource.dart';
 import '../../features/live_trips/data/repositories/live_trips_repository_impl.dart';
 import '../../features/live_trips/domain/repositories/live_trips_repository.dart';
@@ -1005,7 +1005,9 @@ void registerDashboardDependencies() {
   }
   if (!dashboardDi.isRegistered<GetSubscriptionPlansUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => GetSubscriptionPlansUseCase(dashboardDi<SubscriptionPlansRepository>()),
+      () => GetSubscriptionPlansUseCase(
+        dashboardDi<SubscriptionPlansRepository>(),
+      ),
     );
     dashboardDi.registerLazySingleton(
       () => CreateSubscriptionPlanUseCase(
@@ -1219,7 +1221,9 @@ void registerDashboardDependencies() {
   }
   if (!dashboardDi.isRegistered<OwnerOverviewCubit>()) {
     dashboardDi.registerFactory(
-      () => OwnerOverviewCubit(getOverview: dashboardDi<GetOwnerOverviewUseCase>()),
+      () => OwnerOverviewCubit(
+        getOverview: dashboardDi<GetOwnerOverviewUseCase>(),
+      ),
     );
   }
 

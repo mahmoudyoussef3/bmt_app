@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 
 import '../../domain/entities/live_trip.dart';
 import '../cubit/live_trips_cubit.dart';
@@ -44,10 +45,14 @@ class _LiveTripsScreenState extends State<LiveTripsScreen> {
         },
         builder: (context, state) {
           return switch (state) {
-            LiveTripsLoading() => const Center(
-              child: CircularProgressIndicator(),
+            LiveTripsLoading() => const DashboardLoading(
+              rows: 5,
+              showHeader: true,
             ),
-            LiveTripsError(:final message) => _ErrorView(message: message),
+            LiveTripsError(:final message) => DashboardErrorState(
+              message: message,
+              onRetry: () => context.read<LiveTripsCubit>().loadLiveTrips(),
+            ),
             LiveTripsLoaded() => _LoadedView(state: state),
           };
         },
@@ -470,33 +475,6 @@ class _NoSelectedTrip extends StatelessWidget {
         title: 'اختر رحلة لمتابعتها',
         subtitle:
             'ستظهر هنا كل بيانات الرحلة، السائق، المحطات، الركاب والتنبيهات.',
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: AppCard(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline_rounded, size: 44),
-            const SizedBox(height: 12),
-            Text(message, textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            FilledButton(
-              onPressed: () => context.read<LiveTripsCubit>().loadLiveTrips(),
-              child: const Text('حاول مرة أخرى'),
-            ),
-          ],
-        ),
       ),
     );
   }

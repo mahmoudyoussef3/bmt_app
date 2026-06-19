@@ -230,30 +230,30 @@ class FleetDriversCardList extends StatelessWidget {
                         : healthColor,
                   ),
                   const SizedBox(height: AppSpacing.medium),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                  Wrap(
+                    spacing: AppSpacing.small,
+                    runSpacing: AppSpacing.small,
+                    alignment: WrapAlignment.end,
                     children: [
-                      TextButton.icon(
+                      FilledButton.tonal(
                         onPressed: () => onViewDetails(driver),
-                        icon: const Icon(Icons.visibility_outlined, size: 18),
-                        label: const Text('عرض'),
+                        child: const Text('فتح ملف السائق'),
                       ),
-                      TextButton.icon(
+                      OutlinedButton.icon(
                         onPressed: () => onEdit(driver),
                         icon: const Icon(Icons.edit_outlined, size: 18),
                         label: const Text('تعديل'),
                       ),
-                      TextButton.icon(
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: scheme.error,
+                        ),
                         onPressed: () => onDelete(driver),
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.delete_outline_rounded,
                           size: 18,
-                          color: scheme.error,
                         ),
-                        label: Text(
-                          'حذف',
-                          style: TextStyle(color: scheme.error),
-                        ),
+                        label: const Text('حذف'),
                       ),
                     ],
                   ),

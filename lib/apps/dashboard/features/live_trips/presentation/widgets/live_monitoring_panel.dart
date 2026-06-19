@@ -150,30 +150,19 @@ class LiveTripActionsBar extends StatelessWidget {
           if (trip.status == LiveTripStatus.notStarted ||
               trip.status == LiveTripStatus.preparing)
             _ActionButton(
-              label: 'بدء الرحلة',
+              label: trip.status == LiveTripStatus.notStarted
+                  ? 'بدء صعود الركاب'
+                  : 'بدء الرحلة',
               icon: Icons.play_arrow_rounded,
               onPressed: actionLoading ? null : onStart,
               filled: true,
             ),
-          if (trip.status == LiveTripStatus.inProgress) ...[
-            _ActionButton(
-              label: 'إيقاف مؤقت',
-              icon: Icons.pause_rounded,
-              onPressed: actionLoading ? null : onPause,
-            ),
+          if (trip.status == LiveTripStatus.inProgress)
             _ActionButton(
               label: 'إنهاء الرحلة',
               icon: Icons.flag_rounded,
               onPressed: actionLoading ? null : onComplete,
               danger: true,
-            ),
-          ],
-          if (trip.status == LiveTripStatus.paused)
-            _ActionButton(
-              label: 'استكمال الرحلة',
-              icon: Icons.play_arrow_rounded,
-              onPressed: actionLoading ? null : onResume,
-              filled: true,
             ),
           _ActionButton(
             label: 'اتصال بالسائق',
@@ -221,10 +210,7 @@ class _ActionButton extends StatelessWidget {
     return OutlinedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, color: danger ? scheme.error : null),
-      label: Text(
-        label,
-        style: TextStyle(color: danger ? scheme.error : null),
-      ),
+      label: Text(label, style: TextStyle(color: danger ? scheme.error : null)),
     );
   }
 }
@@ -238,15 +224,20 @@ class LiveTripMapPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final points = trip.routePoints;
-    final hasCoords = points.isNotEmpty &&
+    final hasCoords =
+        points.isNotEmpty &&
         (points.first.latitude != 0 || points.first.longitude != 0);
 
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('الخريطة الحية',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+          Text(
+            'الخريطة الحية',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: AppSpacing.medium),
           ClipRRect(
             borderRadius: BorderRadius.circular(AppTokens.radius),
@@ -274,8 +265,10 @@ class _RealMap extends StatelessWidget {
   Widget build(BuildContext context) {
     final points = trip.routePoints;
     final latlngs = points.map((p) => LatLng(p.latitude, p.longitude)).toList();
-    final center = latlngs[points.indexWhere((p) => p.status == LivePointStatus.current)
-        .clamp(0, latlngs.length - 1)];
+    final center =
+        latlngs[points
+            .indexWhere((p) => p.status == LivePointStatus.current)
+            .clamp(0, latlngs.length - 1)];
 
     return FlutterMap(
       options: MapOptions(initialCenter: center, initialZoom: 12),
@@ -340,16 +333,28 @@ class _PlaceholderMap extends StatelessWidget {
       color: scheme.surfaceContainerHighest,
       child: Stack(
         children: [
-          Center(child: Icon(Icons.map_outlined, size: 78, color: scheme.onSurfaceVariant.withAlpha(130))),
+          Center(
+            child: Icon(
+              Icons.map_outlined,
+              size: 78,
+              color: scheme.onSurfaceVariant.withAlpha(130),
+            ),
+          ),
           PositionedDirectional(
             top: 18,
             start: 18,
-            child: _MapPill(label: trip.currentPoint?.name ?? 'غير محدد', icon: Icons.trip_origin_rounded),
+            child: _MapPill(
+              label: trip.currentPoint?.name ?? 'غير محدد',
+              icon: Icons.trip_origin_rounded,
+            ),
           ),
           PositionedDirectional(
             bottom: 18,
             end: 18,
-            child: _MapPill(label: trip.nextPoint?.name ?? 'نهاية الرحلة', icon: Icons.location_on_rounded),
+            child: _MapPill(
+              label: trip.nextPoint?.name ?? 'نهاية الرحلة',
+              icon: Icons.location_on_rounded,
+            ),
           ),
           Center(child: _VehicleMarker(label: trip.vehiclePlate)),
         ],
@@ -386,7 +391,10 @@ class _MapPill extends StatelessWidget {
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(color: scheme.onPrimaryContainer, fontWeight: FontWeight.w800),
+                style: TextStyle(
+                  color: scheme.onPrimaryContainer,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],
@@ -416,7 +424,13 @@ class _VehicleMarker extends StatelessWidget {
         children: [
           Icon(Icons.directions_bus_rounded, color: scheme.onPrimary),
           const SizedBox(width: 6),
-          Text(label, style: TextStyle(color: scheme.onPrimary, fontWeight: FontWeight.w900)),
+          Text(
+            label,
+            style: TextStyle(
+              color: scheme.onPrimary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
         ],
       ),
     );
@@ -443,7 +457,12 @@ class LiveTripRouteTimeline extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('مسار الرحلة', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+          Text(
+            'مسار الرحلة',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: AppSpacing.medium),
           ...List.generate(trip.routePoints.length, (index) {
             final point = trip.routePoints[index];
@@ -505,8 +524,8 @@ class _PointTile extends StatelessWidget {
                 point.status == LivePointStatus.completed
                     ? Icons.check_rounded
                     : isCurrent
-                        ? Icons.directions_bus_rounded
-                        : Icons.circle_rounded,
+                    ? Icons.directions_bus_rounded
+                    : Icons.circle_rounded,
                 size: 14,
                 color: color,
               ),
@@ -527,13 +546,22 @@ class _PointTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(point.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+                Text(
+                  point.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                ),
                 const SizedBox(height: 4),
                 Text(
                   '${point.status.label} · منتظرين ${point.waitingPassengersCount} · صعدوا ${point.boardedPassengersCount}',
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
                 if (isCurrent && tripStatus == LiveTripStatus.inProgress) ...[
                   const SizedBox(height: AppSpacing.small),
@@ -545,32 +573,55 @@ class _PointTile extends StatelessWidget {
                         FilledButton.icon(
                           onPressed: () => onArrived(point.id),
                           style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             minimumSize: const Size(0, 32),
                           ),
                           icon: const Icon(Icons.place_rounded, size: 14),
-                          label: const Text('تسجيل وصول', style: TextStyle(fontSize: 11)),
+                          label: const Text(
+                            'تسجيل وصول',
+                            style: TextStyle(fontSize: 11),
+                          ),
                         ),
-                      if (point.status == LivePointStatus.arrived || point.status == LivePointStatus.current)
+                      if (point.status == LivePointStatus.arrived ||
+                          point.status == LivePointStatus.current)
                         FilledButton.tonalIcon(
                           onPressed: () => onCompleted(point.id),
                           style: FilledButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 4,
+                            ),
                             minimumSize: const Size(0, 32),
                           ),
                           icon: const Icon(Icons.check_rounded, size: 14),
-                          label: const Text('إنهاء المحطة', style: TextStyle(fontSize: 11)),
+                          label: const Text(
+                            'إنهاء المحطة',
+                            style: TextStyle(fontSize: 11),
+                          ),
                         ),
                       OutlinedButton.icon(
                         onPressed: () => onSkipped(point.id),
                         style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
                           minimumSize: const Size(0, 32),
                           foregroundColor: scheme.error,
                           side: BorderSide(color: scheme.error.withAlpha(100)),
                         ),
-                        icon: Icon(Icons.skip_next_rounded, size: 14, color: scheme.error),
-                        label: const Text('تخطي المحطة', style: TextStyle(fontSize: 11)),
+                        icon: Icon(
+                          Icons.skip_next_rounded,
+                          size: 14,
+                          color: scheme.error,
+                        ),
+                        label: const Text(
+                          'تخطي المحطة',
+                          style: TextStyle(fontSize: 11),
+                        ),
                       ),
                     ],
                   ),
@@ -604,7 +655,12 @@ class LiveTripAlertsPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('التنبيهات', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+          Text(
+            'التنبيهات',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: AppSpacing.medium),
           Wrap(
             spacing: AppSpacing.small,
@@ -626,7 +682,9 @@ class LiveTripAlertsPanel extends StatelessWidget {
           if (alerts.isEmpty)
             const Text('لا توجد تنبيهات على هذه الرحلة.')
           else
-            ...alerts.map((alert) => _AlertTile(alert: alert, onResolve: onResolve)),
+            ...alerts.map(
+              (alert) => _AlertTile(alert: alert, onResolve: onResolve),
+            ),
         ],
       ),
     );
@@ -645,8 +703,8 @@ class _AlertTile extends StatelessWidget {
     final color = alert.severity == LiveTripAlertSeverity.critical
         ? scheme.error
         : alert.severity == LiveTripAlertSeverity.warning
-            ? scheme.tertiary
-            : scheme.primary;
+        ? scheme.tertiary
+        : scheme.primary;
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppSpacing.small),
@@ -665,11 +723,28 @@ class _AlertTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(alert.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+                Text(
+                  alert.title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                ),
                 const SizedBox(height: 3),
-                Text(alert.message, maxLines: 3, overflow: TextOverflow.ellipsis),
+                Text(
+                  alert.message,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 const SizedBox(height: 6),
-                Text('${alert.type.label} · ${alert.severity.label}', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color, fontWeight: FontWeight.w800)),
+                Text(
+                  '${alert.type.label} · ${alert.severity.label}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ],
             ),
           ),
@@ -702,7 +777,12 @@ class LiveTripPassengersPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('الركاب', style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
+          Text(
+            'الركاب',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          ),
           const SizedBox(height: AppSpacing.medium),
           if (passengers.isEmpty)
             const Text('لا توجد بيانات ركاب لهذه الرحلة.')
@@ -720,10 +800,7 @@ class LiveTripPassengersPanel extends StatelessWidget {
 }
 
 class _PassengerTile extends StatelessWidget {
-  const _PassengerTile({
-    required this.passenger,
-    required this.onTap,
-  });
+  const _PassengerTile({required this.passenger, required this.onTap});
 
   final LivePassengerCheckin passenger;
   final VoidCallback onTap;
@@ -749,7 +826,9 @@ class _PassengerTile extends StatelessWidget {
               CircleAvatar(
                 backgroundColor: color.withAlpha(20),
                 child: Icon(
-                  passenger.checkedIn ? Icons.check_rounded : Icons.schedule_rounded,
+                  passenger.checkedIn
+                      ? Icons.check_rounded
+                      : Icons.schedule_rounded,
                   color: color,
                 ),
               ),
@@ -762,7 +841,9 @@ class _PassengerTile extends StatelessWidget {
                       passenger.passengerName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -840,32 +921,55 @@ class _SimulatedCallDialogState extends State<_SimulatedCallDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('اتصال جاري...', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'اتصال جاري...',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: AppSpacing.large),
             CircleAvatar(
               radius: 40,
               backgroundColor: scheme.primaryContainer,
               child: Text(
                 widget.trip.driverName.substring(0, 1),
-                style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: scheme.onPrimaryContainer),
+                style: TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.bold,
+                  color: scheme.onPrimaryContainer,
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.medium),
-            Text(widget.trip.driverName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-            Text(widget.trip.driverPhone, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant)),
+            Text(
+              widget.trip.driverName,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              widget.trip.driverPhone,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+            ),
             const SizedBox(height: AppSpacing.large),
             Text(
               _formatDuration(_seconds),
               style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontFamily: 'monospace',
-                  ),
+                fontWeight: FontWeight.bold,
+                fontFamily: 'monospace',
+              ),
             ),
             const SizedBox(height: AppSpacing.large),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(5, (index) {
-                final double height = 10 + (index % 2 == 0 ? (_seconds % 4) * 6.0 : (4 - (_seconds % 4)) * 6.0);
+                final double height =
+                    10 +
+                    (index % 2 == 0
+                        ? (_seconds % 4) * 6.0
+                        : (4 - (_seconds % 4)) * 6.0);
                 return Container(
                   width: 4,
                   height: height,
@@ -908,19 +1012,23 @@ class _SimulatedChatDialogState extends State<_SimulatedChatDialog> {
   void initState() {
     super.initState();
     _messages.addAll([
-      {'isMe': false, 'text': 'مرحباً، بدأت التحرك للمحطة التالية.', 'time': '١٠:٤٢ ص'},
-      {'isMe': true, 'text': 'تمام، يرجى إبلاغنا عند الوصول.', 'time': '١٠:٤٣ ص'},
+      {
+        'isMe': false,
+        'text': 'مرحباً، بدأت التحرك للمحطة التالية.',
+        'time': '١٠:٤٢ ص',
+      },
+      {
+        'isMe': true,
+        'text': 'تمام، يرجى إبلاغنا عند الوصول.',
+        'time': '١٠:٤٣ ص',
+      },
     ]);
   }
 
   void _sendMessage(String text) {
     if (text.trim().isEmpty) return;
     setState(() {
-      _messages.add({
-        'isMe': true,
-        'text': text.trim(),
-        'time': 'الآن',
-      });
+      _messages.add({'isMe': true, 'text': text.trim(), 'time': 'الآن'});
     });
     _controller.clear();
     context.read<LiveTripsCubit>().messageSelectedDriver(text);
@@ -965,17 +1073,28 @@ class _SimulatedChatDialogState extends State<_SimulatedChatDialog> {
             children: [
               Row(
                 children: [
-                  CircleAvatar(child: Text(widget.trip.driverName.substring(0, 1))),
+                  CircleAvatar(
+                    child: Text(widget.trip.driverName.substring(0, 1)),
+                  ),
                   const SizedBox(width: AppSpacing.medium),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.trip.driverName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                      Text('نشط الآن', style: TextStyle(color: scheme.primary, fontSize: 11)),
+                      Text(
+                        widget.trip.driverName,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'نشط الآن',
+                        style: TextStyle(color: scheme.primary, fontSize: 11),
+                      ),
                     ],
                   ),
                   const Spacer(),
-                  IconButton(onPressed: () => Navigator.pop(context), icon: const Icon(Icons.close)),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
                 ],
               ),
               const Divider(),
@@ -987,17 +1106,28 @@ class _SimulatedChatDialogState extends State<_SimulatedChatDialog> {
                     final msg = _messages[index];
                     final isMe = msg['isMe'] as bool;
                     return Align(
-                      alignment: isMe ? Alignment.centerLeft : Alignment.centerRight,
+                      alignment: isMe
+                          ? Alignment.centerLeft
+                          : Alignment.centerRight,
                       child: Container(
                         margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: isMe ? scheme.primaryContainer : scheme.surfaceContainerHighest,
+                          color: isMe
+                              ? scheme.primaryContainer
+                              : scheme.surfaceContainerHighest,
                           borderRadius: BorderRadius.only(
                             topLeft: const Radius.circular(12),
                             topRight: const Radius.circular(12),
-                            bottomLeft: isMe ? Radius.zero : const Radius.circular(12),
-                            bottomRight: isMe ? const Radius.circular(12) : Radius.zero,
+                            bottomLeft: isMe
+                                ? Radius.zero
+                                : const Radius.circular(12),
+                            bottomRight: isMe
+                                ? const Radius.circular(12)
+                                : Radius.zero,
                           ),
                         ),
                         child: Column(
@@ -1007,7 +1137,10 @@ class _SimulatedChatDialogState extends State<_SimulatedChatDialog> {
                             const SizedBox(height: 2),
                             Text(
                               msg['time'] as String,
-                              style: TextStyle(fontSize: 9, color: scheme.onSurfaceVariant),
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: scheme.onSurfaceVariant,
+                              ),
                             ),
                           ],
                         ),
@@ -1019,16 +1152,20 @@ class _SimulatedChatDialogState extends State<_SimulatedChatDialog> {
               const Divider(),
               Wrap(
                 spacing: 4,
-                children: [
-                  'أين أنت الآن؟',
-                  'هل تواجه زحاماً؟',
-                  'تأكيد الوصول للمحطة',
-                ].map((reply) {
-                  return ActionChip(
-                    label: Text(reply, style: const TextStyle(fontSize: 11)),
-                    onPressed: () => _sendMessage(reply),
-                  );
-                }).toList(),
+                children:
+                    [
+                      'أين أنت الآن؟',
+                      'هل تواجه زحاماً؟',
+                      'تأكيد الوصول للمحطة',
+                    ].map((reply) {
+                      return ActionChip(
+                        label: Text(
+                          reply,
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                        onPressed: () => _sendMessage(reply),
+                      );
+                    }).toList(),
               ),
               const SizedBox(height: 4),
               Row(
@@ -1067,7 +1204,9 @@ class _ReportDelayDialog extends StatefulWidget {
 
 class _ReportDelayDialogState extends State<_ReportDelayDialog> {
   int _selectedMinutes = 15;
-  final TextEditingController _reasonController = TextEditingController(text: 'كثافة مرورية على الطريق');
+  final TextEditingController _reasonController = TextEditingController(
+    text: 'كثافة مرورية على الطريق',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -1079,7 +1218,12 @@ class _ReportDelayDialogState extends State<_ReportDelayDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('تسجيل تأخير جديد', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'تسجيل تأخير جديد',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: AppSpacing.medium),
             const Text('مدة التأخير:'),
             const SizedBox(height: AppSpacing.small),
@@ -1101,20 +1245,25 @@ class _ReportDelayDialogState extends State<_ReportDelayDialog> {
             const SizedBox(height: AppSpacing.small),
             TextField(
               controller: _reasonController,
-              decoration: const InputDecoration(hintText: 'مثال: زحام مروري، عطل بسيط'),
+              decoration: const InputDecoration(
+                hintText: 'مثال: زحام مروري، عطل بسيط',
+              ),
             ),
             const SizedBox(height: AppSpacing.large),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('إلغاء'),
+                ),
                 const SizedBox(width: AppSpacing.small),
                 FilledButton(
                   onPressed: () {
                     context.read<LiveTripsCubit>().reportDelayAlert(
-                          minutes: _selectedMinutes,
-                          reason: _reasonController.text.trim(),
-                        );
+                      minutes: _selectedMinutes,
+                      reason: _reasonController.text.trim(),
+                    );
                     Navigator.pop(context);
                   },
                   child: const Text('تسجيل التأخير'),
@@ -1155,7 +1304,13 @@ class _ReportEmergencyDialogState extends State<_ReportEmergencyDialog> {
               children: [
                 Icon(Icons.warning_rounded, color: scheme.error),
                 const SizedBox(width: 8),
-                Text('إبلاغ عن حالة طوارئ', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: scheme.error)),
+                Text(
+                  'إبلاغ عن حالة طوارئ',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: scheme.error,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.medium),
@@ -1164,9 +1319,18 @@ class _ReportEmergencyDialogState extends State<_ReportEmergencyDialog> {
             DropdownButtonFormField<LiveTripAlertType>(
               initialValue: _selectedType,
               items: const [
-                DropdownMenuItem(value: LiveTripAlertType.emergency, child: Text('حالة طوارئ عامة')),
-                DropdownMenuItem(value: LiveTripAlertType.vehicleIssue, child: Text('عطل فني في الأتوبيس')),
-                DropdownMenuItem(value: LiveTripAlertType.routeDeviation, child: Text('انحراف عن المسار المقدر')),
+                DropdownMenuItem(
+                  value: LiveTripAlertType.emergency,
+                  child: Text('حالة طوارئ عامة'),
+                ),
+                DropdownMenuItem(
+                  value: LiveTripAlertType.vehicleIssue,
+                  child: Text('عطل فني في الأتوبيس'),
+                ),
+                DropdownMenuItem(
+                  value: LiveTripAlertType.routeDeviation,
+                  child: Text('انحراف عن المسار المقدر'),
+                ),
               ],
               onChanged: (val) {
                 if (val != null) setState(() => _selectedType = val);
@@ -1178,20 +1342,27 @@ class _ReportEmergencyDialogState extends State<_ReportEmergencyDialog> {
             TextField(
               controller: _descController,
               maxLines: 3,
-              decoration: const InputDecoration(hintText: 'يرجى كتابة تفاصيل المشكلة بدقة ليتم إرسال الدعم.'),
+              decoration: const InputDecoration(
+                hintText: 'يرجى كتابة تفاصيل المشكلة بدقة ليتم إرسال الدعم.',
+              ),
             ),
             const SizedBox(height: AppSpacing.large),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('إلغاء')),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('إلغاء'),
+                ),
                 const SizedBox(width: AppSpacing.small),
                 FilledButton(
                   onPressed: () {
                     context.read<LiveTripsCubit>().reportEmergencyAlert(
-                          type: _selectedType,
-                          reason: _descController.text.trim().isEmpty ? 'بلاغ طوارئ جديد' : _descController.text.trim(),
-                        );
+                      type: _selectedType,
+                      reason: _descController.text.trim().isEmpty
+                          ? 'بلاغ طوارئ جديد'
+                          : _descController.text.trim(),
+                    );
                     Navigator.pop(context);
                   },
                   style: FilledButton.styleFrom(backgroundColor: scheme.error),

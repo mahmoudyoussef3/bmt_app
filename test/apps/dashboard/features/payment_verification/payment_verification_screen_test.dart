@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/apps/dashboard/features/payment_verification/data/datasources/mock_booking_payment_verification_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/payment_verification/data/repositories/booking_payment_verification_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/usecases/add_booking_payment_note_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/usecases/approve_booking_payment_usecase.dart';
@@ -12,12 +11,14 @@ import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/usec
 import 'package:bmt_app/apps/dashboard/features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/payment_verification/presentation/screens/payment_verification_screen.dart';
 
+import 'fake_booking_payment_verification_datasource.dart';
+
 void main() {
   testWidgets('PaymentVerificationScreen renders compact layout safely', (
     tester,
   ) async {
     final repository = BookingPaymentVerificationRepositoryImpl(
-      MockBookingPaymentVerificationDatasource(),
+      FakeBookingPaymentVerificationDatasource(),
     );
     final cubit = PaymentVerificationCubit(
       getQueue: GetBookingPaymentVerificationsUseCase(repository),
@@ -45,13 +46,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.text('قائمة تحقق الدفع'), findsOneWidget);
-    await tester.scrollUntilVisible(
-      find.text('معاينة الإيصال'),
-      500,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('معاينة الإيصال'), findsOneWidget);
+    expect(find.text('تحقق مدفوعات الحجوزات'), findsOneWidget);
+    expect(find.text('قائمة المراجعة'), findsOneWidget);
+    expect(find.text('خالد محمود'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await cubit.close();

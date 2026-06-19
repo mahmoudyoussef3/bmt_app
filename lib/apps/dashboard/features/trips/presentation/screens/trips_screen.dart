@@ -1121,11 +1121,14 @@ class _TripWorkspace extends StatelessWidget {
                 if (updated != null && context.mounted) {
                   context.read<TripsListCubit>().updateTripInList(updated);
                 } else if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('تعذر تحديث حالة الرحلة. حاول مرة أخرى.'),
-                    ),
-                  );
+                  final message = switch (cubit.state) {
+                    TripDetailsLoaded(:final lastError) =>
+                      lastError ?? 'تعذر تحديث حالة الرحلة. حاول مرة أخرى.',
+                    _ => 'تعذر تحديث حالة الرحلة. حاول مرة أخرى.',
+                  };
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text(message)));
                 }
               },
             ),
@@ -1146,13 +1149,14 @@ class _TripWorkspace extends StatelessWidget {
                     if (updated != null && context.mounted) {
                       context.read<TripsListCubit>().updateTripInList(updated);
                     } else if (context.mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            'تعذر تحديث حالة الرحلة. حاول مرة أخرى.',
-                          ),
-                        ),
-                      );
+                      final message = switch (cubit.state) {
+                        TripDetailsLoaded(:final lastError) =>
+                          lastError ?? 'تعذر تحديث حالة الرحلة. حاول مرة أخرى.',
+                        _ => 'تعذر تحديث حالة الرحلة. حاول مرة أخرى.',
+                      };
+                      ScaffoldMessenger.of(
+                        context,
+                      ).showSnackBar(SnackBar(content: Text(message)));
                     }
                   },
                   onSelectTab: cubit.changeWorkspaceTab,

@@ -3,11 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/app_button.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
+import '../../../../core/widgets/dashboard_module_header.dart';
+import '../../../../core/widgets/dashboard_state_views.dart';
 import '../../domain/entities/booking_payment_verification.dart';
 import '../cubit/payment_verification_cubit.dart';
 import '../cubit/payment_verification_state.dart';
@@ -17,14 +18,36 @@ class PaymentVerificationScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<PaymentVerificationCubit, PaymentVerificationState>(
+    return BlocConsumer<PaymentVerificationCubit, PaymentVerificationState>(
+      listenWhen: (previous, current) => current is PaymentVerificationLoaded,
+      listener: (context, state) {
+        if (state is! PaymentVerificationLoaded) return;
+        final messenger = ScaffoldMessenger.maybeOf(context);
+        if (messenger == null) return;
+        final message = state.message;
+        final error = state.errorMessage;
+        if (message == null && error == null) return;
+        messenger
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(message ?? error ?? ''),
+              backgroundColor: error == null
+                  ? Theme.of(context).colorScheme.primary
+                  : Theme.of(context).colorScheme.error,
+            ),
+          );
+        context.read<PaymentVerificationCubit>().clearFeedback();
+      },
       builder: (context, state) {
         return switch (state) {
-          PaymentVerificationLoading() => const Center(
-            child: CircularProgressIndicator(),
+          PaymentVerificationLoading() => const DashboardLoading(
+            rows: 6,
+            showHeader: true,
           ),
-          PaymentVerificationError(:final message) => Center(
-            child: Text(message),
+          PaymentVerificationError(:final message) => DashboardErrorState(
+            message: message,
+            onRetry: () => context.read<PaymentVerificationCubit>().load(),
           ),
           PaymentVerificationLoaded() => _VerificationLoadedView(state: state),
         };
@@ -43,53 +66,81 @@ class _VerificationLoadedView extends StatelessWidget {
     final cubit = context.read<PaymentVerificationCubit>();
     final selected = state.selectedItem;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 1080;
-        final queue = _VerificationQueue(state: state, onSelect: cubit.select);
-        final review = selected == null
-            ? const AppCard(
-                child: EmptyState(
-                  title: 'لا توجد إيصالات للمراجعة',
-                  subtitle: 'ستظهر إيصالات الحجز الجديدة هنا فور وصولها.',
-                ),
-              )
-            : _ReviewScreen(
-                item: selected,
-                zoom: state.receiptZoom,
-                scrollable: !compact,
-                onZoomChanged: cubit.setReceiptZoom,
-                onApprove: (note) => cubit.approve(selected, note),
-                onReject: (note) => cubit.reject(selected, note),
-                onRequestReview: (note) => cubit.requestReview(selected, note),
-                onAddNote: (note) => cubit.addNote(selected, note),
-              );
-
-        if (compact) {
-          return ListView(
-            padding: const EdgeInsets.all(AppSpacing.large),
-            children: [
-              queue,
-              const SizedBox(height: AppSpacing.large),
-              review,
-            ],
-          );
-        }
-
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              width: 430,
-              child: ListView(
-                padding: const EdgeInsets.all(AppSpacing.large),
-                children: [queue],
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          DashboardModuleHeader(
+            icon: Icons.fact_check_outlined,
+            title: 'تحقق مدفوعات الحجوزات',
+            subtitle:
+                'راجع الإيصالات، ثبّت المقاعد، اطلب إعادة الرفع، واترك سجل مراجعة واضح لكل حجز.',
+            actions: [
+              OutlinedButton.icon(
+                onPressed: state.isSaving ? null : cubit.load,
+                icon: state.isSaving
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded),
+                label: const Text('تحديث'),
               ),
+            ],
+            child: _VerificationToolbar(
+              state: state,
+              onQueryChanged: cubit.setQuery,
+              onFilterChanged: cubit.setFilter,
             ),
-            Expanded(child: review),
-          ],
-        );
-      },
+          ),
+          const SizedBox(height: AppSpacing.large),
+          Expanded(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 1080;
+                final queue = _VerificationQueue(
+                  state: state,
+                  onSelect: cubit.select,
+                );
+                final review = selected == null
+                    ? const _NoSelectionPanel()
+                    : _ReviewScreen(
+                        item: selected,
+                        zoom: state.receiptZoom,
+                        scrollable: !compact,
+                        isSaving: state.isSaving,
+                        onZoomChanged: cubit.setReceiptZoom,
+                        onApprove: (note) => cubit.approve(selected, note),
+                        onReject: (note) => cubit.reject(selected, note),
+                        onRequestReview: (note) =>
+                            cubit.requestReview(selected, note),
+                        onAddNote: (note) => cubit.addNote(selected, note),
+                      );
+
+                if (compact) {
+                  return ListView(
+                    children: [
+                      SizedBox(height: 560, child: queue),
+                      const SizedBox(height: AppSpacing.large),
+                      review,
+                    ],
+                  );
+                }
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(width: 420, child: queue),
+                    const SizedBox(width: AppSpacing.large),
+                    Expanded(child: review),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -102,56 +153,141 @@ class _VerificationQueue extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final visibleItems = state.visibleItems;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const _QueueHeader(),
+          if (visibleItems.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(AppSpacing.large),
+              child: EmptyState(
+                title: 'لا توجد حجوزات مطابقة',
+                subtitle: 'غيّر البحث أو الفلتر لعرض بقية الطلبات.',
+              ),
+            )
+          else
+            Expanded(
+              child: ListView.separated(
+                padding: const EdgeInsets.all(AppSpacing.medium),
+                itemCount: visibleItems.length,
+                separatorBuilder: (context, index) =>
+                    const SizedBox(height: AppSpacing.small),
+                itemBuilder: (context, index) {
+                  final item = visibleItems[index];
+                  return _QueueCard(
+                    item: item,
+                    selected: item.id == state.selectedItem?.id,
+                    onTap: () => onSelect(item.id),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VerificationToolbar extends StatelessWidget {
+  final PaymentVerificationLoaded state;
+  final ValueChanged<String> onQueryChanged;
+  final ValueChanged<PaymentVerificationFilter> onFilterChanged;
+
+  const _VerificationToolbar({
+    required this.state,
+    required this.onQueryChanged,
+    required this.onFilterChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final search = SearchBar(
+          hintText: 'ابحث بالعميل، الهاتف، رقم الحجز، المسار أو المرجع',
+          leading: const Icon(Icons.search_rounded),
+          onChanged: onQueryChanged,
+        );
+        final filters = SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.fact_check_outlined, size: 38),
-                  const SizedBox(width: AppSpacing.medium),
-                  Expanded(
-                    child: Text(
-                      'قائمة تحقق الدفع',
-                      style: Theme.of(context).textTheme.headlineSmall,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.small),
-              Text(
-                'مراجعة إيصالات الحجز قبل تثبيت المقاعد نهائياً.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
+              for (final filter in PaymentVerificationFilter.values) ...[
+                ChoiceChip(
+                  label: Text(filter.label),
+                  selected: state.filter == filter,
+                  onSelected: (_) => onFilterChanged(filter),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: [
-                  _Metric(label: 'بانتظار', value: '${state.pendingCount}'),
-                  _Metric(label: 'مراجعة', value: '${state.reviewCount}'),
-                  _Metric(label: 'مقبولة', value: '${state.approvedCount}'),
-                ],
-              ),
+                const SizedBox(width: AppSpacing.xSmall),
+              ],
             ],
           ),
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        ...state.items.map(
-          (item) => _QueueCard(
-            item: item,
-            selected: item.id == state.selectedId,
-            onTap: () => onSelect(item.id),
+        );
+
+        final stats = Wrap(
+          spacing: AppSpacing.small,
+          runSpacing: AppSpacing.small,
+          children: [
+            _Metric(label: 'بانتظار', value: '${state.pendingCount}'),
+            _Metric(label: 'مراجعة', value: '${state.reviewCount}'),
+            _Metric(label: 'مقبولة', value: '${state.approvedCount}'),
+            _Metric(label: 'المعروض', value: '${state.visibleItems.length}'),
+          ],
+        );
+
+        if (constraints.maxWidth < 920) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              search,
+              const SizedBox(height: AppSpacing.medium),
+              filters,
+              const SizedBox(height: AppSpacing.medium),
+              stats,
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(flex: 5, child: search),
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(flex: 4, child: filters),
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(flex: 4, child: stats),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _QueueHeader extends StatelessWidget {
+  const _QueueHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Padding(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Row(
+        children: [
+          Icon(Icons.queue_outlined, color: scheme.primary),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Text(
+              'قائمة المراجعة',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -201,45 +337,126 @@ class _QueueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final statusColor = _verificationStatusColor(context, item.status);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-      child: AppCard(
-        onTap: onTap,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            border: Border.all(
-              color: selected ? scheme.primary : scheme.outline.withAlpha(0),
-              width: selected ? 2 : 0,
-            ),
-            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-          ),
-          child: Padding(
-            padding: EdgeInsets.zero,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        item.customer.name,
-                        style: Theme.of(context).textTheme.titleMedium,
-                      ),
-                    ),
-                    StatusChip(label: item.status.label),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.small),
-                Text('${item.trip.route} • ${item.trip.time}'),
-                const SizedBox(height: AppSpacing.xSmall),
-                Text('مقعد ${item.selectedSeat} • ${item.amount}'),
-                const SizedBox(height: AppSpacing.xSmall),
-                Text(item.seatState.label),
-              ],
-            ),
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTokens.radius),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.all(AppSpacing.medium),
+        decoration: BoxDecoration(
+          color: selected
+              ? scheme.primary.withAlpha(16)
+              : scheme.surfaceContainerHighest.withAlpha(42),
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+          border: Border.all(
+            color: selected ? scheme.primary : scheme.outlineVariant,
+            width: selected ? 2 : 1,
           ),
         ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: statusColor.withAlpha(24),
+                  foregroundColor: statusColor,
+                  child: Icon(_statusIcon(item.status), size: 18),
+                ),
+                const SizedBox(width: AppSpacing.small),
+                Expanded(
+                  child: Text(
+                    item.customer.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall,
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.small),
+                StatusChip(label: item.status.label),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.small),
+            Text(
+              item.trip.route.isEmpty ? 'مسار غير محدد' : item.trip.route,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            const SizedBox(height: AppSpacing.xSmall),
+            Wrap(
+              spacing: AppSpacing.small,
+              runSpacing: AppSpacing.xSmall,
+              children: [
+                _InlineMeta(
+                  icon: Icons.event_seat_outlined,
+                  text: 'مقعد ${item.selectedSeat}',
+                ),
+                _InlineMeta(icon: Icons.payments_outlined, text: item.amount),
+                _InlineMeta(
+                  icon: Icons.schedule_outlined,
+                  text: item.trip.time,
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.xSmall),
+            Text(
+              '${item.method.label} • ${item.seatState.label}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: statusColor,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InlineMeta extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _InlineMeta({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 4),
+        Text(
+          text,
+          style: Theme.of(
+            context,
+          ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+      ],
+    );
+  }
+}
+
+class _NoSelectionPanel extends StatelessWidget {
+  const _NoSelectionPanel();
+
+  @override
+  Widget build(BuildContext context) {
+    return const AppCard(
+      child: EmptyState(
+        title: 'لا توجد إيصالات للمراجعة',
+        subtitle:
+            'ستظهر إيصالات الحجز الجديدة هنا فور وصولها أو عند تغيير الفلتر.',
       ),
     );
   }
@@ -249,6 +466,7 @@ class _ReviewScreen extends StatefulWidget {
   final BookingPaymentVerification item;
   final double zoom;
   final bool scrollable;
+  final bool isSaving;
   final ValueChanged<double> onZoomChanged;
   final ValueChanged<String> onApprove;
   final ValueChanged<String> onReject;
@@ -259,6 +477,7 @@ class _ReviewScreen extends StatefulWidget {
     required this.item,
     required this.zoom,
     this.scrollable = true,
+    required this.isSaving,
     required this.onZoomChanged,
     required this.onApprove,
     required this.onReject,
@@ -296,9 +515,31 @@ class _ReviewScreenState extends State<_ReviewScreen> {
           final details = _ReviewDetails(
             item: item,
             notes: _notes,
-            onApprove: () => _submit(widget.onApprove),
-            onReject: () => _submit(widget.onReject),
-            onRequestReview: () => _submit(widget.onRequestReview),
+            isSaving: widget.isSaving,
+            onApprove: () => _confirmAndSubmit(
+              context,
+              title: 'اعتماد الدفع',
+              message:
+                  'سيتم تثبيت المقعد ${item.selectedSeat} نهائياً للحجز ${item.bookingId}.',
+              confirmLabel: 'اعتماد',
+              action: widget.onApprove,
+            ),
+            onReject: () => _confirmAndSubmit(
+              context,
+              title: 'رفض الدفع',
+              message:
+                  'سيتم رفض الدفع وتحرير المقعد ${item.selectedSeat}. اكتب سبب الرفض في الملاحظات قبل التأكيد.',
+              confirmLabel: 'رفض الدفع',
+              action: widget.onReject,
+            ),
+            onRequestReview: () => _confirmAndSubmit(
+              context,
+              title: 'طلب مراجعة من العميل',
+              message:
+                  'سيبقى المقعد مؤقتاً وسيتم تسجيل طلب مراجعة أو إعادة رفع الإيصال.',
+              confirmLabel: 'طلب مراجعة',
+              action: widget.onRequestReview,
+            ),
             onAddNote: () => _submit(widget.onAddNote),
           );
 
@@ -338,6 +579,34 @@ class _ReviewScreenState extends State<_ReviewScreen> {
     action(_notes.text);
     _notes.clear();
   }
+
+  Future<void> _confirmAndSubmit(
+    BuildContext context, {
+    required String title,
+    required String message,
+    required String confirmLabel,
+    required ValueChanged<String> action,
+  }) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(confirmLabel),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    _submit(action);
+  }
 }
 
 class _ReviewHeader extends StatelessWidget {
@@ -350,6 +619,7 @@ class _ReviewHeader extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return AppCard(
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           CircleAvatar(
             radius: 28,
@@ -369,10 +639,13 @@ class _ReviewHeader extends StatelessWidget {
                 const SizedBox(height: AppSpacing.xSmall),
                 Text(
                   '${item.amount} • ${item.method.label} • ${item.bookingId}',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
+          const SizedBox(width: AppSpacing.small),
           StatusChip(label: item.seatState.label),
         ],
       ),
@@ -424,60 +697,112 @@ class _ReceiptPreview extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(AppTokens.radius),
             child: Container(
-              height: 520,
+              constraints: const BoxConstraints(minHeight: 360, maxHeight: 460),
               width: double.infinity,
-              color: scheme.surfaceContainerHighest,
-              child: Center(
-                child: Transform.scale(
-                  scale: zoom,
-                  child: Container(
-                    width: 280,
-                    padding: const EdgeInsets.all(AppSpacing.large),
-                    decoration: BoxDecoration(
-                      color: scheme.surface,
-                      borderRadius: BorderRadius.circular(AppTokens.radius),
-                      border: Border.all(color: scheme.outlineVariant),
-                      boxShadow: [
-                        BoxShadow(
-                          color: scheme.shadow.withAlpha(35),
-                          blurRadius: 18,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.image_outlined, size: 52),
-                        const SizedBox(height: AppSpacing.medium),
-                        Text(
-                          item.receiptTitle,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: AppSpacing.small),
-                        Text(item.referenceNumber, textAlign: TextAlign.center),
-                        const Divider(height: AppSpacing.large),
-                        _ReceiptLine(label: 'المبلغ', value: item.amount),
-                        _ReceiptLine(
-                          label: 'الطريقة',
-                          value: item.method.label,
-                        ),
-                        _ReceiptLine(label: 'الحجز', value: item.bookingId),
-                        const SizedBox(height: AppSpacing.small),
-                        Text(
-                          item.receiptMeta,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall,
-                        ),
-                      ],
-                    ),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withAlpha(72),
+                border: Border.all(color: scheme.outlineVariant),
+              ),
+              child: InteractiveViewer(
+                minScale: 0.8,
+                maxScale: 3,
+                child: Center(
+                  child: Transform.scale(
+                    scale: zoom,
+                    child: item.receiptUrl == null || item.receiptUrl!.isEmpty
+                        ? _ReceiptPlaceholder(item: item)
+                        : Image.network(
+                            item.receiptUrl!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                _ReceiptPlaceholder(
+                                  item: item,
+                                  failedUrl: true,
+                                ),
+                            loadingBuilder: (context, child, loadingProgress) {
+                              if (loadingProgress == null) return child;
+                              return const SizedBox(
+                                height: 220,
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              );
+                            },
+                          ),
                   ),
                 ),
               ),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ReceiptPlaceholder extends StatelessWidget {
+  final BookingPaymentVerification item;
+  final bool failedUrl;
+
+  const _ReceiptPlaceholder({required this.item, this.failedUrl = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 360),
+      child: Container(
+        margin: const EdgeInsets.all(AppSpacing.large),
+        padding: const EdgeInsets.all(AppSpacing.large),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+          border: Border.all(color: scheme.outlineVariant),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withAlpha(28),
+              blurRadius: 18,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              failedUrl ? Icons.broken_image_outlined : Icons.image_outlined,
+              size: 46,
+              color: scheme.onSurfaceVariant,
+            ),
+            const SizedBox(height: AppSpacing.medium),
+            Text(
+              failedUrl ? 'تعذر عرض الإيصال' : item.receiptTitle,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: AppSpacing.small),
+            Text(
+              item.referenceNumber.isEmpty
+                  ? 'لا يوجد رقم مرجعي'
+                  : item.referenceNumber,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
+            const Divider(height: AppSpacing.large),
+            _ReceiptLine(label: 'المبلغ', value: item.amount),
+            _ReceiptLine(label: 'الطريقة', value: item.method.label),
+            _ReceiptLine(label: 'الحجز', value: item.bookingId),
+            const SizedBox(height: AppSpacing.small),
+            Text(
+              item.receiptMeta,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -495,8 +820,17 @@ class _ReceiptLine extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
       child: Row(
         children: [
-          Expanded(child: Text(label)),
-          Text(value, style: Theme.of(context).textTheme.labelLarge),
+          Text(label),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+          ),
         ],
       ),
     );
@@ -506,6 +840,7 @@ class _ReceiptLine extends StatelessWidget {
 class _ReviewDetails extends StatelessWidget {
   final BookingPaymentVerification item;
   final TextEditingController notes;
+  final bool isSaving;
   final VoidCallback onApprove;
   final VoidCallback onReject;
   final VoidCallback onRequestReview;
@@ -514,6 +849,7 @@ class _ReviewDetails extends StatelessWidget {
   const _ReviewDetails({
     required this.item,
     required this.notes,
+    required this.isSaving,
     required this.onApprove,
     required this.onReject,
     required this.onRequestReview,
@@ -549,7 +885,7 @@ class _ReviewDetails extends StatelessWidget {
             controller: notes,
             minLines: 3,
             maxLines: 4,
-            textDirection: TextDirection.ltr,
+            textDirection: TextDirection.rtl,
             decoration: const InputDecoration(
               labelText: 'ملاحظات التحقق',
               hintText: 'اكتب سبب القرار أو ملاحظة للمتابعة',
@@ -560,24 +896,30 @@ class _ReviewDetails extends StatelessWidget {
             spacing: AppSpacing.small,
             runSpacing: AppSpacing.small,
             children: [
-              AppButton(label: 'اعتماد', height: 42, onPressed: onApprove),
-              AppButton(
-                label: 'رفض',
-                height: 42,
-                outline: true,
-                onPressed: onReject,
+              FilledButton.icon(
+                onPressed: isSaving ? null : onApprove,
+                icon: isSaving
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.check_circle_outline_rounded),
+                label: const Text('اعتماد الدفع'),
               ),
-              AppButton(
-                label: 'طلب مراجعة',
-                height: 42,
-                outline: true,
-                onPressed: onRequestReview,
+              OutlinedButton.icon(
+                onPressed: isSaving ? null : onReject,
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('رفض'),
               ),
-              AppButton(
-                label: 'إضافة ملاحظة',
-                height: 42,
-                outline: true,
-                onPressed: onAddNote,
+              OutlinedButton.icon(
+                onPressed: isSaving ? null : onRequestReview,
+                icon: const Icon(Icons.upload_file_outlined),
+                label: const Text('طلب مراجعة'),
+              ),
+              TextButton.icon(
+                onPressed: isSaving ? null : onAddNote,
+                icon: const Icon(Icons.note_add_outlined),
+                label: const Text('إضافة ملاحظة'),
               ),
             ],
           ),
@@ -611,8 +953,16 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(width: 92, child: Text(label)),
-          Expanded(child: Text(value)),
+          SizedBox(
+            width: 92,
+            child: Text(label, style: Theme.of(context).textTheme.bodySmall),
+          ),
+          Expanded(
+            child: SelectableText(
+              value.isEmpty ? 'غير محدد' : value,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ),
         ],
       ),
     );
@@ -669,4 +1019,26 @@ class _HistoryRow extends StatelessWidget {
       ),
     );
   }
+}
+
+Color _verificationStatusColor(
+  BuildContext context,
+  BookingVerificationStatus status,
+) {
+  final scheme = Theme.of(context).colorScheme;
+  return switch (status) {
+    BookingVerificationStatus.pending => const Color(0xFFB45309),
+    BookingVerificationStatus.approved => const Color(0xFF0F766E),
+    BookingVerificationStatus.rejected => scheme.error,
+    BookingVerificationStatus.reviewRequested => scheme.tertiary,
+  };
+}
+
+IconData _statusIcon(BookingVerificationStatus status) {
+  return switch (status) {
+    BookingVerificationStatus.pending => Icons.hourglass_top_rounded,
+    BookingVerificationStatus.approved => Icons.check_circle_outline_rounded,
+    BookingVerificationStatus.rejected => Icons.cancel_outlined,
+    BookingVerificationStatus.reviewRequested => Icons.upload_file_outlined,
+  };
 }

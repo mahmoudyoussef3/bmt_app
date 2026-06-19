@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/features/payment_verification/data/datasources/booking_payment_verification_datasource.dart';
-import 'package:bmt_app/apps/dashboard/features/payment_verification/data/datasources/mock_booking_payment_verification_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/payment_verification/data/models/booking_payment_verification_model.dart';
 import 'package:bmt_app/apps/dashboard/features/payment_verification/data/repositories/booking_payment_verification_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/entities/booking_payment_verification.dart';
@@ -10,11 +9,13 @@ import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/usec
 import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/usecases/reject_booking_payment_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/usecases/request_booking_payment_review_usecase.dart';
 
+import 'fake_booking_payment_verification_datasource.dart';
+
 void main() {
   group('Booking payment verification clean architecture chain', () {
     test('loads verification queue with receipt and booking details', () async {
       final repository = BookingPaymentVerificationRepositoryImpl(
-        MockBookingPaymentVerificationDatasource(),
+        FakeBookingPaymentVerificationDatasource(),
       );
       final getQueue = GetBookingPaymentVerificationsUseCase(repository);
 
@@ -28,7 +29,7 @@ void main() {
 
     test('approval confirms selected seat permanently', () async {
       final repository = BookingPaymentVerificationRepositoryImpl(
-        MockBookingPaymentVerificationDatasource(),
+        FakeBookingPaymentVerificationDatasource(),
       );
       final getQueue = GetBookingPaymentVerificationsUseCase(repository);
       final approve = ApproveBookingPaymentUseCase(repository);
@@ -45,7 +46,7 @@ void main() {
       'rejection releases seat and review request keeps it temporary',
       () async {
         final repository = BookingPaymentVerificationRepositoryImpl(
-          MockBookingPaymentVerificationDatasource(),
+          FakeBookingPaymentVerificationDatasource(),
         );
         final getQueue = GetBookingPaymentVerificationsUseCase(repository);
         final reject = RejectBookingPaymentUseCase(repository);

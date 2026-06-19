@@ -21,7 +21,9 @@ class SupabaseBookingPaymentVerificationDatasource
   @override
   Future<List<BookingPaymentVerificationModel>> fetchQueue() async {
     try {
-      final response = await _client.from('operation_bookings').select('''
+      final response = await _client
+          .from('operation_bookings')
+          .select('''
             id, status, payment_method, payment_receipt_url,
             passenger_name, phone, seat, created_at, notes, timeline,
             payment_details,
@@ -31,7 +33,9 @@ class SupabaseBookingPaymentVerificationDatasource
               driver:drivers(full_name),
               vehicle:vehicles(plate_number)
             )
-          ''').inFilter('status', _verificationStatuses).order('created_at', ascending: false);
+          ''')
+          .inFilter('status', _verificationStatuses)
+          .order('created_at', ascending: false);
 
       return (response as List)
           .map((json) => _mapToModel(json as Map<String, dynamic>))
@@ -47,10 +51,13 @@ class SupabaseBookingPaymentVerificationDatasource
     String note,
   ) async {
     try {
-      await _client.rpc('approve_booking', params: {
-        'p_booking_id': verificationId,
-        'p_reviewer_name': 'خدمة العملاء',
-      });
+      await _client.rpc(
+        'approve_booking',
+        params: {
+          'p_booking_id': verificationId,
+          'p_reviewer_name': 'خدمة العملاء',
+        },
+      );
       return _refetch(verificationId);
     } catch (e) {
       throw _handleError(e);
@@ -63,11 +70,16 @@ class SupabaseBookingPaymentVerificationDatasource
     String note,
   ) async {
     try {
-      await _client.rpc('reject_booking', params: {
-        'p_booking_id': verificationId,
-        'p_rejection_reason': note.isNotEmpty ? note : 'رُفض من قِبَل خدمة العملاء',
-        'p_reviewer_name': 'خدمة العملاء',
-      });
+      await _client.rpc(
+        'reject_booking',
+        params: {
+          'p_booking_id': verificationId,
+          'p_rejection_reason': note.isNotEmpty
+              ? note
+              : 'رُفض من قِبَل خدمة العملاء',
+          'p_reviewer_name': 'خدمة العملاء',
+        },
+      );
       return _refetch(verificationId);
     } catch (e) {
       throw _handleError(e);
@@ -80,9 +92,33 @@ class SupabaseBookingPaymentVerificationDatasource
     String note,
   ) async {
     try {
+      final existing = await _client
+          .from('operation_bookings')
+          .select('notes, timeline')
+          .eq('id', verificationId)
+          .single();
+      final normalizedNote = note.trim();
+      final notes = _readStringList(existing['notes']);
+      if (normalizedNote.isNotEmpty) {
+        notes.insert(0, normalizedNote);
+      }
+      final timeline = _readTimeline(existing['timeline']);
+      timeline.insert(0, {
+        'action': 'طلب مراجعة الدفع',
+        'timestamp': DateTime.now().toUtc().toIso8601String(),
+        'note': normalizedNote.isEmpty
+            ? 'تم طلب إعادة مراجعة أو رفع إيصال أوضح.'
+            : normalizedNote,
+      });
+
       await _client
           .from('operation_bookings')
-          .update({'status': 'requestReupload', 'updated_at': DateTime.now().toUtc().toIso8601String()})
+          .update({
+            'status': 'requestReupload',
+            'notes': notes,
+            'timeline': timeline,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
           .eq('id', verificationId);
       return _refetch(verificationId);
     } catch (e) {
@@ -102,12 +138,15 @@ class SupabaseBookingPaymentVerificationDatasource
           .eq('id', verificationId)
           .single();
 
-      final currentNotes = (existing['notes'] as List?)?.map((e) => e.toString()).toList() ?? [];
+      final currentNotes = _readStringList(existing['notes']);
       currentNotes.insert(0, note.trim());
 
       await _client
           .from('operation_bookings')
-          .update({'notes': currentNotes})
+          .update({
+            'notes': currentNotes,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
           .eq('id', verificationId);
 
       return _refetch(verificationId);
@@ -117,7 +156,9 @@ class SupabaseBookingPaymentVerificationDatasource
   }
 
   Future<BookingPaymentVerificationModel> _refetch(String bookingId) async {
-    final response = await _client.from('operation_bookings').select('''
+    final response = await _client
+        .from('operation_bookings')
+        .select('''
           id, status, payment_method, payment_receipt_url,
           passenger_name, phone, seat, created_at, notes, timeline,
           payment_details,
@@ -127,7 +168,9 @@ class SupabaseBookingPaymentVerificationDatasource
             driver:drivers(full_name),
             vehicle:vehicles(plate_number)
           )
-        ''').eq('id', bookingId).single();
+        ''')
+        .eq('id', bookingId)
+        .single();
 
     return _mapToModel(response);
   }
@@ -141,8 +184,8 @@ class SupabaseBookingPaymentVerificationDatasource
     final vehicleJson = tripJson?['vehicle'] as Map<String, dynamic>?;
     final paymentDetails = json['payment_details'] as Map<String, dynamic>?;
 
-    final notesList = (json['notes'] as List?)?.map((e) => e.toString()).toList() ?? [];
-    final timelineList = (json['timeline'] as List?) ?? [];
+    final notesList = _readStringList(json['notes']);
+    final timelineList = _readTimeline(json['timeline']);
 
     return BookingPaymentVerificationModel(
       id: json['id'] as String,
@@ -167,20 +210,19 @@ class SupabaseBookingPaymentVerificationDatasource
       method: _mapPaymentMethod(methodStr),
       referenceNumber: paymentDetails?['reference'] as String? ?? '',
       receiptTitle: _receiptTitle(methodStr),
-      receiptMeta: json['payment_receipt_url'] != null ? 'تم رفع الإيصال' : 'لم يُرفع إيصال',
+      receiptMeta: json['payment_receipt_url'] != null
+          ? 'تم رفع الإيصال'
+          : 'لم يُرفع إيصال',
       receiptUrl: json['payment_receipt_url'] as String?,
       status: _mapVerificationStatus(statusStr),
       notes: notesList,
-      history: timelineList
-          .map((e) {
-            final item = e as Map<String, dynamic>;
-            return VerificationHistoryItem(
-              title: item['action'] as String? ?? '',
-              time: item['timestamp'] as String? ?? '',
-              description: item['note'] as String? ?? '',
-            );
-          })
-          .toList(),
+      history: timelineList.map((item) {
+        return VerificationHistoryItem(
+          title: item['action'] as String? ?? '',
+          time: item['timestamp'] as String? ?? '',
+          description: item['note'] as String? ?? '',
+        );
+      }).toList(),
     );
   }
 
@@ -193,12 +235,13 @@ class SupabaseBookingPaymentVerificationDatasource
       };
 
   VerificationSeatState _mapSeatState(String status) => switch (status) {
-        'approved' || 'confirmed' => VerificationSeatState.permanentlyConfirmed,
-        'rejected' || 'cancelled' => VerificationSeatState.released,
-        _ => VerificationSeatState.temporaryReserved,
-      };
+    'approved' || 'confirmed' => VerificationSeatState.permanentlyConfirmed,
+    'rejected' || 'cancelled' => VerificationSeatState.released,
+    _ => VerificationSeatState.temporaryReserved,
+  };
 
-  VerificationPaymentMethod _mapPaymentMethod(String method) => switch (method) {
+  VerificationPaymentMethod _mapPaymentMethod(String method) =>
+      switch (method) {
         'bankTransfer' => VerificationPaymentMethod.bankTransfer,
         'vodafoneCash' || 'instaPay' => VerificationPaymentMethod.wallet,
         'card' => VerificationPaymentMethod.card,
@@ -206,12 +249,24 @@ class SupabaseBookingPaymentVerificationDatasource
       };
 
   String _receiptTitle(String method) => switch (method) {
-        'bankTransfer' => 'إيصال تحويل بنكي',
-        'instaPay' => 'إيصال إنستا باي',
-        'vodafoneCash' => 'إيصال فودافون كاش',
-        'card' => 'إيصال بطاقة',
-        _ => 'إيصال نقدي',
-      };
+    'bankTransfer' => 'إيصال تحويل بنكي',
+    'instaPay' => 'إيصال إنستا باي',
+    'vodafoneCash' => 'إيصال فودافون كاش',
+    'card' => 'إيصال بطاقة',
+    _ => 'إيصال نقدي',
+  };
+
+  List<String> _readStringList(dynamic value) {
+    return (value as List?)?.map((e) => e.toString()).toList() ?? [];
+  }
+
+  List<Map<String, dynamic>> _readTimeline(dynamic value) {
+    return (value as List?)
+            ?.whereType<Map>()
+            .map((item) => Map<String, dynamic>.from(item))
+            .toList() ??
+        [];
+  }
 
   Exception _handleError(dynamic error) {
     if (error is PostgrestException) {

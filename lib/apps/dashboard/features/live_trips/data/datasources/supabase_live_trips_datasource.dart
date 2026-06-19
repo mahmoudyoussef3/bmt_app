@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/live_trip.dart';
-import 'mock_live_trips_datasource.dart';
+import 'live_trips_datasource.dart';
 
 class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
   const SupabaseLiveTripsDatasource(this._client);
@@ -23,10 +23,7 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
     driver:drivers(full_name, phone),
     vehicle:vehicles(plate_number, vehicle_type),
     route_points:trip_route_points(id, point_name, point_order, latitude, longitude),
-    passengers:trip_passengers(
-      id, status,
-      booking:operation_bookings(passenger_name, phone)
-    ),
+    passengers:trip_passengers(id, status, passenger_name, phone, pickup_point_name),
     events:trip_events(id, title, description, done, created_at)
   ''';
 
@@ -36,7 +33,7 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
       final response = await _client
           .from('operation_trips')
           .select(_tripSelect)
-          .inFilter('status', ['boarding', 'in_progress'])
+          .inFilter('status', ['open_for_booking', 'boarding', 'in_progress'])
           .order('departure_time');
 
       return (response as List)
@@ -65,10 +62,25 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
   @override
   Future<LiveTrip> startTrip(String tripId) async {
     try {
-      await _client.rpc('update_trip_status', params: {
-        'p_trip_id': tripId,
-        'p_new_status': 'in_progress',
-      });
+      final current = await _client
+          .from('operation_trips')
+          .select('status')
+          .eq('id', tripId)
+          .single();
+      final currentStatus = current['status']?.toString() ?? '';
+      final nextStatus = switch (currentStatus) {
+        'open_for_booking' => 'boarding',
+        'boarding' => 'in_progress',
+        'scheduled' => 'open_for_booking',
+        _ => throw Exception(
+          'لا يمكن بدء الرحلة من الحالة الحالية: $currentStatus',
+        ),
+      };
+
+      await _client.rpc(
+        'update_trip_status',
+        params: {'p_trip_id': tripId, 'p_new_status': nextStatus},
+      );
       return getLiveTripDetails(tripId);
     } catch (e) {
       throw _handleError(e);
@@ -77,23 +89,21 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
 
   @override
   Future<LiveTrip> pauseTrip(String tripId) async {
-    // No "paused" status in the DB transition matrix — return current state unchanged.
-    return getLiveTripDetails(tripId);
+    throw Exception('الإيقاف المؤقت غير مدعوم في دورة حياة الرحلات الحالية.');
   }
 
   @override
   Future<LiveTrip> resumeTrip(String tripId) async {
-    // Symmetrical with pauseTrip — no-op, return current state.
-    return getLiveTripDetails(tripId);
+    throw Exception('استئناف الرحلة غير مدعوم لأن الإيقاف المؤقت غير مفعل.');
   }
 
   @override
   Future<LiveTrip> completeTrip(String tripId) async {
     try {
-      await _client.rpc('update_trip_status', params: {
-        'p_trip_id': tripId,
-        'p_new_status': 'completed',
-      });
+      await _client.rpc(
+        'update_trip_status',
+        params: {'p_trip_id': tripId, 'p_new_status': 'completed'},
+      );
       return getLiveTripDetails(tripId);
     } catch (e) {
       throw _handleError(e);
@@ -126,7 +136,12 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
   Future<LiveTrip> skipPoint(String tripId, String pointId) async {
     try {
       final point = await _pointName(tripId, pointId);
-      await _insertEvent(tripId, 'تخطي محطة', 'تم تخطي محطة: $point', done: false);
+      await _insertEvent(
+        tripId,
+        'تخطي محطة',
+        'تم تخطي محطة: $point',
+        done: false,
+      );
       return getLiveTripDetails(tripId);
     } catch (e) {
       throw _handleError(e);
@@ -191,7 +206,10 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
 
       await _client
           .from('trip_passengers')
-          .update({'status': newStatus, 'updated_at': DateTime.now().toUtc().toIso8601String()})
+          .update({
+            'status': newStatus,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
           .eq('id', passengerId);
 
       return getLiveTripDetails(tripId);
@@ -251,8 +269,11 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
         .where((e) => (e as Map<String, dynamic>)['title'] == 'وصول محطة')
         .length;
     final totalPoints = includeDetails ? routePointsList.length : 0;
-    final currentIdx = arrivalEventCount.clamp(0, totalPoints > 0 ? totalPoints - 1 : 0);
-    final progress = totalPoints > 0
+    final currentIdx = arrivalEventCount.clamp(
+      0,
+      totalPoints > 0 ? totalPoints - 1 : 0,
+    );
+    final progress = totalPoints > 1
         ? ((currentIdx / (totalPoints - 1)) * 100).round().clamp(0, 100)
         : 0;
 
@@ -261,7 +282,15 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
         .where((e) => !((e as Map<String, dynamic>)['done'] as bool? ?? true))
         .toList();
 
-    final health = activeAlerts.isNotEmpty ? LiveTripHealth.warning : LiveTripHealth.normal;
+    final now = DateTime.now();
+    final isLate =
+        liveTripStatus == LiveTripStatus.preparing &&
+        scheduledTime.isBefore(now.subtract(const Duration(minutes: 10)));
+    final health = activeAlerts.isNotEmpty
+        ? LiveTripHealth.warning
+        : isLate
+        ? LiveTripHealth.delayed
+        : LiveTripHealth.normal;
 
     final mappedPoints = routePointsList.asMap().entries.map((entry) {
       final idx = entry.key;
@@ -269,7 +298,8 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
       LivePointStatus pointStatus;
       if (idx < currentIdx) {
         pointStatus = LivePointStatus.completed;
-      } else if (idx == currentIdx && liveTripStatus == LiveTripStatus.inProgress) {
+      } else if (idx == currentIdx &&
+          liveTripStatus == LiveTripStatus.inProgress) {
         pointStatus = LivePointStatus.current;
       } else {
         pointStatus = LivePointStatus.pending;
@@ -288,13 +318,12 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
 
     final mappedPassengers = passengersList.map((p) {
       final pMap = p as Map<String, dynamic>;
-      final bookingData = pMap['booking'] as Map<String, dynamic>?;
       final isCheckedIn = pMap['status'] == 'confirmed';
       return LivePassengerCheckin(
         id: pMap['id'] as String,
-        passengerName: bookingData?['passenger_name'] as String? ?? '',
-        passengerPhone: bookingData?['phone'] as String? ?? '',
-        pickupPointName: '',
+        passengerName: pMap['passenger_name'] as String? ?? '',
+        passengerPhone: pMap['phone'] as String? ?? '',
+        pickupPointName: pMap['pickup_point_name'] as String? ?? '',
         checkedIn: isCheckedIn,
         checkedInAt: isCheckedIn ? DateTime.now() : null,
       );
@@ -309,7 +338,8 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
         title: eMap['title'] as String? ?? '',
         message: eMap['description'] as String? ?? '',
         createdAt: eMap['created_at'] != null
-            ? DateTime.tryParse(eMap['created_at'] as String)?.toLocal() ?? DateTime.now()
+            ? DateTime.tryParse(eMap['created_at'] as String)?.toLocal() ??
+                  DateTime.now()
             : DateTime.now(),
         resolved: eMap['done'] as bool? ?? false,
       );
@@ -333,7 +363,10 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
       health: health,
       passengersCount: bookedSeats,
       checkedInPassengersCount: checkedInCount,
-      missingPassengersCount: (bookedSeats - checkedInCount).clamp(0, bookedSeats),
+      missingPassengersCount: (bookedSeats - checkedInCount).clamp(
+        0,
+        bookedSeats,
+      ),
       progressPercent: progress,
       scheduledStartTime: scheduledTime,
       routePoints: mappedPoints,
@@ -344,12 +377,12 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
   }
 
   LiveTripStatus _mapStatus(String status) => switch (status) {
-        'boarding' => LiveTripStatus.preparing,
-        'in_progress' => LiveTripStatus.inProgress,
-        'completed' => LiveTripStatus.completed,
-        'cancelled' => LiveTripStatus.cancelled,
-        _ => LiveTripStatus.notStarted,
-      };
+    'boarding' => LiveTripStatus.preparing,
+    'in_progress' => LiveTripStatus.inProgress,
+    'completed' => LiveTripStatus.completed,
+    'cancelled' => LiveTripStatus.cancelled,
+    _ => LiveTripStatus.notStarted,
+  };
 
   Exception _handleError(dynamic error) {
     if (error is PostgrestException) {

@@ -5,5 +5,6 @@ class CallDriverUseCase {
 
   const CallDriverUseCase(this._repository);
 
-  Future<String> call(String driverPhone) => _repository.callDriver(driverPhone);
+  Future<String> call(String driverPhone) =>
+      _repository.callDriver(driverPhone);
 }

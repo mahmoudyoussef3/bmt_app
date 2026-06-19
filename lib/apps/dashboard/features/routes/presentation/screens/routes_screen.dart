@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/search_places_usecase.dart';
 import 'package:bmt_app/core/geo/geo_models.dart';
@@ -29,8 +30,11 @@ class RoutesScreen extends StatelessWidget {
     return BlocBuilder<RoutesCubit, RoutesState>(
       builder: (context, state) {
         return switch (state) {
-          RoutesLoading() => const Center(child: CircularProgressIndicator()),
-          RoutesError(:final message) => _RoutesError(message: message),
+          RoutesLoading() => const DashboardLoading(rows: 5),
+          RoutesError(:final message) => DashboardErrorState(
+            message: message,
+            onRetry: () => context.read<RoutesCubit>().load(),
+          ),
           RoutesLoaded() => switch (state.view) {
             RoutesView.list => _RoutesListView(state: state),
             RoutesView.details => _RouteDetailsView(state: state),
@@ -106,8 +110,6 @@ class _RoutesToolbar extends StatelessWidget {
       (sum, route) => sum + route.stations.length,
     );
 
-    final width = MediaQuery.of(context).size.width;
-    final compact = width < 1260;
     final search = TextField(
       onChanged: cubit.updateSearch,
       decoration: const InputDecoration(
@@ -148,8 +150,11 @@ class _RoutesToolbar extends StatelessWidget {
             totalStations: totalStations,
           ),
           const SizedBox(height: AppSpacing.medium),
-          compact
-              ? Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 980;
+              if (compact) {
+                return Column(
                   children: [
                     search,
                     const SizedBox(height: AppSpacing.small),
@@ -158,14 +163,24 @@ class _RoutesToolbar extends StatelessWidget {
                       child: filters,
                     ),
                   ],
-                )
-              : Row(
-                  children: [
-                    Expanded(flex: 2, child: search),
-                    const SizedBox(width: AppSpacing.medium),
-                    Expanded(flex: 3, child: filters),
-                  ],
-                ),
+                );
+              }
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 5, child: search),
+                  const SizedBox(width: AppSpacing.medium),
+                  Expanded(
+                    flex: 5,
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: filters,
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
         ],
       ),
     );
@@ -237,17 +252,23 @@ class _StatusFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<RoutesCubit>();
     return SizedBox(
-      width: 170,
+      width: 210,
       child: DropdownButtonFormField<OperationRouteStatus?>(
+        isExpanded: true,
         initialValue: state.statusFilter,
         decoration: const InputDecoration(labelText: 'الحالة'),
         items: [
-          const DropdownMenuItem(value: null, child: Text('كل الحالات')),
+          const DropdownMenuItem(
+            value: null,
+            child: Text('كل الحالات', overflow: TextOverflow.ellipsis),
+          ),
           ...OperationRouteStatus.values
               .where((status) => status != OperationRouteStatus.draft)
               .map(
-                (status) =>
-                    DropdownMenuItem(value: status, child: Text(status.label)),
+                (status) => DropdownMenuItem(
+                  value: status,
+                  child: Text(status.label, overflow: TextOverflow.ellipsis),
+                ),
               ),
         ],
         onChanged: cubit.updateStatusFilter,
@@ -265,12 +286,18 @@ class _CityFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<RoutesCubit>();
     return SizedBox(
-      width: 190,
+      width: 230,
       child: DropdownButtonFormField<String>(
+        isExpanded: true,
         initialValue: state.cityFilter,
         decoration: const InputDecoration(labelText: 'المدينة'),
         items: state.cityOptions
-            .map((city) => DropdownMenuItem(value: city, child: Text(city)))
+            .map(
+              (city) => DropdownMenuItem(
+                value: city,
+                child: Text(city, overflow: TextOverflow.ellipsis),
+              ),
+            )
             .toList(),
         onChanged: (value) => cubit.updateCityFilter(value ?? 'الكل'),
       ),
@@ -287,14 +314,17 @@ class _StopsFilter extends StatelessWidget {
   Widget build(BuildContext context) {
     final cubit = context.read<RoutesCubit>();
     return SizedBox(
-      width: 180,
+      width: 220,
       child: DropdownButtonFormField<StopsCountFilter>(
+        isExpanded: true,
         initialValue: state.stopsFilter,
         decoration: const InputDecoration(labelText: 'عدد المحطات'),
         items: StopsCountFilter.values
             .map(
-              (filter) =>
-                  DropdownMenuItem(value: filter, child: Text(filter.label)),
+              (filter) => DropdownMenuItem(
+                value: filter,
+                child: Text(filter.label, overflow: TextOverflow.ellipsis),
+              ),
             )
             .toList(),
         onChanged: (value) =>
@@ -773,46 +803,83 @@ class _RouteDetailsView extends StatelessWidget {
         const SizedBox(height: AppSpacing.medium),
         LayoutBuilder(
           builder: (context, constraints) {
-            final wide = constraints.maxWidth >= 1100;
-            final side = Column(
-              children: [
-                _RouteReadinessCommandCard(route: route),
-                const SizedBox(height: AppSpacing.medium),
-                _RouteQuickActionsCard(route: route),
-              ],
+            final wide = constraints.maxWidth >= 1180;
+            final medium = constraints.maxWidth >= 760;
+            final readiness = _RouteReadinessCommandCard(route: route);
+            final quickActions = _RouteQuickActionsCard(route: route);
+            final stations = _StopManagementPanel(
+              route: route,
+              onAdd: (station) => cubit.addStation(station),
+              onEdit: (station) => cubit.updateStation(station),
+              onDelete: cubit.deleteStation,
+              onReorder: cubit.reorderStations,
             );
-            final main = Column(
+            final mapAndFlow = Column(
               children: [
                 _RouteMapPreviewPanel(route: route),
                 const SizedBox(height: AppSpacing.medium),
                 _StopsTimelinePanel(route: route),
-                const SizedBox(height: AppSpacing.medium),
-                _ClientRoutePreview(route: route),
-                const SizedBox(height: AppSpacing.medium),
-                _StopManagementPanel(
-                  route: route,
-                  onAdd: (station) => cubit.addStation(station),
-                  onEdit: (station) => cubit.updateStation(station),
-                  onDelete: cubit.deleteStation,
-                  onReorder: cubit.reorderStations,
-                ),
               ],
             );
-            if (!wide) {
-              return Column(
+            final clientPreview = _ClientRoutePreview(route: route);
+
+            Widget commandStrip;
+            if (medium) {
+              commandStrip = Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  side,
+                  Expanded(child: readiness),
+                  const SizedBox(width: AppSpacing.medium),
+                  Expanded(child: quickActions),
+                ],
+              );
+            } else {
+              commandStrip = Column(
+                children: [
+                  readiness,
                   const SizedBox(height: AppSpacing.medium),
-                  main,
+                  quickActions,
                 ],
               );
             }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+
+            if (!wide) {
+              return Column(
+                children: [
+                  commandStrip,
+                  const SizedBox(height: AppSpacing.medium),
+                  _RouteMapPreviewPanel(route: route),
+                  const SizedBox(height: AppSpacing.medium),
+                  clientPreview,
+                  const SizedBox(height: AppSpacing.medium),
+                  _StopsTimelinePanel(route: route),
+                  const SizedBox(height: AppSpacing.medium),
+                  stations,
+                ],
+              );
+            }
+
+            return Column(
               children: [
-                SizedBox(width: 340, child: side),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(child: main),
+                commandStrip,
+                const SizedBox(height: AppSpacing.medium),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 7,
+                      child: Column(
+                        children: [
+                          stations,
+                          const SizedBox(height: AppSpacing.medium),
+                          clientPreview,
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(flex: 5, child: mapAndFlow),
+                  ],
+                ),
               ],
             );
           },
@@ -1168,42 +1235,63 @@ class _ClientRoutePreview extends StatelessWidget {
   Widget build(BuildContext context) {
     final pickups = route.stations.where((station) => station.pickupAllowed);
     final dropoffs = route.stations.where((station) => station.dropoffAllowed);
-    final scheme = Theme.of(context).colorScheme;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'معاينة تطبيق العميل',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
-          const SizedBox(height: AppSpacing.xSmall),
-          Text(
-            'هذه هي نقاط الصعود والنزول التي ستظهر للعميل حسب إعدادات المسار.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          _PanelTitle(
+            icon: Icons.phone_iphone_outlined,
+            title: 'معاينة تطبيق العميل',
+            subtitle:
+                'نقاط الصعود والنزول التي ستظهر للعميل حسب إعدادات المسار.',
           ),
           const SizedBox(height: AppSpacing.medium),
-          Wrap(
-            spacing: AppSpacing.large,
-            runSpacing: AppSpacing.medium,
-            children: [
-              _PreviewStopGroup(
-                title: 'نقاط الصعود',
-                stations: pickups.toList(),
-              ),
-              _PreviewStopGroup(
-                title: 'نقاط النزول',
-                stations: dropoffs.toList(),
-              ),
-              _PreviewStopGroup(
-                title: 'ترتيب الرحلة',
-                stations: route.stations,
-              ),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = constraints.maxWidth >= 900
+                  ? 3
+                  : constraints.maxWidth >= 620
+                  ? 2
+                  : 1;
+              const gap = AppSpacing.medium;
+              final width =
+                  (constraints.maxWidth - (gap * (columns - 1))) / columns;
+              return Wrap(
+                spacing: gap,
+                runSpacing: gap,
+                children: [
+                  SizedBox(
+                    width: width,
+                    child: _PreviewStopGroup(
+                      icon: Icons.login_rounded,
+                      title: 'نقاط الصعود',
+                      stations: pickups.toList(),
+                      emptyLabel: 'لا توجد نقاط صعود',
+                    ),
+                  ),
+                  SizedBox(
+                    width: width,
+                    child: _PreviewStopGroup(
+                      icon: Icons.logout_rounded,
+                      title: 'نقاط النزول',
+                      stations: dropoffs.toList(),
+                      emptyLabel: 'لا توجد نقاط نزول',
+                    ),
+                  ),
+                  SizedBox(
+                    width: width,
+                    child: _PreviewStopGroup(
+                      icon: Icons.route_outlined,
+                      title: 'ترتيب الرحلة',
+                      stations: route.stations,
+                      emptyLabel: 'أضف محطات لعرض الترتيب',
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ],
       ),
@@ -1366,47 +1454,90 @@ class _RouteStationsMap extends StatelessWidget {
 }
 
 class _PreviewStopGroup extends StatelessWidget {
+  final IconData icon;
   final String title;
   final List<RouteStation> stations;
+  final String emptyLabel;
 
-  const _PreviewStopGroup({required this.title, required this.stations});
+  const _PreviewStopGroup({
+    required this.icon,
+    required this.title,
+    required this.stations,
+    required this.emptyLabel,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return SizedBox(
-      width: 300,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withAlpha(70),
-          borderRadius: BorderRadius.circular(AppTokens.radius),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.medium),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleSmall),
-              const SizedBox(height: AppSpacing.small),
-              if (stations.isEmpty)
-                Text(
-                  'لا توجد نقاط متاحة',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: scheme.error),
-                )
-              else
-                ...stations.map(
-                  (station) => Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
-                    child: Text(
-                      '${station.order}. ${station.name}'
-                      '${station.estimatedArrivalTime.isEmpty ? '' : ' - ${station.estimatedArrivalTime}'}',
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(70),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: scheme.outline.withAlpha(35)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.medium),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 18, color: scheme.primary),
+                const SizedBox(width: AppSpacing.xSmall),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-            ],
-          ),
+                StatusChip(label: '${stations.length}'),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.small),
+            if (stations.isEmpty)
+              Text(
+                emptyLabel,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              )
+            else
+              ...stations.map(
+                (station) => Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        radius: 12,
+                        backgroundColor: scheme.primaryContainer,
+                        child: Text(
+                          '${station.order}',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: scheme.onPrimaryContainer,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xSmall),
+                      Expanded(
+                        child: Text(
+                          station.estimatedArrivalTime.isEmpty
+                              ? station.name
+                              : '${station.name} - ${station.estimatedArrivalTime}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+          ],
         ),
       ),
     );
@@ -1500,25 +1631,49 @@ class _StopManagementPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  'إدارة المحطات',
-                  style: Theme.of(context).textTheme.titleLarge,
-                ),
-              ),
-              FilledButton.icon(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 620;
+              final title = _PanelTitle(
+                icon: Icons.edit_location_alt_outlined,
+                title: 'إدارة المحطات',
+                subtitle: 'رتب نقاط المسار وحدد الصعود والنزول ومواقع الخريطة.',
+              );
+              final action = FilledButton.icon(
                 onPressed: () => _openStopDialog(context, onSubmit: onAdd),
-                icon: const Icon(Icons.add_rounded),
+                icon: const Icon(Icons.add_location_alt_outlined),
                 label: const Text('إضافة محطة'),
-              ),
-            ],
+              );
+              final count = StatusChip(label: '${route.stations.length} محطة');
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    title,
+                    const SizedBox(height: AppSpacing.small),
+                    Wrap(
+                      spacing: AppSpacing.small,
+                      runSpacing: AppSpacing.small,
+                      children: [count, action],
+                    ),
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: title),
+                  count,
+                  const SizedBox(width: AppSpacing.small),
+                  action,
+                ],
+              );
+            },
           ),
           const SizedBox(height: AppSpacing.medium),
           if (route.stations.isEmpty)
@@ -1526,26 +1681,34 @@ class _StopManagementPanel extends StatelessWidget {
               onAdd: () => _openStopDialog(context, onSubmit: onAdd),
             )
           else
-            ReorderableListView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              buildDefaultDragHandles: false,
-              itemCount: route.stations.length,
-              onReorder: onReorder,
-              itemBuilder: (context, index) {
-                final station = route.stations[index];
-                return _StopManagementRow(
-                  key: ValueKey(station.id),
-                  station: station,
-                  index: index,
-                  onEdit: () => _openStopDialog(
-                    context,
+            DecoratedBox(
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withAlpha(28),
+                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                border: Border.all(color: scheme.outline.withAlpha(28)),
+              ),
+              child: ReorderableListView.builder(
+                shrinkWrap: true,
+                padding: const EdgeInsets.all(AppSpacing.small),
+                physics: const NeverScrollableScrollPhysics(),
+                buildDefaultDragHandles: false,
+                itemCount: route.stations.length,
+                onReorder: onReorder,
+                itemBuilder: (context, index) {
+                  final station = route.stations[index];
+                  return _StopManagementRow(
+                    key: ValueKey(station.id),
                     station: station,
-                    onSubmit: onEdit,
-                  ),
-                  onDelete: () => onDelete(station),
-                );
-              },
+                    index: index,
+                    onEdit: () => _openStopDialog(
+                      context,
+                      station: station,
+                      onSubmit: onEdit,
+                    ),
+                    onDelete: () => onDelete(station),
+                  );
+                },
+              ),
             ),
         ],
       ),
@@ -1624,84 +1787,88 @@ class _StopManagementRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.small),
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(60),
+        color: scheme.surface,
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: scheme.outline.withAlpha(35)),
+        border: Border.all(color: scheme.outline.withAlpha(45)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final compact = constraints.maxWidth < 680;
-          final content = Row(
+          final compact = constraints.maxWidth < 760;
+          final title = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                station.name,
+                maxLines: compact ? 2 : 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: AppSpacing.xSmall),
+              Text(
+                station.locationDescription.isEmpty
+                    ? station.area
+                    : station.locationDescription,
+                maxLines: compact ? 2 : 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          );
+          final facts = Wrap(
+            spacing: AppSpacing.small,
+            runSpacing: AppSpacing.xSmall,
+            children: [
+              _RouteFactPill(
+                icon: Icons.location_city_outlined,
+                label: station.area.isEmpty ? 'غير محدد' : station.area,
+              ),
+              _RouteFactPill(
+                icon: Icons.login_rounded,
+                label: station.pickupAllowed ? 'صعود' : 'بدون صعود',
+              ),
+              _RouteFactPill(
+                icon: Icons.logout_rounded,
+                label: station.dropoffAllowed ? 'نزول' : 'بدون نزول',
+              ),
+              _RouteFactPill(
+                icon: station.latitude == null || station.longitude == null
+                    ? Icons.location_off_outlined
+                    : Icons.location_on_outlined,
+                label: station.latitude == null || station.longitude == null
+                    ? 'بدون موقع'
+                    : 'على الخريطة',
+              ),
+              _RouteFactPill(
+                icon: Icons.schedule_outlined,
+                label:
+                    'وصول ${station.arrivalOffset} - مغادرة ${station.departureOffset.isEmpty ? station.arrivalOffset : station.departureOffset}',
+              ),
+            ],
+          );
+          final leading = Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               ReorderableDragStartListener(
                 index: index,
-                child: const Icon(Icons.drag_handle_rounded),
+                child: Icon(
+                  Icons.drag_indicator_rounded,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(width: AppSpacing.small),
-              CircleAvatar(radius: 16, child: Text('${station.order}')),
-              const SizedBox(width: AppSpacing.medium),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      station.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xSmall),
-                    Wrap(
-                      spacing: AppSpacing.small,
-                      runSpacing: AppSpacing.xSmall,
-                      children: [
-                        _RouteFactPill(
-                          icon: Icons.location_city_outlined,
-                          label: station.area,
-                        ),
-                        _RouteFactPill(
-                          icon: Icons.login_rounded,
-                          label: station.pickupAllowed ? 'صعود' : 'بدون صعود',
-                        ),
-                        _RouteFactPill(
-                          icon: Icons.logout_rounded,
-                          label: station.dropoffAllowed ? 'نزول' : 'بدون نزول',
-                        ),
-                        _RouteFactPill(
-                          icon:
-                              station.latitude == null ||
-                                  station.longitude == null
-                              ? Icons.location_off_outlined
-                              : Icons.location_on_outlined,
-                          label:
-                              station.latitude == null ||
-                                  station.longitude == null
-                              ? 'بدون موقع'
-                              : 'على الخريطة',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.xSmall),
-                    Text(
-                      'وصول ${station.arrivalOffset} - مغادرة ${station.departureOffset.isEmpty ? station.arrivalOffset : station.departureOffset}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                    if (station.locationDescription.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        station.locationDescription,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ],
+              CircleAvatar(
+                radius: 18,
+                backgroundColor: scheme.primary,
+                child: Text(
+                  '${station.order}',
+                  style: TextStyle(
+                    color: scheme.onPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
             ],
@@ -1709,12 +1876,12 @@ class _StopManagementRow extends StatelessWidget {
           final actions = Wrap(
             spacing: AppSpacing.xSmall,
             children: [
-              IconButton(
+              IconButton.outlined(
                 tooltip: 'تعديل المحطة',
                 onPressed: onEdit,
                 icon: const Icon(Icons.edit_outlined),
               ),
-              IconButton(
+              IconButton.outlined(
                 tooltip: 'حذف المحطة',
                 onPressed: onDelete,
                 icon: Icon(Icons.delete_outline, color: scheme.error),
@@ -1725,18 +1892,33 @@ class _StopManagementRow extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                content,
-                const SizedBox(height: AppSpacing.small),
-                Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: actions,
+                Row(
+                  children: [
+                    leading,
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(child: title),
+                    actions,
+                  ],
                 ),
+                const SizedBox(height: AppSpacing.small),
+                facts,
               ],
             );
           }
           return Row(
             children: [
-              Expanded(child: content),
+              leading,
+              const SizedBox(width: AppSpacing.medium),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    title,
+                    const SizedBox(height: AppSpacing.small),
+                    facts,
+                  ],
+                ),
+              ),
               const SizedBox(width: AppSpacing.small),
               actions,
             ],
@@ -1831,32 +2013,6 @@ class _RouteSuccessView extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RoutesError extends StatelessWidget {
-  final String message;
-
-  const _RoutesError({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: AppCard(
-        padding: const EdgeInsets.all(AppSpacing.large),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(message),
-            const SizedBox(height: AppSpacing.medium),
-            FilledButton(
-              onPressed: () => context.read<RoutesCubit>().load(),
-              child: const Text('إعادة المحاولة'),
-            ),
-          ],
         ),
       ),
     );

@@ -32,22 +32,27 @@ class TripDetailsLoaded extends TripDetailsState {
   final OperationTrip trip;
   final TripWorkspaceTab tab;
   final bool isSaving;
+  final String? lastError;
 
   const TripDetailsLoaded({
     required this.trip,
     this.tab = TripWorkspaceTab.overview,
     this.isSaving = false,
+    this.lastError,
   });
 
   TripDetailsLoaded copyWith({
     OperationTrip? trip,
     TripWorkspaceTab? tab,
     bool? isSaving,
+    String? lastError,
+    bool clearError = false,
   }) {
     return TripDetailsLoaded(
       trip: trip ?? this.trip,
       tab: tab ?? this.tab,
       isSaving: isSaving ?? this.isSaving,
+      lastError: clearError ? null : lastError ?? this.lastError,
     );
   }
 }
@@ -77,7 +82,7 @@ class TripDetailsCubit extends Cubit<TripDetailsState> {
   void changeWorkspaceTab(TripWorkspaceTab tab) {
     final current = state;
     if (current is! TripDetailsLoaded) return;
-    emit(current.copyWith(tab: tab));
+    emit(current.copyWith(tab: tab, clearError: true));
   }
 
   Future<void> refreshDetails() async {
@@ -100,13 +105,13 @@ class TripDetailsCubit extends Cubit<TripDetailsState> {
   Future<OperationTrip?> updateStatus(OperationTripStatus status) async {
     final current = state;
     if (current is! TripDetailsLoaded) return null;
-    emit(current.copyWith(isSaving: true));
+    emit(current.copyWith(isSaving: true, clearError: true));
     try {
       final updated = await _updateTripStatus(current.trip.id, status);
       emit(TripDetailsLoaded(trip: updated, tab: current.tab));
       return updated;
     } catch (e) {
-      emit(current.copyWith(isSaving: false));
+      emit(current.copyWith(isSaving: false, lastError: _cleanError(e)));
       return null;
     }
   }
@@ -114,14 +119,18 @@ class TripDetailsCubit extends Cubit<TripDetailsState> {
   Future<OperationTrip?> updateInfo(OperationTrip updatedTrip) async {
     final current = state;
     if (current is! TripDetailsLoaded) return null;
-    emit(current.copyWith(isSaving: true));
+    emit(current.copyWith(isSaving: true, clearError: true));
     try {
       final updated = await _updateTripInfo(updatedTrip);
       emit(TripDetailsLoaded(trip: updated, tab: current.tab));
       return updated;
     } catch (e) {
-      emit(current.copyWith(isSaving: false));
+      emit(current.copyWith(isSaving: false, lastError: _cleanError(e)));
       return null;
     }
+  }
+
+  String _cleanError(Object error) {
+    return error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
   }
 }

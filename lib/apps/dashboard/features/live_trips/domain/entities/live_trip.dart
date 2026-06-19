@@ -7,26 +7,11 @@ enum LiveTripStatus {
   cancelled,
 }
 
-enum LiveTripHealth {
-  normal,
-  delayed,
-  warning,
-  critical,
-}
+enum LiveTripHealth { normal, delayed, warning, critical }
 
-enum LivePointStatus {
-  pending,
-  current,
-  arrived,
-  completed,
-  skipped,
-}
+enum LivePointStatus { pending, current, arrived, completed, skipped }
 
-enum LiveTripAlertSeverity {
-  info,
-  warning,
-  critical,
-}
+enum LiveTripAlertSeverity { info, warning, critical }
 
 enum LiveTripAlertType {
   delay,
@@ -40,52 +25,52 @@ enum LiveTripAlertType {
 
 extension LiveTripStatusX on LiveTripStatus {
   String get label => switch (this) {
-        LiveTripStatus.notStarted => 'لم تبدأ',
-        LiveTripStatus.preparing => 'جاري التجهيز',
-        LiveTripStatus.inProgress => 'قيد التنفيذ',
-        LiveTripStatus.paused => 'متوقفة مؤقتًا',
-        LiveTripStatus.completed => 'مكتملة',
-        LiveTripStatus.cancelled => 'ملغية',
-      };
+    LiveTripStatus.notStarted => 'لم تبدأ',
+    LiveTripStatus.preparing => 'جاري التجهيز',
+    LiveTripStatus.inProgress => 'قيد التنفيذ',
+    LiveTripStatus.paused => 'متوقفة مؤقتًا',
+    LiveTripStatus.completed => 'مكتملة',
+    LiveTripStatus.cancelled => 'ملغية',
+  };
 }
 
 extension LiveTripHealthX on LiveTripHealth {
   String get label => switch (this) {
-        LiveTripHealth.normal => 'طبيعية',
-        LiveTripHealth.delayed => 'متأخرة',
-        LiveTripHealth.warning => 'تحذير',
-        LiveTripHealth.critical => 'حرجة',
-      };
+    LiveTripHealth.normal => 'طبيعية',
+    LiveTripHealth.delayed => 'متأخرة',
+    LiveTripHealth.warning => 'تحذير',
+    LiveTripHealth.critical => 'حرجة',
+  };
 }
 
 extension LivePointStatusX on LivePointStatus {
   String get label => switch (this) {
-        LivePointStatus.pending => 'لم تصل بعد',
-        LivePointStatus.current => 'المحطة الحالية',
-        LivePointStatus.arrived => 'وصلت',
-        LivePointStatus.completed => 'تمت',
-        LivePointStatus.skipped => 'تم التخطي',
-      };
+    LivePointStatus.pending => 'لم تصل بعد',
+    LivePointStatus.current => 'المحطة الحالية',
+    LivePointStatus.arrived => 'وصلت',
+    LivePointStatus.completed => 'تمت',
+    LivePointStatus.skipped => 'تم التخطي',
+  };
 }
 
 extension LiveTripAlertSeverityX on LiveTripAlertSeverity {
   String get label => switch (this) {
-        LiveTripAlertSeverity.info => 'معلومة',
-        LiveTripAlertSeverity.warning => 'تحذير',
-        LiveTripAlertSeverity.critical => 'حرج',
-      };
+    LiveTripAlertSeverity.info => 'معلومة',
+    LiveTripAlertSeverity.warning => 'تحذير',
+    LiveTripAlertSeverity.critical => 'حرج',
+  };
 }
 
 extension LiveTripAlertTypeX on LiveTripAlertType {
   String get label => switch (this) {
-        LiveTripAlertType.delay => 'تأخير',
-        LiveTripAlertType.driverOffline => 'السائق غير متصل',
-        LiveTripAlertType.passengerMissing => 'راكب متأخر',
-        LiveTripAlertType.routeDeviation => 'خروج عن المسار',
-        LiveTripAlertType.vehicleIssue => 'مشكلة في المركبة',
-        LiveTripAlertType.overCapacity => 'تجاوز السعة',
-        LiveTripAlertType.emergency => 'طوارئ',
-      };
+    LiveTripAlertType.delay => 'تأخير',
+    LiveTripAlertType.driverOffline => 'السائق غير متصل',
+    LiveTripAlertType.passengerMissing => 'راكب متأخر',
+    LiveTripAlertType.routeDeviation => 'خروج عن المسار',
+    LiveTripAlertType.vehicleIssue => 'مشكلة في المركبة',
+    LiveTripAlertType.overCapacity => 'تجاوز السعة',
+    LiveTripAlertType.emergency => 'طوارئ',
+  };
 }
 
 class LiveRoutePoint {
@@ -289,11 +274,14 @@ class LiveTrip {
     return routePoints[currentPointIndex + 1];
   }
 
-  int get unresolvedAlertsCount => alerts.where((alert) => !alert.resolved).length;
+  int get unresolvedAlertsCount =>
+      alerts.where((alert) => !alert.resolved).length;
 
   int get criticalAlertsCount => alerts
-      .where((alert) =>
-          !alert.resolved && alert.severity == LiveTripAlertSeverity.critical)
+      .where(
+        (alert) =>
+            !alert.resolved && alert.severity == LiveTripAlertSeverity.critical,
+      )
       .length;
 
   LiveTrip copyWith({

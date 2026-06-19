@@ -45,20 +45,20 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     required CallDriverUseCase callDriver,
     required SendDriverMessageUseCase messageDriver,
     required TogglePassengerCheckinUseCase togglePassengerCheckin,
-  })  : _getLiveTrips = getLiveTrips,
-        _startTrip = startTrip,
-        _pauseTrip = pauseTrip,
-        _resumeTrip = resumeTrip,
-        _completeTrip = completeTrip,
-        _markPointArrived = markPointArrived,
-        _markPointCompleted = markPointCompleted,
-        _skipPoint = skipPoint,
-        _resolveAlert = resolveAlert,
-        _reportAlert = reportAlert,
-        _callDriver = callDriver,
-        _messageDriver = messageDriver,
-        _togglePassengerCheckin = togglePassengerCheckin,
-        super(const LiveTripsLoading());
+  }) : _getLiveTrips = getLiveTrips,
+       _startTrip = startTrip,
+       _pauseTrip = pauseTrip,
+       _resumeTrip = resumeTrip,
+       _completeTrip = completeTrip,
+       _markPointArrived = markPointArrived,
+       _markPointCompleted = markPointCompleted,
+       _skipPoint = skipPoint,
+       _resolveAlert = resolveAlert,
+       _reportAlert = reportAlert,
+       _callDriver = callDriver,
+       _messageDriver = messageDriver,
+       _togglePassengerCheckin = togglePassengerCheckin,
+       super(const LiveTripsLoading());
 
   Future<void> loadLiveTrips() async {
     emit(const LiveTripsLoading());
@@ -158,7 +158,10 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     );
   }
 
-  Future<void> reportDelayAlert({required int minutes, required String reason}) {
+  Future<void> reportDelayAlert({
+    required int minutes,
+    required String reason,
+  }) {
     return _runTripAction(
       action: (trip) => _reportAlert(
         tripId: trip.id,
@@ -171,7 +174,10 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     );
   }
 
-  Future<void> reportEmergencyAlert({required LiveTripAlertType type, required String reason}) {
+  Future<void> reportEmergencyAlert({
+    required LiveTripAlertType type,
+    required String reason,
+  }) {
     return _runTripAction(
       action: (trip) => _reportAlert(
         tripId: trip.id,
@@ -195,7 +201,9 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
       final message = await _callDriver(trip.driverPhone);
       emit(current.copyWith(actionLoading: false, actionMessage: message));
     } catch (error) {
-      emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
+      emit(
+        current.copyWith(actionLoading: false, actionMessage: error.toString()),
+      );
     }
   }
 
@@ -210,7 +218,9 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
       final response = await _messageDriver(trip.driverPhone, message);
       emit(current.copyWith(actionLoading: false, actionMessage: response));
     } catch (error) {
-      emit(current.copyWith(actionLoading: false, actionMessage: error.toString()));
+      emit(
+        current.copyWith(actionLoading: false, actionMessage: error.toString()),
+      );
     }
   }
 
@@ -255,10 +265,7 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
       );
     } catch (error) {
       emit(
-        current.copyWith(
-          actionLoading: false,
-          actionMessage: error.toString(),
-        ),
+        current.copyWith(actionLoading: false, actionMessage: error.toString()),
       );
     }
   }

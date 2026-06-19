@@ -20,7 +20,8 @@ class LiveTripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    final scheduledStartStr = '${trip.scheduledStartTime.hour.toString().padLeft(2, '0')}:${trip.scheduledStartTime.minute.toString().padLeft(2, '0')}';
+    final scheduledStartStr =
+        '${trip.scheduledStartTime.hour.toString().padLeft(2, '0')}:${trip.scheduledStartTime.minute.toString().padLeft(2, '0')}';
     final actualStartStr = trip.actualStartTime != null
         ? '${trip.actualStartTime!.hour.toString().padLeft(2, '0')}:${trip.actualStartTime!.minute.toString().padLeft(2, '0')}'
         : '-';
@@ -52,8 +53,8 @@ class LiveTripCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                        ),
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -66,16 +67,20 @@ class LiveTripCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w600,
+              ),
             ),
             const SizedBox(height: AppSpacing.medium),
             _Fact(icon: Icons.person_outline, label: trip.driverName),
-            _Fact(icon: Icons.directions_bus_outlined, label: '${trip.vehicleType} · ${trip.vehiclePlate}'),
+            _Fact(
+              icon: Icons.directions_bus_outlined,
+              label: '${trip.vehicleType} · ${trip.vehiclePlate}',
+            ),
             _Fact(
               icon: Icons.place_outlined,
-              label: '${trip.currentPoint?.name ?? '-'} → ${trip.nextPoint?.name ?? 'نهاية الرحلة'}',
+              label:
+                  '${trip.currentPoint?.name ?? '-'} → ${trip.nextPoint?.name ?? 'نهاية الرحلة'}',
             ),
             const SizedBox(height: AppSpacing.small),
             Row(
@@ -96,16 +101,18 @@ class LiveTripCard extends StatelessWidget {
                     'الركاب ${trip.checkedInPassengersCount}/${trip.passengersCount}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
                 if (trip.unresolvedAlertsCount > 0)
                   Text(
                     '${trip.unresolvedAlertsCount} تنبيهات',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.error,
-                          fontWeight: FontWeight.w900,
-                        ),
+                      color: scheme.error,
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
               ],
             ),
@@ -137,7 +144,9 @@ class _Fact extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -170,9 +179,9 @@ class _HealthChip extends StatelessWidget {
       child: Text(
         health.label,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
+          color: color,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -193,16 +202,16 @@ class _TimeFact extends StatelessWidget {
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontSize: 10,
-                color: scheme.onSurfaceVariant,
-              ),
+            fontSize: 10,
+            color: scheme.onSurfaceVariant,
+          ),
         ),
         Text(
           value,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: scheme.onSurface,
-              ),
+            fontWeight: FontWeight.bold,
+            color: scheme.onSurface,
+          ),
         ),
       ],
     );

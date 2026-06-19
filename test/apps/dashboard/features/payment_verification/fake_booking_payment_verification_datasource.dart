@@ -1,10 +1,8 @@
-import '../../domain/entities/booking_payment_verification.dart';
-import '../models/booking_payment_verification_model.dart';
-import 'booking_payment_verification_datasource.dart';
+import 'package:bmt_app/apps/dashboard/features/payment_verification/data/datasources/booking_payment_verification_datasource.dart';
+import 'package:bmt_app/apps/dashboard/features/payment_verification/data/models/booking_payment_verification_model.dart';
+import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/entities/booking_payment_verification.dart';
 
-/// Test double for the verification queue. Not registered in DI (the app uses
-/// the Supabase datasource); retained only for repository tests.
-class MockBookingPaymentVerificationDatasource
+class FakeBookingPaymentVerificationDatasource
     implements BookingPaymentVerificationDatasource {
   final List<BookingPaymentVerificationModel> _items =
       List<BookingPaymentVerificationModel>.from(_seedVerifications);

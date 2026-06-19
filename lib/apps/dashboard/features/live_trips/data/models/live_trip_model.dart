@@ -34,17 +34,17 @@ class LiveRoutePointModel extends LiveRoutePoint {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'name': name,
-        'latitude': latitude,
-        'longitude': longitude,
-        'order': order,
-        'status': status.name,
-        'waitingPassengersCount': waitingPassengersCount,
-        'boardedPassengersCount': boardedPassengersCount,
-        'plannedArrivalTime': plannedArrivalTime?.toIso8601String(),
-        'actualArrivalTime': actualArrivalTime?.toIso8601String(),
-      };
+    'id': id,
+    'name': name,
+    'latitude': latitude,
+    'longitude': longitude,
+    'order': order,
+    'status': status.name,
+    'waitingPassengersCount': waitingPassengersCount,
+    'boardedPassengersCount': boardedPassengersCount,
+    'plannedArrivalTime': plannedArrivalTime?.toIso8601String(),
+    'actualArrivalTime': actualArrivalTime?.toIso8601String(),
+  };
 
   factory LiveRoutePointModel.fromEntity(LiveRoutePoint entity) {
     return LiveRoutePointModel(
@@ -77,8 +77,9 @@ class LiveTripAlertModel extends LiveTripAlert {
     return LiveTripAlertModel(
       id: json['id'].toString(),
       type: LiveTripAlertType.values.byName(json['type'].toString()),
-      severity:
-          LiveTripAlertSeverity.values.byName(json['severity'].toString()),
+      severity: LiveTripAlertSeverity.values.byName(
+        json['severity'].toString(),
+      ),
       title: json['title'].toString(),
       message: json['message'].toString(),
       createdAt: DateTime.parse(json['createdAt'].toString()),
@@ -87,14 +88,14 @@ class LiveTripAlertModel extends LiveTripAlert {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type.name,
-        'severity': severity.name,
-        'title': title,
-        'message': message,
-        'createdAt': createdAt.toIso8601String(),
-        'resolved': resolved,
-      };
+    'id': id,
+    'type': type.name,
+    'severity': severity.name,
+    'title': title,
+    'message': message,
+    'createdAt': createdAt.toIso8601String(),
+    'resolved': resolved,
+  };
 
   factory LiveTripAlertModel.fromEntity(LiveTripAlert entity) {
     return LiveTripAlertModel(
@@ -133,13 +134,13 @@ class LivePassengerCheckinModel extends LivePassengerCheckin {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'passengerName': passengerName,
-        'passengerPhone': passengerPhone,
-        'pickupPointName': pickupPointName,
-        'checkedIn': checkedIn,
-        'checkedInAt': checkedInAt?.toIso8601String(),
-      };
+    'id': id,
+    'passengerName': passengerName,
+    'passengerPhone': passengerPhone,
+    'pickupPointName': pickupPointName,
+    'checkedIn': checkedIn,
+    'checkedInAt': checkedInAt?.toIso8601String(),
+  };
 
   factory LivePassengerCheckinModel.fromEntity(LivePassengerCheckin entity) {
     return LivePassengerCheckinModel(
@@ -213,42 +214,45 @@ class LiveTripModel extends LiveTrip {
           .map((e) => LiveTripAlertModel.fromJson(e as Map<String, dynamic>))
           .toList(),
       passengers: (json['passengers'] as List)
-          .map((e) =>
-              LivePassengerCheckinModel.fromJson(e as Map<String, dynamic>))
+          .map(
+            (e) =>
+                LivePassengerCheckinModel.fromJson(e as Map<String, dynamic>),
+          )
           .toList(),
     );
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'tripCode': tripCode,
-        'routeId': routeId,
-        'routeName': routeName,
-        'driverId': driverId,
-        'driverName': driverName,
-        'driverPhone': driverPhone,
-        'vehicleId': vehicleId,
-        'vehiclePlate': vehiclePlate,
-        'vehicleType': vehicleType,
-        'status': status.name,
-        'health': health.name,
-        'passengersCount': passengersCount,
-        'checkedInPassengersCount': checkedInPassengersCount,
-        'missingPassengersCount': missingPassengersCount,
-        'progressPercent': progressPercent,
-        'scheduledStartTime': scheduledStartTime.toIso8601String(),
-        'actualStartTime': actualStartTime?.toIso8601String(),
-        'expectedArrivalTime': expectedArrivalTime?.toIso8601String(),
-        'routePoints': routePoints
-            .map((e) => LiveRoutePointModel.fromEntity(e).toJson())
-            .toList(),
-        'currentPointIndex': currentPointIndex,
-        'alerts':
-            alerts.map((e) => LiveTripAlertModel.fromEntity(e).toJson()).toList(),
-        'passengers': passengers
-            .map((e) => LivePassengerCheckinModel.fromEntity(e).toJson())
-            .toList(),
-      };
+    'id': id,
+    'tripCode': tripCode,
+    'routeId': routeId,
+    'routeName': routeName,
+    'driverId': driverId,
+    'driverName': driverName,
+    'driverPhone': driverPhone,
+    'vehicleId': vehicleId,
+    'vehiclePlate': vehiclePlate,
+    'vehicleType': vehicleType,
+    'status': status.name,
+    'health': health.name,
+    'passengersCount': passengersCount,
+    'checkedInPassengersCount': checkedInPassengersCount,
+    'missingPassengersCount': missingPassengersCount,
+    'progressPercent': progressPercent,
+    'scheduledStartTime': scheduledStartTime.toIso8601String(),
+    'actualStartTime': actualStartTime?.toIso8601String(),
+    'expectedArrivalTime': expectedArrivalTime?.toIso8601String(),
+    'routePoints': routePoints
+        .map((e) => LiveRoutePointModel.fromEntity(e).toJson())
+        .toList(),
+    'currentPointIndex': currentPointIndex,
+    'alerts': alerts
+        .map((e) => LiveTripAlertModel.fromEntity(e).toJson())
+        .toList(),
+    'passengers': passengers
+        .map((e) => LivePassengerCheckinModel.fromEntity(e).toJson())
+        .toList(),
+  };
 
   factory LiveTripModel.fromEntity(LiveTrip entity) {
     return LiveTripModel(

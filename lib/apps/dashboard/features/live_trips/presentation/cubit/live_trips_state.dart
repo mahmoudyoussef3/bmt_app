@@ -47,7 +47,9 @@ class LiveTripsLoaded extends LiveTripsState {
         final matchRoute = trip.routeName.toLowerCase().contains(query);
         final matchDriver = trip.driverName.toLowerCase().contains(query);
         final matchPlate = trip.vehiclePlate.toLowerCase().contains(query);
-        if (!matchCode && !matchRoute && !matchDriver && !matchPlate) return false;
+        if (!matchCode && !matchRoute && !matchDriver && !matchPlate) {
+          return false;
+        }
       }
       return true;
     }).toList();

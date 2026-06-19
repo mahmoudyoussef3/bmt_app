@@ -1,35 +1,8 @@
-import '../../domain/entities/live_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/live_trips/data/datasources/live_trips_datasource.dart';
+import 'package:bmt_app/apps/dashboard/features/live_trips/domain/entities/live_trip.dart';
 
-abstract class LiveTripsDatasource {
-  Future<List<LiveTrip>> getLiveTrips();
-  Future<LiveTrip> getLiveTripDetails(String tripId);
-
-  Future<LiveTrip> startTrip(String tripId);
-  Future<LiveTrip> pauseTrip(String tripId);
-  Future<LiveTrip> resumeTrip(String tripId);
-  Future<LiveTrip> completeTrip(String tripId);
-
-  Future<LiveTrip> markPointArrived(String tripId, String pointId);
-  Future<LiveTrip> markPointCompleted(String tripId, String pointId);
-  Future<LiveTrip> skipPoint(String tripId, String pointId);
-
-  Future<LiveTrip> resolveAlert(String tripId, String alertId);
-
-  Future<LiveTrip> reportAlert({
-    required String tripId,
-    required LiveTripAlertType type,
-    required LiveTripAlertSeverity severity,
-    required String title,
-    required String message,
-  });
-
-  Future<String> callDriver(String driverPhone);
-  Future<String> sendDriverMessage(String driverPhone, String message);
-  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId);
-}
-
-class MockLiveTripsDatasource implements LiveTripsDatasource {
-  MockLiveTripsDatasource() {
+class FakeLiveTripsDatasource implements LiveTripsDatasource {
+  FakeLiveTripsDatasource() {
     _trips = _seedTrips();
   }
 
@@ -119,7 +92,10 @@ class MockLiveTripsDatasource implements LiveTripsDatasource {
       trip.copyWith(
         routePoints: updatedPoints,
         currentPointIndex: pointIndex,
-        progressPercent: _calculateProgress(pointIndex, trip.routePoints.length),
+        progressPercent: _calculateProgress(
+          pointIndex,
+          trip.routePoints.length,
+        ),
       ),
     );
   }
@@ -148,8 +124,9 @@ class MockLiveTripsDatasource implements LiveTripsDatasource {
       trip.copyWith(
         routePoints: updatedPoints,
         currentPointIndex: nextIndex,
-        progressPercent:
-            completed ? 100 : _calculateProgress(nextIndex, trip.routePoints.length),
+        progressPercent: completed
+            ? 100
+            : _calculateProgress(nextIndex, trip.routePoints.length),
         status: completed ? LiveTripStatus.completed : trip.status,
       ),
     );
@@ -199,8 +176,10 @@ class MockLiveTripsDatasource implements LiveTripsDatasource {
   Future<LiveTrip> resolveAlert(String tripId, String alertId) async {
     final trip = _findTrip(tripId);
     final alerts = trip.alerts
-        .map((alert) =>
-            alert.id == alertId ? alert.copyWith(resolved: true) : alert)
+        .map(
+          (alert) =>
+              alert.id == alertId ? alert.copyWith(resolved: true) : alert,
+        )
         .toList();
 
     final hasCritical = alerts.any(
@@ -243,8 +222,12 @@ class MockLiveTripsDatasource implements LiveTripsDatasource {
       if (match != null) {
         delayMins = int.tryParse(match.group(0)!) ?? 15;
       }
-      final currentExpected = trip.expectedArrivalTime ?? trip.scheduledStartTime.add(const Duration(hours: 1, minutes: 30));
-      updatedExpectedArrival = currentExpected.add(Duration(minutes: delayMins));
+      final currentExpected =
+          trip.expectedArrivalTime ??
+          trip.scheduledStartTime.add(const Duration(hours: 1, minutes: 30));
+      updatedExpectedArrival = currentExpected.add(
+        Duration(minutes: delayMins),
+      );
     }
 
     return _replaceTrip(
@@ -271,7 +254,10 @@ class MockLiveTripsDatasource implements LiveTripsDatasource {
   }
 
   @override
-  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId) async {
+  Future<LiveTrip> togglePassengerCheckin(
+    String tripId,
+    String passengerId,
+  ) async {
     final trip = _findTrip(tripId);
     final updatedPassengers = trip.passengers.map((p) {
       if (p.id == passengerId) {

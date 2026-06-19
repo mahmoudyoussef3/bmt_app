@@ -70,7 +70,8 @@ class _EmptyLiveTripsRepository implements LiveTripsRepository {
   }
 
   @override
-  Future<LiveTrip> getLiveTripDetails(String tripId) => throw UnimplementedError();
+  Future<LiveTrip> getLiveTripDetails(String tripId) =>
+      throw UnimplementedError();
 
   @override
   Future<LiveTrip> startTrip(String tripId) => throw UnimplementedError();
@@ -85,16 +86,20 @@ class _EmptyLiveTripsRepository implements LiveTripsRepository {
   Future<LiveTrip> completeTrip(String tripId) => throw UnimplementedError();
 
   @override
-  Future<LiveTrip> markPointArrived(String tripId, String pointId) => throw UnimplementedError();
+  Future<LiveTrip> markPointArrived(String tripId, String pointId) =>
+      throw UnimplementedError();
 
   @override
-  Future<LiveTrip> markPointCompleted(String tripId, String pointId) => throw UnimplementedError();
+  Future<LiveTrip> markPointCompleted(String tripId, String pointId) =>
+      throw UnimplementedError();
 
   @override
-  Future<LiveTrip> skipPoint(String tripId, String pointId) => throw UnimplementedError();
+  Future<LiveTrip> skipPoint(String tripId, String pointId) =>
+      throw UnimplementedError();
 
   @override
-  Future<LiveTrip> resolveAlert(String tripId, String alertId) => throw UnimplementedError();
+  Future<LiveTrip> resolveAlert(String tripId, String alertId) =>
+      throw UnimplementedError();
 
   @override
   Future<LiveTrip> reportAlert({
@@ -109,8 +114,10 @@ class _EmptyLiveTripsRepository implements LiveTripsRepository {
   Future<String> callDriver(String driverPhone) => throw UnimplementedError();
 
   @override
-  Future<String> sendDriverMessage(String driverPhone, String message) => throw UnimplementedError();
+  Future<String> sendDriverMessage(String driverPhone, String message) =>
+      throw UnimplementedError();
 
   @override
-  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId) => throw UnimplementedError();
+  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId) =>
+      throw UnimplementedError();
 }

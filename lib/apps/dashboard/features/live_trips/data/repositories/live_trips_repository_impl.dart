@@ -1,6 +1,6 @@
 import '../../domain/entities/live_trip.dart';
 import '../../domain/repositories/live_trips_repository.dart';
-import '../datasources/mock_live_trips_datasource.dart';
+import '../datasources/live_trips_datasource.dart';
 
 class LiveTripsRepositoryImpl implements LiveTripsRepository {
   final LiveTripsDatasource _datasource;
@@ -11,8 +11,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<List<LiveTrip>> getLiveTrips() async {
     try {
       return await _datasource.getLiveTrips();
-    } catch (_) {
-      throw Exception('تعذر تحميل الرحلات المباشرة');
+    } catch (error) {
+      throw Exception('تعذر تحميل الرحلات المباشرة: ${_cleanError(error)}');
     }
   }
 
@@ -20,8 +20,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<LiveTrip> getLiveTripDetails(String tripId) async {
     try {
       return await _datasource.getLiveTripDetails(tripId);
-    } catch (_) {
-      throw Exception('تعذر تحميل تفاصيل الرحلة');
+    } catch (error) {
+      throw Exception('تعذر تحميل تفاصيل الرحلة: ${_cleanError(error)}');
     }
   }
 
@@ -29,8 +29,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<LiveTrip> startTrip(String tripId) async {
     try {
       return await _datasource.startTrip(tripId);
-    } catch (_) {
-      throw Exception('تعذر بدء الرحلة');
+    } catch (error) {
+      throw Exception('تعذر بدء الرحلة: ${_cleanError(error)}');
     }
   }
 
@@ -38,8 +38,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<LiveTrip> pauseTrip(String tripId) async {
     try {
       return await _datasource.pauseTrip(tripId);
-    } catch (_) {
-      throw Exception('تعذر إيقاف الرحلة مؤقتًا');
+    } catch (error) {
+      throw Exception('تعذر إيقاف الرحلة مؤقتًا: ${_cleanError(error)}');
     }
   }
 
@@ -47,8 +47,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<LiveTrip> resumeTrip(String tripId) async {
     try {
       return await _datasource.resumeTrip(tripId);
-    } catch (_) {
-      throw Exception('تعذر استئناف الرحلة');
+    } catch (error) {
+      throw Exception('تعذر استئناف الرحلة: ${_cleanError(error)}');
     }
   }
 
@@ -56,8 +56,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<LiveTrip> completeTrip(String tripId) async {
     try {
       return await _datasource.completeTrip(tripId);
-    } catch (_) {
-      throw Exception('تعذر إنهاء الرحلة');
+    } catch (error) {
+      throw Exception('تعذر إنهاء الرحلة: ${_cleanError(error)}');
     }
   }
 
@@ -65,8 +65,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<LiveTrip> markPointArrived(String tripId, String pointId) async {
     try {
       return await _datasource.markPointArrived(tripId, pointId);
-    } catch (_) {
-      throw Exception('تعذر تسجيل الوصول للمحطة');
+    } catch (error) {
+      throw Exception('تعذر تسجيل الوصول للمحطة: ${_cleanError(error)}');
     }
   }
 
@@ -74,8 +74,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<LiveTrip> markPointCompleted(String tripId, String pointId) async {
     try {
       return await _datasource.markPointCompleted(tripId, pointId);
-    } catch (_) {
-      throw Exception('تعذر إنهاء المحطة');
+    } catch (error) {
+      throw Exception('تعذر إنهاء المحطة: ${_cleanError(error)}');
     }
   }
 
@@ -83,8 +83,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<LiveTrip> skipPoint(String tripId, String pointId) async {
     try {
       return await _datasource.skipPoint(tripId, pointId);
-    } catch (_) {
-      throw Exception('تعذر تخطي المحطة');
+    } catch (error) {
+      throw Exception('تعذر تخطي المحطة: ${_cleanError(error)}');
     }
   }
 
@@ -92,8 +92,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<LiveTrip> resolveAlert(String tripId, String alertId) async {
     try {
       return await _datasource.resolveAlert(tripId, alertId);
-    } catch (_) {
-      throw Exception('تعذر حل التنبيه');
+    } catch (error) {
+      throw Exception('تعذر حل التنبيه: ${_cleanError(error)}');
     }
   }
 
@@ -113,8 +113,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
         title: title,
         message: message,
       );
-    } catch (_) {
-      throw Exception('تعذر تسجيل التنبيه');
+    } catch (error) {
+      throw Exception('تعذر تسجيل التنبيه: ${_cleanError(error)}');
     }
   }
 
@@ -122,8 +122,8 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<String> callDriver(String driverPhone) async {
     try {
       return await _datasource.callDriver(driverPhone);
-    } catch (_) {
-      throw Exception('تعذر الاتصال بالسائق');
+    } catch (error) {
+      throw Exception('تعذر الاتصال بالسائق: ${_cleanError(error)}');
     }
   }
 
@@ -131,17 +131,24 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
   Future<String> sendDriverMessage(String driverPhone, String message) async {
     try {
       return await _datasource.sendDriverMessage(driverPhone, message);
-    } catch (_) {
-      throw Exception('تعذر إرسال الرسالة للسائق');
+    } catch (error) {
+      throw Exception('تعذر إرسال الرسالة للسائق: ${_cleanError(error)}');
     }
   }
 
   @override
-  Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId) async {
+  Future<LiveTrip> togglePassengerCheckin(
+    String tripId,
+    String passengerId,
+  ) async {
     try {
       return await _datasource.togglePassengerCheckin(tripId, passengerId);
-    } catch (_) {
-      throw Exception('تعذر تسجيل حضور/غياب الراكب');
+    } catch (error) {
+      throw Exception('تعذر تسجيل حضور/غياب الراكب: ${_cleanError(error)}');
     }
+  }
+
+  String _cleanError(Object error) {
+    return error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
   }
 }

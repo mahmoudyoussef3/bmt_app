@@ -228,15 +228,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
     OperationTripStatus status,
   ) async {
     try {
-      await _client
-          .from('operation_trips')
-          .update({'status': status.dbValue})
-          .eq('id', tripId);
-
-      await logEvent(
-        tripId,
-        'تحديث حالة الرحلة',
-        'تم تغيير حالة الرحلة إلى: ${status.label}.',
+      await _client.rpc(
+        'update_trip_status',
+        params: {'p_trip_id': tripId, 'p_new_status': status.dbValue},
       );
 
       return await fetchTripById(tripId);
