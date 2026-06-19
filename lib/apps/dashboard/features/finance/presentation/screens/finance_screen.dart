@@ -433,61 +433,17 @@ class _PaymentsSection extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final useSplit = constraints.maxWidth > 900;
+        final useSplit = constraints.maxWidth > 1150;
         final selected = state.selectedPayment;
 
         Widget tableWidget = Column(
           children: [
             // Filter controls
-            Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      hintText:
-                          'بحث باسم العميل، رقم العملية، أو كود الرحلة...',
-                      prefixIcon: Icon(Icons.search),
-                      border: OutlineInputBorder(),
-                    ),
-                    onChanged: (val) => cubit.setSearchQuery(val),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(
-                  child: DropdownButtonFormField<FinancePaymentMethod>(
-                    initialValue: state.paymentMethodFilter,
-                    decoration: const InputDecoration(
-                      labelText: 'طريقة الدفع',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('الكل')),
-                      ...FinancePaymentMethod.values.map(
-                        (m) => DropdownMenuItem(value: m, child: Text(m.label)),
-                      ),
-                    ],
-                    onChanged: (val) => cubit.setPaymentMethodFilter(val),
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(
-                  child: DropdownButtonFormField<PaymentStatus>(
-                    initialValue: state.paymentStatusFilter,
-                    decoration: const InputDecoration(
-                      labelText: 'الحالة',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: [
-                      const DropdownMenuItem(value: null, child: Text('الكل')),
-                      ...PaymentStatus.values.map(
-                        (s) => DropdownMenuItem(value: s, child: Text(s.label)),
-                      ),
-                    ],
-                    onChanged: (val) => cubit.setPaymentStatusFilter(val),
-                  ),
-                ),
-              ],
+            _PaymentFilters(
+              state: state,
+              onSearchChanged: cubit.setSearchQuery,
+              onMethodChanged: cubit.setPaymentMethodFilter,
+              onStatusChanged: cubit.setPaymentStatusFilter,
             ),
             const SizedBox(height: AppSpacing.medium),
             Expanded(
@@ -550,6 +506,94 @@ class _PaymentsSection extends StatelessWidget {
   }
 }
 
+class _PaymentFilters extends StatelessWidget {
+  final FinanceLoaded state;
+  final ValueChanged<String> onSearchChanged;
+  final ValueChanged<FinancePaymentMethod?> onMethodChanged;
+  final ValueChanged<PaymentStatus?> onStatusChanged;
+
+  const _PaymentFilters({
+    required this.state,
+    required this.onSearchChanged,
+    required this.onMethodChanged,
+    required this.onStatusChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final searchField = TextField(
+      decoration: const InputDecoration(
+        hintText: 'بحث باسم العميل، رقم العملية، أو كود الرحلة...',
+        prefixIcon: Icon(Icons.search),
+        border: OutlineInputBorder(),
+      ),
+      onChanged: onSearchChanged,
+    );
+
+    final methodFilter = DropdownButtonFormField<FinancePaymentMethod>(
+      initialValue: state.paymentMethodFilter,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'طريقة الدفع',
+        border: OutlineInputBorder(),
+      ),
+      items: [
+        const DropdownMenuItem(value: null, child: Text('الكل')),
+        ...FinancePaymentMethod.values.map(
+          (m) => DropdownMenuItem(value: m, child: Text(m.label)),
+        ),
+      ],
+      onChanged: onMethodChanged,
+    );
+
+    final statusFilter = DropdownButtonFormField<PaymentStatus>(
+      initialValue: state.paymentStatusFilter,
+      isExpanded: true,
+      decoration: const InputDecoration(
+        labelText: 'الحالة',
+        border: OutlineInputBorder(),
+      ),
+      items: [
+        const DropdownMenuItem(value: null, child: Text('الكل')),
+        ...PaymentStatus.values.map(
+          (s) => DropdownMenuItem(value: s, child: Text(s.label)),
+        ),
+      ],
+      onChanged: onStatusChanged,
+    );
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 760) {
+          return Column(
+            children: [
+              searchField,
+              const SizedBox(height: AppSpacing.small),
+              Row(
+                children: [
+                  Expanded(child: methodFilter),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(child: statusFilter),
+                ],
+              ),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(flex: 3, child: searchField),
+            const SizedBox(width: AppSpacing.small),
+            Expanded(child: methodFilter),
+            const SizedBox(width: AppSpacing.small),
+            Expanded(child: statusFilter),
+          ],
+        );
+      },
+    );
+  }
+}
+
 class _PaymentsTableWidget extends StatelessWidget {
   final List<PaymentRecord> payments;
   final String? selectedId;
@@ -565,81 +609,105 @@ class _PaymentsTableWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: Theme(
-        data: Theme.of(
-          context,
-        ).copyWith(dividerColor: scheme.outlineVariant.withAlpha(50)),
-        child: DataTable(
-          showCheckboxColumn: false,
-          columns: const [
-            DataColumn(
-              label: Text(
-                'رقم العملية',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'العميل',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'الرحلة',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'المبلغ',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'طريقة الدفع',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'الحالة',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-            DataColumn(
-              label: Text(
-                'التاريخ',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ),
-          ],
-          rows: payments.take(50).map((p) {
-            final isSelected = p.id == selectedId;
-            return DataRow(
-              selected: isSelected,
-              onSelectChanged: (_) => onSelect(isSelected ? null : p.id),
-              cells: [
-                DataCell(
-                  Text(
-                    p.id,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tableWidth = max(constraints.maxWidth, 1120.0);
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: tableWidth,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Theme(
+                data: Theme.of(
+                  context,
+                ).copyWith(dividerColor: scheme.outlineVariant.withAlpha(50)),
+                child: DataTable(
+                  showCheckboxColumn: false,
+                  columnSpacing: AppSpacing.medium,
+                  horizontalMargin: AppSpacing.medium,
+                  columns: const [
+                    DataColumn(
+                      label: Text(
+                        'رقم العملية',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'العميل',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'الرحلة',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'المبلغ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'طريقة الدفع',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'الحالة',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'التاريخ',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                  rows: payments.take(50).map((p) {
+                    final isSelected = p.id == selectedId;
+                    return DataRow(
+                      selected: isSelected,
+                      onSelectChanged: (_) =>
+                          onSelect(isSelected ? null : p.id),
+                      cells: [
+                        DataCell(
+                          Tooltip(
+                            message: p.id,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 220),
+                              child: Text(
+                                p.id,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataCell(Text(p.clientName)),
+                        DataCell(Text(p.tripCode)),
+                        DataCell(Text('${p.amount.toStringAsFixed(0)} ج.م')),
+                        DataCell(_PaymentMethodBadge(method: p.paymentMethod)),
+                        DataCell(_PaymentStatusBadge(status: p.status)),
+                        DataCell(Text(p.date.toString().substring(0, 16))),
+                      ],
+                    );
+                  }).toList(),
                 ),
-                DataCell(Text(p.clientName)),
-                DataCell(Text(p.tripCode)),
-                DataCell(Text('${p.amount.toStringAsFixed(0)} ج.م')),
-                DataCell(_PaymentMethodBadge(method: p.paymentMethod)),
-                DataCell(_PaymentStatusBadge(status: p.status)),
-                DataCell(Text(p.date.toString().substring(0, 16))),
-              ],
-            );
-          }).toList(),
-        ),
-      ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -745,9 +813,14 @@ class _DetailField extends StatelessWidget {
             style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: 2),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          Tooltip(
+            message: value,
+            child: Text(
+              value,
+              maxLines: 3,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
           ),
         ],
       ),

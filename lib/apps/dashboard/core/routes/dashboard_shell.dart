@@ -85,13 +85,13 @@ class _DashboardShellState extends State<DashboardShell> {
 
   late final List<_DashboardNavItem> _items = [
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_home,
+      label: 'الرئيسية',
       route: DashboardRoutes.home,
       icon: Icons.home_outlined,
       selectedIcon: Icons.home_rounded,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_bookings,
+      label: 'الحجوزات',
       route: DashboardRoutes.bookings,
       icon: Icons.event_seat_outlined,
       selectedIcon: Icons.event_seat_rounded,
@@ -99,7 +99,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navOperations,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_trips,
+      label: 'الرحلات',
       route: DashboardRoutes.trips,
       icon: Icons.directions_bus_outlined,
       selectedIcon: Icons.directions_bus_rounded,
@@ -107,7 +107,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navOperations,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_liveTrips,
+      label: 'الرحلات المباشرة',
       route: DashboardRoutes.liveTrips,
       icon: Icons.near_me_outlined,
       selectedIcon: Icons.near_me_rounded,
@@ -115,7 +115,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navOperations,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_routes,
+      label: 'المسارات',
       route: DashboardRoutes.routes,
       icon: Icons.alt_route_outlined,
       selectedIcon: Icons.alt_route_rounded,
@@ -123,7 +123,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navOperations,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_fleet,
+      label: 'إدارة الأسطول',
       route: DashboardRoutes.fleet,
       icon: Icons.local_shipping_outlined,
       selectedIcon: Icons.local_shipping_rounded,
@@ -131,7 +131,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navFleet,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_payments,
+      label: 'المالية',
       route: DashboardRoutes.payments,
       icon: Icons.account_balance_wallet_outlined,
       selectedIcon: Icons.account_balance_wallet_rounded,
@@ -139,7 +139,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navFinance,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_subscriptions,
+      label: 'الاشتراكات',
       route: DashboardRoutes.subscriptions,
       icon: Icons.workspace_premium_outlined,
       selectedIcon: Icons.workspace_premium_rounded,
@@ -147,7 +147,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navFinance,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_reports,
+      label: 'التقارير',
       route: DashboardRoutes.reports,
       icon: Icons.description_outlined,
       selectedIcon: Icons.description_rounded,
@@ -163,7 +163,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navFinance,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_tickets,
+      label: 'الشكاوى',
       route: DashboardRoutes.tickets,
       icon: Icons.support_agent_outlined,
       selectedIcon: Icons.support_agent_rounded,
@@ -171,7 +171,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navSupport,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_permissions,
+      label: 'الصلاحيات',
       route: DashboardRoutes.permissions,
       icon: Icons.admin_panel_settings_outlined,
       selectedIcon: Icons.admin_panel_settings_rounded,
@@ -179,7 +179,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navSystem,
     ),
     _DashboardNavItem(
-      label: AppLocalizations.of(context)!.dashboard_settings,
+      label: 'الإعدادات',
       route: DashboardRoutes.settings,
       icon: Icons.settings_outlined,
       selectedIcon: Icons.settings_rounded,
