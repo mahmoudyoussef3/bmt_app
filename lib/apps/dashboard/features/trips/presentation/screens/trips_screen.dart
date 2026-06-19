@@ -7,6 +7,8 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trips_list_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trip_details_cubit.dart';
@@ -17,6 +19,7 @@ import 'package:bmt_app/apps/dashboard/features/trips/trip_passengers/presentati
 
 import '../widgets/trip_pricing_tab.dart';
 import '../widgets/trip_creation_wizard.dart';
+import '../widgets/trips_analytics.dart';
 
 /// This file contains an improved implementation of the TripsScreen.
 ///
@@ -131,13 +134,15 @@ class _TripsViewState extends State<_TripsView> {
                   controller: _scrollController,
                   padding: const EdgeInsets.all(AppSpacing.large),
                   children: [
-                    _Header(listState: listState),
+                    const _Header(),
                     if (selectedTrip != null) ...[
                       const SizedBox(height: AppSpacing.large),
                       _TripWorkspace(trip: selectedTrip),
                     ],
                     const SizedBox(height: AppSpacing.large),
                     _DashboardKPIs(listState: listState),
+                    const SizedBox(height: AppSpacing.large),
+                    TripsAnalytics(state: listState),
                     const SizedBox(height: AppSpacing.large),
                     _FilterBar(listState: listState),
                     const SizedBox(height: AppSpacing.medium),
@@ -222,45 +227,21 @@ class _TripsViewState extends State<_TripsView> {
 
 /// Header panel with page title and global actions.
 class _Header extends StatelessWidget {
-  final TripsListLoaded listState;
-  const _Header({required this.listState});
+  const _Header();
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'إدارة وجدولة الرحلات',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.xSmall),
-                Text(
-                  'لوحة التحكم التشغيلية لجدولة مسارات الأوتوبيس، تعيين السائقين وإدارة الحجوزات والأسعار.',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Tooltip(
-            message: 'إنشاء رحلة جديدة عبر معالج الخطوات',
-            child: FilledButton.icon(
-              onPressed: () => _openCreateTripWizard(context),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('إنشاء رحلة بالمعالج'),
-            ),
-          ),
-        ],
-      ),
+    return DashboardModuleHeader(
+      icon: Icons.directions_bus_rounded,
+      title: 'إدارة الرحلات',
+      subtitle: 'جدولة الرحلات وتعيين السائقين وإدارة المقاعد والأسعار.',
+      actions: [
+        FilledButton.icon(
+          onPressed: () => _openCreateTripWizard(context),
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('إنشاء رحلة'),
+        ),
+      ],
     );
   }
 
@@ -276,10 +257,7 @@ class _Header extends StatelessWidget {
           child: TripCreationWizardDialog(),
         ),
       ),
-    ).then((_) {
-      // Reload the trips list after the wizard completes
-      tripsCubit.load();
-    });
+    ).then((_) => tripsCubit.load());
   }
 }
 
@@ -291,83 +269,35 @@ class _DashboardKPIs extends StatelessWidget {
   const _DashboardKPIs({required this.listState});
   @override
   Widget build(BuildContext context) {
-    final items = [
-      ('الرحلات اليوم', listState.todayTrips, Icons.today_outlined),
-      ('الرحلات القادمة', listState.upcomingTrips, Icons.schedule_rounded),
-      ('الرحلات الجارية', listState.runningTrips, Icons.near_me_outlined),
-      (
-        'الرحلات المكتملة',
-        listState.completedTrips,
-        Icons.check_circle_outline,
-      ),
-    ];
-    return AppCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final itemWidth = constraints.maxWidth >= 900
-              ? (constraints.maxWidth - AppSpacing.small * 3) / 4
-              : constraints.maxWidth >= 560
-              ? (constraints.maxWidth - AppSpacing.small) / 2
-              : constraints.maxWidth;
-          return Wrap(
-            spacing: AppSpacing.small,
-            runSpacing: AppSpacing.small,
-            children: items.map((item) {
-              final (label, value, icon) = item;
-              return SizedBox(
-                width: itemWidth,
-                child: _InlineKpi(label: label, value: value, icon: icon),
-              );
-            }).toList(),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _InlineKpi extends StatelessWidget {
-  final String label;
-  final int value;
-  final IconData icon;
-
-  const _InlineKpi({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.small,
-        vertical: AppSpacing.xSmall,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(45),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: scheme.primary),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis),
-          ),
-          Text(
-            '$value',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-        ],
-      ),
+    return DashboardKpiGrid(
+      itemExtent: 84,
+      children: [
+        DashboardKpiCard(
+          label: 'الرحلات اليوم',
+          value: '${listState.todayTrips}',
+          icon: Icons.today_outlined,
+          color: scheme.primary,
+        ),
+        DashboardKpiCard(
+          label: 'الرحلات القادمة',
+          value: '${listState.upcomingTrips}',
+          icon: Icons.schedule_rounded,
+          color: scheme.secondary,
+        ),
+        DashboardKpiCard(
+          label: 'الرحلات الجارية',
+          value: '${listState.runningTrips}',
+          icon: Icons.near_me_outlined,
+          color: scheme.tertiary,
+        ),
+        DashboardKpiCard(
+          label: 'الرحلات المكتملة',
+          value: '${listState.completedTrips}',
+          icon: Icons.check_circle_outline,
+          color: scheme.primary,
+        ),
+      ],
     );
   }
 }
@@ -637,7 +567,7 @@ class _TripsTable extends StatelessWidget {
                       crossAxisCount: columns,
                       crossAxisSpacing: AppSpacing.medium,
                       mainAxisSpacing: AppSpacing.medium,
-                      mainAxisExtent: 224,
+                      mainAxisExtent: 260,
                     ),
                     itemBuilder: (context, index) {
                       final trip = listState.filteredTrips[index];
@@ -854,6 +784,7 @@ class _CardFact extends StatelessWidget {
   }
 }
 
+// ignore: unused_element
 class _WorkspaceOperationsHeader extends StatelessWidget {
   final OperationTrip trip;
   final ValueChanged<OperationTripStatus> onChangeStatus;
@@ -1167,96 +1098,779 @@ class _OccupancyBar extends StatelessWidget {
 class _TripWorkspace extends StatelessWidget {
   final OperationTrip trip;
   const _TripWorkspace({required this.trip});
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TripDetailsCubit>();
-    final scheme = Theme.of(context).colorScheme;
     return BlocBuilder<TripDetailsCubit, TripDetailsState>(
       builder: (context, state) {
         if (state is! TripDetailsLoaded) {
           return const SizedBox.shrink();
         }
-        return AppCard(
-          padding: const EdgeInsets.all(AppSpacing.medium),
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _TripCommandHero(
+              trip: state.trip,
+              selectedTab: state.tab,
+              saving: state.isSaving,
+              onClose: cubit.closeDetails,
+              onSelectTab: cubit.changeWorkspaceTab,
+              onChangeStatus: (nextStatus) async {
+                final updated = await cubit.updateStatus(nextStatus);
+                if (updated != null && context.mounted) {
+                  context.read<TripsListCubit>().updateTripInList(updated);
+                } else if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('تعذر تحديث حالة الرحلة. حاول مرة أخرى.'),
+                    ),
+                  );
+                }
+              },
+            ),
+            const SizedBox(height: AppSpacing.medium),
+            LayoutBuilder(
+              builder: (context, constraints) {
+                final wide = constraints.maxWidth >= 1060;
+                final content = _TripWorkspaceContent(
+                  trip: state.trip,
+                  tab: state.tab,
+                  onSelectTab: cubit.changeWorkspaceTab,
+                );
+                final side = _TripOperationsSidePanel(
+                  trip: state.trip,
+                  saving: state.isSaving,
+                  onChangeStatus: (nextStatus) async {
+                    final updated = await cubit.updateStatus(nextStatus);
+                    if (updated != null && context.mounted) {
+                      context.read<TripsListCubit>().updateTripInList(updated);
+                    } else if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'تعذر تحديث حالة الرحلة. حاول مرة أخرى.',
+                          ),
+                        ),
+                      );
+                    }
+                  },
+                  onSelectTab: cubit.changeWorkspaceTab,
+                );
+                if (!wide) {
+                  return Column(
+                    children: [
+                      side,
+                      const SizedBox(height: AppSpacing.medium),
+                      content,
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(width: 340, child: side),
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(child: content),
+                  ],
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _TripWorkspaceContent extends StatelessWidget {
+  final OperationTrip trip;
+  final TripWorkspaceTab tab;
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+
+  const _TripWorkspaceContent({
+    required this.trip,
+    required this.tab,
+    required this.onSelectTab,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle(
+            icon: _tabIcon(tab),
+            title: _tabLabel(tab),
+            subtitle: _tabSubtitle(tab),
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          switch (tab) {
+            TripWorkspaceTab.overview => _OverviewTab(
+              trip: trip,
+              onSelectTab: onSelectTab,
+            ),
+            TripWorkspaceTab.passengers => _PassengersTab(
+              trip: trip,
+              onSelectTab: onSelectTab,
+            ),
+            TripWorkspaceTab.seats => _SeatsTab(
+              trip: trip,
+              onSelectTab: onSelectTab,
+            ),
+            TripWorkspaceTab.pricing => TripPricingTab(trip: trip),
+            TripWorkspaceTab.payments => _PaymentsTab(
+              trip: trip,
+              onSelectTab: onSelectTab,
+            ),
+            TripWorkspaceTab.history => _HistoryTab(trip: trip),
+          },
+        ],
+      ),
+    );
+  }
+}
+
+class _TripCommandHero extends StatelessWidget {
+  final OperationTrip trip;
+  final TripWorkspaceTab selectedTab;
+  final bool saving;
+  final VoidCallback onClose;
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+  final ValueChanged<OperationTripStatus> onChangeStatus;
+
+  const _TripCommandHero({
+    required this.trip,
+    required this.selectedTab,
+    required this.saving,
+    required this.onClose,
+    required this.onSelectTab,
+    required this.onChangeStatus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final statusColor = _statusColor(context, trip.status);
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            decoration: BoxDecoration(
+              color: statusColor.withAlpha(18),
+              borderRadius: BorderRadius.only(
+                topLeft: Radius.circular(AppTokens.radius),
+                topRight: Radius.circular(AppTokens.radius),
+              ),
+            ),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final compact = constraints.maxWidth < 900;
+                final title = Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Wrap(
+                      spacing: AppSpacing.small,
+                      runSpacing: AppSpacing.xSmall,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        StatusChip(
+                          label: trip.status.label,
+                          color: statusColor.withAlpha(34),
+                          textColor: statusColor,
+                        ),
+                        _TripCodeBadge(id: trip.id),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.small),
+                    Text(
+                      trip.route,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: AppSpacing.small),
+                    Wrap(
+                      spacing: AppSpacing.small,
+                      runSpacing: AppSpacing.small,
+                      children: [
+                        _TripInfoChip(
+                          icon: Icons.calendar_today_outlined,
+                          label: trip.date,
+                        ),
+                        _TripInfoChip(
+                          icon: Icons.schedule_rounded,
+                          label: '${trip.departure} → ${trip.arrival}',
+                        ),
+                        _TripInfoChip(
+                          icon: Icons.person_outline_rounded,
+                          label: trip.driver,
+                        ),
+                        _TripInfoChip(
+                          icon: Icons.directions_bus_rounded,
+                          label: trip.vehicle,
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+                final actions = Column(
+                  crossAxisAlignment: compact
+                      ? CrossAxisAlignment.start
+                      : CrossAxisAlignment.end,
+                  children: [
+                    _PrimaryTripAction(
+                      trip: trip,
+                      saving: saving,
+                      onChangeStatus: onChangeStatus,
+                    ),
+                    const SizedBox(height: AppSpacing.small),
+                    Wrap(
+                      spacing: AppSpacing.xSmall,
+                      runSpacing: AppSpacing.xSmall,
+                      alignment: compact
+                          ? WrapAlignment.start
+                          : WrapAlignment.end,
+                      children: [
+                        OutlinedButton.icon(
+                          onPressed: () =>
+                              onSelectTab(TripWorkspaceTab.passengers),
+                          icon: const Icon(Icons.people_outline_rounded),
+                          label: const Text('الركاب'),
+                        ),
+                        OutlinedButton.icon(
+                          onPressed: () => onSelectTab(TripWorkspaceTab.seats),
+                          icon: const Icon(Icons.event_seat_outlined),
+                          label: const Text('المقاعد'),
+                        ),
+                        IconButton.filledTonal(
+                          tooltip: 'إغلاق تفاصيل الرحلة',
+                          onPressed: onClose,
+                          icon: const Icon(Icons.close_rounded),
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+                if (compact) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      title,
+                      const SizedBox(height: AppSpacing.medium),
+                      actions,
+                    ],
+                  );
+                }
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: title),
+                    const SizedBox(width: AppSpacing.large),
+                    actions,
+                  ],
+                );
+              },
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.large,
+              AppSpacing.medium,
+              AppSpacing.large,
+              AppSpacing.large,
+            ),
+            child: Column(
+              children: [
+                _TripLifecycleRail(
+                  status: trip.status,
+                  saving: saving,
+                  onChangeStatus: onChangeStatus,
+                ),
+                const SizedBox(height: AppSpacing.medium),
+                _WorkspaceTabBar(
+                  selected: selectedTab,
+                  onSelected: onSelectTab,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TripOperationsSidePanel extends StatelessWidget {
+  final OperationTrip trip;
+  final bool saving;
+  final ValueChanged<OperationTripStatus> onChangeStatus;
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+
+  const _TripOperationsSidePanel({
+    required this.trip,
+    required this.saving,
+    required this.onChangeStatus,
+    required this.onSelectTab,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _NextActionCard(
+          trip: trip,
+          saving: saving,
+          onChangeStatus: onChangeStatus,
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        _OperationsReadinessCard(trip: trip, onSelectTab: onSelectTab),
+        const SizedBox(height: AppSpacing.medium),
+        _QuickJumpCard(onSelectTab: onSelectTab),
+      ],
+    );
+  }
+}
+
+class _TripLifecycleRail extends StatelessWidget {
+  final OperationTripStatus status;
+  final bool saving;
+  final ValueChanged<OperationTripStatus> onChangeStatus;
+
+  const _TripLifecycleRail({
+    required this.status,
+    required this.saving,
+    required this.onChangeStatus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final statuses = const [
+      OperationTripStatus.scheduled,
+      OperationTripStatus.openForBooking,
+      OperationTripStatus.boarding,
+      OperationTripStatus.inProgress,
+      OperationTripStatus.completed,
+    ];
+    final currentIndex = statuses.indexOf(status);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 760;
+        return Wrap(
+          spacing: AppSpacing.small,
+          runSpacing: AppSpacing.small,
+          children: statuses.indexed.map((entry) {
+            final (index, item) = entry;
+            final reached = currentIndex >= index && currentIndex != -1;
+            final current = item == status;
+            return SizedBox(
+              width: compact ? constraints.maxWidth : 150,
+              child: _LifecycleStepChip(
+                status: item,
+                reached: reached,
+                current: current,
+                onTap: saving ? null : () => onChangeStatus(item),
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+}
+
+class _LifecycleStepChip extends StatelessWidget {
+  final OperationTripStatus status;
+  final bool reached;
+  final bool current;
+  final VoidCallback? onTap;
+
+  const _LifecycleStepChip({
+    required this.status,
+    required this.reached,
+    required this.current,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = _statusColor(context, status);
+    return Material(
+      color: current
+          ? color.withAlpha(32)
+          : reached
+          ? scheme.primaryContainer.withAlpha(50)
+          : scheme.surfaceContainerHighest.withAlpha(55),
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.small),
+          child: Row(
+            children: [
+              Icon(
+                reached
+                    ? Icons.check_circle_rounded
+                    : Icons.radio_button_unchecked_rounded,
+                color: current ? color : scheme.onSurfaceVariant,
+                size: 18,
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  status.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    fontWeight: current ? FontWeight.bold : null,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _WorkspaceTabBar extends StatelessWidget {
+  final TripWorkspaceTab selected;
+  final ValueChanged<TripWorkspaceTab> onSelected;
+
+  const _WorkspaceTabBar({required this.selected, required this.onSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Row(
+        children: TripWorkspaceTab.values.map((tab) {
+          final active = tab == selected;
+          return Padding(
+            padding: const EdgeInsetsDirectional.only(end: AppSpacing.small),
+            child: ChoiceChip(
+              selected: active,
+              showCheckmark: false,
+              onSelected: (_) => onSelected(tab),
+              avatar: Icon(
+                _tabIcon(tab),
+                size: 18,
+                color: active ? scheme.onPrimary : scheme.onSurfaceVariant,
+              ),
+              label: Text(_tabLabel(tab)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+}
+
+class _PrimaryTripAction extends StatelessWidget {
+  final OperationTrip trip;
+  final bool saving;
+  final ValueChanged<OperationTripStatus> onChangeStatus;
+
+  const _PrimaryTripAction({
+    required this.trip,
+    required this.saving,
+    required this.onChangeStatus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final next = _nextStatus(trip.status);
+    if (next == null) {
+      return StatusChip(label: _terminalStatusLabel(trip.status));
+    }
+    return FilledButton.icon(
+      onPressed: saving ? null : () => onChangeStatus(next),
+      icon: saving
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.play_arrow_rounded),
+      label: Text(saving ? 'جاري التحديث...' : _statusActionLabel(next)),
+    );
+  }
+}
+
+class _ReadinessRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final bool ok;
+  final VoidCallback onTap;
+
+  const _ReadinessRow({
+    required this.label,
+    required this.value,
+    required this.ok,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 7),
+        child: Row(
+          children: [
+            Icon(
+              ok ? Icons.check_circle_outline : Icons.error_outline_rounded,
+              color: ok ? scheme.primary : scheme.error,
+              size: 18,
+            ),
+            const SizedBox(width: AppSpacing.small),
+            Expanded(child: Text(label)),
+            Text(
+              value,
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _TripCodeBadge extends StatelessWidget {
+  final String id;
+
+  const _TripCodeBadge({required this.id});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: scheme.surface.withAlpha(180),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: scheme.outline.withAlpha(70)),
+      ),
+      child: Text(
+        id.substring(0, id.length < 8 ? id.length : 8).toUpperCase(),
+        style: const TextStyle(
+          fontWeight: FontWeight.bold,
+          fontFamily: 'monospace',
+        ),
+      ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+
+  const _SectionTitle({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: scheme.primary),
+        const SizedBox(width: AppSpacing.small),
+        Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _WorkspaceOperationsHeader(
-                trip: trip,
-                onClose: cubit.closeDetails,
-                onChangeStatus: (nextStatus) async {
-                  final updated = await cubit.updateStatus(nextStatus);
-                  if (updated != null && context.mounted) {
-                    context.read<TripsListCubit>().updateTripInList(updated);
-                  }
-                },
+              Text(
+                title,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
-              const SizedBox(height: AppSpacing.small),
-              const Divider(),
-              const SizedBox(height: AppSpacing.small),
-              Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: TripWorkspaceTab.values.map((tab) {
-                  final label = switch (tab) {
-                    TripWorkspaceTab.overview => 'نظرة عامة',
-                    TripWorkspaceTab.passengers => 'الركاب',
-                    TripWorkspaceTab.seats => 'المقاعد',
-                    TripWorkspaceTab.pricing => 'التسعير',
-                    TripWorkspaceTab.packages => 'الباقات',
-                    TripWorkspaceTab.payments => 'المدفوعات والتوثيق',
-                    TripWorkspaceTab.history => 'السجل',
-                  };
-                  final icon = switch (tab) {
-                    TripWorkspaceTab.overview => Icons.dashboard_outlined,
-                    TripWorkspaceTab.passengers => Icons.people_outline_rounded,
-                    TripWorkspaceTab.seats => Icons.event_seat_outlined,
-                    TripWorkspaceTab.pricing => Icons.payments_outlined,
-                    TripWorkspaceTab.packages => Icons.card_giftcard_outlined,
-                    TripWorkspaceTab.payments => Icons.receipt_long_outlined,
-                    TripWorkspaceTab.history => Icons.history_rounded,
-                  };
-                  final selected = state.tab == tab;
-                  return ChoiceChip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          icon,
-                          size: 18,
-                          color: selected
-                              ? scheme.onPrimary
-                              : scheme.onSurfaceVariant,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(label),
-                      ],
-                    ),
-                    selected: selected,
-                    onSelected: (_) => cubit.changeWorkspaceTab(tab),
-                    showCheckmark: false,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  );
-                }).toList(),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
-              const SizedBox(height: AppSpacing.medium),
-              // Content for each tab
-              switch (state.tab) {
-                TripWorkspaceTab.overview => _OverviewTab(trip: trip),
-                TripWorkspaceTab.passengers => _PassengersTab(trip: trip),
-                TripWorkspaceTab.seats => _SeatsTab(trip: trip),
-                TripWorkspaceTab.pricing => TripPricingTab(trip: trip),
-                TripWorkspaceTab.packages => _PackagesTab(trip: trip),
-                TripWorkspaceTab.payments => _PaymentsTab(trip: trip),
-                TripWorkspaceTab.history => _HistoryTab(trip: trip),
-              },
             ],
           ),
-        );
-      },
+        ),
+      ],
+    );
+  }
+}
+
+class _NextActionCard extends StatelessWidget {
+  final OperationTrip trip;
+  final bool saving;
+  final ValueChanged<OperationTripStatus> onChangeStatus;
+
+  const _NextActionCard({
+    required this.trip,
+    required this.saving,
+    required this.onChangeStatus,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final next = _nextStatus(trip.status);
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle(
+            icon: Icons.play_circle_outline_rounded,
+            title: 'الخطوة التالية',
+            subtitle: _nextActionCopy(trip),
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          if (next == null)
+            StatusChip(label: 'لا توجد خطوة تشغيلية تالية')
+          else
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: saving ? null : () => onChangeStatus(next),
+                icon: saving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.arrow_forward_rounded),
+                label: Text(
+                  saving ? 'جاري التحديث...' : _statusActionLabel(next),
+                ),
+              ),
+            ),
+          const SizedBox(height: AppSpacing.small),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: saving || trip.status == OperationTripStatus.cancelled
+                  ? null
+                  : () => onChangeStatus(OperationTripStatus.cancelled),
+              icon: const Icon(Icons.cancel_outlined),
+              label: const Text('إلغاء الرحلة'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OperationsReadinessCard extends StatelessWidget {
+  final OperationTrip trip;
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+
+  const _OperationsReadinessCard({
+    required this.trip,
+    required this.onSelectTab,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final occupancy = _occupancyRatio(trip);
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle(
+            icon: Icons.health_and_safety_outlined,
+            title: 'جاهزية التشغيل',
+            subtitle: _attentionLabel(trip) ?? 'لا توجد تنبيهات حرجة حالياً',
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          _OccupancyBar(
+            ratio: occupancy,
+            label:
+                '${trip.bookedSeats}/${trip.capacity} مشغول - ${trip.availableSeats} متاح',
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          _ReadinessRow(
+            label: 'المقاعد',
+            value: '${trip.seats.length}/${trip.capacity}',
+            ok: trip.seats.length >= trip.capacity && trip.capacity > 0,
+            onTap: () => onSelectTab(TripWorkspaceTab.seats),
+          ),
+          _ReadinessRow(
+            label: 'الركاب',
+            value: '${trip.passengers.length}',
+            ok: trip.passengers.length <= trip.capacity,
+            onTap: () => onSelectTab(TripWorkspaceTab.passengers),
+          ),
+          _ReadinessRow(
+            label: 'المحطات',
+            value: '${trip.routePoints.length}',
+            ok: trip.routePoints.length >= 2,
+            onTap: () => onSelectTab(TripWorkspaceTab.overview),
+          ),
+          _ReadinessRow(
+            label: 'السعر',
+            value: '${trip.ticketPrice.toStringAsFixed(0)} ${trip.currency}',
+            ok: trip.ticketPrice > 0,
+            onTap: () => onSelectTab(TripWorkspaceTab.pricing),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _QuickJumpCard extends StatelessWidget {
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+
+  const _QuickJumpCard({required this.onSelectTab});
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _SectionTitle(
+            icon: Icons.touch_app_outlined,
+            title: 'اختصارات الإدارة',
+            subtitle: 'انتقل مباشرة للقسم المطلوب',
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          for (final tab in TripWorkspaceTab.values)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
+              child: SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => onSelectTab(tab),
+                  icon: Icon(_tabIcon(tab)),
+                  label: Text(_tabLabel(tab)),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -1271,6 +1885,7 @@ class _TripInfoChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
+      constraints: const BoxConstraints(maxWidth: 280),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(80),
@@ -1278,15 +1893,18 @@ class _TripInfoChip extends StatelessWidget {
         border: Border.all(color: scheme.outline.withAlpha(30)),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 16, color: scheme.primary),
           const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),
@@ -1296,7 +1914,9 @@ class _TripInfoChip extends StatelessWidget {
 
 class _OverviewTab extends StatelessWidget {
   final OperationTrip trip;
-  const _OverviewTab({required this.trip});
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+
+  const _OverviewTab({required this.trip, required this.onSelectTab});
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -1359,6 +1979,8 @@ class _OverviewTab extends StatelessWidget {
           },
         ),
         const SizedBox(height: AppSpacing.medium),
+        _TripDetailHealthPanel(trip: trip, onSelectTab: onSelectTab),
+        const SizedBox(height: AppSpacing.medium),
         AppCard(
           padding: const EdgeInsets.all(AppSpacing.medium),
           child: Column(
@@ -1383,6 +2005,148 @@ class _OverviewTab extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _TripDetailHealthPanel extends StatelessWidget {
+  final OperationTrip trip;
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+
+  const _TripDetailHealthPanel({required this.trip, required this.onSelectTab});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 980
+            ? 3
+            : constraints.maxWidth >= 620
+            ? 2
+            : 1;
+        final items = [
+          _DetailHealthItem(
+            icon: Icons.event_seat_outlined,
+            title: 'المقاعد',
+            value: '${trip.seats.length}/${trip.capacity}',
+            subtitle: trip.seats.length >= trip.capacity && trip.capacity > 0
+                ? 'التوزيع مكتمل'
+                : 'راجع توليد المقاعد والسعة',
+            ok: trip.seats.length >= trip.capacity && trip.capacity > 0,
+            onTap: () => onSelectTab(TripWorkspaceTab.seats),
+          ),
+          _DetailHealthItem(
+            icon: Icons.payments_outlined,
+            title: 'التسعير الأساسي',
+            value: trip.ticketPrice > 0
+                ? '${trip.ticketPrice.toStringAsFixed(0)} ${trip.currency}'
+                : 'غير محدد',
+            subtitle: trip.ticketPrice > 0
+                ? 'جاهز للحجز'
+                : 'أضف سعر الرحلة قبل فتح الحجوزات',
+            ok: trip.ticketPrice > 0,
+            onTap: () => onSelectTab(TripWorkspaceTab.pricing),
+          ),
+          _DetailHealthItem(
+            icon: Icons.route_outlined,
+            title: 'المسار',
+            value: '${trip.routePoints.length} محطات',
+            subtitle: trip.routePoints.length >= 2
+                ? 'نقاط الصعود والنزول متاحة'
+                : 'المسار يحتاج نقطتين على الأقل',
+            ok: trip.routePoints.length >= 2,
+            onTap: () => onSelectTab(TripWorkspaceTab.overview),
+          ),
+        ];
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: AppSpacing.medium,
+            mainAxisSpacing: AppSpacing.medium,
+            mainAxisExtent: 118,
+          ),
+          itemBuilder: (context, index) => items[index],
+        );
+      },
+    );
+  }
+}
+
+class _DetailHealthItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String value;
+  final String subtitle;
+  final bool ok;
+  final VoidCallback onTap;
+
+  const _DetailHealthItem({
+    required this.icon,
+    required this.title,
+    required this.value,
+    required this.subtitle,
+    required this.ok,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = ok ? scheme.primary : scheme.error;
+    return Material(
+      color: color.withAlpha(ok ? 14 : 18),
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+            border: Border.all(color: color.withAlpha(55)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: color),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    Text(
+                      value,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.chevron_left_rounded, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1536,7 +2300,9 @@ class _RouteTimelineStrip extends StatelessWidget {
 
 class _PassengersTab extends StatefulWidget {
   final OperationTrip trip;
-  const _PassengersTab({required this.trip});
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+
+  const _PassengersTab({required this.trip, required this.onSelectTab});
 
   @override
   State<_PassengersTab> createState() => _PassengersTabState();
@@ -1579,6 +2345,20 @@ class _PassengersTabState extends State<_PassengersTab> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.medium,
+              AppSpacing.medium,
+              AppSpacing.medium,
+              0,
+            ),
+            child: _PassengerManifestSummary(
+              trip: trip,
+              onSelectSeats: () => widget.onSelectTab(TripWorkspaceTab.seats),
+              onSelectPayments: () =>
+                  widget.onSelectTab(TripWorkspaceTab.payments),
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(AppSpacing.medium),
             child: LayoutBuilder(
@@ -1629,7 +2409,12 @@ class _PassengersTabState extends State<_PassengersTab> {
             ),
           ),
           if (trip.passengers.isEmpty)
-            _ManifestEmptyState(color: scheme.onSurfaceVariant)
+            _ManifestEmptyState(
+              color: scheme.onSurfaceVariant,
+              onSelectSeats: () => widget.onSelectTab(TripWorkspaceTab.seats),
+              onSelectPricing: () =>
+                  widget.onSelectTab(TripWorkspaceTab.pricing),
+            )
           else if (filteredPassengers.isEmpty)
             Padding(
               padding: const EdgeInsets.all(AppSpacing.large),
@@ -1710,26 +2495,221 @@ class _PassengersTabState extends State<_PassengersTab> {
   }
 }
 
-class _ManifestEmptyState extends StatelessWidget {
-  final Color color;
+class _PassengerManifestSummary extends StatelessWidget {
+  final OperationTrip trip;
+  final VoidCallback onSelectSeats;
+  final VoidCallback onSelectPayments;
 
-  const _ManifestEmptyState({required this.color});
+  const _PassengerManifestSummary({
+    required this.trip,
+    required this.onSelectSeats,
+    required this.onSelectPayments,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final paid = trip.passengers
+        .where((p) => _paymentBucket(p) == _PaymentBucket.paid)
+        .length;
+    final pending = trip.passengers
+        .where((p) => _paymentBucket(p) == _PaymentBucket.pending)
+        .length;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 820 ? 4 : 2;
+        final items = [
+          _CompactOpsMetric(
+            label: 'الركاب',
+            value: '${trip.passengers.length}',
+            icon: Icons.people_outline_rounded,
+            color: scheme.primary,
+          ),
+          _CompactOpsMetric(
+            label: 'المقاعد المتاحة',
+            value: '${trip.availableSeats}',
+            icon: Icons.event_available_outlined,
+            color: scheme.secondary,
+            onTap: onSelectSeats,
+          ),
+          _CompactOpsMetric(
+            label: 'مدفوع',
+            value: '$paid',
+            icon: Icons.check_circle_outline_rounded,
+            color: scheme.primary,
+            onTap: onSelectPayments,
+          ),
+          _CompactOpsMetric(
+            label: 'معلق',
+            value: '$pending',
+            icon: Icons.pending_actions_rounded,
+            color: scheme.tertiary,
+            onTap: onSelectPayments,
+          ),
+        ];
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: AppSpacing.small,
+            mainAxisSpacing: AppSpacing.small,
+            mainAxisExtent: 78,
+          ),
+          itemBuilder: (context, index) => items[index],
+        );
+      },
+    );
+  }
+}
+
+class _ManifestEmptyState extends StatelessWidget {
+  final Color color;
+  final VoidCallback onSelectSeats;
+  final VoidCallback onSelectPricing;
+
+  const _ManifestEmptyState({
+    required this.color,
+    required this.onSelectSeats,
+    required this.onSelectPricing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return _ActionEmptyState(
+      icon: Icons.people_outline_rounded,
+      title: 'لا يوجد ركاب على هذه الرحلة',
+      message:
+          'بعد فتح الرحلة للحجز ستظهر الحجوزات هنا. قبل ذلك تأكد أن المقاعد والتسعير جاهزان.',
+      actions: [
+        OutlinedButton.icon(
+          onPressed: onSelectSeats,
+          icon: const Icon(Icons.event_seat_outlined),
+          label: const Text('مراجعة المقاعد'),
+        ),
+        FilledButton.tonalIcon(
+          onPressed: onSelectPricing,
+          icon: const Icon(Icons.payments_outlined),
+          label: const Text('مراجعة التسعير'),
+        ),
+      ],
+    );
+  }
+}
+
+class _CompactOpsMetric extends StatelessWidget {
+  final String label;
+  final String value;
+  final IconData icon;
+  final Color color;
+  final VoidCallback? onTap;
+
+  const _CompactOpsMetric({
+    required this.label,
+    required this.value,
+    required this.icon,
+    required this.color,
+    this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: color.withAlpha(18),
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        child: Container(
+          padding: const EdgeInsets.all(AppSpacing.small),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+            border: Border.all(color: color.withAlpha(45)),
+          ),
+          child: Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              Text(
+                value,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ActionEmptyState extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String message;
+  final List<Widget> actions;
+
+  const _ActionEmptyState({
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.actions = const [],
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.large),
-      child: Row(
-        children: [
-          Icon(Icons.people_outline_rounded, color: color),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Text(
-              'لا يوجد ركاب مسجلين على هذه الرحلة حالياً.',
-              style: TextStyle(color: color),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.large),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerHighest.withAlpha(35),
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+          border: Border.all(color: scheme.outline.withAlpha(45)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(icon, color: scheme.primary, size: 28),
+            const SizedBox(height: AppSpacing.small),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
-          ),
-        ],
+            const SizedBox(height: AppSpacing.xSmall),
+            Text(
+              message,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+            if (actions.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.medium),
+              Wrap(
+                spacing: AppSpacing.small,
+                runSpacing: AppSpacing.small,
+                children: actions,
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -1851,73 +2831,115 @@ class _SeatBadge extends StatelessWidget {
   }
 }
 
-class _SeatsTab extends StatelessWidget {
+class _SeatsTab extends StatefulWidget {
   final OperationTrip trip;
-  const _SeatsTab({required this.trip});
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+
+  const _SeatsTab({required this.trip, required this.onSelectTab});
+
+  @override
+  State<_SeatsTab> createState() => _SeatsTabState();
+}
+
+class _SeatsTabState extends State<_SeatsTab> {
+  TripSeatState? _filter;
+
   @override
   Widget build(BuildContext context) {
+    final trip = widget.trip;
     final scheme = Theme.of(context).colorScheme;
     final occupancy = _occupancyRatio(trip);
+    final sortedSeats = [...trip.seats]
+      ..sort((a, b) {
+        final rowCompare = a.row.compareTo(b.row);
+        return rowCompare == 0 ? a.column.compareTo(b.column) : rowCompare;
+      });
+    final visibleSeats = _filter == null
+        ? sortedSeats
+        : sortedSeats.where((seat) => seat.state == _filter).toList();
     final columns = trip.seats.isEmpty
         ? 4
         : trip.seats.map((seat) => seat.column).reduce((a, b) => a > b ? a : b);
     final seatColumns = columns.clamp(3, 6);
+    final passengerBySeat = {
+      for (final passenger in trip.passengers) passenger.seat: passenger,
+    };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         AppCard(
           padding: const EdgeInsets.all(AppSpacing.medium),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final compact = constraints.maxWidth < 760;
-              final summary = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'حالة المقاعد',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.small),
-                  _OccupancyBar(
-                    ratio: occupancy,
-                    label:
-                        '${trip.bookedSeats}/${trip.capacity} مقعد مشغول - ${trip.availableSeats} متاح',
-                  ),
-                ],
-              );
-              final legend = Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: TripSeatState.values
-                    .map(
-                      (s) => StatusChip(
-                        label: s.label,
-                        color: _seatColor(context, s).withAlpha(35),
-                        textColor: _seatColor(context, s),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final compact = constraints.maxWidth < 760;
+                  final summary = Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'حالة المقاعد',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
-                    )
-                    .toList(),
-              );
-              if (compact) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    summary,
-                    const SizedBox(height: AppSpacing.medium),
-                    legend,
-                  ],
-                );
-              }
-              return Row(
-                children: [
-                  Expanded(child: summary),
-                  const SizedBox(width: AppSpacing.large),
-                  Expanded(child: legend),
-                ],
-              );
-            },
+                      const SizedBox(height: AppSpacing.small),
+                      _OccupancyBar(
+                        ratio: occupancy,
+                        label:
+                            '${trip.bookedSeats}/${trip.capacity} مقعد مشغول - ${trip.availableSeats} متاح',
+                      ),
+                    ],
+                  );
+                  final actions = Wrap(
+                    spacing: AppSpacing.small,
+                    runSpacing: AppSpacing.small,
+                    children: [
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            widget.onSelectTab(TripWorkspaceTab.passengers),
+                        icon: const Icon(Icons.people_outline_rounded),
+                        label: const Text('قائمة الركاب'),
+                      ),
+                      FilledButton.tonalIcon(
+                        onPressed: () =>
+                            widget.onSelectTab(TripWorkspaceTab.payments),
+                        icon: const Icon(Icons.receipt_long_outlined),
+                        label: const Text('المدفوعات'),
+                      ),
+                    ],
+                  );
+                  if (compact) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        summary,
+                        const SizedBox(height: AppSpacing.medium),
+                        actions,
+                      ],
+                    );
+                  }
+                  return Row(
+                    children: [
+                      Expanded(child: summary),
+                      const SizedBox(width: AppSpacing.large),
+                      actions,
+                    ],
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              _SeatMetricsGrid(trip: trip),
+              if (trip.seats.length != trip.capacity && trip.capacity > 0) ...[
+                const SizedBox(height: AppSpacing.medium),
+                _InlineOpsNotice(
+                  icon: Icons.warning_amber_rounded,
+                  message:
+                      'عدد المقاعد المسجلة (${trip.seats.length}) لا يطابق سعة المركبة (${trip.capacity}). راجع إعداد الرحلة أو المركبة قبل فتح الحجز.',
+                  color: scheme.error,
+                ),
+              ],
+            ],
           ),
         ),
         const SizedBox(height: AppSpacing.medium),
@@ -1927,92 +2949,152 @@ class _SeatsTab extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'مخطط المقاعد القياسية',
+                'مخطط المقاعد',
                 style: Theme.of(
                   context,
                 ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: AppSpacing.xSmall),
               Text(
-                'انقر على أي مقعد لتغيير حالته. كل المقاعد قياسية.',
+                'استخدم الفلاتر للتركيز على حالة معينة. انقر على أي مقعد لتغيير حالته أو مراجعة الراكب المرتبط.',
                 style: Theme.of(
                   context,
                 ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
               ),
               const SizedBox(height: AppSpacing.medium),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final tileWidth =
-                      ((constraints.maxWidth -
-                                  (seatColumns - 1) * AppSpacing.small) /
-                              seatColumns)
-                          .clamp(58.0, 92.0);
-                  final mapWidth =
-                      tileWidth * seatColumns +
-                      (seatColumns - 1) * AppSpacing.small;
-                  return _HorizontalScroll(
-                    child: SizedBox(
-                      width: mapWidth,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: tileWidth,
-                                height: 54,
-                                decoration: BoxDecoration(
-                                  color: scheme.outline.withAlpha(35),
-                                  borderRadius: BorderRadius.circular(
-                                    AppTokens.radiusSmall,
+              _SeatStateFilterBar(
+                selected: _filter,
+                onSelected: (state) => setState(() => _filter = state),
+                trip: trip,
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              BlocBuilder<TripSeatsCubit, TripSeatsState>(
+                builder: (context, state) {
+                  if (state is TripSeatsLoading) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+                      child: LinearProgressIndicator(
+                        minHeight: 3,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    );
+                  }
+                  if (state is TripSeatsError) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.medium),
+                      child: _InlineOpsNotice(
+                        icon: Icons.error_outline_rounded,
+                        message: state.message,
+                        color: scheme.error,
+                      ),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+              if (trip.seats.isEmpty)
+                _ActionEmptyState(
+                  icon: Icons.event_seat_outlined,
+                  title: 'لا توجد مقاعد مولدة لهذه الرحلة',
+                  message:
+                      'يجب أن تحتوي الرحلة على مقاعد مرتبطة بالمركبة حتى يتمكن العملاء من الحجز ويتضح توزيع السعة.',
+                  actions: [
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          widget.onSelectTab(TripWorkspaceTab.overview),
+                      icon: const Icon(Icons.dashboard_outlined),
+                      label: const Text('مراجعة الرحلة'),
+                    ),
+                  ],
+                )
+              else if (visibleSeats.isEmpty)
+                _ActionEmptyState(
+                  icon: Icons.filter_alt_off_outlined,
+                  title: 'لا توجد مقاعد بهذا الفلتر',
+                  message: 'غيّر الفلتر لعرض باقي المقاعد في هذه الرحلة.',
+                  actions: [
+                    FilledButton.tonalIcon(
+                      onPressed: () => setState(() => _filter = null),
+                      icon: const Icon(Icons.clear_all_rounded),
+                      label: const Text('عرض كل المقاعد'),
+                    ),
+                  ],
+                )
+              else
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final tileWidth =
+                        ((constraints.maxWidth -
+                                    (seatColumns - 1) * AppSpacing.small) /
+                                seatColumns)
+                            .clamp(58.0, 92.0);
+                    final mapWidth =
+                        tileWidth * seatColumns +
+                        (seatColumns - 1) * AppSpacing.small;
+                    return _HorizontalScroll(
+                      child: SizedBox(
+                        width: mapWidth,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  width: tileWidth,
+                                  height: 54,
+                                  decoration: BoxDecoration(
+                                    color: scheme.outline.withAlpha(35),
+                                    borderRadius: BorderRadius.circular(
+                                      AppTokens.radiusSmall,
+                                    ),
                                   ),
-                                ),
-                                child: const Center(
-                                  child: Text(
-                                    'السائق',
-                                    textAlign: TextAlign.center,
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.bold,
+                                  child: const Center(
+                                    child: Text(
+                                      'السائق',
+                                      textAlign: TextAlign.center,
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                              const Spacer(),
-                              Icon(
-                                Icons.directions_bus_rounded,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.medium),
-                          const Divider(),
-                          const SizedBox(height: AppSpacing.medium),
-                          GridView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: trip.seats.length,
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                                  crossAxisCount: seatColumns,
-                                  crossAxisSpacing: AppSpacing.small,
-                                  mainAxisSpacing: AppSpacing.small,
-                                  mainAxisExtent: 64,
+                                const Spacer(),
+                                Icon(
+                                  Icons.directions_bus_rounded,
+                                  color: scheme.onSurfaceVariant,
                                 ),
-                            itemBuilder: (context, index) {
-                              final seat = trip.seats[index];
-                              return _SeatTile(
-                                trip: trip,
-                                seat: seat,
-                                cubit: context.read<TripSeatsCubit>(),
-                              );
-                            },
-                          ),
-                        ],
+                              ],
+                            ),
+                            const SizedBox(height: AppSpacing.medium),
+                            const Divider(),
+                            const SizedBox(height: AppSpacing.medium),
+                            GridView.builder(
+                              shrinkWrap: true,
+                              physics: const NeverScrollableScrollPhysics(),
+                              itemCount: visibleSeats.length,
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: seatColumns,
+                                    crossAxisSpacing: AppSpacing.small,
+                                    mainAxisSpacing: AppSpacing.small,
+                                    mainAxisExtent: 76,
+                                  ),
+                              itemBuilder: (context, index) {
+                                final seat = visibleSeats[index];
+                                return _SeatTile(
+                                  trip: trip,
+                                  seat: seat,
+                                  passenger: passengerBySeat[seat.label],
+                                  cubit: context.read<TripSeatsCubit>(),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
             ],
           ),
         ),
@@ -2021,14 +3103,167 @@ class _SeatsTab extends StatelessWidget {
   }
 }
 
+class _SeatMetricsGrid extends StatelessWidget {
+  final OperationTrip trip;
+
+  const _SeatMetricsGrid({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 920
+            ? 5
+            : constraints.maxWidth >= 620
+            ? 3
+            : 2;
+        final items = [
+          _CompactOpsMetric(
+            label: 'متاح',
+            value: '${trip.availableSeats}',
+            icon: Icons.event_available_outlined,
+            color: _seatColor(context, TripSeatState.available),
+          ),
+          _CompactOpsMetric(
+            label: 'محجوز',
+            value: '${_seatCount(trip, TripSeatState.reserved)}',
+            icon: Icons.bookmark_added_outlined,
+            color: _seatColor(context, TripSeatState.reserved),
+          ),
+          _CompactOpsMetric(
+            label: 'مدفوع',
+            value: '${_seatCount(trip, TripSeatState.paid)}',
+            icon: Icons.verified_outlined,
+            color: _seatColor(context, TripSeatState.paid),
+          ),
+          _CompactOpsMetric(
+            label: 'اشتراك',
+            value: '${_seatCount(trip, TripSeatState.subscription)}',
+            icon: Icons.card_membership_outlined,
+            color: _seatColor(context, TripSeatState.subscription),
+          ),
+          _CompactOpsMetric(
+            label: 'محظور',
+            value: '${trip.blockedSeats}',
+            icon: Icons.block_outlined,
+            color: scheme.error,
+          ),
+        ];
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: AppSpacing.small,
+            mainAxisSpacing: AppSpacing.small,
+            mainAxisExtent: 78,
+          ),
+          itemBuilder: (context, index) => items[index],
+        );
+      },
+    );
+  }
+}
+
+class _SeatStateFilterBar extends StatelessWidget {
+  final TripSeatState? selected;
+  final ValueChanged<TripSeatState?> onSelected;
+  final OperationTrip trip;
+
+  const _SeatStateFilterBar({
+    required this.selected,
+    required this.onSelected,
+    required this.trip,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Wrap(
+      spacing: AppSpacing.small,
+      runSpacing: AppSpacing.small,
+      children: [
+        ChoiceChip(
+          selected: selected == null,
+          showCheckmark: false,
+          avatar: Icon(
+            Icons.apps_rounded,
+            size: 18,
+            color: selected == null ? scheme.onPrimary : scheme.primary,
+          ),
+          label: Text('الكل (${trip.seats.length})'),
+          onSelected: (_) => onSelected(null),
+        ),
+        for (final state in TripSeatState.values)
+          ChoiceChip(
+            selected: selected == state,
+            showCheckmark: false,
+            avatar: Icon(
+              _seatStateIcon(state),
+              size: 18,
+              color: selected == state
+                  ? scheme.onPrimary
+                  : _seatColor(context, state),
+            ),
+            label: Text('${state.label} (${_seatCount(trip, state)})'),
+            onSelected: (_) => onSelected(state),
+          ),
+      ],
+    );
+  }
+}
+
+class _InlineOpsNotice extends StatelessWidget {
+  final IconData icon;
+  final String message;
+  final Color color;
+
+  const _InlineOpsNotice({
+    required this.icon,
+    required this.message,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: color.withAlpha(18),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: color.withAlpha(55)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _SeatTile extends StatelessWidget {
   final OperationTrip trip;
   final TripSeat seat;
+  final TripPassenger? passenger;
   final TripSeatsCubit cubit;
 
   const _SeatTile({
     required this.trip,
     required this.seat,
+    required this.passenger,
     required this.cubit,
   });
 
@@ -2039,11 +3274,20 @@ class _SeatTile extends StatelessWidget {
       button: true,
       label: 'المقعد ${seat.label}، الحالة ${seat.state.label}',
       child: Tooltip(
-        message: 'المقعد ${seat.label}: ${seat.state.label}',
+        message: passenger == null
+            ? 'المقعد ${seat.label}: ${seat.state.label}'
+            : 'المقعد ${seat.label}: ${passenger!.name}',
         child: InkWell(
-          onTap: () => _openSeatStateDialog(context, trip, seat, cubit),
+          onTap: () => _openSeatStateDialog(
+            context,
+            trip,
+            seat,
+            cubit,
+            passenger: passenger,
+          ),
           borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
           child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 5),
             decoration: BoxDecoration(
               color: color.withAlpha(35),
               border: Border.all(color: color, width: 1.5),
@@ -2055,7 +3299,7 @@ class _SeatTile extends StatelessWidget {
                 Icon(
                   seat.state == TripSeatState.available
                       ? Icons.airline_seat_recline_normal
-                      : Icons.event_seat_rounded,
+                      : _seatStateIcon(seat.state),
                   size: 18,
                   color: color,
                 ),
@@ -2070,6 +3314,17 @@ class _SeatTile extends StatelessWidget {
                     color: color,
                   ),
                 ),
+                if (passenger != null) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    passenger!.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: color, fontSize: 9),
+                  ),
+                ],
               ],
             ),
           ),
@@ -2079,266 +3334,12 @@ class _SeatTile extends StatelessWidget {
   }
 }
 
-// Packages tab and payments/history tabs are reused from original
-class _PackagesTab extends StatefulWidget {
-  final OperationTrip trip;
-  const _PackagesTab({required this.trip});
-  @override
-  State<_PackagesTab> createState() => _PackagesTabState();
-}
-
-class _PackagesTabState extends State<_PackagesTab> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<TripPricingCubit>().loadPricing(widget.trip.id);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return BlocBuilder<TripPricingCubit, TripPricingState>(
-      builder: (context, state) {
-        if (state is TripPricingLoading) {
-          return const Center(child: CircularProgressIndicator());
-        }
-        if (state is TripPricingError) {
-          return Text(state.message, style: TextStyle(color: scheme.error));
-        }
-        if (state is TripPricingLoaded) {
-          if (state.pricing.isEmpty) {
-            return Padding(
-              padding: const EdgeInsets.all(AppSpacing.large),
-              child: Text(
-                'يرجى إضافة تسعير شريحة أولاً لتفعيل الباقات.',
-                style: TextStyle(color: scheme.onSurfaceVariant),
-              ),
-            );
-          }
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'الباقات والاشتراكات النشطة للشريحة:',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              ...state.pricing.map((pr) {
-                final configs = [
-                  (
-                    name: 'اشتراك أسبوع عمل كامل',
-                    days: 5,
-                    price: pr.fiveDaysPrice,
-                  ),
-                  (
-                    name: 'اشتراك أسبوعين خلال الشهر',
-                    days: 10,
-                    price: pr.tenDaysPrice,
-                  ),
-                  (name: 'اشتراك شهري كامل', days: 22, price: pr.monthlyPrice),
-                  (
-                    name: 'اشتراك 3 شهور مميز',
-                    days: 66,
-                    price: pr.threeMonthsPrice,
-                  ),
-                ];
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-                  child: AppCard(
-                    padding: const EdgeInsets.all(AppSpacing.medium),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.card_membership_rounded,
-                              color: scheme.primary,
-                            ),
-                            const SizedBox(width: AppSpacing.small),
-                            Text(
-                              'الشريحة: ${pr.fromPointName} ← ${pr.toPointName}',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            const SizedBox(width: AppSpacing.small),
-                            Text(
-                              '(التذكرة الفردية: ${pr.oneTimePrice.toStringAsFixed(0)} ج.م)',
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: AppSpacing.medium),
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final tileWidth = constraints.maxWidth >= 900
-                                ? (constraints.maxWidth -
-                                          AppSpacing.small * 3) /
-                                      4
-                                : constraints.maxWidth >= 620
-                                ? (constraints.maxWidth - AppSpacing.small) / 2
-                                : constraints.maxWidth;
-                            return Wrap(
-                              spacing: AppSpacing.small,
-                              runSpacing: AppSpacing.small,
-                              children: configs.map((c) {
-                                final basePrice = pr.oneTimePrice * c.days;
-                                final discPercent = basePrice > 0
-                                    ? ((basePrice - c.price) / basePrice * 100)
-                                    : 0.0;
-                                final savings = basePrice - c.price;
-                                return SizedBox(
-                                  width: tileWidth,
-                                  child: _PackageTierTile(
-                                    name: c.name,
-                                    days: c.days,
-                                    basePrice: basePrice,
-                                    packagePrice: c.price,
-                                    discountPercent: discPercent,
-                                    savings: savings,
-                                  ),
-                                );
-                              }).toList(),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }),
-            ],
-          );
-        }
-        return const SizedBox.shrink();
-      },
-    );
-  }
-}
-
-class _PackageTierTile extends StatelessWidget {
-  final String name;
-  final int days;
-  final double basePrice;
-  final double packagePrice;
-  final double discountPercent;
-  final double savings;
-
-  const _PackageTierTile({
-    required this.name,
-    required this.days,
-    required this.basePrice,
-    required this.packagePrice,
-    required this.discountPercent,
-    required this.savings,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final savingsColor = savings > 0 ? scheme.primary : scheme.error;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(35),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: scheme.outline.withAlpha(35)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(
-                Icons.card_membership_rounded,
-                size: 18,
-                color: scheme.primary,
-              ),
-              const SizedBox(width: AppSpacing.small),
-              Expanded(
-                child: Text(
-                  name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.small),
-          Text(
-            '$days يوم',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          _MiniValueRow(
-            label: 'السعر',
-            value: '${packagePrice.toStringAsFixed(0)} ج.م',
-          ),
-          _MiniValueRow(
-            label: 'قبل الخصم',
-            value: '${basePrice.toStringAsFixed(0)} ج.م',
-          ),
-          _MiniValueRow(
-            label: 'الخصم',
-            value: '${discountPercent.toStringAsFixed(0)}%',
-          ),
-          const SizedBox(height: AppSpacing.xSmall),
-          Text(
-            'وفر ${savings.toStringAsFixed(0)} ج.م',
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
-              color: savingsColor,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniValueRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _MiniValueRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ),
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _PaymentsTab extends StatelessWidget {
   final OperationTrip trip;
-  const _PaymentsTab({required this.trip});
+  final ValueChanged<TripWorkspaceTab> onSelectTab;
+
+  const _PaymentsTab({required this.trip, required this.onSelectTab});
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -2352,9 +3353,70 @@ class _PaymentsTab extends StatelessWidget {
         .where((p) => _paymentBucket(p) == _PaymentBucket.refunded)
         .length;
     final total = trip.passengers.length;
+    final collectionRate = total == 0 ? 0.0 : paid / total;
+    final estimatedCollected = paid * trip.ticketPrice;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        AppCard(
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final compact = constraints.maxWidth < 760;
+              final summary = Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'ملخص التحصيل',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.small),
+                  _OccupancyBar(
+                    ratio: collectionRate,
+                    label:
+                        '$paid من $total مدفوع - تقديري ${estimatedCollected.toStringAsFixed(0)} ${trip.currency}',
+                  ),
+                ],
+              );
+              final actions = Wrap(
+                spacing: AppSpacing.small,
+                runSpacing: AppSpacing.small,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: () => onSelectTab(TripWorkspaceTab.passengers),
+                    icon: const Icon(Icons.people_outline_rounded),
+                    label: const Text('الركاب'),
+                  ),
+                  FilledButton.tonalIcon(
+                    onPressed: () => onSelectTab(TripWorkspaceTab.pricing),
+                    icon: const Icon(Icons.payments_outlined),
+                    label: const Text('التسعير'),
+                  ),
+                ],
+              );
+              if (compact) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    summary,
+                    const SizedBox(height: AppSpacing.medium),
+                    actions,
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: summary),
+                  const SizedBox(width: AppSpacing.large),
+                  actions,
+                ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: AppSpacing.medium),
         LayoutBuilder(
           builder: (context, constraints) {
             final columns = constraints.maxWidth >= 760 ? 4 : 2;
@@ -2419,9 +3481,23 @@ class _PaymentsTab extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.medium),
               if (trip.passengers.isEmpty)
-                Text(
-                  'لا توجد حجوزات مرتبطة بهذه الرحلة حتى الآن.',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
+                _ActionEmptyState(
+                  icon: Icons.receipt_long_outlined,
+                  title: 'لا توجد مدفوعات بعد',
+                  message:
+                      'ستظهر حالة التحصيل بعد وصول أول حجز. يمكنك مراجعة المقاعد والتسعير قبل فتح الرحلة للحجز.',
+                  actions: [
+                    OutlinedButton.icon(
+                      onPressed: () => onSelectTab(TripWorkspaceTab.seats),
+                      icon: const Icon(Icons.event_seat_outlined),
+                      label: const Text('المقاعد'),
+                    ),
+                    FilledButton.tonalIcon(
+                      onPressed: () => onSelectTab(TripWorkspaceTab.pricing),
+                      icon: const Icon(Icons.payments_outlined),
+                      label: const Text('التسعير'),
+                    ),
+                  ],
                 )
               else
                 ...trip.passengers.map(
@@ -2554,100 +3630,184 @@ class _HistoryTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     if (trip.events.isEmpty) {
-      return AppCard(
-        padding: const EdgeInsets.all(AppSpacing.large),
-        child: Row(
-          children: [
-            Icon(Icons.history_rounded, color: scheme.onSurfaceVariant),
-            const SizedBox(width: AppSpacing.small),
-            Expanded(
-              child: Text(
-                'لا توجد أحداث مسجلة لهذه الرحلة بعد.',
-                style: TextStyle(color: scheme.onSurfaceVariant),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Column(
+      return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'سجل التشغيل',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
+          _LifecycleStatusSummary(trip: trip),
           const SizedBox(height: AppSpacing.medium),
-          ...trip.events.asMap().entries.map((entry) {
-            final index = entry.key;
-            final event = entry.value;
-            final isLast = index == trip.events.length - 1;
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: _ActionEmptyState(
+              icon: Icons.history_rounded,
+              title: 'لا توجد أحداث تشغيل مسجلة بعد',
+              message:
+                  'سيظهر هنا سجل تحديثات الرحلة عند بدء التشغيل أو عند تسجيل أحداث من النظام والتطبيقات المرتبطة.',
+            ),
+          ),
+        ],
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _LifecycleStatusSummary(trip: trip),
+        const SizedBox(height: AppSpacing.medium),
+        AppCard(
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'سجل التشغيل',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              ...trip.events.asMap().entries.map((entry) {
+                final index = entry.key;
+                final event = entry.value;
+                final isLast = index == trip.events.length - 1;
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      event.done
-                          ? Icons.check_circle_rounded
-                          : Icons.radio_button_unchecked_rounded,
-                      color: event.done ? scheme.primary : scheme.tertiary,
-                    ),
-                    if (!isLast)
-                      Container(
-                        width: 2,
-                        height: 54,
-                        color: scheme.outline.withAlpha(50),
-                      ),
-                  ],
-                ),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacing.medium),
-                      decoration: BoxDecoration(
-                        color: scheme.surfaceContainerHighest.withAlpha(35),
-                        borderRadius: BorderRadius.circular(
-                          AppTokens.radiusSmall,
+                    Column(
+                      children: [
+                        Icon(
+                          event.done
+                              ? Icons.check_circle_rounded
+                              : Icons.radio_button_unchecked_rounded,
+                          color: event.done ? scheme.primary : scheme.tertiary,
                         ),
-                        border: Border.all(color: scheme.outline.withAlpha(45)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
+                        if (!isLast)
+                          Container(
+                            width: 2,
+                            height: 54,
+                            color: scheme.outline.withAlpha(50),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(
+                          bottom: AppSpacing.medium,
+                        ),
+                        child: Container(
+                          padding: const EdgeInsets.all(AppSpacing.medium),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest.withAlpha(35),
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.radiusSmall,
+                            ),
+                            border: Border.all(
+                              color: scheme.outline.withAlpha(45),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Text(
-                                  event.title,
-                                  style: Theme.of(context).textTheme.titleSmall
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      event.title,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleSmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                  ),
+                                  Text(
+                                    event.time,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelMedium
+                                        ?.copyWith(
+                                          color: scheme.onSurfaceVariant,
+                                        ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                event.time,
-                                style: Theme.of(context).textTheme.labelMedium
-                                    ?.copyWith(color: scheme.onSurfaceVariant),
-                              ),
+                              const SizedBox(height: 4),
+                              Text(event.description),
                             ],
                           ),
-                          const SizedBox(height: 4),
-                          Text(event.description),
-                        ],
+                        ),
                       ),
                     ),
-                  ),
-                ),
+                  ],
+                );
+              }),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _LifecycleStatusSummary extends StatelessWidget {
+  final OperationTrip trip;
+
+  const _LifecycleStatusSummary({required this.trip});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final doneEvents = trip.events.where((event) => event.done).length;
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 700;
+          final summary = Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'حالة السجل',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: AppSpacing.xSmall),
+              Text(
+                '${trip.status.label} - ${trip.events.length} أحداث - $doneEvents مكتمل',
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          );
+          final chips = Wrap(
+            spacing: AppSpacing.small,
+            runSpacing: AppSpacing.small,
+            children: [
+              StatusChip(label: trip.status.label),
+              StatusChip(label: '${trip.passengers.length} ركاب'),
+              StatusChip(label: '${trip.bookedSeats}/${trip.capacity} مقاعد'),
+            ],
+          );
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                summary,
+                const SizedBox(height: AppSpacing.medium),
+                chips,
               ],
             );
-          }),
-        ],
+          }
+          return Row(
+            children: [
+              Expanded(child: summary),
+              const SizedBox(width: AppSpacing.medium),
+              chips,
+            ],
+          );
+        },
       ),
     );
   }
@@ -2686,6 +3846,84 @@ Color _statusColor(BuildContext context, OperationTripStatus status) {
   };
 }
 
+String _tabLabel(TripWorkspaceTab tab) {
+  return switch (tab) {
+    TripWorkspaceTab.overview => 'نظرة عامة',
+    TripWorkspaceTab.passengers => 'الركاب',
+    TripWorkspaceTab.seats => 'المقاعد',
+    TripWorkspaceTab.pricing => 'التسعير',
+    TripWorkspaceTab.payments => 'المدفوعات',
+    TripWorkspaceTab.history => 'السجل',
+  };
+}
+
+String _tabSubtitle(TripWorkspaceTab tab) {
+  return switch (tab) {
+    TripWorkspaceTab.overview => 'ملخص التشغيل والمسار والطاقم',
+    TripWorkspaceTab.passengers => 'إدارة manifest الركاب والحجوزات',
+    TripWorkspaceTab.seats => 'تعديل حالة المقاعد وتوزيع السعة',
+    TripWorkspaceTab.pricing => 'ضبط أسعار شرائح الرحلة',
+    TripWorkspaceTab.payments => 'متابعة حالة التحصيل والتوثيق',
+    TripWorkspaceTab.history => 'سجل الأحداث والتغييرات التشغيلية',
+  };
+}
+
+IconData _tabIcon(TripWorkspaceTab tab) {
+  return switch (tab) {
+    TripWorkspaceTab.overview => Icons.dashboard_outlined,
+    TripWorkspaceTab.passengers => Icons.people_outline_rounded,
+    TripWorkspaceTab.seats => Icons.event_seat_outlined,
+    TripWorkspaceTab.pricing => Icons.payments_outlined,
+    TripWorkspaceTab.payments => Icons.receipt_long_outlined,
+    TripWorkspaceTab.history => Icons.history_rounded,
+  };
+}
+
+OperationTripStatus? _nextStatus(OperationTripStatus status) {
+  return switch (status) {
+    OperationTripStatus.scheduled => OperationTripStatus.openForBooking,
+    OperationTripStatus.openForBooking => OperationTripStatus.boarding,
+    OperationTripStatus.boarding => OperationTripStatus.inProgress,
+    OperationTripStatus.inProgress => OperationTripStatus.completed,
+    OperationTripStatus.completed => null,
+    OperationTripStatus.cancelled => null,
+  };
+}
+
+String _statusActionLabel(OperationTripStatus next) {
+  return switch (next) {
+    OperationTripStatus.openForBooking => 'فتح للحجز',
+    OperationTripStatus.boarding => 'بدء صعود الركاب',
+    OperationTripStatus.inProgress => 'بدء الرحلة',
+    OperationTripStatus.completed => 'إنهاء الرحلة',
+    OperationTripStatus.scheduled => 'إرجاع لجدولة',
+    OperationTripStatus.cancelled => 'إلغاء الرحلة',
+  };
+}
+
+String _nextActionCopy(OperationTrip trip) {
+  return switch (trip.status) {
+    OperationTripStatus.scheduled =>
+      'راجع المقاعد والتسعير ثم افتح الرحلة للحجز.',
+    OperationTripStatus.openForBooking =>
+      'تابع الحجوزات وجهز مرحلة صعود الركاب.',
+    OperationTripStatus.boarding =>
+      'راقب manifest الركاب ثم ابدأ الرحلة عند اكتمال الصعود.',
+    OperationTripStatus.inProgress =>
+      'تابع التشغيل الحي وأغلق الرحلة عند الوصول.',
+    OperationTripStatus.completed => 'الرحلة مكتملة وجاهزة للمراجعة.',
+    OperationTripStatus.cancelled => 'الرحلة ملغاة ولا توجد إجراءات تشغيلية.',
+  };
+}
+
+String _terminalStatusLabel(OperationTripStatus status) {
+  return switch (status) {
+    OperationTripStatus.completed => 'الرحلة مكتملة',
+    OperationTripStatus.cancelled => 'الرحلة ملغاة',
+    _ => 'لا توجد خطوة تالية',
+  };
+}
+
 Color _seatColor(BuildContext context, TripSeatState state) {
   final scheme = Theme.of(context).colorScheme;
   return switch (state) {
@@ -2695,6 +3933,20 @@ Color _seatColor(BuildContext context, TripSeatState state) {
     TripSeatState.subscription => scheme.primary,
     TripSeatState.blocked => scheme.error,
   };
+}
+
+IconData _seatStateIcon(TripSeatState state) {
+  return switch (state) {
+    TripSeatState.available => Icons.airline_seat_recline_normal,
+    TripSeatState.reserved => Icons.bookmark_added_outlined,
+    TripSeatState.paid => Icons.verified_outlined,
+    TripSeatState.subscription => Icons.card_membership_outlined,
+    TripSeatState.blocked => Icons.block_outlined,
+  };
+}
+
+int _seatCount(OperationTrip trip, TripSeatState state) {
+  return trip.seats.where((seat) => seat.state == state).length;
 }
 
 // Modal dialogs are reused from the original file without changes.
@@ -2846,31 +4098,124 @@ void _openSeatStateDialog(
   BuildContext context,
   OperationTrip trip,
   TripSeat seat,
-  TripSeatsCubit cubit,
-) {
+  TripSeatsCubit cubit, {
+  TripPassenger? passenger,
+}) {
   showDialog<void>(
     context: context,
     builder: (dialogContext) => Directionality(
       textDirection: TextDirection.rtl,
       child: AlertDialog(
         title: Text('المقعد ${seat.label}'),
-        content: Wrap(
-          spacing: AppSpacing.small,
-          children: TripSeatState.values
-              .map(
-                (state) => FilledButton.tonal(
-                  onPressed: () {
-                    cubit.changeSeatState(trip.id, seat.id, state);
-                    Navigator.of(dialogContext).pop();
-                  },
-                  child: Text(state.label),
+        content: SizedBox(
+          width: MediaQuery.sizeOf(context).width.clamp(320.0, 520.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _SeatDialogHeader(seat: seat, passenger: passenger),
+              const SizedBox(height: AppSpacing.medium),
+              Text(
+                'تغيير حالة المقعد',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: AppSpacing.small),
+              Wrap(
+                spacing: AppSpacing.small,
+                runSpacing: AppSpacing.small,
+                children: TripSeatState.values
+                    .map(
+                      (state) => FilledButton.tonalIcon(
+                        onPressed: state == seat.state
+                            ? null
+                            : () {
+                                cubit.changeSeatState(trip.id, seat.id, state);
+                                Navigator.of(dialogContext).pop();
+                              },
+                        icon: Icon(_seatStateIcon(state)),
+                        label: Text(state.label),
+                      ),
+                    )
+                    .toList(),
+              ),
+              if (passenger != null &&
+                  (seat.state == TripSeatState.paid ||
+                      seat.state == TripSeatState.subscription ||
+                      seat.state == TripSeatState.reserved)) ...[
+                const SizedBox(height: AppSpacing.medium),
+                _InlineOpsNotice(
+                  icon: Icons.info_outline_rounded,
+                  message:
+                      'هذا المقعد مرتبط بالراكب ${passenger.name}. تغيير الحالة لا ينقل الراكب؛ استخدم نقل المقعد من تبويب الركاب عند الحاجة.',
+                  color: Theme.of(context).colorScheme.tertiary,
                 ),
-              )
-              .toList(),
+              ],
+            ],
+          ),
         ),
+        actions: [
+          TextButton(
+            onPressed: Navigator.of(dialogContext).pop,
+            child: const Text('إغلاق'),
+          ),
+        ],
       ),
     ),
   );
+}
+
+class _SeatDialogHeader extends StatelessWidget {
+  final TripSeat seat;
+  final TripPassenger? passenger;
+
+  const _SeatDialogHeader({required this.seat, required this.passenger});
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _seatColor(context, seat.state);
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: color.withAlpha(18),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: color.withAlpha(55)),
+      ),
+      child: Row(
+        children: [
+          Icon(_seatStateIcon(seat.state), color: color),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  seat.state.label,
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  passenger == null
+                      ? 'لا يوجد راكب مرتبط بهذا المقعد'
+                      : '${passenger!.name} - ${passenger!.phone}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _HorizontalScroll extends StatefulWidget {

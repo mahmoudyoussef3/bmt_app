@@ -12,6 +12,8 @@ import 'place_search_field.dart';
 class RoutePointDraft {
   final String id;
   String label;
+  String area;
+  String locationDescription;
   GeoPoint? point;
   int dwellMinutes;
   String arrivalOffset;
@@ -20,6 +22,8 @@ class RoutePointDraft {
   RoutePointDraft({
     required this.id,
     this.label = '',
+    this.area = '',
+    this.locationDescription = '',
     this.point,
     this.dwellMinutes = 3,
     this.arrivalOffset = '',
@@ -43,10 +47,13 @@ class RoutePointRow extends StatelessWidget {
   final SearchPlacesUseCase searchPlaces;
   final ValueChanged<GeoPlace> onPlaceSelected;
   final ValueChanged<String> onManualLabel;
+  final ValueChanged<String> onAreaChanged;
   final ValueChanged<int> onDwellChanged;
+  final VoidCallback onSelectOnMap;
   final VoidCallback onMoveUp;
   final VoidCallback onMoveDown;
   final VoidCallback onRemove;
+  final bool selectedForMap;
 
   const RoutePointRow({
     super.key,
@@ -57,10 +64,13 @@ class RoutePointRow extends StatelessWidget {
     required this.searchPlaces,
     required this.onPlaceSelected,
     required this.onManualLabel,
+    required this.onAreaChanged,
     required this.onDwellChanged,
+    required this.onSelectOnMap,
     required this.onMoveUp,
     required this.onMoveDown,
     required this.onRemove,
+    this.selectedForMap = false,
   });
 
   bool get _isFirst => index == 0;
@@ -69,8 +79,8 @@ class RoutePointRow extends StatelessWidget {
   String get _roleLabel => _isFirst
       ? 'البداية'
       : _isLast
-          ? 'النهاية'
-          : 'محطة $index';
+      ? 'النهاية'
+      : 'محطة $index';
 
   @override
   Widget build(BuildContext context) {
@@ -79,9 +89,14 @@ class RoutePointRow extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.small),
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
-        color: scheme.surface,
+        color: selectedForMap
+            ? scheme.primaryContainer.withAlpha(70)
+            : scheme.surface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: scheme.outline.withAlpha(70)),
+        border: Border.all(
+          color: selectedForMap ? scheme.primary : scheme.outline.withAlpha(70),
+          width: selectedForMap ? 1.5 : 1,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,10 +107,9 @@ class RoutePointRow extends StatelessWidget {
               const SizedBox(width: AppSpacing.small),
               Text(
                 _roleLabel,
-                style: Theme.of(context)
-                    .textTheme
-                    .labelLarge
-                    ?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
               ),
               const Spacer(),
               if (point.arrivalOffset.isNotEmpty)
@@ -104,6 +118,18 @@ class RoutePointRow extends StatelessWidget {
                       ? 'انطلاق ${point.departureOffset}'
                       : 'وصول ${point.arrivalOffset}',
                 ),
+              const SizedBox(width: AppSpacing.xSmall),
+              Tooltip(
+                message: 'تحديد هذه النقطة على الخريطة',
+                child: IconButton(
+                  onPressed: onSelectOnMap,
+                  icon: Icon(
+                    selectedForMap
+                        ? Icons.my_location_rounded
+                        : Icons.add_location_alt_outlined,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.small),
@@ -116,6 +142,19 @@ class RoutePointRow extends StatelessWidget {
                 SizedBox(width: 110, child: _dwellField()),
               ],
             ],
+          ),
+          const SizedBox(height: AppSpacing.small),
+          TextFormField(
+            key: ValueKey('area-${point.id}-${point.area}'),
+            initialValue: point.area,
+            decoration: const InputDecoration(
+              labelText: 'المنطقة',
+              prefixIcon: Icon(Icons.location_city_outlined),
+              border: OutlineInputBorder(),
+            ),
+            onChanged: onAreaChanged,
+            validator: (v) =>
+                (v == null || v.trim().isEmpty) ? 'أدخل منطقة النقطة' : null,
           ),
           const SizedBox(height: AppSpacing.xSmall),
           Row(
@@ -153,6 +192,7 @@ class RoutePointRow extends StatelessWidget {
         searchPlaces: searchPlaces,
         focus: point.point,
         onSelected: onPlaceSelected,
+        onChanged: onManualLabel,
         validator: (v) =>
             (v == null || v.trim().isEmpty) ? 'اختر $label' : null,
       );
@@ -165,8 +205,7 @@ class RoutePointRow extends StatelessWidget {
         border: const OutlineInputBorder(),
       ),
       onChanged: onManualLabel,
-      validator: (v) =>
-          (v == null || v.trim().isEmpty) ? 'أدخل $label' : null,
+      validator: (v) => (v == null || v.trim().isEmpty) ? 'أدخل $label' : null,
     );
   }
 

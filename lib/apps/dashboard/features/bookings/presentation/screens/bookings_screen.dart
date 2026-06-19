@@ -7,6 +7,8 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_table_frame.dart';
 
 import '../../domain/entities/operation_booking.dart';
 import '../cubit/bookings_cubit.dart';
@@ -19,12 +21,14 @@ class BookingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: BlocBuilder<BookingsCubit, BookingsState>(
         builder: (context, state) {
           return switch (state) {
             BookingsLoading() => const _BookingsLoadingView(),
-            BookingsError(:final message) => _BookingsErrorView(message: message),
+            BookingsError(:final message) => _BookingsErrorView(
+              message: message,
+            ),
             BookingsLoaded() => _BookingsLoadedView(state: state),
           };
         },
@@ -51,7 +55,9 @@ class _BookingsLoadedView extends StatelessWidget {
         final content = CustomScrollView(
           slivers: [
             SliverPadding(
-              padding: EdgeInsets.all(isCompact ? AppSpacing.medium : AppSpacing.large),
+              padding: EdgeInsets.all(
+                isCompact ? AppSpacing.medium : AppSpacing.large,
+              ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate.fixed([
                   _Header(total: state.bookings.length),
@@ -108,7 +114,8 @@ class _BookingsLoadedView extends StatelessWidget {
                       child: _BookingDetailsPanel(
                         booking: opened,
                         onClose: cubit.closePanel,
-                        onStatus: (status) => cubit.updateStatus(opened, status),
+                        onStatus: (status) =>
+                            cubit.updateStatus(opened, status),
                       ),
                     ),
             ),
@@ -126,92 +133,11 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 640;
-
-          final title = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'مركز عمليات الحجوزات',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      height: 1.2,
-                    ),
-              ),
-              const SizedBox(height: AppSpacing.xSmall),
-              Text(
-                'راجع الطلبات، تحقق من الدفع، وافتح تفاصيل الحجز من مكان واحد.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      height: 1.5,
-                    ),
-              ),
-            ],
-          );
-
-          final badge = Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.medium,
-              vertical: AppSpacing.small,
-            ),
-            decoration: BoxDecoration(
-              color: scheme.primary.withAlpha(22),
-              borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-              border: Border.all(color: scheme.primary.withAlpha(55)),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.confirmation_number_outlined, color: scheme.primary, size: 18),
-                const SizedBox(width: AppSpacing.xSmall),
-                Text(
-                  '$total طلب',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: scheme.primary,
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-              ],
-            ),
-          );
-
-          if (compact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(Icons.event_seat_outlined, size: 38, color: scheme.primary),
-                const SizedBox(height: AppSpacing.small),
-                title,
-                const SizedBox(height: AppSpacing.medium),
-                badge,
-              ],
-            );
-          }
-
-          return Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(20),
-                  borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-                ),
-                child: Icon(Icons.event_seat_outlined, size: 30, color: scheme.primary),
-              ),
-              const SizedBox(width: AppSpacing.medium),
-              Expanded(child: title),
-              badge,
-            ],
-          );
-        },
-      ),
+    return DashboardModuleHeader(
+      icon: Icons.event_seat_rounded,
+      title: 'مركز عمليات الحجوزات',
+      subtitle: 'راجع الطلبات، تحقق من الدفع، وافتح تفاصيل الحجز من مكان واحد.',
+      actions: [StatusChip(label: '$total طلب')],
     );
   }
 }
@@ -224,17 +150,43 @@ class _SummaryCards extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = [
-      _SummaryItem('جديدة', state.countByStatus(BookingStatus.newRequest), Icons.fiber_new_rounded, AppStatusColors.onInfoContainer),
+      _SummaryItem(
+        'جديدة',
+        state.countByStatus(BookingStatus.newRequest),
+        Icons.fiber_new_rounded,
+        AppStatusColors.onInfoContainer,
+      ),
       _SummaryItem(
         'تحت المراجعة',
-        state.countByStatus(BookingStatus.underReview) + state.countByStatus(BookingStatus.paymentUploaded),
+        state.countByStatus(BookingStatus.underReview) +
+            state.countByStatus(BookingStatus.paymentUploaded),
         Icons.hourglass_top_rounded,
         AppStatusColors.onWarningContainer,
       ),
-      _SummaryItem('مقبولة', state.countByStatus(BookingStatus.approved), Icons.check_circle_outline, AppStatusColors.onSuccessContainer),
-      _SummaryItem('مؤكدة', state.countByStatus(BookingStatus.confirmed), Icons.verified_outlined, AppStatusColors.onSpecialContainer),
-      _SummaryItem('مرفوضة', state.countByStatus(BookingStatus.rejected), Icons.cancel_outlined, AppStatusColors.onErrorContainer),
-      _SummaryItem('ملغاة', state.countByStatus(BookingStatus.cancelled), Icons.block_outlined, AppStatusColors.onNeutralContainer),
+      _SummaryItem(
+        'مقبولة',
+        state.countByStatus(BookingStatus.approved),
+        Icons.check_circle_outline,
+        AppStatusColors.onSuccessContainer,
+      ),
+      _SummaryItem(
+        'مؤكدة',
+        state.countByStatus(BookingStatus.confirmed),
+        Icons.verified_outlined,
+        AppStatusColors.onSpecialContainer,
+      ),
+      _SummaryItem(
+        'مرفوضة',
+        state.countByStatus(BookingStatus.rejected),
+        Icons.cancel_outlined,
+        AppStatusColors.onErrorContainer,
+      ),
+      _SummaryItem(
+        'ملغاة',
+        state.countByStatus(BookingStatus.cancelled),
+        Icons.block_outlined,
+        AppStatusColors.onNeutralContainer,
+      ),
     ];
 
     return LayoutBuilder(
@@ -242,8 +194,8 @@ class _SummaryCards extends StatelessWidget {
         final columns = constraints.maxWidth >= 1200
             ? 6
             : constraints.maxWidth >= 860
-                ? 3
-                : 2;
+            ? 3
+            : 2;
 
         return GridView.builder(
           shrinkWrap: true,
@@ -297,17 +249,17 @@ class _SummaryCard extends StatelessWidget {
               item.label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
           Text(
             '${item.count}',
             style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: item.color,
-                  fontWeight: FontWeight.w900,
-                ),
+              color: item.color,
+              fontWeight: FontWeight.w900,
+            ),
           ),
         ],
       ),
@@ -374,10 +326,7 @@ class _StatusTabs extends StatelessWidget {
 }
 
 class _BookingFiltersBar extends StatelessWidget {
-  const _BookingFiltersBar({
-    required this.filters,
-    required this.onChanged,
-  });
+  const _BookingFiltersBar({required this.filters, required this.onChanged});
 
   final BookingFilters filters;
   final ValueChanged<BookingFilters> onChanged;
@@ -402,7 +351,8 @@ class _BookingFiltersBar extends StatelessWidget {
                   prefixIcon: Icon(Icons.search_rounded),
                   hintText: 'اسم، هاتف، رقم حجز',
                 ),
-                onChanged: (value) => onChanged(filters.copyWith(search: value)),
+                onChanged: (value) =>
+                    onChanged(filters.copyWith(search: value)),
               ),
             ),
             SizedBox(
@@ -522,9 +472,9 @@ class _BookingBulkActions extends StatelessWidget {
             Text(
               '$selectedCount طلب محدد',
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: scheme.primary,
-                  ),
+                fontWeight: FontWeight.w900,
+                color: scheme.primary,
+              ),
             ),
             FilledButton.icon(
               onPressed: onApprove,
@@ -541,10 +491,7 @@ class _BookingBulkActions extends StatelessWidget {
               icon: const Icon(Icons.alt_route_rounded),
               label: const Text('إسناد لرحلة'),
             ),
-            TextButton(
-              onPressed: onClear,
-              child: const Text('إلغاء التحديد'),
-            ),
+            TextButton(onPressed: onClear, child: const Text('إلغاء التحديد')),
           ],
         ),
       ),
@@ -650,98 +597,71 @@ class _BookingsTable extends StatelessWidget {
     final cubit = context.read<BookingsCubit>();
     final bookings = state.filteredBookings;
 
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.medium),
-            child: Row(
-              children: [
-                Text(
-                  'قائمة ${state.activeTab.label}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-                const Spacer(),
-                Text(
-                  '${bookings.length} طلب',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                ),
-              ],
+    return DashboardTableFrame(
+      icon: Icons.event_seat_rounded,
+      title: 'قائمة ${state.activeTab.label}',
+      trailingText: '${bookings.length} طلب',
+      child: Scrollbar(
+        thumbVisibility: true,
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: DataTable(
+            headingRowColor: WidgetStatePropertyAll(
+              scheme.surfaceContainerHighest.withAlpha(70),
             ),
-          ),
-          Scrollbar(
-            thumbVisibility: true,
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingRowColor: WidgetStatePropertyAll(
-                  scheme.surfaceContainerHighest.withAlpha(70),
-                ),
-                columns: const [
-                  DataColumn(label: Text('')),
-                  DataColumn(label: Text('رقم الحجز')),
-                  DataColumn(label: Text('العميل')),
-                  DataColumn(label: Text('المسار')),
-                  DataColumn(label: Text('المبلغ')),
-                  DataColumn(label: Text('الدفع')),
-                  DataColumn(label: Text('الأولوية')),
-                  DataColumn(label: Text('الحالة')),
-                  DataColumn(label: Text('التاريخ')),
-                  DataColumn(label: Text('إجراءات')),
-                ],
-                rows: bookings.map((booking) {
-                  final selected = state.openedBooking?.id == booking.id;
-                  final checked = state.selectedIds.contains(booking.id);
+            columns: const [
+              DataColumn(label: Text('')),
+              DataColumn(label: Text('رقم الحجز')),
+              DataColumn(label: Text('العميل')),
+              DataColumn(label: Text('المسار')),
+              DataColumn(label: Text('المبلغ')),
+              DataColumn(label: Text('الدفع')),
+              DataColumn(label: Text('الأولوية')),
+              DataColumn(label: Text('الحالة')),
+              DataColumn(label: Text('التاريخ')),
+              DataColumn(label: Text('إجراءات')),
+            ],
+            rows: bookings.map((booking) {
+              final selected = state.openedBooking?.id == booking.id;
+              final checked = state.selectedIds.contains(booking.id);
 
-                  return DataRow(
-                    selected: selected,
-                    onSelectChanged: (_) => cubit.openBooking(booking),
-                    cells: [
-                      DataCell(
-                        Checkbox(
-                          value: checked,
-                          onChanged: (_) => cubit.toggleSelection(booking.id),
-                        ),
+              return DataRow(
+                selected: selected,
+                onSelectChanged: (_) => cubit.openBooking(booking),
+                cells: [
+                  DataCell(
+                    Checkbox(
+                      value: checked,
+                      onChanged: (_) => cubit.toggleSelection(booking.id),
+                    ),
+                  ),
+                  DataCell(Text(booking.id)),
+                  DataCell(
+                    Text(
+                      booking.passengerName,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  DataCell(
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 220),
+                      child: Text(
+                        booking.route,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      DataCell(Text(booking.id)),
-                      DataCell(
-                        Text(
-                          booking.passengerName,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      DataCell(
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 220),
-                          child: Text(
-                            booking.route,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                      DataCell(Text(booking.paymentDetails.amount)),
-                      DataCell(Text(booking.paymentMethod.label)),
-                      DataCell(_PriorityBadge(priority: booking.priority)),
-                      DataCell(StatusChip(label: booking.status.label)),
-                      DataCell(Text(booking.date)),
-                      DataCell(
-                        _RowActions(
-                          booking: booking,
-                          cubit: cubit,
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
+                    ),
+                  ),
+                  DataCell(Text(booking.paymentDetails.amount)),
+                  DataCell(Text(booking.paymentMethod.label)),
+                  DataCell(_PriorityBadge(priority: booking.priority)),
+                  DataCell(StatusChip(label: booking.status.label)),
+                  DataCell(Text(booking.date)),
+                  DataCell(_RowActions(booking: booking, cubit: cubit)),
+                ],
+              );
+            }).toList(),
           ),
-        ],
+        ),
       ),
     );
   }
@@ -771,7 +691,8 @@ class _BookingCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final canReview = booking.status == BookingStatus.underReview ||
+    final canReview =
+        booking.status == BookingStatus.underReview ||
         booking.status == BookingStatus.paymentUploaded;
 
     return AppCard(
@@ -797,8 +718,8 @@ class _BookingCard extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                        ),
+                      fontWeight: FontWeight.w900,
+                    ),
                   ),
                 ),
                 StatusChip(label: booking.status.label),
@@ -808,7 +729,10 @@ class _BookingCard extends StatelessWidget {
             _MiniInfo(label: 'رقم الحجز', value: booking.id),
             _MiniInfo(label: 'الهاتف', value: booking.phone),
             _MiniInfo(label: 'المسار', value: booking.route),
-            _MiniInfo(label: 'الرحلة', value: '${booking.date} - ${booking.tripTime}'),
+            _MiniInfo(
+              label: 'الرحلة',
+              value: '${booking.date} - ${booking.tripTime}',
+            ),
             _MiniInfo(label: 'الدفع', value: booking.paymentMethod.label),
             const SizedBox(height: AppSpacing.small),
             Row(
@@ -818,9 +742,9 @@ class _BookingCard extends StatelessWidget {
                 Text(
                   booking.paymentDetails.amount,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: scheme.primary,
-                      ),
+                    fontWeight: FontWeight.w900,
+                    color: scheme.primary,
+                  ),
                 ),
               ],
             ),
@@ -878,18 +802,18 @@ class _MiniInfo extends StatelessWidget {
             width: 92,
             child: Text(
               label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ),
           Expanded(
             child: Text(
               value,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -906,9 +830,18 @@ class _PriorityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, bg) = switch (priority) {
-      BookingPriority.normal => (AppStatusColors.onNeutralContainer, AppStatusColors.neutralContainer),
-      BookingPriority.urgent => (AppStatusColors.onWarningContainer, AppStatusColors.warningContainer),
-      BookingPriority.vip => (AppStatusColors.onSpecialContainer, AppStatusColors.specialContainer),
+      BookingPriority.normal => (
+        AppStatusColors.onNeutralContainer,
+        AppStatusColors.neutralContainer,
+      ),
+      BookingPriority.urgent => (
+        AppStatusColors.onWarningContainer,
+        AppStatusColors.warningContainer,
+      ),
+      BookingPriority.vip => (
+        AppStatusColors.onSpecialContainer,
+        AppStatusColors.specialContainer,
+      ),
     };
 
     return Container(
@@ -920,26 +853,24 @@ class _PriorityBadge extends StatelessWidget {
       child: Text(
         priority.label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w900,
-            ),
+          color: color,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }
 }
 
 class _RowActions extends StatelessWidget {
-  const _RowActions({
-    required this.booking,
-    required this.cubit,
-  });
+  const _RowActions({required this.booking, required this.cubit});
 
   final OperationBooking booking;
   final BookingsCubit cubit;
 
   @override
   Widget build(BuildContext context) {
-    final canReview = booking.status == BookingStatus.underReview ||
+    final canReview =
+        booking.status == BookingStatus.underReview ||
         booking.status == BookingStatus.paymentUploaded;
 
     return Row(
@@ -1012,15 +943,14 @@ class _BookingDetailsPanel extends StatelessWidget {
                         booking.passengerName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w900,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w900),
                       ),
                       Text(
                         booking.phone,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ],
                   ),
@@ -1196,9 +1126,9 @@ class _DetailsSection extends StatelessWidget {
                 const SizedBox(width: AppSpacing.xSmall),
                 Text(
                   title,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
                 ),
               ],
             ),
@@ -1213,8 +1143,8 @@ class _DetailsSection extends StatelessWidget {
                       child: Text(
                         row.$1,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                     Expanded(
@@ -1222,8 +1152,8 @@ class _DetailsSection extends StatelessWidget {
                         row.$2,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
@@ -1238,10 +1168,7 @@ class _DetailsSection extends StatelessWidget {
 }
 
 class _ListSection extends StatelessWidget {
-  const _ListSection({
-    required this.title,
-    required this.items,
-  });
+  const _ListSection({required this.title, required this.items});
 
   final String title;
   final List<String> items;
@@ -1255,12 +1182,19 @@ class _ListSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: AppSpacing.small),
             if (items.isEmpty)
               Text(
                 'لا توجد عناصر.',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               )
             else
               ...items.map(
@@ -1294,7 +1228,12 @@ class _TimelineSection extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('سجل العمليات', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900)),
+            Text(
+              'سجل العمليات',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+            ),
             const SizedBox(height: AppSpacing.medium),
             if (events.isEmpty)
               Text(
@@ -1331,15 +1270,21 @@ class _TimelineSection extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(event.action, style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w800)),
+                            Text(
+                              event.action,
+                              style: Theme.of(context).textTheme.bodyMedium
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
                             Text(
                               '${event.actor} • ${_formatTime(event.timestamp)}',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                             if (event.note != null)
                               Text(
                                 event.note!,
-                                style: Theme.of(context).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(color: scheme.onSurfaceVariant),
                               ),
                           ],
                         ),
@@ -1384,7 +1329,11 @@ class _BookingsErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline_rounded, color: Theme.of(context).colorScheme.error, size: 42),
+            Icon(
+              Icons.error_outline_rounded,
+              color: Theme.of(context).colorScheme.error,
+              size: 42,
+            ),
             const SizedBox(height: AppSpacing.small),
             Text(message, textAlign: TextAlign.center),
           ],
@@ -1469,7 +1418,8 @@ class _BookingApprovalDialogState extends State<_BookingApprovalDialog> {
       title: 'تأكيد قبول الدفع',
       icon: Icons.check_circle_outline,
       color: AppStatusColors.onSuccessContainer,
-      message: 'سيتم قبول دفع ${widget.passengerName} وتأكيد الحجز ${widget.bookingId}.',
+      message:
+          'سيتم قبول دفع ${widget.passengerName} وتأكيد الحجز ${widget.bookingId}.',
       content: TextField(
         controller: _note,
         maxLines: 3,
@@ -1499,7 +1449,8 @@ class _BookingRejectionDialog extends StatefulWidget {
   final void Function(String reason, String? note) onReject;
 
   @override
-  State<_BookingRejectionDialog> createState() => _BookingRejectionDialogState();
+  State<_BookingRejectionDialog> createState() =>
+      _BookingRejectionDialogState();
 }
 
 class _BookingRejectionDialogState extends State<_BookingRejectionDialog> {
@@ -1529,14 +1480,20 @@ class _BookingRejectionDialogState extends State<_BookingRejectionDialog> {
       title: 'رفض الدفع',
       icon: Icons.warning_amber_rounded,
       color: Theme.of(context).colorScheme.error,
-      message: 'سيتم رفض دفع ${widget.passengerName} للحجز ${widget.bookingId}.',
+      message:
+          'سيتم رفض دفع ${widget.passengerName} للحجز ${widget.bookingId}.',
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           DropdownButtonFormField<String>(
             initialValue: _selectedReason,
             decoration: const InputDecoration(labelText: 'سبب الرفض *'),
-            items: _reasons.map((reason) => DropdownMenuItem(value: reason, child: Text(reason))).toList(),
+            items: _reasons
+                .map(
+                  (reason) =>
+                      DropdownMenuItem(value: reason, child: Text(reason)),
+                )
+                .toList(),
             onChanged: (value) {
               setState(() {
                 _selectedReason = value;
@@ -1555,7 +1512,10 @@ class _BookingRejectionDialogState extends State<_BookingRejectionDialog> {
           ),
           if (_error.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.small),
-            Text(_error, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            Text(
+              _error,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ],
         ],
       ),
@@ -1617,7 +1577,12 @@ class _BookingReuploadDialogState extends State<_BookingReuploadDialog> {
           DropdownButtonFormField<String>(
             initialValue: _selectedReason,
             decoration: const InputDecoration(labelText: 'السبب *'),
-            items: _reasons.map((reason) => DropdownMenuItem(value: reason, child: Text(reason))).toList(),
+            items: _reasons
+                .map(
+                  (reason) =>
+                      DropdownMenuItem(value: reason, child: Text(reason)),
+                )
+                .toList(),
             onChanged: (value) {
               setState(() {
                 _selectedReason = value;
@@ -1627,7 +1592,10 @@ class _BookingReuploadDialogState extends State<_BookingReuploadDialog> {
           ),
           if (_error.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.small),
-            Text(_error, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            Text(
+              _error,
+              style: TextStyle(color: Theme.of(context).colorScheme.error),
+            ),
           ],
         ],
       ),
@@ -1700,12 +1668,12 @@ class _ActionDialogShell extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: Navigator.of(context).pop,
-            child: Text('إلغاء', style: TextStyle(color: scheme.onSurfaceVariant)),
+            child: Text(
+              'إلغاء',
+              style: TextStyle(color: scheme.onSurfaceVariant),
+            ),
           ),
-          FilledButton(
-            onPressed: onConfirm,
-            child: Text(confirmLabel),
-          ),
+          FilledButton(onPressed: onConfirm, child: Text(confirmLabel)),
         ],
       ),
     );

@@ -218,6 +218,11 @@ class _FailingRoutesDatasource implements RoutesDatasource {
   }
 
   @override
+  Future<void> deleteRoute(String routeId) {
+    throw StateError('failure');
+  }
+
+  @override
   Future<List<OperationRouteModel>> fetchRoutes() {
     throw StateError('failure');
   }
@@ -360,6 +365,11 @@ class _MockRoutesDatasource implements RoutesDatasource {
     final updated = OperationRouteModel.fromEntity(route);
     _routes[index] = updated;
     return updated;
+  }
+
+  @override
+  Future<void> deleteRoute(String routeId) async {
+    _routes.removeWhere((route) => route.id == routeId);
   }
 
   @override

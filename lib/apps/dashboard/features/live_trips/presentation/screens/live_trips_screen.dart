@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 
 import '../../domain/entities/live_trip.dart';
 import '../cubit/live_trips_cubit.dart';
@@ -28,45 +29,28 @@ class _LiveTripsScreenState extends State<LiveTripsScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('المتابعة الحية'),
-          actions: [
-            IconButton(
-              tooltip: 'تحديث',
-              onPressed: () => context.read<LiveTripsCubit>().loadLiveTrips(),
-              icon: const Icon(Icons.refresh_rounded),
+      textDirection: TextDirection.rtl,
+      child: BlocConsumer<LiveTripsCubit, LiveTripsState>(
+        listenWhen: (previous, current) {
+          return current is LiveTripsLoaded && current.actionMessage != null;
+        },
+        listener: (context, state) {
+          if (state is LiveTripsLoaded && state.actionMessage != null) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.actionMessage!)));
+            context.read<LiveTripsCubit>().clearActionMessage();
+          }
+        },
+        builder: (context, state) {
+          return switch (state) {
+            LiveTripsLoading() => const Center(
+              child: CircularProgressIndicator(),
             ),
-            IconButton(
-              tooltip: 'فلترة',
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('سيتم إضافة الفلاتر لاحقًا')),
-              ),
-              icon: const Icon(Icons.filter_list_rounded),
-            ),
-          ],
-        ),
-        body: BlocConsumer<LiveTripsCubit, LiveTripsState>(
-          listenWhen: (previous, current) {
-            return current is LiveTripsLoaded && current.actionMessage != null;
-          },
-          listener: (context, state) {
-            if (state is LiveTripsLoaded && state.actionMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.actionMessage!)),
-              );
-              context.read<LiveTripsCubit>().clearActionMessage();
-            }
-          },
-          builder: (context, state) {
-            return switch (state) {
-              LiveTripsLoading() => const Center(child: CircularProgressIndicator()),
-              LiveTripsError(:final message) => _ErrorView(message: message),
-              LiveTripsLoaded() => _LoadedView(state: state),
-            };
-          },
-        ),
+            LiveTripsError(:final message) => _ErrorView(message: message),
+            LiveTripsLoaded() => _LoadedView(state: state),
+          };
+        },
       ),
     );
   }
@@ -116,7 +100,11 @@ class _LoadedView extends StatelessWidget {
                   children: [
                     SizedBox(
                       width: 390,
-                      child: _TripsList(state: state, onTap: cubit.selectTrip, compact: false),
+                      child: _TripsList(
+                        state: state,
+                        onTap: cubit.selectTrip,
+                        compact: false,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.medium),
                     Expanded(
@@ -145,41 +133,22 @@ class _HeaderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
+    return DashboardModuleHeader(
+      icon: Icons.near_me_rounded,
+      title: 'المتابعة الحية',
+      subtitle:
+          'تابع الرحلات، المحطات، الركاب، السائقين والتنبيهات من مكان واحد.',
+      actions: [
+        OutlinedButton.icon(
+          onPressed: () => context.read<LiveTripsCubit>().loadLiveTrips(),
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('تحديث'),
+        ),
+      ],
       child: Wrap(
-        spacing: AppSpacing.medium,
-        runSpacing: AppSpacing.medium,
-        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: AppSpacing.small,
+        runSpacing: AppSpacing.small,
         children: [
-          _HeaderIcon(scheme: scheme),
-          SizedBox(
-            width: 280,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'مركز التحكم في الرحلات المباشرة',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                      ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'تابع الرحلات، المحطات، الركاب، السائقين والتنبيهات من مكان واحد.',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-              ],
-            ),
-          ),
           _MetricChip(
             label: 'رحلات نشطة',
             value: '${state.trips.length}',
@@ -198,25 +167,6 @@ class _HeaderCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon({required this.scheme});
-
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 54,
-      height: 54,
-      decoration: BoxDecoration(
-        color: scheme.primary.withAlpha(22),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Icon(Icons.radar_rounded, color: scheme.primary, size: 30),
     );
   }
 }
@@ -254,8 +204,19 @@ class _MetricChip extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900)),
-              Text(label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: color, fontWeight: FontWeight.w700)),
+              Text(
+                value,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              ),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ],
           ),
         ],
@@ -362,7 +323,9 @@ class _TripsListState extends State<_TripsList> {
             children: [
               Text(
                 'الرحلات النشطة',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
               ),
               if (widget.state.filterHealth != null ||
                   widget.state.filterStatus != null ||
@@ -376,7 +339,10 @@ class _TripsListState extends State<_TripsList> {
                       query: '',
                     );
                   },
-                  child: const Text('إعادة تعيين', style: TextStyle(fontSize: 12)),
+                  child: const Text(
+                    'إعادة تعيين',
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ),
             ],
           ),
@@ -401,7 +367,10 @@ class _TripsListState extends State<_TripsList> {
                       },
                     )
                   : null,
-              contentPadding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                vertical: 8,
+                horizontal: 12,
+              ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -414,7 +383,10 @@ class _TripsListState extends State<_TripsList> {
                 child: DropdownButtonFormField<LiveTripHealth?>(
                   initialValue: widget.state.filterHealth,
                   decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     labelText: 'الحالة الصحية',
                     labelStyle: const TextStyle(fontSize: 11),
                     border: OutlineInputBorder(
@@ -430,15 +402,15 @@ class _TripsListState extends State<_TripsList> {
                     ...LiveTripHealth.values.map(
                       (h) => DropdownMenuItem(
                         value: h,
-                        child: Text(h.label, style: const TextStyle(fontSize: 11)),
+                        child: Text(
+                          h.label,
+                          style: const TextStyle(fontSize: 11),
+                        ),
                       ),
                     ),
                   ],
                   onChanged: (val) {
-                    cubit.setFilters(
-                      health: val,
-                      clearHealth: val == null,
-                    );
+                    cubit.setFilters(health: val, clearHealth: val == null);
                   },
                 ),
               ),
@@ -447,7 +419,10 @@ class _TripsListState extends State<_TripsList> {
                 child: DropdownButtonFormField<LiveTripStatus?>(
                   initialValue: widget.state.filterStatus,
                   decoration: InputDecoration(
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 8,
+                    ),
                     labelText: 'حالة الرحلة',
                     labelStyle: const TextStyle(fontSize: 11),
                     border: OutlineInputBorder(
@@ -463,25 +438,22 @@ class _TripsListState extends State<_TripsList> {
                     ...LiveTripStatus.values.map(
                       (s) => DropdownMenuItem(
                         value: s,
-                        child: Text(s.label, style: const TextStyle(fontSize: 11)),
+                        child: Text(
+                          s.label,
+                          style: const TextStyle(fontSize: 11),
+                        ),
                       ),
                     ),
                   ],
                   onChanged: (val) {
-                    cubit.setFilters(
-                      status: val,
-                      clearStatus: val == null,
-                    );
+                    cubit.setFilters(status: val, clearStatus: val == null);
                   },
                 ),
               ),
             ],
           ),
           const SizedBox(height: AppSpacing.medium),
-          if (widget.compact)
-            listWidget
-          else
-            Expanded(child: listWidget),
+          if (widget.compact) listWidget else Expanded(child: listWidget),
         ],
       ),
     );
@@ -496,7 +468,8 @@ class _NoSelectedTrip extends StatelessWidget {
     return const AppCard(
       child: EmptyState(
         title: 'اختر رحلة لمتابعتها',
-        subtitle: 'ستظهر هنا كل بيانات الرحلة، السائق، المحطات، الركاب والتنبيهات.',
+        subtitle:
+            'ستظهر هنا كل بيانات الرحلة، السائق، المحطات، الركاب والتنبيهات.',
       ),
     );
   }

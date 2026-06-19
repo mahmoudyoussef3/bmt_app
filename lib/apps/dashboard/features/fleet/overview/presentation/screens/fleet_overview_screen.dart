@@ -14,8 +14,8 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentatio
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/screens/fleet_vehicles_screen.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
 
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 class FleetOverviewScreen extends StatefulWidget {
   final FleetTab? initialTab;
@@ -126,117 +126,17 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
   }
 
   Widget _buildHeader(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        gradient: LinearGradient(
-          begin: AlignmentDirectional.topStart,
-          end: AlignmentDirectional.bottomEnd,
-          colors: [scheme.primary, scheme.secondary],
+    return DashboardModuleHeader(
+      icon: Icons.local_shipping_rounded,
+      title: 'إدارة الأسطول',
+      subtitle: 'تحكم في السائقين والمركبات والتعيينات والوثائق من مكان واحد.',
+      actions: [
+        OutlinedButton.icon(
+          onPressed: () => context.read<FleetOverviewCubit>().loadWorkspace(),
+          icon: const Icon(Icons.refresh_rounded),
+          label: const Text('تحديث'),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withAlpha(35),
-            blurRadius: 24,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 720;
-
-          final title = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 7,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(34),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: Colors.white.withAlpha(50)),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.verified_rounded, color: Colors.white, size: 16),
-                    SizedBox(width: 7),
-                    Text(
-                      'Production Fleet Control',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              Text(
-                'إدارة الأسطول',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w900,
-                  height: 1.1,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.xSmall),
-              Text(
-                'تحكم احترافي في السائقين، المركبات، التعيينات، الوثائق والصور من مكان واحد.',
-                maxLines: isCompact ? 3 : 2,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withAlpha(230),
-                  fontWeight: FontWeight.w600,
-                  height: 1.6,
-                ),
-              ),
-            ],
-          );
-
-          final actions = OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Colors.white.withAlpha(130)),
-            ),
-            onPressed: () {
-              debugPrint('[FleetOverviewScreen] Refresh workspace clicked');
-              context.read<FleetOverviewCubit>().loadWorkspace();
-            },
-            icon: const Icon(Icons.refresh_rounded),
-            label: const Text('تحديث البيانات'),
-          );
-
-          if (isCompact) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                title,
-                const SizedBox(height: AppSpacing.large),
-                actions,
-              ],
-            );
-          }
-
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(child: title),
-              const SizedBox(width: AppSpacing.large),
-              actions,
-            ],
-          );
-        },
-      ),
+      ],
     );
   }
 }

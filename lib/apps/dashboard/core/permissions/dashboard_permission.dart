@@ -29,23 +29,6 @@ class DashboardPermissions {
   static Set<DashboardPermission> permissionsFor(DashboardRole role) {
     return switch (role) {
       DashboardRole.admin => DashboardPermission.values.toSet(),
-      DashboardRole.operationsManager => const {
-        DashboardPermission.bookings,
-        DashboardPermission.trips,
-        DashboardPermission.liveTrips,
-        DashboardPermission.fleet,
-        DashboardPermission.drivers,
-        DashboardPermission.assignments,
-        DashboardPermission.vehicles,
-        DashboardPermission.routes,
-        DashboardPermission.reports,
-      },
-      DashboardRole.financeAgent => const {
-        DashboardPermission.payments,
-        DashboardPermission.paymentVerification,
-        DashboardPermission.subscriptions,
-        DashboardPermission.reports,
-      },
       DashboardRole.supportAgent => const {
         DashboardPermission.bookings,
         DashboardPermission.tickets,

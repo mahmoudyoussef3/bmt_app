@@ -181,7 +181,7 @@ class _DashboardShellState extends State<DashboardShell> {
     final visibleItems = _visibleItems;
 
     return Directionality(
-      textDirection: Directionality.of(context),
+      textDirection: TextDirection.rtl,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final useCompactNavigation = constraints.maxWidth < 920;
@@ -414,7 +414,7 @@ class _DashboardSidebar extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest.withAlpha(80),
-          border: Border(left: BorderSide(color: scheme.outline.withAlpha(80))),
+          border: BorderDirectional(end: BorderSide(color: scheme.outline.withAlpha(80))),
         ),
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.medium),

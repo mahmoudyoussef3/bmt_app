@@ -450,6 +450,11 @@ class _MockTripsDatasource implements TripsDatasource {
   }
 
   @override
+  Future<void> deleteTrip(String tripId) async {
+    _trips.removeWhere((trip) => trip.id == tripId);
+  }
+
+  @override
   Future<OperationTripModel> updateTripStatus(
     String tripId,
     OperationTripStatus status,
@@ -687,6 +692,11 @@ class _FailingTripsDatasource implements TripsDatasource {
 
   @override
   Future<OperationTripModel> updateTripInfo(OperationTrip trip) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<void> deleteTrip(String tripId) {
     throw StateError('failure');
   }
 

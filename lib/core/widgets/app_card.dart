@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/theme/app_surface_style.dart';
+
 class AppCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
@@ -14,20 +16,18 @@ class AppCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final style =
+        theme.extension<AppSurfaceStyle>() ??
+        AppSurfaceStyle.legacy(theme.colorScheme);
+    final radius = BorderRadius.circular(style.radius);
     final card = Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: colorScheme.outline.withAlpha(120)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(28),
-            blurRadius: 22,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: theme.cardColor,
+        borderRadius: radius,
+        border: Border.all(color: style.borderColor),
+        boxShadow: style.shadow,
       ),
       child: child,
     );
@@ -35,12 +35,8 @@ class AppCard extends StatelessWidget {
     if (onTap != null) {
       return Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(18),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(18),
-          child: card,
-        ),
+        borderRadius: radius,
+        child: InkWell(onTap: onTap, borderRadius: radius, child: card),
       );
     }
 

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/core/theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bmt_app/core/network/dio_factory.dart';
 import 'package:bmt_app/core/network/supabase_dio_adapter.dart';
 import 'core/di/dashboard_di.dart';
 import 'core/routes/dashboard_shell.dart';
+import 'core/theme/dashboard_app_theme.dart';
 import 'core/theme/dashboard_theme_cubit.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
@@ -48,8 +48,8 @@ class DashboardWebApp extends StatelessWidget {
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 locale: locale,
-                theme: AppTheme.lightTheme(),
-                darkTheme: AppTheme.darkTheme(),
+                theme: DashboardAppTheme.light(),
+                darkTheme: DashboardAppTheme.dark(),
                 themeMode: state.themeMode,
                 home: const DashboardShell(),
               );

@@ -15,6 +15,7 @@ class PlaceSearchField extends StatefulWidget {
   final SearchPlacesUseCase searchPlaces;
   final GeoPoint? focus;
   final ValueChanged<GeoPlace> onSelected;
+  final ValueChanged<String>? onChanged;
   final String? Function(String?)? validator;
 
   const PlaceSearchField({
@@ -24,6 +25,7 @@ class PlaceSearchField extends StatefulWidget {
     required this.onSelected,
     this.initialText = '',
     this.focus,
+    this.onChanged,
     this.validator,
   });
 
@@ -62,6 +64,7 @@ class _PlaceSearchFieldState extends State<PlaceSearchField> {
           controller: controller,
           focusNode: focusNode,
           validator: widget.validator,
+          onChanged: widget.onChanged,
           decoration: InputDecoration(
             labelText: widget.label,
             prefixIcon: const Icon(Icons.place_outlined),
@@ -87,8 +90,10 @@ class _PlaceSearchFieldState extends State<PlaceSearchField> {
                   final place = options.elementAt(index);
                   return ListTile(
                     dense: true,
-                    leading: Icon(Icons.location_on_outlined,
-                        color: scheme.primary),
+                    leading: Icon(
+                      Icons.location_on_outlined,
+                      color: scheme.primary,
+                    ),
                     title: Text(place.label),
                     onTap: () => onSelected(place),
                   );
