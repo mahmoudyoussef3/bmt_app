@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -26,70 +27,53 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('التقارير التحليلية والإحصائيات'),
-          actions: [
-            IconButton(
-              tooltip: 'تحديث البيانات',
-              onPressed: () => context.read<ReportsCubit>().load(),
-              icon: const Icon(Icons.refresh_rounded),
+    return BlocConsumer<ReportsCubit, ReportsState>(
+      listenWhen: (previous, current) {
+        return current is ReportsLoaded && current.exportedFileName != null;
+      },
+      listener: (context, state) {
+        if (state is ReportsLoaded && state.exportedFileName != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'تم تصدير التقرير بنجاح: ${state.exportedFileName}',
+              ),
+              behavior: SnackBarBehavior.floating,
             ),
-          ],
-        ),
-        body: BlocConsumer<ReportsCubit, ReportsState>(
-          listenWhen: (previous, current) {
-            return current is ReportsLoaded && current.exportedFileName != null;
-          },
-          listener: (context, state) {
-            if (state is ReportsLoaded && state.exportedFileName != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('تم تصدير التقرير بنجاح: ${state.exportedFileName}'),
-                  behavior: SnackBarBehavior.floating,
+          );
+          context.read<ReportsCubit>().clearExport();
+        }
+      },
+      builder: (context, state) {
+        return switch (state) {
+          ReportsLoading() => const DashboardLoading(),
+          ReportsError(:final message) => DashboardErrorState(
+            message: message,
+            onRetry: () => context.read<ReportsCubit>().load(),
+          ),
+          ReportsLoaded() => Padding(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: Column(
+              children: [
+                DashboardModuleHeader(
+                  icon: Icons.analytics_outlined,
+                  title: 'التقارير التحليلية والإحصائيات',
+                  subtitle: 'تابع الأداء المالي والتشغيلي وصدّر التقارير.',
+                  actions: [
+                    OutlinedButton.icon(
+                      onPressed: () => context.read<ReportsCubit>().load(),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('تحديث'),
+                    ),
+                  ],
                 ),
-              );
-              context.read<ReportsCubit>().clearExport();
-            }
-          },
-          builder: (context, state) {
-            return switch (state) {
-              ReportsLoading() => const Center(child: CircularProgressIndicator()),
-              ReportsError(:final message) => _ErrorView(message: message),
-              ReportsLoaded() => _LoadedView(state: state),
-            };
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final String message;
-  const _ErrorView({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: AppCard(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: AppStatusColors.onErrorContainer),
-            const SizedBox(height: 12),
-            Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () => context.read<ReportsCubit>().load(),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('إعادة المحاولة'),
+                const SizedBox(height: AppSpacing.medium),
+                Expanded(child: _LoadedView(state: state)),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        };
+      },
     );
   }
 }
@@ -112,7 +96,8 @@ class _LoadedView extends StatelessWidget {
                 height: 120,
                 child: ReportSidebarSelector(
                   selectedType: state.activeReportType,
-                  onSelect: (type) => context.read<ReportsCubit>().switchReportType(type),
+                  onSelect: (type) =>
+                      context.read<ReportsCubit>().switchReportType(type),
                 ),
               ),
               Expanded(child: ReportWorkspace(state: state)),
@@ -128,19 +113,22 @@ class _LoadedView extends StatelessWidget {
             SizedBox(
               width: 240,
               child: Padding(
-                padding: const EdgeInsets.only(right: AppSpacing.medium, top: AppSpacing.medium, bottom: AppSpacing.medium),
+                padding: const EdgeInsetsDirectional.only(
+                  end: AppSpacing.medium,
+                  top: AppSpacing.medium,
+                  bottom: AppSpacing.medium,
+                ),
                 child: AppCard(
                   child: ReportSidebarSelector(
                     selectedType: state.activeReportType,
-                    onSelect: (type) => context.read<ReportsCubit>().switchReportType(type),
+                    onSelect: (type) =>
+                        context.read<ReportsCubit>().switchReportType(type),
                   ),
                 ),
               ),
             ),
             // 80% Main Workspace
-            Expanded(
-              child: ReportWorkspace(state: state),
-            ),
+            Expanded(child: ReportWorkspace(state: state)),
           ],
         );
       },

@@ -9,6 +9,7 @@ import 'package:bmt_app/core/widgets/progress_bar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../../../core/routes/dashboard_routes.dart';
+import '../../../../core/widgets/dashboard_state_views.dart';
 import '../../domain/entities/dashboard_home_data.dart';
 import '../cubit/dashboard_home_cubit.dart';
 import '../cubit/dashboard_home_state.dart';
@@ -23,10 +24,14 @@ class DashboardHomeScreen extends StatelessWidget {
     return BlocBuilder<DashboardHomeCubit, DashboardHomeState>(
       builder: (context, state) {
         return switch (state) {
-          DashboardHomeLoading() => const Center(
-            child: CircularProgressIndicator(),
+          DashboardHomeLoading() => const DashboardLoading(
+            rows: 5,
+            showHeader: true,
           ),
-          DashboardHomeError(:final message) => Center(child: Text(message)),
+          DashboardHomeError(:final message) => DashboardErrorState(
+            message: message,
+            onRetry: () => context.read<DashboardHomeCubit>().load(),
+          ),
           DashboardHomeLoaded(:final data) => _DashboardHomeContent(
             data: data,
             onOpenModule: onOpenModule,
@@ -46,6 +51,7 @@ class _DashboardHomeContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
+      cacheExtent: 1800,
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         const _PageTitle(),
@@ -114,7 +120,7 @@ class _ActionNowSection extends StatelessWidget {
           if (items.isEmpty) {
             return const AppCard(
               padding: EdgeInsets.all(AppSpacing.medium),
-              child: EmptyState(
+              child: _CompactEmptyState(
                 title: 'لا توجد إجراءات عاجلة الآن',
                 subtitle: 'كل قوائم التشغيل المتصلة بالتطبيقات مستقرة حالياً.',
               ),
@@ -368,7 +374,7 @@ class _PaymentReviewSection extends StatelessWidget {
       child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.medium),
         child: items.isEmpty
-            ? const EmptyState(
+            ? const _CompactEmptyState(
                 title: 'لا توجد مدفوعات قيد المراجعة',
                 subtitle: 'ستظهر طلبات الدفع الجديدة هنا عند وصولها.',
               )
@@ -460,21 +466,14 @@ class _PaymentRow extends StatelessWidget {
             ],
           ),
         ),
-        const SizedBox(width: AppSpacing.small),
-        Wrap(
-          spacing: AppSpacing.xSmall,
-          runSpacing: AppSpacing.xSmall,
-          children: [
-            FilledButton.tonal(
-              onPressed: onOpenDetails,
-              child: const Text('اعتماد'),
-            ),
-            OutlinedButton(onPressed: onOpenDetails, child: const Text('رفض')),
-            TextButton(
-              onPressed: onOpenDetails,
-              child: const Text('فتح التفاصيل'),
-            ),
-          ],
+        const SizedBox(width: AppSpacing.medium),
+        Flexible(
+          flex: 0,
+          child: FilledButton.tonalIcon(
+            onPressed: onOpenDetails,
+            icon: const Icon(Icons.receipt_long_outlined),
+            label: const Text('مراجعة الدفع'),
+          ),
         ),
       ],
     );
@@ -632,9 +631,11 @@ class _ComplaintCard extends StatelessWidget {
             spacing: AppSpacing.xSmall,
             runSpacing: AppSpacing.xSmall,
             children: [
-              FilledButton.tonal(onPressed: onOpen, child: const Text('فتح')),
-              OutlinedButton(onPressed: onOpen, child: const Text('تحويل')),
-              TextButton(onPressed: onOpen, child: const Text('إغلاق')),
+              FilledButton.tonalIcon(
+                onPressed: onOpen,
+                icon: const Icon(Icons.support_agent_outlined),
+                label: const Text('فتح التذكرة'),
+              ),
             ],
           ),
         ],
@@ -713,12 +714,11 @@ class _SubscriptionRow extends StatelessWidget {
             spacing: AppSpacing.xSmall,
             runSpacing: AppSpacing.xSmall,
             children: [
-              FilledButton.tonal(
+              FilledButton.tonalIcon(
                 onPressed: onOpen,
-                child: const Text('اعتماد'),
+                icon: const Icon(Icons.card_membership_outlined),
+                label: const Text('إدارة الاشتراك'),
               ),
-              OutlinedButton(onPressed: onOpen, child: const Text('تعديل')),
-              TextButton(onPressed: onOpen, child: const Text('إيقاف')),
             ],
           ),
         ],
@@ -880,7 +880,7 @@ class _SectionCard extends StatelessWidget {
       child: AppCard(
         padding: const EdgeInsets.all(AppSpacing.medium),
         child: children.isEmpty
-            ? EmptyState(title: emptyTitle)
+            ? _CompactEmptyState(title: emptyTitle)
             : Column(
                 children: children.indexed.map((entry) {
                   final (index, child) = entry;
@@ -914,6 +914,52 @@ class _InlineFact extends StatelessWidget {
         const SizedBox(width: AppSpacing.xSmall),
         Text(text, style: Theme.of(context).textTheme.bodySmall),
       ],
+    );
+  }
+}
+
+class _CompactEmptyState extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+
+  const _CompactEmptyState({required this.title, this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(44),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        border: Border.all(color: scheme.outlineVariant.withAlpha(120)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.check_circle_outline_rounded, color: scheme.primary),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: Theme.of(context).textTheme.titleSmall),
+                if (subtitle != null) ...[
+                  const SizedBox(height: AppSpacing.xSmall),
+                  Text(
+                    subtitle!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

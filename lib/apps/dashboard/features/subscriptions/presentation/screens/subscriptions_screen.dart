@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -16,52 +18,38 @@ class SubscriptionsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('الاشتراكات'),
-          actions: [
-            Padding(
-              padding: const EdgeInsetsDirectional.only(end: AppSpacing.medium),
-              child: FilledButton.icon(
-                onPressed: () => _openCreate(context),
-                icon: const Icon(Icons.add),
-                label: const Text('اشتراك جديد'),
-              ),
+    return BlocConsumer<SubscriptionsCubit, SubscriptionsState>(
+      listener: (context, state) {
+        if (state is SubscriptionsActionSuccess) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.message)));
+        }
+      },
+      builder: (context, state) {
+        return switch (state) {
+          SubscriptionsInitial() ||
+          SubscriptionsLoading() => const DashboardLoading(),
+          SubscriptionsError(:final message) => DashboardErrorState(
+            message: message,
+            onRetry: () => context.read<SubscriptionsCubit>().load(),
+          ),
+          SubscriptionsLoaded() => _SubscriptionsListView(
+            state: state,
+            onCreate: () => _openCreate(context),
+          ),
+          SubscriptionsActionSuccess() => _SubscriptionsListView(
+            state: SubscriptionsLoaded(
+              subscriptions: state.subscriptions,
+              creationOptions: state.creationOptions,
             ),
-          ],
-        ),
-        body: BlocConsumer<SubscriptionsCubit, SubscriptionsState>(
-          listener: (context, state) {
-            if (state is SubscriptionsActionSuccess) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
-            }
-          },
-          builder: (context, state) {
-            return switch (state) {
-              SubscriptionsInitial() || SubscriptionsLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              SubscriptionsError(:final message) => Center(
-                child: Text(message),
-              ),
-              SubscriptionsLoaded() => _SubscriptionsListView(state: state),
-              SubscriptionsActionSuccess() => _SubscriptionsListView(
-                state: SubscriptionsLoaded(
-                  subscriptions: state.subscriptions,
-                  creationOptions: state.creationOptions,
-                ),
-              ),
-              SubscriptionDetailsLoaded() => SubscriptionDetailsScreen(
-                subscription: state.subscription,
-              ),
-            };
-          },
-        ),
-      ),
+            onCreate: () => _openCreate(context),
+          ),
+          SubscriptionDetailsLoaded() => SubscriptionDetailsScreen(
+            subscription: state.subscription,
+          ),
+        };
+      },
     );
   }
 
@@ -89,8 +77,9 @@ class SubscriptionsScreen extends StatelessWidget {
 
 class _SubscriptionsListView extends StatelessWidget {
   final SubscriptionsLoaded state;
+  final VoidCallback onCreate;
 
-  const _SubscriptionsListView({required this.state});
+  const _SubscriptionsListView({required this.state, required this.onCreate});
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +103,12 @@ class _SubscriptionsListView extends StatelessWidget {
                   ),
                   Text(
                     '${_toArabicNumber(state.filteredSubscriptions.length)} اشتراك',
+                  ),
+                  const SizedBox(width: AppSpacing.small),
+                  FilledButton.icon(
+                    onPressed: onCreate,
+                    icon: const Icon(Icons.add_rounded),
+                    label: const Text('اشتراك جديد'),
                   ),
                 ],
               ),
@@ -445,11 +440,10 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
   @override
   Widget build(BuildContext context) {
     final points = _trip?.points ?? const <SubscriptionPointOption>[];
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
-        appBar: AppBar(title: const Text('إنشاء اشتراك')),
-        body: BlocListener<SubscriptionsCubit, SubscriptionsState>(
+    return Material(
+      color: Theme.of(context).scaffoldBackgroundColor,
+      child: SafeArea(
+        child: BlocListener<SubscriptionsCubit, SubscriptionsState>(
           listener: (context, state) {
             if (state is SubscriptionsActionSuccess) {
               Navigator.of(context).pop();
@@ -460,6 +454,19 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
             child: ListView(
               padding: const EdgeInsets.all(AppSpacing.large),
               children: [
+                DashboardModuleHeader(
+                  icon: Icons.workspace_premium_outlined,
+                  title: 'إنشاء اشتراك',
+                  subtitle: 'اختر العميل والرحلة ونقاط المسار ونوع الاشتراك.',
+                  actions: [
+                    OutlinedButton.icon(
+                      onPressed: Navigator.of(context).pop,
+                      icon: const Icon(Icons.close_rounded),
+                      label: const Text('إغلاق'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.medium),
                 AppCard(
                   child: Column(
                     children: [

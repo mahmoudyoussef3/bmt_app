@@ -2,6 +2,8 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -27,76 +29,58 @@ class _FinanceScreenState extends State<FinanceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('المركز المالي وعمليات الدفع'),
-          elevation: 0,
-          actions: [
-            IconButton(
-              tooltip: 'تحديث البيانات',
-              onPressed: () => context.read<FinanceCubit>().load(),
-              icon: const Icon(Icons.refresh_rounded),
+    return BlocConsumer<FinanceCubit, FinanceState>(
+      listenWhen: (previous, current) {
+        return current is FinanceLoaded && current.actionMessage != null;
+      },
+      listener: (context, state) {
+        if (state is FinanceLoaded && state.actionMessage != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                state.actionMessage!,
+                style: const TextStyle(fontWeight: FontWeight.w500),
+              ),
+              backgroundColor: Theme.of(context).colorScheme.primary,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
             ),
-          ],
-        ),
-        body: BlocConsumer<FinanceCubit, FinanceState>(
-          listenWhen: (previous, current) {
-            return current is FinanceLoaded && current.actionMessage != null;
-          },
-          listener: (context, state) {
-            if (state is FinanceLoaded && state.actionMessage != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    state.actionMessage!,
-                    style: const TextStyle(fontWeight: FontWeight.w500),
-                  ),
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          );
+          context.read<FinanceCubit>().clearActionMessage();
+        }
+      },
+      builder: (context, state) {
+        return switch (state) {
+          FinanceLoading() => const DashboardLoading(),
+          FinanceError(:final message) => DashboardErrorState(
+            message: message,
+            onRetry: () => context.read<FinanceCubit>().load(),
+          ),
+          FinanceLoaded() => Padding(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: Column(
+              children: [
+                DashboardModuleHeader(
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: 'المركز المالي وعمليات الدفع',
+                  subtitle: 'تابع الإيرادات والمدفوعات والمراجعات المالية.',
+                  actions: [
+                    OutlinedButton.icon(
+                      onPressed: () => context.read<FinanceCubit>().load(),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('تحديث'),
+                    ),
+                  ],
                 ),
-              );
-              context.read<FinanceCubit>().clearActionMessage();
-            }
-          },
-          builder: (context, state) {
-            return switch (state) {
-              FinanceLoading() => const Center(child: CircularProgressIndicator()),
-              FinanceError(:final message) => _ErrorView(message: message),
-              FinanceLoaded() => _LoadedView(state: state),
-            };
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  final String message;
-  const _ErrorView({required this.message});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: AppCard(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.error_outline_rounded, size: 48, color: AppStatusColors.onErrorContainer),
-            const SizedBox(height: 12),
-            Text(message, style: const TextStyle(fontWeight: FontWeight.bold)),
-            const SizedBox(height: 16),
-            FilledButton.icon(
-              onPressed: () => context.read<FinanceCubit>().load(),
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('إعادة المحاولة'),
+                const SizedBox(height: AppSpacing.medium),
+                Expanded(child: _LoadedView(state: state)),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        };
+      },
     );
   }
 }
@@ -118,14 +102,13 @@ class _LoadedView extends StatelessWidget {
           // 2. Navigation Tabs
           _TabSelector(
             selectedIndex: state.selectedSectionIndex,
-            onTabSelected: (index) => context.read<FinanceCubit>().selectSection(index),
+            onTabSelected: (index) =>
+                context.read<FinanceCubit>().selectSection(index),
           ),
           const SizedBox(height: AppSpacing.medium),
 
           // 3. Tab Content
-          Expanded(
-            child: _buildSectionContent(state.selectedSectionIndex),
-          ),
+          Expanded(child: _buildSectionContent(state.selectedSectionIndex)),
         ],
       ),
     );
@@ -162,17 +145,45 @@ class _MetricsRow extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Expanded(child: _MetricCard(title: 'إيرادات اليوم', value: '${metrics.todayRevenue.toStringAsFixed(0)} ج.م', icon: Icons.today, color: const Color(0xFF10B981))),
+                  Expanded(
+                    child: _MetricCard(
+                      title: 'إيرادات اليوم',
+                      value: '${metrics.todayRevenue.toStringAsFixed(0)} ج.م',
+                      icon: Icons.today,
+                      color: const Color(0xFF10B981),
+                    ),
+                  ),
                   SizedBox(width: spacing),
-                  Expanded(child: _MetricCard(title: 'إيرادات الأسبوع', value: '${metrics.weeklyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.date_range, color: AppStatusColors.onInfoContainer)),
+                  Expanded(
+                    child: _MetricCard(
+                      title: 'إيرادات الأسبوع',
+                      value: '${metrics.weeklyRevenue.toStringAsFixed(0)} ج.م',
+                      icon: Icons.date_range,
+                      color: AppStatusColors.onInfoContainer,
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: spacing),
               Row(
                 children: [
-                  Expanded(child: _MetricCard(title: 'إيرادات الشهر', value: '${metrics.monthlyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.calendar_month, color: AppStatusColors.onSpecialContainer)),
+                  Expanded(
+                    child: _MetricCard(
+                      title: 'إيرادات الشهر',
+                      value: '${metrics.monthlyRevenue.toStringAsFixed(0)} ج.م',
+                      icon: Icons.calendar_month,
+                      color: AppStatusColors.onSpecialContainer,
+                    ),
+                  ),
                   SizedBox(width: spacing),
-                  Expanded(child: _MetricCard(title: 'الاشتراكات النشطة', value: '${metrics.activeSubscriptions}', icon: Icons.card_membership, color: AppStatusColors.onWarningContainer)),
+                  Expanded(
+                    child: _MetricCard(
+                      title: 'الاشتراكات النشطة',
+                      value: '${metrics.activeSubscriptions}',
+                      icon: Icons.card_membership,
+                      color: AppStatusColors.onWarningContainer,
+                    ),
+                  ),
                 ],
               ),
               SizedBox(height: spacing),
@@ -189,15 +200,50 @@ class _MetricsRow extends StatelessWidget {
 
         return Row(
           children: [
-            Expanded(child: _MetricCard(title: 'إيرادات اليوم', value: '${metrics.todayRevenue.toStringAsFixed(0)} ج.م', icon: Icons.today, color: const Color(0xFF10B981))),
+            Expanded(
+              child: _MetricCard(
+                title: 'إيرادات اليوم',
+                value: '${metrics.todayRevenue.toStringAsFixed(0)} ج.م',
+                icon: Icons.today,
+                color: const Color(0xFF10B981),
+              ),
+            ),
             SizedBox(width: spacing),
-            Expanded(child: _MetricCard(title: 'إيرادات الأسبوع', value: '${metrics.weeklyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.date_range, color: AppStatusColors.onInfoContainer)),
+            Expanded(
+              child: _MetricCard(
+                title: 'إيرادات الأسبوع',
+                value: '${metrics.weeklyRevenue.toStringAsFixed(0)} ج.م',
+                icon: Icons.date_range,
+                color: AppStatusColors.onInfoContainer,
+              ),
+            ),
             SizedBox(width: spacing),
-            Expanded(child: _MetricCard(title: 'إيرادات الشهر', value: '${metrics.monthlyRevenue.toStringAsFixed(0)} ج.م', icon: Icons.calendar_month, color: AppStatusColors.onSpecialContainer)),
+            Expanded(
+              child: _MetricCard(
+                title: 'إيرادات الشهر',
+                value: '${metrics.monthlyRevenue.toStringAsFixed(0)} ج.م',
+                icon: Icons.calendar_month,
+                color: AppStatusColors.onSpecialContainer,
+              ),
+            ),
             SizedBox(width: spacing),
-            Expanded(child: _MetricCard(title: 'الاشتراكات النشطة', value: '${metrics.activeSubscriptions}', icon: Icons.card_membership, color: AppStatusColors.onWarningContainer)),
+            Expanded(
+              child: _MetricCard(
+                title: 'الاشتراكات النشطة',
+                value: '${metrics.activeSubscriptions}',
+                icon: Icons.card_membership,
+                color: AppStatusColors.onWarningContainer,
+              ),
+            ),
             SizedBox(width: spacing),
-            Expanded(child: _MetricCard(title: 'إجمالي إيرادات الحجوزات', value: '${metrics.totalBookingsRevenue.toStringAsFixed(0)} ج.م', icon: Icons.account_balance_wallet, color: AppStatusColors.onNeutralContainer)),
+            Expanded(
+              child: _MetricCard(
+                title: 'إجمالي إيرادات الحجوزات',
+                value: '${metrics.totalBookingsRevenue.toStringAsFixed(0)} ج.م',
+                icon: Icons.account_balance_wallet,
+                color: AppStatusColors.onNeutralContainer,
+              ),
+            ),
           ],
         );
       },
@@ -311,12 +357,16 @@ class _TabSelector extends StatelessWidget {
                     avatar: Icon(
                       tab.icon,
                       size: 18,
-                      color: isSelected ? scheme.onPrimary : scheme.onSurfaceVariant,
+                      color: isSelected
+                          ? scheme.onPrimary
+                          : scheme.onSurfaceVariant,
                     ),
                     label: Text(
                       tab.title,
                       style: TextStyle(
-                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                        fontWeight: isSelected
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
                     selected: isSelected,
@@ -344,7 +394,11 @@ class _TabItem {
   final String title;
   final IconData icon;
   final int index;
-  const _TabItem({required this.title, required this.icon, required this.index});
+  const _TabItem({
+    required this.title,
+    required this.icon,
+    required this.index,
+  });
 }
 
 // -------------------------------------------------------------
@@ -360,13 +414,18 @@ class _PaymentsSection extends StatelessWidget {
 
     // 1. Filter the list
     final filteredPayments = state.payments.where((p) {
-      final matchesSearch = state.searchQuery.isEmpty ||
+      final matchesSearch =
+          state.searchQuery.isEmpty ||
           p.clientName.contains(state.searchQuery) ||
           p.id.contains(state.searchQuery) ||
           p.tripCode.contains(state.searchQuery);
 
-      final matchesMethod = state.paymentMethodFilter == null || p.paymentMethod == state.paymentMethodFilter;
-      final matchesStatus = state.paymentStatusFilter == null || p.status == state.paymentStatusFilter;
+      final matchesMethod =
+          state.paymentMethodFilter == null ||
+          p.paymentMethod == state.paymentMethodFilter;
+      final matchesStatus =
+          state.paymentStatusFilter == null ||
+          p.status == state.paymentStatusFilter;
 
       return matchesSearch && matchesMethod && matchesStatus;
     }).toList();
@@ -385,7 +444,8 @@ class _PaymentsSection extends StatelessWidget {
                   flex: 3,
                   child: TextField(
                     decoration: const InputDecoration(
-                      hintText: 'بحث باسم العميل، رقم العملية، أو كود الرحلة...',
+                      hintText:
+                          'بحث باسم العميل، رقم العملية، أو كود الرحلة...',
                       prefixIcon: Icon(Icons.search),
                       border: OutlineInputBorder(),
                     ),
@@ -476,7 +536,8 @@ class _PaymentsSection extends StatelessWidget {
                   ? const AppCard(
                       child: EmptyState(
                         title: 'اختر عملية لعرض تفاصيلها',
-                        subtitle: 'اضغط على أي صف في الجدول لمعاينة سجل وتفاصيل العملية كاملة.',
+                        subtitle:
+                            'اضغط على أي صف في الجدول لمعاينة سجل وتفاصيل العملية كاملة.',
                       ),
                     )
                   : _PaymentDetailPanel(payment: selected),
@@ -506,19 +567,54 @@ class _PaymentsTableWidget extends StatelessWidget {
     return SingleChildScrollView(
       scrollDirection: Axis.vertical,
       child: Theme(
-        data: Theme.of(context).copyWith(
-          dividerColor: scheme.outlineVariant.withAlpha(50),
-        ),
+        data: Theme.of(
+          context,
+        ).copyWith(dividerColor: scheme.outlineVariant.withAlpha(50)),
         child: DataTable(
           showCheckboxColumn: false,
           columns: const [
-            DataColumn(label: Text('رقم العملية', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('العميل', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('الرحلة', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('المبلغ', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('طريقة الدفع', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
-            DataColumn(label: Text('التاريخ', style: TextStyle(fontWeight: FontWeight.bold))),
+            DataColumn(
+              label: Text(
+                'رقم العملية',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'العميل',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'الرحلة',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'المبلغ',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'طريقة الدفع',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'الحالة',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            DataColumn(
+              label: Text(
+                'التاريخ',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
           rows: payments.take(50).map((p) {
             final isSelected = p.id == selectedId;
@@ -526,7 +622,12 @@ class _PaymentsTableWidget extends StatelessWidget {
               selected: isSelected,
               onSelectChanged: (_) => onSelect(isSelected ? null : p.id),
               cells: [
-                DataCell(Text(p.id, style: const TextStyle(fontWeight: FontWeight.w500))),
+                DataCell(
+                  Text(
+                    p.id,
+                    style: const TextStyle(fontWeight: FontWeight.w500),
+                  ),
+                ),
                 DataCell(Text(p.clientName)),
                 DataCell(Text(p.tripCode)),
                 DataCell(Text('${p.amount.toStringAsFixed(0)} ج.م')),
@@ -559,7 +660,9 @@ class _PaymentDetailPanel extends StatelessWidget {
               Expanded(
                 child: Text(
                   'تفاصيل العملية المالية',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
@@ -568,8 +671,14 @@ class _PaymentDetailPanel extends StatelessWidget {
           _DetailField(label: 'رقم العملية', value: payment.id),
           _DetailField(label: 'اسم العميل', value: payment.clientName),
           _DetailField(label: 'كود الرحلة', value: payment.tripCode),
-          _DetailField(label: 'مبلغ العملية', value: '${payment.amount.toStringAsFixed(2)} جنيه مصري'),
-          _DetailField(label: 'طريقة الدفع المستخدمة', value: payment.paymentMethod.label),
+          _DetailField(
+            label: 'مبلغ العملية',
+            value: '${payment.amount.toStringAsFixed(2)} جنيه مصري',
+          ),
+          _DetailField(
+            label: 'طريقة الدفع المستخدمة',
+            value: payment.paymentMethod.label,
+          ),
           _DetailField(
             label: 'تاريخ وتوقيت العملية',
             value: payment.date.toString().substring(0, 19),
@@ -578,7 +687,10 @@ class _PaymentDetailPanel extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('حالة العملية الحالية:', style: TextStyle(fontWeight: FontWeight.w500)),
+              const Text(
+                'حالة العملية الحالية:',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
               _PaymentStatusBadge(status: payment.status),
             ],
           ),
@@ -591,11 +703,17 @@ class _PaymentDetailPanel extends StatelessWidget {
           _HistoryTimelineItem(
             time: payment.date.toString().substring(11, 16),
             title: 'إنشاء الفاتورة للعميل',
-            desc: 'تم تكوين الفاتورة وطلب الدفع عبر ${payment.paymentMethod.label}.',
+            desc:
+                'تم تكوين الفاتورة وطلب الدفع عبر ${payment.paymentMethod.label}.',
           ),
           _HistoryTimelineItem(
-            time: payment.date.add(const Duration(minutes: 2)).toString().substring(11, 16),
-            title: payment.status == PaymentStatus.success ? 'تأكيد استلام المبلغ' : 'العملية قيد المراجعة/المعالجة',
+            time: payment.date
+                .add(const Duration(minutes: 2))
+                .toString()
+                .substring(11, 16),
+            title: payment.status == PaymentStatus.success
+                ? 'تأكيد استلام المبلغ'
+                : 'العملية قيد المراجعة/المعالجة',
             desc: payment.status == PaymentStatus.success
                 ? 'تم استلام وتأكيد المعاملة بنجاح.'
                 : 'بانتظار مراجعة إيصال الدفع من موظف العمليات.',
@@ -621,9 +739,15 @@ class _DetailField extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant)),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+          ),
           const SizedBox(height: 2),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+          ),
         ],
       ),
     );
@@ -655,14 +779,13 @@ class _HistoryTimelineItem extends StatelessWidget {
             Container(
               width: 10,
               height: 10,
-              decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle),
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                shape: BoxShape.circle,
+              ),
             ),
             if (!isLast)
-              Container(
-                width: 2,
-                height: 40,
-                color: scheme.outlineVariant,
-              ),
+              Container(width: 2, height: 40, color: scheme.outlineVariant),
           ],
         ),
         const SizedBox(width: AppSpacing.medium),
@@ -673,12 +796,27 @@ class _HistoryTimelineItem extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
-                  Text(time, style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant)),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                  ),
+                  Text(
+                    time,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 2),
-              Text(desc, style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant)),
+              Text(
+                desc,
+                style: TextStyle(fontSize: 11, color: scheme.onSurfaceVariant),
+              ),
               const SizedBox(height: AppSpacing.medium),
             ],
           ),
@@ -695,15 +833,30 @@ class _PaymentMethodBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (method) {
-      FinancePaymentMethod.instapay => (AppStatusColors.specialContainer, AppStatusColors.onSpecialContainer),
-      FinancePaymentMethod.vodafoneCash => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
-      FinancePaymentMethod.cash => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
-      FinancePaymentMethod.card => (AppStatusColors.infoContainer, AppStatusColors.onInfoContainer),
+      FinancePaymentMethod.instapay => (
+        AppStatusColors.specialContainer,
+        AppStatusColors.onSpecialContainer,
+      ),
+      FinancePaymentMethod.vodafoneCash => (
+        AppStatusColors.errorContainer,
+        AppStatusColors.onErrorContainer,
+      ),
+      FinancePaymentMethod.cash => (
+        AppStatusColors.warningContainer,
+        AppStatusColors.onWarningContainer,
+      ),
+      FinancePaymentMethod.card => (
+        AppStatusColors.infoContainer,
+        AppStatusColors.onInfoContainer,
+      ),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
       child: Text(
         method.label,
         style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
@@ -719,15 +872,30 @@ class _PaymentStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      PaymentStatus.success => (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer),
-      PaymentStatus.pending => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
-      PaymentStatus.cancelled => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
-      PaymentStatus.refunded => (AppStatusColors.neutralContainer, AppStatusColors.onNeutralContainer),
+      PaymentStatus.success => (
+        AppStatusColors.successContainer,
+        AppStatusColors.onSuccessContainer,
+      ),
+      PaymentStatus.pending => (
+        AppStatusColors.warningContainer,
+        AppStatusColors.onWarningContainer,
+      ),
+      PaymentStatus.cancelled => (
+        AppStatusColors.errorContainer,
+        AppStatusColors.onErrorContainer,
+      ),
+      PaymentStatus.refunded => (
+        AppStatusColors.neutralContainer,
+        AppStatusColors.onNeutralContainer,
+      ),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
       child: Text(
         status.label,
         style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
@@ -784,12 +952,17 @@ class _ReviewQueueSectionState extends State<_ReviewQueueSection> {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 DropdownButton<ReceiptReviewStatus?>(
-                  value: widget.state.receiptStatusFilter ?? ReceiptReviewStatus.pending,
+                  value:
+                      widget.state.receiptStatusFilter ??
+                      ReceiptReviewStatus.pending,
                   underline: const SizedBox(),
                   items: ReceiptReviewStatus.values.map((s) {
                     return DropdownMenuItem(
                       value: s,
-                      child: Text(s.label, style: const TextStyle(fontSize: 12)),
+                      child: Text(
+                        s.label,
+                        style: const TextStyle(fontSize: 12),
+                      ),
                     );
                   }).toList(),
                   onChanged: (status) => cubit.setReceiptStatusFilter(status),
@@ -802,30 +975,47 @@ class _ReviewQueueSectionState extends State<_ReviewQueueSection> {
                 child: pendingReviews.isEmpty
                     ? const EmptyState(
                         title: 'صندوق المراجعة فارغ',
-                        subtitle: 'لا توجد طلبات معلقة للمراجعة بالفلتر المحدد.',
+                        subtitle:
+                            'لا توجد طلبات معلقة للمراجعة بالفلتر المحدد.',
                       )
                     : ListView.separated(
                         itemCount: pendingReviews.length,
                         separatorBuilder: (_, _) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final r = pendingReviews[index];
-                          final isSelected = r.id == widget.state.selectedReceiptId;
+                          final isSelected =
+                              r.id == widget.state.selectedReceiptId;
                           return ListTile(
                             selected: isSelected,
                             onTap: () {
                               cubit.selectReceipt(r.id);
                               _notesController.clear();
                             },
-                            title: Text(r.clientName, style: const TextStyle(fontWeight: FontWeight.bold)),
-                            subtitle: Text('العملية: ${r.transactionId} | الرحلة: ${r.tripCode}'),
+                            title: Text(
+                              r.clientName,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(
+                              'العملية: ${r.transactionId} | الرحلة: ${r.tripCode}',
+                            ),
                             trailing: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text('${r.amount.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold)),
+                                Text(
+                                  '${r.amount.toStringAsFixed(0)} ج.م',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 Text(
                                   r.date.toString().substring(5, 16),
-                                  style: const TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: AppStatusColors.onNeutralContainer,
+                                  ),
                                 ),
                               ],
                             ),
@@ -841,7 +1031,8 @@ class _ReviewQueueSectionState extends State<_ReviewQueueSection> {
             ? const AppCard(
                 child: EmptyState(
                   title: 'اختر طلب مراجعة لمعاينته',
-                  subtitle: 'تظهر هنا صورة الإيصال ومطابقة البيانات وأزرار القرار (قبول / رفض / إعادة رفع).',
+                  subtitle:
+                      'تظهر هنا صورة الإيصال ومطابقة البيانات وأزرار القرار (قبول / رفض / إعادة رفع).',
                 ),
               )
             : _ReceiptWorkspace(
@@ -850,19 +1041,35 @@ class _ReviewQueueSectionState extends State<_ReviewQueueSection> {
                 zoom: widget.state.receiptZoom,
                 rotation: widget.state.receiptRotation,
                 actionLoading: widget.state.actionLoading,
-                onZoomIn: () => cubit.setReceiptZoom(widget.state.receiptZoom + 0.25),
-                onZoomOut: () => cubit.setReceiptZoom(widget.state.receiptZoom - 0.25),
-                onRotate: () => cubit.setReceiptRotation(widget.state.receiptRotation + 90.0),
+                onZoomIn: () =>
+                    cubit.setReceiptZoom(widget.state.receiptZoom + 0.25),
+                onZoomOut: () =>
+                    cubit.setReceiptZoom(widget.state.receiptZoom - 0.25),
+                onRotate: () => cubit.setReceiptRotation(
+                  widget.state.receiptRotation + 90.0,
+                ),
                 onAccept: () {
-                  cubit.reviewReceipt(selected.id, ReceiptReviewStatus.accepted, notes: _notesController.text);
+                  cubit.reviewReceipt(
+                    selected.id,
+                    ReceiptReviewStatus.accepted,
+                    notes: _notesController.text,
+                  );
                   _notesController.clear();
                 },
                 onReject: () {
-                  cubit.reviewReceipt(selected.id, ReceiptReviewStatus.rejected, notes: _notesController.text);
+                  cubit.reviewReceipt(
+                    selected.id,
+                    ReceiptReviewStatus.rejected,
+                    notes: _notesController.text,
+                  );
                   _notesController.clear();
                 },
                 onRequestReupload: () {
-                  cubit.reviewReceipt(selected.id, ReceiptReviewStatus.reuploadRequested, notes: _notesController.text);
+                  cubit.reviewReceipt(
+                    selected.id,
+                    ReceiptReviewStatus.reuploadRequested,
+                    notes: _notesController.text,
+                  );
                   _notesController.clear();
                 },
               );
@@ -943,10 +1150,19 @@ class _ReceiptWorkspace extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('طلب مراجعة #${receipt.id}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(
+                      'طلب مراجعة #${receipt.id}',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
                     Text(
                       'العميل: ${receipt.clientName} | الرحلة: ${receipt.tripCode}',
-                      style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
+                      style: TextStyle(
+                        color: scheme.onSurfaceVariant,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -954,7 +1170,14 @@ class _ReceiptWorkspace extends StatelessWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text('${receipt.amount.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: AppStatusColors.onInfoContainer)),
+                  Text(
+                    '${receipt.amount.toStringAsFixed(0)} ج.م',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: AppStatusColors.onInfoContainer,
+                    ),
+                  ),
                   const SizedBox(height: 2),
                   _ReceiptStatusBadge(status: receipt.status),
                 ],
@@ -975,7 +1198,9 @@ class _ReceiptWorkspace extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppStatusColors.neutralContainer,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppStatusColors.onNeutralContainer),
+                      border: Border.all(
+                        color: AppStatusColors.onNeutralContainer,
+                      ),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Stack(
@@ -994,12 +1219,26 @@ class _ReceiptWorkspace extends StatelessWidget {
                           bottom: 12,
                           left: 12,
                           child: Card(
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
                             child: Row(
                               children: [
-                                IconButton(icon: const Icon(Icons.zoom_in), onPressed: onZoomIn, tooltip: 'تكبير'),
-                                IconButton(icon: const Icon(Icons.zoom_out), onPressed: onZoomOut, tooltip: 'تصغير'),
-                                IconButton(icon: const Icon(Icons.rotate_right), onPressed: onRotate, tooltip: 'تدوير'),
+                                IconButton(
+                                  icon: const Icon(Icons.zoom_in),
+                                  onPressed: onZoomIn,
+                                  tooltip: 'تكبير',
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.zoom_out),
+                                  onPressed: onZoomOut,
+                                  tooltip: 'تصغير',
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.rotate_right),
+                                  onPressed: onRotate,
+                                  tooltip: 'تدوير',
+                                ),
                               ],
                             ),
                           ),
@@ -1017,22 +1256,41 @@ class _ReceiptWorkspace extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text('معلومات التحويل المطالب بها:', style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Text(
+                          'معلومات التحويل المطالب بها:',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         const SizedBox(height: AppSpacing.small),
-                        _InfoRow(label: 'رقم المعاملة (المرجع)', value: receipt.transactionId),
-                        _InfoRow(label: 'المبلغ المحوّل', value: '${receipt.amount.toStringAsFixed(2)} ج.م'),
-                        _InfoRow(label: 'تاريخ الرفع', value: receipt.date.toString().substring(0, 16)),
+                        _InfoRow(
+                          label: 'رقم المعاملة (المرجع)',
+                          value: receipt.transactionId,
+                        ),
+                        _InfoRow(
+                          label: 'المبلغ المحوّل',
+                          value: '${receipt.amount.toStringAsFixed(2)} ج.م',
+                        ),
+                        _InfoRow(
+                          label: 'تاريخ الرفع',
+                          value: receipt.date.toString().substring(0, 16),
+                        ),
                         const Divider(height: AppSpacing.large),
 
                         // Review Note
                         if (receipt.status == ReceiptReviewStatus.pending) ...[
-                          const Text('ملاحظات المراجعة (تُرسل للعميل عند الرفض):', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                          const Text(
+                            'ملاحظات المراجعة (تُرسل للعميل عند الرفض):',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
                           const SizedBox(height: AppSpacing.small),
                           TextField(
                             controller: notesController,
                             maxLines: 3,
                             decoration: const InputDecoration(
-                              hintText: 'مثال: إيصال غير واضح، يرجى إعادة إرساله...',
+                              hintText:
+                                  'مثال: إيصال غير واضح، يرجى إعادة إرساله...',
                               border: OutlineInputBorder(),
                             ),
                           ),
@@ -1059,8 +1317,11 @@ class _ReceiptWorkspace extends StatelessWidget {
                                   child: OutlinedButton.icon(
                                     onPressed: onReject,
                                     style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppStatusColors.onErrorContainer,
-                                      side: const BorderSide(color: AppStatusColors.onErrorContainer),
+                                      foregroundColor:
+                                          AppStatusColors.onErrorContainer,
+                                      side: const BorderSide(
+                                        color: AppStatusColors.onErrorContainer,
+                                      ),
                                       minimumSize: const Size(0, 42),
                                     ),
                                     icon: const Icon(Icons.close),
@@ -1072,8 +1333,12 @@ class _ReceiptWorkspace extends StatelessWidget {
                                   child: OutlinedButton.icon(
                                     onPressed: onRequestReupload,
                                     style: OutlinedButton.styleFrom(
-                                      foregroundColor: AppStatusColors.onWarningContainer,
-                                      side: const BorderSide(color: AppStatusColors.onWarningContainer),
+                                      foregroundColor:
+                                          AppStatusColors.onWarningContainer,
+                                      side: const BorderSide(
+                                        color:
+                                            AppStatusColors.onWarningContainer,
+                                      ),
                                       minimumSize: const Size(0, 42),
                                     ),
                                     icon: const Icon(Icons.replay),
@@ -1093,12 +1358,21 @@ class _ReceiptWorkspace extends StatelessWidget {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text('قرار المراجعة المسجل:', style: TextStyle(fontWeight: FontWeight.bold)),
+                                const Text(
+                                  'قرار المراجعة المسجل:',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
                                 const SizedBox(height: 4),
                                 _ReceiptStatusBadge(status: receipt.status),
                                 if (receipt.notes != null) ...[
                                   const SizedBox(height: 8),
-                                  Text('ملاحظات: ${receipt.notes}', style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic)),
+                                  Text(
+                                    'ملاحظات: ${receipt.notes}',
+                                    style: const TextStyle(
+                                      fontSize: 12,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
                                 ],
                               ],
                             ),
@@ -1107,12 +1381,26 @@ class _ReceiptWorkspace extends StatelessWidget {
                         const Divider(height: AppSpacing.large),
 
                         // Ticket History Logs
-                        const Text('سجل حركة الإيصال:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                        const Text(
+                          'سجل حركة الإيصال:',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                         const SizedBox(height: AppSpacing.small),
-                        ...receipt.history.map((log) => Padding(
-                              padding: const EdgeInsets.only(bottom: 6.0),
-                              child: Text('• $log', style: const TextStyle(fontSize: 11, color: AppStatusColors.onNeutralContainer)),
-                            )),
+                        ...receipt.history.map(
+                          (log) => Padding(
+                            padding: const EdgeInsets.only(bottom: 6.0),
+                            child: Text(
+                              '• $log',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: AppStatusColors.onNeutralContainer,
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -1142,38 +1430,117 @@ class _ReceiptWorkspace extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('instaPay', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: AppStatusColors.onSpecialContainer)),
-              Icon(Icons.qr_code, color: AppStatusColors.onSpecialContainer, size: 28),
+              const Text(
+                'instaPay',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppStatusColors.onSpecialContainer,
+                ),
+              ),
+              Icon(
+                Icons.qr_code,
+                color: AppStatusColors.onSpecialContainer,
+                size: 28,
+              ),
             ],
           ),
           const SizedBox(height: 4),
-          const Text('معاملة دفع ناجحة', style: TextStyle(color: Color(0xFF10B981), fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+          const Text(
+            'معاملة دفع ناجحة',
+            style: TextStyle(
+              color: Color(0xFF10B981),
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+            ),
+            textAlign: TextAlign.center,
+          ),
           const Divider(height: 24),
           const SizedBox(height: 10),
-          const Text('المرسل إليه:', style: TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer)),
-          const Text('شركة باصات النقل المتميز (BMT)', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          const Text(
+            'المرسل إليه:',
+            style: TextStyle(
+              fontSize: 10,
+              color: AppStatusColors.onNeutralContainer,
+            ),
+          ),
+          const Text(
+            'شركة باصات النقل المتميز (BMT)',
+            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
-          const Text('المرسل:', style: TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer)),
-          Text(receipt.clientName, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+          const Text(
+            'المرسل:',
+            style: TextStyle(
+              fontSize: 10,
+              color: AppStatusColors.onNeutralContainer,
+            ),
+          ),
+          Text(
+            receipt.clientName,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 12),
-          const Text('رقم الحساب أو المحفظة:', style: TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer)),
+          const Text(
+            'رقم الحساب أو المحفظة:',
+            style: TextStyle(
+              fontSize: 10,
+              color: AppStatusColors.onNeutralContainer,
+            ),
+          ),
           const Text('*** *** **8792', style: TextStyle(fontSize: 11)),
           const SizedBox(height: 12),
-          const Text('رقم المعاملة الفريد (RRN):', style: TextStyle(fontSize: 10, color: AppStatusColors.onNeutralContainer)),
-          Text(receipt.transactionId, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppStatusColors.onSpecialContainer)),
+          const Text(
+            'رقم المعاملة الفريد (RRN):',
+            style: TextStyle(
+              fontSize: 10,
+              color: AppStatusColors.onNeutralContainer,
+            ),
+          ),
+          Text(
+            receipt.transactionId,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              color: AppStatusColors.onSpecialContainer,
+            ),
+          ),
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: AppStatusColors.specialContainer, borderRadius: BorderRadius.circular(6)),
+            decoration: BoxDecoration(
+              color: AppStatusColors.specialContainer,
+              borderRadius: BorderRadius.circular(6),
+            ),
             child: Column(
               children: [
-                const Text('القيمة المحولة:', style: TextStyle(fontSize: 10, color: AppStatusColors.onSpecialContainer)),
-                Text('${receipt.amount.toStringAsFixed(2)} EGP', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: AppStatusColors.onSpecialContainer)),
+                const Text(
+                  'القيمة المحولة:',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppStatusColors.onSpecialContainer,
+                  ),
+                ),
+                Text(
+                  '${receipt.amount.toStringAsFixed(2)} EGP',
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: AppStatusColors.onSpecialContainer,
+                  ),
+                ),
               ],
             ),
           ),
           const Spacer(),
-          Text('تاريخ المعاملة: ${receipt.date.toString().substring(0, 16)}', style: const TextStyle(fontSize: 8, color: AppStatusColors.onNeutralContainer), textAlign: TextAlign.center),
+          Text(
+            'تاريخ المعاملة: ${receipt.date.toString().substring(0, 16)}',
+            style: const TextStyle(
+              fontSize: 8,
+              color: AppStatusColors.onNeutralContainer,
+            ),
+            textAlign: TextAlign.center,
+          ),
         ],
       ),
     );
@@ -1192,8 +1559,17 @@ class _InfoRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppStatusColors.onNeutralContainer)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppStatusColors.onNeutralContainer,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -1207,15 +1583,30 @@ class _ReceiptStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      ReceiptReviewStatus.pending => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
-      ReceiptReviewStatus.accepted => (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer),
-      ReceiptReviewStatus.rejected => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
-      ReceiptReviewStatus.reuploadRequested => (AppStatusColors.infoContainer, AppStatusColors.onInfoContainer),
+      ReceiptReviewStatus.pending => (
+        AppStatusColors.warningContainer,
+        AppStatusColors.onWarningContainer,
+      ),
+      ReceiptReviewStatus.accepted => (
+        AppStatusColors.successContainer,
+        AppStatusColors.onSuccessContainer,
+      ),
+      ReceiptReviewStatus.rejected => (
+        AppStatusColors.errorContainer,
+        AppStatusColors.onErrorContainer,
+      ),
+      ReceiptReviewStatus.reuploadRequested => (
+        AppStatusColors.infoContainer,
+        AppStatusColors.onInfoContainer,
+      ),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
       child: Text(
         status.label,
         style: TextStyle(color: fg, fontSize: 10, fontWeight: FontWeight.bold),
@@ -1236,7 +1627,9 @@ class _RefundsSection extends StatelessWidget {
     final cubit = context.read<FinanceCubit>();
 
     final filteredRefunds = state.refundRequests.where((r) {
-      final matchesStatus = state.refundStatusFilter == null || r.status == state.refundStatusFilter;
+      final matchesStatus =
+          state.refundStatusFilter == null ||
+          r.status == state.refundStatusFilter;
       return matchesStatus;
     }).toList();
 
@@ -1250,7 +1643,10 @@ class _RefundsSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Text('تصفية طلبات الاسترداد:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'تصفية طلبات الاسترداد:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(width: AppSpacing.medium),
                 ChoiceChip(
                   label: const Text('الكل'),
@@ -1258,14 +1654,17 @@ class _RefundsSection extends StatelessWidget {
                   onSelected: (sel) => cubit.setRefundStatusFilter(null),
                 ),
                 const SizedBox(width: AppSpacing.small),
-                ...RefundStatus.values.map((s) => Padding(
-                      padding: const EdgeInsets.only(left: 4.0),
-                      child: ChoiceChip(
-                        label: Text(s.label),
-                        selected: state.refundStatusFilter == s,
-                        onSelected: (sel) => cubit.setRefundStatusFilter(sel ? s : null),
-                      ),
-                    )),
+                ...RefundStatus.values.map(
+                  (s) => Padding(
+                    padding: const EdgeInsets.only(left: 4.0),
+                    child: ChoiceChip(
+                      label: Text(s.label),
+                      selected: state.refundStatusFilter == s,
+                      onSelected: (sel) =>
+                          cubit.setRefundStatusFilter(sel ? s : null),
+                    ),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.medium),
@@ -1274,7 +1673,8 @@ class _RefundsSection extends StatelessWidget {
                 child: filteredRefunds.isEmpty
                     ? const EmptyState(
                         title: 'لا توجد طلبات مرتجع',
-                        subtitle: 'لم يتم العثور على طلبات استرداد مطابقة للمعيار.',
+                        subtitle:
+                            'لم يتم العثور على طلبات استرداد مطابقة للمعيار.',
                       )
                     : ListView.separated(
                         itemCount: filteredRefunds.length,
@@ -1285,13 +1685,23 @@ class _RefundsSection extends StatelessWidget {
                           return ListTile(
                             selected: isSelected,
                             onTap: () => cubit.selectRefund(r.id),
-                            title: Text('طلب استرداد #${r.id} (${r.clientName})'),
-                            subtitle: Text('العملية الأصلية: ${r.transactionId} | سبب الاسترداد: ${r.reason}'),
+                            title: Text(
+                              'طلب استرداد #${r.id} (${r.clientName})',
+                            ),
+                            subtitle: Text(
+                              'العملية الأصلية: ${r.transactionId} | سبب الاسترداد: ${r.reason}',
+                            ),
                             trailing: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Text('${r.amount.toStringAsFixed(0)} ج.م', style: const TextStyle(fontWeight: FontWeight.bold, color: AppStatusColors.onErrorContainer)),
+                                Text(
+                                  '${r.amount.toStringAsFixed(0)} ج.م',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: AppStatusColors.onErrorContainer,
+                                  ),
+                                ),
                                 _RefundStatusBadge(status: r.status),
                               ],
                             ),
@@ -1307,14 +1717,17 @@ class _RefundsSection extends StatelessWidget {
             ? const AppCard(
                 child: EmptyState(
                   title: 'اختر طلب مرتجع لمعاينته',
-                  subtitle: 'اضغط على أي عنصر في القائمة لمراجعة العملية والسبب وتأكيد أو رفض الاسترداد.',
+                  subtitle:
+                      'اضغط على أي عنصر في القائمة لمراجعة العملية والسبب وتأكيد أو رفض الاسترداد.',
                 ),
               )
             : _RefundDetailsPanel(
                 refund: selected,
                 actionLoading: state.actionLoading,
-                onApprove: () => cubit.processRefund(selected.id, RefundStatus.approved),
-                onReject: () => cubit.processRefund(selected.id, RefundStatus.rejected),
+                onApprove: () =>
+                    cubit.processRefund(selected.id, RefundStatus.approved),
+                onReject: () =>
+                    cubit.processRefund(selected.id, RefundStatus.rejected),
               );
 
         if (!useSplit) {
@@ -1373,21 +1786,39 @@ class _RefundDetailsPanel extends StatelessWidget {
               const Icon(Icons.assignment_return_outlined, size: 28),
               const SizedBox(width: AppSpacing.small),
               Expanded(
-                child: Text('معالجة طلب الاسترداد #${refund.id}', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                child: Text(
+                  'معالجة طلب الاسترداد #${refund.id}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ],
           ),
           const Divider(height: AppSpacing.large),
           _DetailField(label: 'اسم العميل', value: refund.clientName),
-          _DetailField(label: 'رقم العملية الأصلية', value: refund.transactionId),
-          _DetailField(label: 'مبلغ الاسترداد المطالب به', value: '${refund.amount.toStringAsFixed(2)} جنيه مصري'),
-          _DetailField(label: 'تاريخ تقديم طلب المرتجع', value: refund.date.toString().substring(0, 16)),
+          _DetailField(
+            label: 'رقم العملية الأصلية',
+            value: refund.transactionId,
+          ),
+          _DetailField(
+            label: 'مبلغ الاسترداد المطالب به',
+            value: '${refund.amount.toStringAsFixed(2)} جنيه مصري',
+          ),
+          _DetailField(
+            label: 'تاريخ تقديم طلب المرتجع',
+            value: refund.date.toString().substring(0, 16),
+          ),
           _DetailField(label: 'سبب طلب الاسترداد', value: refund.reason),
           const Divider(height: AppSpacing.medium),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('حالة طلب الاسترداد:', style: TextStyle(fontWeight: FontWeight.w500)),
+              const Text(
+                'حالة طلب الاسترداد:',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
               _RefundStatusBadge(status: refund.status),
             ],
           ),
@@ -1401,7 +1832,10 @@ class _RefundDetailsPanel extends StatelessWidget {
                   Expanded(
                     child: FilledButton.icon(
                       onPressed: onApprove,
-                      style: FilledButton.styleFrom(backgroundColor: AppStatusColors.onErrorContainer, foregroundColor: Colors.white),
+                      style: FilledButton.styleFrom(
+                        backgroundColor: AppStatusColors.onErrorContainer,
+                        foregroundColor: Colors.white,
+                      ),
                       icon: const Icon(Icons.check_circle_outline),
                       label: const Text('الموافقة وإرجاع المبلغ'),
                     ),
@@ -1418,12 +1852,23 @@ class _RefundDetailsPanel extends StatelessWidget {
               ),
           ],
           const SizedBox(height: AppSpacing.medium),
-          const Text('سجل الموافقات والحركات:', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          const Text(
+            'سجل الموافقات والحركات:',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
           const SizedBox(height: AppSpacing.small),
-          ...refund.history.map((log) => Padding(
-                padding: const EdgeInsets.only(bottom: 4.0),
-                child: Text('• $log', style: const TextStyle(fontSize: 11, color: AppStatusColors.onNeutralContainer)),
-              )),
+          ...refund.history.map(
+            (log) => Padding(
+              padding: const EdgeInsets.only(bottom: 4.0),
+              child: Text(
+                '• $log',
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppStatusColors.onNeutralContainer,
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1437,14 +1882,26 @@ class _RefundStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      RefundStatus.pending => (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
-      RefundStatus.approved => (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer),
-      RefundStatus.rejected => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
+      RefundStatus.pending => (
+        AppStatusColors.warningContainer,
+        AppStatusColors.onWarningContainer,
+      ),
+      RefundStatus.approved => (
+        AppStatusColors.successContainer,
+        AppStatusColors.onSuccessContainer,
+      ),
+      RefundStatus.rejected => (
+        AppStatusColors.errorContainer,
+        AppStatusColors.onErrorContainer,
+      ),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
       child: Text(
         status.label,
         style: TextStyle(color: fg, fontSize: 10, fontWeight: FontWeight.bold),
@@ -1465,7 +1922,9 @@ class _SubscriptionsSection extends StatelessWidget {
     final cubit = context.read<FinanceCubit>();
 
     final filteredSubscriptions = state.subscriptions.where((s) {
-      final matchesStatus = state.subscriptionStatusFilter == null || s.status == state.subscriptionStatusFilter;
+      final matchesStatus =
+          state.subscriptionStatusFilter == null ||
+          s.status == state.subscriptionStatusFilter;
       return matchesStatus;
     }).toList();
 
@@ -1479,7 +1938,10 @@ class _SubscriptionsSection extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Text('حالة الاشتراك:', style: TextStyle(fontWeight: FontWeight.bold)),
+                const Text(
+                  'حالة الاشتراك:',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
                 const SizedBox(width: AppSpacing.medium),
                 ChoiceChip(
                   label: const Text('الكل'),
@@ -1487,11 +1949,14 @@ class _SubscriptionsSection extends StatelessWidget {
                   onSelected: (_) => cubit.setSubscriptionStatusFilter(null),
                 ),
                 const SizedBox(width: AppSpacing.small),
-                ...SubscriptionStatus.values.map((s) => ChoiceChip(
-                      label: Text(s.label),
-                      selected: state.subscriptionStatusFilter == s,
-                      onSelected: (sel) => cubit.setSubscriptionStatusFilter(sel ? s : null),
-                    )),
+                ...SubscriptionStatus.values.map(
+                  (s) => ChoiceChip(
+                    label: Text(s.label),
+                    selected: state.subscriptionStatusFilter == s,
+                    onSelected: (sel) =>
+                        cubit.setSubscriptionStatusFilter(sel ? s : null),
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: AppSpacing.medium),
@@ -1506,32 +1971,90 @@ class _SubscriptionsSection extends StatelessWidget {
                         scrollDirection: Axis.vertical,
                         child: Theme(
                           data: Theme.of(context).copyWith(
-                            dividerColor: Theme.of(context).colorScheme.outlineVariant.withAlpha(50),
+                            dividerColor: Theme.of(
+                              context,
+                            ).colorScheme.outlineVariant.withAlpha(50),
                           ),
                           child: DataTable(
                             showCheckboxColumn: false,
                             columns: const [
-                              DataColumn(label: Text('رقم الاشتراك', style: TextStyle(fontWeight: FontWeight.bold))),
-                              DataColumn(label: Text('العميل', style: TextStyle(fontWeight: FontWeight.bold))),
-                              DataColumn(label: Text('باقة الاشتراك', style: TextStyle(fontWeight: FontWeight.bold))),
-                              DataColumn(label: Text('السعر', style: TextStyle(fontWeight: FontWeight.bold))),
-                              DataColumn(label: Text('الرحلات المتبقية', style: TextStyle(fontWeight: FontWeight.bold))),
-                              DataColumn(label: Text('تاريخ الانتهاء', style: TextStyle(fontWeight: FontWeight.bold))),
-                              DataColumn(label: Text('الحالة', style: TextStyle(fontWeight: FontWeight.bold))),
+                              DataColumn(
+                                label: Text(
+                                  'رقم الاشتراك',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'العميل',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'باقة الاشتراك',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'السعر',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'الرحلات المتبقية',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'تاريخ الانتهاء',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
+                              DataColumn(
+                                label: Text(
+                                  'الحالة',
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                              ),
                             ],
                             rows: filteredSubscriptions.take(40).map((s) {
-                              final isSelected = s.id == state.selectedSubscriptionId;
+                              final isSelected =
+                                  s.id == state.selectedSubscriptionId;
                               return DataRow(
                                 selected: isSelected,
-                                onSelectChanged: (_) => cubit.selectSubscription(s.id),
+                                onSelectChanged: (_) =>
+                                    cubit.selectSubscription(s.id),
                                 cells: [
-                                  DataCell(Text(s.id, style: const TextStyle(fontWeight: FontWeight.w500))),
+                                  DataCell(
+                                    Text(
+                                      s.id,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
                                   DataCell(Text(s.clientName)),
                                   DataCell(Text(s.packageName)),
-                                  DataCell(Text('${s.amount.toStringAsFixed(0)} ج.م')),
-                                  DataCell(Text(s.status == SubscriptionStatus.active ? '${s.remainingRides} رحلات' : '0')),
-                                  DataCell(Text(s.endDate.toString().substring(0, 10))),
-                                  DataCell(_SubscriptionStatusBadge(status: s.status)),
+                                  DataCell(
+                                    Text('${s.amount.toStringAsFixed(0)} ج.م'),
+                                  ),
+                                  DataCell(
+                                    Text(
+                                      s.status == SubscriptionStatus.active
+                                          ? '${s.remainingRides} رحلات'
+                                          : '0',
+                                    ),
+                                  ),
+                                  DataCell(
+                                    Text(s.endDate.toString().substring(0, 10)),
+                                  ),
+                                  DataCell(
+                                    _SubscriptionStatusBadge(status: s.status),
+                                  ),
                                 ],
                               );
                             }).toList(),
@@ -1547,7 +2070,8 @@ class _SubscriptionsSection extends StatelessWidget {
             ? const AppCard(
                 child: EmptyState(
                   title: 'اختر اشتراك لعرض التفاصيل والإدارة',
-                  subtitle: 'اضغط على أي اشتراك في الجدول لتفعيله أو إلغائه فورياً.',
+                  subtitle:
+                      'اضغط على أي اشتراك في الجدول لتفعيله أو إلغائه فورياً.',
                 ),
               )
             : _SubscriptionDetailPanel(
@@ -1610,23 +2134,47 @@ class _SubscriptionDetailPanel extends StatelessWidget {
               const Icon(Icons.card_membership_outlined, size: 28),
               const SizedBox(width: AppSpacing.small),
               Expanded(
-                child: Text('إدارة حزمة الاشتراك', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                child: Text(
+                  'إدارة حزمة الاشتراك',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                  ),
+                ),
               ),
             ],
           ),
           const Divider(height: AppSpacing.large),
           _DetailField(label: 'رقم الاشتراك الفريد', value: subscription.id),
           _DetailField(label: 'اسم المشترك', value: subscription.clientName),
-          _DetailField(label: 'باقة الاشتراك الحالية', value: subscription.packageName),
-          _DetailField(label: 'سعر الاشتراك والفوترة', value: '${subscription.amount.toStringAsFixed(2)} ج.م'),
-          _DetailField(label: 'عدد الرحلات المتبقية للعميل', value: '${subscription.remainingRides} رحلات متاحة'),
-          _DetailField(label: 'تاريخ بدء الاشتراك', value: subscription.startDate.toString().substring(0, 10)),
-          _DetailField(label: 'تاريخ وتوقيت انتهاء الاشتراك', value: subscription.endDate.toString().substring(0, 10)),
+          _DetailField(
+            label: 'باقة الاشتراك الحالية',
+            value: subscription.packageName,
+          ),
+          _DetailField(
+            label: 'سعر الاشتراك والفوترة',
+            value: '${subscription.amount.toStringAsFixed(2)} ج.م',
+          ),
+          _DetailField(
+            label: 'عدد الرحلات المتبقية للعميل',
+            value: '${subscription.remainingRides} رحلات متاحة',
+          ),
+          _DetailField(
+            label: 'تاريخ بدء الاشتراك',
+            value: subscription.startDate.toString().substring(0, 10),
+          ),
+          _DetailField(
+            label: 'تاريخ وتوقيت انتهاء الاشتراك',
+            value: subscription.endDate.toString().substring(0, 10),
+          ),
           const Divider(height: AppSpacing.medium),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('حالة الاشتراك الحالية:', style: TextStyle(fontWeight: FontWeight.w500)),
+              const Text(
+                'حالة الاشتراك الحالية:',
+                style: TextStyle(fontWeight: FontWeight.w500),
+              ),
               _SubscriptionStatusBadge(status: subscription.status),
             ],
           ),
@@ -1654,7 +2202,11 @@ class _SubscriptionDetailPanel extends StatelessWidget {
               ),
               child: const Text(
                 'الاشتراك منتهي أو تم إلغاؤه مسبقاً، ولا يمكن إجراء تعديلات عليه.',
-                style: TextStyle(fontSize: 12, color: AppStatusColors.onNeutralContainer, fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: AppStatusColors.onNeutralContainer,
+                  fontStyle: FontStyle.italic,
+                ),
               ),
             ),
           ],
@@ -1671,14 +2223,26 @@ class _SubscriptionStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
-      SubscriptionStatus.active => (AppStatusColors.successContainer, AppStatusColors.onSuccessContainer),
-      SubscriptionStatus.expired => (AppStatusColors.neutralContainer, AppStatusColors.onNeutralContainer),
-      SubscriptionStatus.cancelled => (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
+      SubscriptionStatus.active => (
+        AppStatusColors.successContainer,
+        AppStatusColors.onSuccessContainer,
+      ),
+      SubscriptionStatus.expired => (
+        AppStatusColors.neutralContainer,
+        AppStatusColors.onNeutralContainer,
+      ),
+      SubscriptionStatus.cancelled => (
+        AppStatusColors.errorContainer,
+        AppStatusColors.onErrorContainer,
+      ),
     };
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(6)),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(6),
+      ),
       child: Text(
         status.label,
         style: TextStyle(color: fg, fontSize: 10, fontWeight: FontWeight.bold),
@@ -1713,7 +2277,13 @@ class _RevenueSection extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                 ),
                 const SizedBox(height: 2),
-                Text('توضيح حركة المبيعات وتدفق الإيرادات اليومية في السبعة أيام الأخيرة.', style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 11)),
+                Text(
+                  'توضيح حركة المبيعات وتدفق الإيرادات اليومية في السبعة أيام الأخيرة.',
+                  style: TextStyle(
+                    color: scheme.onSurfaceVariant,
+                    fontSize: 11,
+                  ),
+                ),
                 const SizedBox(height: AppSpacing.large),
                 // Simulated Chart Widget
                 Expanded(child: _RevenueChartWidget(payments: state.payments)),
@@ -1727,7 +2297,10 @@ class _RevenueSection extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                const Text('نسبة توزيع طرق الدفع', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text(
+                  'نسبة توزيع طرق الدفع',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
                 const SizedBox(height: AppSpacing.medium),
                 _MethodBreakdownItem(
                   method: FinancePaymentMethod.instapay,
@@ -1746,12 +2319,31 @@ class _RevenueSection extends StatelessWidget {
                   payments: state.payments,
                 ),
                 const Divider(height: AppSpacing.large),
-                const Text('ملخص مؤشرات الإيرادات', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                const Text(
+                  'ملخص مؤشرات الإيرادات',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                ),
                 const SizedBox(height: AppSpacing.medium),
-                _RevenueMetricSummaryRow(label: 'متوسط قيمة العملية', value: '${_calculateAverageTxnValue().toStringAsFixed(1)} ج.م'),
-                _RevenueMetricSummaryRow(label: 'إجمالي العمليات الناجحة', value: '${state.payments.where((p) => p.status == PaymentStatus.success).length} عملية'),
-                _RevenueMetricSummaryRow(label: 'المرتجعات المقبولة', value: '${state.payments.where((p) => p.status == PaymentStatus.refunded).length} عملية مستردة'),
-                _RevenueMetricSummaryRow(label: 'إيرادات الاشتراكات (مضمنة)', value: '${_calculateTotalSubscriptionsRevenue().toStringAsFixed(0)} ج.م'),
+                _RevenueMetricSummaryRow(
+                  label: 'متوسط قيمة العملية',
+                  value:
+                      '${_calculateAverageTxnValue().toStringAsFixed(1)} ج.م',
+                ),
+                _RevenueMetricSummaryRow(
+                  label: 'إجمالي العمليات الناجحة',
+                  value:
+                      '${state.payments.where((p) => p.status == PaymentStatus.success).length} عملية',
+                ),
+                _RevenueMetricSummaryRow(
+                  label: 'المرتجعات المقبولة',
+                  value:
+                      '${state.payments.where((p) => p.status == PaymentStatus.refunded).length} عملية مستردة',
+                ),
+                _RevenueMetricSummaryRow(
+                  label: 'إيرادات الاشتراكات (مضمنة)',
+                  value:
+                      '${_calculateTotalSubscriptionsRevenue().toStringAsFixed(0)} ج.م',
+                ),
               ],
             ),
           ),
@@ -1761,14 +2353,19 @@ class _RevenueSection extends StatelessWidget {
   }
 
   double _calculateAverageTxnValue() {
-    final successPayments = state.payments.where((p) => p.status == PaymentStatus.success).toList();
+    final successPayments = state.payments
+        .where((p) => p.status == PaymentStatus.success)
+        .toList();
     if (successPayments.isEmpty) return 0.0;
     final total = successPayments.map((p) => p.amount).reduce((a, b) => a + b);
     return total / successPayments.length;
   }
 
   double _calculateTotalSubscriptionsRevenue() {
-    return state.subscriptions.where((s) => s.status == SubscriptionStatus.active).map((s) => s.amount).fold(0.0, (a, b) => a + b);
+    return state.subscriptions
+        .where((s) => s.status == SubscriptionStatus.active)
+        .map((s) => s.amount)
+        .fold(0.0, (a, b) => a + b);
   }
 }
 
@@ -1776,17 +2373,21 @@ class _MethodBreakdownItem extends StatelessWidget {
   final FinancePaymentMethod method;
   final List<PaymentRecord> payments;
 
-  const _MethodBreakdownItem({
-    required this.method,
-    required this.payments,
-  });
+  const _MethodBreakdownItem({required this.method, required this.payments});
 
   @override
   Widget build(BuildContext context) {
-    final successPayments = payments.where((p) => p.status == PaymentStatus.success).toList();
-    final total = successPayments.isEmpty ? 1.0 : successPayments.map((p) => p.amount).fold(0.0, (a, b) => a + b);
+    final successPayments = payments
+        .where((p) => p.status == PaymentStatus.success)
+        .toList();
+    final total = successPayments.isEmpty
+        ? 1.0
+        : successPayments.map((p) => p.amount).fold(0.0, (a, b) => a + b);
 
-    final methodTotal = successPayments.where((p) => p.paymentMethod == method).map((p) => p.amount).fold(0.0, (a, b) => a + b);
+    final methodTotal = successPayments
+        .where((p) => p.paymentMethod == method)
+        .map((p) => p.amount)
+        .fold(0.0, (a, b) => a + b);
 
     final double percentage = methodTotal / total;
 
@@ -1805,8 +2406,20 @@ class _MethodBreakdownItem extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(method.label, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12)),
-              Text('${(percentage * 100).toStringAsFixed(1)}% (${methodTotal.toStringAsFixed(0)} ج.م)', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+              Text(
+                method.label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                '${(percentage * 100).toStringAsFixed(1)}% (${methodTotal.toStringAsFixed(0)} ج.م)',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
@@ -1835,8 +2448,17 @@ class _RevenueMetricSummaryRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: AppStatusColors.onNeutralContainer)),
-          Text(value, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppStatusColors.onNeutralContainer,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
         ],
       ),
     );
@@ -1858,22 +2480,37 @@ class _RevenueChartWidget extends StatelessWidget {
     final now = DateTime.now();
     final List<MapEntry<String, double>> dailyTotals = [];
 
-    final arabicDays = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+    final arabicDays = [
+      'الأحد',
+      'الإثنين',
+      'الثلاثاء',
+      'الأربعاء',
+      'الخميس',
+      'الجمعة',
+      'السبت',
+    ];
 
     for (int i = 6; i >= 0; i--) {
       final targetDate = now.subtract(Duration(days: i));
       final dateStr = targetDate.toString().substring(0, 10);
       final dayName = arabicDays[targetDate.weekday % 7];
 
-      final double total = payments.where((p) {
-        return p.status == PaymentStatus.success && p.date.toString().substring(0, 10) == dateStr;
-      }).fold(0.0, (sum, p) => sum + p.amount);
+      final double total = payments
+          .where((p) {
+            return p.status == PaymentStatus.success &&
+                p.date.toString().substring(0, 10) == dateStr;
+          })
+          .fold(0.0, (sum, p) => sum + p.amount);
 
       dailyTotals.add(MapEntry(dayName, total));
     }
 
-    final double maxVal = dailyTotals.map((e) => e.value).reduce((a, b) => a > b ? a : b);
-    final double maxCeiling = maxVal == 0 ? 1000 : ((maxVal / 500).ceil() * 500).toDouble();
+    final double maxVal = dailyTotals
+        .map((e) => e.value)
+        .reduce((a, b) => a > b ? a : b);
+    final double maxCeiling = maxVal == 0
+        ? 1000
+        : ((maxVal / 500).ceil() * 500).toDouble();
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1885,7 +2522,10 @@ class _RevenueChartWidget extends StatelessWidget {
             final double value = maxCeiling * (4 - index) / 4;
             return Text(
               '${value.toStringAsFixed(0)} ج',
-              style: const TextStyle(fontSize: 9, color: AppStatusColors.onNeutralContainer),
+              style: const TextStyle(
+                fontSize: 9,
+                color: AppStatusColors.onNeutralContainer,
+              ),
             );
           }),
         ),
@@ -1899,7 +2539,9 @@ class _RevenueChartWidget extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: dailyTotals.map((entry) {
-                  final double barHeightPercentage = maxCeiling == 0 ? 0.0 : (entry.value / maxCeiling);
+                  final double barHeightPercentage = maxCeiling == 0
+                      ? 0.0
+                      : (entry.value / maxCeiling);
 
                   return Column(
                     mainAxisAlignment: MainAxisAlignment.end,
@@ -1907,7 +2549,11 @@ class _RevenueChartWidget extends StatelessWidget {
                       // Tooltip value
                       Text(
                         entry.value.toStringAsFixed(0),
-                        style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: scheme.primary),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.bold,
+                          color: scheme.primary,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       // The visual bar
@@ -1930,7 +2576,10 @@ class _RevenueChartWidget extends StatelessWidget {
                       // Day Label
                       Text(
                         entry.key,
-                        style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500),
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ],
                   );

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/app_mode/app_mode.dart';
-import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 
 import '../../../../core/theme/dashboard_theme_cubit.dart';
-import '../../../../core/widgets/dashboard_operations_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -17,11 +15,10 @@ class SettingsScreen extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
-        const _SettingsHeader(),
-        const SizedBox(height: AppSpacing.large),
-        const SizedBox(
-          height: 520,
-          child: DashboardOperationsScreen(workspaceId: 'settings'),
+        const DashboardModuleHeader(
+          icon: Icons.settings_outlined,
+          title: 'الإعدادات',
+          subtitle: 'إعدادات عامة للوحة التشغيل وتجربة المستخدم.',
         ),
         const SizedBox(height: AppSpacing.large),
         AppCard(
@@ -59,82 +56,40 @@ class SettingsScreen extends StatelessWidget {
             },
           ),
         ),
-        const SizedBox(height: AppSpacing.large),
+        const SizedBox(height: AppSpacing.medium),
         AppCard(
-          child: BlocBuilder<AppModeCubit, AppModeState>(
-            builder: (context, state) {
-              final cubit = context.read<AppModeCubit>();
-              return Column(
+          child: Builder(
+            builder: (context) {
+              final scheme = Theme.of(context).colorScheme;
+              return Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'وضع التطبيق (للمطورين)',
-                    style: Theme.of(context).textTheme.titleMedium,
+                  Icon(
+                    Icons.admin_panel_settings_outlined,
+                    color: scheme.primary,
                   ),
-                  const SizedBox(height: AppSpacing.small),
-                  Text(
-                    'التبديل بين إصدارات التطبيق المختلفة (العميل، السائق، لوحة التحكم)',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'صلاحيات التشغيل',
+                          style: Theme.of(context).textTheme.titleMedium,
+                        ),
+                        const SizedBox(height: AppSpacing.xSmall),
+                        Text(
+                          'إعدادات الصلاحيات وتبديل التطبيقات الداخلية لا تظهر في واجهة الإنتاج. يتم التحكم بها من إعدادات النشر والإدارة.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  SegmentedButton<AppMode>(
-                    segments: AppMode.values.map((m) {
-                      String label = m.displayLabel;
-                      switch (m) {
-                        case AppMode.client:
-                          label = 'العميل';
-                          break;
-                        case AppMode.driver:
-                          label = 'السائق';
-                          break;
-                        case AppMode.admin:
-                          label = 'المدير';
-                          break;
-                        case AppMode.ops:
-                          label = 'لوحة التحكم';
-                          break;
-                      }
-                      return ButtonSegment<AppMode>(
-                        value: m,
-                        label: Text(label),
-                      );
-                    }).toList(),
-                    selected: {state.mode},
-                    onSelectionChanged: (selection) {
-                      if (selection.first != state.mode) {
-                        cubit.changeMode(selection.first);
-                      }
-                    },
                   ),
                 ],
               );
             },
           ),
-        ),
-      ],
-    );
-  }
-}
-
-class _SettingsHeader extends StatelessWidget {
-  const _SettingsHeader();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('الإعدادات', style: Theme.of(context).textTheme.headlineSmall),
-        const SizedBox(height: AppSpacing.xSmall),
-        Text(
-          'إعدادات عامة للوحة التشغيل.',
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
         ),
       ],
     );

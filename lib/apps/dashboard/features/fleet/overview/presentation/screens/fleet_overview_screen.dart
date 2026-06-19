@@ -15,6 +15,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentatio
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
 
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
 class FleetOverviewScreen extends StatefulWidget {
@@ -47,11 +48,14 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
     return BlocBuilder<FleetOverviewCubit, FleetOverviewState>(
       builder: (context, state) {
         if (state is FleetOverviewLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const DashboardLoading();
         }
 
         if (state is FleetOverviewError) {
-          return Center(child: Text('Error: ${state.message}'));
+          return DashboardErrorState(
+            message: state.message,
+            onRetry: () => context.read<FleetOverviewCubit>().loadWorkspace(),
+          );
         }
 
         if (state is FleetOverviewLoaded) {
@@ -120,7 +124,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
           );
         }
 
-        return const Center(child: CircularProgressIndicator());
+        return const DashboardLoading();
       },
     );
   }
