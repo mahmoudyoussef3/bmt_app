@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart' as intl;
 
+import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/colors.dart';
@@ -10,8 +11,11 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/user_subscription.dart';
+import '../../plans/presentation/cubit/subscription_plans_cubit.dart';
+import '../../plans/presentation/screens/subscription_plans_screen.dart';
 import '../cubit/subscriptions_cubit.dart';
 import '../cubit/subscriptions_state.dart';
+import '../widgets/subscriptions_analytics.dart';
 
 class SubscriptionsScreen extends StatelessWidget {
   const SubscriptionsScreen({super.key});
@@ -75,6 +79,17 @@ class SubscriptionsScreen extends StatelessWidget {
   }
 }
 
+void openPlansManagement(BuildContext context) {
+  Navigator.of(context).push(
+    MaterialPageRoute<void>(
+      builder: (_) => BlocProvider(
+        create: (_) => dashboardDi<SubscriptionPlansCubit>()..load(),
+        child: const Scaffold(body: SubscriptionPlansScreen()),
+      ),
+    ),
+  );
+}
+
 class _SubscriptionsListView extends StatelessWidget {
   final SubscriptionsLoaded state;
   final VoidCallback onCreate;
@@ -87,28 +102,40 @@ class _SubscriptionsListView extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
+        DashboardModuleHeader(
+          icon: Icons.workspace_premium_outlined,
+          title: 'الاشتراكات',
+          subtitle: 'تابع المشتركين والإيرادات وأدر باقات الاشتراك.',
+          actions: [
+            OutlinedButton.icon(
+              onPressed: () => openPlansManagement(context),
+              icon: const Icon(Icons.inventory_2_outlined),
+              label: const Text('إدارة الباقات'),
+            ),
+            FilledButton.icon(
+              onPressed: onCreate,
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('اشتراك جديد'),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        SubscriptionsAnalytics(subscriptions: state.subscriptions),
+        const SizedBox(height: AppSpacing.medium),
         AppCard(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  const Icon(Icons.workspace_premium_outlined, size: 40),
-                  const SizedBox(width: AppSpacing.medium),
                   Expanded(
                     child: Text(
-                      'الاشتراكات',
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      'قائمة المشتركين',
+                      style: Theme.of(context).textTheme.titleLarge,
                     ),
                   ),
                   Text(
                     '${_toArabicNumber(state.filteredSubscriptions.length)} اشتراك',
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  FilledButton.icon(
-                    onPressed: onCreate,
-                    icon: const Icon(Icons.add_rounded),
-                    label: const Text('اشتراك جديد'),
                   ),
                 ],
               ),
@@ -234,17 +261,19 @@ class _SubscriptionCard extends StatelessWidget {
             spacing: AppSpacing.large,
             runSpacing: AppSpacing.small,
             children: [
-              _Info(label: 'المسار', value: subscription.routeName),
-              _Info(
-                label: 'الجزء',
-                value:
-                    '${subscription.fromPointName} → ${subscription.toPointName}',
-              ),
-              _Info(label: 'نوع الاشتراك', value: subscription.type.label),
+              _Info(label: 'الباقة', value: subscription.routeName),
               _Info(label: 'السعر', value: _money(subscription)),
               _Info(
-                label: 'الرحلات المتبقية',
-                value: _toArabicNumber(subscription.remainingRides),
+                label: 'المدفوع',
+                value: _amount(subscription.paidAmount),
+              ),
+              _Info(
+                label: 'المتبقي',
+                value: _amount(subscription.remainingAmount),
+              ),
+              _Info(
+                label: 'الأيام المتبقية',
+                value: '${_toArabicNumber(subscription.remainingDays)} يوم',
               ),
               _Info(
                 label: 'المدة',
@@ -304,40 +333,23 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                 items: [
                   _InfoData('العميل', subscription.userName),
                   _InfoData('الهاتف', subscription.userPhone),
-                  _InfoData('رقم العميل', subscription.userId),
-                ],
-              ),
-              const Divider(height: AppSpacing.large),
-              _SectionTitle('بيانات الرحلة والمسار'),
-              _DetailsGrid(
-                items: [
-                  _InfoData('رقم الرحلة', subscription.tripId),
-                  _InfoData('رقم المسار', subscription.routeId),
-                  _InfoData('المسار', subscription.routeName),
-                  _InfoData(
-                    'الجزء',
-                    '${subscription.fromPointName} → ${subscription.toPointName}',
-                  ),
                 ],
               ),
               const Divider(height: AppSpacing.large),
               _SectionTitle('بيانات الاشتراك'),
               _DetailsGrid(
                 items: [
-                  _InfoData('نوع الاشتراك', subscription.type.label),
+                  _InfoData('الباقة', subscription.routeName),
                   _InfoData('السعر', _money(subscription)),
-                  _InfoData('حالة الدفع', _paymentLabel(subscription.status)),
+                  _InfoData('المدفوع', _amount(subscription.paidAmount)),
+                  _InfoData('المتبقي', _amount(subscription.remainingAmount)),
                   _InfoData(
-                    'إجمالي الرحلات',
-                    _toArabicNumber(subscription.totalRides),
+                    'عدد التجديدات',
+                    _toArabicNumber(subscription.renewalsCount),
                   ),
                   _InfoData(
-                    'الرحلات المستخدمة',
-                    _toArabicNumber(subscription.usedRides),
-                  ),
-                  _InfoData(
-                    'الرحلات المتبقية',
-                    _toArabicNumber(subscription.remainingRides),
+                    'الأيام المتبقية',
+                    '${_toArabicNumber(subscription.remainingDays)} يوم',
                   ),
                   _InfoData('تاريخ البداية', _date(subscription.startDate)),
                   _InfoData('تاريخ النهاية', _date(subscription.endDate)),
@@ -360,30 +372,13 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                 label: const Text('تجديد الاشتراك'),
               ),
               OutlinedButton.icon(
-                onPressed: () =>
-                    context.read<SubscriptionsCubit>().cancel(subscription.id),
-                icon: const Icon(Icons.cancel_outlined),
-                label: const Text('إلغاء الاشتراك'),
-              ),
-              OutlinedButton.icon(
-                onPressed: subscription.remainingRides == 0
+                onPressed: subscription.status == SubscriptionStatus.cancelled
                     ? null
-                    : () => context.read<SubscriptionsCubit>().markRideUsed(
+                    : () => context.read<SubscriptionsCubit>().cancel(
                         subscription.id,
                       ),
-                icon: const Icon(Icons.check_circle_outline),
-                label: const Text('تسجيل رحلة مستخدمة'),
-              ),
-              OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('عرض المدفوعات سيتم ربطه لاحقًا'),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.payments_outlined),
-                label: const Text('عرض المدفوعات'),
+                icon: const Icon(Icons.cancel_outlined),
+                label: const Text('إلغاء الاشتراك'),
               ),
             ],
           ),
@@ -406,40 +401,18 @@ class CreateSubscriptionScreen extends StatefulWidget {
 class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
   final _formKey = GlobalKey<FormState>();
   SubscriptionUserOption? _user;
-  SubscriptionTripOption? _trip;
-  SubscriptionPointOption? _fromPoint;
-  SubscriptionPointOption? _toPoint;
-  SubscriptionType? _type;
+  SubscriptionPlanOption? _plan;
   DateTime? _startDate;
 
-  SubscriptionPricingOption? get _pricing {
-    final trip = _trip;
-    final fromPoint = _fromPoint;
-    final toPoint = _toPoint;
-    final type = _type;
-    if (trip == null || fromPoint == null || toPoint == null || type == null) {
-      return null;
-    }
-    for (final pricing in trip.pricing) {
-      if (pricing.fromPointId == fromPoint.id &&
-          pricing.toPointId == toPoint.id &&
-          pricing.type == type) {
-        return pricing;
-      }
-    }
-    return null;
-  }
-
   DateTime? get _endDate {
-    final type = _type;
-    final startDate = _startDate;
-    if (type == null || startDate == null) return null;
-    return SubscriptionsCubit.endDateFor(type, startDate);
+    final plan = _plan;
+    final start = _startDate;
+    if (plan == null || start == null) return null;
+    return DateTime(start.year, start.month, start.day + plan.days);
   }
 
   @override
   Widget build(BuildContext context) {
-    final points = _trip?.points ?? const <SubscriptionPointOption>[];
     return Material(
       color: Theme.of(context).scaffoldBackgroundColor,
       child: SafeArea(
@@ -457,7 +430,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                 DashboardModuleHeader(
                   icon: Icons.workspace_premium_outlined,
                   title: 'إنشاء اشتراك',
-                  subtitle: 'اختر العميل والرحلة ونقاط المسار ونوع الاشتراك.',
+                  subtitle: 'اختر العميل والباقة وتاريخ البداية.',
                   actions: [
                     OutlinedButton.icon(
                       onPressed: Navigator.of(context).pop,
@@ -478,56 +451,13 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                         onChanged: (value) => setState(() => _user = value),
                       ),
                       const SizedBox(height: AppSpacing.medium),
-                      _Dropdown<SubscriptionTripOption>(
-                        label: 'اختر الرحلة',
-                        value: _trip,
-                        items: widget.options.trips,
-                        itemLabel: (trip) => trip.routeName,
-                        onChanged: (value) => setState(() {
-                          _trip = value;
-                          _fromPoint = null;
-                          _toPoint = null;
-                        }),
-                      ),
-                      const SizedBox(height: AppSpacing.medium),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _Dropdown<SubscriptionPointOption>(
-                              label: 'من نقطة',
-                              value: _fromPoint,
-                              items: points,
-                              itemLabel: (point) => point.name,
-                              onChanged: (value) =>
-                                  setState(() => _fromPoint = value),
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.medium),
-                          Expanded(
-                            child: _Dropdown<SubscriptionPointOption>(
-                              label: 'إلى نقطة',
-                              value: _toPoint,
-                              items: points
-                                  .where(
-                                    (point) =>
-                                        _fromPoint == null ||
-                                        point.order > _fromPoint!.order,
-                                  )
-                                  .toList(),
-                              itemLabel: (point) => point.name,
-                              onChanged: (value) =>
-                                  setState(() => _toPoint = value),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.medium),
-                      _Dropdown<SubscriptionType>(
-                        label: 'نوع الاشتراك',
-                        value: _type,
-                        items: SubscriptionType.values,
-                        itemLabel: (type) => type.label,
-                        onChanged: (value) => setState(() => _type = value),
+                      _Dropdown<SubscriptionPlanOption>(
+                        label: 'اختر الباقة',
+                        value: _plan,
+                        items: widget.options.plans,
+                        itemLabel: (plan) =>
+                            '${plan.name} - ${_toArabicNumber(plan.price)} ${plan.currency}',
+                        onChanged: (value) => setState(() => _plan = value),
                       ),
                       const SizedBox(height: AppSpacing.medium),
                       ListTile(
@@ -541,17 +471,15 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                       ),
                       const Divider(),
                       _Info(
-                        label: 'السعر من تسعير الرحلة',
-                        value: _pricing == null
-                            ? 'اختر الجزء ونوع الاشتراك'
-                            : '${_toArabicNumber(_pricing!.price)} ${_pricing!.currency}',
+                        label: 'سعر الباقة',
+                        value: _plan == null
+                            ? 'اختر الباقة'
+                            : '${_toArabicNumber(_plan!.price)} ${_plan!.currency}',
                       ),
                       const SizedBox(height: AppSpacing.small),
                       _Info(
                         label: 'تاريخ النهاية المحسوب',
-                        value: _endDate == null
-                            ? 'لم يحدد بعد'
-                            : _date(_endDate!),
+                        value: _endDate == null ? 'لم يحدد بعد' : _date(_endDate!),
                       ),
                     ],
                   ),
@@ -585,33 +513,15 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
 
   void _submit() {
     _formKey.currentState?.validate();
-    final missing =
-        _user == null ||
-        _trip == null ||
-        _fromPoint == null ||
-        _toPoint == null ||
-        _type == null ||
-        _startDate == null;
-    if (missing) {
+    if (_user == null || _plan == null || _startDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('أكمل بيانات الاشتراك المطلوبة')),
       );
       return;
     }
-    if (_pricing == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('السعر يجب أن يكون مسجلًا في تسعير الرحلة'),
-        ),
-      );
-      return;
-    }
     context.read<SubscriptionsCubit>().createManualSubscription(
       user: _user!,
-      trip: _trip!,
-      fromPoint: _fromPoint!,
-      toPoint: _toPoint!,
-      type: _type!,
+      plan: _plan!,
       startDate: _startDate!,
     );
   }
@@ -746,15 +656,11 @@ class _SubscriptionStatusChip extends StatelessWidget {
   }
 }
 
-String _paymentLabel(SubscriptionStatus status) {
-  return status == SubscriptionStatus.pendingPayment
-      ? 'بانتظار الدفع'
-      : 'لا يوجد دفع إلكتروني';
-}
-
 String _money(UserSubscription subscription) {
   return '${_toArabicNumber(subscription.price)} ${subscription.currency}';
 }
+
+String _amount(double value) => '${_toArabicNumber(value)} ج.م';
 
 String _date(DateTime value) {
   return _toArabicDigits(intl.DateFormat('yyyy/MM/dd').format(value));

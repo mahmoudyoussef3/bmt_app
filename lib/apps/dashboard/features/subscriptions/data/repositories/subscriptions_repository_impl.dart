@@ -1,6 +1,6 @@
 import '../../domain/entities/user_subscription.dart';
 import '../../domain/repositories/subscriptions_repository.dart';
-import '../datasources/mock_subscriptions_datasource.dart';
+import '../datasources/subscriptions_datasource.dart';
 
 class SubscriptionsRepositoryImpl implements SubscriptionsRepository {
   final SubscriptionsDatasource _datasource;

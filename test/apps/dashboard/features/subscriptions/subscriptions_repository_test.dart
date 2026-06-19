@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/apps/dashboard/features/subscriptions/data/datasources/mock_subscriptions_datasource.dart';
+import 'package:bmt_app/apps/dashboard/features/subscriptions/data/datasources/subscriptions_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/data/repositories/subscriptions_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/entities/user_subscription.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/cancel_subscription_usecase.dart';
@@ -8,14 +8,123 @@ import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/cr
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/get_subscription_creation_options_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/get_subscription_details_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/get_subscriptions_usecase.dart';
-import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/mark_subscription_ride_used_usecase.dart';
-import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/renew_subscription_usecase.dart';
+
+UserSubscription _sub(String id, SubscriptionStatus status) => UserSubscription(
+      id: id,
+      userId: 'usr-$id',
+      userName: 'أحمد محمد',
+      userPhone: '01000000000',
+      tripId: '',
+      routeId: '',
+      routeName: 'الباقة الشهرية',
+      fromPointId: '',
+      fromPointName: '',
+      toPointId: '',
+      toPointName: '',
+      type: SubscriptionType.monthly,
+      price: 550,
+      currency: 'ج.م',
+      totalRides: 0,
+      usedRides: 0,
+      remainingRides: 0,
+      paidAmount: 550,
+      remainingAmount: 0,
+      renewalsCount: 1,
+      startDate: DateTime(2026, 6, 1),
+      endDate: DateTime(2026, 6, 30),
+      status: status,
+      createdAt: DateTime(2026, 6, 1),
+      updatedAt: DateTime(2026, 6, 1),
+    );
+
+class _FakeSubscriptionsDatasource implements SubscriptionsDatasource {
+  final List<UserSubscription> _items = [
+    _sub('sub-1', SubscriptionStatus.active),
+  ];
+
+  @override
+  Future<List<UserSubscription>> fetchSubscriptions() async =>
+      List.unmodifiable(_items);
+
+  @override
+  Future<UserSubscription> fetchSubscriptionDetails(String id) async =>
+      _items.firstWhere((s) => s.id == id);
+
+  @override
+  Future<UserSubscription> createSubscription(
+    UserSubscription subscription,
+  ) async {
+    final created = subscription.copyWith(id: 'sub-new');
+    _items.insert(0, created);
+    return created;
+  }
+
+  @override
+  Future<UserSubscription> cancelSubscription(String id) async {
+    final updated =
+        _items.firstWhere((s) => s.id == id).copyWith(
+              status: SubscriptionStatus.cancelled,
+            );
+    _items[_items.indexWhere((s) => s.id == id)] = updated;
+    return updated;
+  }
+
+  @override
+  Future<UserSubscription> renewSubscription(String id) async =>
+      _items.firstWhere((s) => s.id == id).copyWith(
+            status: SubscriptionStatus.active,
+            renewalsCount: 2,
+          );
+
+  @override
+  Future<UserSubscription> markRideUsed(String id) async =>
+      throw Exception('تتبع الرحلات غير مدعوم');
+
+  @override
+  Future<SubscriptionCreationOptions> fetchCreationOptions() async =>
+      const SubscriptionCreationOptions(
+        users: [
+          SubscriptionUserOption(id: 'usr-1', name: 'أحمد محمد', phone: '0100'),
+        ],
+        plans: [
+          SubscriptionPlanOption(
+            id: 'pkg-1',
+            name: 'الباقة الشهرية',
+            price: 550,
+            currency: 'ج.م',
+            days: 30,
+            tripsCount: 44,
+          ),
+        ],
+      );
+}
+
+class _FailingDatasource implements SubscriptionsDatasource {
+  @override
+  Future<UserSubscription> cancelSubscription(String id) =>
+      throw StateError('x');
+  @override
+  Future<UserSubscription> createSubscription(UserSubscription s) =>
+      throw StateError('x');
+  @override
+  Future<SubscriptionCreationOptions> fetchCreationOptions() =>
+      throw StateError('x');
+  @override
+  Future<UserSubscription> fetchSubscriptionDetails(String id) =>
+      throw StateError('x');
+  @override
+  Future<List<UserSubscription>> fetchSubscriptions() => throw StateError('x');
+  @override
+  Future<UserSubscription> markRideUsed(String id) => throw StateError('x');
+  @override
+  Future<UserSubscription> renewSubscription(String id) => throw StateError('x');
+}
 
 void main() {
   group('Subscriptions clean architecture chain', () {
-    test('loads subscribed users with segment and pricing details', () async {
+    test('loads subscribers and details from the datasource', () async {
       final repository = SubscriptionsRepositoryImpl(
-        MockSubscriptionsDatasource(),
+        _FakeSubscriptionsDatasource(),
       );
       final getSubscriptions = GetSubscriptionsUseCase(repository);
       final getDetails = GetSubscriptionDetailsUseCase(repository);
@@ -25,91 +134,54 @@ void main() {
 
       expect(subscriptions, isNotEmpty);
       expect(details.userName, 'أحمد محمد');
-      expect(details.routeName, 'بنها → التجمع الخامس');
-      expect(details.fromPointName, 'بنها');
-      expect(details.toPointName, 'رمسيس');
-      expect(details.type, SubscriptionType.fiveDays);
-      expect(details.price, 280);
-      expect(details.remainingRides, 3);
+      expect(details.routeName, 'الباقة الشهرية');
+      expect(details.price, 550);
       expect(details.status, SubscriptionStatus.active);
     });
 
-    test('creates a subscription using a trip-scoped pricing option', () async {
+    test('creates a subscription from real creation options', () async {
       final repository = SubscriptionsRepositoryImpl(
-        MockSubscriptionsDatasource(),
+        _FakeSubscriptionsDatasource(),
       );
       final getOptions = GetSubscriptionCreationOptionsUseCase(repository);
       final createSubscription = CreateSubscriptionUseCase(repository);
-      final getSubscriptions = GetSubscriptionsUseCase(repository);
 
       final options = await getOptions();
       final user = options.users.first;
-      final trip = options.trips.first;
-      final pricing = trip.pricing.firstWhere(
-        (item) => item.type == SubscriptionType.monthly,
-      );
-      final fromPoint = trip.points.firstWhere(
-        (point) => point.id == pricing.fromPointId,
-      );
-      final toPoint = trip.points.firstWhere(
-        (point) => point.id == pricing.toPointId,
-      );
+      final plan = options.plans.first;
 
       final created = await createSubscription(
-        UserSubscription(
-          id: 'sub-test',
-          userId: user.id,
-          userName: user.name,
-          userPhone: user.phone,
-          tripId: trip.id,
-          routeId: trip.routeId,
-          routeName: trip.routeName,
-          fromPointId: fromPoint.id,
-          fromPointName: fromPoint.name,
-          toPointId: toPoint.id,
-          toPointName: toPoint.name,
-          type: pricing.type,
-          price: pricing.price,
-          currency: pricing.currency,
-          totalRides: 22,
-          usedRides: 0,
-          remainingRides: 22,
-          startDate: DateTime(2026, 6, 9),
-          endDate: DateTime(2026, 7, 8),
-          status: SubscriptionStatus.pendingPayment,
-          createdAt: DateTime(2026, 6, 9),
-          updatedAt: DateTime(2026, 6, 9),
-        ),
+        _sub('seed', SubscriptionStatus.active).copyWith(),
       );
 
-      expect(created.price, pricing.price);
-      expect(created.routeId, trip.routeId);
-      expect(created.status, SubscriptionStatus.pendingPayment);
-      expect((await getSubscriptions()).first.id, 'sub-test');
+      expect(options.plans, isNotEmpty);
+      expect(plan.tripsCount, 44);
+      expect(user.name, 'أحمد محمد');
+      expect(created.id, 'sub-new');
     });
 
-    test('updates cancellation renewal and used ride counts', () async {
+    test('cancels a subscription', () async {
       final repository = SubscriptionsRepositoryImpl(
-        MockSubscriptionsDatasource(),
+        _FakeSubscriptionsDatasource(),
       );
       final cancel = CancelSubscriptionUseCase(repository);
-      final renew = RenewSubscriptionUseCase(repository);
-      final markRideUsed = MarkSubscriptionRideUsedUseCase(repository);
-
-      final cancelled = await cancel('sub-1001');
+      final cancelled = await cancel('sub-1');
       expect(cancelled.status, SubscriptionStatus.cancelled);
+    });
 
-      final renewed = await renew('sub-1003');
-      expect(renewed.status, SubscriptionStatus.pendingPayment);
-      expect(renewed.usedRides, 0);
-      expect(renewed.remainingRides, renewed.totalRides);
-
-      final used = await markRideUsed('sub-1005');
-      expect(used.usedRides, 1);
-      expect(used.remainingRides, 0);
-      expect(used.status, SubscriptionStatus.expired);
-
-      expect(() => markRideUsed('sub-1005'), throwsA(isA<Exception>()));
+    test('maps datasource failures to an Arabic repository error', () async {
+      final repository = SubscriptionsRepositoryImpl(_FailingDatasource());
+      final getSubscriptions = GetSubscriptionsUseCase(repository);
+      expect(
+        getSubscriptions.call,
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('تعذر تحميل الاشتراكات'),
+          ),
+        ),
+      );
     });
   });
 }

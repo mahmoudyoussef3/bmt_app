@@ -33,6 +33,11 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
+  Future<List<RevenueTrendPoint>> getRevenueTrend() async {
+    return _datasource.getRevenueTrend();
+  }
+
+  @override
   Future<void> reviewReceipt(String id, ReceiptReviewStatus action, {String? notes}) async {
     _datasource.reviewReceipt(id, action, notes: notes);
   }

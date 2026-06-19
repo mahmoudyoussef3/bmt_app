@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_paym
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_receipt_reviews_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_refund_requests_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_revenue_metrics_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_revenue_trend_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_subscriptions_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/process_refund_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/review_receipt_usecase.dart';
@@ -26,6 +27,7 @@ void main() {
         getRefundRequests: GetRefundRequestsUseCase(repository),
         getSubscriptions: GetFinanceSubscriptionsUseCase(repository),
         getRevenueMetrics: GetRevenueMetricsUseCase(repository),
+        getRevenueTrend: GetRevenueTrendUseCase(repository),
         reviewReceipt: ReviewReceiptUseCase(repository),
         processRefund: ProcessRefundUseCase(repository),
         cancelSubscription: CancelFinanceSubscriptionUseCase(repository),
@@ -156,6 +158,9 @@ class _MockFinanceRepository implements FinanceRepository {
 
   @override
   Future<RevenueMetrics> getRevenueMetrics() async => metrics;
+
+  @override
+  Future<List<RevenueTrendPoint>> getRevenueTrend() async => const [];
 
   @override
   Future<void> reviewReceipt(String id, ReceiptReviewStatus action, {String? notes}) async {

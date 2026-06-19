@@ -86,42 +86,37 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
 
   Future<void> createManualSubscription({
     required SubscriptionUserOption user,
-    required SubscriptionTripOption trip,
-    required SubscriptionPointOption fromPoint,
-    required SubscriptionPointOption toPoint,
-    required SubscriptionType type,
+    required SubscriptionPlanOption plan,
     required DateTime startDate,
   }) async {
     try {
-      final pricing = _pricingFor(
-        trip: trip,
-        fromPointId: fromPoint.id,
-        toPointId: toPoint.id,
-        type: type,
-      );
-      final totalRides = ridesFor(type);
       final now = DateTime.now();
+      final endDate = DateTime(
+        startDate.year,
+        startDate.month,
+        startDate.day + plan.days,
+      );
       final subscription = UserSubscription(
-        id: 'sub-${now.microsecondsSinceEpoch}',
+        id: '',
         userId: user.id,
         userName: user.name,
         userPhone: user.phone,
-        tripId: trip.id,
-        routeId: trip.routeId,
-        routeName: trip.routeName,
-        fromPointId: fromPoint.id,
-        fromPointName: fromPoint.name,
-        toPointId: toPoint.id,
-        toPointName: toPoint.name,
-        type: type,
-        price: pricing.price,
-        currency: pricing.currency,
-        totalRides: totalRides,
+        tripId: '',
+        routeId: '',
+        routeName: plan.name,
+        fromPointId: '',
+        fromPointName: '',
+        toPointId: '',
+        toPointName: '',
+        type: SubscriptionType.monthly,
+        price: plan.price,
+        currency: plan.currency,
+        totalRides: plan.tripsCount,
         usedRides: 0,
-        remainingRides: totalRides,
+        remainingRides: plan.tripsCount,
         startDate: startDate,
-        endDate: endDateFor(type, startDate),
-        status: SubscriptionStatus.pendingPayment,
+        endDate: endDate,
+        status: SubscriptionStatus.active,
         createdAt: now,
         updatedAt: now,
       );
@@ -215,53 +210,6 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
         creationOptions: current.creationOptions,
       ),
       _ => null,
-    };
-  }
-
-  SubscriptionPricingOption _pricingFor({
-    required SubscriptionTripOption trip,
-    required String fromPointId,
-    required String toPointId,
-    required SubscriptionType type,
-  }) {
-    return trip.pricing.firstWhere(
-      (pricing) =>
-          pricing.fromPointId == fromPointId &&
-          pricing.toPointId == toPointId &&
-          pricing.type == type,
-      orElse: () => throw StateError('لا يوجد سعر لهذا الجزء ونوع الاشتراك'),
-    );
-  }
-
-  static int ridesFor(SubscriptionType type) {
-    return switch (type) {
-      SubscriptionType.oneTime => 1,
-      SubscriptionType.fiveDays => 5,
-      SubscriptionType.tenDaysMonthly => 10,
-      SubscriptionType.monthly => 22,
-      SubscriptionType.threeMonths => 66,
-    };
-  }
-
-  static DateTime endDateFor(SubscriptionType type, DateTime startDate) {
-    return switch (type) {
-      SubscriptionType.oneTime => startDate,
-      SubscriptionType.fiveDays => startDate.add(const Duration(days: 4)),
-      SubscriptionType.tenDaysMonthly => DateTime(
-        startDate.year,
-        startDate.month + 1,
-        0,
-      ),
-      SubscriptionType.monthly => DateTime(
-        startDate.year,
-        startDate.month + 1,
-        startDate.day - 1,
-      ),
-      SubscriptionType.threeMonths => DateTime(
-        startDate.year,
-        startDate.month + 3,
-        startDate.day - 1,
-      ),
     };
   }
 }

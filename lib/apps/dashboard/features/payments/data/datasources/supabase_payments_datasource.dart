@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/finance_payment.dart';
 import '../models/finance_payment_model.dart';
-import 'mock_payments_datasource.dart';
+import 'payments_datasource.dart';
 
 class SupabasePaymentsDatasource implements PaymentsDatasource {
   const SupabasePaymentsDatasource(this._client);

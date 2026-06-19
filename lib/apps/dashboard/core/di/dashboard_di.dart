@@ -79,7 +79,7 @@ import '../../features/live_trips/domain/usecases/call_driver_usecase.dart';
 import '../../features/live_trips/domain/usecases/send_driver_message_usecase.dart';
 import '../../features/live_trips/domain/usecases/toggle_passenger_checkin_usecase.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
-import '../../features/payments/data/datasources/mock_payments_datasource.dart';
+import '../../features/payments/data/datasources/payments_datasource.dart';
 import '../../features/payments/data/datasources/supabase_payments_datasource.dart';
 import '../../features/payments/data/repositories/payments_repository_impl.dart';
 import '../../features/payments/domain/repositories/payments_repository.dart';
@@ -88,7 +88,7 @@ import '../../features/payments/domain/usecases/get_finance_payments_usecase.dar
 import '../../features/payments/domain/usecases/reassign_booking_usecase.dart';
 import '../../features/payments/domain/usecases/update_payment_review_status_usecase.dart';
 import '../../features/payments/presentation/cubit/payments_cubit.dart';
-import '../../features/payment_verification/data/datasources/mock_booking_payment_verification_datasource.dart';
+import '../../features/payment_verification/data/datasources/booking_payment_verification_datasource.dart';
 import '../../features/payment_verification/data/datasources/supabase_booking_payment_verification_datasource.dart';
 import '../../features/payment_verification/data/repositories/booking_payment_verification_repository_impl.dart';
 import '../../features/payment_verification/domain/repositories/booking_payment_verification_repository.dart';
@@ -115,7 +115,7 @@ import '../../features/routes/domain/usecases/get_route_geometry_usecase.dart';
 import '../../features/routes/presentation/cubit/routes_cubit.dart';
 import 'package:bmt_app/core/geo/geo_service.dart';
 import 'package:bmt_app/core/geo/ors_geo_service.dart';
-import '../../features/subscriptions/data/datasources/mock_subscriptions_datasource.dart';
+import '../../features/subscriptions/data/datasources/subscriptions_datasource.dart';
 import '../../features/subscriptions/data/datasources/supabase_subscriptions_datasource.dart';
 import '../../features/subscriptions/data/repositories/subscriptions_repository_impl.dart';
 import '../../features/subscriptions/domain/repositories/subscriptions_repository.dart';
@@ -127,6 +127,11 @@ import '../../features/subscriptions/domain/usecases/get_subscriptions_usecase.d
 import '../../features/subscriptions/domain/usecases/mark_subscription_ride_used_usecase.dart';
 import '../../features/subscriptions/domain/usecases/renew_subscription_usecase.dart';
 import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
+import '../../features/subscriptions/plans/data/datasources/subscription_plans_datasource.dart';
+import '../../features/subscriptions/plans/data/repositories/subscription_plans_repository_impl.dart';
+import '../../features/subscriptions/plans/domain/repositories/subscription_plans_repository.dart';
+import '../../features/subscriptions/plans/domain/usecases/subscription_plans_usecases.dart';
+import '../../features/subscriptions/plans/presentation/cubit/subscription_plans_cubit.dart';
 import '../../features/trips/trips_di.dart';
 // Mock vehicles removed
 import '../../features/tickets/data/datasources/supabase_tickets_datasource.dart';
@@ -147,12 +152,18 @@ import '../../features/finance/domain/usecases/get_payments_usecase.dart';
 import '../../features/finance/domain/usecases/get_receipt_reviews_usecase.dart';
 import '../../features/finance/domain/usecases/get_refund_requests_usecase.dart';
 import '../../features/finance/domain/usecases/get_revenue_metrics_usecase.dart';
+import '../../features/finance/domain/usecases/get_revenue_trend_usecase.dart';
 import '../../features/finance/domain/usecases/get_subscriptions_usecase.dart';
 import '../../features/finance/domain/usecases/process_refund_usecase.dart';
 import '../../features/finance/domain/usecases/review_receipt_usecase.dart';
 import '../../features/finance/data/datasources/finance_datasource.dart';
 import '../../features/finance/data/datasources/supabase_finance_datasource.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
+import '../../features/owner_overview/data/datasources/owner_overview_datasource.dart';
+import '../../features/owner_overview/data/repositories/owner_overview_repository_impl.dart';
+import '../../features/owner_overview/domain/repositories/owner_overview_repository.dart';
+import '../../features/owner_overview/domain/usecases/get_owner_overview_usecase.dart';
+import '../../features/owner_overview/presentation/cubit/owner_overview_cubit.dart';
 import '../../features/reports/data/datasources/reports_datasource.dart';
 import '../../features/reports/data/datasources/supabase_reports_datasource.dart';
 import '../../features/reports/data/repositories/reports_repository_impl.dart';
@@ -979,6 +990,56 @@ void registerDashboardDependencies() {
     );
   }
 
+  // Subscription Plans (packages) CRUD
+  if (!dashboardDi.isRegistered<SubscriptionPlansDatasource>()) {
+    dashboardDi.registerLazySingleton(
+      () => SubscriptionPlansDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<SubscriptionPlansRepository>()) {
+    dashboardDi.registerLazySingleton<SubscriptionPlansRepository>(
+      () => SubscriptionPlansRepositoryImpl(
+        dashboardDi<SubscriptionPlansDatasource>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetSubscriptionPlansUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetSubscriptionPlansUseCase(dashboardDi<SubscriptionPlansRepository>()),
+    );
+    dashboardDi.registerLazySingleton(
+      () => CreateSubscriptionPlanUseCase(
+        dashboardDi<SubscriptionPlansRepository>(),
+      ),
+    );
+    dashboardDi.registerLazySingleton(
+      () => UpdateSubscriptionPlanUseCase(
+        dashboardDi<SubscriptionPlansRepository>(),
+      ),
+    );
+    dashboardDi.registerLazySingleton(
+      () => SetSubscriptionPlanStatusUseCase(
+        dashboardDi<SubscriptionPlansRepository>(),
+      ),
+    );
+    dashboardDi.registerLazySingleton(
+      () => DeleteSubscriptionPlanUseCase(
+        dashboardDi<SubscriptionPlansRepository>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<SubscriptionPlansCubit>()) {
+    dashboardDi.registerFactory(
+      () => SubscriptionPlansCubit(
+        getPlans: dashboardDi<GetSubscriptionPlansUseCase>(),
+        createPlan: dashboardDi<CreateSubscriptionPlanUseCase>(),
+        updatePlan: dashboardDi<UpdateSubscriptionPlanUseCase>(),
+        setStatus: dashboardDi<SetSubscriptionPlanStatusUseCase>(),
+        deletePlan: dashboardDi<DeleteSubscriptionPlanUseCase>(),
+      ),
+    );
+  }
+
   registerTripsDependencies(dashboardDi);
 
   // Mock vehicles registrations removed
@@ -1100,6 +1161,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<GetRevenueTrendUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetRevenueTrendUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<ReviewReceiptUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => ReviewReceiptUseCase(dashboardDi<FinanceRepository>()),
@@ -1126,10 +1193,33 @@ void registerDashboardDependencies() {
         getRefundRequests: dashboardDi<GetRefundRequestsUseCase>(),
         getSubscriptions: dashboardDi<GetFinanceSubscriptionsUseCase>(),
         getRevenueMetrics: dashboardDi<GetRevenueMetricsUseCase>(),
+        getRevenueTrend: dashboardDi<GetRevenueTrendUseCase>(),
         reviewReceipt: dashboardDi<ReviewReceiptUseCase>(),
         processRefund: dashboardDi<ProcessRefundUseCase>(),
         cancelSubscription: dashboardDi<CancelFinanceSubscriptionUseCase>(),
       ),
+    );
+  }
+
+  // Owner / Revenue Overview Registration
+  if (!dashboardDi.isRegistered<OwnerOverviewDatasource>()) {
+    dashboardDi.registerLazySingleton(
+      () => OwnerOverviewDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<OwnerOverviewRepository>()) {
+    dashboardDi.registerLazySingleton<OwnerOverviewRepository>(
+      () => OwnerOverviewRepositoryImpl(dashboardDi<OwnerOverviewDatasource>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetOwnerOverviewUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetOwnerOverviewUseCase(dashboardDi<OwnerOverviewRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<OwnerOverviewCubit>()) {
+    dashboardDi.registerFactory(
+      () => OwnerOverviewCubit(getOverview: dashboardDi<GetOwnerOverviewUseCase>()),
     );
   }
 

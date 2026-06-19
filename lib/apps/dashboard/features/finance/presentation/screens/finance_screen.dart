@@ -12,6 +12,7 @@ import 'package:bmt_app/core/widgets/empty_state.dart';
 import '../../domain/entities/finance_entities.dart';
 import '../cubit/finance_cubit.dart';
 import '../cubit/finance_state.dart';
+import '../widgets/finance_charts_section.dart';
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -1413,133 +1414,53 @@ class _ReceiptWorkspace extends StatelessWidget {
     );
   }
 
-  // Generates a mock visual card representing the bank receipt
+  // Shows the real uploaded receipt image; falls back to a clear empty state
+  // when no receipt has been uploaded or the image cannot be loaded.
   Widget _buildReceiptVisual(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final url = receipt.receiptUrl;
+    final hasImage = url.startsWith('http');
     return Container(
       width: 260,
       height: 420,
-      padding: const EdgeInsets.all(AppSpacing.medium),
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 8)],
+        border: Border.all(color: scheme.outlineVariant),
       ),
+      child: hasImage
+          ? InteractiveViewer(
+              child: Image.network(
+                url,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, progress) => progress == null
+                    ? child
+                    : const Center(child: CircularProgressIndicator()),
+                errorBuilder: (context, error, stack) =>
+                    _receiptPlaceholder(context, 'تعذّر تحميل صورة الإيصال'),
+              ),
+            )
+          : _receiptPlaceholder(context, 'لم يتم رفع إيصال لهذه العملية'),
+    );
+  }
+
+  Widget _receiptPlaceholder(BuildContext context, String message) {
+    final scheme = Theme.of(context).colorScheme;
+    return Center(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'instaPay',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppStatusColors.onSpecialContainer,
-                ),
-              ),
-              Icon(
-                Icons.qr_code,
-                color: AppStatusColors.onSpecialContainer,
-                size: 28,
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'معاملة دفع ناجحة',
-            style: TextStyle(
-              color: Color(0xFF10B981),
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
+          Icon(Icons.receipt_long_outlined,
+              size: 48, color: scheme.onSurfaceVariant),
+          const SizedBox(height: AppSpacing.small),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: AppSpacing.medium),
+            child: Text(
+              message,
+              textAlign: TextAlign.center,
+              style: TextStyle(color: scheme.onSurfaceVariant, fontSize: 12),
             ),
-            textAlign: TextAlign.center,
-          ),
-          const Divider(height: 24),
-          const SizedBox(height: 10),
-          const Text(
-            'المرسل إليه:',
-            style: TextStyle(
-              fontSize: 10,
-              color: AppStatusColors.onNeutralContainer,
-            ),
-          ),
-          const Text(
-            'شركة باصات النقل المتميز (BMT)',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'المرسل:',
-            style: TextStyle(
-              fontSize: 10,
-              color: AppStatusColors.onNeutralContainer,
-            ),
-          ),
-          Text(
-            receipt.clientName,
-            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 12),
-          const Text(
-            'رقم الحساب أو المحفظة:',
-            style: TextStyle(
-              fontSize: 10,
-              color: AppStatusColors.onNeutralContainer,
-            ),
-          ),
-          const Text('*** *** **8792', style: TextStyle(fontSize: 11)),
-          const SizedBox(height: 12),
-          const Text(
-            'رقم المعاملة الفريد (RRN):',
-            style: TextStyle(
-              fontSize: 10,
-              color: AppStatusColors.onNeutralContainer,
-            ),
-          ),
-          Text(
-            receipt.transactionId,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: AppStatusColors.onSpecialContainer,
-            ),
-          ),
-          const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: AppStatusColors.specialContainer,
-              borderRadius: BorderRadius.circular(6),
-            ),
-            child: Column(
-              children: [
-                const Text(
-                  'القيمة المحولة:',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: AppStatusColors.onSpecialContainer,
-                  ),
-                ),
-                Text(
-                  '${receipt.amount.toStringAsFixed(2)} EGP',
-                  style: const TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: AppStatusColors.onSpecialContainer,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          Text(
-            'تاريخ المعاملة: ${receipt.date.toString().substring(0, 16)}',
-            style: const TextStyle(
-              fontSize: 8,
-              color: AppStatusColors.onNeutralContainer,
-            ),
-            textAlign: TextAlign.center,
           ),
         ],
       ),
@@ -2252,343 +2173,12 @@ class _SubscriptionStatusBadge extends StatelessWidget {
 }
 
 // -------------------------------------------------------------
-// SECTION 5: REVENUE (الإيرادات)
+// SECTION 5: REVENUE (الإيرادات) — real-data charts
 // -------------------------------------------------------------
 class _RevenueSection extends StatelessWidget {
   final FinanceLoaded state;
   const _RevenueSection({required this.state});
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left Side: Charts & breakdowns
-          Expanded(
-            flex: 6,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'مخطط الإيرادات الأسبوعي',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'توضيح حركة المبيعات وتدفق الإيرادات اليومية في السبعة أيام الأخيرة.',
-                  style: TextStyle(
-                    color: scheme.onSurfaceVariant,
-                    fontSize: 11,
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.large),
-                // Simulated Chart Widget
-                Expanded(child: _RevenueChartWidget(payments: state.payments)),
-              ],
-            ),
-          ),
-          const VerticalDivider(width: 32),
-          // Right Side: Breakdown list
-          Expanded(
-            flex: 4,
-            child: ListView(
-              padding: EdgeInsets.zero,
-              children: [
-                const Text(
-                  'نسبة توزيع طرق الدفع',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                const SizedBox(height: AppSpacing.medium),
-                _MethodBreakdownItem(
-                  method: FinancePaymentMethod.instapay,
-                  payments: state.payments,
-                ),
-                _MethodBreakdownItem(
-                  method: FinancePaymentMethod.vodafoneCash,
-                  payments: state.payments,
-                ),
-                _MethodBreakdownItem(
-                  method: FinancePaymentMethod.card,
-                  payments: state.payments,
-                ),
-                _MethodBreakdownItem(
-                  method: FinancePaymentMethod.cash,
-                  payments: state.payments,
-                ),
-                const Divider(height: AppSpacing.large),
-                const Text(
-                  'ملخص مؤشرات الإيرادات',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                ),
-                const SizedBox(height: AppSpacing.medium),
-                _RevenueMetricSummaryRow(
-                  label: 'متوسط قيمة العملية',
-                  value:
-                      '${_calculateAverageTxnValue().toStringAsFixed(1)} ج.م',
-                ),
-                _RevenueMetricSummaryRow(
-                  label: 'إجمالي العمليات الناجحة',
-                  value:
-                      '${state.payments.where((p) => p.status == PaymentStatus.success).length} عملية',
-                ),
-                _RevenueMetricSummaryRow(
-                  label: 'المرتجعات المقبولة',
-                  value:
-                      '${state.payments.where((p) => p.status == PaymentStatus.refunded).length} عملية مستردة',
-                ),
-                _RevenueMetricSummaryRow(
-                  label: 'إيرادات الاشتراكات (مضمنة)',
-                  value:
-                      '${_calculateTotalSubscriptionsRevenue().toStringAsFixed(0)} ج.م',
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  double _calculateAverageTxnValue() {
-    final successPayments = state.payments
-        .where((p) => p.status == PaymentStatus.success)
-        .toList();
-    if (successPayments.isEmpty) return 0.0;
-    final total = successPayments.map((p) => p.amount).reduce((a, b) => a + b);
-    return total / successPayments.length;
-  }
-
-  double _calculateTotalSubscriptionsRevenue() {
-    return state.subscriptions
-        .where((s) => s.status == SubscriptionStatus.active)
-        .map((s) => s.amount)
-        .fold(0.0, (a, b) => a + b);
-  }
-}
-
-class _MethodBreakdownItem extends StatelessWidget {
-  final FinancePaymentMethod method;
-  final List<PaymentRecord> payments;
-
-  const _MethodBreakdownItem({required this.method, required this.payments});
-
-  @override
-  Widget build(BuildContext context) {
-    final successPayments = payments
-        .where((p) => p.status == PaymentStatus.success)
-        .toList();
-    final total = successPayments.isEmpty
-        ? 1.0
-        : successPayments.map((p) => p.amount).fold(0.0, (a, b) => a + b);
-
-    final methodTotal = successPayments
-        .where((p) => p.paymentMethod == method)
-        .map((p) => p.amount)
-        .fold(0.0, (a, b) => a + b);
-
-    final double percentage = methodTotal / total;
-
-    final color = switch (method) {
-      FinancePaymentMethod.instapay => AppStatusColors.onSpecialContainer,
-      FinancePaymentMethod.vodafoneCash => AppStatusColors.onErrorContainer,
-      FinancePaymentMethod.card => AppStatusColors.onInfoContainer,
-      FinancePaymentMethod.cash => AppStatusColors.onWarningContainer,
-    };
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                method.label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 12,
-                ),
-              ),
-              Text(
-                '${(percentage * 100).toStringAsFixed(1)}% (${methodTotal.toStringAsFixed(0)} ج.م)',
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          LinearProgressIndicator(
-            value: percentage,
-            color: color,
-            backgroundColor: color.withAlpha(20),
-            minHeight: 8,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RevenueMetricSummaryRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const _RevenueMetricSummaryRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.small),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 12,
-              color: AppStatusColors.onNeutralContainer,
-            ),
-          ),
-          Text(
-            value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// -------------------------------------------------------------
-// REVENUE CHART WIDGET (simulated bar/line graph)
-// -------------------------------------------------------------
-class _RevenueChartWidget extends StatelessWidget {
-  final List<PaymentRecord> payments;
-  const _RevenueChartWidget({required this.payments});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    // We will aggregate sales for the last 7 days
-    final now = DateTime.now();
-    final List<MapEntry<String, double>> dailyTotals = [];
-
-    final arabicDays = [
-      'الأحد',
-      'الإثنين',
-      'الثلاثاء',
-      'الأربعاء',
-      'الخميس',
-      'الجمعة',
-      'السبت',
-    ];
-
-    for (int i = 6; i >= 0; i--) {
-      final targetDate = now.subtract(Duration(days: i));
-      final dateStr = targetDate.toString().substring(0, 10);
-      final dayName = arabicDays[targetDate.weekday % 7];
-
-      final double total = payments
-          .where((p) {
-            return p.status == PaymentStatus.success &&
-                p.date.toString().substring(0, 10) == dateStr;
-          })
-          .fold(0.0, (sum, p) => sum + p.amount);
-
-      dailyTotals.add(MapEntry(dayName, total));
-    }
-
-    final double maxVal = dailyTotals
-        .map((e) => e.value)
-        .reduce((a, b) => a > b ? a : b);
-    final double maxCeiling = maxVal == 0
-        ? 1000
-        : ((maxVal / 500).ceil() * 500).toDouble();
-
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Y-Axis labels
-        Column(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(5, (index) {
-            final double value = maxCeiling * (4 - index) / 4;
-            return Text(
-              '${value.toStringAsFixed(0)} ج',
-              style: const TextStyle(
-                fontSize: 9,
-                color: AppStatusColors.onNeutralContainer,
-              ),
-            );
-          }),
-        ),
-        const SizedBox(width: 8),
-
-        // Bars Container
-        Expanded(
-          child: LayoutBuilder(
-            builder: (context, box) {
-              return Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: dailyTotals.map((entry) {
-                  final double barHeightPercentage = maxCeiling == 0
-                      ? 0.0
-                      : (entry.value / maxCeiling);
-
-                  return Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      // Tooltip value
-                      Text(
-                        entry.value.toStringAsFixed(0),
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.bold,
-                          color: scheme.primary,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // The visual bar
-                      Container(
-                        width: 24,
-                        height: (box.maxHeight - 35) * barHeightPercentage,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [scheme.primary, scheme.secondary],
-                            begin: Alignment.bottomCenter,
-                            end: Alignment.topCenter,
-                          ),
-                          borderRadius: const BorderRadius.only(
-                            topLeft: Radius.circular(6),
-                            topRight: Radius.circular(6),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      // Day Label
-                      Text(
-                        entry.key,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  );
-                }).toList(),
-              );
-            },
-          ),
-        ),
-      ],
-    );
-  }
+  Widget build(BuildContext context) => FinanceChartsSection(state: state);
 }

@@ -1,30 +1,9 @@
 import '../../domain/entities/booking_payment_verification.dart';
 import '../models/booking_payment_verification_model.dart';
+import 'booking_payment_verification_datasource.dart';
 
-abstract class BookingPaymentVerificationDatasource {
-  Future<List<BookingPaymentVerificationModel>> fetchQueue();
-
-  Future<BookingPaymentVerificationModel> approve(
-    String verificationId,
-    String note,
-  );
-
-  Future<BookingPaymentVerificationModel> reject(
-    String verificationId,
-    String note,
-  );
-
-  Future<BookingPaymentVerificationModel> requestReview(
-    String verificationId,
-    String note,
-  );
-
-  Future<BookingPaymentVerificationModel> addNote(
-    String verificationId,
-    String note,
-  );
-}
-
+/// Test double for the verification queue. Not registered in DI (the app uses
+/// the Supabase datasource); retained only for repository tests.
 class MockBookingPaymentVerificationDatasource
     implements BookingPaymentVerificationDatasource {
   final List<BookingPaymentVerificationModel> _items =

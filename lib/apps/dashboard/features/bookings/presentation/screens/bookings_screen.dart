@@ -14,6 +14,7 @@ import '../../domain/entities/operation_booking.dart';
 import '../cubit/bookings_cubit.dart';
 import '../cubit/bookings_state.dart';
 import '../models/booking_filters.dart';
+import '../widgets/bookings_analytics.dart';
 
 class BookingsScreen extends StatelessWidget {
   const BookingsScreen({super.key});
@@ -63,6 +64,8 @@ class _BookingsLoadedView extends StatelessWidget {
                   _Header(total: state.bookings.length),
                   const SizedBox(height: AppSpacing.medium),
                   _SummaryCards(state: state),
+                  const SizedBox(height: AppSpacing.medium),
+                  BookingsAnalytics(bookings: state.bookings),
                   const SizedBox(height: AppSpacing.medium),
                   _BookingsToolbar(state: state),
                   const SizedBox(height: AppSpacing.medium),

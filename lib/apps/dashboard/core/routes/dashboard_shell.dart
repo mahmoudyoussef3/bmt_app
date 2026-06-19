@@ -18,6 +18,10 @@ import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
 import '../../features/finance/presentation/screens/finance_screen.dart';
+import '../../features/owner_overview/presentation/cubit/owner_overview_cubit.dart';
+import '../../features/owner_overview/presentation/screens/owner_overview_screen.dart';
+import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
+import '../../features/subscriptions/presentation/screens/subscriptions_screen.dart';
 import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
 import '../../features/payment_verification/presentation/screens/payment_verification_screen.dart';
 import '../../features/permissions/presentation/screens/permissions_screen.dart';
@@ -148,6 +152,14 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.description_outlined,
       selectedIcon: Icons.description_rounded,
       permission: DashboardPermission.reports,
+      group: _navFinance,
+    ),
+    _DashboardNavItem(
+      label: 'نظرة المالك',
+      route: DashboardRoutes.ownerOverview,
+      icon: Icons.insights_outlined,
+      selectedIcon: Icons.insights_rounded,
+      permission: DashboardPermission.ownerOverview,
       group: _navFinance,
     ),
     _DashboardNavItem(
@@ -330,8 +342,12 @@ class _DashboardShellState extends State<DashboardShell> {
       ),
       DashboardRoutes.users => _workspace('users', const UsersScreen()),
       DashboardRoutes.subscriptions => BlocProvider(
-        create: (_) => dashboardDi<FinanceCubit>()..load()..selectSection(3),
-        child: const FinanceScreen(),
+        create: (_) => dashboardDi<SubscriptionsCubit>()..load(),
+        child: const SubscriptionsScreen(),
+      ),
+      DashboardRoutes.ownerOverview => BlocProvider(
+        create: (_) => dashboardDi<OwnerOverviewCubit>()..load(),
+        child: const OwnerOverviewScreen(),
       ),
       DashboardRoutes.payments => BlocProvider(
         create: (_) => dashboardDi<FinanceCubit>()..load(),

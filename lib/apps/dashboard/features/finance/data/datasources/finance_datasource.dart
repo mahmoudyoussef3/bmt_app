@@ -6,6 +6,7 @@ abstract class FinanceDatasource {
   Future<List<RefundRequest>> getRefundRequests();
   Future<List<SubscriptionRecord>> getSubscriptions();
   Future<RevenueMetrics> getRevenueMetrics();
+  Future<List<RevenueTrendPoint>> getRevenueTrend();
   Future<void> reviewReceipt(String id, ReceiptReviewStatus action, {String? notes});
   Future<void> processRefund(String id, RefundStatus action);
   Future<void> cancelSubscription(String id);

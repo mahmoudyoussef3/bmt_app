@@ -46,6 +46,11 @@ class UserSubscription {
   final int usedRides;
   final int remainingRides;
 
+  // Real financial fields from the `subscriptions` table.
+  final double paidAmount;
+  final double remainingAmount;
+  final int renewalsCount;
+
   final DateTime startDate;
   final DateTime endDate;
 
@@ -53,6 +58,13 @@ class UserSubscription {
 
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  /// Days left until [endDate] (never negative). Real, derived value used in
+  /// place of a ride count, which the backend does not track.
+  int get remainingDays {
+    final diff = endDate.difference(DateTime.now()).inDays;
+    return diff < 0 ? 0 : diff;
+  }
 
   const UserSubscription({
     required this.id,
@@ -72,6 +84,9 @@ class UserSubscription {
     required this.totalRides,
     required this.usedRides,
     required this.remainingRides,
+    this.paidAmount = 0,
+    this.remainingAmount = 0,
+    this.renewalsCount = 0,
     required this.startDate,
     required this.endDate,
     required this.status,
@@ -97,6 +112,9 @@ class UserSubscription {
     int? totalRides,
     int? usedRides,
     int? remainingRides,
+    double? paidAmount,
+    double? remainingAmount,
+    int? renewalsCount,
     DateTime? startDate,
     DateTime? endDate,
     SubscriptionStatus? status,
@@ -121,6 +139,9 @@ class UserSubscription {
       totalRides: totalRides ?? this.totalRides,
       usedRides: usedRides ?? this.usedRides,
       remainingRides: remainingRides ?? this.remainingRides,
+      paidAmount: paidAmount ?? this.paidAmount,
+      remainingAmount: remainingAmount ?? this.remainingAmount,
+      renewalsCount: renewalsCount ?? this.renewalsCount,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       status: status ?? this.status,
@@ -142,53 +163,28 @@ class SubscriptionUserOption {
   });
 }
 
-class SubscriptionTripOption {
-  final String id;
-  final String routeId;
-  final String routeName;
-  final List<SubscriptionPointOption> points;
-  final List<SubscriptionPricingOption> pricing;
-
-  const SubscriptionTripOption({
-    required this.id,
-    required this.routeId,
-    required this.routeName,
-    required this.points,
-    required this.pricing,
-  });
-}
-
-class SubscriptionPointOption {
+/// A real subscription plan, sourced from the `packages` table.
+class SubscriptionPlanOption {
   final String id;
   final String name;
-  final int order;
-
-  const SubscriptionPointOption({
-    required this.id,
-    required this.name,
-    required this.order,
-  });
-}
-
-class SubscriptionPricingOption {
-  final String fromPointId;
-  final String toPointId;
-  final SubscriptionType type;
   final double price;
   final String currency;
+  final int days;
+  final int tripsCount;
 
-  const SubscriptionPricingOption({
-    required this.fromPointId,
-    required this.toPointId,
-    required this.type,
+  const SubscriptionPlanOption({
+    required this.id,
+    required this.name,
     required this.price,
     required this.currency,
+    required this.days,
+    required this.tripsCount,
   });
 }
 
 class SubscriptionCreationOptions {
   final List<SubscriptionUserOption> users;
-  final List<SubscriptionTripOption> trips;
+  final List<SubscriptionPlanOption> plans;
 
-  const SubscriptionCreationOptions({required this.users, required this.trips});
+  const SubscriptionCreationOptions({required this.users, required this.plans});
 }

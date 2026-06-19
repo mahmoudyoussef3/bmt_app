@@ -1,6 +1,6 @@
 import '../../domain/entities/finance_payment.dart';
 import '../../domain/repositories/payments_repository.dart';
-import '../datasources/mock_payments_datasource.dart';
+import '../datasources/payments_datasource.dart';
 
 class PaymentsRepositoryImpl implements PaymentsRepository {
   final PaymentsDatasource _datasource;

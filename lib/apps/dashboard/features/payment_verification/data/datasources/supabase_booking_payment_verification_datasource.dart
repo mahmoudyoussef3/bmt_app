@@ -2,7 +2,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/booking_payment_verification.dart';
 import '../models/booking_payment_verification_model.dart';
-import 'mock_booking_payment_verification_datasource.dart';
+import 'booking_payment_verification_datasource.dart';
 
 class SupabaseBookingPaymentVerificationDatasource
     implements BookingPaymentVerificationDatasource {

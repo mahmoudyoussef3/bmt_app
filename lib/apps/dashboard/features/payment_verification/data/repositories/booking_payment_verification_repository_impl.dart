@@ -1,6 +1,6 @@
 import '../../domain/entities/booking_payment_verification.dart';
 import '../../domain/repositories/booking_payment_verification_repository.dart';
-import '../datasources/mock_booking_payment_verification_datasource.dart';
+import '../datasources/booking_payment_verification_datasource.dart';
 
 class BookingPaymentVerificationRepositoryImpl
     implements BookingPaymentVerificationRepository {

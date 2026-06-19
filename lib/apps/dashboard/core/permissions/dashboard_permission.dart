@@ -15,6 +15,7 @@ enum DashboardPermission {
   paymentVerification,
   tickets,
   reports,
+  ownerOverview,
   settings,
   permissions,
 }

@@ -6,6 +6,7 @@ import '../../domain/usecases/get_payments_usecase.dart';
 import '../../domain/usecases/get_receipt_reviews_usecase.dart';
 import '../../domain/usecases/get_refund_requests_usecase.dart';
 import '../../domain/usecases/get_revenue_metrics_usecase.dart';
+import '../../domain/usecases/get_revenue_trend_usecase.dart';
 import '../../domain/usecases/get_subscriptions_usecase.dart';
 import '../../domain/usecases/process_refund_usecase.dart';
 import '../../domain/usecases/review_receipt_usecase.dart';
@@ -17,6 +18,7 @@ class FinanceCubit extends Cubit<FinanceState> {
   final GetRefundRequestsUseCase _getRefundRequests;
   final GetFinanceSubscriptionsUseCase _getSubscriptions;
   final GetRevenueMetricsUseCase _getRevenueMetrics;
+  final GetRevenueTrendUseCase _getRevenueTrend;
   final ReviewReceiptUseCase _reviewReceipt;
   final ProcessRefundUseCase _processRefund;
   final CancelFinanceSubscriptionUseCase _cancelSubscription;
@@ -27,6 +29,7 @@ class FinanceCubit extends Cubit<FinanceState> {
     required GetRefundRequestsUseCase getRefundRequests,
     required GetFinanceSubscriptionsUseCase getSubscriptions,
     required GetRevenueMetricsUseCase getRevenueMetrics,
+    required GetRevenueTrendUseCase getRevenueTrend,
     required ReviewReceiptUseCase reviewReceipt,
     required ProcessRefundUseCase processRefund,
     required CancelFinanceSubscriptionUseCase cancelSubscription,
@@ -35,6 +38,7 @@ class FinanceCubit extends Cubit<FinanceState> {
         _getRefundRequests = getRefundRequests,
         _getSubscriptions = getSubscriptions,
         _getRevenueMetrics = getRevenueMetrics,
+        _getRevenueTrend = getRevenueTrend,
         _reviewReceipt = reviewReceipt,
         _processRefund = processRefund,
         _cancelSubscription = cancelSubscription,
@@ -48,6 +52,7 @@ class FinanceCubit extends Cubit<FinanceState> {
       final refunds = await _getRefundRequests();
       final subscriptions = await _getSubscriptions();
       final metrics = await _getRevenueMetrics();
+      final revenueTrend = await _getRevenueTrend();
 
       // Find first pending receipt review to pre-select it
       final firstPendingReceipt = receipts.cast<ReceiptReview?>().firstWhere(
@@ -67,6 +72,7 @@ class FinanceCubit extends Cubit<FinanceState> {
         refundRequests: refunds,
         subscriptions: subscriptions,
         metrics: metrics,
+        revenueTrend: revenueTrend,
         selectedPaymentId: payments.isNotEmpty ? payments.first.id : null,
         selectedReceiptId: firstPendingReceipt?.id,
         selectedRefundId: firstPendingRefund?.id,

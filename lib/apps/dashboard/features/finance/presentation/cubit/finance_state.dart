@@ -19,6 +19,7 @@ class FinanceLoaded extends FinanceState {
   final List<RefundRequest> refundRequests;
   final List<SubscriptionRecord> subscriptions;
   final RevenueMetrics metrics;
+  final List<RevenueTrendPoint> revenueTrend;
 
   final int selectedSectionIndex; // 0: المدفوعات, 1: طلبات المراجعة, 2: المرتجعات, 3: الاشتراكات, 4: الإيرادات
   final String? selectedPaymentId;
@@ -44,6 +45,7 @@ class FinanceLoaded extends FinanceState {
     required this.refundRequests,
     required this.subscriptions,
     required this.metrics,
+    this.revenueTrend = const [],
     this.selectedSectionIndex = 0,
     this.selectedPaymentId,
     this.selectedReceiptId,
@@ -93,12 +95,45 @@ class FinanceLoaded extends FinanceState {
     );
   }
 
+  /// Realised revenue (everything except cancelled) grouped by payment method.
+  Map<FinancePaymentMethod, double> get revenueByMethod {
+    final map = <FinancePaymentMethod, double>{};
+    for (final p in payments) {
+      if (p.status == PaymentStatus.cancelled) continue;
+      map[p.paymentMethod] = (map[p.paymentMethod] ?? 0) + p.amount;
+    }
+    return map;
+  }
+
+  /// Amount grouped by payment status (paid / pending / refunded / cancelled).
+  Map<PaymentStatus, double> get amountByStatus {
+    final map = <PaymentStatus, double>{};
+    for (final p in payments) {
+      map[p.status] = (map[p.status] ?? 0) + p.amount;
+    }
+    return map;
+  }
+
+  /// Top routes by realised revenue (descending), capped to [limit].
+  List<MapEntry<String, double>> revenueByRoute([int limit = 6]) {
+    final map = <String, double>{};
+    for (final p in payments) {
+      if (p.status == PaymentStatus.cancelled) continue;
+      final route = p.tripCode.isEmpty ? 'غير محدد' : p.tripCode;
+      map[route] = (map[route] ?? 0) + p.amount;
+    }
+    final entries = map.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return entries.take(limit).toList();
+  }
+
   FinanceLoaded copyWith({
     List<PaymentRecord>? payments,
     List<ReceiptReview>? receiptReviews,
     List<RefundRequest>? refundRequests,
     List<SubscriptionRecord>? subscriptions,
     RevenueMetrics? metrics,
+    List<RevenueTrendPoint>? revenueTrend,
     int? selectedSectionIndex,
     String? selectedPaymentId,
     String? selectedReceiptId,
@@ -131,6 +166,7 @@ class FinanceLoaded extends FinanceState {
       refundRequests: refundRequests ?? this.refundRequests,
       subscriptions: subscriptions ?? this.subscriptions,
       metrics: metrics ?? this.metrics,
+      revenueTrend: revenueTrend ?? this.revenueTrend,
       selectedSectionIndex: selectedSectionIndex ?? this.selectedSectionIndex,
       selectedPaymentId: clearPaymentSelection ? null : (selectedPaymentId ?? this.selectedPaymentId),
       selectedReceiptId: clearReceiptSelection ? null : (selectedReceiptId ?? this.selectedReceiptId),

@@ -226,6 +226,19 @@ class SubscriptionRecord {
   }
 }
 
+/// A single day on the revenue trend line, sourced from `revenue_daily_view`.
+class RevenueTrendPoint {
+  final DateTime date;
+  final double amount;
+  final int bookings;
+
+  const RevenueTrendPoint({
+    required this.date,
+    required this.amount,
+    required this.bookings,
+  });
+}
+
 class RevenueMetrics {
   final double todayRevenue;
   final double weeklyRevenue;
