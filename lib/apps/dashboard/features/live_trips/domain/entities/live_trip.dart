@@ -73,6 +73,25 @@ extension LiveTripAlertTypeX on LiveTripAlertType {
   };
 }
 
+class VehiclePosition {
+  const VehiclePosition({
+    required this.latitude,
+    required this.longitude,
+    this.heading,
+    this.speed,
+    required this.updatedAt,
+  });
+
+  final double latitude;
+  final double longitude;
+  final double? heading;
+  final double? speed; // m/s from Geolocator
+  final DateTime updatedAt;
+
+  bool get isMoving => speed != null && speed! > 0.5;
+  bool get isStale => DateTime.now().difference(updatedAt).inMinutes > 2;
+}
+
 class LiveRoutePoint {
   const LiveRoutePoint({
     required this.id,
@@ -228,6 +247,7 @@ class LiveTrip {
     required this.passengers,
     this.actualStartTime,
     this.expectedArrivalTime,
+    this.vehiclePosition,
   });
 
   final String id;
@@ -260,6 +280,7 @@ class LiveTrip {
 
   final List<LiveTripAlert> alerts;
   final List<LivePassengerCheckin> passengers;
+  final VehiclePosition? vehiclePosition;
 
   LiveRoutePoint? get currentPoint {
     if (routePoints.isEmpty) return null;
@@ -308,6 +329,8 @@ class LiveTrip {
     int? currentPointIndex,
     List<LiveTripAlert>? alerts,
     List<LivePassengerCheckin>? passengers,
+    VehiclePosition? vehiclePosition,
+    bool clearVehiclePosition = false,
   }) {
     return LiveTrip(
       id: id ?? this.id,
@@ -335,6 +358,9 @@ class LiveTrip {
       currentPointIndex: currentPointIndex ?? this.currentPointIndex,
       alerts: alerts ?? this.alerts,
       passengers: passengers ?? this.passengers,
+      vehiclePosition: clearVehiclePosition
+          ? null
+          : vehiclePosition ?? this.vehiclePosition,
     );
   }
 }

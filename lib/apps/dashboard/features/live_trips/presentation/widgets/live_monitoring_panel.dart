@@ -1,8 +1,8 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -21,30 +21,16 @@ class LiveMonitoringPanel extends StatelessWidget {
   final LiveTrip trip;
   final bool actionLoading;
 
-  void _showCallDialog(BuildContext context, LiveTrip trip) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => BlocProvider.value(
-        value: context.read<LiveTripsCubit>(),
-        child: Directionality(
-          textDirection: TextDirection.ltr,
-          child: _SimulatedCallDialog(trip: trip),
-        ),
-      ),
-    );
+  Future<void> _callDriver(LiveTrip trip) async {
+    final uri = Uri.parse('tel:${trip.driverPhone}');
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
-  void _showChatDialog(BuildContext context, LiveTrip trip) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => BlocProvider.value(
-        value: context.read<LiveTripsCubit>(),
-        child: Directionality(
-          textDirection: TextDirection.ltr,
-          child: _SimulatedChatDialog(trip: trip),
-        ),
-      ),
+  Future<void> _messageDriver(LiveTrip trip) async {
+    final uri = Uri.parse(
+      'sms:${trip.driverPhone}?body=${Uri.encodeComponent('رسالة من لوحة التحكم — رحلة ${trip.tripCode}')}',
     );
+    if (await canLaunchUrl(uri)) await launchUrl(uri);
   }
 
   void _showDelayDialog(BuildContext context, LiveTrip trip) {
@@ -89,8 +75,8 @@ class LiveMonitoringPanel extends StatelessWidget {
           onPause: cubit.pauseSelectedTrip,
           onResume: cubit.resumeSelectedTrip,
           onComplete: cubit.completeSelectedTrip,
-          onCallDriver: () => _showCallDialog(context, trip),
-          onMessageDriver: () => _showChatDialog(context, trip),
+          onCallDriver: () => _callDriver(trip),
+          onMessageDriver: () => _messageDriver(trip),
         ),
         const SizedBox(height: AppSpacing.medium),
         LiveTripMapPanel(trip: trip),
@@ -232,11 +218,19 @@ class LiveTripMapPanel extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'الخريطة الحية',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'الخريطة الحية',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              if (trip.vehiclePosition != null)
+                _GpsStatusBadge(position: trip.vehiclePosition!),
+            ],
           ),
           const SizedBox(height: AppSpacing.medium),
           ClipRRect(
@@ -256,6 +250,52 @@ class LiveTripMapPanel extends StatelessWidget {
   }
 }
 
+class _GpsStatusBadge extends StatelessWidget {
+  const _GpsStatusBadge({required this.position});
+  final VehiclePosition position;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final stale = position.isStale;
+    final moving = position.isMoving;
+    final color = stale ? scheme.error : scheme.primary;
+    final label = stale
+        ? 'إشارة قديمة'
+        : moving
+        ? 'يتحرك'
+        : 'واقف';
+    final icon = stale
+        ? Icons.signal_wifi_statusbar_connected_no_internet_4_rounded
+        : moving
+        ? Icons.directions_bus_rounded
+        : Icons.pause_circle_rounded;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(99),
+        border: Border.all(color: color.withAlpha(80)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _RealMap extends StatelessWidget {
   const _RealMap({required this.trip, required this.scheme});
   final LiveTrip trip;
@@ -265,10 +305,15 @@ class _RealMap extends StatelessWidget {
   Widget build(BuildContext context) {
     final points = trip.routePoints;
     final latlngs = points.map((p) => LatLng(p.latitude, p.longitude)).toList();
-    final center =
-        latlngs[points
-            .indexWhere((p) => p.status == LivePointStatus.current)
-            .clamp(0, latlngs.length - 1)];
+    final currentIdx = points
+        .indexWhere((p) => p.status == LivePointStatus.current)
+        .clamp(0, latlngs.length - 1);
+    final center = trip.vehiclePosition != null
+        ? LatLng(
+            trip.vehiclePosition!.latitude,
+            trip.vehiclePosition!.longitude,
+          )
+        : latlngs[currentIdx];
 
     return FlutterMap(
       options: MapOptions(initialCenter: center, initialZoom: 12),
@@ -289,9 +334,67 @@ class _RealMap extends StatelessWidget {
                 point: LatLng(p.latitude, p.longitude),
                 child: _StopDot(status: p.status),
               ),
+            if (trip.vehiclePosition != null)
+              Marker(
+                point: LatLng(
+                  trip.vehiclePosition!.latitude,
+                  trip.vehiclePosition!.longitude,
+                ),
+                child: _LiveVehicleMarker(
+                  label: trip.vehiclePlate,
+                  isStale: trip.vehiclePosition!.isStale,
+                  isMoving: trip.vehiclePosition!.isMoving,
+                ),
+              ),
           ],
         ),
       ],
+    );
+  }
+}
+
+class _LiveVehicleMarker extends StatelessWidget {
+  const _LiveVehicleMarker({
+    required this.label,
+    required this.isStale,
+    required this.isMoving,
+  });
+  final String label;
+  final bool isStale;
+  final bool isMoving;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = isStale ? scheme.error : scheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(10),
+        boxShadow: [BoxShadow(color: color.withAlpha(100), blurRadius: 6)],
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isMoving
+                ? Icons.directions_bus_rounded
+                : Icons.pause_circle_filled_rounded,
+            color: scheme.onPrimary,
+            size: 16,
+          ),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: scheme.onPrimary,
+              fontWeight: FontWeight.w900,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -356,7 +459,6 @@ class _PlaceholderMap extends StatelessWidget {
               icon: Icons.location_on_rounded,
             ),
           ),
-          Center(child: _VehicleMarker(label: trip.vehiclePlate)),
         ],
       ),
     );
@@ -399,39 +501,6 @@ class _MapPill extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _VehicleMarker extends StatelessWidget {
-  const _VehicleMarker({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: scheme.primary,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.directions_bus_rounded, color: scheme.onPrimary),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: scheme.onPrimary,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -866,323 +935,6 @@ class _PassengerTile extends StatelessWidget {
                     value: passenger.checkedIn,
                     onChanged: (_) => onTap(),
                     activeThumbColor: scheme.primary,
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SimulatedCallDialog extends StatefulWidget {
-  const _SimulatedCallDialog({required this.trip});
-  final LiveTrip trip;
-
-  @override
-  State<_SimulatedCallDialog> createState() => _SimulatedCallDialogState();
-}
-
-class _SimulatedCallDialogState extends State<_SimulatedCallDialog> {
-  Timer? _timer;
-  int _seconds = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        _seconds++;
-      });
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    super.dispose();
-  }
-
-  String _formatDuration(int totalSecs) {
-    final mins = totalSecs ~/ 60;
-    final secs = totalSecs % 60;
-    return '${mins.toString().padLeft(2, '0')}:${secs.toString().padLeft(2, '0')}';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.large),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'اتصال جاري...',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: AppSpacing.large),
-            CircleAvatar(
-              radius: 40,
-              backgroundColor: scheme.primaryContainer,
-              child: Text(
-                widget.trip.driverName.substring(0, 1),
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
-                  color: scheme.onPrimaryContainer,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.medium),
-            Text(
-              widget.trip.driverName,
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              widget.trip.driverPhone,
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            const SizedBox(height: AppSpacing.large),
-            Text(
-              _formatDuration(_seconds),
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                fontFamily: 'monospace',
-              ),
-            ),
-            const SizedBox(height: AppSpacing.large),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(5, (index) {
-                final double height =
-                    10 +
-                    (index % 2 == 0
-                        ? (_seconds % 4) * 6.0
-                        : (4 - (_seconds % 4)) * 6.0);
-                return Container(
-                  width: 4,
-                  height: height,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  decoration: BoxDecoration(
-                    color: scheme.primary,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                );
-              }),
-            ),
-            const SizedBox(height: AppSpacing.large),
-            FilledButton.icon(
-              onPressed: () => Navigator.pop(context),
-              style: FilledButton.styleFrom(backgroundColor: scheme.error),
-              icon: const Icon(Icons.call_end_rounded),
-              label: const Text('إنهاء المكالمة'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _SimulatedChatDialog extends StatefulWidget {
-  const _SimulatedChatDialog({required this.trip});
-  final LiveTrip trip;
-
-  @override
-  State<_SimulatedChatDialog> createState() => _SimulatedChatDialogState();
-}
-
-class _SimulatedChatDialogState extends State<_SimulatedChatDialog> {
-  final List<Map<String, dynamic>> _messages = [];
-  final TextEditingController _controller = TextEditingController();
-  final ScrollController _scrollController = ScrollController();
-
-  @override
-  void initState() {
-    super.initState();
-    _messages.addAll([
-      {
-        'isMe': false,
-        'text': 'مرحباً، بدأت التحرك للمحطة التالية.',
-        'time': '١٠:٤٢ ص',
-      },
-      {
-        'isMe': true,
-        'text': 'تمام، يرجى إبلاغنا عند الوصول.',
-        'time': '١٠:٤٣ ص',
-      },
-    ]);
-  }
-
-  void _sendMessage(String text) {
-    if (text.trim().isEmpty) return;
-    setState(() {
-      _messages.add({'isMe': true, 'text': text.trim(), 'time': 'الآن'});
-    });
-    _controller.clear();
-    context.read<LiveTripsCubit>().messageSelectedDriver(text);
-
-    Timer(const Duration(milliseconds: 1500), () {
-      if (!mounted) return;
-      setState(() {
-        _messages.add({
-          'isMe': false,
-          'text': 'علم، جاري التنفيذ الآن.',
-          'time': 'الآن',
-        });
-      });
-      _scrollToBottom();
-    });
-    _scrollToBottom();
-  }
-
-  void _scrollToBottom() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients) {
-        _scrollController.animateTo(
-          _scrollController.position.maxScrollExtent,
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOut,
-        );
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: SizedBox(
-        width: 500,
-        height: 600,
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.medium),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  CircleAvatar(
-                    child: Text(widget.trip.driverName.substring(0, 1)),
-                  ),
-                  const SizedBox(width: AppSpacing.medium),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        widget.trip.driverName,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        'نشط الآن',
-                        style: TextStyle(color: scheme.primary, fontSize: 11),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  IconButton(
-                    onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close),
-                  ),
-                ],
-              ),
-              const Divider(),
-              Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  itemCount: _messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = _messages[index];
-                    final isMe = msg['isMe'] as bool;
-                    return Align(
-                      alignment: isMe
-                          ? Alignment.centerLeft
-                          : Alignment.centerRight,
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(vertical: 4),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isMe
-                              ? scheme.primaryContainer
-                              : scheme.surfaceContainerHighest,
-                          borderRadius: BorderRadius.only(
-                            topLeft: const Radius.circular(12),
-                            topRight: const Radius.circular(12),
-                            bottomLeft: isMe
-                                ? Radius.zero
-                                : const Radius.circular(12),
-                            bottomRight: isMe
-                                ? const Radius.circular(12)
-                                : Radius.zero,
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(msg['text'] as String),
-                            const SizedBox(height: 2),
-                            Text(
-                              msg['time'] as String,
-                              style: TextStyle(
-                                fontSize: 9,
-                                color: scheme.onSurfaceVariant,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-              const Divider(),
-              Wrap(
-                spacing: 4,
-                children:
-                    [
-                      'أين أنت الآن؟',
-                      'هل تواجه زحاماً؟',
-                      'تأكيد الوصول للمحطة',
-                    ].map((reply) {
-                      return ActionChip(
-                        label: Text(
-                          reply,
-                          style: const TextStyle(fontSize: 11),
-                        ),
-                        onPressed: () => _sendMessage(reply),
-                      );
-                    }).toList(),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      controller: _controller,
-                      decoration: const InputDecoration(
-                        hintText: 'اكتب رسالة للسائق...',
-                        border: InputBorder.none,
-                      ),
-                      onSubmitted: _sendMessage,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: () => _sendMessage(_controller.text),
-                    icon: Icon(Icons.send_rounded, color: scheme.primary),
                   ),
                 ],
               ),

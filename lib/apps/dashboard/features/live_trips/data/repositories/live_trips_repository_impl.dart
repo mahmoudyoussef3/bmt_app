@@ -148,6 +148,11 @@ class LiveTripsRepositoryImpl implements LiveTripsRepository {
     }
   }
 
+  @override
+  Stream<VehiclePosition> watchVehiclePosition(String tripId) {
+    return _datasource.watchVehiclePosition(tripId);
+  }
+
   String _cleanError(Object error) {
     return error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
   }

@@ -64,20 +64,9 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
           ? pricingList.first as Map<String, dynamic>
           : <String, dynamic>{};
 
-      // Fallback: auto-generate seats if trip_seats is empty
       if (seats.isEmpty) {
-        final capacity = vehicle['capacity'] as int? ?? 14;
-        for (int i = 1; i <= capacity; i++) {
-          seats.add(
-            SeatOptionModel(
-              id: 'generated_$i',
-              seatNumber: i,
-              availability: SeatAvailability.available,
-            ),
-          );
-        }
+        throw Exception('لا توجد مقاعد مسجلة لهذه الرحلة. يرجى التواصل مع خدمة العملاء.');
       }
-
 
       final ticketPrice = tripResponse['ticket_price'];
       final legacyPrice = pricing['one_time_price'];

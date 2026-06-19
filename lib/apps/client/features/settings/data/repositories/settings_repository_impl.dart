@@ -1,11 +1,11 @@
 import '../../domain/entities/settings_data.dart';
 import '../../domain/repositories/settings_repository.dart';
-import '../datasources/mock_settings_datasource.dart';
+import '../datasources/supabase_settings_datasource.dart';
 
 class SettingsRepositoryImpl implements SettingsRepository {
   const SettingsRepositoryImpl(this._datasource);
 
-  final MockSettingsDatasource _datasource;
+  final SupabaseSettingsDatasource _datasource;
 
   @override
   Future<SettingsData> getSettingsData() {

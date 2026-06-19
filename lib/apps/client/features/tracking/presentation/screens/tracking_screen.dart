@@ -39,10 +39,24 @@ class _TrackingScreenState extends State<TrackingScreen>
 
   List<Offset> get _routePoints {
     final points = _tracking?.data.routePoints ?? const <TrackingPoint>[];
-    if (points.isEmpty) {
-      return const [Offset(0.35, 0.65)];
-    }
-    return points.map((point) => Offset(point.x, point.y)).toList();
+    if (points.isEmpty) return const [Offset(0.35, 0.65)];
+    if (points.length == 1) return const [Offset(0.5, 0.5)];
+
+    final lats = points.map((p) => p.latitude);
+    final lngs = points.map((p) => p.longitude);
+    final minLat = lats.reduce(math.min);
+    final maxLat = lats.reduce(math.max);
+    final minLng = lngs.reduce(math.min);
+    final maxLng = lngs.reduce(math.max);
+    final latRange = maxLat - minLat;
+    final lngRange = maxLng - minLng;
+
+    if (latRange == 0 && lngRange == 0) return const [Offset(0.5, 0.5)];
+
+    return points.map((p) => Offset(
+      lngRange == 0 ? 0.5 : (p.longitude - minLng) / lngRange,
+      latRange == 0 ? 0.5 : 1.0 - (p.latitude - minLat) / latRange,
+    )).toList();
   }
 
   @override

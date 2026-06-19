@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
-import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -89,7 +88,6 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                             }
 
                             final isDriver = seat.seatType == 'driver';
-                            final isVip = seat.seatType == 'vip';
 
                             return Container(
                               width: 48,
@@ -98,8 +96,6 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                               decoration: BoxDecoration(
                                 color: isDriver
                                     ? scheme.secondaryContainer
-                                    : isVip
-                                    ? AppStatusColors.specialContainer
                                     : scheme.primaryContainer,
                                 borderRadius: BorderRadius.circular(
                                   AppTokens.radiusSmall,
@@ -107,8 +103,6 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                 border: Border.all(
                                   color: isDriver
                                       ? scheme.secondary
-                                      : isVip
-                                      ? AppStatusColors.onSpecialContainer
                                       : scheme.primary,
                                 ),
                               ),
@@ -118,14 +112,10 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                   Icon(
                                     isDriver
                                         ? Icons.settings_accessibility_rounded
-                                        : isVip
-                                        ? Icons.star_rounded
                                         : Icons.event_seat_rounded,
                                     size: 18,
                                     color: isDriver
                                         ? scheme.onSecondaryContainer
-                                        : isVip
-                                        ? AppStatusColors.onSpecialContainer
                                         : scheme.onPrimaryContainer,
                                   ),
                                   const SizedBox(height: 2),
@@ -136,8 +126,6 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                                       fontWeight: FontWeight.bold,
                                       color: isDriver
                                           ? scheme.onSecondaryContainer
-                                          : isVip
-                                          ? AppStatusColors.onSpecialContainer
                                           : scheme.onPrimaryContainer,
                                     ),
                                   ),

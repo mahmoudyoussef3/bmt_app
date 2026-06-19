@@ -841,10 +841,6 @@ class _PriorityBadge extends StatelessWidget {
         AppStatusColors.onWarningContainer,
         AppStatusColors.warningContainer,
       ),
-      BookingPriority.vip => (
-        AppStatusColors.onSpecialContainer,
-        AppStatusColors.specialContainer,
-      ),
     };
 
     return Container(
@@ -1061,7 +1057,6 @@ class _BookingDetailsPanel extends StatelessWidget {
     return switch (priority) {
       BookingPriority.normal => scheme.surfaceContainerHighest,
       BookingPriority.urgent => AppStatusColors.warningContainer,
-      BookingPriority.vip => AppStatusColors.specialContainer,
     };
   }
 }

@@ -7,10 +7,10 @@ enum TrackingTripState {
 }
 
 class TrackingPoint {
-  const TrackingPoint({required this.x, required this.y});
+  const TrackingPoint({required this.latitude, required this.longitude});
 
-  final double x;
-  final double y;
+  final double latitude;
+  final double longitude;
 }
 
 class TrackingTripData {
@@ -18,11 +18,19 @@ class TrackingTripData {
     required this.routePoints,
     required this.timelineSteps,
     required this.stops,
+    required this.tripState,
+    this.tripId,
+    this.vehicleLatitude,
+    this.vehicleLongitude,
   });
 
   final List<TrackingPoint> routePoints;
   final List<String> timelineSteps;
   final List<String> stops;
+  final TrackingTripState tripState;
+  final String? tripId;
+  final double? vehicleLatitude;
+  final double? vehicleLongitude;
 }
 
 class TrackingRatings {

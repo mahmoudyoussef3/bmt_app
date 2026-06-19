@@ -27,7 +27,6 @@ import '../../features/dashboard_home/data/repositories/dashboard_home_repositor
 import '../../features/dashboard_home/domain/repositories/dashboard_home_repository.dart';
 import '../../features/dashboard_home/domain/usecases/get_dashboard_home_usecase.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
-import '../../features/dashboard_operations/data/datasources/mock_dashboard_operations_datasource.dart';
 import '../../features/dashboard_operations/data/repositories/dashboard_operations_repository_impl.dart';
 import '../../features/dashboard_operations/domain/repositories/dashboard_operations_repository.dart';
 import '../../features/dashboard_operations/domain/usecases/get_dashboard_workspace_usecase.dart';
@@ -78,6 +77,7 @@ import '../../features/live_trips/domain/usecases/report_live_trip_alert_usecase
 import '../../features/live_trips/domain/usecases/call_driver_usecase.dart';
 import '../../features/live_trips/domain/usecases/send_driver_message_usecase.dart';
 import '../../features/live_trips/domain/usecases/toggle_passenger_checkin_usecase.dart';
+import '../../features/live_trips/domain/usecases/watch_vehicle_position_usecase.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/payments/data/datasources/payments_datasource.dart';
 import '../../features/payments/data/datasources/supabase_payments_datasource.dart';
@@ -224,17 +224,9 @@ void registerDashboardDependencies() {
     );
   }
 
-  if (!dashboardDi.isRegistered<DashboardOperationsDatasource>()) {
-    dashboardDi.registerLazySingleton<DashboardOperationsDatasource>(
-      MockDashboardOperationsDatasource.new,
-    );
-  }
-
   if (!dashboardDi.isRegistered<DashboardOperationsRepository>()) {
     dashboardDi.registerLazySingleton<DashboardOperationsRepository>(
-      () => DashboardOperationsRepositoryImpl(
-        dashboardDi<DashboardOperationsDatasource>(),
-      ),
+      () => const DashboardOperationsRepositoryImpl(),
     );
   }
 
@@ -682,6 +674,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<WatchVehiclePositionUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => WatchVehiclePositionUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<LiveTripsCubit>()) {
     dashboardDi.registerFactory(
       () => LiveTripsCubit(
@@ -698,6 +696,7 @@ void registerDashboardDependencies() {
         callDriver: dashboardDi<CallDriverUseCase>(),
         messageDriver: dashboardDi<SendDriverMessageUseCase>(),
         togglePassengerCheckin: dashboardDi<TogglePassengerCheckinUseCase>(),
+        watchVehiclePosition: dashboardDi<WatchVehiclePositionUseCase>(),
       ),
     );
   }

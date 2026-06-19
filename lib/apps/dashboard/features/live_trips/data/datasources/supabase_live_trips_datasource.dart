@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/live_trip.dart';
 import 'live_trips_datasource.dart';
@@ -36,24 +37,68 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
           .inFilter('status', ['open_for_booking', 'boarding', 'in_progress'])
           .order('departure_time');
 
-      return (response as List)
+      final trips = (response as List)
           .map((json) => _mapToLiveTrip(json as Map<String, dynamic>))
           .toList();
+
+      return _attachLatestLocations(trips);
     } catch (e) {
       throw _handleError(e);
+    }
+  }
+
+  Future<List<LiveTrip>> _attachLatestLocations(List<LiveTrip> trips) async {
+    if (trips.isEmpty) return trips;
+    final tripIds = trips.map((t) => t.id).toList();
+    try {
+      final locs = await _client
+          .from('trip_live_locations')
+          .select('trip_id, latitude, longitude, heading, speed, recorded_at')
+          .inFilter('trip_id', tripIds)
+          .order('recorded_at', ascending: false);
+
+      final latestByTrip = <String, Map<String, dynamic>>{};
+      for (final loc in (locs as List)) {
+        final m = loc as Map<String, dynamic>;
+        final tid = m['trip_id'] as String;
+        latestByTrip.putIfAbsent(tid, () => m);
+      }
+
+      return trips.map((t) {
+        final loc = latestByTrip[t.id];
+        if (loc == null) return t;
+        return t.copyWith(vehiclePosition: _mapPosition(loc));
+      }).toList();
+    } catch (_) {
+      return trips;
     }
   }
 
   @override
   Future<LiveTrip> getLiveTripDetails(String tripId) async {
     try {
-      final response = await _client
-          .from('operation_trips')
-          .select(_tripSelectWithDetails)
-          .eq('id', tripId)
-          .single();
+      final results = await Future.wait([
+        _client
+            .from('operation_trips')
+            .select(_tripSelectWithDetails)
+            .eq('id', tripId)
+            .single(),
+        _client
+            .from('trip_live_locations')
+            .select('latitude, longitude, heading, speed, recorded_at')
+            .eq('trip_id', tripId)
+            .order('recorded_at', ascending: false)
+            .limit(1)
+            .maybeSingle(),
+      ]);
 
-      return _mapToLiveTrip(response, includeDetails: true);
+      final trip = _mapToLiveTrip(
+        results[0] as Map<String, dynamic>,
+        includeDetails: true,
+      );
+      final locRow = results[1] as Map<String, dynamic>?;
+      if (locRow == null) return trip;
+      return trip.copyWith(vehiclePosition: _mapPosition(locRow));
     } catch (e) {
       throw _handleError(e);
     }
@@ -218,6 +263,33 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
     }
   }
 
+  @override
+  Stream<VehiclePosition> watchVehiclePosition(String tripId) {
+    final controller = StreamController<VehiclePosition>.broadcast();
+    final channel = _client
+        .channel('live_location:$tripId')
+        .onBroadcast(
+          event: 'location',
+          callback: (payload) {
+            try {
+              controller.add(
+                VehiclePosition(
+                  latitude: (payload['lat'] as num).toDouble(),
+                  longitude: (payload['lng'] as num).toDouble(),
+                  speed: payload['speed'] != null
+                      ? (payload['speed'] as num).toDouble()
+                      : null,
+                  updatedAt: DateTime.now(),
+                ),
+              );
+            } catch (_) {}
+          },
+        )
+        .subscribe();
+    controller.onCancel = () => channel.unsubscribe();
+    return controller.stream;
+  }
+
   // ── helpers ──────────────────────────────────────────────────────────
 
   Future<String> _pointName(String tripId, String pointId) async {
@@ -242,6 +314,21 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
       'description': description,
       'done': done,
     });
+  }
+
+  VehiclePosition _mapPosition(Map<String, dynamic> loc) {
+    return VehiclePosition(
+      latitude: (loc['latitude'] as num).toDouble(),
+      longitude: (loc['longitude'] as num).toDouble(),
+      heading: loc['heading'] != null
+          ? (loc['heading'] as num).toDouble()
+          : null,
+      speed: loc['speed'] != null ? (loc['speed'] as num).toDouble() : null,
+      updatedAt: loc['recorded_at'] != null
+          ? DateTime.tryParse(loc['recorded_at'] as String)?.toLocal() ??
+                DateTime.now()
+          : DateTime.now(),
+    );
   }
 
   LiveTrip _mapToLiveTrip(

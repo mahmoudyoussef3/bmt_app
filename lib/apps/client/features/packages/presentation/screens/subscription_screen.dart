@@ -518,12 +518,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 AppLocalizations.of(context)!.packages_flexibleTimingDesc,
                 scheme,
               ),
-              _buildBenefitRow(
-                Icons.card_membership_rounded,
-                AppLocalizations.of(context)!.packages_vipBoarding,
-                AppLocalizations.of(context)!.packages_vipBoardingDesc,
-                scheme,
-              ),
               const SizedBox(height: 20),
 
               // Route details card

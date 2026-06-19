@@ -53,7 +53,7 @@ import '../../features/loyalty/domain/repositories/loyalty_repository.dart';
 import '../../features/loyalty/domain/usecases/get_loyalty_data_usecase.dart';
 import '../../features/loyalty/domain/usecases/redeem_loyalty_reward_usecase.dart';
 import '../../features/loyalty/presentation/cubit/loyalty_cubit.dart';
-import '../../features/notifications/data/datasources/mock_notifications_datasource.dart';
+import '../../features/notifications/data/datasources/supabase_notifications_datasource.dart';
 import '../../features/notifications/data/repositories/notifications_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notifications_repository.dart';
 import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
@@ -100,12 +100,12 @@ import '../../features/seat_selection/domain/usecases/book_trip_seat_usecase.dar
 import '../../features/seat_selection/domain/usecases/lock_trip_seat_usecase.dart';
 import '../../features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
 import '../../features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
-import '../../features/seat_release/data/datasources/mock_seat_release_datasource.dart';
+import '../../features/seat_release/data/datasources/supabase_seat_release_datasource.dart';
 import '../../features/seat_release/data/repositories/seat_release_repository_impl.dart';
 import '../../features/seat_release/domain/repositories/seat_release_repository.dart';
 import '../../features/seat_release/domain/usecases/get_seat_release_data_usecase.dart';
 import '../../features/seat_release/presentation/cubit/seat_release_cubit.dart';
-import '../../features/settings/data/datasources/mock_settings_datasource.dart';
+import '../../features/settings/data/datasources/supabase_settings_datasource.dart';
 import '../../features/settings/data/repositories/settings_repository_impl.dart';
 import '../../features/settings/domain/repositories/settings_repository.dart';
 import '../../features/settings/domain/usecases/get_settings_data_usecase.dart';
@@ -126,7 +126,7 @@ import '../../features/trips/domain/repositories/trips_repository.dart';
 import '../../features/trips/domain/usecases/get_trip_details_usecase.dart';
 import '../../features/trips/domain/usecases/get_trips_usecase.dart';
 import '../../features/trips/presentation/cubit/trips_cubit.dart';
-import '../../features/tracking/data/datasources/mock_tracking_datasource.dart';
+import '../../features/tracking/data/datasources/supabase_tracking_datasource.dart';
 import '../../features/tracking/data/repositories/tracking_repository_impl.dart';
 import '../../features/tracking/domain/repositories/tracking_repository.dart';
 import '../../features/tracking/domain/usecases/get_tracking_title_usecase.dart';
@@ -457,15 +457,17 @@ void _registerSeatSelectionDependencies() {
 }
 
 void _registerSeatReleaseDependencies() {
-  if (!clientGetIt.isRegistered<MockSeatReleaseDatasource>()) {
-    clientGetIt.registerLazySingleton<MockSeatReleaseDatasource>(
-      () => const MockSeatReleaseDatasource(),
+  if (!clientGetIt.isRegistered<SupabaseSeatReleaseDatasource>()) {
+    clientGetIt.registerLazySingleton<SupabaseSeatReleaseDatasource>(
+      () => SupabaseSeatReleaseDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<SeatReleaseRepository>()) {
     clientGetIt.registerLazySingleton<SeatReleaseRepository>(
-      () => SeatReleaseRepositoryImpl(clientGetIt<MockSeatReleaseDatasource>()),
+      () => SeatReleaseRepositoryImpl(
+        clientGetIt<SupabaseSeatReleaseDatasource>(),
+      ),
     );
   }
 
@@ -518,15 +520,17 @@ void _registerPaymentDependencies() {
 }
 
 void _registerSettingsDependencies() {
-  if (!clientGetIt.isRegistered<MockSettingsDatasource>()) {
-    clientGetIt.registerLazySingleton<MockSettingsDatasource>(
-      () => const MockSettingsDatasource(),
+  if (!clientGetIt.isRegistered<SupabaseSettingsDatasource>()) {
+    clientGetIt.registerLazySingleton<SupabaseSettingsDatasource>(
+      () => SupabaseSettingsDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<SettingsRepository>()) {
     clientGetIt.registerLazySingleton<SettingsRepository>(
-      () => SettingsRepositoryImpl(clientGetIt<MockSettingsDatasource>()),
+      () => SettingsRepositoryImpl(
+        clientGetIt<SupabaseSettingsDatasource>(),
+      ),
     );
   }
 
@@ -586,15 +590,17 @@ void _registerPackagesDependencies() {
 }
 
 void _registerTrackingDependencies() {
-  if (!clientGetIt.isRegistered<MockTrackingDatasource>()) {
-    clientGetIt.registerLazySingleton<MockTrackingDatasource>(
-      () => const MockTrackingDatasource(),
+  if (!clientGetIt.isRegistered<SupabaseTrackingDatasource>()) {
+    clientGetIt.registerLazySingleton<SupabaseTrackingDatasource>(
+      () => SupabaseTrackingDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<TrackingRepository>()) {
     clientGetIt.registerLazySingleton<TrackingRepository>(
-      () => TrackingRepositoryImpl(clientGetIt<MockTrackingDatasource>()),
+      () => TrackingRepositoryImpl(
+        clientGetIt<SupabaseTrackingDatasource>(),
+      ),
     );
   }
 
@@ -671,16 +677,16 @@ void _registerSupportDependencies() {
 }
 
 void _registerNotificationsDependencies() {
-  if (!clientGetIt.isRegistered<MockNotificationsDatasource>()) {
-    clientGetIt.registerLazySingleton<MockNotificationsDatasource>(
-      () => const MockNotificationsDatasource(),
+  if (!clientGetIt.isRegistered<SupabaseNotificationsDatasource>()) {
+    clientGetIt.registerLazySingleton<SupabaseNotificationsDatasource>(
+      () => SupabaseNotificationsDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<NotificationsRepository>()) {
     clientGetIt.registerLazySingleton<NotificationsRepository>(
       () => NotificationsRepositoryImpl(
-        clientGetIt<MockNotificationsDatasource>(),
+        clientGetIt<SupabaseNotificationsDatasource>(),
       ),
     );
   }

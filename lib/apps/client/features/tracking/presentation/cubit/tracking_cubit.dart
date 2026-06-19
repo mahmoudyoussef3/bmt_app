@@ -20,11 +20,12 @@ class TrackingCubit extends Cubit<TrackingState> {
     emit(const TrackingLoading());
     try {
       final data = await _getTrackingTrip();
+      final state = data.tripState;
       emit(
         TrackingLoaded(
           data: data,
-          currentState: TrackingTripState.notStarted,
-          title: _getTrackingTitle(TrackingTripState.notStarted),
+          currentState: state,
+          title: _getTrackingTitle(state),
         ),
       );
     } catch (error) {

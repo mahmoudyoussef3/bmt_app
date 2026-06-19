@@ -27,8 +27,7 @@ enum BookingPaymentMethod {
 
 enum BookingPriority {
   normal('عادي'),
-  urgent('مستعجل'),
-  vip('VIP');
+  urgent('مستعجل');
 
   final String label;
 
