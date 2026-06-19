@@ -63,9 +63,12 @@ class TicketsLoaded extends TicketsState {
 
     // breached first, then near-breach, then by remaining SLA time
     result.sort((a, b) {
-      if (a.slaBreached != b.slaBreached) return a.slaBreached ? -1 : 1;
-      if (a.isSlaNearBreach != b.isSlaNearBreach)
+      if (a.slaBreached != b.slaBreached) {
+        return a.slaBreached ? -1 : 1;
+      }
+      if (a.isSlaNearBreach != b.isSlaNearBreach) {
         return a.isSlaNearBreach ? -1 : 1;
+      }
       if (a.slaDueAt != null && b.slaDueAt != null) {
         return a.slaDueAt!.compareTo(b.slaDueAt!);
       }

@@ -364,8 +364,9 @@ class _ReassignDialogState extends State<_ReassignDialog> {
                       final success = await context
                           .read<PaymentsCubit>()
                           .reassignBooking(widget.bookingId, _selectedTripId!);
-                      if (success && context.mounted)
+                      if (success && context.mounted) {
                         Navigator.of(context).pop();
+                      }
                     },
               child: const Text('تحويل'),
             ),

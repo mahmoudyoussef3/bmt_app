@@ -37,8 +37,9 @@ class OrsGeoService implements GeoService {
 
   @override
   Future<List<GeoPlace>> autocomplete(String query, {GeoPoint? focus}) async {
-    if (!enabled)
+    if (!enabled) {
       throw const GeoException('خدمة الخرائط غير مفعّلة (لا يوجد مفتاح).');
+    }
     if (query.trim().length < 3) return const [];
 
     try {
@@ -66,8 +67,9 @@ class OrsGeoService implements GeoService {
 
   @override
   Future<RouteGeometry> directions(List<GeoPoint> orderedPoints) async {
-    if (!enabled)
+    if (!enabled) {
       throw const GeoException('خدمة الخرائط غير مفعّلة (لا يوجد مفتاح).');
+    }
     if (orderedPoints.length < 2) {
       throw const GeoException('يلزم نقطتان على الأقل لحساب المسار.');
     }

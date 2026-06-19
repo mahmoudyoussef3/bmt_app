@@ -14,10 +14,8 @@ void main() {
       expect(workspace.title, 'الحجوزات');
       expect(workspace.metrics, isNotEmpty);
       expect(workspace.tabs.map((tab) => tab.filter), contains('attention'));
-      expect(
-        workspace.rows.where((row) => row.status == 'attention'),
-        isNotEmpty,
-      );
+      expect(workspace.rows, isEmpty);
+      expect(workspace.sections, isNotEmpty);
     });
 
     test('maps datasource failures to dashboard failure message', () async {

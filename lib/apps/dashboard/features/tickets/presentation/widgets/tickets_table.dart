@@ -199,8 +199,9 @@ class _SlaBadgeState extends State<_SlaBadge> {
   @override
   Widget build(BuildContext context) {
     final ticket = widget.ticket;
-    if (ticket.slaDueAt == null)
+    if (ticket.slaDueAt == null) {
       return const Text('—', style: TextStyle(fontSize: 12));
+    }
 
     if (ticket.slaBreached) {
       return _badge(

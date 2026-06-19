@@ -360,50 +360,6 @@ class _DetailSection extends StatelessWidget {
   }
 }
 
-class _InfoItem extends StatelessWidget {
-  const _InfoItem({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final String value;
-  final IconData icon;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _SoftIcon(icon: icon, color: ClientColors.primary, size: 42),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                value,
-                style: ClientTypography.bodyMedium(context).copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: ClientColors.textPrimaryFor(context),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
 class _ComfortCard extends StatelessWidget {
   const _ComfortCard({required this.vehicle});
 

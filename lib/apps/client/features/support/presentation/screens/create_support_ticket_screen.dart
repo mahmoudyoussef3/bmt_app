@@ -155,7 +155,9 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
                     DropdownMenuItem(value: 'high', child: Text('High')),
                   ],
                   onChanged: (val) {
-                    if (val != null) setState(() => _selectedPriority = val);
+                    if (val != null) {
+                      setState(() => _selectedPriority = val);
+                    }
                   },
                 ),
                 const SizedBox(height: 16),
@@ -166,9 +168,12 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
                     border: OutlineInputBorder(),
                   ),
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty)
+                    if (val == null || val.trim().isEmpty) {
                       return 'Title is required';
-                    if (val.trim().length < 5) return 'Title too short';
+                    }
+                    if (val.trim().length < 5) {
+                      return 'Title too short';
+                    }
                     return null;
                   },
                 ),
@@ -181,10 +186,12 @@ class _CreateSupportTicketScreenState extends State<CreateSupportTicketScreen> {
                   ),
                   maxLines: 5,
                   validator: (val) {
-                    if (val == null || val.trim().isEmpty)
+                    if (val == null || val.trim().isEmpty) {
                       return 'Description is required';
-                    if (val.trim().length < 10)
+                    }
+                    if (val.trim().length < 10) {
                       return 'Please provide more details';
+                    }
                     return null;
                   },
                 ),
