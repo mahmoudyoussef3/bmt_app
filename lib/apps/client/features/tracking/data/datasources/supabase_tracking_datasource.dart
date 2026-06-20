@@ -91,7 +91,7 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
     return TrackingTripDataModel(
       routePoints: routePoints,
       timelineSteps: _buildTimeline(state),
-      stops: stops.isEmpty ? ['محطة البداية', 'محطة النهاية'] : stops,
+      stops: stops.isEmpty ? const ['Origin', 'Destination'] : stops,
       tripState: state,
       tripId: resolvedTripId,
       bookingId: booking['id']?.toString(),
@@ -181,21 +181,21 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
   }
 
   List<String> _buildTimeline(TrackingTripState state) => const [
-    'تأكيد الحجز',
-    'السائق في الطريق',
-    'صعود الركاب',
-    'الرحلة انطلقت',
-    'وصلنا',
+    'Booking confirmed',
+    'Driver on the way',
+    'Boarding',
+    'Trip started',
+    'Arrived',
   ];
 
   TrackingTripDataModel _emptyModel() => const TrackingTripDataModel(
     routePoints: [],
     timelineSteps: [
-      'تأكيد الحجز',
-      'السائق في الطريق',
-      'صعود الركاب',
-      'الرحلة انطلقت',
-      'وصلنا',
+      'Booking confirmed',
+      'Driver on the way',
+      'Boarding',
+      'Trip started',
+      'Arrived',
     ],
     stops: [],
     tripState: TrackingTripState.notStarted,

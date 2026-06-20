@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/entities/subscription_request.dart';
 import '../models/package_plan_model.dart';
 import 'packages_datasource.dart';
 
@@ -6,6 +7,40 @@ class SupabasePackagesDatasource implements PackagesDatasource {
   final SupabaseClient _supabase;
 
   const SupabasePackagesDatasource(this._supabase);
+
+  @override
+  Future<String> createSubscription(SubscriptionRequest request) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('You must be signed in to subscribe.');
+    }
+
+    final meta = user.userMetadata ?? const <String, dynamic>{};
+    final now = DateTime.now();
+    final end = now.add(Duration(days: request.days));
+
+    final payload = {
+      'client_id': user.id,
+      'customer_name': meta['full_name']?.toString() ?? '',
+      'customer_phone': meta['phone']?.toString() ?? '',
+      'package_name': request.packageName,
+      'route_name': request.routeName,
+      'start_date': now.toIso8601String(),
+      'end_date': end.toIso8601String(),
+      'status': 'active',
+      'total_price': request.totalPrice,
+      'paid_amount': request.totalPrice,
+      'remaining_amount': 0,
+    };
+
+    final row = await _supabase
+        .from('subscriptions')
+        .insert(payload)
+        .select('id')
+        .single();
+
+    return row['id'].toString();
+  }
 
   @override
   Future<PackageSelectionDataModel> getSelectionData() async {

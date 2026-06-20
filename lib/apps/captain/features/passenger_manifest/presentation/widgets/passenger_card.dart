@@ -19,7 +19,7 @@ class PassengerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return AppCard(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -42,7 +42,7 @@ class PassengerCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Seat ${passenger.seat} • ${passenger.pickupPoint}',
+                  'مقعد ${passenger.seat} • ${passenger.pickupPoint}',
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
                 if (passenger.destination.isNotEmpty) ...[
@@ -66,17 +66,19 @@ class PassengerCard extends StatelessWidget {
               ],
             ),
           ),
+          const SizedBox(width: 8),
           Column(
             children: [
-              IconButton(
+              _ContactButton(
+                icon: Icons.call_rounded,
+                tooltip: 'اتصال',
                 onPressed: onCall,
-                icon: const Icon(Icons.call_rounded),
-                visualDensity: VisualDensity.compact,
               ),
-              IconButton(
+              const SizedBox(height: 6),
+              _ContactButton(
+                icon: Icons.chat_bubble_outline_rounded,
+                tooltip: 'مراسلة',
                 onPressed: onChat,
-                icon: const Icon(Icons.chat_bubble_outline_rounded),
-                visualDensity: VisualDensity.compact,
               ),
             ],
           ),
@@ -93,10 +95,10 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color) = switch (status) {
-      PassengerBoardingStatus.boarded => ('Boarded', Colors.green),
-      PassengerBoardingStatus.pending => ('Pending', Colors.orange),
-      PassengerBoardingStatus.absent => ('No-Show', Colors.red),
-      PassengerBoardingStatus.cancelled => ('Cancelled', Colors.grey),
+      PassengerBoardingStatus.boarded => ('صعد', Colors.green),
+      PassengerBoardingStatus.pending => ('بانتظار', Colors.orange),
+      PassengerBoardingStatus.absent => ('لم يحضر', Colors.red),
+      PassengerBoardingStatus.cancelled => ('ملغي', Colors.grey),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -108,6 +110,35 @@ class _StatusBadge extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
+      ),
+    );
+  }
+}
+
+class _ContactButton extends StatelessWidget {
+  const _ContactButton({
+    required this.icon,
+    required this.tooltip,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Tooltip(
+      message: tooltip,
+      child: IconButton.filledTonal(
+        onPressed: onPressed,
+        icon: Icon(icon, size: 18),
+        style: IconButton.styleFrom(
+          fixedSize: const Size(40, 40),
+          backgroundColor: scheme.surfaceContainerLow,
+          foregroundColor: scheme.primary,
+        ),
       ),
     );
   }

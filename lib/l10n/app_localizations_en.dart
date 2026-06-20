@@ -791,4 +791,128 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get dashboard_unauthorized =>
       'This page is not available for the current role';
+
+  @override
+  String get onboarding_skip => 'Skip';
+
+  @override
+  String get onboarding_next => 'Next';
+
+  @override
+  String get onboarding_getStarted => 'Get Started';
+
+  @override
+  String get onboarding_page1Title => 'Book your daily ride in seconds';
+
+  @override
+  String get onboarding_page1Body =>
+      'Discover routes, pick a trip, and reserve your seat — all in a few taps.';
+
+  @override
+  String get onboarding_page1FeatureA => 'Trip booking';
+
+  @override
+  String get onboarding_page1FeatureB => 'Route discovery';
+
+  @override
+  String get onboarding_page2Title => 'Follow every trip live';
+
+  @override
+  String get onboarding_page2Body =>
+      'Track your vehicle on the map in real time and know exactly when it arrives.';
+
+  @override
+  String get onboarding_page2FeatureA => 'Live tracking';
+
+  @override
+  String get onboarding_page2FeatureB => 'Arrival ETA';
+
+  @override
+  String get onboarding_page3Title => 'Travel smart, worry-free';
+
+  @override
+  String get onboarding_page3Body =>
+      'Save with monthly passes, pay securely, and reach our support team whenever you need it.';
+
+  @override
+  String get onboarding_page3FeatureA => 'Subscriptions';
+
+  @override
+  String get onboarding_page3FeatureB => 'Discounted packages';
+
+  @override
+  String get onboarding_page4Title => 'Pay securely, get help anytime';
+
+  @override
+  String get onboarding_page4Body =>
+      'Pay safely with trusted methods and reach our support team whenever you need.';
+
+  @override
+  String get onboarding_page4FeatureA => 'Secure payments';
+
+  @override
+  String get onboarding_page4FeatureB => '24/7 support';
+
+  @override
+  String get welcome_trustSecure => 'Secure payments';
+
+  @override
+  String get welcome_trustLive => 'Real-time tracking';
+
+  @override
+  String get welcome_trustDaily => 'Trusted daily commute';
+
+  @override
+  String get authSuccess_createdTitle => 'You\'re all set!';
+
+  @override
+  String get authSuccess_createdSubtitle =>
+      'Your account is ready. Let\'s get you moving.';
+
+  @override
+  String get authSuccess_verifyTitle => 'Verify your email';
+
+  @override
+  String authSuccess_verifySubtitle(String email) {
+    return 'We sent a confirmation link to $email. Confirm it to activate your account, then sign in.';
+  }
+
+  @override
+  String get authSuccess_getStarted => 'Get started';
+
+  @override
+  String get authSuccess_backToSignIn => 'Back to sign in';
+
+  @override
+  String get authSuccess_perkBooking => 'Book trips instantly';
+
+  @override
+  String get authSuccess_perkTracking => 'Track rides live';
+
+  @override
+  String get authSuccess_perkPasses => 'Save with passes';
+
+  @override
+  String get auth_passwordStrengthLabel => 'Password strength';
+
+  @override
+  String get auth_passwordWeak => 'Weak';
+
+  @override
+  String get auth_passwordFair => 'Fair';
+
+  @override
+  String get auth_passwordGood => 'Good';
+
+  @override
+  String get auth_passwordStrong => 'Strong';
+
+  @override
+  String get auth_passwordHint =>
+      'Use 8+ characters with letters, numbers and a symbol.';
+
+  @override
+  String auth_policyComingSoon(String title) {
+    return '$title will open when published.';
+  }
 }

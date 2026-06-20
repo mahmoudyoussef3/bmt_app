@@ -261,9 +261,9 @@ Future<String?> showHomePickerSheet({
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
                   child: Text(
                     'No options available yet',
-                    style: ClientTypography.bodyMedium(ctx).copyWith(
-                      color: ClientColors.textSecondaryFor(ctx),
-                    ),
+                    style: ClientTypography.bodyMedium(
+                      ctx,
+                    ).copyWith(color: ClientColors.textSecondaryFor(ctx)),
                   ),
                 )
               else

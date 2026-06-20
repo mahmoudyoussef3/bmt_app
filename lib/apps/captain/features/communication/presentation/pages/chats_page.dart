@@ -21,11 +21,16 @@ class ChatsPage extends StatelessWidget {
                     ChatDetailsPage(tripId: tripId, title: 'جميع الركاب'),
               ),
             ),
-            padding: const EdgeInsets.all(14),
-            child: const ListTile(
+            padding: const EdgeInsets.all(16),
+            child: ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: Icon(Icons.campaign_rounded),
-              title: Text('إرسال رسالة لجميع الركاب'),
+              leading: Icon(
+                Icons.campaign_rounded,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              title: const Text('إرسال رسالة لجميع الركاب'),
+              subtitle: const Text('تنبيه جماعي مرتبط بهذه الرحلة'),
+              trailing: const Icon(Icons.chevron_right_rounded),
             ),
           ),
         ],

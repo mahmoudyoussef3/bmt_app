@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
-import '../widgets/onboarding_page_content.dart';
-import '../widgets/onboarding_bottom_controls.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
+
 import '../animations/animated_background_blob.dart';
-import '../animations/floating_animation.dart';
+import '../widgets/onboarding_bottom_controls.dart';
+import '../widgets/onboarding_page_content.dart';
+import '../widgets/onboarding_scene.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -19,145 +22,239 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
+  static const _cyan = Color(0xFF06B6D4);
+
   @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
   }
 
-  void _onNext() {
-    if (_currentPage < 2) {
+  List<OnboardingPageData> _pages(AppLocalizations l10n) => [
+    OnboardingPageData(
+      title: l10n.onboarding_page1Title,
+      body: l10n.onboarding_page1Body,
+      accent: ClientColors.primary,
+      scene: OnboardingScene(
+        accent: ClientColors.primary,
+        centerIcon: Icons.directions_bus_filled_rounded,
+        cards: const [
+          OnboardingFloatingCard(
+            icon: Icons.near_me_rounded,
+            title: 'Cairo → Zayed',
+            alignment: Alignment(-0.98, -0.86),
+            floatMagnitude: 6,
+            floatSeconds: 5,
+          ),
+          OnboardingFloatingCard(
+            icon: Icons.schedule_rounded,
+            title: '08:40 AM',
+            subtitle: 'Next trip',
+            alignment: Alignment(0.98, -0.46),
+            floatSeconds: 4,
+          ),
+          OnboardingFloatingCard(
+            icon: Icons.event_seat_rounded,
+            title: 'Seat A12',
+            subtitle: 'Confirmed',
+            alignment: Alignment(0.9, 0.92),
+            accent: ClientColors.journeyGreen,
+            floatMagnitude: 8,
+            floatSeconds: 6,
+          ),
+        ],
+      ),
+      features: [
+        OnboardingFeature(
+          Icons.event_seat_rounded,
+          l10n.onboarding_page1FeatureA,
+        ),
+        OnboardingFeature(Icons.route_rounded, l10n.onboarding_page1FeatureB),
+      ],
+    ),
+    OnboardingPageData(
+      title: l10n.onboarding_page2Title,
+      body: l10n.onboarding_page2Body,
+      accent: _cyan,
+      scene: OnboardingScene(
+        accent: _cyan,
+        centerIcon: Icons.navigation_rounded,
+        cards: const [
+          OnboardingFloatingCard(
+            icon: Icons.my_location_rounded,
+            title: 'Live',
+            subtitle: 'Updated now',
+            alignment: Alignment(-0.98, -0.86),
+            floatSeconds: 5,
+          ),
+          OnboardingFloatingCard(
+            icon: Icons.timer_outlined,
+            title: 'ETA 12 min',
+            subtitle: 'On time',
+            alignment: Alignment(0.98, -0.46),
+            accent: ClientColors.journeyGreen,
+            floatMagnitude: 8,
+            floatSeconds: 4,
+          ),
+          OnboardingFloatingCard(
+            icon: Icons.directions_bus_rounded,
+            title: 'On the way',
+            alignment: Alignment(-0.9, 0.92),
+            floatMagnitude: 6,
+            floatSeconds: 6,
+          ),
+        ],
+      ),
+      features: [
+        OnboardingFeature(
+          Icons.my_location_rounded,
+          l10n.onboarding_page2FeatureA,
+        ),
+        OnboardingFeature(
+          Icons.schedule_rounded,
+          l10n.onboarding_page2FeatureB,
+        ),
+      ],
+    ),
+    OnboardingPageData(
+      title: l10n.onboarding_page3Title,
+      body: l10n.onboarding_page3Body,
+      accent: ClientColors.journeyPurple,
+      scene: OnboardingScene(
+        accent: ClientColors.journeyPurple,
+        centerIcon: Icons.card_membership_rounded,
+        cards: const [
+          OnboardingFloatingCard(
+            icon: Icons.verified_rounded,
+            title: 'Monthly pass',
+            subtitle: 'Active',
+            alignment: Alignment(-0.98, -0.86),
+            accent: ClientColors.journeyGreen,
+            floatSeconds: 5,
+          ),
+          OnboardingFloatingCard(
+            icon: Icons.lock_rounded,
+            title: 'Paid securely',
+            alignment: Alignment(0.98, -0.46),
+            accent: ClientColors.primary,
+            floatMagnitude: 8,
+            floatSeconds: 4,
+          ),
+          OnboardingFloatingCard(
+            icon: Icons.support_agent_rounded,
+            title: 'Support 24/7',
+            alignment: Alignment(0.9, 0.92),
+            floatMagnitude: 6,
+            floatSeconds: 6,
+          ),
+        ],
+      ),
+      features: [
+        OnboardingFeature(
+          Icons.card_membership_rounded,
+          l10n.onboarding_page3FeatureA,
+        ),
+        OnboardingFeature(Icons.lock_rounded, l10n.onboarding_page4FeatureA),
+        OnboardingFeature(
+          Icons.support_agent_rounded,
+          l10n.onboarding_page4FeatureB,
+        ),
+      ],
+    ),
+  ];
+
+  void _onNext(int total) {
+    if (_currentPage < total - 1) {
       _pageController.nextPage(
-        duration: const Duration(milliseconds: 600),
+        duration: const Duration(milliseconds: 520),
         curve: Curves.easeOutCubic,
       );
     } else {
-      _completeOnboarding();
+      _complete();
     }
   }
 
   void _onSkip() {
     HapticFeedback.lightImpact();
-    _completeOnboarding();
+    _complete();
   }
 
-  void _completeOnboarding() {
-    context.read<OnboardingCubit>().completeOnboarding();
-    // The navigation will be handled by the route listener in client_app or wherever the stream builder is.
-  }
+  void _complete() => context.read<OnboardingCubit>().completeOnboarding();
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Background Blobs
-          AnimatedBackgroundBlob(
-            color: ClientColors.primary,
-            size: 400,
-            initialPosition: Offset(-100, -100),
-            animationDuration: const Duration(seconds: 12),
-          ),
-          AnimatedBackgroundBlob(
-            color: const Color(0xFF06B6D4), // Cyan
-            size: 300,
-            initialPosition: Offset(
-              MediaQuery.of(context).size.width - 150,
-              MediaQuery.of(context).size.height - 300,
-            ),
-            animationDuration: const Duration(seconds: 15),
-          ),
+    final l10n = AppLocalizations.of(context)!;
+    final pages = _pages(l10n);
+    final size = MediaQuery.sizeOf(context);
+    final isLast = _currentPage == pages.length - 1;
 
-          // Content
-          SafeArea(
-            child: Column(
-              children: [
-                // Top Bar (Skip Button)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8.0, right: 16.0),
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: TextButton(
-                      onPressed: _onSkip,
-                      style: TextButton.styleFrom(
-                        foregroundColor: ClientColors.textSecondaryFor(context),
-                      ),
-                      child: const Text(
-                        'Skip',
-                        style: TextStyle(fontWeight: FontWeight.w600),
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: ClientColors.surfaceFor(context),
+        body: Stack(
+          children: [
+            AnimatedBackgroundBlob(
+              color: ClientColors.primary,
+              size: 400,
+              initialPosition: const Offset(-110, -120),
+              animationDuration: const Duration(seconds: 12),
+            ),
+            AnimatedBackgroundBlob(
+              color: _cyan,
+              size: 300,
+              initialPosition: Offset(size.width - 150, size.height - 300),
+              animationDuration: const Duration(seconds: 15),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: AnimatedOpacity(
+                      duration: const Duration(milliseconds: 250),
+                      opacity: isLast ? 0 : 1,
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 6, right: 12),
+                        child: TextButton(
+                          onPressed: isLast ? null : _onSkip,
+                          style: TextButton.styleFrom(
+                            foregroundColor: ClientColors.textSecondaryFor(
+                              context,
+                            ),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          child: Text(l10n.onboarding_skip),
+                        ),
                       ),
                     ),
                   ),
-                ),
-
-                // Page View
-                Expanded(
-                  child: PageView(
-                    controller: _pageController,
-                    onPageChanged: (index) {
-                      setState(() {
-                        _currentPage = index;
-                      });
-                      HapticFeedback.selectionClick();
-                    },
-                    children: [
-                      OnboardingPageContent(
-                        isVisible: _currentPage == 0,
-                        title: 'Move Smarter Every Day',
-                        subtitle:
-                            'Book your daily rides in seconds and enjoy a smooth transportation experience built around your schedule.',
-                        heroImage: FloatingAnimation(
-                          magnitude: 8,
-                          duration: const Duration(seconds: 4),
-                          child: Image.asset(
-                            'assets/images/onboarding/smart_transport.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
+                  Expanded(
+                    child: PageView.builder(
+                      controller: _pageController,
+                      itemCount: pages.length,
+                      onPageChanged: (index) {
+                        setState(() => _currentPage = index);
+                        HapticFeedback.selectionClick();
+                      },
+                      itemBuilder: (context, index) => OnboardingPageContent(
+                        data: pages[index],
+                        isVisible: _currentPage == index,
                       ),
-                      OnboardingPageContent(
-                        isVisible: _currentPage == 1,
-                        title: 'Track Every Journey Live',
-                        subtitle:
-                            'Know exactly where your trip is, when it arrives, and stay updated throughout the entire journey.',
-                        heroImage: FloatingAnimation(
-                          magnitude: 12,
-                          duration: const Duration(seconds: 5),
-                          child: Image.asset(
-                            'assets/images/onboarding/live_tracking.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                      OnboardingPageContent(
-                        isVisible: _currentPage == 2,
-                        title: 'Save More With Smart Passes',
-                        subtitle:
-                            'Unlock monthly subscriptions, discounted packages, and a premium commuting experience.',
-                        heroImage: FloatingAnimation(
-                          magnitude: 10,
-                          duration: const Duration(seconds: 3),
-                          child: Image.asset(
-                            'assets/images/onboarding/subscriptions.png',
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-
-                // Bottom Controls
-                OnboardingBottomControls(
-                  currentPage: _currentPage,
-                  totalPages: 3,
-                  onNext: _onNext,
-                  onSkip: _onSkip,
-                ),
-              ],
+                  OnboardingBottomControls(
+                    currentPage: _currentPage,
+                    totalPages: pages.length,
+                    onNext: () => _onNext(pages.length),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -85,8 +85,22 @@ class _CheckInPageState extends State<CheckInPage> {
                       ),
                     ],
                   ),
-                SizedBox(
-                  height: 300,
+                Container(
+                  height: MediaQuery.sizeOf(context).height * 0.42,
+                  constraints: const BoxConstraints(
+                    minHeight: 280,
+                    maxHeight: 420,
+                  ),
+                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  clipBehavior: Clip.antiAlias,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.outline.withAlpha(90),
+                    ),
+                  ),
                   child: Stack(
                     children: [
                       MobileScanner(
@@ -103,7 +117,6 @@ class _CheckInPageState extends State<CheckInPage> {
                           }
                         },
                       ),
-                      // Scanning overlay
                       Center(
                         child: Container(
                           width: 200,
@@ -114,6 +127,26 @@ class _CheckInPageState extends State<CheckInPage> {
                               width: 3,
                             ),
                             borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      Positioned(
+                        left: 16,
+                        right: 16,
+                        bottom: 16,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 10,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withAlpha(120),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: const Text(
+                            'ثبّت الكود داخل الإطار حتى يكتمل التسجيل',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: Colors.white),
                           ),
                         ),
                       ),
@@ -152,9 +185,16 @@ class _ResultPanel extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
       children: [
         if (state is CheckInLoading) ...[
-          const Center(child: CircularProgressIndicator()),
-          const SizedBox(height: 12),
-          const Center(child: Text('جاري التحقق...')),
+          const AppCard(
+            padding: EdgeInsets.all(18),
+            child: Column(
+              children: [
+                CircularProgressIndicator(),
+                SizedBox(height: 12),
+                Text('جاري التحقق من الحجز...'),
+              ],
+            ),
+          ),
         ] else if (state is CheckInReady &&
             (state as CheckInReady).result != null) ...[
           _ScanResult(result: (state as CheckInReady).result!),
@@ -178,11 +218,22 @@ class _ResultPanel extends StatelessWidget {
             ),
           ),
         ] else ...[
-          const Center(
-            child: Text(
-              'وجّه الكاميرا نحو كود QR الخاص بالراكب',
-              textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.grey),
+          AppCard(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.qr_code_scanner_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'وجّه الكاميرا نحو كود QR الخاص بالراكب',
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

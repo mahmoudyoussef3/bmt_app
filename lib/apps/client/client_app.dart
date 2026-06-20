@@ -12,7 +12,6 @@ import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubi
 import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/trip_details_screen.dart';
-import 'package:bmt_app/core/theme/app_theme.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
@@ -20,7 +19,6 @@ import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_checkout_screen.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/screens/subscription_screen.dart';
-import 'package:bmt_app/apps/client/features/packages/presentation/screens/subscription_confirmation_screen.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/screens/tracking_screen.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
@@ -45,6 +43,7 @@ import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_route
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/auth_success_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/forgot_password_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
@@ -62,6 +61,7 @@ import 'package:bmt_app/apps/client/features/seat_selection/presentation/screens
 import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/seat_release_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
+import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/screens/client_splash_screen.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_state.dart';
@@ -109,8 +109,8 @@ class _ClientAppState extends State<ClientApp> {
                 }
                 return supportedLocales.first;
               },
-              theme: AppTheme.lightTheme(),
-              darkTheme: AppTheme.darkTheme(),
+              theme: ClientTheme.light(),
+              darkTheme: ClientTheme.dark(),
               themeMode: _themeMode,
 
               home: BlocBuilder<OnboardingCubit, OnboardingState>(
@@ -152,7 +152,11 @@ class _ClientAppState extends State<ClientApp> {
                 AuthRoutes.forgotPassword: (_) =>
                     _buildForgotPasswordScope(const ForgotPasswordScreen()),
 
-                AuthRoutes.success: (_) => _buildClientShell(),
+                AuthRoutes.success: (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments;
+                  final email = args is Map ? args['email']?.toString() : null;
+                  return AuthSuccessScreen(email: email);
+                },
 
                 // Booking
                 BookingRoutes.search: (context) => _buildBookingScope(
@@ -194,7 +198,7 @@ class _ClientAppState extends State<ClientApp> {
                 '/seat-release': (_) =>
                     _buildSeatReleaseScope(const SeatReleaseScreen()),
 
-                '/payment-demo': (context) {
+                '/payment-checkout': (context) {
                   final args = ModalRoute.of(context)?.settings.arguments;
                   final checkoutData = args is Map
                       ? PaymentCheckoutData(
@@ -241,16 +245,6 @@ class _ClientAppState extends State<ClientApp> {
                     SubscriptionScreen(hasActiveSubscription: hasActiveSub),
                   );
                 },
-
-                '/subscription-confirmation': (_) => _buildPackagesScope(
-                  const SubscriptionConfirmationScreen(
-                    pickup: '',
-                    destination: '',
-                    time: '',
-                    planName: 'Monthly',
-                    price: 'EGP 1,200/month',
-                  ),
-                ),
 
                 // Trips
                 TripsRoutes.myTrips: (context) => _buildTripsScope(

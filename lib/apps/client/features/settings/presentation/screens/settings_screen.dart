@@ -2,11 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bmt_app/core/widgets/switch_widget.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
 
 import '../cubit/settings_cubit.dart';
 import '../cubit/settings_state.dart';
@@ -295,7 +297,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 title: 'Language & Localization',
                 subtitle: _selectedLanguage == 'en'
                     ? 'English (Save Option)'
-                    : 'العربية (خيار الحفظ)',
+                    : 'Arabic (Save Option)',
                 onTap: () => _navigateTo(2),
                 context: context,
               ),
@@ -734,7 +736,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         _buildLanguageOptionCard(
           langCode: 'ar',
           title: 'Arabic',
-          nativeName: 'العربية (EG)',
+          nativeName: 'Arabic (EG)',
           context: context,
         ),
         const SizedBox(height: 30),
@@ -765,7 +767,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     _selectedLanguage == 'en'
                         ? 'Mega Commute Portal'
-                        : 'بوابة ميجا للتنقل',
+                        : 'Mega Commute Portal',
                     style: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
@@ -786,7 +788,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: Text(
                       _selectedLanguage == 'en'
                           ? 'English translation'
-                          : 'مترجم للعربية',
+                          : 'Arabic translation',
                       style: ClientTypography.labelSmall(context),
                     ),
                   ),
@@ -796,7 +798,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Text(
                 _selectedLanguage == 'en'
                     ? 'Flexible commutes made simpler. Tap to release your reserved seat or book daily luxury shuttle trips in seconds.'
-                    : 'التنقلات المرنة أصبحت أكثر بساطة. اضغط لتحرير مقعدك المحجوز أو احجز رحلات مكوكية فاخرة يومية في ثوانٍ.',
+                    : 'Flexible commutes made simpler. Tap to release your reserved seat or book daily luxury shuttle trips in seconds.',
                 style: const TextStyle(
                   fontSize: 11,
                   color: Colors.grey,
@@ -972,7 +974,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         const SizedBox(height: 10),
 
-        // Render preview mockups depending on select
+        // Render visual previews for the selected style.
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -1004,7 +1006,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              // Buttons mockup
+              // Button preview.
               Row(
                 children: [
                   Expanded(
@@ -1048,7 +1050,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ],
               ),
               const SizedBox(height: 16),
-              // Cards mockup
+              // Card preview.
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
@@ -3152,10 +3154,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: ClientButton(
                       label: 'Log Out',
                       expand: true,
-                      onPressed: () {
-                        Navigator.pop(context);
-                        // Redirect to welcome screen route
-                        Navigator.of(context).pushReplacementNamed('/welcome');
+                      onPressed: () async {
+                        // Capture the root navigator before the async gap so we
+                        // don't use a BuildContext after `await`.
+                        final navigator = Navigator.of(
+                          context,
+                          rootNavigator: true,
+                        );
+                        navigator.pop(); // close the confirmation dialog
+                        try {
+                          await Supabase.instance.client.auth.signOut();
+                        } catch (_) {
+                          // Even if the network sign-out fails, the local
+                          // session is cleared; fall through to the welcome flow.
+                        }
+                        navigator.pushNamedAndRemoveUntil(
+                          AuthRoutes.welcome,
+                          (route) => false,
+                        );
                       },
                     ),
                   ),

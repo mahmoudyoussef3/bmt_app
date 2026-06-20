@@ -19,34 +19,43 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
   final StartBoardingUseCase _startBoarding;
   final StartTripUseCase _startTrip;
   final CompleteTripUseCase _completeTrip;
+  TripExecutionStatus _status = TripExecutionStatus.scheduled;
+
+  void setInitialStatus(TripExecutionStatus status) {
+    _status = status;
+    emit(TripExecutionIdle(status));
+  }
 
   Future<void> board(String tripId) async {
-    emit(const TripExecutionLoading());
+    emit(TripExecutionLoading(_status));
     try {
       final result = await _startBoarding(tripId);
+      _status = result.status;
       emit(TripExecutionIdle(result.status));
     } catch (error) {
-      emit(TripExecutionError(error.toString()));
+      emit(TripExecutionError(error.toString(), _status));
     }
   }
 
   Future<void> start(String tripId) async {
-    emit(const TripExecutionLoading());
+    emit(TripExecutionLoading(_status));
     try {
       final result = await _startTrip(tripId);
+      _status = result.status;
       emit(TripExecutionIdle(result.status));
     } catch (error) {
-      emit(TripExecutionError(error.toString()));
+      emit(TripExecutionError(error.toString(), _status));
     }
   }
 
   Future<void> complete(String tripId) async {
-    emit(const TripExecutionLoading());
+    emit(TripExecutionLoading(_status));
     try {
       final result = await _completeTrip(tripId);
+      _status = result.status;
       emit(TripExecutionIdle(result.status));
     } catch (error) {
-      emit(TripExecutionError(error.toString()));
+      emit(TripExecutionError(error.toString(), _status));
     }
   }
 }

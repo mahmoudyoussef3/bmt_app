@@ -786,4 +786,127 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get dashboard_unauthorized => 'هذه الصفحة غير متاحة للدور الحالي';
+
+  @override
+  String get onboarding_skip => 'تخطّي';
+
+  @override
+  String get onboarding_next => 'التالي';
+
+  @override
+  String get onboarding_getStarted => 'ابدأ الآن';
+
+  @override
+  String get onboarding_page1Title => 'احجز رحلتك اليومية في ثوانٍ';
+
+  @override
+  String get onboarding_page1Body =>
+      'اكتشف المسارات، اختر رحلتك، واحجز مقعدك بنقرات بسيطة.';
+
+  @override
+  String get onboarding_page1FeatureA => 'حجز الرحلات';
+
+  @override
+  String get onboarding_page1FeatureB => 'اكتشاف المسارات';
+
+  @override
+  String get onboarding_page2Title => 'تابع كل رحلة مباشرةً';
+
+  @override
+  String get onboarding_page2Body =>
+      'تتبّع مركبتك على الخريطة لحظة بلحظة واعرف وقت وصولها بدقة.';
+
+  @override
+  String get onboarding_page2FeatureA => 'تتبّع مباشر';
+
+  @override
+  String get onboarding_page2FeatureB => 'وقت الوصول';
+
+  @override
+  String get onboarding_page3Title => 'تنقّل بذكاء وراحة بال';
+
+  @override
+  String get onboarding_page3Body =>
+      'وفّر مع الباقات الشهرية، وادفع بأمان، وتواصل مع فريق الدعم وقت ما تحتاج.';
+
+  @override
+  String get onboarding_page3FeatureA => 'الاشتراكات';
+
+  @override
+  String get onboarding_page3FeatureB => 'باقات مخفّضة';
+
+  @override
+  String get onboarding_page4Title => 'ادفع بأمان واحصل على الدعم دائماً';
+
+  @override
+  String get onboarding_page4Body =>
+      'ادفع بأمان عبر وسائل موثوقة وتواصل مع فريق الدعم وقت ما تحتاج.';
+
+  @override
+  String get onboarding_page4FeatureA => 'دفع آمن';
+
+  @override
+  String get onboarding_page4FeatureB => 'دعم على مدار الساعة';
+
+  @override
+  String get welcome_trustSecure => 'دفع آمن';
+
+  @override
+  String get welcome_trustLive => 'تتبّع لحظي';
+
+  @override
+  String get welcome_trustDaily => 'تنقل يومي موثوق';
+
+  @override
+  String get authSuccess_createdTitle => 'كل شيء جاهز!';
+
+  @override
+  String get authSuccess_createdSubtitle => 'تم إنشاء حسابك. لنبدأ رحلتك.';
+
+  @override
+  String get authSuccess_verifyTitle => 'فعّل بريدك الإلكتروني';
+
+  @override
+  String authSuccess_verifySubtitle(String email) {
+    return 'أرسلنا رابط تأكيد إلى $email. أكّده لتفعيل حسابك ثم سجّل الدخول.';
+  }
+
+  @override
+  String get authSuccess_getStarted => 'ابدأ الآن';
+
+  @override
+  String get authSuccess_backToSignIn => 'العودة لتسجيل الدخول';
+
+  @override
+  String get authSuccess_perkBooking => 'احجز رحلاتك فوراً';
+
+  @override
+  String get authSuccess_perkTracking => 'تتبّع رحلاتك مباشرة';
+
+  @override
+  String get authSuccess_perkPasses => 'وفّر مع الباقات';
+
+  @override
+  String get auth_passwordStrengthLabel => 'قوة كلمة المرور';
+
+  @override
+  String get auth_passwordWeak => 'ضعيفة';
+
+  @override
+  String get auth_passwordFair => 'متوسطة';
+
+  @override
+  String get auth_passwordGood => 'جيدة';
+
+  @override
+  String get auth_passwordStrong => 'قوية';
+
+  @override
+  String get auth_passwordHint =>
+      'استخدم ٨ أحرف على الأقل تتضمن حروفاً وأرقاماً ورمزاً.';
+
+  @override
+  String auth_policyComingSoon(String title) {
+    return 'سيتوفر $title عند نشره.';
+  }
 }

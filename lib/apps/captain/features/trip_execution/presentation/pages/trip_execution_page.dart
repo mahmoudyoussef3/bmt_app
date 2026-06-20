@@ -25,12 +25,12 @@ class TripExecutionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<TripExecutionCubit>(
-      create: (_) => captainGetIt<TripExecutionCubit>(),
+      create: (_) =>
+          captainGetIt<TripExecutionCubit>()
+            ..setInitialStatus(_executionStatusFromTrip(trip.status)),
       child: BlocBuilder<TripExecutionCubit, TripExecutionCubitState>(
         builder: (context, state) {
-          final status = state is TripExecutionIdle
-              ? state.status
-              : TripExecutionStatus.scheduled;
+          final status = _statusFromState(state);
           return Scaffold(
             appBar: AppBar(title: const Text('تنفيذ الرحلة')),
             floatingActionButton: status == TripExecutionStatus.inProgress
@@ -40,21 +40,54 @@ class TripExecutionPage extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
               children: [
                 AppCard(
-                  padding: const EdgeInsets.all(14),
+                  padding: const EdgeInsets.all(16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        trip.route,
-                        style: Theme.of(context).textTheme.displaySmall,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Text(
+                              trip.route,
+                              style: Theme.of(context).textTheme.headlineSmall
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                          ),
+                          StatusChip(
+                            label: _statusLabel(status),
+                            color: _statusColor(status).withAlpha(28),
+                            textColor: _statusColor(status),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Text(
                         'المركبة ${trip.vehicleNumber} • ${trip.plateNumber}',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                       ),
                       const SizedBox(height: 12),
-                      StatusChip(label: _statusLabel(status)),
-                      const SizedBox(height: 14),
+                      Row(
+                        children: [
+                          _TripFact(
+                            icon: Icons.schedule_rounded,
+                            value: _timeRange(trip),
+                          ),
+                          const SizedBox(width: 10),
+                          _TripFact(
+                            icon: Icons.people_alt_rounded,
+                            value:
+                                '${trip.boardedCount}/${trip.passengerCount} صعد',
+                          ),
+                        ],
+                      ),
+                      if (state is TripExecutionError) ...[
+                        const SizedBox(height: 12),
+                        _InlineError(message: state.message),
+                      ],
+                      const SizedBox(height: 16),
                       if (state is TripExecutionLoading)
                         const Center(child: CircularProgressIndicator())
                       else
@@ -72,59 +105,72 @@ class TripExecutionPage extends StatelessWidget {
                 if (status == TripExecutionStatus.inProgress &&
                     trip.stops.isNotEmpty)
                   const SizedBox(height: 14),
-                _ActionTile(
-                  label: 'قائمة الركاب',
-                  icon: Icons.people_alt_rounded,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => PassengerListPage(tripId: trip.id),
+                GridView.count(
+                  crossAxisCount: MediaQuery.sizeOf(context).width > 520
+                      ? 3
+                      : 2,
+                  mainAxisSpacing: 10,
+                  crossAxisSpacing: 10,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  childAspectRatio: 1.5,
+                  children: [
+                    _ActionTile(
+                      label: 'قائمة الركاب',
+                      icon: Icons.people_alt_rounded,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => PassengerListPage(tripId: trip.id),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                _ActionTile(
-                  label: 'تسجيل الدخول',
-                  icon: Icons.qr_code_scanner_rounded,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => CheckInPage(tripId: trip.id),
+                    _ActionTile(
+                      label: 'تسجيل الدخول',
+                      icon: Icons.qr_code_scanner_rounded,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => CheckInPage(tripId: trip.id),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                _ActionTile(
-                  label: 'مشاركة الموقع',
-                  icon: Icons.location_on_rounded,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => LiveLocationPage(tripId: trip.id),
+                    _ActionTile(
+                      label: 'مشاركة الموقع',
+                      icon: Icons.location_on_rounded,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => LiveLocationPage(tripId: trip.id),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                _ActionTile(
-                  label: 'التواصل',
-                  icon: Icons.chat_bubble_outline_rounded,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ChatsPage(tripId: trip.id),
+                    _ActionTile(
+                      label: 'التواصل',
+                      icon: Icons.chat_bubble_outline_rounded,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ChatsPage(tripId: trip.id),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                _ActionTile(
-                  label: 'تحديث الحالة',
-                  icon: Icons.sync_rounded,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => StatusUpdatePage(tripId: trip.id),
+                    _ActionTile(
+                      label: 'تحديث الحالة',
+                      icon: Icons.sync_rounded,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => StatusUpdatePage(tripId: trip.id),
+                        ),
+                      ),
                     ),
-                  ),
-                ),
-                _ActionTile(
-                  label: 'الإبلاغ عن حادثة',
-                  icon: Icons.report_problem_outlined,
-                  onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute(
-                      builder: (_) => ReportIncidentPage(tripId: trip.id),
+                    _ActionTile(
+                      label: 'بلاغ',
+                      icon: Icons.report_problem_outlined,
+                      destructive: true,
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => ReportIncidentPage(tripId: trip.id),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -162,6 +208,43 @@ class TripExecutionPage extends StatelessWidget {
       TripExecutionStatus.completed || TripExecutionStatus.cancelled =>
         AppButton(label: _statusLabel(status), onPressed: () {}),
     };
+  }
+
+  TripExecutionStatus _statusFromState(TripExecutionCubitState state) {
+    return switch (state) {
+      TripExecutionIdle(:final status) => status,
+      TripExecutionLoading(:final previousStatus) => previousStatus,
+      TripExecutionError(:final previousStatus) => previousStatus,
+    };
+  }
+
+  TripExecutionStatus _executionStatusFromTrip(AssignedTripStatus status) {
+    return switch (status) {
+      AssignedTripStatus.scheduled => TripExecutionStatus.scheduled,
+      AssignedTripStatus.boarding => TripExecutionStatus.boarding,
+      AssignedTripStatus.inProgress => TripExecutionStatus.inProgress,
+      AssignedTripStatus.completed => TripExecutionStatus.completed,
+    };
+  }
+
+  Color _statusColor(TripExecutionStatus status) {
+    return switch (status) {
+      TripExecutionStatus.scheduled => Colors.blue,
+      TripExecutionStatus.boarding => Colors.orange,
+      TripExecutionStatus.inProgress => Colors.green,
+      TripExecutionStatus.completed => Colors.grey,
+      TripExecutionStatus.cancelled => Colors.red,
+    };
+  }
+
+  String _timeRange(AssignedTrip trip) {
+    return '${_time(trip.departureTime)} - ${_time(trip.expectedArrivalTime)}';
+  }
+
+  String _time(DateTime value) {
+    final hour = value.hour.toString().padLeft(2, '0');
+    final minute = value.minute.toString().padLeft(2, '0');
+    return '$hour:$minute';
   }
 }
 
@@ -324,29 +407,103 @@ class _ActionTile extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onTap,
+    this.destructive = false,
   });
 
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+  final bool destructive;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: AppCard(
-        onTap: onTap,
-        padding: const EdgeInsets.all(14),
+    final scheme = Theme.of(context).colorScheme;
+    final color = destructive ? scheme.error : scheme.primary;
+    return AppCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Icon(icon, color: color),
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TripFact extends StatelessWidget {
+  const _TripFact({required this.icon, required this.value});
+
+  final IconData icon;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: scheme.outline.withAlpha(70)),
+        ),
         child: Row(
           children: [
-            Icon(icon, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 12),
+            Icon(icon, size: 16, color: scheme.primary),
+            const SizedBox(width: 6),
             Expanded(
-              child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+              child: Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelMedium,
+              ),
             ),
-            const Icon(Icons.chevron_right_rounded),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _InlineError extends StatelessWidget {
+  const _InlineError({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        message,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: scheme.onErrorContainer),
       ),
     );
   }

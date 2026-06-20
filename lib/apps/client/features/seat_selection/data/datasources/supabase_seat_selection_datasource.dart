@@ -51,7 +51,7 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
           .maybeSingle();
 
       if (tripResponse == null) {
-        throw Exception('تعذر العثور على تفاصيل الرحلة.');
+        throw Exception('Trip details could not be found.');
       }
 
       final vehicle = tripResponse['vehicles'] as Map<String, dynamic>? ?? {};
@@ -65,7 +65,7 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
 
       if (seats.isEmpty) {
         throw Exception(
-          'لا توجد مقاعد مسجلة لهذه الرحلة. يرجى التواصل مع خدمة العملاء.',
+          'No seats are registered for this trip. Please contact support.',
         );
       }
 
@@ -99,7 +99,7 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
       );
     } catch (error) {
       if (error is PostgrestException) {
-        throw Exception('تعذر تحميل مقاعد الرحلة من قاعدة البيانات.');
+        throw Exception('Could not load trip seats from the database.');
       }
       rethrow;
     }

@@ -90,9 +90,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   int _successfullyRebookedSeats = 0;
   int _totalCompensationEarned = 0; // EGP
 
-  // Empty state simulator toggle
-  bool _showEmptyState = false;
-
   // Form states
   UpcomingTrip? _selectedTripForRelease;
   String _selectedReason = 'Personal Plans';
@@ -120,7 +117,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   // Past release records
   List<SeatReleaseRecord> _pastReleases = [];
 
-  // Mock list of notifications
+  // Seat-release status notifications derived from loaded account state.
   late List<NotificationItem> _notifications;
 
   bool _seatReleaseDataApplied = false;
@@ -545,19 +542,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 letterSpacing: 0.5,
               ),
             ),
-            // Simulator toggle
-            TextButton.icon(
-              onPressed: () =>
-                  setState(() => _showEmptyState = !_showEmptyState),
-              icon: Icon(
-                _showEmptyState ? Icons.visibility : Icons.visibility_off,
-                size: 14,
-              ),
-              label: Text(
-                _showEmptyState ? 'Show Trips' : 'Mock Empty State',
-                style: const TextStyle(fontSize: 10),
-              ),
-            ),
           ],
         ),
         const SizedBox(height: 10),
@@ -846,7 +830,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   }
 
   Widget _buildUpcomingTripsList(ColorScheme scheme) {
-    if (_showEmptyState || _upcomingTrips.isEmpty) {
+    if (_upcomingTrips.isEmpty) {
       return ClientErrorCard.fullScreen(
         message:
             'No upcoming package trips\nAll upcoming seats are active, or no remaining days remain.',

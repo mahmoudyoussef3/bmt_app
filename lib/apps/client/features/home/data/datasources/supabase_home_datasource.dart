@@ -205,7 +205,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
   List<_PriceCandidate> _priceCandidatesFromTrip(dynamic trip) {
     if (trip is! Map<String, dynamic>) return const [];
 
-    final currency = trip['currency']?.toString() ?? 'ج.م';
+    final currency = trip['currency']?.toString() ?? 'EGP';
     final candidates = <_PriceCandidate>[];
     final pricingRows = trip['trip_pricing'];
     if (pricingRows is List) {

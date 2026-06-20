@@ -34,6 +34,7 @@ class TripData {
     required this.dateLabel,
     required this.timeLabel,
     required this.driverName,
+    required this.driverPhone,
     required this.driverInitials,
     required this.driverRating,
     required this.vehicleName,
@@ -54,6 +55,7 @@ class TripData {
   final String dateLabel;
   final String timeLabel;
   final String driverName;
+  final String driverPhone;
   final String driverInitials;
   final double driverRating;
   final String vehicleName;

@@ -14,7 +14,7 @@ class SortVehiclesUseCase {
           (a, b) => _priceValue(a.price).compareTo(_priceValue(b.price)),
         );
       case VehicleSortOption.rating:
-        // Rating field removed since it was fake data. Sort by available seats as fallback.
+        // Rating is not part of the verified vehicle payload; sort by available seats.
         list.sort((a, b) => b.availableSeats.compareTo(a.availableSeats));
       case VehicleSortOption.seats:
         list.sort((a, b) => b.availableSeats.compareTo(a.availableSeats));

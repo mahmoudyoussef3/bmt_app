@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/features/loyalty/domain/entities/loyalty_data.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_cubit.dart';
@@ -348,6 +349,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                 label: 'Copy & Close',
                 expand: true,
                 onPressed: () {
+                  Clipboard.setData(ClipboardData(text: reward.couponCode));
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(

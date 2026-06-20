@@ -182,7 +182,7 @@ class _SeatSelectionContent extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
       decoration: BoxDecoration(
-        color: ClientColors.primaryLight,
+        color: ClientColors.primaryContainerFor(context),
         borderRadius: BorderRadius.circular(28),
         border: Border.all(color: ClientColors.primaryMuted),
         boxShadow: [
@@ -238,7 +238,7 @@ class _SeatSelectionContent extends StatelessWidget {
                       child: Text(
                         '${data.availableCount} free',
                         style: ClientTypography.labelSmall(context).copyWith(
-                          color: ClientColors.primary,
+                          color: ClientColors.primaryFor(context),
                           fontWeight: FontWeight.w700,
                         ),
                       ),
@@ -313,14 +313,14 @@ class _SeatSelectionContent extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: ClientColors.primaryLight,
+                  color: ClientColors.primaryContainerFor(context),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(color: ClientColors.primaryMuted),
                 ),
                 child: Text(
                   '${data.availableCount} open',
                   style: ClientTypography.labelSmall(context).copyWith(
-                    color: ClientColors.primary,
+                    color: ClientColors.primaryFor(context),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -373,14 +373,14 @@ class _SeatSelectionContent extends StatelessWidget {
                   vertical: 8,
                 ),
                 decoration: BoxDecoration(
-                  color: ClientColors.primaryLight,
+                  color: ClientColors.primaryContainerFor(context),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(color: ClientColors.primaryMuted),
                 ),
                 child: Text(
                   'FRONT OF VEHICLE',
                   style: ClientTypography.labelSmall(context).copyWith(
-                    color: ClientColors.primary,
+                    color: ClientColors.primaryFor(context),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -488,14 +488,14 @@ class _SeatSelectionContent extends StatelessWidget {
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: const BoxDecoration(
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: ClientColors.primaryLight,
+              color: ClientColors.primaryContainerFor(context),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.event_seat_outlined,
               size: 36,
-              color: ClientColors.primary,
+              color: ClientColors.primaryFor(context),
             ),
           ),
           const SizedBox(height: 14),
@@ -536,7 +536,7 @@ class _SeatSelectionContent extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: ClientColors.primaryLight,
+        color: ClientColors.primaryContainerFor(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: ClientColors.primaryMuted, width: 1.5),
       ),
@@ -642,7 +642,7 @@ class _SeatSelectionContent extends StatelessWidget {
                             .lockSelectedSeat();
                         if (!locked || !context.mounted) return;
                         Navigator.of(context).pushNamed(
-                          '/payment-demo',
+                          '/payment-checkout',
                           arguments: {
                             'tripId': data.tripId,
                             'pickupPoint': data.pickupPoint,

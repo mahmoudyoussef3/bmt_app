@@ -65,6 +65,7 @@ class ClientButton extends StatelessWidget {
           backgroundColor: ClientColors.primary,
           foregroundColor: ClientColors.textInverse,
           disabledBackgroundColor: ClientColors.primary.withAlpha(100),
+          disabledForegroundColor: ClientColors.textInverse.withAlpha(180),
           minimumSize: minSize,
           shape: shape,
           textStyle: ClientTypography.labelLarge(context),

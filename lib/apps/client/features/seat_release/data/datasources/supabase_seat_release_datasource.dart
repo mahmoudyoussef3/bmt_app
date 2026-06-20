@@ -81,22 +81,22 @@ class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
 
     return SeatReleaseData(
       packageName: sub?['package_name'] as String? ?? '',
-      packageType: 'باقة اشتراك',
+      packageType: 'Subscription package',
       packageRoute: sub?['route_name'] as String? ?? '',
       startDate: _formatDateStr(sub?['start_date'] as String? ?? ''),
       endDate: _formatDateStr(sub?['end_date'] as String? ?? ''),
-      packageStatus: sub != null ? 'نشطة' : 'لا يوجد اشتراك',
+      packageStatus: sub != null ? 'Active' : 'No subscription',
       remainingDays: _remainingDays(sub?['end_date'] as String?),
       releasedSeatsThisMonth: cancelledRows.length,
       successfullyRebookedSeats: 0,
       totalCompensationEarned: 0,
       reasons: const [
-        'خطط شخصية',
-        'العمل من المنزل',
-        'إجازة',
-        'وسيلة نقل بديلة',
-        'سبب طبي',
-        'أخرى',
+        'Personal plans',
+        'Working from home',
+        'Vacation',
+        'Alternative transport',
+        'Medical reason',
+        'Other',
       ],
       upcomingTrips: upcomingTrips,
       pastReleases: const [],
@@ -122,17 +122,9 @@ class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
       final today = DateTime(now.year, now.month, now.day);
       final target = DateTime(d.year, d.month, d.day);
       final diff = target.difference(today).inDays;
-      if (diff == 0) return 'اليوم';
-      if (diff == 1) return 'غداً';
-      const days = [
-        'الأحد',
-        'الإثنين',
-        'الثلاثاء',
-        'الأربعاء',
-        'الخميس',
-        'الجمعة',
-        'السبت',
-      ];
+      if (diff == 0) return 'Today';
+      if (diff == 1) return 'Tomorrow';
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       return '${days[d.weekday % 7]} ${d.day}/${d.month}';
     } catch (_) {
       return isoDate;
@@ -165,18 +157,18 @@ class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
     packageRoute: '',
     startDate: '',
     endDate: '',
-    packageStatus: 'لا يوجد اشتراك',
+    packageStatus: 'No subscription',
     remainingDays: 0,
     releasedSeatsThisMonth: 0,
     successfullyRebookedSeats: 0,
     totalCompensationEarned: 0,
     reasons: [
-      'خطط شخصية',
-      'العمل من المنزل',
-      'إجازة',
-      'وسيلة نقل بديلة',
-      'سبب طبي',
-      'أخرى',
+      'Personal plans',
+      'Working from home',
+      'Vacation',
+      'Alternative transport',
+      'Medical reason',
+      'Other',
     ],
     upcomingTrips: [],
     pastReleases: [],

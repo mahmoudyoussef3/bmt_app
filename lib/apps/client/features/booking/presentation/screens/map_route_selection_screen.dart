@@ -27,11 +27,14 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
   MapSelectionMode _mode = MapSelectionMode.pickup;
   int _pickupTapIndex = 0;
   int _destTapIndex = 0;
+  bool _didLoad = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _query = bookingQueryFromContext(context);
+    if (_didLoad) return;
+    _didLoad = true;
     context.read<BookingCubit>().loadMapPins();
   }
 

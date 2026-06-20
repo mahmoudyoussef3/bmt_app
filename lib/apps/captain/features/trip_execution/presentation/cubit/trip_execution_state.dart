@@ -11,11 +11,14 @@ class TripExecutionIdle extends TripExecutionCubitState {
 }
 
 class TripExecutionLoading extends TripExecutionCubitState {
-  const TripExecutionLoading();
+  const TripExecutionLoading(this.previousStatus);
+
+  final TripExecutionStatus previousStatus;
 }
 
 class TripExecutionError extends TripExecutionCubitState {
-  const TripExecutionError(this.message);
+  const TripExecutionError(this.message, this.previousStatus);
 
   final String message;
+  final TripExecutionStatus previousStatus;
 }

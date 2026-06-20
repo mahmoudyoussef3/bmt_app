@@ -453,7 +453,11 @@ class _SearchEntryBar extends StatelessWidget {
                   color: scheme.primary.withAlpha(15),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(Icons.tune_rounded, size: 18, color: scheme.primary),
+                child: Icon(
+                  Icons.tune_rounded,
+                  size: 18,
+                  color: scheme.primary,
+                ),
               ),
             ],
           ),

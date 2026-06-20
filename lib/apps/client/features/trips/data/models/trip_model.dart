@@ -10,6 +10,7 @@ class TripModel {
     required this.dateLabel,
     required this.timeLabel,
     required this.driverName,
+    required this.driverPhone,
     required this.driverInitials,
     required this.driverRating,
     required this.vehicleName,
@@ -30,6 +31,7 @@ class TripModel {
   final String dateLabel;
   final String timeLabel;
   final String driverName;
+  final String driverPhone;
   final String driverInitials;
   final double driverRating;
   final String vehicleName;
@@ -51,6 +53,7 @@ class TripModel {
       dateLabel: dateLabel,
       timeLabel: timeLabel,
       driverName: driverName,
+      driverPhone: driverPhone,
       driverInitials: driverInitials,
       driverRating: driverRating,
       vehicleName: vehicleName,

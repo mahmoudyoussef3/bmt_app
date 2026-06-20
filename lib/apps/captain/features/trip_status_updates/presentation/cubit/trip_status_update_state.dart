@@ -11,11 +11,14 @@ class TripStatusUpdateReady extends TripStatusUpdateState {
 }
 
 class TripStatusUpdateLoading extends TripStatusUpdateState {
-  const TripStatusUpdateLoading();
+  const TripStatusUpdateLoading({this.status});
+
+  final CaptainTripStatus? status;
 }
 
 class TripStatusUpdateError extends TripStatusUpdateState {
-  const TripStatusUpdateError(this.message);
+  const TripStatusUpdateError(this.message, {this.status});
 
   final String message;
+  final CaptainTripStatus? status;
 }

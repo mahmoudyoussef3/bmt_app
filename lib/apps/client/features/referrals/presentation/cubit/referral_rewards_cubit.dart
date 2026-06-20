@@ -31,7 +31,7 @@ class ReferralRewardsCubit extends Cubit<ReferralRewardsState> {
     }
   }
 
-  void invite(MockContact contact) {
+  void invite(ReferralContact contact) {
     final current = state;
     if (current is! ReferralRewardsLoaded) return;
     _inviteContact(current.data, contact);

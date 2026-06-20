@@ -20,7 +20,7 @@ class VehicleCompareCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: selected
-          ? ClientColors.primaryLight
+          ? ClientColors.primaryContainerFor(context)
           : ClientColors.surfaceFor(context),
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
@@ -47,12 +47,12 @@ class VehicleCompareCard extends StatelessWidget {
                     width: 46,
                     height: 46,
                     decoration: BoxDecoration(
-                      color: ClientColors.primaryLight,
+                      color: ClientColors.primaryContainerFor(context),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.schedule_rounded,
-                      color: ClientColors.primary,
+                      color: ClientColors.primaryFor(context),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -135,6 +135,7 @@ class VehicleCompareCard extends StatelessWidget {
                 onPressed: onSelect,
                 style: FilledButton.styleFrom(
                   backgroundColor: ClientColors.primary,
+                  foregroundColor: ClientColors.textInverse,
                 ),
                 icon: Icon(
                   selected
@@ -223,13 +224,15 @@ class _SeatsBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: lowSeats
             ? ClientColors.journeyAmberLight
-            : ClientColors.primaryLight,
+            : ClientColors.primaryContainerFor(context),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         '$availableSeats seats',
         style: ClientTypography.labelMedium(context).copyWith(
-          color: lowSeats ? ClientColors.onJourneyAmber : ClientColors.primary,
+          color: lowSeats
+              ? ClientColors.onJourneyAmber
+              : ClientColors.primaryFor(context),
           fontWeight: FontWeight.w900,
         ),
       ),

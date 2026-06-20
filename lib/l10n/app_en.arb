@@ -370,5 +370,53 @@
   "dashboard_menu": "Menu",
   "dashboard_lightMode": "Light Mode",
   "dashboard_darkMode": "Dark Mode",
-  "dashboard_unauthorized": "This page is not available for the current role"
+  "dashboard_unauthorized": "This page is not available for the current role",
+  "onboarding_skip": "Skip",
+  "onboarding_next": "Next",
+  "onboarding_getStarted": "Get Started",
+  "onboarding_page1Title": "Book your daily ride in seconds",
+  "onboarding_page1Body": "Discover routes, pick a trip, and reserve your seat — all in a few taps.",
+  "onboarding_page1FeatureA": "Trip booking",
+  "onboarding_page1FeatureB": "Route discovery",
+  "onboarding_page2Title": "Follow every trip live",
+  "onboarding_page2Body": "Track your vehicle on the map in real time and know exactly when it arrives.",
+  "onboarding_page2FeatureA": "Live tracking",
+  "onboarding_page2FeatureB": "Arrival ETA",
+  "onboarding_page3Title": "Travel smart, worry-free",
+  "onboarding_page3Body": "Save with monthly passes, pay securely, and reach our support team whenever you need it.",
+  "onboarding_page3FeatureA": "Subscriptions",
+  "onboarding_page3FeatureB": "Discounted packages",
+  "onboarding_page4Title": "Pay securely, get help anytime",
+  "onboarding_page4Body": "Pay safely with trusted methods and reach our support team whenever you need.",
+  "onboarding_page4FeatureA": "Secure payments",
+  "onboarding_page4FeatureB": "24/7 support",
+  "welcome_trustSecure": "Secure payments",
+  "welcome_trustLive": "Real-time tracking",
+  "welcome_trustDaily": "Trusted daily commute",
+  "authSuccess_createdTitle": "You're all set!",
+  "authSuccess_createdSubtitle": "Your account is ready. Let's get you moving.",
+  "authSuccess_verifyTitle": "Verify your email",
+  "authSuccess_verifySubtitle": "We sent a confirmation link to {email}. Confirm it to activate your account, then sign in.",
+  "@authSuccess_verifySubtitle": {
+    "placeholders": {
+      "email": { "type": "String" }
+    }
+  },
+  "authSuccess_getStarted": "Get started",
+  "authSuccess_backToSignIn": "Back to sign in",
+  "authSuccess_perkBooking": "Book trips instantly",
+  "authSuccess_perkTracking": "Track rides live",
+  "authSuccess_perkPasses": "Save with passes",
+  "auth_passwordStrengthLabel": "Password strength",
+  "auth_passwordWeak": "Weak",
+  "auth_passwordFair": "Fair",
+  "auth_passwordGood": "Good",
+  "auth_passwordStrong": "Strong",
+  "auth_passwordHint": "Use 8+ characters with letters, numbers and a symbol.",
+  "auth_policyComingSoon": "{title} will open when published.",
+  "@auth_policyComingSoon": {
+    "placeholders": {
+      "title": { "type": "String" }
+    }
+  }
 }

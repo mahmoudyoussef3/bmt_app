@@ -88,7 +88,9 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('تعذر رفع الإيصال: ${error.toString()}')),
+        SnackBar(
+          content: Text('Unable to upload receipt: ${error.toString()}'),
+        ),
       );
     } finally {
       if (mounted) setState(() => _submitting = false);

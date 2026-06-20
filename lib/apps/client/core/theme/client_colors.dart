@@ -11,9 +11,18 @@ import 'package:flutter/material.dart';
 /// Use the static journey constants directly for status colors.
 abstract final class ClientColors {
   // ── Brand ──────────────────────────────────────────────────────────────────
-  static const Color primary = Color(0xFF1B6EF3);
-  static const Color primaryLight = Color(0xFFEBF2FF);
-  static const Color primaryMuted = Color(0xFF6B9FF8);
+  static const Color primary = Color(0xFF1769E8);
+  static const Color primaryHover = Color(0xFF0F58CA);
+  static const Color primaryLight = Color(0xFFEAF2FF);
+  static const Color primaryMuted = Color(0xFF76A8FF);
+  static const Color secondary = Color(0xFF0891B2);
+  static const Color accent = Color(0xFFF59E0B);
+
+  static const Color darkPrimary = Color(0xFF72A7FF);
+  static const Color darkPrimaryStrong = Color(0xFF4B8BFF);
+  static const Color darkPrimaryLight = Color(0xFF12284A);
+  static const Color darkSecondary = Color(0xFF38BDF8);
+  static const Color darkAccent = Color(0xFFFBBF24);
 
   // ── Journey status ─────────────────────────────────────────────────────────
   // Green — confirmed booking, on-time, boarded, active trip
@@ -42,27 +51,30 @@ abstract final class ClientColors {
   static const Color onJourneyPurple = Color(0xFF3B0764);
 
   // ── Text ───────────────────────────────────────────────────────────────────
-  static const Color textPrimary = Color(0xFF0F172A);
-  static const Color textSecondary = Color(0xFF475569);
-  static const Color textTertiary = Color(0xFF94A3B8);
+  static const Color textPrimary = Color(0xFF111827);
+  static const Color textSecondary = Color(0xFF4B5563);
+  static const Color textTertiary = Color(0xFF8793A4);
   static const Color textInverse = Color(0xFFFFFFFF);
 
   // ── Surfaces ───────────────────────────────────────────────────────────────
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceSubtle = Color(0xFFF8FAFC);
-  static const Color surfaceMuted = Color(0xFFF1F5F9);
-  static const Color border = Color(0xFFE2E8F0);
-  static const Color borderStrong = Color(0xFFCBD5E1);
+  static const Color surfaceSubtle = Color(0xFFF6F8FC);
+  static const Color surfaceMuted = Color(0xFFEFF4FA);
+  static const Color surfaceRaised = Color(0xFFFFFFFF);
+  static const Color border = Color(0xFFDDE6F1);
+  static const Color borderStrong = Color(0xFFB7C6D8);
 
   // ── Dark-mode overrides (used when [Brightness.dark]) ─────────────────────
-  static const Color _darkSurface = Color(0xFF0F172A);
-  static const Color _darkSurfaceSubtle = Color(0xFF1E293B);
-  static const Color _darkSurfaceMuted = Color(0xFF334155);
-  static const Color _darkBorder = Color(0xFF334155);
-  static const Color _darkBorderStrong = Color(0xFF475569);
-  static const Color _darkTextPrimary = Color(0xFFF8FAFC);
-  static const Color _darkTextSecondary = Color(0xFFCBD5E1);
-  static const Color _darkTextTertiary = Color(0xFF64748B);
+  static const Color _darkBackground = Color(0xFF0B1220);
+  static const Color _darkSurface = Color(0xFF101A2E);
+  static const Color _darkSurfaceSubtle = Color(0xFF0D1728);
+  static const Color _darkSurfaceMuted = Color(0xFF17233A);
+  static const Color _darkSurfaceRaised = Color(0xFF15213A);
+  static const Color _darkBorder = Color(0xFF293B59);
+  static const Color _darkBorderStrong = Color(0xFF3A5174);
+  static const Color _darkTextPrimary = Color(0xFFF6F9FF);
+  static const Color _darkTextSecondary = Color(0xFFC3D0E2);
+  static const Color _darkTextTertiary = Color(0xFF8190A8);
 
   // ── Theme-aware accessors ──────────────────────────────────────────────────
 
@@ -70,11 +82,17 @@ abstract final class ClientColors {
   static Color surfaceFor(BuildContext context) =>
       _isDark(context) ? _darkSurface : surface;
 
+  static Color backgroundFor(BuildContext context) =>
+      _isDark(context) ? _darkBackground : surfaceSubtle;
+
   static Color surfaceSubtleFor(BuildContext context) =>
       _isDark(context) ? _darkSurfaceSubtle : surfaceSubtle;
 
   static Color surfaceMutedFor(BuildContext context) =>
       _isDark(context) ? _darkSurfaceMuted : surfaceMuted;
+
+  static Color surfaceRaisedFor(BuildContext context) =>
+      _isDark(context) ? _darkSurfaceRaised : surfaceRaised;
 
   static Color borderFor(BuildContext context) =>
       _isDark(context) ? _darkBorder : border;
@@ -90,6 +108,15 @@ abstract final class ClientColors {
 
   static Color textTertiaryFor(BuildContext context) =>
       _isDark(context) ? _darkTextTertiary : textTertiary;
+
+  static Color primaryFor(BuildContext context) =>
+      _isDark(context) ? darkPrimary : primary;
+
+  static Color primaryContainerFor(BuildContext context) =>
+      _isDark(context) ? darkPrimaryLight : primaryLight;
+
+  static Color shadowFor(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF020617) : const Color(0xFF1E293B);
 
   static bool _isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;
@@ -127,6 +154,40 @@ abstract final class ClientColors {
         bg: journeyRedLight,
         fg: onJourneyRed,
         label: journeyRed,
+      ),
+    };
+  }
+
+  static ({Color bg, Color fg, Color label}) journeyBadgeFor(
+    BuildContext context,
+    ClientJourneyStatus status,
+  ) {
+    if (!_isDark(context)) return journeyBadge(status);
+    return switch (status) {
+      ClientJourneyStatus.active => (
+        bg: const Color(0xFF0F3324),
+        fg: const Color(0xFFB9F8D0),
+        label: const Color(0xFF4ADE80),
+      ),
+      ClientJourneyStatus.upcoming => (
+        bg: darkPrimaryLight,
+        fg: const Color(0xFFD8E8FF),
+        label: darkPrimary,
+      ),
+      ClientJourneyStatus.departing => (
+        bg: const Color(0xFF3A2A0A),
+        fg: const Color(0xFFFFE7A3),
+        label: darkAccent,
+      ),
+      ClientJourneyStatus.completed => (
+        bg: const Color(0xFF1F2937),
+        fg: const Color(0xFFD1D5DB),
+        label: const Color(0xFF94A3B8),
+      ),
+      ClientJourneyStatus.cancelled => (
+        bg: const Color(0xFF3A1518),
+        fg: const Color(0xFFFFC6CC),
+        label: const Color(0xFFFB7185),
       ),
     };
   }

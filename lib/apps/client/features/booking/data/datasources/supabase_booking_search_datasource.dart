@@ -193,9 +193,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         .toList();
     final fallbackOrder = candidates.isEmpty
         ? 0
-        : (checkPickup
-              ? candidates.first.order
-              : candidates.last.order);
+        : (checkPickup ? candidates.first.order : candidates.last.order);
 
     final normalized = query.trim().toLowerCase();
     if (normalized.isEmpty || candidates.isEmpty) {
@@ -381,7 +379,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
   List<_PriceCandidate> _priceCandidatesFromTrip(dynamic trip) {
     if (trip is! Map<String, dynamic>) return const [];
 
-    final currency = trip['currency']?.toString() ?? 'ج.م';
+    final currency = trip['currency']?.toString() ?? 'EGP';
     final candidates = <_PriceCandidate>[];
     final pricingRows = trip['trip_pricing'];
     if (pricingRows is List) {
@@ -429,26 +427,32 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           .gte('trip_date', today),
     ]);
 
-    final pickups = results[0]
-        .map((s) => s['name']?.toString() ?? '')
-        .where((n) => n.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final pickups =
+        results[0]
+            .map((s) => s['name']?.toString() ?? '')
+            .where((n) => n.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
 
-    final destinations = results[1]
-        .map((s) => s['name']?.toString() ?? '')
-        .where((n) => n.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final destinations =
+        results[1]
+            .map((s) => s['name']?.toString() ?? '')
+            .where((n) => n.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
 
-    final times = results[2]
-        .map((t) => _formatDepartureTime(t['departure_time']?.toString() ?? ''))
-        .where((t) => t.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final times =
+        results[2]
+            .map(
+              (t) =>
+                  _formatDepartureTime(t['departure_time']?.toString() ?? ''),
+            )
+            .where((t) => t.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
 
     return TripSearchOptions(
       pickupPoints: pickups,

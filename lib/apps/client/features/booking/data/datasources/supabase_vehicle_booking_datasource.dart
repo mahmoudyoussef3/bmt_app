@@ -76,7 +76,7 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
       seatType: vehicle['seat_layout_type']?.toString() ?? 'Standard',
       driverName: driverFullName,
       price:
-          '${data['currency'] ?? pricing['currency'] ?? 'ج.م'} ${data['ticket_price'] ?? pricing['one_time_price'] ?? 0}',
+          '${data['currency'] ?? pricing['currency'] ?? 'EGP'} ${data['ticket_price'] ?? pricing['one_time_price'] ?? 0}',
       capacity: capacity,
       availableSeats: capacity - passengerCount,
       estimatedArrival: data['arrival_time']?.toString() ?? 'N/A',

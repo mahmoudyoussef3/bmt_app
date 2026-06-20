@@ -7,7 +7,9 @@ import 'package:bmt_app/l10n/app_localizations.dart';
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../routes/auth_routes.dart';
+import '../widgets/auth_brand_logo.dart';
 import '../widgets/auth_section_card.dart';
+import '../widgets/password_strength_meter.dart';
 import '../widgets/premium_auth_button.dart';
 import '../widgets/premium_auth_scaffold.dart';
 import '../widgets/premium_auth_text_field.dart';
@@ -88,7 +90,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
             previous.signUpStatus != current.signUpStatus,
         listener: (context, state) {
           if (state.signUpStatus == AuthSubmissionStatus.success) {
-            Navigator.of(context).pushReplacementNamed(AuthRoutes.success);
+            Navigator.of(context).pushReplacementNamed(
+              AuthRoutes.success,
+              arguments: {'email': _emailController.text.trim().toLowerCase()},
+            );
             return;
           }
 
@@ -102,7 +107,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
           }
         },
         child: PremiumAuthScaffold(
-          logo: _AuthLogo(scheme: scheme),
+          logo: const AuthBrandLogo(),
           title: 'Create Account',
           subtitle:
               'Register your details once and enjoy booking trips, tracking buses, and managing subscriptions easily.',
@@ -117,6 +122,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                 absorbing: isLoading,
                 child: Form(
                   key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
                   child: AutofillGroup(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -225,6 +231,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                                 return null;
                               },
                             ),
+                            ValueListenableBuilder<TextEditingValue>(
+                              valueListenable: _passwordController,
+                              builder: (context, value, _) =>
+                                  PasswordStrengthMeter(password: value.text),
+                            ),
                           ],
                         ),
 
@@ -259,45 +270,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
           ),
         ),
       ),
-    );
-  }
-}
-
-class _AuthLogo extends StatelessWidget {
-  const _AuthLogo({required this.scheme});
-
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          height: 46,
-          width: 46,
-          padding: const EdgeInsets.all(9),
-          decoration: BoxDecoration(
-            color: scheme.primary.withAlpha(18),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: scheme.primary.withAlpha(45)),
-          ),
-          child: Image.asset(
-            'assets/images/app_icon.png',
-            fit: BoxFit.contain,
-            errorBuilder: (_, _, _) =>
-                Icon(Icons.directions_bus_rounded, color: scheme.primary),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          'EasyWay',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w900,
-            color: scheme.primary,
-            letterSpacing: -0.3,
-          ),
-        ),
-      ],
     );
   }
 }

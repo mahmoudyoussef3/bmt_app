@@ -3,7 +3,7 @@ import '../entities/referral_rewards.dart';
 class InviteContactUseCase {
   const InviteContactUseCase();
 
-  void call(ReferralRewardsData data, MockContact contact) {
+  void call(ReferralRewardsData data, ReferralContact contact) {
     if (contact.isInvited) return;
     contact.isInvited = true;
     data.totalInvites++;

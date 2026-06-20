@@ -20,7 +20,7 @@ abstract final class ClientTypography {
       Theme.of(context).textTheme.displaySmall!.copyWith(
         fontSize: 40,
         fontWeight: FontWeight.w900,
-        letterSpacing: -1.5,
+        letterSpacing: 0,
         height: 1.05,
       );
 
@@ -28,7 +28,7 @@ abstract final class ClientTypography {
       Theme.of(context).textTheme.displaySmall!.copyWith(
         fontSize: 32,
         fontWeight: FontWeight.w900,
-        letterSpacing: -1.0,
+        letterSpacing: 0,
         height: 1.08,
       );
 
@@ -38,7 +38,7 @@ abstract final class ClientTypography {
       Theme.of(context).textTheme.headlineSmall!.copyWith(
         fontSize: 24,
         fontWeight: FontWeight.w800,
-        letterSpacing: -0.5,
+        letterSpacing: 0,
         height: 1.2,
       );
 
@@ -46,7 +46,7 @@ abstract final class ClientTypography {
       Theme.of(context).textTheme.titleLarge!.copyWith(
         fontSize: 20,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.3,
+        letterSpacing: 0,
         height: 1.25,
       );
 
@@ -83,17 +83,17 @@ abstract final class ClientTypography {
   static TextStyle labelLarge(BuildContext context) => Theme.of(context)
       .textTheme
       .labelLarge!
-      .copyWith(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0.5);
+      .copyWith(fontSize: 14, fontWeight: FontWeight.w700, letterSpacing: 0);
 
   static TextStyle labelMedium(BuildContext context) => Theme.of(context)
       .textTheme
       .labelMedium!
-      .copyWith(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0.5);
+      .copyWith(fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 0);
 
   static TextStyle labelSmall(BuildContext context) => Theme.of(context)
       .textTheme
       .labelSmall!
-      .copyWith(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0.8);
+      .copyWith(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0);
 
   // ── Price ──────────────────────────────────────────────────────────────────
   // Dedicated price display styles — used on trip cards, checkout, packages
@@ -101,15 +101,15 @@ abstract final class ClientTypography {
   static TextStyle priceHero(BuildContext context) => Theme.of(context)
       .textTheme
       .headlineMedium!
-      .copyWith(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: -0.5);
+      .copyWith(fontSize: 28, fontWeight: FontWeight.w900, letterSpacing: 0);
 
   static TextStyle priceMedium(BuildContext context) => Theme.of(context)
       .textTheme
       .titleLarge!
-      .copyWith(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: -0.3);
+      .copyWith(fontSize: 20, fontWeight: FontWeight.w800, letterSpacing: 0);
 
   static TextStyle priceSmall(BuildContext context) => Theme.of(context)
       .textTheme
       .titleMedium!
-      .copyWith(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: -0.1);
+      .copyWith(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0);
 }

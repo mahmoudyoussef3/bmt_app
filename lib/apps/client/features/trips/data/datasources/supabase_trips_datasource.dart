@@ -59,6 +59,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       dateLabel: data['trip_date']?.toString() ?? '',
       timeLabel: data['trip_time']?.toString() ?? '',
       driverName: driverObj?['full_name']?.toString() ?? 'Driver Pending',
+      driverPhone: driverObj?['phone']?.toString() ?? 'Not available',
       driverInitials: (driverObj?['full_name']?.toString() ?? 'DP')
           .substring(0, 2)
           .toUpperCase(),

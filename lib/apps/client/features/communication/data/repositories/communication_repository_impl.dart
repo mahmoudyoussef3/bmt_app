@@ -15,4 +15,15 @@ class CommunicationRepositoryImpl implements CommunicationRepository {
         .map((conversation) => conversation.toEntity())
         .toList();
   }
+
+  @override
+  Future<void> sendMessage({
+    required String conversationId,
+    required String text,
+  }) {
+    return _datasource.appendClientMessage(
+      conversationId: conversationId,
+      text: text,
+    );
+  }
 }

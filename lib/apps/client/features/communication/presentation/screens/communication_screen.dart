@@ -48,8 +48,8 @@ class _CommunicationScreenState extends State<CommunicationScreen>
   Timer? _callTimer;
   int _callDurationSeconds = 0;
 
-  // Simulation states
-  bool _isTyping = false;
+  // Reserved for a future realtime "agent typing" indicator (no simulation).
+  final bool _isTyping = false;
   String _selectedFilter = 'All'; // 'All', 'Support', 'Drivers', 'Groups'
 
   // Voice message simulation states
@@ -131,8 +131,8 @@ class _CommunicationScreenState extends State<CommunicationScreen>
 
     final newMessage = ChatMessage(
       id: 'msg_${math.Random().nextInt(10000)}',
-      sender: 'user',
-      senderName: 'User',
+      sender: 'client',
+      senderName: 'You',
       text: text,
       time: timeStr,
     );
@@ -143,51 +143,6 @@ class _CommunicationScreenState extends State<CommunicationScreen>
     context.read<CommunicationCubit>().addMessage(newMessage);
 
     _scrollToBottom();
-
-    // Trigger simulation reply
-    _simulateAgentReply();
-  }
-
-  void _simulateAgentReply() {
-    setState(() {
-      _isTyping = true;
-    });
-    _scrollToBottom();
-
-    Timer(const Duration(seconds: 2), () {
-      if (!mounted || _activeConversation == null) return;
-
-      final now = DateTime.now();
-      final timeStr =
-          '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} ${now.hour >= 12 ? 'PM' : 'AM'}';
-
-      String replyText = '';
-      if (_activeConversation!.category == 'Driver') {
-        replyText = 'Okay, I received your message. I am keeping track of it.';
-      } else if (_activeConversation!.category == 'Support') {
-        replyText =
-            'Thank you for reaching out. We have registered this ticket modification in our system.';
-      } else {
-        replyText = 'Hey, I am on my way to the shuttle now.';
-      }
-
-      final replyMessage = ChatMessage(
-        id: 'msg_${math.Random().nextInt(10000)}',
-        sender: 'other',
-        senderName: _activeConversation!.category == 'Group'
-            ? 'Kareem Aly'
-            : _activeConversation!.name.split(' ').first,
-        text: replyText,
-        time: timeStr,
-      );
-
-      setState(() {
-        _isTyping = false;
-      });
-      context.read<CommunicationCubit>().addMessage(replyMessage);
-
-      _scrollToBottom();
-    });
   }
 
   // Voice message simulation playback
@@ -472,7 +427,6 @@ class _CommunicationScreenState extends State<CommunicationScreen>
             ),
           ),
         ],
-        IconButton(icon: const Icon(Icons.more_vert_rounded), onPressed: () {}),
         const SizedBox(width: 8),
       ],
       elevation: 1,
@@ -968,8 +922,8 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                 context.read<CommunicationCubit>().addMessage(
                   ChatMessage(
                     id: 'd_loc',
-                    sender: 'user',
-                    senderName: 'User',
+                    sender: 'client',
+                    senderName: 'You',
                     text: '📍 Shared Live Location',
                     time: 'Just now',
                   ),
@@ -980,14 +934,13 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                 context.read<CommunicationCubit>().addMessage(
                   ChatMessage(
                     id: 'd_late',
-                    sender: 'user',
-                    senderName: 'User',
+                    sender: 'client',
+                    senderName: 'You',
                     text: 'I will be late by 5 minutes, please hold for me.',
                     time: 'Just now',
                   ),
                 );
                 _scrollToBottom();
-                _simulateAgentReply();
               }, scheme),
             ],
           ),
@@ -1079,7 +1032,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
             ],
           ),
           const SizedBox(height: 10),
-          // Horizontal scrolling list of mock avatars
+          // Horizontal scrolling list of conversation avatars.
           SizedBox(
             height: 30,
             child: ListView(
@@ -1131,7 +1084,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
       itemCount: messages.length,
       itemBuilder: (context, idx) {
         final msg = messages[idx];
-        final isUser = msg.sender == 'user';
+        final isUser = msg.sender == 'user' || msg.sender == 'client';
         return _buildMessageItem(msg, isUser, scheme);
       },
     );

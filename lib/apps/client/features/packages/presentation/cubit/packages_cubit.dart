@@ -1,7 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/package_plan.dart';
+import '../../domain/entities/subscription_request.dart';
 import '../../domain/usecases/calculate_package_pricing_usecase.dart';
+import '../../domain/usecases/create_subscription_usecase.dart';
 import '../../domain/usecases/filter_packages_usecase.dart';
 import '../../domain/usecases/get_package_selection_data_usecase.dart';
 import 'packages_state.dart';
@@ -11,14 +13,17 @@ class PackagesCubit extends Cubit<PackagesState> {
     required GetPackageSelectionDataUseCase getSelectionData,
     required FilterPackagesUseCase filterPackages,
     required CalculatePackagePricingUseCase calculatePricing,
+    required CreateSubscriptionUseCase createSubscription,
   }) : _getSelectionData = getSelectionData,
        _filterPackages = filterPackages,
        _calculatePricing = calculatePricing,
+       _createSubscription = createSubscription,
        super(const PackagesLoading());
 
   final GetPackageSelectionDataUseCase _getSelectionData;
   final FilterPackagesUseCase _filterPackages;
   final CalculatePackagePricingUseCase _calculatePricing;
+  final CreateSubscriptionUseCase _createSubscription;
 
   Future<void> load() async {
     emit(const PackagesLoading());
@@ -134,6 +139,44 @@ class PackagesCubit extends Cubit<PackagesState> {
     final current = state;
     if (current is! PackagesLoaded) return;
     emit(current.copyWith(isProcessing: value));
+  }
+
+  /// Activates the selected package by persisting a real `subscriptions` row.
+  Future<void> subscribe() async {
+    final current = state;
+    if (current is! PackagesLoaded) return;
+    final package = current.selectedPackage;
+    if (package == null) return;
+
+    emit(current.copyWith(isProcessing: true, subscribeError: null));
+    try {
+      final id = await _createSubscription(
+        SubscriptionRequest(
+          packageName: package.name,
+          routeName: current.selectedRoute,
+          days: package.days,
+          totalPrice: current.pricing.finalPrice,
+        ),
+      );
+      emit(
+        current.copyWith(
+          isProcessing: false,
+          subscriptionId: id,
+          subscribed: true,
+        ),
+      );
+    } catch (error) {
+      emit(
+        current.copyWith(isProcessing: false, subscribeError: error.toString()),
+      );
+    }
+  }
+
+  /// Clears a surfaced activation error after the UI has shown it.
+  void clearSubscribeError() {
+    final current = state;
+    if (current is! PackagesLoaded) return;
+    emit(current.copyWith(subscribeError: null));
   }
 
   void _updateSelection({

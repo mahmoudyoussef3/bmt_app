@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/features/referrals/domain/entities/referral_rewards.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_cubit.dart';
@@ -123,6 +124,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
   }
 
   void _copyReferralCode() {
+    final code = _referralCode;
+    if (code.isEmpty) return;
+    Clipboard.setData(ClipboardData(text: code));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Referral code copied to clipboard!'),
@@ -132,8 +136,16 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
   }
 
   void _shareReferralLink() {
+    final code = _referralCode;
+    if (code.isEmpty) return;
+    final message =
+        'Join me on BMT and book your daily commute! '
+        'Use my referral code $code to get started.';
+    Clipboard.setData(ClipboardData(text: message));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Sharing link via System Share...')),
+      const SnackBar(
+        content: Text('Invite message copied — share it with your friends!'),
+      ),
     );
   }
 

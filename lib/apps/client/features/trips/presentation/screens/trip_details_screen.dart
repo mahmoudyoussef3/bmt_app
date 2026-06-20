@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
@@ -90,7 +91,7 @@ class _TripDetailsView extends StatelessWidget {
         appBar: AppBar(
           backgroundColor: ClientColors.surfaceFor(context),
           title: Text(
-            'تفاصيل الرحلة',
+            'Trip Details',
             style: ClientTypography.headingSmall(
               context,
             ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -109,7 +110,7 @@ class _TripDetailsView extends StatelessWidget {
                   size: 18,
                 ),
                 label: const Text(
-                  'إلغاء',
+                  'Cancel',
                   style: TextStyle(
                     color: ClientColors.journeyRed,
                     fontWeight: FontWeight.w800,
@@ -132,36 +133,36 @@ class _TripDetailsView extends StatelessWidget {
               const SizedBox(height: 16),
             ],
             _DetailSection(
-              title: 'خط السير',
-              subtitle: 'نقطة الركوب والوجهة',
+              title: 'Route',
+              subtitle: 'Pickup point and destination',
               icon: Icons.route_rounded,
               child: _RouteTimelineCard(trip: trip),
             ),
             const SizedBox(height: 16),
             _DetailSection(
-              title: 'السائق',
-              subtitle: 'بيانات الكابتن المسؤول عن الرحلة',
+              title: 'Driver',
+              subtitle: 'Assigned captain details',
               icon: Icons.person_pin_circle_rounded,
               child: _DriverCard(trip: trip),
             ),
             const SizedBox(height: 16),
             _DetailSection(
-              title: 'العربية',
-              subtitle: 'بيانات المركبة المخصصة للرحلة',
+              title: 'Vehicle',
+              subtitle: 'Assigned vehicle details',
               icon: Icons.directions_bus_filled_rounded,
               child: _VehicleCard(trip: trip),
             ),
             const SizedBox(height: 16),
             _DetailSection(
-              title: 'المقاعد',
-              subtitle: 'المقاعد المحجوزة في هذه الرحلة',
+              title: 'Seats',
+              subtitle: 'Seats reserved for this trip',
               icon: Icons.event_seat_rounded,
               child: _SeatsCard(trip: trip),
             ),
             const SizedBox(height: 16),
             _DetailSection(
-              title: 'الدفع',
-              subtitle: 'حالة الدفع وقيمة الرحلة',
+              title: 'Payment',
+              subtitle: 'Payment status and fare',
               icon: Icons.payments_rounded,
               child: _PaymentCard(trip: trip),
             ),
@@ -195,7 +196,7 @@ class _TripLoadingView extends StatelessWidget {
       textDirection: TextDirection.ltr,
       child: Scaffold(
         backgroundColor: ClientColors.surfaceSubtleFor(context),
-        appBar: const _StaticAppBar(title: 'تفاصيل الرحلة'),
+        appBar: const _StaticAppBar(title: 'Trip Details'),
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
           children: [
@@ -224,7 +225,7 @@ class _TripErrorView extends StatelessWidget {
       textDirection: TextDirection.ltr,
       child: Scaffold(
         backgroundColor: ClientColors.surfaceFor(context),
-        appBar: const _StaticAppBar(title: 'تفاصيل الرحلة'),
+        appBar: const _StaticAppBar(title: 'Trip Details'),
         body: ClientErrorCard.fullScreen(message: message),
       ),
     );
@@ -240,10 +241,10 @@ class _TripEmptyView extends StatelessWidget {
       textDirection: TextDirection.ltr,
       child: Scaffold(
         backgroundColor: ClientColors.surfaceSubtleFor(context),
-        appBar: const _StaticAppBar(title: 'تفاصيل الرحلة'),
+        appBar: const _StaticAppBar(title: 'Trip Details'),
         body: Center(
           child: Text(
-            'لم يتم العثور على الرحلة',
+            'Trip not found',
             style: ClientTypography.bodyMedium(
               context,
             ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -355,7 +356,7 @@ class _TripHeroCard extends StatelessWidget {
                 const SizedBox(height: 14),
                 _HeroMetaChip(
                   icon: Icons.check_circle_rounded,
-                  label: 'تمت الرحلة ${trip.completedAt}',
+                  label: 'Completed ${trip.completedAt}',
                 ),
               ],
             ],
@@ -375,9 +376,9 @@ class _TripHeroCard extends StatelessWidget {
   }
 
   String _seatsLabel(TripData trip) {
-    if (trip.seats.isEmpty) return 'لا يوجد مقعد محدد';
-    if (trip.seats.length == 1) return 'مقعد ${trip.seats.first}';
-    return '${trip.seats.length} مقاعد';
+    if (trip.seats.isEmpty) return 'No seat selected';
+    if (trip.seats.length == 1) return 'Seat ${trip.seats.first}';
+    return '${trip.seats.length} seats';
   }
 }
 
@@ -468,11 +469,11 @@ class _TripTicketCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'تذكرة الركوب',
+                  'Boarding Ticket',
                   style: ClientTypography.headingSmall(context),
                 ),
               ),
-              _StatusBadge(label: 'جاهزة', color: ClientColors.journeyGreen),
+              _StatusBadge(label: 'Ready', color: ClientColors.journeyGreen),
             ],
           ),
           const SizedBox(height: 14),
@@ -509,14 +510,14 @@ class _LiveTrackingCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'الرحلة بدأت بالفعل',
+                  'Your trip is in progress',
                   style: ClientTypography.headingSmall(
                     context,
                   ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'تابع مكان العربية ووقت الوصول المتوقع.',
+                  'Track the vehicle location and expected arrival time.',
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -535,7 +536,7 @@ class _LiveTrackingCard extends StatelessWidget {
               backgroundColor: ClientColors.primary,
               foregroundColor: ClientColors.textInverse,
             ),
-            child: const Text('تتبع'),
+            child: const Text('Track'),
           ),
         ],
       ),
@@ -557,7 +558,7 @@ class _CompletedTripCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'ساعدنا نحسن الخدمة بتقييم رحلتك مع ${trip.driverName}.',
+              'Help us improve by rating your trip with ${trip.driverName}.',
               style: ClientTypography.bodyMedium(context).copyWith(
                 fontWeight: FontWeight.w700,
                 color: ClientColors.textPrimaryFor(context),
@@ -634,7 +635,7 @@ class _RouteTimelineCard extends StatelessWidget {
           _RouteTimelinePoint(
             icon: Icons.trip_origin_rounded,
             color: ClientColors.journeyGreen,
-            title: 'نقطة الركوب',
+            title: 'Pickup Point',
             value: trip.pickup,
             time: trip.timeLabel,
           ),
@@ -642,9 +643,9 @@ class _RouteTimelineCard extends StatelessWidget {
           _RouteTimelinePoint(
             icon: Icons.location_on_rounded,
             color: ClientColors.journeyRed,
-            title: 'الوجهة',
+            title: 'Destination',
             value: trip.destination,
-            time: 'الوصول حسب خط الرحلة',
+            time: 'Arrival follows the route schedule',
           ),
         ],
       ),
@@ -781,7 +782,7 @@ class _DriverCard extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          ' · كابتن معتمد',
+                          ' · Verified captain',
                           style: ClientTypography.bodySmall(context).copyWith(
                             color: ClientColors.textSecondaryFor(context),
                           ),
@@ -791,7 +792,10 @@ class _DriverCard extends StatelessWidget {
                   ],
                 ),
               ),
-              _StatusBadge(label: 'متاح', color: ClientColors.journeyGreen),
+              _StatusBadge(
+                label: 'Available',
+                color: ClientColors.journeyGreen,
+              ),
             ],
           ),
           const SizedBox(height: 16),
@@ -800,23 +804,23 @@ class _DriverCard extends StatelessWidget {
               Expanded(
                 child: _InlineActionButton(
                   icon: Icons.call_rounded,
-                  label: 'اتصال',
-                  onTap: () => _showComingSoon(context, 'الاتصال بالسائق'),
+                  label: 'Call',
+                  onTap: () => _callDriver(context),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _InlineActionButton(
                   icon: Icons.chat_bubble_rounded,
-                  label: 'محادثة',
-                  onTap: () => _showComingSoon(context, 'محادثة السائق'),
+                  label: 'Chat',
+                  onTap: () => Navigator.pushNamed(context, '/communication'),
                 ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: _InlineActionButton(
                   icon: Icons.location_on_rounded,
-                  label: 'تتبع',
+                  label: 'Track',
                   onTap: () => Navigator.pushNamed(
                     context,
                     '/tracking',
@@ -831,10 +835,21 @@ class _DriverCard extends StatelessWidget {
     );
   }
 
-  void _showComingSoon(BuildContext context, String feature) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('$feature سيتم تفعيله قريبًا')));
+  Future<void> _callDriver(BuildContext context) async {
+    final phone = trip.driverPhone.trim();
+    final messenger = ScaffoldMessenger.of(context);
+    if (phone.isEmpty) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Driver phone number is not available.')),
+      );
+      return;
+    }
+    final uri = Uri(scheme: 'tel', path: phone);
+    if (!await launchUrl(uri)) {
+      messenger.showSnackBar(
+        SnackBar(content: Text('Could not start a call to $phone.')),
+      );
+    }
   }
 }
 
@@ -904,7 +919,7 @@ class _VehicleCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'كود العربية: ${trip.vehicleId}',
+                  'Vehicle code: ${trip.vehicleId}',
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -938,7 +953,7 @@ class _SeatsCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  trip.seats.isEmpty ? 'لا يوجد مقعد محدد' : _selectedSeatsText,
+                  trip.seats.isEmpty ? 'No seat selected' : _selectedSeatsText,
                   style: ClientTypography.headingSmall(
                     context,
                   ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -956,8 +971,8 @@ class _SeatsCard extends StatelessWidget {
   }
 
   String get _selectedSeatsText {
-    if (trip.seats.length == 1) return 'مقعدك المختار: ${trip.seats.first}';
-    return 'مقاعدك المختارة: ${trip.seats.join(', ')}';
+    if (trip.seats.length == 1) return 'Selected seat: ${trip.seats.first}';
+    return 'Selected seats: ${trip.seats.join(', ')}';
   }
 }
 
@@ -1008,10 +1023,10 @@ class _MiniSeatLayout extends StatelessWidget {
             spacing: 12,
             runSpacing: 8,
             children: [
-              _SeatLegend(color: ClientColors.journeyGreen, label: 'مقعدك'),
+              _SeatLegend(color: ClientColors.journeyGreen, label: 'Your seat'),
               _SeatLegend(
                 color: ClientColors.primary.withAlpha(100),
-                label: 'مقعد آخر',
+                label: 'Other seat',
               ),
             ],
           ),
@@ -1123,23 +1138,23 @@ class _PaymentCard extends StatelessWidget {
                 ),
               ),
               _StatusBadge(
-                label: _paymentArabicLabel(trip.paymentStatus),
+                label: _paymentLabel(trip.paymentStatus),
                 color: color,
               ),
             ],
           ),
           const SizedBox(height: 16),
-          _PaymentRow(label: 'سعر الرحلة', value: trip.fare),
+          _PaymentRow(label: 'Trip fare', value: trip.fare),
           const SizedBox(height: 8),
-          const _PaymentRow(label: 'رسوم الخدمة', value: '0'),
+          const _PaymentRow(label: 'Service fee', value: '0'),
           const SizedBox(height: 8),
-          const _PaymentRow(label: 'الخصم', value: '0'),
+          const _PaymentRow(label: 'Discount', value: '0'),
           Divider(height: 24, color: ClientColors.borderFor(context)),
           Row(
             children: [
               Expanded(
                 child: Text(
-                  'الإجمالي',
+                  'Total',
                   style: ClientTypography.headingSmall(
                     context,
                   ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -1167,12 +1182,12 @@ class _PaymentCard extends StatelessWidget {
     };
   }
 
-  String _paymentArabicLabel(PaymentStatus status) {
+  String _paymentLabel(PaymentStatus status) {
     return switch (status) {
-      PaymentStatus.paid => 'مدفوع',
-      PaymentStatus.pending => 'قيد الانتظار',
-      PaymentStatus.refunded => 'مسترد',
-      PaymentStatus.failed => 'فشل',
+      PaymentStatus.paid => 'Paid',
+      PaymentStatus.pending => 'Pending',
+      PaymentStatus.refunded => 'Refunded',
+      PaymentStatus.failed => 'Failed',
     };
   }
 }
@@ -1229,7 +1244,7 @@ class _CancellationReasonCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'سبب الإلغاء',
+                  'Cancellation Reason',
                   style: ClientTypography.headingSmall(
                     context,
                   ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -1291,7 +1306,7 @@ class _TripActionsBar extends StatelessWidget {
           children: [
             if (canTrack)
               ClientButton(
-                label: 'تتبع العربية',
+                label: 'Track Vehicle',
                 onPressed: () => Navigator.pushNamed(
                   context,
                   '/tracking',
@@ -1303,7 +1318,7 @@ class _TripActionsBar extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ClientButton(
-                      label: 'تتبع العربية',
+                      label: 'Track Vehicle',
                       onPressed: () => Navigator.pushNamed(
                         context,
                         '/tracking',
@@ -1314,7 +1329,7 @@ class _TripActionsBar extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: ClientButton.secondary(
-                      label: 'إلغاء الرحلة',
+                      label: 'Cancel Trip',
                       onPressed: () => showTripCancellationFlow(
                         context,
                         tripReference: trip.reference,
@@ -1328,7 +1343,7 @@ class _TripActionsBar extends StatelessWidget {
                 children: [
                   Expanded(
                     child: ClientButton(
-                      label: 'تقييم الرحلة',
+                      label: 'Rate Trip',
                       onPressed: () => showTripReviewFlow(
                         context,
                         tripReference: trip.reference,
@@ -1338,8 +1353,9 @@ class _TripActionsBar extends StatelessWidget {
                   const SizedBox(width: 10),
                   Expanded(
                     child: ClientButton.secondary(
-                      label: 'احجز مرة أخرى',
-                      onPressed: () => Navigator.pushNamed(context, '/booking'),
+                      label: 'Book Again',
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/booking/search'),
                     ),
                   ),
                 ],

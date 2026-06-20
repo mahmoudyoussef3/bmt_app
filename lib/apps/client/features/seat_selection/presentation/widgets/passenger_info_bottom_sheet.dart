@@ -93,7 +93,7 @@ class _PassengerInfoSheet extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'We will use this number for trip updates (demo UI only).',
+                    'We will use this number for trip updates.',
                     style: ClientTypography.bodySmall(
                       context,
                     ).copyWith(color: ClientColors.textSecondaryFor(context)),

@@ -58,22 +58,36 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                       if (state is CaptainCommunicationLoading) {
                         return const Center(child: CircularProgressIndicator());
                       }
+                      if (state is CaptainCommunicationError) {
+                        return AsyncStateView(
+                          status: AsyncViewStatus.error,
+                          errorMessage: state.message,
+                          onRetry: () =>
+                              context.read<CaptainCommunicationCubit>().load(
+                                tripId: widget.tripId,
+                                passengerId: widget.passengerId,
+                              ),
+                          child: const SizedBox.shrink(),
+                        );
+                      }
                       final messages = state is CaptainCommunicationLoaded
                           ? state.conversation.messages
                           : const <CaptainMessage>[];
+                      if (messages.isEmpty) {
+                        return const EmptyState(
+                          title: 'لا توجد رسائل بعد',
+                          subtitle: 'ابدأ المحادثة برسالة قصيرة وواضحة.',
+                        );
+                      }
                       return ListView.builder(
-                        padding: const EdgeInsets.all(16),
+                        reverse: true,
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
-                          final message = messages[index];
+                          final message = messages[messages.length - 1 - index];
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: AppCard(
-                              padding: const EdgeInsets.all(12),
-                              child: Text(
-                                '${message.senderName}: ${message.text}',
-                              ),
-                            ),
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _MessageBubble(message: message),
                           );
                         },
                       );
@@ -127,8 +141,10 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                   IconButton(
                     tooltip: 'إرسال',
                     onPressed: () {
+                      final text = _controller.text.trim();
+                      if (text.isEmpty) return;
                       context.read<CaptainCommunicationCubit>().send(
-                        _controller.text,
+                        text,
                         CaptainMessageType.text,
                       );
                       _controller.clear();
@@ -153,6 +169,59 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _MessageBubble extends StatelessWidget {
+  const _MessageBubble({required this.message});
+
+  final CaptainMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final mine =
+        message.senderName.contains('Captain') ||
+        message.senderName.contains('السائق');
+    return Align(
+      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: MediaQuery.sizeOf(context).width * 0.78,
+        ),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            color: mine ? scheme.primary : scheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: mine ? scheme.primary : scheme.outline.withAlpha(70),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  message.senderName,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: mine ? scheme.onPrimary : scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  message.text,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: mine ? scheme.onPrimary : scheme.onSurface,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

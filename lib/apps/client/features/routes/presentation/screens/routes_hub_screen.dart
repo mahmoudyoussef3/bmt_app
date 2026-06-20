@@ -134,13 +134,15 @@ class _GradientHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final primaryContainer = ClientColors.primaryContainerFor(context);
+
     return Container(
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [ClientColors.primaryLight, ClientColors.surfaceFor(context)],
+          colors: [primaryContainer, ClientColors.surfaceFor(context)],
         ),
         borderRadius: BorderRadius.circular(16),
       ),
@@ -187,7 +189,7 @@ class _SearchCtaCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: ClientColors.primaryLight,
+        color: ClientColors.primaryContainerFor(context),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: ClientColors.primary.withAlpha(40)),
       ),

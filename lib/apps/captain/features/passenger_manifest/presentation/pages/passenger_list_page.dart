@@ -1,5 +1,6 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/features/communication/presentation/pages/chat_details_page.dart';
+import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,7 +27,13 @@ class PassengerListPage extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
             if (state is PassengerManifestError) {
-              return Center(child: Text(state.message));
+              return AsyncStateView(
+                status: AsyncViewStatus.error,
+                errorMessage: state.message,
+                onRetry: () =>
+                    context.read<PassengerManifestCubit>().load(tripId),
+                child: const SizedBox.shrink(),
+              );
             }
             final passengers = state is PassengerManifestLoaded
                 ? state.passengers
@@ -34,21 +41,45 @@ class PassengerListPage extends StatelessWidget {
             final boarded = passengers
                 .where((p) => p.status == PassengerBoardingStatus.boarded)
                 .length;
+            if (passengers.isEmpty) {
+              return const EmptyState(
+                title: 'لا يوجد ركاب على هذه الرحلة',
+                subtitle: 'ستظهر الحجوزات المؤكدة هنا فور إضافتها.',
+              );
+            }
             return Column(
               children: [
-                if (passengers.isNotEmpty)
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 10,
-                    ),
-                    color: Theme.of(context).colorScheme.surfaceContainerLow,
-                    child: Text(
-                      '✓ $boarded صعد · ${passengers.length - boarded} متبقٍ · ${passengers.length} إجمالاً',
-                      style: Theme.of(context).textTheme.bodySmall,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  child: AppCard(
+                    padding: const EdgeInsets.all(14),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: _ManifestMetric(
+                            label: 'صعد',
+                            value: boarded.toString(),
+                            color: Colors.green,
+                          ),
+                        ),
+                        Expanded(
+                          child: _ManifestMetric(
+                            label: 'متبقٍ',
+                            value: (passengers.length - boarded).toString(),
+                            color: Colors.orange,
+                          ),
+                        ),
+                        Expanded(
+                          child: _ManifestMetric(
+                            label: 'الإجمالي',
+                            value: passengers.length.toString(),
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
+                ),
                 Expanded(
                   child: ListView.builder(
                     padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
@@ -81,6 +112,35 @@ class PassengerListPage extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+class _ManifestMetric extends StatelessWidget {
+  const _ManifestMetric({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
+
+  final String label;
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: color,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(label, style: Theme.of(context).textTheme.labelSmall),
+      ],
     );
   }
 }

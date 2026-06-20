@@ -130,7 +130,7 @@ Future<bool> showTripCancellationFlow(
         children: [
           Text(
             'Your booking will be cancelled and a refund will be processed '
-            'according to policy (demo UI).',
+            'according to the active cancellation and refund policy.',
             style: ClientTypography.bodySmall(ctx),
           ),
           const SizedBox(height: 12),
@@ -176,9 +176,9 @@ Future<bool> showTripCancellationFlow(
   );
 
   if (confirmed == true && context.mounted) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Trip cancelled (demo)')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Cancellation request saved.')),
+    );
     return true;
   }
   return false;

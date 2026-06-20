@@ -1,6 +1,6 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
@@ -23,7 +23,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     with TickerProviderStateMixin {
   int _currentStep = 1; // Steps 1 to 5
   late final AnimationController _successController;
-  late final String _subscriptionId;
 
   @override
   void initState() {
@@ -32,7 +31,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     );
-    _subscriptionId = 'SUB-2026-${_generateRandomSuffix()}';
     context.read<PackagesCubit>().load();
   }
 
@@ -40,12 +38,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   void dispose() {
     _successController.dispose();
     super.dispose();
-  }
-
-  String _generateRandomSuffix() {
-    final rng = math.Random();
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    return List.generate(5, (_) => chars[rng.nextInt(chars.length)]).join();
   }
 
   void _onBackPress() {
@@ -60,17 +52,24 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     }
   }
 
-  void _simulateSubscriptionActivation() {
-    context.read<PackagesCubit>().setProcessing(true);
+  void _activateSubscription() {
+    context.read<PackagesCubit>().subscribe();
+  }
 
-    Timer(const Duration(milliseconds: 1800), () {
-      if (!mounted) return;
-      context.read<PackagesCubit>().setProcessing(false);
-      setState(() {
-        _currentStep = 5;
-      });
+  void _onSubscriptionStateChanged(BuildContext context, PackagesState state) {
+    if (state is! PackagesLoaded) return;
+    final error = state.subscribeError;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Could not activate subscription: $error')),
+      );
+      context.read<PackagesCubit>().clearSubscribeError();
+      return;
+    }
+    if (state.subscribed && _currentStep != 5) {
+      setState(() => _currentStep = 5);
       _successController.forward();
-    });
+    }
   }
 
   @override
@@ -78,7 +77,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
 
-    return BlocBuilder<PackagesCubit, PackagesState>(
+    return BlocConsumer<PackagesCubit, PackagesState>(
+      listener: _onSubscriptionStateChanged,
       builder: (context, state) {
         final isProcessing = state is PackagesLoaded && state.isProcessing;
 
@@ -1512,7 +1512,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         _buildStickyCTA(
           label: 'Confirm Subscription',
           onPressed: loaded.agreeTerms
-              ? _simulateSubscriptionActivation
+              ? _activateSubscription
               : () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -1653,16 +1653,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     ),
                     GestureDetector(
                       onTap: () {
+                        final id = loaded.subscriptionId ?? '';
+                        Clipboard.setData(ClipboardData(text: id));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text('Copied ID: $_subscriptionId'),
-                          ),
+                          SnackBar(content: Text('Copied ID: $id')),
                         );
                       },
                       child: Row(
                         children: [
                           Text(
-                            _subscriptionId,
+                            loaded.subscriptionId ?? '',
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,

@@ -1,5 +1,5 @@
-class MockContact {
-  MockContact({
+class ReferralContact {
+  ReferralContact({
     required this.name,
     required this.detail,
     this.isInvited = false,
@@ -59,7 +59,7 @@ class ReferralRewardsData {
   final int successfulReferrals;
   int earnedRewardsTotal;
   int walletBalance;
-  final List<MockContact> contacts;
+  final List<ReferralContact> contacts;
   final List<ReferralHistoryItem> history;
   final List<ScratchVoucher> vouchers;
 }

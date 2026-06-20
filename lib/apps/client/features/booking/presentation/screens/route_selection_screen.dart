@@ -24,11 +24,15 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
   late BookingSearchQuery _query;
   String? _selectedRouteId;
   String? _selectedTripId;
+  String? _loadedQueryKey;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _query = bookingQueryFromContext(context);
+    final queryKey = _queryKey(_query);
+    if (_loadedQueryKey == queryKey) return;
+    _loadedQueryKey = queryKey;
     context.read<BookingCubit>().loadRoutes(_query);
   }
 
@@ -82,7 +86,8 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
             routes: routes,
             selectedRoute: selectedRoute,
             selectedTripId: _selectedTripId,
-            onRetry: () => context.read<BookingCubit>().loadRoutes(_query),
+            onRetry: () =>
+                context.read<BookingCubit>().loadRoutes(_query, force: true),
             onMap: () {
               Navigator.pushNamed(
                 context,
@@ -109,6 +114,16 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
       (route) => route.id == _selectedRouteId,
       orElse: () => routes.first,
     );
+  }
+
+  String _queryKey(BookingSearchQuery query) {
+    return [
+      query.routeId ?? '',
+      query.pickup,
+      query.destination,
+      query.date,
+      query.time,
+    ].join('|');
   }
 }
 
@@ -234,9 +249,9 @@ class _ClosestMatchBanner extends StatelessWidget {
               children: [
                 Text(
                   'Best results for you',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
                 ),
                 const SizedBox(height: 3),
                 Text(

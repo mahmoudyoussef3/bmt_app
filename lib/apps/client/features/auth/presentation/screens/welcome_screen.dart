@@ -1,6 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 import '../routes/auth_routes.dart';
@@ -54,9 +55,27 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     super.dispose();
   }
 
-  void _openTerms() {}
+  void _openTerms() {
+    final l10n = AppLocalizations.of(context);
+    _showPolicyNotice(l10n?.auth_termsOfService ?? 'Terms of Service');
+  }
 
-  void _openPrivacy() {}
+  void _openPrivacy() {
+    final l10n = AppLocalizations.of(context);
+    _showPolicyNotice(l10n?.auth_privacyPolicy ?? 'Privacy Policy');
+  }
+
+  void _showPolicyNotice(String title) {
+    final l10n = AppLocalizations.of(context);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          l10n?.auth_policyComingSoon(title) ??
+              '$title will open when published.',
+        ),
+      ),
+    );
+  }
 
   void _goToSignIn() {
     Navigator.pushNamed(context, AuthRoutes.signIn);
@@ -73,7 +92,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
     final scheme = theme.colorScheme;
     final size = MediaQuery.sizeOf(context);
 
-    final isCompactHeight = size.height < 720;
+    final isCompactHeight = size.height < 800;
     final isWide = size.width >= 760;
 
     return Directionality(
@@ -111,6 +130,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                     child: _ActionPanel(
                                       l10n: l10n,
                                       scheme: scheme,
+                                      compact: isCompactHeight,
                                       onLogin: _goToSignIn,
                                       onCreateAccount: _goToSignUp,
                                       termsRecognizer: _termsRecognizer,
@@ -130,6 +150,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                                   _ActionPanel(
                                     l10n: l10n,
                                     scheme: scheme,
+                                    compact: isCompactHeight,
                                     onLogin: _goToSignIn,
                                     onCreateAccount: _goToSignUp,
                                     termsRecognizer: _termsRecognizer,
@@ -160,61 +181,107 @@ class _HeroContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      child: Padding(
-        padding: EdgeInsets.only(top: compact ? 4 : 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _BrandHeader(scheme: scheme),
-            SizedBox(height: compact ? 22 : 34),
-            Text(
-              'Your daily trip\nin one click',
-              textAlign: TextAlign.start,
-              style: theme.textTheme.displaySmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                height: 1.08,
-                letterSpacing: -0.7,
-                color: scheme.onSurface,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final hasBoundedHeight = constraints.hasBoundedHeight;
+        final availableHeight = constraints.maxHeight;
+        final tightHero = hasBoundedHeight && availableHeight < 430;
+        final showFeaturePills =
+            !tightHero && (!hasBoundedHeight || availableHeight >= 500);
+        final headerGap = tightHero ? 12.0 : (compact ? 18.0 : 26.0);
+        final titleGap = tightHero ? 10.0 : 14.0;
+        final visualGap = tightHero ? 14.0 : (compact ? 18.0 : 26.0);
+        final titleReserve = tightHero ? 61.0 : (compact ? 66.0 : 74.0);
+        final subtitleReserve = tightHero ? 78.0 : 92.0;
+        final featureReserve = showFeaturePills ? (compact ? 58.0 : 66.0) : 0.0;
+        final fixedHeight =
+            54.0 +
+            headerGap +
+            titleReserve +
+            titleGap +
+            subtitleReserve +
+            visualGap +
+            featureReserve;
+        final visualMaxHeight = tightHero ? 190.0 : (compact ? 218.0 : 236.0);
+        final visualHeight = hasBoundedHeight
+            ? (availableHeight - fixedHeight)
+                  .clamp(tightHero ? 116.0 : 150.0, visualMaxHeight)
+                  .toDouble()
+            : visualMaxHeight;
+
+        return Padding(
+          padding: EdgeInsets.only(
+            top: compact ? 0 : 8,
+            bottom: compact ? 8 : 12,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _BrandHeader(scheme: scheme),
+              SizedBox(height: headerGap),
+              Text(
+                'Your daily trip\nin one click',
+                textAlign: TextAlign.start,
+                style:
+                    (tightHero
+                            ? theme.textTheme.headlineMedium
+                            : theme.textTheme.displaySmall)
+                        ?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          height: 1.08,
+                          letterSpacing: 0,
+                          color: scheme.onSurface,
+                        ),
               ),
-            ),
-            const SizedBox(height: 14),
-            Text(
-              'Book your trip, track buses in real-time, and manage your subscriptions easily from one place.',
-              style: theme.textTheme.bodyLarge?.copyWith(
-                height: 1.75,
-                fontWeight: FontWeight.w600,
-                color: scheme.onSurfaceVariant,
+              SizedBox(height: titleGap),
+              Text(
+                'Book your trip, track buses in real-time, and manage your subscriptions easily from one place.',
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+                style:
+                    (tightHero
+                            ? theme.textTheme.bodyMedium
+                            : theme.textTheme.bodyLarge)
+                        ?.copyWith(
+                          height: tightHero ? 1.58 : 1.68,
+                          fontWeight: FontWeight.w600,
+                          color: scheme.onSurfaceVariant,
+                        ),
               ),
-            ),
-            SizedBox(height: compact ? 22 : 30),
-            _RouteVisualCard(scheme: scheme),
-            SizedBox(height: compact ? 20 : 26),
-            Wrap(
-              spacing: 10,
-              runSpacing: 10,
-              children: [
-                _FeaturePill(
-                  scheme: scheme,
-                  icon: Icons.route_rounded,
-                  label: 'Smart Routes',
-                ),
-                _FeaturePill(
-                  scheme: scheme,
-                  icon: Icons.location_on_outlined,
-                  label: 'Live Tracking',
-                ),
-                _FeaturePill(
-                  scheme: scheme,
-                  icon: Icons.card_membership_rounded,
-                  label: 'Monthly Subscriptions',
+              SizedBox(height: visualGap),
+              _RouteVisualCard(
+                scheme: scheme,
+                height: visualHeight,
+                dense: tightHero,
+              ),
+              if (showFeaturePills) ...[
+                SizedBox(height: compact ? 18 : 24),
+                Wrap(
+                  spacing: 10,
+                  runSpacing: 10,
+                  children: [
+                    _FeaturePill(
+                      scheme: scheme,
+                      icon: Icons.route_rounded,
+                      label: 'Smart Routes',
+                    ),
+                    _FeaturePill(
+                      scheme: scheme,
+                      icon: Icons.location_on_outlined,
+                      label: 'Live Tracking',
+                    ),
+                    _FeaturePill(
+                      scheme: scheme,
+                      icon: Icons.card_membership_rounded,
+                      label: 'Monthly Subscriptions',
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
+            ],
+          ),
+        );
+      },
     );
   }
 }
@@ -253,7 +320,7 @@ class _BrandHeader extends StatelessWidget {
           style: Theme.of(context).textTheme.headlineSmall?.copyWith(
             fontWeight: FontWeight.w900,
             color: scheme.primary,
-            letterSpacing: -0.3,
+            letterSpacing: 0,
           ),
         ),
       ],
@@ -262,18 +329,26 @@ class _BrandHeader extends StatelessWidget {
 }
 
 class _RouteVisualCard extends StatelessWidget {
-  const _RouteVisualCard({required this.scheme});
+  const _RouteVisualCard({
+    required this.scheme,
+    required this.height,
+    required this.dense,
+  });
 
   final ColorScheme scheme;
+  final double height;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
+    final busSize = dense ? 70.0 : 86.0;
+
     return Container(
-      height: 236,
+      height: height,
       width: double.infinity,
-      padding: const EdgeInsets.all(18),
+      padding: EdgeInsets.all(dense ? 14 : 18),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(dense ? 28 : 32),
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
@@ -300,35 +375,37 @@ class _RouteVisualCard extends StatelessWidget {
             ),
           ),
           Positioned(
-            top: 10,
+            top: dense ? 4 : 10,
             right: 8,
             child: _MiniStatusCard(
               scheme: scheme,
               icon: Icons.schedule_rounded,
               title: '08:40 AM',
               subtitle: 'Next Trip',
+              dense: dense,
             ),
           ),
           Positioned(
-            bottom: 8,
+            bottom: dense ? 4 : 8,
             left: 8,
             child: _MiniStatusCard(
               scheme: scheme,
               icon: Icons.verified_rounded,
               title: 'Seat Confirmed',
               subtitle: 'No. A12',
+              dense: dense,
             ),
           ),
           Positioned(
-            bottom: 16,
+            bottom: dense ? 12 : 16,
             right: 10,
-            child: _RouteNamePill(scheme: scheme),
+            child: _RouteNamePill(scheme: scheme, dense: dense),
           ),
           Align(
             alignment: Alignment.center,
             child: Container(
-              height: 86,
-              width: 86,
+              height: busSize,
+              width: busSize,
               decoration: BoxDecoration(
                 color: scheme.primary,
                 shape: BoxShape.circle,
@@ -342,7 +419,7 @@ class _RouteVisualCard extends StatelessWidget {
               ),
               child: Icon(
                 Icons.directions_bus_filled_rounded,
-                size: 42,
+                size: dense ? 34 : 42,
                 color: scheme.onPrimary,
               ),
             ),
@@ -354,15 +431,19 @@ class _RouteVisualCard extends StatelessWidget {
 }
 
 class _RouteNamePill extends StatelessWidget {
-  const _RouteNamePill({required this.scheme});
+  const _RouteNamePill({required this.scheme, required this.dense});
 
   final ColorScheme scheme;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      constraints: const BoxConstraints(maxWidth: 190),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      constraints: BoxConstraints(maxWidth: dense ? 176 : 190),
+      padding: EdgeInsets.symmetric(
+        horizontal: dense ? 10 : 12,
+        vertical: dense ? 8 : 9,
+      ),
       decoration: BoxDecoration(
         color: scheme.surface.withAlpha(230),
         borderRadius: BorderRadius.circular(999),
@@ -396,18 +477,20 @@ class _MiniStatusCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.subtitle,
+    required this.dense,
   });
 
   final ColorScheme scheme;
   final IconData icon;
   final String title;
   final String subtitle;
+  final bool dense;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 142,
-      padding: const EdgeInsets.all(12),
+      width: dense ? 132 : 142,
+      padding: EdgeInsets.all(dense ? 10 : 12),
       decoration: BoxDecoration(
         color: scheme.surface.withAlpha(236),
         borderRadius: BorderRadius.circular(18),
@@ -415,8 +498,8 @@ class _MiniStatusCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(icon, color: scheme.primary, size: 19),
-          const SizedBox(width: 9),
+          Icon(icon, color: scheme.primary, size: dense ? 17 : 19),
+          SizedBox(width: dense ? 7 : 9),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -452,6 +535,7 @@ class _ActionPanel extends StatelessWidget {
   const _ActionPanel({
     required this.l10n,
     required this.scheme,
+    required this.compact,
     required this.onLogin,
     required this.onCreateAccount,
     required this.termsRecognizer,
@@ -460,6 +544,7 @@ class _ActionPanel extends StatelessWidget {
 
   final AppLocalizations? l10n;
   final ColorScheme scheme;
+  final bool compact;
   final VoidCallback onLogin;
   final VoidCallback onCreateAccount;
   final TapGestureRecognizer termsRecognizer;
@@ -475,10 +560,10 @@ class _ActionPanel extends StatelessWidget {
     final privacyText = l10n?.auth_privacyPolicy ?? 'Privacy Policy';
 
     return Container(
-      padding: const EdgeInsets.all(22),
+      padding: EdgeInsets.all(compact ? 18 : 22),
       decoration: BoxDecoration(
         color: scheme.surface.withAlpha(248),
-        borderRadius: BorderRadius.circular(30),
+        borderRadius: BorderRadius.circular(compact ? 26 : 30),
         border: Border.all(color: scheme.outline.withAlpha(55)),
         boxShadow: [
           BoxShadow(
@@ -495,12 +580,16 @@ class _ActionPanel extends StatelessWidget {
           Text(
             'Start your journey now',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.w900,
-              color: scheme.onSurface,
-            ),
+            style:
+                (compact
+                        ? Theme.of(context).textTheme.titleMedium
+                        : Theme.of(context).textTheme.titleLarge)
+                    ?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: scheme.onSurface,
+                    ),
           ),
-          const SizedBox(height: 6),
+          SizedBox(height: compact ? 4 : 6),
           Text(
             'Log in or create a new account to benefit from all mobility services.',
             textAlign: TextAlign.center,
@@ -510,25 +599,31 @@ class _ActionPanel extends StatelessWidget {
               color: scheme.onSurfaceVariant,
             ),
           ),
-          const SizedBox(height: 20),
-          FilledButton(
-            onPressed: onLogin,
-            style: FilledButton.styleFrom(
-              minimumSize: const Size.fromHeight(58),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(18),
+          SizedBox(height: compact ? 16 : 20),
+          PressableScale(
+            onTap: onLogin,
+            child: FilledButton(
+              onPressed: onLogin,
+              style: FilledButton.styleFrom(
+                minimumSize: Size.fromHeight(compact ? 54 : 58),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(18),
+                ),
+              ),
+              child: Text(
+                loginText,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
             ),
-            child: Text(
-              loginText,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
-            ),
           ),
-          const SizedBox(height: 12),
+          SizedBox(height: compact ? 10 : 12),
           OutlinedButton(
             onPressed: onCreateAccount,
             style: OutlinedButton.styleFrom(
-              minimumSize: const Size.fromHeight(58),
+              minimumSize: Size.fromHeight(compact ? 54 : 58),
               side: BorderSide(color: scheme.outline.withAlpha(90)),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(18),
@@ -543,7 +638,9 @@ class _ActionPanel extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(height: 18),
+          SizedBox(height: compact ? 14 : 18),
+          _TrustRow(scheme: scheme, l10n: l10n),
+          SizedBox(height: compact ? 12 : 16),
           RichText(
             textAlign: TextAlign.center,
             text: TextSpan(
@@ -616,6 +713,53 @@ class _FeaturePill extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TrustRow extends StatelessWidget {
+  const _TrustRow({required this.scheme, required this.l10n});
+
+  final ColorScheme scheme;
+  final AppLocalizations? l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <({IconData icon, String label})>[
+      (
+        icon: Icons.lock_rounded,
+        label: l10n?.welcome_trustSecure ?? 'Secure payments',
+      ),
+      (
+        icon: Icons.my_location_rounded,
+        label: l10n?.welcome_trustLive ?? 'Real-time tracking',
+      ),
+      (
+        icon: Icons.verified_rounded,
+        label: l10n?.welcome_trustDaily ?? 'Trusted daily commute',
+      ),
+    ];
+    return Wrap(
+      alignment: WrapAlignment.center,
+      spacing: 14,
+      runSpacing: 8,
+      children: [
+        for (final item in items)
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(item.icon, size: 14, color: scheme.primary),
+              const SizedBox(width: 5),
+              Text(
+                item.label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+      ],
     );
   }
 }

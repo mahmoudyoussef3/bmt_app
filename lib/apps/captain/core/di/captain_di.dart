@@ -302,7 +302,7 @@ void _registerCheckInDependencies() {
 void _registerTripStatusUpdateDependencies() {
   if (!captainGetIt.isRegistered<TripStatusDataSource>()) {
     captainGetIt.registerLazySingleton<TripStatusDataSource>(
-      () => const TripStatusDataSource(),
+      () => TripStatusDataSource(captainGetIt<SupabaseClient>()),
     );
   }
   if (!captainGetIt.isRegistered<TripStatusRepository>()) {

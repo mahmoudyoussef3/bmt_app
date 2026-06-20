@@ -15,8 +15,18 @@ import 'package:bmt_app/l10n/app_localizations.dart';
 /// Generates the next [count] selectable dates as display strings.
 List<String> _buildDateOptions({int count = 7}) {
   const months = [
-    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
   ];
   const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
   final now = DateTime.now();
@@ -154,8 +164,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             const SizedBox(height: 20),
             ClientSectionHeader(
               title: AppLocalizations.of(context)!.booking_otherWaysToSearch,
-              subtitle:
-                  AppLocalizations.of(context)!.booking_browseOrPickMap,
+              subtitle: AppLocalizations.of(context)!.booking_browseOrPickMap,
             ),
             const SizedBox(height: 12),
             _SearchOptionTile(
@@ -172,7 +181,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
               ),
             ),
             const SizedBox(height: 10),
-        /*    _SearchOptionTile(
+            /*    _SearchOptionTile(
               icon: Icons.map_rounded,
               iconColor: ClientColors.journeySlate,
               title: AppLocalizations.of(context)!.booking_selectOnMap,

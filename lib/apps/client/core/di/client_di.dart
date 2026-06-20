@@ -37,9 +37,12 @@ import '../../features/booking/domain/usecases/get_vehicle_details_usecase.dart'
 import '../../features/booking/domain/usecases/get_vehicles_usecase.dart';
 import '../../features/booking/domain/usecases/sort_vehicles_usecase.dart';
 import '../../features/booking/presentation/cubit/booking_cubit.dart';
+import '../../features/communication/data/datasources/supabase_communication_datasource.dart';
+import '../../features/communication/data/repositories/communication_repository_impl.dart';
 import '../../features/communication/domain/repositories/communication_repository.dart';
 import '../../features/communication/domain/usecases/add_conversation_message_usecase.dart';
 import '../../features/communication/domain/usecases/get_conversations_usecase.dart';
+import '../../features/communication/domain/usecases/send_conversation_message_usecase.dart';
 import '../../features/communication/presentation/cubit/communication_cubit.dart';
 import '../../features/home/data/datasources/home_datasource.dart';
 import '../../features/home/data/datasources/supabase_home_datasource.dart';
@@ -73,6 +76,7 @@ import '../../features/packages/data/datasources/supabase_packages_datasource.da
 import '../../features/packages/data/repositories/packages_repository_impl.dart';
 import '../../features/packages/domain/repositories/packages_repository.dart';
 import '../../features/packages/domain/usecases/calculate_package_pricing_usecase.dart';
+import '../../features/packages/domain/usecases/create_subscription_usecase.dart';
 import '../../features/packages/domain/usecases/filter_packages_usecase.dart';
 import '../../features/packages/domain/usecases/get_package_selection_data_usecase.dart';
 import '../../features/packages/presentation/cubit/packages_cubit.dart';
@@ -140,6 +144,7 @@ import '../../../../core/network/network_di.dart';
 final GetIt clientGetIt = GetIt.instance;
 
 void registerClientDependencies() {
+  _registerCoreDependencies();
   _registerAuthDependencies();
   // Register Core Networking (Dio, Retrofit ApiService)
   registerNetworkDependencies(clientGetIt);
@@ -162,6 +167,14 @@ void registerClientDependencies() {
   _registerReferralRewardsDependencies();
   _registerLoyaltyDependencies();
   _registerSettingsDependencies();
+}
+
+void _registerCoreDependencies() {
+  if (!clientGetIt.isRegistered<SupabaseClient>()) {
+    clientGetIt.registerLazySingleton<SupabaseClient>(
+      () => Supabase.instance.client,
+    );
+  }
 }
 
 void _registerOnboardingDependencies() {
@@ -599,12 +612,19 @@ void _registerPackagesDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<CreateSubscriptionUseCase>()) {
+    clientGetIt.registerLazySingleton<CreateSubscriptionUseCase>(
+      () => CreateSubscriptionUseCase(clientGetIt<PackagesRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<PackagesCubit>()) {
     clientGetIt.registerFactory<PackagesCubit>(
       () => PackagesCubit(
         getSelectionData: clientGetIt<GetPackageSelectionDataUseCase>(),
         filterPackages: clientGetIt<FilterPackagesUseCase>(),
         calculatePricing: clientGetIt<CalculatePackagePricingUseCase>(),
+        createSubscription: clientGetIt<CreateSubscriptionUseCase>(),
       ),
     );
   }
@@ -776,6 +796,20 @@ void _registerRoutesHubDependencies() {
 }
 
 void _registerCommunicationDependencies() {
+  if (!clientGetIt.isRegistered<SupabaseCommunicationDatasource>()) {
+    clientGetIt.registerLazySingleton<SupabaseCommunicationDatasource>(
+      () => SupabaseCommunicationDatasource(Supabase.instance.client),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<CommunicationRepository>()) {
+    clientGetIt.registerLazySingleton<CommunicationRepository>(
+      () => CommunicationRepositoryImpl(
+        clientGetIt<SupabaseCommunicationDatasource>(),
+      ),
+    );
+  }
+
   if (!clientGetIt.isRegistered<GetConversationsUseCase>()) {
     clientGetIt.registerLazySingleton<GetConversationsUseCase>(
       () => GetConversationsUseCase(clientGetIt<CommunicationRepository>()),
@@ -788,11 +822,20 @@ void _registerCommunicationDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<SendConversationMessageUseCase>()) {
+    clientGetIt.registerLazySingleton<SendConversationMessageUseCase>(
+      () => SendConversationMessageUseCase(
+        clientGetIt<CommunicationRepository>(),
+      ),
+    );
+  }
+
   if (!clientGetIt.isRegistered<CommunicationCubit>()) {
     clientGetIt.registerFactory<CommunicationCubit>(
       () => CommunicationCubit(
         getConversations: clientGetIt<GetConversationsUseCase>(),
         addMessage: clientGetIt<AddConversationMessageUseCase>(),
+        sendMessage: clientGetIt<SendConversationMessageUseCase>(),
       ),
     );
   }

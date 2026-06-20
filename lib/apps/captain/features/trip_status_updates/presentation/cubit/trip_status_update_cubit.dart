@@ -9,14 +9,17 @@ class TripStatusUpdateCubit extends Cubit<TripStatusUpdateState> {
     : super(const TripStatusUpdateReady());
 
   final UpdateTripStatusUseCase _updateStatus;
+  CaptainTripStatus? _status;
 
   Future<void> update(String tripId, CaptainTripStatus status) async {
-    emit(const TripStatusUpdateLoading());
+    _status = status;
+    emit(TripStatusUpdateLoading(status: status));
     try {
       final update = await _updateStatus(tripId, status);
+      _status = update.status;
       emit(TripStatusUpdateReady(status: update.status));
     } catch (error) {
-      emit(TripStatusUpdateError(error.toString()));
+      emit(TripStatusUpdateError(error.toString(), status: _status));
     }
   }
 }

@@ -617,7 +617,7 @@ class _RouteSummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'ملخص خط السير',
+                  'Route Summary',
                   style: ClientTypography.bodySmall(context).copyWith(
                     color: ClientColors.textSecondaryFor(context),
                     fontWeight: FontWeight.w700,
@@ -678,7 +678,7 @@ class _VehicleBottomBar extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${vehicle.availableSeats} مقاعد متاحة',
+                    '${vehicle.availableSeats} seats available',
                     style: ClientTypography.bodySmall(context).copyWith(
                       color: ClientColors.textSecondaryFor(context),
                       fontWeight: FontWeight.w700,
@@ -691,7 +691,7 @@ class _VehicleBottomBar extends StatelessWidget {
             Expanded(
               flex: 2,
               child: ClientButton(
-                label: 'اختيار المقعد',
+                label: 'Select Seat',
                 onPressed: () => Navigator.pushNamed(
                   context,
                   '/seat-selection',
@@ -747,7 +747,7 @@ class _VehicleLoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      appBar: _StaticVehicleAppBar(title: 'تفاصيل العربية'),
+      appBar: _StaticVehicleAppBar(title: 'Vehicle Details'),
       body: Center(
         child: CircularProgressIndicator(color: ClientColors.primary),
       ),
@@ -763,7 +763,7 @@ class _VehicleErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const _StaticVehicleAppBar(title: 'تفاصيل العربية'),
+      appBar: const _StaticVehicleAppBar(title: 'Vehicle Details'),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -784,7 +784,7 @@ class _VehicleErrorView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'لم نتمكن من تحميل تفاصيل العربية',
+                  'Unable to load vehicle details',
                   textAlign: TextAlign.center,
                   style: ClientTypography.headingSmall(
                     context,
@@ -813,10 +813,10 @@ class _VehicleEmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const _StaticVehicleAppBar(title: 'تفاصيل العربية'),
+      appBar: const _StaticVehicleAppBar(title: 'Vehicle Details'),
       body: Center(
         child: Text(
-          'لم يتم العثور على العربية',
+          'Vehicle not found',
           style: ClientTypography.bodyMedium(
             context,
           ).copyWith(color: ClientColors.textSecondaryFor(context)),

@@ -79,6 +79,7 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
               onRetry: () => context.read<BookingCubit>().loadVehicles(
                 sort: _sort,
                 routeId: _query.routeId,
+                force: true,
               ),
               onSort: _selectSort,
               onSelect: _selectVehicle,
@@ -179,12 +180,12 @@ class _CompactHeader extends StatelessWidget {
             width: 42,
             height: 42,
             decoration: BoxDecoration(
-              color: ClientColors.primaryLight,
+              color: ClientColors.primaryContainerFor(context),
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.directions_bus_filled_rounded,
-              color: ClientColors.primary,
+              color: ClientColors.primaryFor(context),
               size: 22,
             ),
           ),
@@ -272,7 +273,7 @@ class _SortChip extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: active
-              ? ClientColors.primaryLight
+              ? ClientColors.primaryContainerFor(context)
               : ClientColors.surfaceFor(context),
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
@@ -288,7 +289,7 @@ class _SortChip extends StatelessWidget {
               icon,
               size: 16,
               color: active
-                  ? ClientColors.primary
+                  ? ClientColors.primaryFor(context)
                   : ClientColors.textTertiaryFor(context),
             ),
             const SizedBox(width: 6),
@@ -296,7 +297,7 @@ class _SortChip extends StatelessWidget {
               label,
               style: ClientTypography.bodySmall(context).copyWith(
                 color: active
-                    ? ClientColors.primary
+                    ? ClientColors.primaryFor(context)
                     : ClientColors.textPrimaryFor(context),
                 fontWeight: active ? FontWeight.w900 : FontWeight.w700,
               ),

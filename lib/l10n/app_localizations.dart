@@ -1555,6 +1555,234 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This page is not available for the current role'**
   String get dashboard_unauthorized;
+
+  /// No description provided for @onboarding_skip.
+  ///
+  /// In en, this message translates to:
+  /// **'Skip'**
+  String get onboarding_skip;
+
+  /// No description provided for @onboarding_next.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get onboarding_next;
+
+  /// No description provided for @onboarding_getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get Started'**
+  String get onboarding_getStarted;
+
+  /// No description provided for @onboarding_page1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Book your daily ride in seconds'**
+  String get onboarding_page1Title;
+
+  /// No description provided for @onboarding_page1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover routes, pick a trip, and reserve your seat — all in a few taps.'**
+  String get onboarding_page1Body;
+
+  /// No description provided for @onboarding_page1FeatureA.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip booking'**
+  String get onboarding_page1FeatureA;
+
+  /// No description provided for @onboarding_page1FeatureB.
+  ///
+  /// In en, this message translates to:
+  /// **'Route discovery'**
+  String get onboarding_page1FeatureB;
+
+  /// No description provided for @onboarding_page2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow every trip live'**
+  String get onboarding_page2Title;
+
+  /// No description provided for @onboarding_page2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your vehicle on the map in real time and know exactly when it arrives.'**
+  String get onboarding_page2Body;
+
+  /// No description provided for @onboarding_page2FeatureA.
+  ///
+  /// In en, this message translates to:
+  /// **'Live tracking'**
+  String get onboarding_page2FeatureA;
+
+  /// No description provided for @onboarding_page2FeatureB.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival ETA'**
+  String get onboarding_page2FeatureB;
+
+  /// No description provided for @onboarding_page3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel smart, worry-free'**
+  String get onboarding_page3Title;
+
+  /// No description provided for @onboarding_page3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Save with monthly passes, pay securely, and reach our support team whenever you need it.'**
+  String get onboarding_page3Body;
+
+  /// No description provided for @onboarding_page3FeatureA.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscriptions'**
+  String get onboarding_page3FeatureA;
+
+  /// No description provided for @onboarding_page3FeatureB.
+  ///
+  /// In en, this message translates to:
+  /// **'Discounted packages'**
+  String get onboarding_page3FeatureB;
+
+  /// No description provided for @onboarding_page4Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay securely, get help anytime'**
+  String get onboarding_page4Title;
+
+  /// No description provided for @onboarding_page4Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay safely with trusted methods and reach our support team whenever you need.'**
+  String get onboarding_page4Body;
+
+  /// No description provided for @onboarding_page4FeatureA.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure payments'**
+  String get onboarding_page4FeatureA;
+
+  /// No description provided for @onboarding_page4FeatureB.
+  ///
+  /// In en, this message translates to:
+  /// **'24/7 support'**
+  String get onboarding_page4FeatureB;
+
+  /// No description provided for @welcome_trustSecure.
+  ///
+  /// In en, this message translates to:
+  /// **'Secure payments'**
+  String get welcome_trustSecure;
+
+  /// No description provided for @welcome_trustLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Real-time tracking'**
+  String get welcome_trustLive;
+
+  /// No description provided for @welcome_trustDaily.
+  ///
+  /// In en, this message translates to:
+  /// **'Trusted daily commute'**
+  String get welcome_trustDaily;
+
+  /// No description provided for @authSuccess_createdTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re all set!'**
+  String get authSuccess_createdTitle;
+
+  /// No description provided for @authSuccess_createdSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account is ready. Let\'s get you moving.'**
+  String get authSuccess_createdSubtitle;
+
+  /// No description provided for @authSuccess_verifyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify your email'**
+  String get authSuccess_verifyTitle;
+
+  /// No description provided for @authSuccess_verifySubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a confirmation link to {email}. Confirm it to activate your account, then sign in.'**
+  String authSuccess_verifySubtitle(String email);
+
+  /// No description provided for @authSuccess_getStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get authSuccess_getStarted;
+
+  /// No description provided for @authSuccess_backToSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get authSuccess_backToSignIn;
+
+  /// No description provided for @authSuccess_perkBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Book trips instantly'**
+  String get authSuccess_perkBooking;
+
+  /// No description provided for @authSuccess_perkTracking.
+  ///
+  /// In en, this message translates to:
+  /// **'Track rides live'**
+  String get authSuccess_perkTracking;
+
+  /// No description provided for @authSuccess_perkPasses.
+  ///
+  /// In en, this message translates to:
+  /// **'Save with passes'**
+  String get authSuccess_perkPasses;
+
+  /// No description provided for @auth_passwordStrengthLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Password strength'**
+  String get auth_passwordStrengthLabel;
+
+  /// No description provided for @auth_passwordWeak.
+  ///
+  /// In en, this message translates to:
+  /// **'Weak'**
+  String get auth_passwordWeak;
+
+  /// No description provided for @auth_passwordFair.
+  ///
+  /// In en, this message translates to:
+  /// **'Fair'**
+  String get auth_passwordFair;
+
+  /// No description provided for @auth_passwordGood.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get auth_passwordGood;
+
+  /// No description provided for @auth_passwordStrong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong'**
+  String get auth_passwordStrong;
+
+  /// No description provided for @auth_passwordHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Use 8+ characters with letters, numbers and a symbol.'**
+  String get auth_passwordHint;
+
+  /// No description provided for @auth_policyComingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'{title} will open when published.'**
+  String auth_policyComingSoon(String title);
 }
 
 class _AppLocalizationsDelegate

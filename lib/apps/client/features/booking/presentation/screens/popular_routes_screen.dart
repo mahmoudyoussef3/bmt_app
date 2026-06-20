@@ -21,11 +21,14 @@ class PopularRoutesScreen extends StatefulWidget {
 
 class _PopularRoutesScreenState extends State<PopularRoutesScreen> {
   late BookingSearchQuery _query;
+  bool _didLoad = false;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _query = bookingQueryFromContext(context);
+    if (_didLoad) return;
+    _didLoad = true;
     context.read<BookingCubit>().loadPopularRoutes();
   }
 
@@ -38,7 +41,8 @@ class _PopularRoutesScreenState extends State<PopularRoutesScreen> {
           query: _query.isComplete ? _query : null,
           body: _PopularRoutesBody(
             state: state,
-            onRetry: context.read<BookingCubit>().loadPopularRoutes,
+            onRetry: () =>
+                context.read<BookingCubit>().loadPopularRoutes(force: true),
             onRouteTap: (route) {
               final updated = _query.copyWith(
                 routeId: route.id,
@@ -82,7 +86,6 @@ class _PopularRoutesBodyState extends State<_PopularRoutesBody> {
   String _query = '';
   String? _departure;
   String? _destination;
-  RangeValues? _priceRange;
   _DurationFilter _duration = _DurationFilter.any;
   _RouteSort _sort = _RouteSort.recommended;
 
@@ -110,6 +113,10 @@ class _PopularRoutesBodyState extends State<_PopularRoutesBody> {
     final filteredRoutes = _applyControls(routes);
     final activeFilters = _activeFilterCount;
     final isTablet = MediaQuery.sizeOf(context).width >= 720;
+    final departures = _uniqueValues(routes.map((route) => route.pickup));
+    final destinations = _uniqueValues(
+      routes.map((route) => route.destination),
+    );
 
     return RefreshIndicator(
       onRefresh: () async => widget.onRetry(),
@@ -125,13 +132,23 @@ class _PopularRoutesBodyState extends State<_PopularRoutesBody> {
                 totalRoutes: routes.length,
                 visibleRoutes: filteredRoutes.length,
                 activeFilters: activeFilters,
+                departures: departures,
+                destinations: destinations,
+                selectedDeparture: _departure,
+                selectedDestination: _destination,
+                selectedDuration: _duration,
                 sort: _sort,
                 onSearchChanged: (value) => setState(() => _query = value),
                 onClearSearch: () {
                   _searchController.clear();
                   setState(() => _query = '');
                 },
-                onFilterTap: () => _openFilters(routes),
+                onDepartureChanged: (value) =>
+                    setState(() => _departure = value),
+                onDestinationChanged: (value) =>
+                    setState(() => _destination = value),
+                onDurationChanged: (value) => setState(() => _duration = value),
+                onClearFilters: _clearFilters,
                 onSortChanged: (sort) => setState(() => _sort = sort),
               ),
             ),
@@ -153,7 +170,7 @@ class _PopularRoutesBodyState extends State<_PopularRoutesBody> {
               child: _RoutesEmptyState(
                 title: 'No routes match your search',
                 subtitle:
-                    'Try a different departure, destination, duration, or price range.',
+                    'Try a different departure, destination, or duration.',
                 actionLabel: 'Clear filters',
                 onAction: _clearControls,
               ),
@@ -187,13 +204,11 @@ class _PopularRoutesBodyState extends State<_PopularRoutesBody> {
       _departure,
       _destination,
       _duration == _DurationFilter.any ? null : _duration,
-      _priceRange,
     ].where((value) => value != null).length;
   }
 
   List<PopularRouteListData> _applyControls(List<PopularRouteListData> routes) {
     final query = _query.trim().toLowerCase();
-    final range = _priceRange;
 
     final filtered = routes.where((route) {
       final matchesQuery =
@@ -204,16 +219,11 @@ class _PopularRoutesBodyState extends State<_PopularRoutesBody> {
       final matchesDeparture = _departure == null || route.pickup == _departure;
       final matchesDestination =
           _destination == null || route.destination == _destination;
-      final price = _priceValue(route.startingPrice);
-      final matchesPrice =
-          range == null ||
-          (price != null && price >= range.start && price <= range.end);
       final matchesDuration = _matchesDuration(route.averageDuration);
 
       return matchesQuery &&
           matchesDeparture &&
           matchesDestination &&
-          matchesPrice &&
           matchesDuration;
     }).toList();
 
@@ -254,53 +264,22 @@ class _PopularRoutesBodyState extends State<_PopularRoutesBody> {
       _query = '';
       _departure = null;
       _destination = null;
-      _priceRange = null;
       _duration = _DurationFilter.any;
       _sort = _RouteSort.recommended;
     });
   }
 
-  Future<void> _openFilters(List<PopularRouteListData> routes) async {
-    final prices = routes
-        .map((route) => _priceValue(route.startingPrice))
-        .whereType<int>()
-        .toList();
-    final maxPrice = prices.isEmpty
-        ? 1000.0
-        : prices.reduce((a, b) => a > b ? a : b).toDouble();
-    final minPrice = prices.isEmpty
-        ? 0.0
-        : prices.reduce((a, b) => a < b ? a : b).toDouble();
-    final departures = routes.map((route) => route.pickup).toSet().toList()
-      ..sort();
-    final destinations =
-        routes.map((route) => route.destination).toSet().toList()..sort();
-
-    final result = await showModalBottomSheet<_RouteFilterResult>(
-      context: context,
-      isScrollControlled: true,
-      showDragHandle: true,
-      builder: (context) {
-        return _RouteFilterSheet(
-          departures: departures,
-          destinations: destinations,
-          selectedDeparture: _departure,
-          selectedDestination: _destination,
-          selectedDuration: _duration,
-          selectedPriceRange: _priceRange ?? RangeValues(minPrice, maxPrice),
-          minPrice: minPrice,
-          maxPrice: maxPrice <= minPrice ? minPrice + 1 : maxPrice,
-        );
-      },
-    );
-
-    if (result == null) return;
+  void _clearFilters() {
     setState(() {
-      _departure = result.departure;
-      _destination = result.destination;
-      _duration = result.duration;
-      _priceRange = result.priceRange;
+      _departure = null;
+      _destination = null;
+      _duration = _DurationFilter.any;
     });
+  }
+
+  List<String> _uniqueValues(Iterable<String> values) {
+    return values.where((value) => value.trim().isNotEmpty).toSet().toList()
+      ..sort();
   }
 }
 
@@ -311,10 +290,18 @@ class _RoutesDiscoveryHeader extends StatelessWidget {
     required this.totalRoutes,
     required this.visibleRoutes,
     required this.activeFilters,
+    required this.departures,
+    required this.destinations,
+    required this.selectedDeparture,
+    required this.selectedDestination,
+    required this.selectedDuration,
     required this.sort,
     required this.onSearchChanged,
     required this.onClearSearch,
-    required this.onFilterTap,
+    required this.onDepartureChanged,
+    required this.onDestinationChanged,
+    required this.onDurationChanged,
+    required this.onClearFilters,
     required this.onSortChanged,
   });
 
@@ -323,10 +310,18 @@ class _RoutesDiscoveryHeader extends StatelessWidget {
   final int totalRoutes;
   final int visibleRoutes;
   final int activeFilters;
+  final List<String> departures;
+  final List<String> destinations;
+  final String? selectedDeparture;
+  final String? selectedDestination;
+  final _DurationFilter selectedDuration;
   final _RouteSort sort;
   final ValueChanged<String> onSearchChanged;
   final VoidCallback onClearSearch;
-  final VoidCallback onFilterTap;
+  final ValueChanged<String?> onDepartureChanged;
+  final ValueChanged<String?> onDestinationChanged;
+  final ValueChanged<_DurationFilter> onDurationChanged;
+  final VoidCallback onClearFilters;
   final ValueChanged<_RouteSort> onSortChanged;
 
   @override
@@ -381,60 +376,47 @@ class _RoutesDiscoveryHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: onFilterTap,
-                icon: const Icon(Icons.tune_rounded),
-                label: Text(
-                  activeFilters == 0 ? 'Filters' : 'Filters ($activeFilters)',
-                ),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: _SortMenuButton(sort: sort, onSelected: onSortChanged),
+        ),
+        const SizedBox(height: 12),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          clipBehavior: Clip.none,
+          child: Row(
+            children: [
+              _LocationFilterMenu(
+                icon: Icons.trip_origin_rounded,
+                label: 'Departure',
+                values: departures,
+                selected: selectedDeparture,
+                anyLabel: 'Any departure',
+                onSelected: onDepartureChanged,
               ),
-            ),
-            const SizedBox(width: 10),
-            PopupMenuButton<_RouteSort>(
-              initialValue: sort,
-              tooltip: 'Sort routes',
-              onSelected: onSortChanged,
-              itemBuilder: (context) => const [
-                PopupMenuItem(
-                  value: _RouteSort.recommended,
-                  child: Text('Recommended'),
-                ),
-                PopupMenuItem(
-                  value: _RouteSort.priceLow,
-                  child: Text('Lowest price'),
-                ),
-                PopupMenuItem(
-                  value: _RouteSort.durationShort,
-                  child: Text('Shortest duration'),
-                ),
-                PopupMenuItem(
-                  value: _RouteSort.tripsHigh,
-                  child: Text('Most trips'),
+              const SizedBox(width: 8),
+              _LocationFilterMenu(
+                icon: Icons.place_rounded,
+                label: 'Destination',
+                values: destinations,
+                selected: selectedDestination,
+                anyLabel: 'Any destination',
+                onSelected: onDestinationChanged,
+              ),
+              const SizedBox(width: 8),
+              _DurationFilterMenu(
+                selected: selectedDuration,
+                onSelected: onDurationChanged,
+              ),
+              if (activeFilters > 0) ...[
+                const SizedBox(width: 8),
+                _ClearFiltersChip(
+                  activeFilters: activeFilters,
+                  onPressed: onClearFilters,
                 ),
               ],
-              child: Container(
-                height: 48,
-                padding: const EdgeInsets.symmetric(horizontal: 14),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: scheme.outline.withAlpha(110)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.sort_rounded, size: 20),
-                    const SizedBox(width: 8),
-                    Text(_sortLabel(sort)),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.expand_more_rounded, size: 18),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
         const SizedBox(height: 8),
       ],
@@ -442,148 +424,202 @@ class _RoutesDiscoveryHeader extends StatelessWidget {
   }
 }
 
-class _RouteFilterSheet extends StatefulWidget {
-  const _RouteFilterSheet({
-    required this.departures,
-    required this.destinations,
-    required this.selectedDeparture,
-    required this.selectedDestination,
-    required this.selectedDuration,
-    required this.selectedPriceRange,
-    required this.minPrice,
-    required this.maxPrice,
-  });
+class _SortMenuButton extends StatelessWidget {
+  const _SortMenuButton({required this.sort, required this.onSelected});
 
-  final List<String> departures;
-  final List<String> destinations;
-  final String? selectedDeparture;
-  final String? selectedDestination;
-  final _DurationFilter selectedDuration;
-  final RangeValues selectedPriceRange;
-  final double minPrice;
-  final double maxPrice;
-
-  @override
-  State<_RouteFilterSheet> createState() => _RouteFilterSheetState();
-}
-
-class _RouteFilterSheetState extends State<_RouteFilterSheet> {
-  late String? _departure = widget.selectedDeparture;
-  late String? _destination = widget.selectedDestination;
-  late _DurationFilter _duration = widget.selectedDuration;
-  late RangeValues _priceRange = widget.selectedPriceRange;
+  final _RouteSort sort;
+  final ValueChanged<_RouteSort> onSelected;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return SafeArea(
-      child: ListView(
-        shrinkWrap: true,
-        padding: EdgeInsets.fromLTRB(
-          20,
-          0,
-          20,
-          20 + MediaQuery.viewInsetsOf(context).bottom,
+    return PopupMenuButton<_RouteSort>(
+      initialValue: sort,
+      tooltip: 'Sort routes',
+      onSelected: onSelected,
+      itemBuilder: (context) => const [
+        PopupMenuItem(
+          value: _RouteSort.recommended,
+          child: Text('Recommended'),
         ),
+        PopupMenuItem(value: _RouteSort.priceLow, child: Text('Lowest price')),
+        PopupMenuItem(
+          value: _RouteSort.durationShort,
+          child: Text('Shortest duration'),
+        ),
+        PopupMenuItem(value: _RouteSort.tripsHigh, child: Text('Most trips')),
+      ],
+      child: Container(
+        height: 46,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: scheme.outline.withAlpha(95)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.sort_rounded, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              _sortLabel(sort),
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.expand_more_rounded, size: 18),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _LocationFilterMenu extends StatelessWidget {
+  const _LocationFilterMenu({
+    required this.icon,
+    required this.label,
+    required this.values,
+    required this.selected,
+    required this.anyLabel,
+    required this.onSelected,
+  });
+
+  final IconData icon;
+  final String label;
+  final List<String> values;
+  final String? selected;
+  final String anyLabel;
+  final ValueChanged<String?> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<String?>(
+      initialValue: selected,
+      tooltip: label,
+      onSelected: onSelected,
+      itemBuilder: (context) => [
+        PopupMenuItem<String?>(
+          value: null,
+          child: _PopupMenuText(text: anyLabel),
+        ),
+        ...values.map(
+          (value) => PopupMenuItem<String?>(
+            value: value,
+            child: _PopupMenuText(text: value),
+          ),
+        ),
+      ],
+      child: _FilterPill(
+        icon: icon,
+        label: label,
+        value: selected ?? 'Any',
+        isActive: selected != null,
+      ),
+    );
+  }
+}
+
+class _DurationFilterMenu extends StatelessWidget {
+  const _DurationFilterMenu({required this.selected, required this.onSelected});
+
+  final _DurationFilter selected;
+  final ValueChanged<_DurationFilter> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return PopupMenuButton<_DurationFilter>(
+      initialValue: selected,
+      tooltip: 'Duration',
+      onSelected: onSelected,
+      itemBuilder: (context) => _DurationFilter.values
+          .map(
+            (value) => PopupMenuItem<_DurationFilter>(
+              value: value,
+              child: Text(_durationLabel(value)),
+            ),
+          )
+          .toList(),
+      child: _FilterPill(
+        icon: Icons.schedule_rounded,
+        label: 'Duration',
+        value: _durationLabel(selected),
+        isActive: selected != _DurationFilter.any,
+      ),
+    );
+  }
+}
+
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.isActive,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final bool isActive;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final background = isActive ? scheme.primary.withAlpha(18) : scheme.surface;
+    final borderColor = isActive
+        ? scheme.primary.withAlpha(130)
+        : scheme.outline.withAlpha(85);
+
+    return Container(
+      height: 56,
+      constraints: const BoxConstraints(minWidth: 126, maxWidth: 236),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            'Filter routes',
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 16),
-          _ChoiceSection(
-            title: 'Departure',
-            values: widget.departures,
-            selected: _departure,
-            onSelected: (value) => setState(() => _departure = value),
-          ),
-          const SizedBox(height: 18),
-          _ChoiceSection(
-            title: 'Destination',
-            values: widget.destinations,
-            selected: _destination,
-            onSelected: (value) => setState(() => _destination = value),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Duration',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 10),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _DurationFilter.values.map((value) {
-              return FilterChip(
-                selected: _duration == value,
-                label: Text(_durationLabel(value)),
-                onSelected: (_) => setState(() => _duration = value),
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: 18),
-          Text(
-            'Price range',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            '${_priceRange.start.round()} - ${_priceRange.end.round()}',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurface.withAlpha(150),
-              fontWeight: FontWeight.w700,
+          Icon(icon, size: 19, color: isActive ? scheme.primary : null),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurface.withAlpha(145),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                    color: isActive ? scheme.primary : scheme.onSurface,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
           ),
-          RangeSlider(
-            values: _priceRange,
-            min: widget.minPrice,
-            max: widget.maxPrice,
-            divisions: 20,
-            labels: RangeLabels(
-              _priceRange.start.round().toString(),
-              _priceRange.end.round().toString(),
-            ),
-            onChanged: (value) => setState(() => _priceRange = value),
-          ),
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    Navigator.pop(
-                      context,
-                      const _RouteFilterResult(duration: _DurationFilter.any),
-                    );
-                  },
-                  child: const Text('Reset'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: FilledButton(
-                  onPressed: () {
-                    Navigator.pop(
-                      context,
-                      _RouteFilterResult(
-                        departure: _departure,
-                        destination: _destination,
-                        duration: _duration,
-                        priceRange: _priceRange,
-                      ),
-                    );
-                  },
-                  child: const Text('Apply filters'),
-                ),
-              ),
-            ],
+          const SizedBox(width: 4),
+          Icon(
+            Icons.expand_more_rounded,
+            size: 18,
+            color: scheme.onSurface.withAlpha(150),
           ),
         ],
       ),
@@ -591,66 +627,45 @@ class _RouteFilterSheetState extends State<_RouteFilterSheet> {
   }
 }
 
-class _ChoiceSection extends StatelessWidget {
-  const _ChoiceSection({
-    required this.title,
-    required this.values,
-    required this.selected,
-    required this.onSelected,
+class _ClearFiltersChip extends StatelessWidget {
+  const _ClearFiltersChip({
+    required this.activeFilters,
+    required this.onPressed,
   });
 
-  final String title;
-  final List<String> values;
-  final String? selected;
-  final ValueChanged<String?> onSelected;
+  final int activeFilters;
+  final VoidCallback onPressed;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+    return SizedBox(
+      height: 56,
+      child: OutlinedButton.icon(
+        onPressed: onPressed,
+        icon: const Icon(Icons.close_rounded, size: 18),
+        label: Text('Clear $activeFilters'),
+        style: OutlinedButton.styleFrom(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            FilterChip(
-              selected: selected == null,
-              label: const Text('Any'),
-              onSelected: (_) => onSelected(null),
-            ),
-            ...values.where((value) => value.isNotEmpty).map((value) {
-              return FilterChip(
-                selected: selected == value,
-                label: Text(value),
-                onSelected: (_) => onSelected(value),
-              );
-            }),
-          ],
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _RouteFilterResult {
-  const _RouteFilterResult({
-    this.departure,
-    this.destination,
-    this.duration = _DurationFilter.any,
-    this.priceRange,
-  });
+class _PopupMenuText extends StatelessWidget {
+  const _PopupMenuText({required this.text});
 
-  final String? departure;
-  final String? destination;
-  final _DurationFilter duration;
-  final RangeValues? priceRange;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 300),
+      child: Text(text, maxLines: 2, overflow: TextOverflow.ellipsis),
+    );
+  }
 }
 
 class _RoutesLoadingSkeleton extends StatelessWidget {

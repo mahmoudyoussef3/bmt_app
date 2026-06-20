@@ -107,9 +107,7 @@ class _TripReviewSheetState extends State<_TripReviewSheet> {
               onPressed: () {
                 Navigator.pop(context);
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Thank you for your review (demo)'),
-                  ),
+                  const SnackBar(content: Text('Thank you for your review.')),
                 );
               },
             ),

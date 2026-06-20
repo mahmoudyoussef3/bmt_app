@@ -70,7 +70,7 @@ class RouteOptionCard extends StatelessWidget {
                     const SizedBox(width: 14),
                     _MetaItem(
                       icon: Icons.event_seat_rounded,
-                      label: '${route.availableSeats} مقاعد',
+                      label: '${route.availableSeats} seats',
                     ),
                     const Spacer(),
                     Text(
@@ -238,7 +238,7 @@ class _Header extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              'الأسرع',
+              'Fastest',
               style: ClientTypography.labelSmall(context).copyWith(
                 color: ClientColors.primary,
                 fontWeight: FontWeight.w700,
@@ -255,7 +255,7 @@ class _Header extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              'مختار',
+              'Selected',
               style: ClientTypography.labelSmall(context).copyWith(
                 color: ClientColors.primary,
                 fontWeight: FontWeight.w700,
@@ -287,14 +287,14 @@ class _MainRouteLine extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _PointBlock(label: 'من', value: start),
+          child: _PointBlock(label: 'From', value: start),
         ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10),
           child: Icon(Icons.arrow_back_rounded),
         ),
         Expanded(
-          child: _PointBlock(label: 'إلى', value: end),
+          child: _PointBlock(label: 'To', value: end),
         ),
       ],
     );
@@ -361,10 +361,10 @@ class _CompactPointsPreview extends StatelessWidget {
         children: [
           Text(
             hasSavedStations
-                ? '${points.length} محطات على المسار'
+                ? '${points.length} route stops'
                 : previewPoints.isEmpty
-                ? 'رحلة مباشرة بدون محطات مرور'
-                : '${previewPoints.length} محطات مرور',
+                ? 'Direct trip with no intermediate stops'
+                : '${previewPoints.length} intermediate stops',
             style: ClientTypography.bodySmall(
               context,
             ).copyWith(fontWeight: FontWeight.w800),
@@ -381,7 +381,7 @@ class _CompactPointsPreview extends StatelessWidget {
             if (previewPoints.length > 4) ...[
               const SizedBox(height: 8),
               Text(
-                '+ ${previewPoints.length - 4} محطات أخرى',
+                '+ ${previewPoints.length - 4} more stops',
                 style: ClientTypography.bodySmall(
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),

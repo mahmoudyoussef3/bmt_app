@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
-/// Terms & Privacy footer links (placeholder taps).
+/// Terms & Privacy footer links.
 class TermsFooter extends StatelessWidget {
   const TermsFooter({super.key});
 
@@ -18,10 +18,10 @@ class TermsFooter extends StatelessWidget {
       height: 1.5,
     );
 
-    void showPlaceholder(String title) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$title — placeholder')));
+    void showPolicyNotice(String title) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$title will open when published.')),
+      );
     }
 
     return Text.rich(
@@ -33,14 +33,14 @@ class TermsFooter extends StatelessWidget {
             text: 'Terms & Conditions',
             style: linkStyle,
             recognizer: TapGestureRecognizer()
-              ..onTap = () => showPlaceholder('Terms & Conditions'),
+              ..onTap = () => showPolicyNotice('Terms & Conditions'),
           ),
           const TextSpan(text: ' and '),
           TextSpan(
             text: 'Privacy Policy',
             style: linkStyle,
             recognizer: TapGestureRecognizer()
-              ..onTap = () => showPlaceholder('Privacy Policy'),
+              ..onTap = () => showPolicyNotice('Privacy Policy'),
           ),
           const TextSpan(text: '.'),
         ],
