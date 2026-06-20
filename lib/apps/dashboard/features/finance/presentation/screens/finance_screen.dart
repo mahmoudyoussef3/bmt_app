@@ -1929,32 +1929,13 @@ class _SubscriptionsSection extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final useSplit = constraints.maxWidth > 900;
+        final useSplit = constraints.maxWidth > 1150;
 
         Widget tableWidget = Column(
           children: [
-            Row(
-              children: [
-                const Text(
-                  'حالة الاشتراك:',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(width: AppSpacing.medium),
-                ChoiceChip(
-                  label: const Text('الكل'),
-                  selected: state.subscriptionStatusFilter == null,
-                  onSelected: (_) => cubit.setSubscriptionStatusFilter(null),
-                ),
-                const SizedBox(width: AppSpacing.small),
-                ...SubscriptionStatus.values.map(
-                  (s) => ChoiceChip(
-                    label: Text(s.label),
-                    selected: state.subscriptionStatusFilter == s,
-                    onSelected: (sel) =>
-                        cubit.setSubscriptionStatusFilter(sel ? s : null),
-                  ),
-                ),
-              ],
+            _SubscriptionFilters(
+              selected: state.subscriptionStatusFilter,
+              onChanged: cubit.setSubscriptionStatusFilter,
             ),
             const SizedBox(height: AppSpacing.medium),
             Expanded(
@@ -1964,99 +1945,10 @@ class _SubscriptionsSection extends StatelessWidget {
                         title: 'لا توجد اشتراكات',
                         subtitle: 'لم يتم العثور على سجلات اشتراكات مطابقة.',
                       )
-                    : SingleChildScrollView(
-                        scrollDirection: Axis.vertical,
-                        child: Theme(
-                          data: Theme.of(context).copyWith(
-                            dividerColor: Theme.of(
-                              context,
-                            ).colorScheme.outlineVariant.withAlpha(50),
-                          ),
-                          child: DataTable(
-                            showCheckboxColumn: false,
-                            columns: const [
-                              DataColumn(
-                                label: Text(
-                                  'رقم الاشتراك',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'العميل',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'باقة الاشتراك',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'السعر',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'الرحلات المتبقية',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'تاريخ الانتهاء',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                              DataColumn(
-                                label: Text(
-                                  'الحالة',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
-                            rows: filteredSubscriptions.take(40).map((s) {
-                              final isSelected =
-                                  s.id == state.selectedSubscriptionId;
-                              return DataRow(
-                                selected: isSelected,
-                                onSelectChanged: (_) =>
-                                    cubit.selectSubscription(s.id),
-                                cells: [
-                                  DataCell(
-                                    Text(
-                                      s.id,
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                    ),
-                                  ),
-                                  DataCell(Text(s.clientName)),
-                                  DataCell(Text(s.packageName)),
-                                  DataCell(
-                                    Text('${s.amount.toStringAsFixed(0)} ج.م'),
-                                  ),
-                                  DataCell(
-                                    Text(
-                                      s.status == SubscriptionStatus.active
-                                          ? '${s.remainingRides} رحلات'
-                                          : '0',
-                                    ),
-                                  ),
-                                  DataCell(
-                                    Text(s.endDate.toString().substring(0, 10)),
-                                  ),
-                                  DataCell(
-                                    _SubscriptionStatusBadge(status: s.status),
-                                  ),
-                                ],
-                              );
-                            }).toList(),
-                          ),
-                        ),
+                    : _SubscriptionsTableWidget(
+                        subscriptions: filteredSubscriptions,
+                        selectedId: state.selectedSubscriptionId,
+                        onSelect: cubit.selectSubscription,
                       ),
               ),
             ),
@@ -2109,6 +2001,201 @@ class _SubscriptionsSection extends StatelessWidget {
   }
 }
 
+class _SubscriptionFilters extends StatelessWidget {
+  const _SubscriptionFilters({required this.selected, required this.onChanged});
+
+  final SubscriptionStatus? selected;
+  final ValueChanged<SubscriptionStatus?> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withAlpha(45),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: Theme.of(context).colorScheme.outlineVariant.withAlpha(100),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.small),
+        child: Wrap(
+          spacing: AppSpacing.small,
+          runSpacing: AppSpacing.small,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          alignment: WrapAlignment.end,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.small,
+                vertical: AppSpacing.xSmall,
+              ),
+              child: Text(
+                'حالة الاشتراك',
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ),
+            ChoiceChip(
+              label: const Text('الكل'),
+              avatar: selected == null
+                  ? const Icon(Icons.check_rounded, size: 16)
+                  : null,
+              selected: selected == null,
+              onSelected: (_) => onChanged(null),
+            ),
+            ...SubscriptionStatus.values.map((status) {
+              final isSelected = selected == status;
+              return ChoiceChip(
+                label: Text(status.label),
+                avatar: isSelected
+                    ? const Icon(Icons.check_rounded, size: 16)
+                    : null,
+                selected: isSelected,
+                onSelected: (sel) => onChanged(sel ? status : null),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SubscriptionsTableWidget extends StatelessWidget {
+  const _SubscriptionsTableWidget({
+    required this.subscriptions,
+    required this.selectedId,
+    required this.onSelect,
+  });
+
+  final List<SubscriptionRecord> subscriptions;
+  final String? selectedId;
+  final ValueChanged<String?> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final tableWidth = max(constraints.maxWidth, 1050.0);
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: SizedBox(
+            width: tableWidth,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: Theme(
+                data: Theme.of(
+                  context,
+                ).copyWith(dividerColor: scheme.outlineVariant.withAlpha(50)),
+                child: DataTable(
+                  showCheckboxColumn: false,
+                  columnSpacing: AppSpacing.medium,
+                  horizontalMargin: AppSpacing.medium,
+                  columns: const [
+                    DataColumn(
+                      label: Text(
+                        'رقم الاشتراك',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'العميل',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'باقة الاشتراك',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'السعر',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'الرحلات المتبقية',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'تاريخ الانتهاء',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'الحالة',
+                        style: TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                  rows: subscriptions.take(40).map((subscription) {
+                    final isSelected = subscription.id == selectedId;
+                    return DataRow(
+                      selected: isSelected,
+                      onSelectChanged: (_) =>
+                          onSelect(isSelected ? null : subscription.id),
+                      cells: [
+                        DataCell(
+                          Tooltip(
+                            message: subscription.id,
+                            child: ConstrainedBox(
+                              constraints: const BoxConstraints(maxWidth: 260),
+                              child: Text(
+                                subscription.id,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        DataCell(Text(subscription.clientName)),
+                        DataCell(Text(subscription.packageName)),
+                        DataCell(
+                          Text('${subscription.amount.toStringAsFixed(0)} ج.م'),
+                        ),
+                        DataCell(
+                          Text(
+                            subscription.status == SubscriptionStatus.active
+                                ? '${subscription.remainingRides} رحلات'
+                                : '0',
+                          ),
+                        ),
+                        DataCell(
+                          Text(
+                            subscription.endDate.toString().substring(0, 10),
+                          ),
+                        ),
+                        DataCell(
+                          _SubscriptionStatusBadge(status: subscription.status),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
 class _SubscriptionDetailPanel extends StatelessWidget {
   final SubscriptionRecord subscription;
   final bool actionLoading;
@@ -2123,8 +2210,8 @@ class _SubscriptionDetailPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: ListView(
+        padding: EdgeInsets.zero,
         children: [
           Row(
             children: [
@@ -2142,7 +2229,7 @@ class _SubscriptionDetailPanel extends StatelessWidget {
             ],
           ),
           const Divider(height: AppSpacing.large),
-          _DetailField(label: 'رقم الاشتراك الفريد', value: subscription.id),
+          _DetailField(label: 'رقم الاشتراك', value: subscription.id),
           _DetailField(label: 'اسم المشترك', value: subscription.clientName),
           _DetailField(
             label: 'باقة الاشتراك الحالية',
@@ -2166,12 +2253,14 @@ class _SubscriptionDetailPanel extends StatelessWidget {
           ),
           const Divider(height: AppSpacing.medium),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'حالة الاشتراك الحالية:',
-                style: TextStyle(fontWeight: FontWeight.w500),
+              const Expanded(
+                child: Text(
+                  'حالة الاشتراك الحالية:',
+                  style: TextStyle(fontWeight: FontWeight.w500),
+                ),
               ),
+              const SizedBox(width: AppSpacing.small),
               _SubscriptionStatusBadge(status: subscription.status),
             ],
           ),

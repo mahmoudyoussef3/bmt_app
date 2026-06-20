@@ -8,8 +8,14 @@ class TrackingRepositoryImpl implements TrackingRepository {
   final TrackingDatasource _datasource;
 
   @override
-  Future<TrackingTripData> getTrackingTrip() async {
-    final model = await _datasource.getTrackingTrip();
+  Future<TrackingTripData> getTrackingTrip({
+    String? bookingId,
+    String? tripId,
+  }) async {
+    final model = await _datasource.getTrackingTrip(
+      bookingId: bookingId,
+      tripId: tripId,
+    );
     return model.toEntity();
   }
 }

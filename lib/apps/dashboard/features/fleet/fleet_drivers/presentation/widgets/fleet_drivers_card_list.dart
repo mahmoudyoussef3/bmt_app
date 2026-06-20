@@ -46,6 +46,7 @@ class FleetDriversCardList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, drivers.length);
     final paged = start >= drivers.length
@@ -75,192 +76,426 @@ class FleetDriversCardList extends StatelessWidget {
             final healthColor = _healthColor(context, snapshot.health);
 
             return AppCard(
-              padding: const EdgeInsets.all(AppSpacing.medium),
+              padding: EdgeInsets.zero,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      FleetAvatar(
-                        label: driver.imageLabel,
-                        profileImageUrl: driver.profileImageUrl,
-                      ),
-                      const SizedBox(width: AppSpacing.medium),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  Padding(
+                    padding: const EdgeInsets.all(AppSpacing.medium),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        FleetAvatar(
+                          label: driver.imageLabel,
+                          profileImageUrl: driver.profileImageUrl,
+                        ),
+                        const SizedBox(width: AppSpacing.medium),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                driver.name,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                driver.employeeCode,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: AppSpacing.small),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text(
-                              driver.name,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              driver.employeeCode,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
+                            StatusChip(
+                              label: snapshot.health.label,
+                              color: healthColor.withAlpha(24),
+                              textColor: healthColor,
                             ),
                           ],
                         ),
-                      ),
-                      StatusChip(
-                        label: snapshot.health.label,
-                        color: healthColor.withAlpha(24),
-                        textColor: healthColor,
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: AppSpacing.medium),
-                  Row(
-                    children: [
-                      Expanded(child: StatusChip(label: snapshot.status.label)),
-                      const SizedBox(width: AppSpacing.small),
-                      Expanded(
-                        child: Text(
-                          snapshot.primaryReason,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.end,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: healthColor,
-                                fontWeight: FontWeight.w800,
-                              ),
-                        ),
-                      ),
-                    ],
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.medium,
+                    ),
+                    child: _DriverOperationalStrip(
+                      status: snapshot.status.label,
+                      reason: snapshot.primaryReason,
+                      color: healthColor,
+                    ),
                   ),
                   if (driver.isLicenseExpired) ...[
-                    const SizedBox(height: AppSpacing.small),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.medium,
+                        AppSpacing.small,
+                        AppSpacing.medium,
+                        0,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppStatusColors.errorContainer,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: AppStatusColors.onErrorContainer,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            Icons.warning_rounded,
-                            color: AppStatusColors.onErrorContainer,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'الرخصة منتهية',
-                            style: TextStyle(
-                              color: AppStatusColors.onErrorContainer,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      child: const _DriverAlertBanner(
+                        icon: Icons.warning_rounded,
+                        label: 'الرخصة منتهية',
+                        severity: _DriverAlertSeverity.critical,
                       ),
                     ),
                   ] else if (driver.isLicenseExpiringSoon) ...[
-                    const SizedBox(height: AppSpacing.small),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.medium,
+                        AppSpacing.small,
+                        AppSpacing.medium,
+                        0,
                       ),
-                      decoration: BoxDecoration(
-                        color: AppStatusColors.warningContainer,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: AppStatusColors.onWarningContainer,
+                      child: const _DriverAlertBanner(
+                        icon: Icons.schedule_rounded,
+                        label: 'الرخصة تنتهي قريباً',
+                        severity: _DriverAlertSeverity.warning,
+                      ),
+                    ),
+                  ],
+                  const SizedBox(height: AppSpacing.small),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.medium,
+                    ),
+                    child: _DriverMetaGrid(
+                      items: [
+                        _DriverMetaItem(
+                          icon: Icons.phone_android_rounded,
+                          label: 'الهاتف',
+                          value: driver.phone,
                         ),
+                        _DriverMetaItem(
+                          icon: Icons.badge_outlined,
+                          label: 'الرقم القومي',
+                          value: driver.nationalId,
+                        ),
+                        _DriverMetaItem(
+                          icon: Icons.directions_bus_outlined,
+                          label: 'المركبة',
+                          value: vehicle.isEmpty ? 'بدون مركبة' : vehicle,
+                        ),
+                        _DriverMetaItem(
+                          icon: Icons.calendar_today_rounded,
+                          label: 'انتهاء الرخصة',
+                          value: driver.licenseExpiry,
+                          valueColor: healthColor,
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.small),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.medium,
+                    ),
+                    child: _DriverDecisionLine(
+                      value: snapshot.canAssign
+                          ? 'جاهز للتعيين'
+                          : 'راجع المخاطر',
+                      color: snapshot.canAssign ? scheme.primary : healthColor,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      color: scheme.surfaceContainerHighest.withAlpha(38),
+                      border: Border(
+                        top: BorderSide(color: scheme.outlineVariant),
                       ),
-                      child: Row(
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.medium),
+                      child: Wrap(
+                        spacing: AppSpacing.small,
+                        runSpacing: AppSpacing.small,
+                        alignment: WrapAlignment.end,
                         children: [
-                          Icon(
-                            Icons.schedule_rounded,
-                            color: AppStatusColors.onWarningContainer,
-                            size: 16,
+                          FilledButton.icon(
+                            onPressed: () => onViewDetails(driver),
+                            icon: const Icon(Icons.open_in_new_rounded),
+                            label: const Text('فتح ملف السائق'),
                           ),
-                          const SizedBox(width: 6),
-                          Text(
-                            'الرخصة تنتهي قريباً',
-                            style: TextStyle(
-                              color: AppStatusColors.onWarningContainer,
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                          OutlinedButton.icon(
+                            onPressed: () => onEdit(driver),
+                            icon: const Icon(Icons.edit_outlined, size: 18),
+                            label: const Text('تعديل'),
+                          ),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: scheme.error,
                             ),
+                            onPressed: () => onDelete(driver),
+                            icon: const Icon(
+                              Icons.delete_outline_rounded,
+                              size: 18,
+                            ),
+                            label: const Text('حذف'),
                           ),
                         ],
                       ),
                     ),
-                  ],
-                  const SizedBox(height: AppSpacing.medium),
-                  const Divider(),
-                  const SizedBox(height: AppSpacing.small),
-                  FleetMetaRow(
-                    icon: Icons.phone_android_rounded,
-                    label: 'الهاتف',
-                    value: driver.phone,
-                  ),
-                  FleetMetaRow(
-                    icon: Icons.badge_outlined,
-                    label: 'الرقم القومي',
-                    value: driver.nationalId,
-                  ),
-                  FleetMetaRow(
-                    icon: Icons.directions_bus_outlined,
-                    label: 'المركبة',
-                    value: vehicle.isEmpty ? 'بدون مركبة' : vehicle,
-                  ),
-                  FleetMetaRow(
-                    icon: Icons.calendar_today_rounded,
-                    label: 'انتهاء الرخصة',
-                    value: driver.licenseExpiry,
-                    valueColor: healthColor,
-                  ),
-                  FleetMetaRow(
-                    icon: Icons.assignment_late_outlined,
-                    label: 'قرار التشغيل',
-                    value: snapshot.canAssign ? 'جاهز للتعيين' : 'راجع المخاطر',
-                    valueColor: snapshot.canAssign
-                        ? scheme.primary
-                        : healthColor,
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  Wrap(
-                    spacing: AppSpacing.small,
-                    runSpacing: AppSpacing.small,
-                    alignment: WrapAlignment.end,
-                    children: [
-                      FilledButton.tonal(
-                        onPressed: () => onViewDetails(driver),
-                        child: const Text('فتح ملف السائق'),
-                      ),
-                      OutlinedButton.icon(
-                        onPressed: () => onEdit(driver),
-                        icon: const Icon(Icons.edit_outlined, size: 18),
-                        label: const Text('تعديل'),
-                      ),
-                      OutlinedButton.icon(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: scheme.error,
-                        ),
-                        onPressed: () => onDelete(driver),
-                        icon: const Icon(
-                          Icons.delete_outline_rounded,
-                          size: 18,
-                        ),
-                        label: const Text('حذف'),
-                      ),
-                    ],
                   ),
                 ],
               ),
             );
           },
+        ),
+      ],
+    );
+  }
+}
+
+class _DriverOperationalStrip extends StatelessWidget {
+  const _DriverOperationalStrip({
+    required this.status,
+    required this.reason,
+    required this.color,
+  });
+
+  final String status;
+  final String reason;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small,
+      ),
+      decoration: BoxDecoration(
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withAlpha(70)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 8,
+            height: 8,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: AppSpacing.small),
+          Text(
+            status,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Text(
+              reason,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+enum _DriverAlertSeverity { warning, critical }
+
+class _DriverAlertBanner extends StatelessWidget {
+  const _DriverAlertBanner({
+    required this.icon,
+    required this.label,
+    required this.severity,
+  });
+
+  final IconData icon;
+  final String label;
+  final _DriverAlertSeverity severity;
+
+  @override
+  Widget build(BuildContext context) {
+    final isCritical = severity == _DriverAlertSeverity.critical;
+    final bg = isCritical
+        ? AppStatusColors.errorContainer
+        : AppStatusColors.warningContainer;
+    final fg = isCritical
+        ? AppStatusColors.onErrorContainer
+        : AppStatusColors.onWarningContainer;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small,
+      ),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: fg.withAlpha(90)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: fg, size: 18),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Text(
+              label,
+              style: TextStyle(
+                color: fg,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DriverMetaGrid extends StatelessWidget {
+  const _DriverMetaGrid({required this.items});
+
+  final List<_DriverMetaItem> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final itemWidth = constraints.maxWidth < 560
+            ? constraints.maxWidth
+            : (constraints.maxWidth - AppSpacing.small) / 2;
+        return Wrap(
+          spacing: AppSpacing.small,
+          runSpacing: AppSpacing.small,
+          children: [
+            for (final item in items)
+              SizedBox(
+                width: itemWidth,
+                child: _DriverMetaTile(item: item),
+              ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DriverMetaItem {
+  const _DriverMetaItem({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  final IconData icon;
+  final String label;
+  final String value;
+  final Color? valueColor;
+}
+
+class _DriverMetaTile extends StatelessWidget {
+  const _DriverMetaTile({required this.item});
+
+  final _DriverMetaItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.small),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(45),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: scheme.outlineVariant.withAlpha(80)),
+      ),
+      child: Row(
+        children: [
+          Icon(item.icon, size: 17, color: scheme.onSurfaceVariant),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  item.value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: item.valueColor ?? scheme.onSurface,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _DriverDecisionLine extends StatelessWidget {
+  const _DriverDecisionLine({required this.value, required this.color});
+
+  final String value;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(Icons.assignment_turned_in_outlined, size: 18, color: color),
+        const SizedBox(width: AppSpacing.small),
+        Text(
+          'قرار التشغيل',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            fontWeight: FontWeight.w700,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(width: AppSpacing.small),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
         ),
       ],
     );

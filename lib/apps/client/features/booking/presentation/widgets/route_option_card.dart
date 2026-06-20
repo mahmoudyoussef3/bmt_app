@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
@@ -52,6 +54,10 @@ class RouteOptionCard extends StatelessWidget {
                   points: points,
                   hasSavedStations: hasSavedStations,
                 ),
+                if (points.where((p) => p.hasCoordinates).length >= 2) ...[
+                  const SizedBox(height: 12),
+                  _StationsMiniMap(points: points),
+                ],
                 const SizedBox(height: 14),
                 Divider(color: ClientColors.borderFor(context)),
                 const SizedBox(height: 12),
@@ -109,6 +115,109 @@ class RoutePointUiData {
   final String name;
   final double? latitude;
   final double? longitude;
+
+  bool get hasCoordinates => latitude != null && longitude != null;
+
+  LatLng get latLng => LatLng(latitude!, longitude!);
+}
+
+class _StationsMiniMap extends StatelessWidget {
+  const _StationsMiniMap({required this.points});
+
+  final List<RoutePointUiData> points;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final geoPoints = points.where((point) => point.hasCoordinates).toList();
+    final center = _center(geoPoints);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: SizedBox(
+        height: 156,
+        child: FlutterMap(
+          options: MapOptions(
+            initialCenter: center,
+            initialZoom: 11,
+            interactionOptions: const InteractionOptions(
+              flags: InteractiveFlag.drag | InteractiveFlag.pinchZoom,
+            ),
+          ),
+          children: [
+            TileLayer(
+              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+              userAgentPackageName: 'com.bmt.app',
+            ),
+            PolylineLayer(
+              polylines: [
+                Polyline(
+                  points: geoPoints.map((point) => point.latLng).toList(),
+                  color: scheme.primary,
+                  strokeWidth: 4,
+                  borderColor: Colors.white,
+                  borderStrokeWidth: 2,
+                ),
+              ],
+            ),
+            MarkerLayer(
+              markers: geoPoints.indexed.map((entry) {
+                final index = entry.$1;
+                final point = entry.$2;
+                final isEdge = index == 0 || index == geoPoints.length - 1;
+                return Marker(
+                  point: point.latLng,
+                  width: isEdge ? 34 : 24,
+                  height: isEdge ? 34 : 24,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: isEdge
+                          ? scheme.primary
+                          : ClientColors.surfaceFor(context),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: isEdge ? Colors.white : scheme.primary,
+                        width: 2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withAlpha(45),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: isEdge ? Colors.white : scheme.primary,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  LatLng _center(List<RoutePointUiData> points) {
+    final lat =
+        points
+            .map((point) => point.latitude!)
+            .reduce((value, element) => value + element) /
+        points.length;
+    final lng =
+        points
+            .map((point) => point.longitude!)
+            .reduce((value, element) => value + element) /
+        points.length;
+    return LatLng(lat, lng);
+  }
 }
 
 class _Header extends StatelessWidget {

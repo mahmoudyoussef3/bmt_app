@@ -17,8 +17,23 @@ class TrackingTripDataModel {
     required this.stops,
     required this.tripState,
     this.tripId,
+    this.bookingId,
+    this.routeName,
+    this.pickupName,
+    this.destinationName,
+    this.departureAt,
+    this.arrivalAt,
+    this.driverName,
+    this.driverPhone,
+    this.driverRating,
+    this.vehicleName,
+    this.vehicleType,
+    this.vehiclePlate,
     this.vehicleLatitude,
     this.vehicleLongitude,
+    this.vehicleHeading,
+    this.vehicleSpeed,
+    this.vehicleLocationAt,
   });
 
   final List<TrackingPointModel> routePoints;
@@ -26,8 +41,23 @@ class TrackingTripDataModel {
   final List<String> stops;
   final TrackingTripState tripState;
   final String? tripId;
+  final String? bookingId;
+  final String? routeName;
+  final String? pickupName;
+  final String? destinationName;
+  final DateTime? departureAt;
+  final DateTime? arrivalAt;
+  final String? driverName;
+  final String? driverPhone;
+  final double? driverRating;
+  final String? vehicleName;
+  final String? vehicleType;
+  final String? vehiclePlate;
   final double? vehicleLatitude;
   final double? vehicleLongitude;
+  final double? vehicleHeading;
+  final double? vehicleSpeed;
+  final DateTime? vehicleLocationAt;
 
   TrackingTripData toEntity() {
     return TrackingTripData(
@@ -36,8 +66,23 @@ class TrackingTripDataModel {
       stops: stops,
       tripState: tripState,
       tripId: tripId,
+      bookingId: bookingId,
+      routeName: routeName,
+      pickupName: pickupName,
+      destinationName: destinationName,
+      departureAt: departureAt,
+      arrivalAt: arrivalAt,
+      driverName: driverName,
+      driverPhone: driverPhone,
+      driverRating: driverRating,
+      vehicleName: vehicleName,
+      vehicleType: vehicleType,
+      vehiclePlate: vehiclePlate,
       vehicleLatitude: vehicleLatitude,
       vehicleLongitude: vehicleLongitude,
+      vehicleHeading: vehicleHeading,
+      vehicleSpeed: vehicleSpeed,
+      vehicleLocationAt: vehicleLocationAt,
     );
   }
 }

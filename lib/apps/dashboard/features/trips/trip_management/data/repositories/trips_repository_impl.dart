@@ -32,8 +32,20 @@ class TripsRepositoryImpl implements TripsRepository {
     OperationTripStatus status,
   ) async {
     try {
+      final trip = await _datasource.fetchTripById(tripId);
+      if (trip.status == status) {
+        return trip;
+      }
+      if (!_canTransitionTripStatus(trip.status, status)) {
+        throw Exception(
+          'لا يمكن نقل الرحلة من "${trip.status.label}" إلى "${status.label}". استخدم الخطوة التشغيلية التالية فقط.',
+        );
+      }
       return await _datasource.updateTripStatus(tripId, status);
     } catch (e) {
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
       throw Exception('تعذر تحديث حالة الرحلة: ${e.toString()}');
     }
   }
@@ -290,4 +302,23 @@ class TripsRepositoryImpl implements TripsRepository {
   Future<List<Map<String, dynamic>>> getActiveRoutes() {
     return _datasource.fetchActiveRoutes();
   }
+}
+
+bool _canTransitionTripStatus(
+  OperationTripStatus current,
+  OperationTripStatus next,
+) {
+  return switch (current) {
+    OperationTripStatus.scheduled =>
+      next == OperationTripStatus.openForBooking ||
+          next == OperationTripStatus.cancelled,
+    OperationTripStatus.openForBooking =>
+      next == OperationTripStatus.boarding ||
+          next == OperationTripStatus.cancelled,
+    OperationTripStatus.boarding =>
+      next == OperationTripStatus.inProgress ||
+          next == OperationTripStatus.cancelled,
+    OperationTripStatus.inProgress => next == OperationTripStatus.completed,
+    OperationTripStatus.completed || OperationTripStatus.cancelled => false,
+  };
 }

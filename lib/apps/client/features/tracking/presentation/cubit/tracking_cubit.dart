@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/tracking_trip.dart';
@@ -15,11 +17,17 @@ class TrackingCubit extends Cubit<TrackingState> {
 
   final GetTrackingTripUseCase _getTrackingTrip;
   final GetTrackingTitleUseCase _getTrackingTitle;
+  Timer? _liveRefreshTimer;
+  String? _bookingId;
+  String? _tripId;
 
-  Future<void> load() async {
+  Future<void> load({String? bookingId, String? tripId}) async {
+    _bookingId = bookingId;
+    _tripId = tripId;
+    _liveRefreshTimer?.cancel();
     emit(const TrackingLoading());
     try {
-      final data = await _getTrackingTrip();
+      final data = await _getTrackingTrip(bookingId: bookingId, tripId: tripId);
       final state = data.tripState;
       emit(
         TrackingLoaded(
@@ -28,8 +36,38 @@ class TrackingCubit extends Cubit<TrackingState> {
           title: _getTrackingTitle(state),
         ),
       );
+      _scheduleLiveRefreshIfNeeded(state);
     } catch (error) {
       emit(TrackingError(error.toString()));
+    }
+  }
+
+  Future<void> refresh() => _refresh(silent: false);
+
+  Future<void> _refresh({required bool silent}) async {
+    final current = state;
+    if (current is TrackingLoaded && silent) {
+      emit(current.copyWith(isRefreshing: true));
+    }
+
+    try {
+      final data = await _getTrackingTrip(
+        bookingId: _bookingId,
+        tripId: _tripId,
+      );
+      final nextState = data.tripState;
+      final loaded = state is TrackingLoaded ? state as TrackingLoaded : null;
+      emit(
+        TrackingLoaded(
+          data: data,
+          currentState: nextState,
+          title: _getTrackingTitle(nextState),
+          ratings: loaded?.ratings ?? const TrackingRatings(),
+        ),
+      );
+      _scheduleLiveRefreshIfNeeded(nextState);
+    } catch (error) {
+      if (!silent) emit(TrackingError(error.toString()));
     }
   }
 
@@ -44,6 +82,15 @@ class TrackingCubit extends Cubit<TrackingState> {
             ? const TrackingRatings()
             : current.ratings,
       ),
+    );
+  }
+
+  void _scheduleLiveRefreshIfNeeded(TrackingTripState state) {
+    _liveRefreshTimer?.cancel();
+    if (state == TrackingTripState.completed) return;
+    _liveRefreshTimer = Timer.periodic(
+      const Duration(seconds: 10),
+      (_) => _refresh(silent: true),
     );
   }
 
@@ -65,5 +112,11 @@ class TrackingCubit extends Cubit<TrackingState> {
         ),
       ),
     );
+  }
+
+  @override
+  Future<void> close() {
+    _liveRefreshTimer?.cancel();
+    return super.close();
   }
 }

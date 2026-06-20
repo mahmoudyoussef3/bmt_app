@@ -1,0 +1,322 @@
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
+
+declare const Deno: {
+  env: { get(key: string): string | undefined };
+  serve(handler: (req: Request) => Response | Promise<Response>): void;
+};
+
+type CheckoutRequest = {
+  booking_id?: string;
+  amount?: number | string;
+  currency?: string;
+  integration_id?: number | string;
+  iframe_id?: number | string;
+  route?: string;
+  trip_id?: string;
+  seat?: string;
+  customer?: {
+    email?: string;
+    name?: string;
+    phone?: string;
+  };
+};
+
+type PaymobAuthResponse = {
+  token?: string;
+};
+
+type PaymobOrderResponse = {
+  id?: number;
+};
+
+type PaymobPaymentKeyResponse = {
+  token?: string;
+};
+
+const paymobBaseUrl = "https://accept.paymob.com";
+const defaultPaymobCardIntegrationId = "4923808";
+const defaultPaymobIframeId = "893140";
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
+
+  try {
+    const config = readPaymobConfig();
+    const payload = await req.json() as CheckoutRequest;
+    const normalized = normalizeCheckoutRequest(payload);
+    const checkoutConfig = resolveCheckoutConfig(config, payload);
+
+    const authToken = await getAuthToken(config.apiKey);
+    const orderId = await createPaymobOrder({
+      authToken,
+      amountCents: normalized.amountCents,
+      currency: normalized.currency,
+      bookingId: normalized.bookingId,
+      route: normalized.route,
+      tripId: normalized.tripId,
+      seat: normalized.seat,
+    });
+    const paymentKey = await createPaymentKey({
+      authToken,
+      orderId,
+      amountCents: normalized.amountCents,
+      currency: normalized.currency,
+      integrationId: checkoutConfig.integrationId,
+      customer: normalized.customer,
+    });
+
+    const checkoutUrl =
+      `${paymobBaseUrl}/api/acceptance/iframes/${checkoutConfig.iframeId}` +
+      `?payment_token=${encodeURIComponent(paymentKey)}`;
+
+    return jsonResponse({
+      checkout_url: checkoutUrl,
+      gateway_reference: orderId.toString(),
+      order_id: orderId,
+    });
+  } catch (error) {
+    return jsonResponse(
+      { error: error instanceof Error ? error.message : String(error) },
+      400,
+    );
+  }
+});
+
+function readPaymobConfig() {
+  const apiKey =
+    Deno.env.get("PAYMOB_API_KEY") ?? Deno.env.get("PAYMOB_SECRET_KEY");
+  const integrationId =
+    Deno.env.get("PAYMOB_CARD_INTEGRATION_ID") ??
+      Deno.env.get("PAYMOB_INTEGRATION_ID") ??
+      defaultPaymobCardIntegrationId;
+  const iframeId = Deno.env.get("PAYMOB_IFRAME_ID") ?? defaultPaymobIframeId;
+
+  if (!apiKey) {
+    throw new Error(
+      "Paymob env is missing. Configure PAYMOB_API_KEY as a Supabase secret.",
+    );
+  }
+
+  const parsedIntegrationId = Number(integrationId);
+  if (!Number.isFinite(parsedIntegrationId) || parsedIntegrationId <= 0) {
+    throw new Error("Paymob card integration id must be a valid number.");
+  }
+
+  return {
+    apiKey,
+    integrationId: parsedIntegrationId,
+    iframeId,
+  };
+}
+
+function resolveCheckoutConfig(
+  config: { integrationId: number; iframeId: string },
+  payload: CheckoutRequest,
+) {
+  const integrationId = payload.integration_id == null ||
+      String(payload.integration_id).trim().length === 0
+    ? config.integrationId
+    : Number(payload.integration_id);
+  if (!Number.isFinite(integrationId) || integrationId <= 0) {
+    throw new Error("Paymob card integration id must be a valid number.");
+  }
+
+  const iframeId = sanitizeText(payload.iframe_id, config.iframeId);
+  return { integrationId, iframeId };
+}
+
+function normalizeCheckoutRequest(payload: CheckoutRequest) {
+  const amount = Number(payload.amount);
+  const bookingId = String(payload.booking_id ?? "").trim();
+  if (!bookingId) throw new Error("booking_id is required.");
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new Error("amount must be a positive number.");
+  }
+
+  const customer = payload.customer ?? {};
+  const name = sanitizeText(customer.name, "BMT Passenger");
+  const nameParts = name.split(/\s+/).filter(Boolean);
+
+  return {
+    bookingId,
+    amountCents: Math.round(amount * 100),
+    currency: sanitizeText(payload.currency, "EGP"),
+    route: sanitizeText(payload.route, "BMT trip booking"),
+    tripId: sanitizeText(payload.trip_id, ""),
+    seat: sanitizeText(payload.seat, ""),
+    customer: {
+      email: sanitizeEmail(customer.email),
+      firstName: nameParts[0] ?? "BMT",
+      lastName: nameParts.length > 1 ? nameParts.slice(1).join(" ") : "User",
+      phone: sanitizePhone(customer.phone),
+    },
+  };
+}
+
+async function getAuthToken(apiKey: string) {
+  const response = await postPaymob<PaymobAuthResponse>("/api/auth/tokens", {
+    api_key: apiKey,
+  });
+  if (!response.token) throw new Error("Paymob auth token was not returned.");
+  return response.token;
+}
+
+async function createPaymobOrder(input: {
+  authToken: string;
+  amountCents: number;
+  currency: string;
+  bookingId: string;
+  route: string;
+  tripId: string;
+  seat: string;
+}) {
+  const response = await postPaymob<PaymobOrderResponse>(
+    "/api/ecommerce/orders",
+    {
+      auth_token: input.authToken,
+      delivery_needed: "false",
+      amount_cents: input.amountCents.toString(),
+      currency: input.currency,
+      merchant_order_id: input.bookingId,
+      items: [
+        {
+          name: `BMT booking ${input.bookingId}`,
+          amount_cents: input.amountCents.toString(),
+          description: input.route,
+          quantity: "1",
+        },
+      ],
+      data: {
+        booking_id: input.bookingId,
+        trip_id: input.tripId,
+        seat: input.seat,
+      },
+    },
+    input.authToken,
+  );
+  if (!response.id) throw new Error("Paymob order id was not returned.");
+  return response.id;
+}
+
+async function createPaymentKey(input: {
+  authToken: string;
+  orderId: number;
+  amountCents: number;
+  currency: string;
+  integrationId: number;
+  customer: {
+    email: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+  };
+}) {
+  const response = await postPaymob<PaymobPaymentKeyResponse>(
+    "/api/acceptance/payment_keys",
+    {
+      auth_token: input.authToken,
+      order_id: input.orderId,
+      amount_cents: input.amountCents.toString(),
+      currency: input.currency,
+      integration_id: input.integrationId,
+      lock_order_when_paid: "false",
+      billing_data: {
+        apartment: "NA",
+        email: input.customer.email,
+        floor: "NA",
+        first_name: input.customer.firstName,
+        street: "NA",
+        building: "NA",
+        phone_number: input.customer.phone,
+        shipping_method: "NA",
+        postal_code: "NA",
+        city: "Cairo",
+        country: "EG",
+        last_name: input.customer.lastName,
+        state: "Cairo",
+      },
+    },
+    input.authToken,
+  );
+  if (!response.token) throw new Error("Paymob payment key was not returned.");
+  return response.token;
+}
+
+async function postPaymob<T>(
+  path: string,
+  body: Record<string, unknown>,
+  bearerToken?: string,
+) {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (bearerToken) {
+    headers.Authorization = `Bearer ${bearerToken}`;
+  }
+
+  const response = await fetch(`${paymobBaseUrl}${path}`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(body),
+  });
+  const data = await response.json() as Record<string, unknown>;
+  if (!response.ok) {
+    throw new Error(paymobErrorMessage(data, path));
+  }
+  return data as T;
+}
+
+function paymobErrorMessage(data: Record<string, unknown>, path: string) {
+  const detail = data.detail;
+  if (typeof detail === "string" && detail.trim().length > 0) {
+    return friendlyPaymobMessage(detail, path);
+  }
+
+  const message = data.message;
+  if (typeof message === "string" && message.trim().length > 0) {
+    return friendlyPaymobMessage(message, path);
+  }
+
+  const errors = data.errors;
+  if (Array.isArray(errors) && errors.length > 0) {
+    return errors.map((error) => String(error)).join(", ");
+  }
+
+  return `Paymob request failed: ${path}`;
+}
+
+function friendlyPaymobMessage(message: string, path: string) {
+  const normalized = message.toLowerCase();
+  if (normalized.includes("unrelated payment integration")) {
+    return "Paymob configuration mismatch: the card integration_id is not related to this Paymob account/API key, or the iframe_id belongs to a different integration. Verify PAYMOB_API_KEY, PAYMOB_CARD_INTEGRATION_ID, PAYMOB_IFRAME_ID, and payment_methods.metadata.";
+  }
+  return message || `Paymob request failed: ${path}`;
+}
+
+function jsonResponse(body: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function sanitizeText(value: unknown, fallback: string) {
+  const text = String(value ?? "").trim();
+  return text.length === 0 ? fallback : text;
+}
+
+function sanitizeEmail(value: unknown) {
+  const email = String(value ?? "").trim();
+  return email.includes("@") ? email : "passenger@bmt.app";
+}
+
+function sanitizePhone(value: unknown) {
+  const phone = String(value ?? "").replace(/[^\d+]/g, "");
+  return phone.length >= 8 ? phone : "01000000000";
+}

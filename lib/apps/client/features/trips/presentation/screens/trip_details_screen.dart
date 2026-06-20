@@ -526,7 +526,11 @@ class _LiveTrackingCard extends StatelessWidget {
           ),
           const SizedBox(width: 10),
           FilledButton(
-            onPressed: () => Navigator.pushNamed(context, '/tracking'),
+            onPressed: () => Navigator.pushNamed(
+              context,
+              '/tracking',
+              arguments: {'bookingId': trip.id},
+            ),
             style: FilledButton.styleFrom(
               backgroundColor: ClientColors.primary,
               foregroundColor: ClientColors.textInverse,
@@ -813,7 +817,11 @@ class _DriverCard extends StatelessWidget {
                 child: _InlineActionButton(
                   icon: Icons.location_on_rounded,
                   label: 'تتبع',
-                  onTap: () => Navigator.pushNamed(context, '/tracking'),
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    '/tracking',
+                    arguments: {'bookingId': trip.id},
+                  ),
                 ),
               ),
             ],
@@ -1284,7 +1292,11 @@ class _TripActionsBar extends StatelessWidget {
             if (canTrack)
               ClientButton(
                 label: 'تتبع العربية',
-                onPressed: () => Navigator.pushNamed(context, '/tracking'),
+                onPressed: () => Navigator.pushNamed(
+                  context,
+                  '/tracking',
+                  arguments: {'bookingId': trip.id},
+                ),
               ),
             if (canCancel)
               Row(
@@ -1292,8 +1304,11 @@ class _TripActionsBar extends StatelessWidget {
                   Expanded(
                     child: ClientButton(
                       label: 'تتبع العربية',
-                      onPressed: () =>
-                          Navigator.pushNamed(context, '/tracking'),
+                      onPressed: () => Navigator.pushNamed(
+                        context,
+                        '/tracking',
+                        arguments: {'bookingId': trip.id},
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),

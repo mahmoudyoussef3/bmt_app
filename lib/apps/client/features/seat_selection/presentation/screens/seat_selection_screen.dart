@@ -632,26 +632,34 @@ class _SeatSelectionContent extends StatelessWidget {
               child: BookingFooterSummary(
                 selectedSeat: seatNumStr,
                 pricePerSeat: data.pricePerSeat,
-                onConfirm: selectedSeat == null
+                isLoading: loaded.isLocking,
+                errorMessage: loaded.lockError,
+                onConfirm: selectedSeat == null || loaded.isLocking
                     ? null
-                    : () => Navigator.of(context).pushNamed(
-                        '/payment-demo',
-                        arguments: {
-                          'tripId': data.tripId,
-                          'pickupPoint': data.pickupPoint,
-                          'destination': data.destination,
-                          'vehicleNumber': data.vehicleNumber,
-                          'tripDate': data.tripDate,
-                          'departureTime': data.departureTime,
-                          'arrivalTime': data.arrivalTime,
-                          'selectedSeatId': selectedSeat,
-                          'selectedSeat': seatNumStr,
-                          'driverName': data.driverName,
-                          'baseFare': data.pricePerSeat,
-                          'serviceFee': 0,
-                          'tax': 0,
-                        },
-                      ),
+                    : () async {
+                        final locked = await context
+                            .read<SeatSelectionCubit>()
+                            .lockSelectedSeat();
+                        if (!locked || !context.mounted) return;
+                        Navigator.of(context).pushNamed(
+                          '/payment-demo',
+                          arguments: {
+                            'tripId': data.tripId,
+                            'pickupPoint': data.pickupPoint,
+                            'destination': data.destination,
+                            'vehicleNumber': data.vehicleNumber,
+                            'tripDate': data.tripDate,
+                            'departureTime': data.departureTime,
+                            'arrivalTime': data.arrivalTime,
+                            'selectedSeatId': selectedSeat,
+                            'selectedSeat': seatNumStr,
+                            'driverName': data.driverName,
+                            'baseFare': data.pricePerSeat,
+                            'serviceFee': 0,
+                            'tax': 0,
+                          },
+                        );
+                      },
               ),
             ),
           ),

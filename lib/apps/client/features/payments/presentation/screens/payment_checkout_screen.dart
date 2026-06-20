@@ -68,7 +68,6 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             paymentMethod: method,
             promoCode: state.appliedPromoCode,
             promoDiscount: state.promoDiscount,
-            simulateFailure: false,
           ),
         ),
       );

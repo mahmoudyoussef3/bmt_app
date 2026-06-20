@@ -39,11 +39,29 @@ void main() {
       final updateStatus = UpdateTripStatusUseCase(repository);
       final updated = await updateStatus(
         'trip-1',
-        OperationTripStatus.completed,
+        OperationTripStatus.openForBooking,
       );
 
-      expect(updated.status, OperationTripStatus.completed);
+      expect(updated.status, OperationTripStatus.openForBooking);
     });
+
+    test(
+      'rejects backwards trip status transitions before datasource update',
+      () {
+        final updateStatus = UpdateTripStatusUseCase(repository);
+
+        expect(
+          () => updateStatus('trip-2', OperationTripStatus.openForBooking),
+          throwsA(
+            isA<Exception>().having(
+              (e) => e.toString(),
+              'message',
+              contains('لا يمكن نقل الرحلة من "جارية" إلى "مفتوحة للحجز"'),
+            ),
+          ),
+        );
+      },
+    );
 
     test('creates trip with validations', () async {
       final createTrip = CreateTripUseCase(repository);

@@ -62,7 +62,10 @@ class _FakeTrackingDatasource implements TrackingDatasource {
   const _FakeTrackingDatasource();
 
   @override
-  Future<TrackingTripDataModel> getTrackingTrip() async {
+  Future<TrackingTripDataModel> getTrackingTrip({
+    String? bookingId,
+    String? tripId,
+  }) async {
     return const TrackingTripDataModel(
       routePoints: [
         TrackingPointModel(latitude: 30.15, longitude: 31.85),

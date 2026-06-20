@@ -201,7 +201,7 @@ class PromoCodeCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              ClientButton(label: 'Apply', onPressed: onApply),
+              ClientButton(label: 'Apply', onPressed: onApply, expand: false),
             ],
           ),
           const SizedBox(height: 10),
@@ -424,25 +424,55 @@ class _SummaryRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 5),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            label,
-            style: ClientTypography.bodySmall(
-              context,
-            ).copyWith(color: ClientColors.textSecondaryFor(context)),
+    final labelStyle = ClientTypography.bodySmall(
+      context,
+    ).copyWith(color: ClientColors.textSecondaryFor(context));
+    final valueStyle = ClientTypography.bodySmall(
+      context,
+    ).copyWith(fontWeight: FontWeight.w700);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final stackValue = constraints.maxWidth < 330 || value.length > 34;
+        if (stackValue) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label, style: labelStyle),
+                const SizedBox(height: 3),
+                Text(
+                  value,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: valueStyle,
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Padding(
+          padding: const EdgeInsets.symmetric(vertical: 5),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: 92, child: Text(label, style: labelStyle)),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  value,
+                  textAlign: TextAlign.end,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: valueStyle,
+                ),
+              ),
+            ],
           ),
-          Text(
-            value,
-            style: ClientTypography.bodySmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w700),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -458,19 +488,26 @@ class _PriceRow extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: ClientTypography.bodySmall(
-              context,
-            ).copyWith(color: ClientColors.textSecondaryFor(context)),
+          Expanded(
+            child: Text(
+              label,
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
+            ),
           ),
-          Text(
-            '${value > 0 ? '+' : ''}$value EGP',
-            style: ClientTypography.bodySmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w700, color: valueColor),
+          const SizedBox(width: 10),
+          Flexible(
+            child: Text(
+              '${value > 0 ? '+' : ''}$value EGP',
+              textAlign: TextAlign.end,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(fontWeight: FontWeight.w700, color: valueColor),
+            ),
           ),
         ],
       ),

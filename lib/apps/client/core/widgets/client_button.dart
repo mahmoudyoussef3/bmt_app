@@ -56,7 +56,7 @@ class ClientButton extends StatelessWidget {
     final shape = RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(14),
     );
-    const minSize = Size.fromHeight(52);
+    final minSize = expand ? const Size.fromHeight(52) : const Size(0, 52);
 
     Widget button = switch (_variant) {
       _ClientButtonVariant.primary => FilledButton(

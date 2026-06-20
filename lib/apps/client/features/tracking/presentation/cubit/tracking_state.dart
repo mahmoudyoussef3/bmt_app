@@ -14,23 +14,28 @@ class TrackingLoaded extends TrackingState {
     required this.currentState,
     required this.title,
     this.ratings = const TrackingRatings(),
+    this.isRefreshing = false,
   });
 
   final TrackingTripData data;
   final TrackingTripState currentState;
   final String title;
   final TrackingRatings ratings;
+  final bool isRefreshing;
 
   TrackingLoaded copyWith({
+    TrackingTripData? data,
     TrackingTripState? currentState,
     String? title,
     TrackingRatings? ratings,
+    bool? isRefreshing,
   }) {
     return TrackingLoaded(
-      data: data,
+      data: data ?? this.data,
       currentState: currentState ?? this.currentState,
       title: title ?? this.title,
       ratings: ratings ?? this.ratings,
+      isRefreshing: isRefreshing ?? this.isRefreshing,
     );
   }
 }

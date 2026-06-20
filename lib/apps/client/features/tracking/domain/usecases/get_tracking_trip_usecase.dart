@@ -6,7 +6,7 @@ class GetTrackingTripUseCase {
 
   final TrackingRepository _repository;
 
-  Future<TrackingTripData> call() {
-    return _repository.getTrackingTrip();
+  Future<TrackingTripData> call({String? bookingId, String? tripId}) {
+    return _repository.getTrackingTrip(bookingId: bookingId, tripId: tripId);
   }
 }

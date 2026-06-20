@@ -7,12 +7,16 @@ class BookingFooterSummary extends StatelessWidget {
   final String? selectedSeat;
   final VoidCallback? onConfirm;
   final double pricePerSeat;
+  final bool isLoading;
+  final String? errorMessage;
 
   const BookingFooterSummary({
     super.key,
     required this.selectedSeat,
     required this.onConfirm,
     this.pricePerSeat = 25,
+    this.isLoading = false,
+    this.errorMessage,
   });
 
   int get _seatCount => selectedSeat == null ? 0 : 1;
@@ -101,6 +105,16 @@ class BookingFooterSummary extends StatelessWidget {
               ],
             ),
           ),
+        if (errorMessage != null && errorMessage!.trim().isNotEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            errorMessage!,
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: ClientColors.journeyRed,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
         const SizedBox(height: 12),
         Row(
           children: [
@@ -127,8 +141,13 @@ class BookingFooterSummary extends StatelessWidget {
             ],
             Expanded(
               child: ClientButton(
-                label: hasSeat ? 'Continue Booking' : 'Select a Seat',
-                onPressed: onConfirm ?? () {},
+                label: isLoading
+                    ? 'Reserving seat...'
+                    : hasSeat
+                    ? 'Continue Booking'
+                    : 'Select a Seat',
+                isLoading: isLoading,
+                onPressed: onConfirm,
               ),
             ),
           ],

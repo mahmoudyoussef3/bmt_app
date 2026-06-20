@@ -1,7 +1,8 @@
 import 'dart:math' as math;
-import 'dart:ui' show lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_trip.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_state.dart';
@@ -13,8 +14,15 @@ typedef TripState = TrackingTripState;
 
 class TrackingScreen extends StatefulWidget {
   final bool shellMode;
+  final String? bookingId;
+  final String? tripId;
 
-  const TrackingScreen({super.key, this.shellMode = false});
+  const TrackingScreen({
+    super.key,
+    this.shellMode = false,
+    this.bookingId,
+    this.tripId,
+  });
 
   @override
   State<TrackingScreen> createState() => _TrackingScreenState();
@@ -22,7 +30,6 @@ class TrackingScreen extends StatefulWidget {
 
 class _TrackingScreenState extends State<TrackingScreen>
     with TickerProviderStateMixin {
-  late final AnimationController _mapAnimationController;
   late final AnimationController _pulseController;
   TrackingLoaded? _tracking;
 
@@ -37,96 +44,113 @@ class _TrackingScreenState extends State<TrackingScreen>
 
   int get _routeRating => _tracking?.ratings.route ?? 0;
 
-  List<Offset> get _routePoints {
-    final points = _tracking?.data.routePoints ?? const <TrackingPoint>[];
-    if (points.isEmpty) return const [Offset(0.35, 0.65)];
-    if (points.length == 1) return const [Offset(0.5, 0.5)];
+  TrackingTripData? get _trip => _tracking?.data;
 
-    final lats = points.map((p) => p.latitude);
-    final lngs = points.map((p) => p.longitude);
-    final minLat = lats.reduce(math.min);
-    final maxLat = lats.reduce(math.max);
-    final minLng = lngs.reduce(math.min);
-    final maxLng = lngs.reduce(math.max);
-    final latRange = maxLat - minLat;
-    final lngRange = maxLng - minLng;
+  String get _routeName => _trip?.routeName ?? 'Trip route';
 
-    if (latRange == 0 && lngRange == 0) return const [Offset(0.5, 0.5)];
+  String get _pickupName {
+    final trip = _trip;
+    return trip?.pickupName ??
+        (trip?.stops.isNotEmpty == true ? trip!.stops.first : 'Pickup');
+  }
 
-    return points
-        .map(
-          (p) => Offset(
-            lngRange == 0 ? 0.5 : (p.longitude - minLng) / lngRange,
-            latRange == 0 ? 0.5 : 1.0 - (p.latitude - minLat) / latRange,
-          ),
-        )
-        .toList();
+  String get _destinationName {
+    final trip = _trip;
+    return trip?.destinationName ??
+        (trip?.stops.isNotEmpty == true ? trip!.stops.last : 'Destination');
+  }
+
+  LatLng? get _vehicleLatLng {
+    final trip = _trip;
+    if (trip?.vehicleLatitude == null || trip?.vehicleLongitude == null) {
+      return null;
+    }
+    return LatLng(trip!.vehicleLatitude!, trip.vehicleLongitude!);
+  }
+
+  int get _currentTimelineStep {
+    return switch (_currentState) {
+      TripState.notStarted => 1,
+      TripState.driverOnWay => 2,
+      TripState.boarding => 3,
+      TripState.inProgress => 4,
+      TripState.completed => 5,
+    };
+  }
+
+  int get _currentStopIndex {
+    final trip = _trip;
+    final vehicle = _vehicleLatLng;
+    final points = trip?.routePoints ?? const <TrackingPoint>[];
+    if (_currentState == TripState.completed && points.isNotEmpty) {
+      return points.length - 1;
+    }
+    if (vehicle == null || points.isEmpty) return 0;
+
+    var bestIndex = 0;
+    var bestDistance = double.infinity;
+    for (var i = 0; i < points.length; i++) {
+      final point = points[i];
+      final distance =
+          math.pow(point.latitude - vehicle.latitude, 2) +
+          math.pow(point.longitude - vehicle.longitude, 2);
+      if (distance < bestDistance) {
+        bestDistance = distance.toDouble();
+        bestIndex = i;
+      }
+    }
+    return bestIndex;
+  }
+
+  String _formatTime(DateTime? value) {
+    if (value == null) return 'Pending';
+    final hour = value.hour % 12 == 0 ? 12 : value.hour % 12;
+    final minute = value.minute.toString().padLeft(2, '0');
+    final suffix = value.hour >= 12 ? 'PM' : 'AM';
+    return '$hour:$minute $suffix';
+  }
+
+  String _formatRelativeDeparture() {
+    final departure = _trip?.departureAt;
+    if (departure == null) return 'Scheduled time pending';
+    final diff = departure.difference(DateTime.now());
+    if (diff.inMinutes > 0) {
+      return 'Trip starts in ${diff.inMinutes} minutes';
+    }
+    if (diff.inMinutes > -5) return 'Trip is starting now';
+    return 'Scheduled trip';
+  }
+
+  String _liveLocationLabel() {
+    final updatedAt = _trip?.vehicleLocationAt;
+    if (updatedAt == null) return 'Waiting for driver location';
+    final diff = DateTime.now().difference(updatedAt);
+    if (diff.inMinutes < 1) return 'Live just now';
+    return 'Live ${diff.inMinutes} min ago';
   }
 
   @override
   void initState() {
     super.initState();
-    _mapAnimationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat();
-
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
 
-    context.read<TrackingCubit>().load();
+    context.read<TrackingCubit>().load(
+      bookingId: widget.bookingId,
+      tripId: widget.tripId,
+    );
   }
 
   @override
   void dispose() {
-    _mapAnimationController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
 
   void _changeState(TripState state) {
     context.read<TrackingCubit>().changeState(state);
-  }
-
-  // Calculate current driver position based on state & animation
-  Offset _getDriverPosition(double animValue) {
-    switch (_currentState) {
-      case TripState.notStarted:
-        return _routePoints[2]; // Placed at pickup point or not shown
-      case TripState.driverOnWay:
-        // Move from Driver Start (0) to Pickup (2)
-        final segmentPoints = _routePoints.sublist(0, 3);
-        return _interpolatePosition(segmentPoints, animValue);
-      case TripState.boarding:
-        return _routePoints[2]; // Parked at Pickup
-      case TripState.inProgress:
-        // Move from Pickup (2) to Destination (8)
-        final segmentPoints = _routePoints.sublist(2, 9);
-        return _interpolatePosition(segmentPoints, animValue);
-      case TripState.completed:
-        return _routePoints[8]; // Arrived at Destination
-    }
-  }
-
-  Offset _interpolatePosition(List<Offset> points, double t) {
-    if (points.isEmpty) return Offset.zero;
-    if (points.length == 1) return points.first;
-
-    final clampedT = t.clamp(0.0, 1.0);
-    final totalSegments = points.length - 1;
-    final positionOnSegment = clampedT * totalSegments;
-    final segmentIndex = positionOnSegment.floor().clamp(0, totalSegments - 1);
-    final segmentProgress = positionOnSegment - segmentIndex;
-
-    final start = points[segmentIndex];
-    final end = points[segmentIndex + 1];
-
-    return Offset(
-      lerpDouble(start.dx, end.dx, segmentProgress)!,
-      lerpDouble(start.dy, end.dy, segmentProgress)!,
-    );
   }
 
   @override
@@ -152,7 +176,8 @@ class _TrackingScreenState extends State<TrackingScreen>
           );
         }
 
-        _tracking = state as TrackingLoaded;
+        final loaded = state as TrackingLoaded;
+        _tracking = loaded;
 
         return Scaffold(
           backgroundColor: ClientColors.surfaceMutedFor(context),
@@ -206,12 +231,16 @@ class _TrackingScreenState extends State<TrackingScreen>
                     : _buildMobileLayout(context, scheme),
               ),
 
-              if (!widget.shellMode)
+              if (loaded.isRefreshing)
                 Positioned(
-                  left: 16,
-                  right: 16,
-                  top: 16,
-                  child: _buildDemoStateController(context),
+                  left: 0,
+                  right: 0,
+                  top: 0,
+                  child: LinearProgressIndicator(
+                    minHeight: 2,
+                    color: ClientColors.primary,
+                    backgroundColor: Colors.transparent,
+                  ),
                 ),
             ],
           ),
@@ -377,80 +406,12 @@ class _TrackingScreenState extends State<TrackingScreen>
   // --- MAP COMPONENT ---
   Widget _buildMapArea(ColorScheme scheme) {
     return AnimatedBuilder(
-      animation: _mapAnimationController,
-      builder: (context, child) {
-        final driverPos = _getDriverPosition(_mapAnimationController.value);
-        return PremiumMap(
-          routePoints: _routePoints,
-          driverPos: driverPos,
-          currentState: _currentState,
-          pulseValue: _pulseController.value,
-        );
-      },
-    );
-  }
-
-  // --- FLOATING STATE SWITCHER PANEL ---
-  Widget _buildDemoStateController(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.tune_rounded, color: ClientColors.primary, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                'Demo Controller (Simulate Trip States)',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: ClientColors.textSecondaryFor(context),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            child: Row(
-              children: [
-                _buildStateTab(
-                  '1. Waiting',
-                  TripState.notStarted,
-                  Theme.of(context).colorScheme,
-                ),
-                _buildStateTab(
-                  '2. Heading',
-                  TripState.driverOnWay,
-                  Theme.of(context).colorScheme,
-                ),
-                _buildStateTab(
-                  '3. Arrived',
-                  TripState.boarding,
-                  Theme.of(context).colorScheme,
-                ),
-                _buildStateTab(
-                  '4. In Route',
-                  TripState.inProgress,
-                  Theme.of(context).colorScheme,
-                ),
-                _buildStateTab(
-                  '5. Arrived/Done',
-                  TripState.completed,
-                  Theme.of(context).colorScheme,
-                ),
-              ],
-            ),
-          ),
-        ],
+      animation: _pulseController,
+      builder: (context, child) => PremiumMap(
+        routePoints: _trip?.routePoints ?? const <TrackingPoint>[],
+        vehiclePosition: _vehicleLatLng,
+        currentState: _currentState,
+        pulseValue: _pulseController.value,
       ),
     );
   }
@@ -536,7 +497,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            'Trip starts in 24 Minutes',
+            _formatRelativeDeparture(),
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 22,
@@ -546,7 +507,7 @@ class _TrackingScreenState extends State<TrackingScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Scheduled departure at 08:30 AM',
+            'Scheduled departure at ${_formatTime(_trip?.departureAt)}',
             style: TextStyle(
               fontSize: 13,
               color: ClientColors.textSecondaryFor(context),
@@ -570,7 +531,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  'Expected pickup: 08:32 AM',
+                  _trip?.hasLiveVehicleLocation == true
+                      ? _liveLocationLabel()
+                      : 'Driver location starts when captain shares it',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -602,14 +565,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             'View Route',
             ClientColors.primary,
             () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text(
-                    'Showing full route layout. Set to "Heading" state to track!',
-                  ),
-                  backgroundColor: ClientColors.primary,
-                ),
-              );
+              context.read<TrackingCubit>().refresh();
             },
           ),
           _buildQuickActionItem(
@@ -617,7 +573,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             'Contact Driver',
             ClientColors.journeyGreen,
             () {
-              _showMockContactDialog(context, scheme, 'Driver');
+              _showContactInfo(context, 'Driver', _trip?.driverPhone);
             },
           ),
           _buildQuickActionItem(
@@ -625,7 +581,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             'Support',
             scheme.tertiary,
             () {
-              _showMockContactDialog(context, scheme, 'Support Desk');
+              Navigator.of(context).pushNamed('/support');
             },
           ),
         ],
@@ -677,8 +633,7 @@ class _TrackingScreenState extends State<TrackingScreen>
       'Trip Completed',
     ];
 
-    // We are currently in "Booking Confirmed" or "Driver Assigned" stage
-    const currentActiveStep = 1;
+    final currentActiveStep = _currentTimelineStep;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -768,7 +723,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                         if (isActive) ...[
                           const SizedBox(height: 4),
                           Text(
-                            'Driver Ahmed Mohamed is scheduled for your pickup.',
+                            _timelineDescription(index),
                             style: TextStyle(
                               fontSize: 11,
                               color: ClientColors.textSecondaryFor(context),
@@ -785,6 +740,20 @@ class _TrackingScreenState extends State<TrackingScreen>
         }),
       ),
     );
+  }
+
+  String _timelineDescription(int index) {
+    return switch (index) {
+      1 => '${_trip?.displayDriverName ?? 'Driver'} is assigned to your trip.',
+      2 =>
+        _trip?.hasLiveVehicleLocation == true
+            ? 'Vehicle location is updating from the captain app.'
+            : 'Waiting for captain location sharing.',
+      3 => 'Vehicle is at pickup or boarding is open.',
+      4 => 'Trip is live on the route.',
+      5 => 'Trip has arrived.',
+      _ => 'Booking is confirmed.',
+    };
   }
 
   // Route Info
@@ -809,7 +778,7 @@ class _TrackingScreenState extends State<TrackingScreen>
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  'Banha Express Route',
+                  _routeName,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -824,16 +793,16 @@ class _TrackingScreenState extends State<TrackingScreen>
             Icons.trip_origin_rounded,
             ClientColors.journeyGreen,
             'Pickup Location',
-            'Banha Station',
-            'Scheduled departure: 08:30 AM',
+            _pickupName,
+            'Scheduled departure: ${_formatTime(_trip?.departureAt)}',
           ),
           _buildLineConnector(context),
           _buildMapTimelineRow(
             Icons.location_on_rounded,
             scheme.tertiary,
             'Destination',
-            'Smart Village (Gate 4)',
-            'Expected arrival: 09:20 AM',
+            _destinationName,
+            'Expected arrival: ${_formatTime(_trip?.arrivalAt)}',
           ),
         ],
       ),
@@ -924,7 +893,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Text(
-                  'Premium Shuttle',
+                  _trip?.vehicleType ?? 'Vehicle',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -938,16 +907,23 @@ class _TrackingScreenState extends State<TrackingScreen>
                   color: ClientColors.borderFor(context),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: const Text(
-                  'MB-15-2847',
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+                child: Text(
+                  _trip?.displayVehiclePlate ?? 'Plate pending',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            'Mercedes Sprinter Luxury',
+            _trip?.displayVehicleName ?? 'Assigned vehicle',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.bold,
@@ -958,18 +934,17 @@ class _TrackingScreenState extends State<TrackingScreen>
           Row(
             children: [
               _buildFeatureIconBadge(
-                Icons.ac_unit_rounded,
-                'A/C Active',
+                Icons.location_searching_rounded,
+                _liveLocationLabel(),
                 context,
               ),
               const SizedBox(width: 8),
-              _buildFeatureIconBadge(
-                Icons.airline_seat_recline_extra_rounded,
-                'Leather Seats',
-                context,
-              ),
-              const SizedBox(width: 8),
-              _buildFeatureIconBadge(Icons.wifi_rounded, 'WiFi', context),
+              if (_trip?.vehicleSpeed != null)
+                _buildFeatureIconBadge(
+                  Icons.speed_rounded,
+                  '${_trip!.vehicleSpeed!.round()} km/h',
+                  context,
+                ),
             ],
           ),
         ],
@@ -1018,7 +993,7 @@ class _TrackingScreenState extends State<TrackingScreen>
             radius: 24,
             backgroundColor: ClientColors.primaryLight,
             child: Text(
-              'AM',
+              _trip?.driverInitials ?? 'DR',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 color: ClientColors.primary,
@@ -1031,7 +1006,9 @@ class _TrackingScreenState extends State<TrackingScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Ahmed Mohamed',
+                  _trip?.displayDriverName ?? 'Driver assigned',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
@@ -1044,18 +1021,11 @@ class _TrackingScreenState extends State<TrackingScreen>
                     Icon(Icons.star_rounded, size: 14, color: scheme.tertiary),
                     const SizedBox(width: 4),
                     Text(
-                      '4.9',
+                      _trip?.driverRating?.toStringAsFixed(1) ?? 'N/A',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: ClientColors.textPrimaryFor(context),
-                      ),
-                    ),
-                    Text(
-                      ' (1,200+ rides)',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: ClientColors.textSecondaryFor(context),
                       ),
                     ),
                   ],
@@ -1069,7 +1039,7 @@ class _TrackingScreenState extends State<TrackingScreen>
               color: ClientColors.primary,
             ),
             onPressed: () =>
-                _showMockContactDialog(context, scheme, 'Ahmed Mohamed'),
+                _showContactInfo(context, 'Driver', _trip?.driverPhone),
           ),
         ],
       ),
@@ -1121,22 +1091,24 @@ class _TrackingScreenState extends State<TrackingScreen>
     switch (_currentState) {
       case TripState.driverOnWay:
         title = 'Driver On The Way';
-        subtitle = 'Captain Ahmed is driving towards Banha Station';
+        subtitle = _trip?.hasLiveVehicleLocation == true
+            ? '${_trip?.displayDriverName ?? 'Captain'} is heading towards $_pickupName'
+            : 'Waiting for live vehicle location';
         toneColor = ClientColors.journeyGreen;
         break;
       case TripState.boarding:
         title = 'Boarding Started';
-        subtitle = 'Shuttle is at the station. Board now.';
+        subtitle = 'Vehicle is at $_pickupName. Board when instructed.';
         toneColor = ClientColors.primary;
         break;
       case TripState.inProgress:
         title = 'Trip In Progress';
-        subtitle = 'Heading to next stop: Nasr City';
+        subtitle = 'Heading to $_destinationName';
         toneColor = ClientColors.primary;
         break;
       case TripState.completed:
         title = 'Arrived Safely';
-        subtitle = 'Trip completed at 09:22 AM';
+        subtitle = 'Trip completed at ${_formatTime(_trip?.arrivalAt)}';
         toneColor = ClientColors.journeyGreen;
         break;
       default:
@@ -1178,9 +1150,11 @@ class _TrackingScreenState extends State<TrackingScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildETACard(
-          '12',
-          'minutes away',
-          'Pickup distance: 2.1 km',
+          _trip?.hasLiveVehicleLocation == true ? 'Live' : '--',
+          _trip?.hasLiveVehicleLocation == true
+              ? 'tracking active'
+              : 'no GPS yet',
+          _liveLocationLabel(),
           context,
           scheme,
         ),
@@ -1198,9 +1172,9 @@ class _TrackingScreenState extends State<TrackingScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildETACard(
-          '4',
-          'minutes left to board',
-          'Departure: 08:30 AM',
+          'Now',
+          'boarding window',
+          'Departure: ${_formatTime(_trip?.departureAt)}',
           context,
           scheme,
         ),
@@ -1216,25 +1190,11 @@ class _TrackingScreenState extends State<TrackingScreen>
           child: Column(
             children: [
               const Text(
-                'Show Boarding QR code or share PIN with driver',
+                'Boarding is open for this confirmed booking',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 16),
-              // Simulated QR code
-              Container(
-                width: 120,
-                height: 120,
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: CustomPaint(
-                  painter: MockQRCodePainter(ClientColors.primary),
-                ),
-              ),
-              const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
@@ -1245,11 +1205,12 @@ class _TrackingScreenState extends State<TrackingScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'PIN: 5839',
+                  _trip?.bookingId == null
+                      ? 'Booking reference pending'
+                      : 'Booking: ${_trip!.bookingId}',
                   style: TextStyle(
-                    fontSize: 16,
+                    fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
                     color: ClientColors.primary,
                   ),
                 ),
@@ -1269,9 +1230,9 @@ class _TrackingScreenState extends State<TrackingScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildETACard(
-          '28',
-          'minutes remaining',
-          'Expected Arrival: 09:20 AM',
+          _trip?.vehicleSpeed?.round().toString() ?? 'Live',
+          _trip?.vehicleSpeed == null ? 'tracking active' : 'km/h',
+          'Expected arrival: ${_formatTime(_trip?.arrivalAt)}',
           context,
           scheme,
         ),
@@ -1295,19 +1256,21 @@ class _TrackingScreenState extends State<TrackingScreen>
               _buildMetricItem(
                 Icons.speed_rounded,
                 'Speed',
-                '58 km/h',
+                _trip?.vehicleSpeed == null
+                    ? 'Pending'
+                    : '${_trip!.vehicleSpeed!.round()} km/h',
                 ClientColors.primary,
               ),
               _buildMetricItem(
-                Icons.ac_unit_rounded,
-                'Climate',
-                '22°C',
+                Icons.location_on_rounded,
+                'GPS',
+                _trip?.hasLiveVehicleLocation == true ? 'Live' : 'Waiting',
                 ClientColors.journeyGreen,
               ),
               _buildMetricItem(
-                Icons.network_wifi_3_bar_rounded,
-                'WiFi',
-                'Connected',
+                Icons.update_rounded,
+                'Updated',
+                _liveLocationLabel(),
                 scheme.tertiary,
               ),
             ],
@@ -1373,10 +1336,10 @@ class _TrackingScreenState extends State<TrackingScreen>
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
               ),
               const Divider(height: 20),
-              _buildSummaryRow('Total Duration', '42 Minutes'),
-              _buildSummaryRow('Distance Traveled', '28.5 km'),
-              _buildSummaryRow('Average Speed', '55 km/h'),
-              _buildSummaryRow('Arrival Time', '09:22 AM'),
+              _buildSummaryRow('Route', _routeName),
+              _buildSummaryRow('Pickup', _pickupName),
+              _buildSummaryRow('Destination', _destinationName),
+              _buildSummaryRow('Arrival Time', _formatTime(_trip?.arrivalAt)),
             ],
           ),
         ),
@@ -1579,7 +1542,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 radius: 24,
                 backgroundColor: ClientColors.primaryLight,
                 child: Text(
-                  'AM',
+                  _trip?.driverInitials ?? 'DR',
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     color: ClientColors.primary,
@@ -1592,7 +1555,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Ahmed Mohamed',
+                      _trip?.displayDriverName ?? 'Driver assigned',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.bold,
@@ -1607,9 +1572,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                           color: scheme.tertiary,
                         ),
                         const SizedBox(width: 4),
-                        const Text(
-                          '4.9',
-                          style: TextStyle(
+                        Text(
+                          _trip?.driverRating?.toStringAsFixed(1) ?? 'N/A',
+                          style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1628,11 +1593,8 @@ class _TrackingScreenState extends State<TrackingScreen>
                 child: ClientButton.secondary(
                   label: 'Call Driver',
                   expand: true,
-                  onPressed: () => _showMockContactDialog(
-                    context,
-                    scheme,
-                    'Ahmed Mohamed (Phone)',
-                  ),
+                  onPressed: () =>
+                      _showContactInfo(context, 'Driver', _trip?.driverPhone),
                 ),
               ),
               const SizedBox(width: 10),
@@ -1640,11 +1602,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 child: ClientButton(
                   label: 'Chat Driver',
                   expand: true,
-                  onPressed: () => _showMockContactDialog(
-                    context,
-                    scheme,
-                    'Ahmed Mohamed (Chat)',
-                  ),
+                  onPressed: () => Navigator.of(context).pushNamed('/support'),
                 ),
               ),
             ],
@@ -1656,6 +1614,14 @@ class _TrackingScreenState extends State<TrackingScreen>
 
   // Stops progress section
   Widget _buildRemainingStopsHeader(BuildContext context, ColorScheme scheme) {
+    final stops = _trip?.stops ?? const <String>[];
+    final remaining = stops.isEmpty
+        ? 0
+        : (stops.length - _currentStopIndex - 1).clamp(0, stops.length);
+    final nextStop = stops.isEmpty
+        ? _destinationName
+        : stops[_currentStopIndex.clamp(0, stops.length - 1)];
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -1667,14 +1633,14 @@ class _TrackingScreenState extends State<TrackingScreen>
               color: ClientColors.primary,
             ),
             const SizedBox(width: 6),
-            const Text(
-              '3 Stops Remaining',
-              style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+            Text(
+              '$remaining Stops Remaining',
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         Text(
-          'Next stop: Nasr City',
+          'Next stop: $nextStop',
           style: TextStyle(
             fontSize: 12,
             color: ClientColors.journeyGreen,
@@ -1686,14 +1652,22 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   Widget _buildStopsProgressTimeline(BuildContext context, ColorScheme scheme) {
-    final stops = [
-      'Banha Station',
-      'Nasr City Station',
-      'Heliopolis Station',
-      'Smart Village',
-    ];
-    // Index representing where we are
-    const currentStopIndex = 1;
+    final stops = _trip?.stops ?? const <String>[];
+    final currentStopIndex = stops.isEmpty ? 0 : _currentStopIndex;
+    if (stops.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: ClientColors.surfaceFor(context),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: ClientColors.borderFor(context)),
+        ),
+        child: Text(
+          'No route stations were found for this trip.',
+          style: TextStyle(color: ClientColors.textSecondaryFor(context)),
+        ),
+      );
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1857,12 +1831,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     );
   }
 
-  // Mock contact actions dialogue
-  void _showMockContactDialog(
-    BuildContext context,
-    ColorScheme scheme,
-    String title,
-  ) {
+  void _showContactInfo(BuildContext context, String title, String? phone) {
     showDialog(
       context: context,
       builder: (context) {
@@ -1872,14 +1841,16 @@ class _TrackingScreenState extends State<TrackingScreen>
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Contact $title',
+            title,
             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'This is a mock UI component. Contact channels (VOIP, chat, phone dialer) will trigger here in production.',
+                phone == null || phone.trim().isEmpty
+                    ? 'Driver phone is not available for this trip yet.'
+                    : 'Phone: $phone',
                 style: TextStyle(
                   fontSize: 13,
                   color: ClientColors.textSecondaryFor(context),
@@ -1924,235 +1895,225 @@ class _BackgroundGlow extends StatelessWidget {
   }
 }
 
-// --- PREMIUM MOCK MAP PAINTER ---
 class PremiumMap extends StatelessWidget {
-  final List<Offset> routePoints;
-  final Offset driverPos;
-  final TripState currentState;
-  final double pulseValue;
-
   const PremiumMap({
     super.key,
     required this.routePoints,
-    required this.driverPos,
+    required this.vehiclePosition,
     required this.currentState,
     required this.pulseValue,
   });
 
+  final List<TrackingPoint> routePoints;
+  final LatLng? vehiclePosition;
+  final TripState currentState;
+  final double pulseValue;
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final route = routePoints
+        .where((point) => point.latitude != 0 && point.longitude != 0)
+        .map((point) => LatLng(point.latitude, point.longitude))
+        .toList();
+    final center = vehiclePosition ?? (route.isNotEmpty ? route.first : null);
+
+    if (center == null) {
+      return _NoMapDataPanel(
+        onRefresh: () => context.read<TrackingCubit>().refresh(),
+      );
+    }
+
+    final boundsPoints = [...route, ?vehiclePosition];
+    final cameraFit = boundsPoints.length > 1
+        ? CameraFit.bounds(
+            bounds: LatLngBounds.fromPoints(boundsPoints),
+            padding: const EdgeInsets.all(48),
+          )
+        : null;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(18),
       child: Stack(
         children: [
-          // Background grids & streets painting
-          Positioned.fill(
-            child: CustomPaint(painter: _MapGridAndStreetsPainter(context)),
-          ),
-          // Route path drawing
-          Positioned.fill(
-            child: CustomPaint(
-              painter: _MapRouteLinePainter(
-                routePoints: routePoints,
-                driverPos: driverPos,
-                currentState: currentState,
-                scheme: scheme,
+          FlutterMap(
+            options: MapOptions(
+              initialCenter: center,
+              initialZoom: 13,
+              initialCameraFit: cameraFit,
+              interactionOptions: const InteractionOptions(
+                flags:
+                    InteractiveFlag.drag |
+                    InteractiveFlag.pinchZoom |
+                    InteractiveFlag.doubleTapZoom,
               ),
             ),
-          ),
-          // Interactive dynamic overlays (Markers)
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final w = constraints.maxWidth;
-              final h = constraints.maxHeight;
-
-              final pickupOffset = Offset(
-                routePoints[2].dx * w,
-                routePoints[2].dy * h,
-              );
-              final stop1Offset = Offset(
-                routePoints[4].dx * w,
-                routePoints[4].dy * h,
-              );
-              final stop2Offset = Offset(
-                routePoints[6].dx * w,
-                routePoints[6].dy * h,
-              );
-              final destOffset = Offset(
-                routePoints[8].dx * w,
-                routePoints[8].dy * h,
-              );
-              final driverOffset = Offset(driverPos.dx * w, driverPos.dy * h);
-
-              final showDriver =
-                  currentState != TripState.completed ||
-                  (math.sin(pulseValue * math.pi) >
-                      0.0); // blinking/pulsing at destination
-
-              return Stack(
-                children: [
-                  // Pickup Pin
-                  Positioned(
-                    left: pickupOffset.dx - 12,
-                    top: pickupOffset.dy - 32,
-                    child: _buildMapPin(
-                      Icons.trip_origin_rounded,
-                      ClientColors.journeyGreen,
-                      'Pickup',
-                      pulseValue,
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.bmt.app',
+              ),
+              if (route.length > 1)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: route,
+                      strokeWidth: 5,
+                      color: ClientColors.primary,
                     ),
-                  ),
-                  // Stops Pins
-                  Positioned(
-                    left: stop1Offset.dx - 6,
-                    top: stop1Offset.dy - 6,
-                    child: _buildMapStopCircle(
-                      ClientColors.borderFor(context),
-                      'Nasr City',
+                  ],
+                ),
+              MarkerLayer(
+                markers: [
+                  if (route.isNotEmpty)
+                    Marker(
+                      point: route.first,
+                      width: 44,
+                      height: 44,
+                      child: _MapMarker(
+                        icon: Icons.trip_origin_rounded,
+                        color: ClientColors.journeyGreen,
+                      ),
                     ),
-                  ),
-                  Positioned(
-                    left: stop2Offset.dx - 6,
-                    top: stop2Offset.dy - 6,
-                    child: _buildMapStopCircle(
-                      ClientColors.borderFor(context),
-                      'Heliopolis',
+                  if (route.length > 1)
+                    Marker(
+                      point: route.last,
+                      width: 44,
+                      height: 44,
+                      child: _MapMarker(
+                        icon: Icons.location_on_rounded,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
                     ),
-                  ),
-                  // Destination Pin
-                  Positioned(
-                    left: destOffset.dx - 12,
-                    top: destOffset.dy - 32,
-                    child: _buildMapPin(
-                      Icons.location_on_rounded,
-                      scheme.tertiary,
-                      'Destination',
-                      pulseValue,
-                    ),
-                  ),
-
-                  // Driver Pin (Moving Shuttle)
-                  if (showDriver)
-                    Positioned(
-                      left: driverOffset.dx - 18,
-                      top: driverOffset.dy - 18,
-                      child: _buildDriverMarker(context, scheme, pulseValue),
+                  if (vehiclePosition != null)
+                    Marker(
+                      point: vehiclePosition!,
+                      width: 58,
+                      height: 58,
+                      child: _VehicleMarker(pulseValue: pulseValue),
                     ),
                 ],
-              );
-            },
+              ),
+            ],
+          ),
+          Positioned(
+            left: 12,
+            right: 12,
+            bottom: 12,
+            child: _MapStatusStrip(
+              hasLiveLocation: vehiclePosition != null,
+              currentState: currentState,
+            ),
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildMapPin(IconData icon, Color color, String label, double pulse) {
-    final scale = 1.0 + 0.1 * math.sin(pulse * math.pi);
-    return Transform.scale(
-      scale: scale,
+class _NoMapDataPanel extends StatelessWidget {
+  const _NoMapDataPanel({required this.onRefresh});
+
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
+      padding: const EdgeInsets.all(18),
       child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Colors.black.withAlpha(200),
-              borderRadius: BorderRadius.circular(4),
-              border: Border.all(color: color.withAlpha(120)),
-            ),
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 8,
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
+          Icon(Icons.map_outlined, color: ClientColors.primary, size: 40),
+          const SizedBox(height: 10),
+          Text(
+            'Map data unavailable',
+            style: TextStyle(
+              fontWeight: FontWeight.w800,
+              color: ClientColors.textPrimaryFor(context),
             ),
           ),
-          const SizedBox(height: 2),
-          Container(
-            width: 22,
-            height: 22,
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: color.withAlpha(100),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: const Center(
-              child: Icon(
-                Icons.navigation_rounded,
-                size: 12,
-                color: Colors.white,
-              ),
-            ),
+          const SizedBox(height: 6),
+          Text(
+            'No route coordinates were found for this trip.',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: ClientColors.textSecondaryFor(context)),
+          ),
+          const SizedBox(height: 14),
+          ClientButton.secondary(
+            label: 'Refresh',
+            expand: false,
+            onPressed: onRefresh,
           ),
         ],
       ),
     );
   }
+}
 
-  Widget _buildMapStopCircle(Color color, String name) {
-    return Tooltip(
-      message: name,
-      child: Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          color: Colors.black,
-          shape: BoxShape.circle,
-          border: Border.all(color: color, width: 2),
-        ),
+class _MapMarker extends StatelessWidget {
+  const _MapMarker({required this.icon, required this.color});
+
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.circle,
+        border: Border.all(color: color, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(45),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
+      child: Icon(icon, color: color, size: 22),
     );
   }
+}
 
-  Widget _buildDriverMarker(
-    BuildContext context,
-    ColorScheme scheme,
-    double pulse,
-  ) {
-    final alpha = (80 + 100 * math.sin(pulse * math.pi)).toInt().clamp(0, 255);
+class _VehicleMarker extends StatelessWidget {
+  const _VehicleMarker({required this.pulseValue});
+
+  final double pulseValue;
+
+  @override
+  Widget build(BuildContext context) {
+    final alpha = (55 + 90 * math.sin(pulseValue * math.pi)).toInt().clamp(
+      0,
+      255,
+    );
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Outer pulsing glow
         Container(
-          width: 36,
-          height: 36,
+          width: 54,
+          height: 54,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: ClientColors.primary.withAlpha(alpha),
           ),
         ),
-        // Driver Shuttle Card
         Container(
-          width: 26,
-          height: 26,
+          width: 34,
+          height: 34,
           decoration: BoxDecoration(
-            color: ClientColors.surfaceFor(context),
+            color: ClientColors.primary,
             shape: BoxShape.circle,
-            border: Border.all(color: ClientColors.primary, width: 2),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(150),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+            border: Border.all(color: Colors.white, width: 3),
           ),
-          child: Center(
-            child: Icon(
-              Icons.directions_bus_rounded,
-              size: 14,
-              color: ClientColors.primary,
-            ),
+          child: const Icon(
+            Icons.directions_bus_rounded,
+            size: 18,
+            color: Colors.white,
           ),
         ),
       ],
@@ -2160,194 +2121,57 @@ class PremiumMap extends StatelessWidget {
   }
 }
 
-// Painting grids, background color, block streets for city simulation
-class _MapGridAndStreetsPainter extends CustomPainter {
-  final BuildContext _context;
-  _MapGridAndStreetsPainter(this._context);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    // Fill background with elegant charcoal color
-    final bgPaint = Paint()..color = ClientColors.surfaceMutedFor(_context);
-    canvas.drawRect(Offset.zero & size, bgPaint);
-
-    final streetPaint = Paint()
-      ..color = ClientColors.surfaceFor(_context).withAlpha(60)
-      ..strokeWidth = 22
-      ..strokeCap = StrokeCap.round
-      ..style = PaintingStyle.stroke;
-
-    // Draw some city background streets winding around to simulate layout
-    final streetPath1 = Path()
-      ..moveTo(0, size.height * 0.2)
-      ..lineTo(size.width, size.height * 0.2);
-    final streetPath2 = Path()
-      ..moveTo(0, size.height * 0.5)
-      ..quadraticBezierTo(
-        size.width * 0.5,
-        size.height * 0.7,
-        size.width,
-        size.height * 0.5,
-      );
-    final streetPath3 = Path()
-      ..moveTo(size.width * 0.2, 0)
-      ..lineTo(size.width * 0.2, size.height);
-    final streetPath4 = Path()
-      ..moveTo(size.width * 0.8, 0)
-      ..lineTo(size.width * 0.8, size.height);
-
-    canvas.drawPath(streetPath1, streetPaint);
-    canvas.drawPath(streetPath2, streetPaint);
-    canvas.drawPath(streetPath3, streetPaint);
-    canvas.drawPath(streetPath4, streetPaint);
-
-    // Draw minor grid overlays
-    final gridPaint = Paint()
-      ..color = ClientColors.borderFor(_context).withAlpha(12)
-      ..strokeWidth = 0.5;
-
-    const spacing = 30.0;
-    for (double x = 0; x < size.width; x += spacing) {
-      canvas.drawLine(Offset(x, 0), Offset(x, size.height), gridPaint);
-    }
-    for (double y = 0; y < size.height; y += spacing) {
-      canvas.drawLine(Offset(0, y), Offset(size.width, y), gridPaint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-// Drawing route path segment and highlighting progress
-class _MapRouteLinePainter extends CustomPainter {
-  final List<Offset> routePoints;
-  final Offset driverPos;
-  final TripState currentState;
-  final ColorScheme scheme;
-
-  _MapRouteLinePainter({
-    required this.routePoints,
-    required this.driverPos,
+class _MapStatusStrip extends StatelessWidget {
+  const _MapStatusStrip({
+    required this.hasLiveLocation,
     required this.currentState,
-    required this.scheme,
   });
 
+  final bool hasLiveLocation;
+  final TripState currentState;
+
   @override
-  void paint(Canvas canvas, Size size) {
-    if (routePoints.isEmpty) return;
-
-    final w = size.width;
-    final h = size.height;
-
-    // Convert relative points to absolute coordinates
-    final points = routePoints.map((p) => Offset(p.dx * w, p.dy * h)).toList();
-    final driverAbsolutePos = Offset(driverPos.dx * w, driverPos.dy * h);
-
-    // 1. Draw Remaining Route (Dotted/Dashed Line or Dim Line)
-    final remainingPaint = Paint()
-      ..color = ClientColors.primaryMuted.withAlpha(120)
-      ..strokeWidth = 4
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final fullPath = Path()..moveTo(points.first.dx, points.first.dy);
-    for (var i = 1; i < points.length; i++) {
-      fullPath.lineTo(points[i].dx, points[i].dy);
-    }
-    canvas.drawPath(fullPath, remainingPaint);
-
-    // 2. Draw Traveled Route (Highlighted neon line up to Driver position)
-    final traveledPaint = Paint()
-      ..color = ClientColors.primary
-      ..strokeWidth = 4.5
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    final traveledPath = Path()..moveTo(points.first.dx, points.first.dy);
-
-    // Identify which point segments the driver has passed
-    // Find segment on full route closest to driver position
-    var segmentIdx = 0;
-    var minDist = double.infinity;
-    for (var i = 0; i < points.length; i++) {
-      final d = (points[i] - driverAbsolutePos).distance;
-      if (d < minDist) {
-        minDist = d;
-        segmentIdx = i;
-      }
-    }
-
-    // Draw up to that closest segment
-    for (var i = 1; i <= segmentIdx; i++) {
-      traveledPath.lineTo(points[i].dx, points[i].dy);
-    }
-    // Connect remaining distance to exact driver position
-    traveledPath.lineTo(driverAbsolutePos.dx, driverAbsolutePos.dy);
-
-    canvas.drawPath(traveledPath, traveledPaint);
+  Widget build(BuildContext context) {
+    final label = hasLiveLocation
+        ? 'Live vehicle location'
+        : currentState == TripState.completed
+        ? 'Trip completed'
+        : 'Waiting for captain location';
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context).withAlpha(235),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+        child: Row(
+          children: [
+            Icon(
+              hasLiveLocation
+                  ? Icons.my_location_rounded
+                  : Icons.location_searching_rounded,
+              color: hasLiveLocation
+                  ? ClientColors.journeyGreen
+                  : ClientColors.textSecondaryFor(context),
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: ClientColors.textPrimaryFor(context),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
-
-  @override
-  bool shouldRepaint(covariant _MapRouteLinePainter old) =>
-      old.driverPos != driverPos ||
-      old.currentState != currentState ||
-      old.scheme != scheme;
-}
-
-// Draw a mock QR code layout utilizing CustomPainter lines
-class MockQRCodePainter extends CustomPainter {
-  final Color qrColor;
-  MockQRCodePainter(this.qrColor);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = qrColor
-      ..style = PaintingStyle.fill;
-
-    // Corner squares
-    canvas.drawRect(const Rect.fromLTWH(0, 0, 30, 30), paint);
-    canvas.drawRect(Rect.fromLTWH(size.width - 30, 0, 30, 30), paint);
-    canvas.drawRect(Rect.fromLTWH(0, size.height - 30, 30, 30), paint);
-
-    // Inner holes in corner squares
-    paint.color = Colors.white;
-    canvas.drawRect(const Rect.fromLTWH(6, 6, 18, 18), paint);
-    canvas.drawRect(Rect.fromLTWH(size.width - 24, 6, 18, 18), paint);
-    canvas.drawRect(Rect.fromLTWH(6, size.height - 24, 18, 18), paint);
-
-    paint.color = qrColor;
-    canvas.drawRect(const Rect.fromLTWH(10, 10, 10, 10), paint);
-    canvas.drawRect(Rect.fromLTWH(size.width - 20, 10, 10, 10), paint);
-    canvas.drawRect(Rect.fromLTWH(10, size.height - 20, 10, 10), paint);
-
-    // Winding random QR pixels/lines in center
-    final random = math.Random(101);
-    const cellSize = 5.0;
-    for (double x = 35; x < size.width - 35; x += cellSize) {
-      for (double y = 0; y < size.height; y += cellSize) {
-        if (random.nextBool()) {
-          canvas.drawRect(Rect.fromLTWH(x, y, cellSize, cellSize), paint);
-        }
-      }
-    }
-    for (double x = 0; x < 35; x += cellSize) {
-      for (double y = 35; y < size.height - 35; y += cellSize) {
-        if (random.nextBool()) {
-          canvas.drawRect(Rect.fromLTWH(x, y, cellSize, cellSize), paint);
-        }
-      }
-    }
-    for (double x = size.width - 35; x < size.width; x += cellSize) {
-      for (double y = 35; y < size.height - 35; y += cellSize) {
-        if (random.nextBool()) {
-          canvas.drawRect(Rect.fromLTWH(x, y, cellSize, cellSize), paint);
-        }
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -5,16 +5,18 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/apps/client/features/payments/domain/usecases/create_card_payment_session_usecase.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/booking_confirmation_screen.dart';
+import 'package:bmt_app/apps/client/features/payments/presentation/screens/paymob_checkout_webview_screen.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
-import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/book_trip_seat_usecase.dart';
+import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
 
 class PaymentProcessingScreen extends StatefulWidget {
   final PaymentCheckoutData checkoutData;
   final PaymentMethodData paymentMethod;
   final String? promoCode;
   final int promoDiscount;
-  final bool simulateFailure;
+  final String? receiptUrl;
 
   const PaymentProcessingScreen({
     super.key,
@@ -22,7 +24,7 @@ class PaymentProcessingScreen extends StatefulWidget {
     required this.paymentMethod,
     required this.promoCode,
     required this.promoDiscount,
-    required this.simulateFailure,
+    this.receiptUrl,
   });
 
   @override
@@ -38,12 +40,15 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
 
   bool _loading = true;
   bool _failed = false;
+  bool _externalCardCheckout = false;
+  String? _failureReason;
   int _currentStepIndex = 0;
   Timer? _stepTimer;
   Timer? _transitionTimer;
 
-  late final String _transactionId;
-  late final String _bookingReference;
+  late String _transactionId;
+  late String _bookingReference;
+  String? _bookingId;
 
   final List<String> _progressSteps = [
     'Establishing secure fintech connection...',
@@ -54,8 +59,8 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
   @override
   void initState() {
     super.initState();
-    _transactionId = _generateId(prefix: 'TXN');
-    _bookingReference = _generateId(prefix: 'MGT');
+    _transactionId = 'Pending';
+    _bookingReference = 'Pending';
 
     _pulseController = AnimationController(
       vsync: this,
@@ -87,25 +92,14 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
   }
 
   Future<void> _processBooking() async {
-    final shouldFail = widget.simulateFailure;
-    if (shouldFail) {
-      await Future.delayed(const Duration(milliseconds: 2800));
-      if (!mounted) return;
-      setState(() {
-        _loading = false;
-        _failed = true;
-      });
-      return;
-    }
-
     try {
-      final bookTripSeat = clientGetIt<BookTripSeatUseCase>();
+      final confirmSeatBooking = clientGetIt<ConfirmSeatBookingUseCase>();
       final total = widget.checkoutData.totalForDiscount(widget.promoDiscount);
 
-      final bookingId = await bookTripSeat({
+      final booking = await confirmSeatBooking({
         'p_trip_id': widget.checkoutData.tripId,
         'p_seat_id': widget.checkoutData.selectedSeatId,
-        'p_seat': widget.checkoutData.selectedSeat,
+        'p_seat_label': widget.checkoutData.selectedSeat,
         'p_pricing_id': null,
         'p_pickup_point_id': null,
         'p_dropoff_point_id': null,
@@ -114,17 +108,51 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
         'p_route': widget.checkoutData.route,
         'p_trip_time': widget.checkoutData.departureTime,
         'p_trip_date': widget.checkoutData.tripDate,
-        'p_payment_method': widget.paymentMethod.title,
+        'p_payment_method': _paymentMethodCode(widget.paymentMethod.type),
         'p_payment_amount': total,
         'p_pickup_point_name': widget.checkoutData.pickupPoint,
         'p_dropoff_point_name': widget.checkoutData.destination,
+        'p_receipt_url': widget.receiptUrl,
       });
 
       if (!mounted) return;
+      final bookingId = booking['booking_id']?.toString() ?? '';
+      _bookingId = bookingId.isEmpty ? null : bookingId;
+      _bookingReference =
+          booking['booking_number']?.toString() ??
+          (bookingId.isEmpty
+              ? null
+              : bookingId.substring(0, 8).toUpperCase()) ??
+          _bookingReference;
+      _transactionId = _bookingReference;
+
+      if (widget.paymentMethod.type == PaymentMethodType.creditCard) {
+        final createCardSession =
+            clientGetIt<CreateCardPaymentSessionUseCase>();
+        final session = await createCardSession(
+          checkoutData: widget.checkoutData,
+          paymentMethod: widget.paymentMethod,
+          bookingId: bookingId,
+          amount: total,
+        );
+        _transactionId = session.gatewayReference;
+        if (!mounted) return;
+        await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => PaymobCheckoutWebViewScreen(
+              checkoutUrl: session.checkoutUrl,
+              bookingReference: _bookingReference,
+            ),
+          ),
+        );
+      }
+      if (!mounted) return;
       setState(() {
-        _bookingReference = bookingId.substring(0, 8).toUpperCase();
         _loading = false;
         _failed = false;
+        _failureReason = null;
+        _externalCardCheckout =
+            widget.paymentMethod.type == PaymentMethodType.creditCard;
       });
       _checkController.forward();
     } catch (e) {
@@ -132,18 +160,19 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
       setState(() {
         _loading = false;
         _failed = true;
+        _failureReason = _cleanFailureReason(e);
       });
     }
   }
 
-  String _generateId({required String prefix}) {
-    final rng = math.Random();
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    final body = List.generate(
-      5,
-      (_) => chars[rng.nextInt(chars.length)],
-    ).join();
-    return '$prefix-2026-$body';
+  String _paymentMethodCode(PaymentMethodType type) {
+    return switch (type) {
+      PaymentMethodType.creditCard => 'credit_card',
+      PaymentMethodType.vodafoneCash => 'mobile_wallet',
+      PaymentMethodType.instapay => 'instapay',
+      PaymentMethodType.walletBalance => 'wallet_balance',
+      PaymentMethodType.cashOnBoarding => 'cash_on_boarding',
+    };
   }
 
   @override
@@ -436,14 +465,18 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Payment Successful',
+                  _externalCardCheckout
+                      ? 'Paymob Checkout Opened'
+                      : 'Payment Submitted',
                   style: ClientTypography.headingMedium(
                     context,
                   ).copyWith(color: ClientColors.journeyGreen),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Your booking reference has been confirmed',
+                  _externalCardCheckout
+                      ? 'Complete card payment in the secure Paymob page.'
+                      : 'Your receipt was sent for operations review.',
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -502,6 +535,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     departureTime: widget.checkoutData.departureTime,
                     destination: widget.checkoutData.destination,
                     bookingReference: _bookingReference,
+                    bookingId: _bookingId,
                   ),
                 ),
               );
@@ -586,7 +620,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _getMockFailureReason(),
+                        _failureReason ?? 'Payment could not be completed.',
                         style: ClientTypography.bodyMedium(context).copyWith(
                           color: ClientColors.textPrimaryFor(context),
                           fontWeight: FontWeight.bold,
@@ -666,14 +700,10 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
     );
   }
 
-  String _getMockFailureReason() {
-    if (widget.paymentMethod.type == PaymentMethodType.walletBalance) {
-      return 'Insufficient wallet balance for this transaction.';
-    }
-    if (widget.paymentMethod.type == PaymentMethodType.creditCard) {
-      return '3D Secure authorization failed / timeout.';
-    }
-    return 'Verification error. The receipt upload screenshot was rejected / invalid transaction reference.';
+  String _cleanFailureReason(Object error) {
+    final raw = error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
+    if (raw.trim().isEmpty) return 'Payment could not be completed.';
+    return raw;
   }
 
   void _showSupportDialog(BuildContext context) {

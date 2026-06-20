@@ -52,11 +52,33 @@ class SupabaseHomeDatasource implements HomeDatasource {
     final packagesData = responses[2];
     final currentTripData = responses[3];
 
+    final routeIds = routesData
+        .map((route) => route['id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toList();
+    final pricingTripsData = routeIds.isEmpty
+        ? const <dynamic>[]
+        : await _supabase
+              .from('operation_trips')
+              .select('''
+                route_id, ticket_price, currency, status, trip_date,
+                trip_pricing(one_time_price, currency, is_active)
+              ''')
+              .inFilter('route_id', routeIds)
+              .neq('status', 'cancelled')
+              .limit(500);
+
     final tripsByRoute = <String, List<dynamic>>{};
     for (final trip in tripsData) {
       final routeId = trip['route_id']?.toString();
       if (routeId == null || routeId.isEmpty) continue;
       tripsByRoute.putIfAbsent(routeId, () => []).add(trip);
+    }
+    final pricingTripsByRoute = <String, List<dynamic>>{};
+    for (final trip in pricingTripsData) {
+      final routeId = trip['route_id']?.toString();
+      if (routeId == null || routeId.isEmpty) continue;
+      pricingTripsByRoute.putIfAbsent(routeId, () => []).add(trip);
     }
 
     final sortedRoutesData = [...routesData]
@@ -72,20 +94,8 @@ class SupabaseHomeDatasource implements HomeDatasource {
     final popularRoutes = popularRoutesData.map((e) {
       final routeId = e['id']?.toString() ?? '';
       final routeTrips = tripsByRoute[routeId] ?? const <dynamic>[];
-      final pricedTrips = routeTrips
-          .where((trip) => trip['ticket_price'] != null)
-          .toList();
-      pricedTrips.sort((a, b) {
-        final aPrice =
-            (a['ticket_price'] as num?)?.toDouble() ?? double.infinity;
-        final bPrice =
-            (b['ticket_price'] as num?)?.toDouble() ?? double.infinity;
-        return aPrice.compareTo(bPrice);
-      });
-      final firstPricedTrip = pricedTrips.isNotEmpty ? pricedTrips.first : null;
-      final startingPrice = firstPricedTrip == null
-          ? 'Price pending'
-          : '${firstPricedTrip['currency'] ?? 'EGP'} ${firstPricedTrip['ticket_price']}';
+      final pricingTrips = pricingTripsByRoute[routeId] ?? routeTrips;
+      final startingPrice = _startingPriceLabel(pricingTrips);
       final startCity = e['start_city'] as String? ?? '';
       final endCity = e['end_city'] as String? ?? '';
 
@@ -180,4 +190,57 @@ class SupabaseHomeDatasource implements HomeDatasource {
       currentTrip: currentTrip,
     );
   }
+
+  String _startingPriceLabel(List<dynamic> trips) {
+    final candidates = <_PriceCandidate>[];
+    for (final trip in trips) {
+      candidates.addAll(_priceCandidatesFromTrip(trip));
+    }
+    if (candidates.isEmpty) return 'Price pending';
+    candidates.sort((a, b) => a.amount.compareTo(b.amount));
+    final cheapest = candidates.first;
+    return '${cheapest.currency} ${_formatPrice(cheapest.amount)}';
+  }
+
+  List<_PriceCandidate> _priceCandidatesFromTrip(dynamic trip) {
+    if (trip is! Map<String, dynamic>) return const [];
+
+    final currency = trip['currency']?.toString() ?? 'ج.م';
+    final candidates = <_PriceCandidate>[];
+    final pricingRows = trip['trip_pricing'];
+    if (pricingRows is List) {
+      for (final row in pricingRows) {
+        if (row is! Map<String, dynamic>) continue;
+        final isActive = row['is_active'] as bool? ?? true;
+        final amount = (row['one_time_price'] as num?)?.toDouble();
+        if (!isActive || amount == null || amount <= 0) continue;
+        candidates.add(
+          _PriceCandidate(
+            amount: amount,
+            currency: row['currency']?.toString() ?? currency,
+          ),
+        );
+      }
+    }
+
+    final ticketPrice = (trip['ticket_price'] as num?)?.toDouble();
+    if (ticketPrice != null && ticketPrice > 0) {
+      candidates.add(_PriceCandidate(amount: ticketPrice, currency: currency));
+    }
+
+    return candidates;
+  }
+
+  String _formatPrice(double value) {
+    return value == value.roundToDouble()
+        ? value.round().toString()
+        : value.toStringAsFixed(2);
+  }
+}
+
+class _PriceCandidate {
+  const _PriceCandidate({required this.amount, required this.currency});
+
+  final double amount;
+  final String currency;
 }

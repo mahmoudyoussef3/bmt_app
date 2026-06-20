@@ -48,15 +48,26 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       final endCity = data['end_city']?.toString() ?? '';
       final pickup = query.pickup.isEmpty ? startCity : query.pickup;
       final dest = query.destination.isEmpty ? endCity : query.destination;
-      final trips = await _supabase
+      final pricingTrips = await _supabase
           .from('operation_trips')
           .select('''
-            id, departure_time, arrival_time, capacity, passenger_count, booked_seats,
-            ticket_price, currency, status,
-            vehicles(vehicle_type)
+            id, trip_date, departure_time, arrival_time, capacity, passenger_count, booked_seats,
+            ticket_price, currency, status, route_id,
+            vehicles(vehicle_type),
+            trip_pricing(one_time_price, currency, is_active)
           ''')
           .eq('route_id', data['id'])
-          .inFilter('status', ['open_for_booking', 'boarding']);
+          .neq('status', 'cancelled')
+          .limit(100);
+      final today = DateTime.now().toIso8601String().split('T').first;
+      final trips = pricingTrips.where((trip) {
+        final status = trip['status']?.toString();
+        final tripDate = trip['trip_date']?.toString();
+        final isBookable = status == 'open_for_booking' || status == 'boarding';
+        final isUpcoming = tripDate == null || tripDate.compareTo(today) >= 0;
+        return isBookable && isUpcoming;
+      }).toList();
+      final priceSourceTrips = trips.isEmpty ? pricingTrips : trips;
       final availableSeats = trips.fold<int>(0, (sum, trip) {
         final capacity = trip['capacity'] as int? ?? 0;
         final used =
@@ -66,22 +77,8 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         final remaining = capacity - used;
         return sum + remaining.clamp(0, capacity).toInt();
       });
-      final pricedTrips = trips
-          .where((trip) => trip['ticket_price'] != null)
-          .toList();
-      pricedTrips.sort((a, b) {
-        final aPrice =
-            (a['ticket_price'] as num?)?.toDouble() ?? double.infinity;
-        final bPrice =
-            (b['ticket_price'] as num?)?.toDouble() ?? double.infinity;
-        return aPrice.compareTo(bPrice);
-      });
-      final firstPricedTrip = pricedTrips.isNotEmpty ? pricedTrips.first : null;
-      final currency = firstPricedTrip?['currency']?.toString() ?? 'EGP';
-      final basePrice = firstPricedTrip == null
-          ? 'Price pending'
-          : '$currency ${firstPricedTrip['ticket_price'] ?? 0}';
-      final priceRange = _priceRangeLabel(pricedTrips, currency: currency);
+      final basePrice = _startingPriceLabel(priceSourceTrips);
+      final priceRange = _priceRangeLabel(priceSourceTrips);
       final availableTrips = trips.map((trip) {
         final capacity = trip['capacity'] as int? ?? 0;
         final used =
@@ -90,8 +87,6 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
             0;
         final remaining = capacity - used;
         final vehicle = trip['vehicles'] as Map<String, dynamic>? ?? {};
-        final tripCurrency = trip['currency']?.toString() ?? currency;
-        final tripPrice = trip['ticket_price'];
 
         return RouteTripOptionModel(
           id: trip['id']?.toString() ?? '',
@@ -99,9 +94,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           arrivalTime: trip['arrival_time']?.toString() ?? 'Not set',
           availableSeats: remaining.clamp(0, capacity).toInt(),
           vehicleType: vehicle['vehicle_type']?.toString() ?? 'Standard',
-          price: tripPrice == null
-              ? 'Price pending'
-              : '$tripCurrency $tripPrice',
+          price: _startingPriceLabel([trip]),
         );
       }).toList();
       final routePoints = _mapRoutePoints(
@@ -163,38 +156,40 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         .eq('status', 'active')
         .limit(10);
 
+    final routeIds = response
+        .map((route) => route['id']?.toString() ?? '')
+        .where((id) => id.isNotEmpty)
+        .toList();
     final today = DateTime.now().toIso8601String().split('T').first;
-    final trips = await _supabase
-        .from('operation_trips')
-        .select('route_id, ticket_price, currency')
-        .gte('trip_date', today)
-        .inFilter('status', ['open_for_booking', 'boarding']);
+    final trips = routeIds.isEmpty
+        ? const <dynamic>[]
+        : await _supabase
+              .from('operation_trips')
+              .select('''
+          route_id, ticket_price, currency, status, trip_date,
+          trip_pricing(one_time_price, currency, is_active)
+        ''')
+              .inFilter('route_id', routeIds)
+              .neq('status', 'cancelled');
 
     return response.map((data) {
       final routeTrips = trips
           .where((trip) => trip['route_id'] == data['id'])
           .toList();
-      final pricedTrips = routeTrips
-          .where((trip) => trip['ticket_price'] != null)
-          .toList();
-      pricedTrips.sort((a, b) {
-        final aPrice =
-            (a['ticket_price'] as num?)?.toDouble() ?? double.infinity;
-        final bPrice =
-            (b['ticket_price'] as num?)?.toDouble() ?? double.infinity;
-        return aPrice.compareTo(bPrice);
-      });
-      final firstTrip = pricedTrips.isNotEmpty ? pricedTrips.first : null;
-      final basePrice = firstTrip == null
-          ? 'Price pending'
-          : '${firstTrip['currency'] ?? 'EGP'} ${firstTrip['ticket_price'] ?? 0}';
+      final upcomingRouteTrips = routeTrips.where((trip) {
+        final tripDate = trip['trip_date']?.toString();
+        return tripDate == null || tripDate.compareTo(today) >= 0;
+      }).toList();
+      final basePrice = _startingPriceLabel(
+        upcomingRouteTrips.isEmpty ? routeTrips : upcomingRouteTrips,
+      );
 
       return PopularRouteListModel(
         id: data['id']?.toString() ?? '',
         routeName:
             data['name']?.toString() ??
             '${data['start_city']} — ${data['end_city']}',
-        dailyTrips: routeTrips.length,
+        dailyTrips: upcomingRouteTrips.length,
         averageDuration: data['duration']?.toString() ?? 'N/A',
         startingPrice: basePrice,
         pickup: data['start_city']?.toString() ?? '',
@@ -282,16 +277,15 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     return station['sort_order'] as int? ?? 0;
   }
 
-  String _priceRangeLabel(
-    List<dynamic> pricedTrips, {
-    required String currency,
-  }) {
-    if (pricedTrips.isEmpty) return 'Price pending';
-    final prices = pricedTrips
-        .map((trip) => (trip['ticket_price'] as num?)?.toDouble())
-        .whereType<double>()
-        .toList();
-    if (prices.isEmpty) return 'Price pending';
+  String _priceRangeLabel(List<dynamic> trips) {
+    final candidates = <_PriceCandidate>[];
+    for (final trip in trips) {
+      candidates.addAll(_priceCandidatesFromTrip(trip));
+    }
+    if (candidates.isEmpty) return 'Price pending';
+    candidates.sort((a, b) => a.amount.compareTo(b.amount));
+    final currency = candidates.first.currency;
+    final prices = candidates.map((candidate) => candidate.amount).toList();
     prices.sort();
     final min = prices.first;
     final max = prices.last;
@@ -303,6 +297,46 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     return value == value.roundToDouble()
         ? value.round().toString()
         : value.toStringAsFixed(2);
+  }
+
+  String _startingPriceLabel(List<dynamic> trips) {
+    final candidates = <_PriceCandidate>[];
+    for (final trip in trips) {
+      candidates.addAll(_priceCandidatesFromTrip(trip));
+    }
+    if (candidates.isEmpty) return 'Price pending';
+    candidates.sort((a, b) => a.amount.compareTo(b.amount));
+    final cheapest = candidates.first;
+    return '${cheapest.currency} ${_formatPrice(cheapest.amount)}';
+  }
+
+  List<_PriceCandidate> _priceCandidatesFromTrip(dynamic trip) {
+    if (trip is! Map<String, dynamic>) return const [];
+
+    final currency = trip['currency']?.toString() ?? 'ج.م';
+    final candidates = <_PriceCandidate>[];
+    final pricingRows = trip['trip_pricing'];
+    if (pricingRows is List) {
+      for (final row in pricingRows) {
+        if (row is! Map<String, dynamic>) continue;
+        final isActive = row['is_active'] as bool? ?? true;
+        final amount = (row['one_time_price'] as num?)?.toDouble();
+        if (!isActive || amount == null || amount <= 0) continue;
+        candidates.add(
+          _PriceCandidate(
+            amount: amount,
+            currency: row['currency']?.toString() ?? currency,
+          ),
+        );
+      }
+    }
+
+    final ticketPrice = (trip['ticket_price'] as num?)?.toDouble();
+    if (ticketPrice != null && ticketPrice > 0) {
+      candidates.add(_PriceCandidate(amount: ticketPrice, currency: currency));
+    }
+
+    return candidates;
   }
 
   double? _toDouble(dynamic value) {
@@ -334,8 +368,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
       final capacity = vehicle['capacity'] as int? ?? 14;
       final passengerCount = data['passenger_count'] as int? ?? 0;
-      final basePrice =
-          '${data['currency'] ?? 'ج.م'} ${data['ticket_price'] ?? 0}';
+      final basePrice = _startingPriceLabel([data]);
 
       return AvailableTripModel(
         vehicleId: data['id']?.toString() ?? '', // Actually trip_id
@@ -353,20 +386,25 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
   Future<List<MapPinOptionModel>> getPickupMapPins() async {
     final response = await _supabase
         .from('route_stations')
-        .select('name, operation_routes!inner(status)')
+        .select('name, latitude, longitude, operation_routes!inner(status)')
         .eq('operation_routes.status', 'active')
         .eq('pickup_allowed', true);
 
-    final distinctPickups = response.map((e) => e['name'].toString()).toSet();
-
-    return distinctPickups.map((pickup) {
-      return MapPinOptionModel(
-        label: pickup,
-        subtitle: 'Terminal',
-        x: 30.0,
-        y: 31.0,
+    final pinsByName = <String, MapPinOptionModel>{};
+    for (final data in response) {
+      final name = data['name']?.toString() ?? 'Station';
+      pinsByName.putIfAbsent(
+        name,
+        () => MapPinOptionModel(
+          label: name,
+          subtitle: 'Pickup station',
+          x: _toDouble(data['latitude']) ?? 30.0444,
+          y: _toDouble(data['longitude']) ?? 31.2357,
+        ),
       );
-    }).toList();
+    }
+
+    return pinsByName.values.toList();
   }
 
   @override
@@ -380,14 +418,17 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     return response.map((data) {
       return MapPinOptionModel(
         label: data['name']?.toString() ?? 'Station',
-        subtitle: 'Terminal',
-        x: data['latitude'] != null
-            ? (data['latitude'] as num).toDouble()
-            : 30.0,
-        y: data['longitude'] != null
-            ? (data['longitude'] as num).toDouble()
-            : 31.0,
+        subtitle: 'Destination station',
+        x: _toDouble(data['latitude']) ?? 30.0444,
+        y: _toDouble(data['longitude']) ?? 31.2357,
       );
     }).toList();
   }
+}
+
+class _PriceCandidate {
+  const _PriceCandidate({required this.amount, required this.currency});
+
+  final double amount;
+  final String currency;
 }

@@ -177,6 +177,7 @@ class _RouteDetailsBody extends StatelessWidget {
         const SizedBox(height: 14),
         _AvailableTripsSection(
           trips: route.availableTrips,
+          hasRoutePricing: !_isPendingPrice(route.startingPrice),
           selectedTripId: selectedTripId,
           onSelectTrip: onSelectTrip,
         ),
@@ -190,6 +191,10 @@ class _RouteDetailsBody extends StatelessWidget {
         ],
       ],
     );
+  }
+
+  bool _isPendingPrice(String value) {
+    return value.trim().toLowerCase() == 'price pending';
   }
 }
 
@@ -601,11 +606,13 @@ class _PriceBlock extends StatelessWidget {
 class _AvailableTripsSection extends StatelessWidget {
   const _AvailableTripsSection({
     required this.trips,
+    required this.hasRoutePricing,
     required this.selectedTripId,
     required this.onSelectTrip,
   });
 
   final List<RouteTripOptionData> trips;
+  final bool hasRoutePricing;
   final String? selectedTripId;
   final ValueChanged<RouteTripOptionData> onSelectTrip;
 
@@ -636,10 +643,14 @@ class _AvailableTripsSection extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           if (trips.isEmpty)
-            const _InlineEmpty(
+            _InlineEmpty(
               icon: Icons.event_busy_rounded,
-              title: 'No scheduled trips yet',
-              subtitle: 'Trips created from the dashboard will appear here.',
+              title: hasRoutePricing
+                  ? 'No bookable trips right now'
+                  : 'No scheduled trips yet',
+              subtitle: hasRoutePricing
+                  ? 'This route has pricing, but no upcoming trip is open for booking.'
+                  : 'Trips created from the dashboard will appear here.',
             )
           else
             ...trips.map(

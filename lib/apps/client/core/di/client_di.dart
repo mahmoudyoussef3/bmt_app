@@ -63,7 +63,9 @@ import '../../features/payments/data/datasources/supabase_payment_datasource.dar
 import '../../features/payments/data/repositories/payment_repository_impl.dart';
 import '../../features/payments/domain/repositories/payment_repository.dart';
 import '../../features/payments/domain/usecases/apply_promo_code_usecase.dart';
+import '../../features/payments/domain/usecases/create_card_payment_session_usecase.dart';
 import '../../features/payments/domain/usecases/get_payment_methods_usecase.dart';
+import '../../features/payments/domain/usecases/upload_payment_receipt_usecase.dart';
 import '../../features/payments/presentation/cubit/payment_cubit.dart';
 import '../../features/packages/data/datasources/packages_datasource.dart';
 import '../../features/packages/data/datasources/supabase_packages_datasource.dart';
@@ -451,6 +453,7 @@ void _registerSeatSelectionDependencies() {
       () => SeatSelectionCubit(
         getSeatSelectionData: clientGetIt<GetSeatSelectionDataUseCase>(),
         selectSeat: clientGetIt<SelectSeatUseCase>(),
+        lockTripSeat: clientGetIt<LockTripSeatUseCase>(),
       ),
     );
   }
@@ -500,6 +503,18 @@ void _registerPaymentDependencies() {
   if (!clientGetIt.isRegistered<GetPaymentMethodsUseCase>()) {
     clientGetIt.registerLazySingleton<GetPaymentMethodsUseCase>(
       () => GetPaymentMethodsUseCase(clientGetIt<PaymentRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<UploadPaymentReceiptUseCase>()) {
+    clientGetIt.registerLazySingleton<UploadPaymentReceiptUseCase>(
+      () => UploadPaymentReceiptUseCase(clientGetIt<PaymentRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<CreateCardPaymentSessionUseCase>()) {
+    clientGetIt.registerLazySingleton<CreateCardPaymentSessionUseCase>(
+      () => CreateCardPaymentSessionUseCase(clientGetIt<PaymentRepository>()),
     );
   }
 

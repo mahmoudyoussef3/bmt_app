@@ -11,12 +11,26 @@ class PaymentMethodData {
   final String title;
   final String subtitle;
   final bool recommended;
+  final String? transferAccount;
+  final String? accountHolder;
+  final String? gateway;
+  final String? integrationId;
+  final String? iframeId;
+  final List<String> supportedChannels;
+  final String? instructions;
 
   const PaymentMethodData({
     required this.type,
     required this.title,
     required this.subtitle,
     this.recommended = false,
+    this.transferAccount,
+    this.accountHolder,
+    this.gateway,
+    this.integrationId,
+    this.iframeId,
+    this.supportedChannels = const [],
+    this.instructions,
   });
 }
 
@@ -104,4 +118,14 @@ class PaymentResultData {
     required this.fromWallet,
     required this.remainingWalletBalance,
   });
+}
+
+class CardPaymentSession {
+  const CardPaymentSession({
+    required this.checkoutUrl,
+    required this.gatewayReference,
+  });
+
+  final String checkoutUrl;
+  final String gatewayReference;
 }

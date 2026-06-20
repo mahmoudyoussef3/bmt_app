@@ -1471,13 +1471,17 @@ class _TripLifecycleRail extends StatelessWidget {
             final (index, item) = entry;
             final reached = currentIndex >= index && currentIndex != -1;
             final current = item == status;
+            final canMoveToStatus = _canMoveToStatus(status, item);
             return SizedBox(
               width: compact ? constraints.maxWidth : 150,
               child: _LifecycleStepChip(
                 status: item,
                 reached: reached,
                 current: current,
-                onTap: saving ? null : () => onChangeStatus(item),
+                enabled: canMoveToStatus,
+                onTap: saving || !canMoveToStatus
+                    ? null
+                    : () => onChangeStatus(item),
               ),
             );
           }).toList(),
@@ -1491,12 +1495,14 @@ class _LifecycleStepChip extends StatelessWidget {
   final OperationTripStatus status;
   final bool reached;
   final bool current;
+  final bool enabled;
   final VoidCallback? onTap;
 
   const _LifecycleStepChip({
     required this.status,
     required this.reached,
     required this.current,
+    required this.enabled,
     required this.onTap,
   });
 
@@ -1504,6 +1510,9 @@ class _LifecycleStepChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final color = _statusColor(context, status);
+    final foreground = enabled || current
+        ? scheme.onSurface
+        : scheme.onSurfaceVariant.withAlpha(135);
     return Material(
       color: current
           ? color.withAlpha(32)
@@ -1522,7 +1531,11 @@ class _LifecycleStepChip extends StatelessWidget {
                 reached
                     ? Icons.check_circle_rounded
                     : Icons.radio_button_unchecked_rounded,
-                color: current ? color : scheme.onSurfaceVariant,
+                color: current
+                    ? color
+                    : enabled
+                    ? scheme.onSurfaceVariant
+                    : scheme.onSurfaceVariant.withAlpha(120),
                 size: 18,
               ),
               const SizedBox(width: 6),
@@ -1533,6 +1546,7 @@ class _LifecycleStepChip extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     fontWeight: current ? FontWeight.bold : null,
+                    color: foreground,
                   ),
                 ),
               ),
@@ -3892,6 +3906,10 @@ OperationTripStatus? _nextStatus(OperationTripStatus status) {
     OperationTripStatus.completed => null,
     OperationTripStatus.cancelled => null,
   };
+}
+
+bool _canMoveToStatus(OperationTripStatus current, OperationTripStatus target) {
+  return _nextStatus(current) == target;
 }
 
 String _statusActionLabel(OperationTripStatus next) {

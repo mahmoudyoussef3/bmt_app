@@ -3,7 +3,10 @@ import '../models/tracking_trip_model.dart';
 import '../../domain/entities/tracking_trip.dart';
 
 abstract class TrackingDatasource {
-  Future<TrackingTripDataModel> getTrackingTrip();
+  Future<TrackingTripDataModel> getTrackingTrip({
+    String? bookingId,
+    String? tripId,
+  });
 }
 
 class SupabaseTrackingDatasource implements TrackingDatasource {
@@ -12,45 +15,43 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
   final SupabaseClient _client;
 
   @override
-  Future<TrackingTripDataModel> getTrackingTrip() async {
+  Future<TrackingTripDataModel> getTrackingTrip({
+    String? bookingId,
+    String? tripId,
+  }) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return _emptyModel();
 
-    // Find the most recent active booking for this client.
-    final booking = await _client
-        .from('operation_bookings')
-        .select('trip_id, status')
-        .eq('client_id', userId)
-        .inFilter('status', [
-          'newRequest',
-          'paymentUploaded',
-          'underReview',
-          'approved',
-          'confirmed',
-        ])
-        .order('created_at', ascending: false)
-        .limit(1)
-        .maybeSingle();
+    final booking = await _findBooking(
+      userId: userId,
+      bookingId: bookingId,
+      tripId: tripId,
+    );
 
     if (booking == null) return _emptyModel();
-    final tripId = booking['trip_id'] as String?;
-    if (tripId == null) return _emptyModel();
+    final resolvedTripId = booking['trip_id'] as String?;
+    if (resolvedTripId == null) return _emptyModel();
 
     final results = await Future.wait([
       _client
           .from('trip_route_points')
           .select('latitude, longitude, point_name, point_order')
-          .eq('trip_id', tripId)
+          .eq('trip_id', resolvedTripId)
           .order('point_order'),
       _client
           .from('operation_trips')
-          .select('status')
-          .eq('id', tripId)
+          .select('''
+            id, trip_code, status, trip_date, departure_time, arrival_time,
+            route:operation_routes(name),
+            driver:drivers(full_name, phone),
+            vehicle:vehicles(vehicle_code, plate_number, vehicle_type, brand, model)
+          ''')
+          .eq('id', resolvedTripId)
           .maybeSingle(),
       _client
           .from('trip_live_locations')
-          .select('latitude, longitude')
-          .eq('trip_id', tripId)
+          .select('latitude, longitude, heading, speed, recorded_at')
+          .eq('trip_id', resolvedTripId)
           .order('recorded_at', ascending: false)
           .limit(1)
           .maybeSingle(),
@@ -74,34 +75,109 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
         .toList();
 
     final tripStatus = tripRow?['status'] as String? ?? '';
-    final state = _mapTripState(booking['status'] as String, tripStatus);
+    final state = _mapTripState(tripStatus, hasLiveLocation: locRow != null);
+    final departureAt = _combineDateAndTime(
+      tripRow?['trip_date']?.toString(),
+      tripRow?['departure_time']?.toString(),
+    );
+    final arrivalAt = _combineDateAndTime(
+      tripRow?['trip_date']?.toString(),
+      tripRow?['arrival_time']?.toString(),
+    );
+    final route = tripRow?['route'] as Map<String, dynamic>?;
+    final driver = tripRow?['driver'] as Map<String, dynamic>?;
+    final vehicle = tripRow?['vehicle'] as Map<String, dynamic>?;
 
     return TrackingTripDataModel(
       routePoints: routePoints,
       timelineSteps: _buildTimeline(state),
       stops: stops.isEmpty ? ['محطة البداية', 'محطة النهاية'] : stops,
       tripState: state,
-      tripId: tripId,
+      tripId: resolvedTripId,
+      bookingId: booking['id']?.toString(),
+      routeName: route?['name']?.toString(),
+      pickupName: stops.isNotEmpty ? stops.first : null,
+      destinationName: stops.length > 1 ? stops.last : null,
+      departureAt: departureAt,
+      arrivalAt: arrivalAt,
+      driverName: driver?['full_name']?.toString(),
+      driverPhone: driver?['phone']?.toString(),
+      vehicleName: [
+        vehicle?['brand']?.toString(),
+        vehicle?['model']?.toString(),
+      ].where((part) => part != null && part.trim().isNotEmpty).join(' '),
+      vehicleType: vehicle?['vehicle_type']?.toString(),
+      vehiclePlate: vehicle?['plate_number']?.toString(),
       vehicleLatitude: locRow != null
           ? (locRow['latitude'] as num?)?.toDouble()
           : null,
       vehicleLongitude: locRow != null
           ? (locRow['longitude'] as num?)?.toDouble()
           : null,
+      vehicleHeading: locRow != null
+          ? (locRow['heading'] as num?)?.toDouble()
+          : null,
+      vehicleSpeed: locRow != null
+          ? (locRow['speed'] as num?)?.toDouble()
+          : null,
+      vehicleLocationAt: locRow?['recorded_at'] != null
+          ? DateTime.tryParse(locRow!['recorded_at'].toString())?.toLocal()
+          : null,
     );
   }
 
-  TrackingTripState _mapTripState(String bookingStatus, String tripStatus) {
+  Future<Map<String, dynamic>?> _findBooking({
+    required String userId,
+    String? bookingId,
+    String? tripId,
+  }) async {
+    var query = _client
+        .from('operation_bookings')
+        .select('id, trip_id, status, created_at')
+        .eq('client_id', userId);
+
+    if (bookingId != null && bookingId.isNotEmpty) {
+      return query.eq('id', bookingId).maybeSingle();
+    }
+
+    if (tripId != null && tripId.isNotEmpty) {
+      return query.eq('trip_id', tripId).maybeSingle();
+    }
+
+    return query
+        .inFilter('status', [
+          'newRequest',
+          'paymentUploaded',
+          'underReview',
+          'approved',
+          'confirmed',
+        ])
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+  }
+
+  TrackingTripState _mapTripState(
+    String tripStatus, {
+    required bool hasLiveLocation,
+  }) {
     return switch (tripStatus) {
+      'open_for_booking' || 'scheduled' =>
+        hasLiveLocation
+            ? TrackingTripState.driverOnWay
+            : TrackingTripState.notStarted,
       'in_progress' => TrackingTripState.inProgress,
       'boarding' => TrackingTripState.boarding,
       'completed' => TrackingTripState.completed,
-      _ => switch (bookingStatus) {
-        'confirmed' => TrackingTripState.boarding,
-        'approved' => TrackingTripState.driverOnWay,
-        _ => TrackingTripState.notStarted,
-      },
+      _ => TrackingTripState.notStarted,
     };
+  }
+
+  DateTime? _combineDateAndTime(String? date, String? time) {
+    if (date == null || date.isEmpty || time == null || time.isEmpty) {
+      return null;
+    }
+    return DateTime.tryParse('${date}T$time')?.toLocal();
   }
 
   List<String> _buildTimeline(TrackingTripState state) => const [

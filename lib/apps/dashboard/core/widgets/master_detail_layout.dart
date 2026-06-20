@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
 
 /// Standard dashboard list→detail scaffold (master-detail split).
 ///
@@ -54,16 +53,71 @@ class MasterDetailLayout extends StatelessWidget {
                   detail ??
                   Padding(
                     padding: const EdgeInsets.all(AppSpacing.large),
-                    child: EmptyState(
+                    child: _MasterDetailPlaceholder(
                       title: placeholderTitle,
                       subtitle: placeholderSubtitle,
-                      emoji: '👈',
                     ),
                   ),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _MasterDetailPlaceholder extends StatelessWidget {
+  const _MasterDetailPlaceholder({required this.title, this.subtitle});
+
+  final String title;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 430),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: scheme.primaryContainer.withAlpha(115),
+                shape: BoxShape.circle,
+                border: Border.all(color: scheme.primary.withAlpha(70)),
+              ),
+              child: Icon(
+                Icons.manage_search_rounded,
+                color: scheme.primary,
+                size: 42,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.large),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
+            ),
+            if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.small),
+              Text(
+                subtitle!,
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.6,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

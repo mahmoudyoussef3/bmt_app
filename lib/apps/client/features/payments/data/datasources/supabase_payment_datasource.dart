@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/payment_models.dart';
@@ -32,6 +34,87 @@ class SupabasePaymentDatasource implements PaymentDatasource {
     }
   }
 
+  @override
+  Future<String> uploadReceipt({
+    required String bookingOrTripId,
+    required String fileName,
+    required Uint8List bytes,
+    required String contentType,
+  }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    final safeName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+    final storagePath =
+        '${user.id}/$bookingOrTripId/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+
+    await _supabase.storage
+        .from('payment-receipts')
+        .uploadBinary(
+          storagePath,
+          bytes,
+          fileOptions: FileOptions(contentType: contentType, upsert: false),
+        );
+
+    return _supabase.storage
+        .from('payment-receipts')
+        .createSignedUrl(storagePath, 60 * 60 * 24 * 365);
+  }
+
+  @override
+  Future<CardPaymentSession> createCardPaymentSession({
+    required PaymentCheckoutData checkoutData,
+    required PaymentMethodData paymentMethod,
+    required String bookingId,
+    required int amount,
+  }) async {
+    final user = _supabase.auth.currentUser;
+    final metadata = user?.userMetadata ?? const <String, dynamic>{};
+    try {
+      final response = await _supabase.functions.invoke(
+        'paymob-create-intention',
+        body: {
+          'booking_id': bookingId,
+          'amount': amount,
+          'currency': 'EGP',
+          'trip_id': checkoutData.tripId,
+          'route': checkoutData.route,
+          'seat': checkoutData.selectedSeat,
+          'integration_id': paymentMethod.integrationId,
+          'iframe_id': paymentMethod.iframeId,
+          'customer': {
+            'email': user?.email,
+            'name':
+                metadata['full_name']?.toString() ??
+                metadata['name']?.toString(),
+            'phone': metadata['phone']?.toString(),
+          },
+        },
+      );
+      final data = response.data is Map
+          ? Map<String, dynamic>.from(response.data as Map)
+          : <String, dynamic>{};
+      final error = data['error']?.toString().trim();
+      if (error != null && error.isNotEmpty) {
+        throw Exception(error);
+      }
+      final checkoutUrl = data['checkout_url']?.toString() ?? '';
+      if (checkoutUrl.isEmpty) {
+        throw Exception('Paymob checkout URL was not returned.');
+      }
+      return CardPaymentSession(
+        checkoutUrl: checkoutUrl,
+        gatewayReference:
+            data['gateway_reference']?.toString() ??
+            data['order_id']?.toString() ??
+            data['intention_id']?.toString() ??
+            bookingId,
+      );
+    } on FunctionException catch (error) {
+      throw Exception(_functionErrorMessage(error));
+    }
+  }
+
   PaymentMethodData? _mapPaymentMethod(Map<String, dynamic> json) {
     final type = _parseType(
       json['type']?.toString() ??
@@ -40,6 +123,15 @@ class SupabasePaymentDatasource implements PaymentDatasource {
           '',
     );
     if (type == null) return null;
+    final metadata = json['metadata'] is Map
+        ? Map<String, dynamic>.from(json['metadata'] as Map)
+        : const <String, dynamic>{};
+    final channels = metadata['supported_channels'] is List
+        ? (metadata['supported_channels'] as List)
+              .map((item) => item.toString())
+              .where((item) => item.trim().isNotEmpty)
+              .toList()
+        : const <String>[];
 
     return PaymentMethodData(
       type: type,
@@ -53,7 +145,28 @@ class SupabasePaymentDatasource implements PaymentDatasource {
           _defaultSubtitle(type),
       recommended:
           json['recommended'] == true || json['is_recommended'] == true,
+      transferAccount: metadata['transfer_account']?.toString(),
+      accountHolder: metadata['account_holder']?.toString(),
+      gateway: metadata['gateway']?.toString(),
+      integrationId: metadata['integration_id']?.toString(),
+      iframeId: metadata['iframe_id']?.toString(),
+      supportedChannels: channels,
+      instructions: metadata['instructions']?.toString(),
     );
+  }
+
+  String _functionErrorMessage(FunctionException error) {
+    final details = error.details;
+    if (details is Map) {
+      final message =
+          details['error'] ?? details['message'] ?? details['detail'];
+      if (message != null && message.toString().trim().isNotEmpty) {
+        return message.toString();
+      }
+    }
+    final reason = error.reasonPhrase;
+    if (reason != null && reason.trim().isNotEmpty) return reason;
+    return 'Unable to create Paymob checkout session.';
   }
 
   PaymentMethodType? _parseType(String value) {

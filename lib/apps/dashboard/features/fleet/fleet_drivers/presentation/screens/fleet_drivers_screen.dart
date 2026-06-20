@@ -309,124 +309,80 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
   ) {
     final scheme = Theme.of(context).colorScheme;
     return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
+      padding: const EdgeInsets.all(AppSpacing.large),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _buildReadinessSummary(context, state.drivers, workspace),
-          const SizedBox(height: AppSpacing.medium),
-          Wrap(
-            spacing: AppSpacing.small,
-            runSpacing: AppSpacing.small,
-            children: _DriverOpsFilter.values.map((filter) {
-              return FilterChip(
-                selected: _opsFilter == filter,
-                label: Text(filter.label),
-                tooltip: 'تصفية السائقين حسب ${filter.label}',
-                onSelected: (_) {
-                  setState(() {
-                    _opsFilter = filter;
-                    _page = 0;
-                  });
-                },
-              );
-            }).toList(),
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          Row(
-            children: [
-              Expanded(
-                child: SearchBar(
-                  hintText: 'ابحث بالاسم أو كود الموظف أو الهاتف...',
-                  elevation: WidgetStateProperty.all(0),
-                  backgroundColor: WidgetStateProperty.all(
-                    scheme.surfaceContainerHighest.withAlpha(90),
+          const SizedBox(height: AppSpacing.large),
+          DecoratedBox(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withAlpha(45),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: scheme.outlineVariant.withAlpha(90)),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.medium),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _DriverFilterBar(
+                    selected: _opsFilter,
+                    onSelected: (filter) {
+                      setState(() {
+                        _opsFilter = filter;
+                        _page = 0;
+                      });
+                    },
                   ),
-                  onChanged: cubit.search,
-                  leading: const Icon(Icons.search_rounded),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.medium),
-              DropdownButton<FleetSortField>(
-                value: _sortField,
-                underline: const SizedBox.shrink(),
-                icon: const Icon(Icons.sort_rounded),
-                items: const [
-                  DropdownMenuItem(
-                    value: FleetSortField.name,
-                    child: Text('ترتيب حسب الاسم'),
-                  ),
-                  DropdownMenuItem(
-                    value: FleetSortField.status,
-                    child: Text('ترتيب حسب الحالة'),
-                  ),
-                  DropdownMenuItem(
-                    value: FleetSortField.licenseExpiry,
-                    child: Text('ترتيب بانتهاء الرخصة'),
+                  const SizedBox(height: AppSpacing.medium),
+                  _DriverSearchSortActions(
+                    selectedCount: state.selectedIds.length,
+                    sortField: _sortField,
+                    sortAscending: _sortAscending,
+                    onSearch: cubit.search,
+                    onSortChanged: (field) =>
+                        setState(() => _sortField = field),
+                    onToggleSort: () =>
+                        setState(() => _sortAscending = !_sortAscending),
+                    onAdd: () => _setView(_DriversViewState.form),
+                    onArchive: state.selectedIds.isEmpty
+                        ? null
+                        : () async {
+                            final confirm = await showDialog<bool>(
+                              context: context,
+                              builder: (_) => AlertDialog(
+                                title: const Text('أرشفة السائقين'),
+                                content: Text(
+                                  'هل أنت متأكد من أرشفة ${state.selectedIds.length} من السائقين المحددين؟',
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, false),
+                                    child: const Text('إلغاء'),
+                                  ),
+                                  FilledButton(
+                                    onPressed: () =>
+                                        Navigator.pop(context, true),
+                                    child: const Text('تأكيد الأرشفة'),
+                                  ),
+                                ],
+                              ),
+                            );
+                            if (confirm == true) {
+                              await cubit.bulkArchiveDrivers();
+                              if (context.mounted) {
+                                await context
+                                    .read<FleetOverviewCubit>()
+                                    .loadWorkspace();
+                              }
+                            }
+                          },
                   ),
                 ],
-                onChanged: (val) {
-                  if (val != null) {
-                    setState(() => _sortField = val);
-                  }
-                },
               ),
-              Tooltip(
-                message: _sortAscending ? 'ترتيب تصاعدي' : 'ترتيب تنازلي',
-                child: IconButton(
-                  onPressed: () =>
-                      setState(() => _sortAscending = !_sortAscending),
-                  icon: Icon(
-                    _sortAscending
-                        ? Icons.arrow_upward_rounded
-                        : Icons.arrow_downward_rounded,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.small),
-              if (state.selectedIds.isNotEmpty) ...[
-                FilledButton.icon(
-                  onPressed: () async {
-                    final confirm = await showDialog<bool>(
-                      context: context,
-                      builder: (_) => AlertDialog(
-                        title: const Text('أرشفة السائقين'),
-                        content: Text(
-                          'هل أنت متأكد من أرشفة ${state.selectedIds.length} من السائقين المحددين؟',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context, false),
-                            child: const Text('إلغاء'),
-                          ),
-                          FilledButton(
-                            onPressed: () => Navigator.pop(context, true),
-                            child: const Text('تأكيد الأرشفة'),
-                          ),
-                        ],
-                      ),
-                    );
-                    if (confirm == true) {
-                      await cubit.bulkArchiveDrivers();
-                      if (context.mounted) {
-                        await context
-                            .read<FleetOverviewCubit>()
-                            .loadWorkspace();
-                      }
-                    }
-                  },
-                  icon: const Icon(Icons.archive_outlined),
-                  label: Text('أرشفة (${state.selectedIds.length})'),
-                  style: FilledButton.styleFrom(backgroundColor: scheme.error),
-                ),
-                const SizedBox(width: AppSpacing.small),
-              ],
-              FilledButton.icon(
-                onPressed: () => _setView(_DriversViewState.form),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('إضافة سائق'),
-              ),
-            ],
+            ),
           ),
         ],
       ),
@@ -540,6 +496,211 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
               .toList(),
         );
       },
+    );
+  }
+}
+
+class _DriverFilterBar extends StatelessWidget {
+  const _DriverFilterBar({required this.selected, required this.onSelected});
+
+  final _DriverOpsFilter selected;
+  final ValueChanged<_DriverOpsFilter> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.small,
+      runSpacing: AppSpacing.small,
+      alignment: WrapAlignment.end,
+      children: _DriverOpsFilter.values.map((filter) {
+        final isSelected = selected == filter;
+        return ChoiceChip(
+          selected: isSelected,
+          label: Text(filter.label),
+          avatar: isSelected ? const Icon(Icons.check_rounded, size: 16) : null,
+          tooltip: 'تصفية السائقين حسب ${filter.label}',
+          onSelected: (_) => onSelected(filter),
+        );
+      }).toList(),
+    );
+  }
+}
+
+class _DriverSearchSortActions extends StatelessWidget {
+  const _DriverSearchSortActions({
+    required this.selectedCount,
+    required this.sortField,
+    required this.sortAscending,
+    required this.onSearch,
+    required this.onSortChanged,
+    required this.onToggleSort,
+    required this.onAdd,
+    required this.onArchive,
+  });
+
+  final int selectedCount;
+  final FleetSortField sortField;
+  final bool sortAscending;
+  final ValueChanged<String> onSearch;
+  final ValueChanged<FleetSortField> onSortChanged;
+  final VoidCallback onToggleSort;
+  final VoidCallback onAdd;
+  final VoidCallback? onArchive;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isNarrow = constraints.maxWidth < 680;
+        final search = _DriverSearchField(onChanged: onSearch);
+        final controls = _DriverSortActions(
+          selectedCount: selectedCount,
+          sortField: sortField,
+          sortAscending: sortAscending,
+          onSortChanged: onSortChanged,
+          onToggleSort: onToggleSort,
+          onAdd: onAdd,
+          onArchive: onArchive,
+        );
+
+        if (isNarrow) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              search,
+              const SizedBox(height: AppSpacing.small),
+              controls,
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(child: search),
+            const SizedBox(width: AppSpacing.medium),
+            controls,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _DriverSearchField extends StatelessWidget {
+  const _DriverSearchField({required this.onChanged});
+
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SearchBar(
+      hintText: 'ابحث بالاسم أو كود الموظف أو الهاتف...',
+      elevation: WidgetStateProperty.all(0),
+      padding: WidgetStateProperty.all(
+        const EdgeInsets.symmetric(horizontal: AppSpacing.medium),
+      ),
+      backgroundColor: WidgetStateProperty.all(scheme.surface),
+      side: WidgetStateProperty.all(
+        BorderSide(color: scheme.outlineVariant.withAlpha(120)),
+      ),
+      onChanged: onChanged,
+      leading: Icon(Icons.search_rounded, color: scheme.onSurfaceVariant),
+    );
+  }
+}
+
+class _DriverSortActions extends StatelessWidget {
+  const _DriverSortActions({
+    required this.selectedCount,
+    required this.sortField,
+    required this.sortAscending,
+    required this.onSortChanged,
+    required this.onToggleSort,
+    required this.onAdd,
+    required this.onArchive,
+  });
+
+  final int selectedCount;
+  final FleetSortField sortField;
+  final bool sortAscending;
+  final ValueChanged<FleetSortField> onSortChanged;
+  final VoidCallback onToggleSort;
+  final VoidCallback onAdd;
+  final VoidCallback? onArchive;
+
+  String get _sortLabel {
+    return switch (sortField) {
+      FleetSortField.status => 'الحالة',
+      FleetSortField.licenseExpiry => 'انتهاء الرخصة',
+      _ => 'الاسم',
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: AppSpacing.small,
+      runSpacing: AppSpacing.small,
+      alignment: WrapAlignment.end,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        MenuAnchor(
+          builder: (context, controller, child) {
+            return OutlinedButton.icon(
+              onPressed: () =>
+                  controller.isOpen ? controller.close() : controller.open(),
+              icon: const Icon(Icons.sort_rounded),
+              label: Text('ترتيب: $_sortLabel'),
+            );
+          },
+          menuChildren: [
+            MenuItemButton(
+              onPressed: () => onSortChanged(FleetSortField.name),
+              leadingIcon: sortField == FleetSortField.name
+                  ? const Icon(Icons.check_rounded)
+                  : null,
+              child: const Text('الاسم'),
+            ),
+            MenuItemButton(
+              onPressed: () => onSortChanged(FleetSortField.status),
+              leadingIcon: sortField == FleetSortField.status
+                  ? const Icon(Icons.check_rounded)
+                  : null,
+              child: const Text('الحالة'),
+            ),
+            MenuItemButton(
+              onPressed: () => onSortChanged(FleetSortField.licenseExpiry),
+              leadingIcon: sortField == FleetSortField.licenseExpiry
+                  ? const Icon(Icons.check_rounded)
+                  : null,
+              child: const Text('انتهاء الرخصة'),
+            ),
+          ],
+        ),
+        Tooltip(
+          message: sortAscending ? 'ترتيب تصاعدي' : 'ترتيب تنازلي',
+          child: IconButton.outlined(
+            onPressed: onToggleSort,
+            icon: Icon(
+              sortAscending
+                  ? Icons.arrow_upward_rounded
+                  : Icons.arrow_downward_rounded,
+            ),
+          ),
+        ),
+        if (selectedCount > 0)
+          FilledButton.tonalIcon(
+            onPressed: onArchive,
+            icon: const Icon(Icons.archive_outlined),
+            label: Text('أرشفة $selectedCount'),
+          ),
+        FilledButton.icon(
+          onPressed: onAdd,
+          icon: const Icon(Icons.add_rounded),
+          label: const Text('إضافة سائق'),
+        ),
+      ],
     );
   }
 }

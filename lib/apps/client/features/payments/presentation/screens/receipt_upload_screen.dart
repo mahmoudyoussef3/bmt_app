@@ -1,10 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/apps/client/features/payments/domain/usecases/upload_payment_receipt_usecase.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_processing_screen.dart';
 
 class ReceiptUploadScreen extends StatefulWidget {
@@ -29,6 +32,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
   File? _receiptFile;
   String? _receiptName;
   int? _receiptSize;
+  bool _submitting = false;
 
   Future<void> _pickReceipt() async {
     final result = await FilePicker.platform.pickFiles(
@@ -55,18 +59,40 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
     });
   }
 
-  void _proceed() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => PaymentProcessingScreen(
-          checkoutData: widget.checkoutData,
-          paymentMethod: widget.paymentMethod,
-          promoCode: widget.promoCode,
-          promoDiscount: widget.promoDiscount,
-          simulateFailure: false,
+  Future<void> _proceed() async {
+    final file = _receiptFile;
+    final fileName = _receiptName;
+    if (file == null || fileName == null || _submitting) return;
+
+    setState(() => _submitting = true);
+    try {
+      final uploadReceipt = clientGetIt<UploadPaymentReceiptUseCase>();
+      final receiptUrl = await uploadReceipt(
+        bookingOrTripId: widget.checkoutData.tripId,
+        fileName: fileName,
+        bytes: await file.readAsBytes(),
+        contentType: _contentTypeFor(fileName),
+      );
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => PaymentProcessingScreen(
+            checkoutData: widget.checkoutData,
+            paymentMethod: widget.paymentMethod,
+            promoCode: widget.promoCode,
+            promoDiscount: widget.promoDiscount,
+            receiptUrl: receiptUrl,
+          ),
         ),
-      ),
-    );
+      );
+    } catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تعذر رفع الإيصال: ${error.toString()}')),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   @override
@@ -158,27 +184,39 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
             _buildInfoRow(
               context,
               'InstaPay IPA:',
-              'megatrans@instapay',
+              widget.paymentMethod.transferAccount ?? 'Not configured',
               showCopy: true,
             ),
             const SizedBox(height: 10),
             _buildInfoRow(
               context,
               'Account Holder:',
-              'Mega Transportation Services',
+              widget.paymentMethod.accountHolder ?? 'Not configured',
             ),
           ] else ...[
             _buildInfoRow(
               context,
               'Mobile Wallet No:',
-              '0100 123 4567',
+              widget.paymentMethod.transferAccount ?? 'Not configured',
               showCopy: true,
             ),
             const SizedBox(height: 10),
             _buildInfoRow(
               context,
               'Wallet Type:',
-              'Vodafone / Orange / Etisalat Cash',
+              widget.paymentMethod.supportedChannels.isEmpty
+                  ? 'Vodafone / Orange / Etisalat / WE'
+                  : widget.paymentMethod.supportedChannels.join(' / '),
+            ),
+          ],
+          if ((widget.paymentMethod.instructions ?? '').trim().isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Text(
+              widget.paymentMethod.instructions!,
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
+                height: 1.4,
+              ),
             ),
           ],
         ],
@@ -219,6 +257,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
               const SizedBox(width: 6),
               GestureDetector(
                 onTap: () {
+                  Clipboard.setData(ClipboardData(text: value));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('$value copied to clipboard'),
@@ -409,12 +448,28 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
       child: SafeArea(
         top: false,
         child: ClientButton(
-          label: hasReceipt ? 'Submit Payment' : 'Attach Receipt',
+          label: _submitting
+              ? 'Uploading...'
+              : hasReceipt
+              ? 'Submit Payment'
+              : 'Attach Receipt',
           expand: true,
-          onPressed: hasReceipt ? _proceed : _pickReceipt,
+          isLoading: _submitting,
+          onPressed: _submitting
+              ? null
+              : hasReceipt
+              ? _proceed
+              : _pickReceipt,
         ),
       ),
     );
+  }
+
+  String _contentTypeFor(String fileName) {
+    final lower = fileName.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.pdf')) return 'application/pdf';
+    return 'image/jpeg';
   }
 
   String _formatFileSize(int bytes) {

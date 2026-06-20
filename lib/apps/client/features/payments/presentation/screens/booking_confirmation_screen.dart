@@ -13,6 +13,7 @@ class BookingConfirmationScreen extends StatefulWidget {
   final String departureTime;
   final String destination;
   final String? bookingReference;
+  final String? bookingId;
 
   const BookingConfirmationScreen({
     super.key,
@@ -22,6 +23,7 @@ class BookingConfirmationScreen extends StatefulWidget {
     required this.departureTime,
     required this.destination,
     this.bookingReference,
+    this.bookingId,
   });
 
   @override
@@ -112,8 +114,13 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                   Expanded(
                     child: ClientButton(
                       label: 'Track Vehicle',
-                      onPressed: () =>
-                          Navigator.of(context).pushNamed('/tracking'),
+                      onPressed: () => Navigator.of(context).pushNamed(
+                        '/tracking',
+                        arguments: {
+                          if (widget.bookingId != null)
+                            'bookingId': widget.bookingId,
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -224,45 +231,57 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(
-                      'Booking Reference',
-                      style: ClientTypography.bodySmall(
-                        context,
-                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                    Expanded(
+                      child: Text(
+                        'Booking Reference',
+                        style: ClientTypography.bodySmall(context).copyWith(
+                          color: ClientColors.textSecondaryFor(context),
+                        ),
+                      ),
                     ),
-                    Text(
-                      bookingReference,
-                      style: ClientTypography.labelMedium(context).copyWith(
-                        color: ClientColors.primary,
-                        fontWeight: FontWeight.w700,
+                    const SizedBox(width: 12),
+                    Flexible(
+                      child: Text(
+                        bookingReference,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.end,
+                        style: ClientTypography.labelMedium(context).copyWith(
+                          color: ClientColors.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
                   ],
                 ),
                 const SizedBox(height: 14),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.destination,
-                          style: ClientTypography.headingSmall(
-                            context,
-                          ).copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'Seat ${widget.seat}',
-                          style: ClientTypography.bodySmall(context).copyWith(
-                            color: ClientColors.textSecondaryFor(context),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.destination,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: ClientTypography.headingSmall(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w700),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 6),
+                          Text(
+                            'Seat ${widget.seat}',
+                            style: ClientTypography.bodySmall(context).copyWith(
+                              color: ClientColors.textSecondaryFor(context),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
@@ -274,6 +293,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                         ),
                         Text(
                           widget.departureTime,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: ClientTypography.bodyMedium(
                             context,
                           ).copyWith(fontWeight: FontWeight.w700),
@@ -298,23 +319,29 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                       ),
                     ),
                     const SizedBox(width: 12),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          widget.driver,
-                          style: ClientTypography.bodyMedium(
-                            context,
-                          ).copyWith(fontWeight: FontWeight.w700),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Vehicle ${widget.vehicleId}',
-                          style: ClientTypography.bodySmall(context).copyWith(
-                            color: ClientColors.textSecondaryFor(context),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            widget.driver,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: ClientTypography.bodyMedium(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w700),
                           ),
-                        ),
-                      ],
+                          const SizedBox(height: 4),
+                          Text(
+                            'Vehicle ${widget.vehicleId}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: ClientTypography.bodySmall(context).copyWith(
+                              color: ClientColors.textSecondaryFor(context),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),

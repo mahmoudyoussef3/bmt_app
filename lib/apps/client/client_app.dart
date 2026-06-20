@@ -275,7 +275,18 @@ class _ClientAppState extends State<ClientApp> {
                 },
 
                 // Other Features
-                '/tracking': (_) => _buildTrackingScope(const TrackingScreen()),
+                '/tracking': (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments;
+                  String? bookingId;
+                  String? tripId;
+                  if (args is Map) {
+                    bookingId = args['bookingId']?.toString();
+                    tripId = args['tripId']?.toString();
+                  }
+                  return _buildTrackingScope(
+                    TrackingScreen(bookingId: bookingId, tripId: tripId),
+                  );
+                },
                 '/support': (_) =>
                     _buildSupportScope(const SupportCenterScreen()),
                 '/create_ticket': (context) {
