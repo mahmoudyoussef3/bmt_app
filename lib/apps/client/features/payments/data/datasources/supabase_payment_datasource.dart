@@ -26,6 +26,11 @@ class SupabasePaymentDatasource implements PaymentDatasource {
 
       return methods;
     } on PostgrestException catch (error) {
+      // Table not yet provisioned — degrade to an empty list so the screen
+      // shows its empty state instead of a crash.
+      if (error.code == 'PGRST205' || error.code == '42P01') {
+        return const <PaymentMethodData>[];
+      }
       throw Exception(
         error.message.isEmpty
             ? 'Unable to load payment methods.'

@@ -14,6 +14,7 @@ class RouteOptionModel {
     required this.availableTrips,
     this.points = const [],
     this.isFastest = false,
+    this.matchQuality = RouteMatchQuality.exact,
   });
 
   final String id;
@@ -28,6 +29,7 @@ class RouteOptionModel {
   final List<RouteTripOptionModel> availableTrips;
   final List<RoutePointModel> points;
   final bool isFastest;
+  final RouteMatchQuality matchQuality;
 
   RouteOptionData toEntity() {
     return RouteOptionData(
@@ -43,6 +45,7 @@ class RouteOptionModel {
       availableTrips: availableTrips.map((trip) => trip.toEntity()).toList(),
       points: points.map((point) => point.toEntity()).toList(),
       isFastest: isFastest,
+      matchQuality: matchQuality,
     );
   }
 }

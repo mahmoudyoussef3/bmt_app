@@ -1,3 +1,15 @@
+/// How closely a route matches the user's pickup/destination search.
+enum RouteMatchQuality {
+  /// Route serves both the requested pickup and destination, in order.
+  exact,
+
+  /// Route serves the pickup or destination, but not a perfect pairing.
+  partial,
+
+  /// Closest available route; does not directly match the search.
+  suggested,
+}
+
 class RouteOptionData {
   const RouteOptionData({
     required this.id,
@@ -12,6 +24,7 @@ class RouteOptionData {
     required this.availableTrips,
     this.points = const [],
     this.isFastest = false,
+    this.matchQuality = RouteMatchQuality.exact,
   });
 
   final String id;
@@ -26,6 +39,9 @@ class RouteOptionData {
   final List<RouteTripOptionData> availableTrips;
   final List<RoutePointData> points;
   final bool isFastest;
+  final RouteMatchQuality matchQuality;
+
+  bool get isExactMatch => matchQuality == RouteMatchQuality.exact;
 }
 
 class RoutePointData {

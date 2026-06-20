@@ -2,6 +2,7 @@ import '../../domain/entities/booking_hub_data.dart';
 import '../../domain/entities/booking_option.dart';
 import '../../domain/entities/booking_search_query.dart';
 import '../../domain/entities/daily_booking_data.dart';
+import '../../domain/entities/search_options.dart';
 import '../../domain/entities/vehicle_detail.dart';
 import '../../domain/repositories/booking_repository.dart';
 import '../datasources/booking_search_datasource.dart';
@@ -61,6 +62,11 @@ class BookingRepositoryImpl implements BookingRepository {
   Future<List<MapPinOption>> getDestinationMapPins() async {
     final models = await _searchDatasource.getDestinationMapPins();
     return models.map((pin) => pin.toEntity()).toList();
+  }
+
+  @override
+  Future<TripSearchOptions> getSearchOptions() {
+    return _searchDatasource.getSearchOptions();
   }
 
   @override

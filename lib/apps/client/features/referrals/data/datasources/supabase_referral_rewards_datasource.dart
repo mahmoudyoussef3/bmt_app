@@ -10,25 +10,26 @@ class SupabaseReferralRewardsDatasource {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
-    // Query loyalty account and referral history in parallel.
-    // referrals table is optional — swallow errors if it doesn't exist yet.
-    final loyaltyFuture = _supabase
+    // Loyalty account holds the wallet balance (core data).
+    final accountData = await _supabase
         .from('loyalty_accounts')
         .select()
         .eq('client_id', user.id)
         .maybeSingle();
 
-    final rewardsFuture = _supabase
-        .from('loyalty_rewards')
-        .select()
-        .eq('is_active', true)
-        .order('points_cost', ascending: true)
-        .limit(5);
-
-    final results = await Future.wait([loyaltyFuture, rewardsFuture]);
-
-    final accountData = results[0] as Map<String, dynamic>?;
-    final rewardsData = results[1] as List<dynamic>;
+    // Rewards catalog is optional — degrade to no vouchers if the table is
+    // not yet provisioned instead of failing the whole screen.
+    List<dynamic> rewardsData = const [];
+    try {
+      rewardsData = await _supabase
+          .from('loyalty_rewards')
+          .select()
+          .eq('is_active', true)
+          .order('points_cost', ascending: true)
+          .limit(5);
+    } on PostgrestException {
+      rewardsData = const [];
+    }
 
     final walletBalance = accountData?['wallet_balance'] as int? ?? 0;
 

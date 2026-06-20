@@ -14,6 +14,18 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
     return 'Bronze';
   }
 
+  /// Runs a select query, returning an empty list if the table is not yet
+  /// provisioned (PGRST205) so one missing catalog table cannot fail the
+  /// whole screen.
+  Future<List<dynamic>> _safeList(Future<dynamic> Function() query) async {
+    try {
+      final result = await query();
+      return result is List ? result : const <dynamic>[];
+    } on PostgrestException {
+      return const <dynamic>[];
+    }
+  }
+
   @override
   Future<LoyaltyData> getLoyaltyData() async {
     final user = _supabase.auth.currentUser;
@@ -21,47 +33,42 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
       throw Exception('User is not authenticated');
     }
 
-    // 1. Fetch points and wallet balance
-    final accountFuture = _supabase
+    // 1. Points and wallet balance (core data).
+    final accountResponse = await _supabase
         .from('loyalty_accounts')
         .select()
         .eq('client_id', user.id)
         .maybeSingle();
 
-    // 2. Fetch point transactions
-    final txFuture = _supabase
-        .from('loyalty_transactions')
-        .select()
-        .eq('client_id', user.id)
-        .order('created_at', ascending: false);
-
-    // 3. Fetch loyalty tiers
-    final tiersFuture = _supabase
-        .from('loyalty_tiers')
-        .select()
-        .order(
-          'points_required_val',
-          ascending: true,
-        ); // Assuming a numeric field for sorting
-
-    // 4. Fetch redeemable rewards
-    final rewardsFuture = _supabase
-        .from('loyalty_rewards')
-        .select()
-        .eq('is_active', true)
-        .order('points_cost', ascending: true);
-
+    // 2-4. Transactions, tiers and rewards are catalog/history data. Fetch
+    // them defensively so a not-yet-provisioned table degrades to an empty
+    // section instead of failing the whole screen.
     final responses = await Future.wait([
-      accountFuture,
-      txFuture,
-      tiersFuture,
-      rewardsFuture,
+      _safeList(
+        () => _supabase
+            .from('loyalty_transactions')
+            .select()
+            .eq('client_id', user.id)
+            .order('created_at', ascending: false),
+      ),
+      _safeList(
+        () => _supabase
+            .from('loyalty_tiers')
+            .select()
+            .order('points_required_val', ascending: true),
+      ),
+      _safeList(
+        () => _supabase
+            .from('loyalty_rewards')
+            .select()
+            .eq('is_active', true)
+            .order('points_cost', ascending: true),
+      ),
     ]);
 
-    final accountResponse = responses[0] as Map<String, dynamic>?;
-    final txResponse = responses[1] as List<dynamic>;
-    final tiersResponse = responses[2] as List<dynamic>;
-    final rewardsResponse = responses[3] as List<dynamic>;
+    final txResponse = responses[0];
+    final tiersResponse = responses[1];
+    final rewardsResponse = responses[2];
 
     final currentPoints = accountResponse?['points'] as int? ?? 0;
 

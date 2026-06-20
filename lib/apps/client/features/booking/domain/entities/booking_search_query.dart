@@ -4,7 +4,7 @@ class BookingSearchQuery {
     this.routeId,
     this.pickup = '',
     this.destination = '',
-    this.date = 'Today, Jun 3',
+    this.date = '',
     this.time = '',
   });
 
@@ -53,7 +53,7 @@ class BookingSearchQuery {
         routeId: args['routeId']?.toString(),
         pickup: args['pickup']?.toString() ?? '',
         destination: args['destination']?.toString() ?? '',
-        date: args['date']?.toString() ?? 'Today, Jun 3',
+        date: args['date']?.toString() ?? '',
         time: args['time']?.toString() ?? '',
       );
     }

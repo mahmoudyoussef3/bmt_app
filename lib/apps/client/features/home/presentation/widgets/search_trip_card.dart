@@ -229,14 +229,17 @@ Future<String?> showHomePickerSheet({
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
     ),
+    isScrollControlled: true,
     builder: (ctx) {
+      final maxHeight = MediaQuery.sizeOf(ctx).height * 0.7;
       return SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: maxHeight),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const SizedBox(height: 12),
               Center(
                 child: Container(
                   width: 40,
@@ -248,50 +251,72 @@ Future<String?> showHomePickerSheet({
                 ),
               ),
               const SizedBox(height: 16),
-              Text(title, style: ClientTypography.headingMedium(ctx)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: Text(title, style: ClientTypography.headingMedium(ctx)),
+              ),
               const SizedBox(height: 12),
-              ...options.map((option) {
-                final isSelected = option == selected;
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 8),
-                  child: Material(
-                    color: isSelected
-                        ? ClientColors.primaryLight
-                        : ClientColors.surfaceSubtleFor(ctx),
-                    borderRadius: BorderRadius.circular(14),
-                    child: InkWell(
-                      onTap: () => Navigator.pop(ctx, option),
-                      borderRadius: BorderRadius.circular(14),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 14,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(14),
-                          border: isSelected
-                              ? Border.all(
-                                  color: ClientColors.primary,
-                                  width: 2,
-                                )
-                              : Border.all(color: ClientColors.borderFor(ctx)),
-                        ),
-                        child: Text(
-                          option,
-                          style: ClientTypography.bodyLarge(ctx).copyWith(
-                            color: isSelected
-                                ? ClientColors.primary
-                                : ClientColors.textPrimaryFor(ctx),
-                            fontWeight: isSelected
-                                ? FontWeight.w600
-                                : FontWeight.w400,
-                          ),
-                        ),
-                      ),
+              if (options.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
+                  child: Text(
+                    'No options available yet',
+                    style: ClientTypography.bodyMedium(ctx).copyWith(
+                      color: ClientColors.textSecondaryFor(ctx),
                     ),
                   ),
-                );
-              }),
+                )
+              else
+                Flexible(
+                  child: ListView.separated(
+                    shrinkWrap: true,
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    itemCount: options.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final option = options[index];
+                      final isSelected = option == selected;
+                      return Material(
+                        color: isSelected
+                            ? ClientColors.primaryLight
+                            : ClientColors.surfaceSubtleFor(ctx),
+                        borderRadius: BorderRadius.circular(14),
+                        child: InkWell(
+                          onTap: () => Navigator.pop(ctx, option),
+                          borderRadius: BorderRadius.circular(14),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 14,
+                              vertical: 12,
+                            ),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(14),
+                              border: isSelected
+                                  ? Border.all(
+                                      color: ClientColors.primary,
+                                      width: 2,
+                                    )
+                                  : Border.all(
+                                      color: ClientColors.borderFor(ctx),
+                                    ),
+                            ),
+                            child: Text(
+                              option,
+                              style: ClientTypography.bodyLarge(ctx).copyWith(
+                                color: isSelected
+                                    ? ClientColors.primary
+                                    : ClientColors.textPrimaryFor(ctx),
+                                fontWeight: isSelected
+                                    ? FontWeight.w600
+                                    : FontWeight.w400,
+                              ),
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ),
             ],
           ),
         ),

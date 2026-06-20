@@ -32,6 +32,7 @@ import '../../features/booking/domain/usecases/get_booking_routes_usecase.dart';
 import '../../features/booking/domain/usecases/get_daily_booking_data_usecase.dart';
 import '../../features/booking/domain/usecases/get_map_pins_usecase.dart';
 import '../../features/booking/domain/usecases/get_popular_routes_usecase.dart';
+import '../../features/booking/domain/usecases/get_search_options_usecase.dart';
 import '../../features/booking/domain/usecases/get_vehicle_details_usecase.dart';
 import '../../features/booking/domain/usecases/get_vehicles_usecase.dart';
 import '../../features/booking/domain/usecases/sort_vehicles_usecase.dart';
@@ -365,6 +366,12 @@ void _registerBookingDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<GetSearchOptionsUseCase>()) {
+    clientGetIt.registerLazySingleton<GetSearchOptionsUseCase>(
+      () => GetSearchOptionsUseCase(clientGetIt<BookingRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<GetAvailableTripsUseCase>()) {
     clientGetIt.registerLazySingleton<GetAvailableTripsUseCase>(
       () => GetAvailableTripsUseCase(clientGetIt<BookingRepository>()),
@@ -397,6 +404,7 @@ void _registerBookingDependencies() {
         getRoutes: clientGetIt<GetBookingRoutesUseCase>(),
         getPopularRoutes: clientGetIt<GetPopularRoutesUseCase>(),
         getMapPins: clientGetIt<GetMapPinsUseCase>(),
+        getSearchOptions: clientGetIt<GetSearchOptionsUseCase>(),
         getVehicles: clientGetIt<GetVehiclesUseCase>(),
         getVehicleDetails: clientGetIt<GetVehicleDetailsUseCase>(),
         sortVehicles: clientGetIt<SortVehiclesUseCase>(),

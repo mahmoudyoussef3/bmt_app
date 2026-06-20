@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/entities/booking_option.dart';
 import '../../domain/entities/booking_search_query.dart';
+import '../../domain/entities/search_options.dart';
 import '../models/booking_option_model.dart';
 import 'booking_search_datasource.dart';
 
@@ -39,15 +41,15 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       stationsByRouteId.putIfAbsent(routeId, () => []).add(station);
     }
 
-    final List<RouteOptionModel> matchedRoutes = [];
+    final matchesRequestedRoute =
+        query.routeId != null && query.routeId!.isNotEmpty;
+    final List<_ScoredRoute> scored = [];
 
     for (var data in response) {
       final routeId = data['id']?.toString() ?? '';
       final stations = stationsByRouteId[routeId] ?? const <dynamic>[];
       final startCity = data['start_city']?.toString() ?? '';
       final endCity = data['end_city']?.toString() ?? '';
-      final pickup = query.pickup.isEmpty ? startCity : query.pickup;
-      final dest = query.destination.isEmpty ? endCity : query.destination;
       final pricingTrips = await _supabase
           .from('operation_trips')
           .select('''
@@ -103,35 +105,59 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         endCity: endCity,
       );
 
-      final pickupOrder = _pointOrder(
-        pickup,
-        stations: stations,
-        startCity: startCity,
-        endCity: endCity,
+      final pickupMatch = _bestLocationMatch(
+        query.pickup,
+        routePoints,
         checkPickup: true,
+        fallbackLabel: startCity,
       );
-      final destOrder = _pointOrder(
-        dest,
-        stations: stations,
-        startCity: startCity,
-        endCity: endCity,
+      final destMatch = _bestLocationMatch(
+        query.destination,
+        routePoints,
         checkPickup: false,
+        fallbackLabel: endCity,
       );
-      final matchesRequestedRoute =
-          query.routeId != null && query.routeId!.isNotEmpty;
 
+      final bothMatched = pickupMatch.score > 0 && destMatch.score > 0;
+      final orderValid = pickupMatch.order <= destMatch.order;
+
+      final RouteMatchQuality quality;
       if (matchesRequestedRoute ||
-          (pickupOrder != null &&
-              destOrder != null &&
-              pickupOrder <= destOrder)) {
-        matchedRoutes.add(
-          RouteOptionModel(
+          (pickupMatch.score >= 0.75 &&
+              destMatch.score >= 0.75 &&
+              orderValid)) {
+        quality = RouteMatchQuality.exact;
+      } else if (bothMatched && orderValid) {
+        quality = RouteMatchQuality.partial;
+      } else {
+        quality = RouteMatchQuality.suggested;
+      }
+
+      final relevance =
+          (matchesRequestedRoute ? 100.0 : 0.0) +
+          destMatch.score * 1.2 +
+          pickupMatch.score +
+          (bothMatched && orderValid ? 0.5 : 0.0);
+
+      final displayPickup = pickupMatch.label.isNotEmpty
+          ? pickupMatch.label
+          : (query.pickup.isEmpty ? startCity : query.pickup);
+      final displayDest = destMatch.label.isNotEmpty
+          ? destMatch.label
+          : (query.destination.isEmpty ? endCity : query.destination);
+
+      scored.add(
+        _ScoredRoute(
+          relevance: relevance,
+          hasTrips: trips.isNotEmpty,
+          availableSeats: availableSeats,
+          model: RouteOptionModel(
             id: routeId,
             routeName: data['name']?.toString().trim().isNotEmpty == true
                 ? data['name'].toString()
                 : '$startCity - $endCity',
-            pickup: pickup,
-            destination: dest,
+            pickup: displayPickup,
+            destination: displayDest,
             distance: data['distance']?.toString() ?? 'Not set',
             duration: data['duration']?.toString() ?? 'N/A',
             availableSeats: availableSeats,
@@ -139,13 +165,89 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
             priceRange: priceRange,
             availableTrips: availableTrips,
             points: routePoints,
-            isFastest: true,
+            matchQuality: quality,
           ),
-        );
+        ),
+      );
+    }
+
+    scored.sort((a, b) {
+      final byRelevance = b.relevance.compareTo(a.relevance);
+      if (byRelevance != 0) return byRelevance;
+      if (a.hasTrips != b.hasTrips) return a.hasTrips ? -1 : 1;
+      return b.availableSeats.compareTo(a.availableSeats);
+    });
+
+    return scored.take(8).map((entry) => entry.model).toList();
+  }
+
+  /// Scores how well a route serves [query] and returns the closest stop.
+  _LocationMatch _bestLocationMatch(
+    String query,
+    List<RoutePointModel> points, {
+    required bool checkPickup,
+    required String fallbackLabel,
+  }) {
+    final candidates = points
+        .where((p) => checkPickup ? p.pickupAllowed : p.dropoffAllowed)
+        .toList();
+    final fallbackOrder = candidates.isEmpty
+        ? 0
+        : (checkPickup
+              ? candidates.first.order
+              : candidates.last.order);
+
+    final normalized = query.trim().toLowerCase();
+    if (normalized.isEmpty || candidates.isEmpty) {
+      return _LocationMatch(
+        label: fallbackLabel,
+        order: fallbackOrder,
+        score: 0,
+      );
+    }
+
+    RoutePointModel? best;
+    var bestScore = 0.0;
+    for (final candidate in candidates) {
+      final score = _textSimilarity(normalized, candidate.name.toLowerCase());
+      if (score > bestScore) {
+        bestScore = score;
+        best = candidate;
       }
     }
 
-    return matchedRoutes;
+    if (best == null || bestScore == 0) {
+      return _LocationMatch(
+        label: fallbackLabel,
+        order: fallbackOrder,
+        score: 0,
+      );
+    }
+    return _LocationMatch(
+      label: best.name,
+      order: best.order,
+      score: bestScore,
+    );
+  }
+
+  double _textSimilarity(String a, String b) {
+    if (a.isEmpty || b.isEmpty) return 0;
+    if (a == b) return 1;
+    if (a.contains(b) || b.contains(a)) return 0.8;
+    final aTokens = _tokens(a);
+    final bTokens = _tokens(b);
+    if (aTokens.isEmpty || bTokens.isEmpty) return 0;
+    final shared = aTokens.intersection(bTokens).length;
+    if (shared == 0) return 0;
+    return 0.6 * (shared / aTokens.length);
+  }
+
+  Set<String> _tokens(String value) {
+    const stopwords = {'of', 'the', 'and', 'egypt'};
+    return value
+        .split(RegExp(r'[\s,.\-]+'))
+        .where((t) => t.length > 1 && !stopwords.contains(t))
+        .toSet();
   }
 
   @override
@@ -243,40 +345,6 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     ];
   }
 
-  int? _pointOrder(
-    String value, {
-    required List<dynamic> stations,
-    required String startCity,
-    required String endCity,
-    required bool checkPickup,
-  }) {
-    final normalized = value.trim().toLowerCase();
-    if (normalized.isEmpty) return null;
-
-    if (startCity.trim().toLowerCase() == normalized) {
-      return stations.isEmpty ? 0 : _stationOrder(stations.first);
-    }
-    if (endCity.trim().toLowerCase() == normalized) {
-      return stations.isEmpty ? 1 : _stationOrder(stations.last);
-    }
-
-    for (final station in stations) {
-      final stationName =
-          station['name']?.toString().trim().toLowerCase() ?? '';
-      if (stationName != normalized) continue;
-      final allowed = checkPickup
-          ? station['pickup_allowed'] as bool? ?? true
-          : station['dropoff_allowed'] as bool? ?? true;
-      if (!allowed) return null;
-      return _stationOrder(station);
-    }
-    return null;
-  }
-
-  int _stationOrder(dynamic station) {
-    return station['sort_order'] as int? ?? 0;
-  }
-
   String _priceRangeLabel(List<dynamic> trips) {
     final candidates = <_PriceCandidate>[];
     for (final trip in trips) {
@@ -337,6 +405,67 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     }
 
     return candidates;
+  }
+
+  @override
+  Future<TripSearchOptions> getSearchOptions() async {
+    final today = DateTime.now().toIso8601String().split('T').first;
+
+    final results = await Future.wait([
+      _supabase
+          .from('route_stations')
+          .select('name, operation_routes!inner(status)')
+          .eq('operation_routes.status', 'active')
+          .eq('pickup_allowed', true),
+      _supabase
+          .from('route_stations')
+          .select('name, operation_routes!inner(status)')
+          .eq('operation_routes.status', 'active')
+          .eq('dropoff_allowed', true),
+      _supabase
+          .from('operation_trips')
+          .select('departure_time')
+          .or('status.eq.open_for_booking,status.eq.boarding')
+          .gte('trip_date', today),
+    ]);
+
+    final pickups = results[0]
+        .map((s) => s['name']?.toString() ?? '')
+        .where((n) => n.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
+    final destinations = results[1]
+        .map((s) => s['name']?.toString() ?? '')
+        .where((n) => n.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
+    final times = results[2]
+        .map((t) => _formatDepartureTime(t['departure_time']?.toString() ?? ''))
+        .where((t) => t.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
+    return TripSearchOptions(
+      pickupPoints: pickups,
+      destinations: destinations,
+      departureTimes: times,
+    );
+  }
+
+  String _formatDepartureTime(String raw) {
+    if (raw.isEmpty) return '';
+    final parts = raw.split(':');
+    if (parts.length < 2) return raw;
+    final hour = int.tryParse(parts[0]) ?? 0;
+    final minute = int.tryParse(parts[1]) ?? 0;
+    final period = hour >= 12 ? 'PM' : 'AM';
+    final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+    return '$h:${minute.toString().padLeft(2, '0')} $period';
   }
 
   double? _toDouble(dynamic value) {
@@ -431,4 +560,32 @@ class _PriceCandidate {
 
   final double amount;
   final String currency;
+}
+
+/// A route paired with its relevance score for ranking search results.
+class _ScoredRoute {
+  const _ScoredRoute({
+    required this.model,
+    required this.relevance,
+    required this.hasTrips,
+    required this.availableSeats,
+  });
+
+  final RouteOptionModel model;
+  final double relevance;
+  final bool hasTrips;
+  final int availableSeats;
+}
+
+/// The closest stop on a route to a searched location, with a 0–1 score.
+class _LocationMatch {
+  const _LocationMatch({
+    required this.label,
+    required this.order,
+    required this.score,
+  });
+
+  final String label;
+  final int order;
+  final double score;
 }

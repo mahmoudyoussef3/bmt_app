@@ -150,11 +150,17 @@ class _RouteDetailsBody extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
       children: [
+        if (!route.isExactMatch) ...[
+          _ClosestMatchBanner(quality: route.matchQuality),
+          const SizedBox(height: 12),
+        ],
         Row(
           children: [
             Expanded(
               child: Text(
-                'Is this route suitable?',
+                route.isExactMatch
+                    ? 'Is this route suitable?'
+                    : 'Closest routes for your search',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   height: 1.05,
@@ -195,6 +201,57 @@ class _RouteDetailsBody extends StatelessWidget {
 
   bool _isPendingPrice(String value) {
     return value.trim().toLowerCase() == 'price pending';
+  }
+}
+
+class _ClosestMatchBanner extends StatelessWidget {
+  const _ClosestMatchBanner({required this.quality});
+
+  final RouteMatchQuality quality;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isPartial = quality == RouteMatchQuality.partial;
+    final message = isPartial
+        ? 'No exact match for your search. These routes cover most of your trip.'
+        : 'No route matches this exact trip yet. Here are the closest options we run.';
+
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: scheme.tertiaryContainer.withAlpha(70),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: scheme.tertiary.withAlpha(90)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.auto_awesome_rounded, color: scheme.tertiary, size: 22),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Best results for you',
+                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  message,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurface.withAlpha(170),
+                    height: 1.3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

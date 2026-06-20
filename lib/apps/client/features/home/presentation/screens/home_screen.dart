@@ -85,23 +85,6 @@ class _HomeContent extends StatefulWidget {
 }
 
 class _HomeContentState extends State<_HomeContent> {
-  final TextEditingController _searchController = TextEditingController();
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
-  void _openRoute(PopularRouteData route) {
-    widget.onOpenRoute(ClientRoutes.bookingRouteSelection, {
-      'routeId': route.id,
-      'pickup': route.pickup,
-      'destination': route.destination,
-      'time': '',
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -131,12 +114,7 @@ class _HomeContentState extends State<_HomeContent> {
                     onOpenNotifications: widget.onOpenNotifications,
                   ),
                   const SizedBox(height: 18),
-                  _RouteSearchSection(
-                    controller: _searchController,
-                    routes: widget.data.popularRoutes,
-                    onBrowseAll: widget.onOpenSearch,
-                    onSelectRoute: _openRoute,
-                  ),
+                  _SearchEntryBar(onTap: widget.onOpenSearch),
                   const SizedBox(height: 26),
                   PopularRoutesPreview(
                     routes: widget.data.popularRoutes,
@@ -407,149 +385,9 @@ class _NotificationButton extends StatelessWidget {
   }
 }
 
-class _RouteSearchSection extends StatefulWidget {
-  const _RouteSearchSection({
-    required this.controller,
-    required this.routes,
-    required this.onBrowseAll,
-    required this.onSelectRoute,
-  });
+class _SearchEntryBar extends StatelessWidget {
+  const _SearchEntryBar({required this.onTap});
 
-  final TextEditingController controller;
-  final List<PopularRouteData> routes;
-  final VoidCallback onBrowseAll;
-  final ValueChanged<PopularRouteData> onSelectRoute;
-
-  @override
-  State<_RouteSearchSection> createState() => _RouteSearchSectionState();
-}
-
-class _RouteSearchSectionState extends State<_RouteSearchSection> {
-  String _query = '';
-
-  List<PopularRouteData> get _matches {
-    final query = _query.trim().toLowerCase();
-    final source = widget.routes;
-    if (query.isEmpty) return source.take(3).toList();
-    return source
-        .where((route) {
-          return route.routeName.toLowerCase().contains(query) ||
-              route.pickup.toLowerCase().contains(query) ||
-              route.destination.toLowerCase().contains(query);
-        })
-        .take(5)
-        .toList();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final matches = _matches;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.outline.withAlpha(70)),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.onSurface.withAlpha(10),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(18),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.my_location_rounded,
-                  size: 16,
-                  color: scheme.primary,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(
-                  'Where are you heading?',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: widget.onBrowseAll,
-                style: TextButton.styleFrom(
-                  padding: EdgeInsets.zero,
-                  minimumSize: Size.zero,
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                ),
-                child: const Text('Browse all'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: widget.controller,
-            onChanged: (value) => setState(() => _query = value),
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              hintText: 'Search by route, departure, or destination',
-              prefixIcon: const Icon(Icons.search_rounded),
-              suffixIcon: _query.isEmpty
-                  ? null
-                  : IconButton(
-                      tooltip: 'Clear search',
-                      icon: const Icon(Icons.close_rounded),
-                      onPressed: () {
-                        widget.controller.clear();
-                        setState(() => _query = '');
-                      },
-                    ),
-              filled: true,
-              fillColor: scheme.surfaceContainerHighest.withAlpha(55),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: scheme.outline.withAlpha(60)),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: BorderSide(color: scheme.outline.withAlpha(60)),
-              ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (widget.routes.isEmpty)
-            _SearchEmptyState(onBrowseAll: widget.onBrowseAll)
-          else if (matches.isEmpty)
-            _NoSearchMatches(onBrowseAll: widget.onBrowseAll)
-          else
-            ...matches.map(
-              (route) => _RouteSuggestionTile(
-                route: route,
-                onTap: () => widget.onSelectRoute(route),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RouteSuggestionTile extends StatelessWidget {
-  const _RouteSuggestionTile({required this.route, required this.onTap});
-
-  final PopularRouteData route;
   final VoidCallback onTap;
 
   @override
@@ -560,120 +398,67 @@ class _RouteSuggestionTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        borderRadius: BorderRadius.circular(18),
+        child: Ink(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            color: scheme.surface,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: scheme.outline.withAlpha(70)),
+            boxShadow: [
+              BoxShadow(
+                color: scheme.onSurface.withAlpha(10),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
           child: Row(
             children: [
               Container(
-                width: 38,
-                height: 38,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(20),
-                  borderRadius: BorderRadius.circular(11),
+                  color: scheme.primary.withAlpha(18),
+                  borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(
-                  Icons.directions_bus_rounded,
-                  color: scheme.primary,
-                ),
+                child: Icon(Icons.search_rounded, color: scheme.primary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      route.routeName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      'Where are you heading?',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      '${route.pickup} to ${route.destination}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      'Route name, city, or destination',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(150),
+                        color: scheme.onSurface.withAlpha(130),
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    route.startingPrice,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'from',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurface.withAlpha(125),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(width: 6),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 18,
-                color: scheme.onSurface.withAlpha(100),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: scheme.primary.withAlpha(15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.tune_rounded, size: 18, color: scheme.primary),
               ),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _SearchEmptyState extends StatelessWidget {
-  const _SearchEmptyState({required this.onBrowseAll});
-
-  final VoidCallback onBrowseAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return _InlineHomeEmptyState(
-      icon: Icons.route_outlined,
-      title: 'No routes available yet',
-      subtitle: 'Routes published from the dashboard will appear here.',
-      actionLabel: 'Open search',
-      color: scheme.primary,
-      onTap: onBrowseAll,
-    );
-  }
-}
-
-class _NoSearchMatches extends StatelessWidget {
-  const _NoSearchMatches({required this.onBrowseAll});
-
-  final VoidCallback onBrowseAll;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return _InlineHomeEmptyState(
-      icon: Icons.manage_search_rounded,
-      title: 'No matching routes',
-      subtitle: 'Try a route name, departure city, or destination city.',
-      actionLabel: 'Browse routes',
-      color: scheme.secondary,
-      onTap: onBrowseAll,
     );
   }
 }
@@ -899,73 +684,6 @@ class _SupportLink extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _InlineHomeEmptyState extends StatelessWidget {
-  const _InlineHomeEmptyState({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.actionLabel,
-    required this.color,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final String actionLabel;
-  final Color color;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(45),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: scheme.outline.withAlpha(55)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withAlpha(22),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: color),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurface.withAlpha(150),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          TextButton(onPressed: onTap, child: Text(actionLabel)),
-        ],
       ),
     );
   }

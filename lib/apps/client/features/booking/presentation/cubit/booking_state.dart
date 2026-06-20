@@ -1,6 +1,7 @@
 import '../../domain/entities/booking_hub_data.dart';
 import '../../domain/entities/booking_option.dart';
 import '../../domain/entities/daily_booking_data.dart';
+import '../../domain/entities/search_options.dart';
 import '../../domain/entities/vehicle_detail.dart';
 
 sealed class BookingState {
@@ -52,6 +53,12 @@ class VehicleDetailsLoaded extends BookingState {
   const VehicleDetailsLoaded(this.vehicle);
 
   final VehicleDetailData? vehicle;
+}
+
+class SearchOptionsLoaded extends BookingState {
+  const SearchOptionsLoaded(this.options);
+
+  final TripSearchOptions options;
 }
 
 class BookingError extends BookingState {

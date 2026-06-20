@@ -7,6 +7,7 @@ import '../../domain/usecases/get_booking_routes_usecase.dart';
 import '../../domain/usecases/get_daily_booking_data_usecase.dart';
 import '../../domain/usecases/get_map_pins_usecase.dart';
 import '../../domain/usecases/get_popular_routes_usecase.dart';
+import '../../domain/usecases/get_search_options_usecase.dart';
 import '../../domain/usecases/get_vehicle_details_usecase.dart';
 import '../../domain/usecases/get_vehicles_usecase.dart';
 import '../../domain/usecases/sort_vehicles_usecase.dart';
@@ -19,6 +20,7 @@ class BookingCubit extends Cubit<BookingState> {
     required GetBookingRoutesUseCase getRoutes,
     required GetPopularRoutesUseCase getPopularRoutes,
     required GetMapPinsUseCase getMapPins,
+    required GetSearchOptionsUseCase getSearchOptions,
     required GetVehiclesUseCase getVehicles,
     required GetVehicleDetailsUseCase getVehicleDetails,
     required SortVehiclesUseCase sortVehicles,
@@ -27,6 +29,7 @@ class BookingCubit extends Cubit<BookingState> {
        _getRoutes = getRoutes,
        _getPopularRoutes = getPopularRoutes,
        _getMapPins = getMapPins,
+       _getSearchOptions = getSearchOptions,
        _getVehicles = getVehicles,
        _getVehicleDetails = getVehicleDetails,
        _sortVehicles = sortVehicles,
@@ -37,6 +40,7 @@ class BookingCubit extends Cubit<BookingState> {
   final GetBookingRoutesUseCase _getRoutes;
   final GetPopularRoutesUseCase _getPopularRoutes;
   final GetMapPinsUseCase _getMapPins;
+  final GetSearchOptionsUseCase _getSearchOptions;
   final GetVehiclesUseCase _getVehicles;
   final GetVehicleDetailsUseCase _getVehicleDetails;
   final SortVehiclesUseCase _sortVehicles;
@@ -86,6 +90,16 @@ class BookingCubit extends Cubit<BookingState> {
     try {
       final pins = await _getMapPins();
       emit(MapPinsLoaded(pickup: pins.pickup, destination: pins.destination));
+    } catch (error) {
+      emit(BookingError(error.toString()));
+    }
+  }
+
+  Future<void> loadSearchOptions() async {
+    emit(const BookingLoading());
+    try {
+      final options = await _getSearchOptions();
+      emit(SearchOptionsLoaded(options));
     } catch (error) {
       emit(BookingError(error.toString()));
     }
