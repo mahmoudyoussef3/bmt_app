@@ -11,7 +11,7 @@ import 'package:bmt_app/core/localization/failure_l10n_ext.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/app_dialogs.dart';
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
@@ -180,47 +180,34 @@ class _WelcomeSection extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            scheme.primary.withAlpha(22),
-            scheme.secondaryContainer.withAlpha(28),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: scheme.primary,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: scheme.primary.withAlpha(45), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.primary.withAlpha(60),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(22),
         child: Stack(
           children: [
             PositionedDirectional(
-              top: -40,
-              end: -40,
+              top: -30,
+              end: -20,
               child: Container(
                 width: 130,
                 height: 130,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: scheme.primary.withAlpha(14),
-                ),
-              ),
-            ),
-            PositionedDirectional(
-              bottom: -50,
-              start: -30,
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: scheme.secondary.withAlpha(10),
+                  color: Colors.white.withAlpha(15),
                 ),
               ),
             ),
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(22),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -235,8 +222,8 @@ class _WelcomeSection extends StatelessWidget {
                               greeting,
                               style: Theme.of(context).textTheme.bodySmall
                                   ?.copyWith(
-                                    color: scheme.primary,
-                                    fontWeight: FontWeight.w700,
+                                    color: scheme.onPrimary.withAlpha(210),
+                                    fontWeight: FontWeight.w600,
                                     letterSpacing: 0.4,
                                   ),
                             ),
@@ -245,7 +232,7 @@ class _WelcomeSection extends StatelessWidget {
                               firstName,
                               style: ClientTypography.headingLarge(context)
                                   .copyWith(
-                                    color: ClientColors.textPrimaryFor(context),
+                                    color: scheme.onPrimary,
                                     height: 1.05,
                                   ),
                             ),
@@ -253,15 +240,15 @@ class _WelcomeSection extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      _NotificationButton(onTap: onOpenNotifications),
+                      _NotificationButton(onTap: onOpenNotifications, isInverse: true),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   Text(
                     'Book reliable rides in minutes',
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: scheme.onSurface.withAlpha(200),
+                      color: scheme.onPrimary,
                     ),
                   ),
                   const SizedBox(height: 14),
@@ -269,7 +256,7 @@ class _WelcomeSection extends StatelessWidget {
                     Text(
                       'Search live routes, compare prices, and reserve your seat when routes are available.',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(155),
+                        color: scheme.onPrimary.withAlpha(210),
                         height: 1.35,
                       ),
                     )
@@ -282,11 +269,13 @@ class _WelcomeSection extends StatelessWidget {
                           icon: Icons.route_rounded,
                           label: '$routeCount active routes',
                           scheme: scheme,
+                          isInverse: true,
                         ),
                         _WelcomeStatChip(
                           icon: Icons.directions_bus_rounded,
                           label: '$tripCount upcoming trips',
                           scheme: scheme,
+                          isInverse: true,
                         ),
                       ],
                     ),
@@ -320,30 +309,32 @@ class _WelcomeStatChip extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.scheme,
+    this.isInverse = false,
   });
 
   final IconData icon;
   final String label;
   final ColorScheme scheme;
+  final bool isInverse;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: scheme.surface.withAlpha(190),
+        color: isInverse ? Colors.white.withAlpha(25) : scheme.surface.withAlpha(190),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.primary.withAlpha(30)),
+        border: Border.all(color: isInverse ? Colors.white.withAlpha(40) : scheme.primary.withAlpha(30)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: scheme.primary),
+          Icon(icon, size: 13, color: isInverse ? scheme.onPrimary : scheme.primary),
           const SizedBox(width: 5),
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: scheme.onSurface.withAlpha(210),
+              color: isInverse ? scheme.onPrimary : scheme.onSurface.withAlpha(210),
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -354,16 +345,17 @@ class _WelcomeStatChip extends StatelessWidget {
 }
 
 class _NotificationButton extends StatelessWidget {
-  const _NotificationButton({required this.onTap});
+  const _NotificationButton({required this.onTap, this.isInverse = false});
 
   final VoidCallback onTap;
+  final bool isInverse;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
     return Material(
-      color: scheme.surface,
+      color: isInverse ? Colors.white.withAlpha(25) : scheme.surface,
       shape: const CircleBorder(),
       child: InkWell(
         customBorder: const CircleBorder(),
@@ -373,11 +365,11 @@ class _NotificationButton extends StatelessWidget {
           height: 46,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(color: scheme.outline.withAlpha(70)),
+            border: Border.all(color: isInverse ? Colors.white.withAlpha(40) : scheme.outline.withAlpha(70)),
           ),
           child: Icon(
             Icons.notifications_none_rounded,
-            color: scheme.onSurface,
+            color: isInverse ? scheme.onPrimary : scheme.onSurface,
           ),
         ),
       ),
@@ -404,14 +396,7 @@ class _SearchEntryBar extends StatelessWidget {
           decoration: BoxDecoration(
             color: scheme.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: scheme.outline.withAlpha(70)),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.onSurface.withAlpha(10),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
+            border: Border.all(color: scheme.outline.withAlpha(120)),
           ),
           child: Row(
             children: [
@@ -488,42 +473,9 @@ class _SubscriptionPromo extends StatelessWidget {
           decoration: BoxDecoration(
             color: scheme.surface,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: scheme.primary.withAlpha(62), width: 1.2),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withAlpha(18),
-                blurRadius: 24,
-                offset: const Offset(0, 12),
-              ),
-            ],
+            border: Border.all(color: scheme.outline.withAlpha(80), width: 1),
           ),
-          child: Stack(
-            children: [
-              PositionedDirectional(
-                top: -34,
-                end: -26,
-                child: Container(
-                  width: 112,
-                  height: 112,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: scheme.primary.withAlpha(18),
-                  ),
-                ),
-              ),
-              PositionedDirectional(
-                bottom: -40,
-                start: -34,
-                child: Container(
-                  width: 132,
-                  height: 132,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: scheme.secondary.withAlpha(12),
-                  ),
-                ),
-              ),
-              Column(
+          child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
@@ -613,8 +565,6 @@ class _SubscriptionPromo extends StatelessWidget {
                   ),
                 ],
               ),
-            ],
-          ),
         ),
       ),
     );

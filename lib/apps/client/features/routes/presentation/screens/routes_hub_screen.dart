@@ -134,18 +134,8 @@ class _GradientHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primaryContainer = ClientColors.primaryContainerFor(context);
-
     return Container(
       padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [primaryContainer, ClientColors.surfaceFor(context)],
-        ),
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
         child: Column(
@@ -186,48 +176,58 @@ class _SearchCtaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: ClientColors.primaryContainerFor(context),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ClientColors.primary.withAlpha(40)),
+        color: scheme.surfaceContainerHighest.withAlpha(50),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outline.withAlpha(50)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Center(
-            child: Container(
-              width: 56,
-              height: 56,
-              decoration: const BoxDecoration(
-                color: ClientColors.primary,
-                shape: BoxShape.circle,
+          Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: ClientColors.primary.withAlpha(20),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(
+                  Icons.search_rounded,
+                  size: 24,
+                  color: ClientColors.primary,
+                ),
               ),
-              child: const Icon(
-                Icons.search_rounded,
-                size: 28,
-                color: ClientColors.textInverse,
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      searchTitle,
+                      style: ClientTypography.headingSmall(context).copyWith(
+                        color: ClientColors.textPrimaryFor(context),
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      searchDescription,
+                      style: ClientTypography.bodySmall(context).copyWith(
+                        color: ClientColors.textSecondaryFor(context),
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            searchTitle,
-            style: ClientTypography.headingSmall(
-              context,
-            ).copyWith(color: ClientColors.textPrimaryFor(context)),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            searchDescription,
-            style: ClientTypography.bodyMedium(
-              context,
-            ).copyWith(color: ClientColors.textSecondaryFor(context)),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           ClientButton(label: 'Search trips', onPressed: onSearch),
         ],
       ),

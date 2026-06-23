@@ -23,73 +23,57 @@ class ClientBottomNavigation extends StatelessWidget {
     ];
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(
-        AppLayout.spaceMd,
-        0,
-        AppLayout.spaceMd,
-        AppLayout.spaceMd,
-      ),
       decoration: BoxDecoration(
-        color: scheme.surface.withAlpha(230),
-        borderRadius: BorderRadius.circular(AppLayout.radiusXl),
-        border: Border.all(color: scheme.outline.withAlpha(120)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(34),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: scheme.surface,
+        border: Border(top: BorderSide(color: scheme.outline.withAlpha(40))),
       ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppLayout.spaceSm,
-        vertical: AppLayout.spaceSm,
+      padding: const EdgeInsets.only(
+        top: AppLayout.spaceSm,
+        bottom: AppLayout.spaceSm,
+        left: AppLayout.spaceSm,
+        right: AppLayout.spaceSm,
       ),
-      child: Row(
-        children: tabs.map((tab) {
-          final isActive = activeTab == tab.id;
-          return Expanded(
-            child: InkWell(
-              onTap: () => onTabChange(tab.id),
-              borderRadius: BorderRadius.circular(AppLayout.radiusLg),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppLayout.spaceSm,
-                ),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? scheme.primary.withAlpha(40)
-                      : Colors.transparent,
-                  borderRadius: BorderRadius.circular(AppLayout.radiusLg),
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      tab.icon,
-                      size: 22,
-                      color: isActive
-                          ? scheme.primary
-                          : scheme.onSurface.withAlpha(155),
-                    ),
-                    const SizedBox(height: AppLayout.spaceXs),
-                    Text(
-                      tab.label,
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: tabs.map((tab) {
+            final isActive = activeTab == tab.id;
+            return Expanded(
+              child: InkWell(
+                onTap: () => onTabChange(tab.id),
+                borderRadius: BorderRadius.circular(AppLayout.radiusLg),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppLayout.spaceXs,
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        tab.icon,
+                        size: 24,
                         color: isActive
                             ? scheme.primary
-                            : scheme.onSurface.withAlpha(155),
-                        fontWeight: FontWeight.w600,
-                        fontSize: 10,
+                            : scheme.onSurfaceVariant.withAlpha(150),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      Text(
+                        tab.label,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: isActive
+                              ? scheme.primary
+                              : scheme.onSurfaceVariant.withAlpha(150),
+                          fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

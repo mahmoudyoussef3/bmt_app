@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import '../../domain/entities/support_ticket.dart';
 
 class SupportTicketCard extends StatelessWidget {
@@ -15,17 +17,17 @@ class SupportTicketCard extends StatelessWidget {
   Color _getStatusColor(TicketStatus status) {
     switch (status) {
       case TicketStatus.submitted:
-        return Colors.blue;
+        return ClientColors.primary;
       case TicketStatus.underReview:
-        return Colors.orange;
+        return ClientColors.journeyAmber;
       case TicketStatus.contacted:
-        return Colors.purple;
+        return ClientColors.secondary;
       case TicketStatus.resolved:
-        return Colors.green;
+        return ClientColors.journeyGreen;
       case TicketStatus.closed:
-        return Colors.grey;
+        return Colors.grey.shade600;
       case TicketStatus.rejected:
-        return Colors.red;
+        return Colors.red.shade600;
     }
   }
 
@@ -48,15 +50,18 @@ class SupportTicketCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final statusColor = _getStatusColor(ticket.status);
+
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: scheme.outline.withAlpha(50)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -66,41 +71,36 @@ class SupportTicketCard extends StatelessWidget {
               children: [
                 Text(
                   ticket.ticketNumber,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
+                  style: ClientTypography.labelMedium(context).copyWith(
+                    color: scheme.onSurface.withAlpha(150),
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
+                    horizontal: 10,
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(
-                      ticket.status,
-                    ).withValues(alpha: 0.1),
+                    color: statusColor.withAlpha(25),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Text(
                     _getStatusLabel(ticket.status),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: _getStatusColor(ticket.status),
+                    style: ClientTypography.labelSmall(context).copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: statusColor,
                     ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
               ticket.title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: Colors.black87,
+              style: ClientTypography.headingSmall(context).copyWith(
+                color: scheme.onSurface,
+                height: 1.2,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -108,16 +108,22 @@ class SupportTicketCard extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               ticket.category,
-              style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: scheme.onSurface.withAlpha(180),
+              ),
             ),
+            const SizedBox(height: 16),
+            Divider(color: scheme.outline.withAlpha(40), height: 1),
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(Icons.access_time, size: 14, color: Colors.grey[500]),
-                const SizedBox(width: 4),
+                Icon(Icons.access_time_rounded, size: 14, color: scheme.onSurface.withAlpha(130)),
+                const SizedBox(width: 6),
                 Text(
                   DateFormat('MMM dd, yyyy HH:mm').format(ticket.createdAt),
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  style: ClientTypography.labelMedium(context).copyWith(
+                    color: scheme.onSurface.withAlpha(150),
+                  ),
                 ),
               ],
             ),

@@ -36,7 +36,7 @@ class PopularRouteCard extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: ClientColors.borderFor(context)),
+              border: Border.all(color: ClientColors.borderFor(context).withAlpha(150)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

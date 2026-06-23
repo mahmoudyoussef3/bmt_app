@@ -54,7 +54,7 @@ class ClientButton extends StatelessWidget {
     final effective = isLoading ? null : onPressed;
     final child = _buildChild(context);
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(12),
     );
     final minSize = expand ? const Size.fromHeight(52) : const Size(0, 52);
 

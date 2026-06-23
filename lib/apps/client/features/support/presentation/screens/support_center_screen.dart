@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
+
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
@@ -23,23 +24,24 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: scheme.surfaceContainerHighest.withAlpha(80),
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: scheme.surface,
         elevation: 0,
         title: Text(
           'Support Tickets',
-          style: GoogleFonts.outfit(
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
+          style: ClientTypography.headingMedium(context).copyWith(
+            color: scheme.onSurface,
           ),
         ),
         centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: scheme.onSurface),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh),
+            icon: const Icon(Icons.refresh_rounded),
             onPressed: () {
               context.read<SupportCubit>().refreshTickets();
             },
@@ -50,9 +52,16 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
         onPressed: () {
           Navigator.pushNamed(context, '/create_ticket');
         },
-        backgroundColor: Colors.black87,
-        icon: const Icon(Icons.add),
-        label: const Text('Create Ticket'),
+        backgroundColor: scheme.primary,
+        elevation: 4,
+        icon: Icon(Icons.add_rounded, color: scheme.onPrimary),
+        label: Text(
+          'Create Ticket',
+          style: ClientTypography.labelLarge(context).copyWith(
+            color: scheme.onPrimary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
       body: BlocConsumer<SupportCubit, SupportState>(
         listener: (context, state) {
@@ -84,23 +93,23 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                Icons.inbox_outlined,
+                                Icons.inbox_rounded,
                                 size: 64,
-                                color: Colors.grey[400],
+                                color: scheme.onSurface.withAlpha(100),
                               ),
                               const SizedBox(height: 16),
                               Text(
                                 'No active tickets',
-                                style: GoogleFonts.outfit(
-                                  fontSize: 18,
-                                  color: Colors.grey[600],
-                                  fontWeight: FontWeight.w500,
+                                style: ClientTypography.headingSmall(context).copyWith(
+                                  color: scheme.onSurface.withAlpha(180),
                                 ),
                               ),
                               const SizedBox(height: 8),
                               Text(
                                 'Tap + to create a new ticket',
-                                style: TextStyle(color: Colors.grey[500]),
+                                style: ClientTypography.bodyMedium(context).copyWith(
+                                  color: scheme.onSurface.withAlpha(130),
+                                ),
                               ),
                             ],
                           ),

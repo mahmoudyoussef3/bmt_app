@@ -59,7 +59,7 @@ abstract final class ClientTheme {
 
   static ThemeData _build(ColorScheme scheme, Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    final textTheme = GoogleFonts.outfitTextTheme(
+    final textTheme = GoogleFonts.interTextTheme(
       _textTheme(scheme),
     ).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
 
@@ -102,11 +102,11 @@ abstract final class ClientTheme {
         surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(ClientRadius.md),
-          side: BorderSide(color: scheme.outline.withAlpha(isDark ? 100 : 180)),
+          side: BorderSide(color: scheme.outline.withAlpha(isDark ? 50 : 80)),
         ),
       ),
       dividerTheme: DividerThemeData(
-        color: scheme.outline.withAlpha(isDark ? 110 : 180),
+        color: scheme.outline.withAlpha(isDark ? 50 : 80),
         thickness: 1,
         space: 1,
       ),

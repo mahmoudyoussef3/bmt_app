@@ -20,7 +20,7 @@ abstract final class ClientTypography {
       Theme.of(context).textTheme.displaySmall!.copyWith(
         fontSize: 40,
         fontWeight: FontWeight.w900,
-        letterSpacing: 0,
+        letterSpacing: -0.5,
         height: 1.05,
       );
 
@@ -28,7 +28,7 @@ abstract final class ClientTypography {
       Theme.of(context).textTheme.displaySmall!.copyWith(
         fontSize: 32,
         fontWeight: FontWeight.w900,
-        letterSpacing: 0,
+        letterSpacing: -0.5,
         height: 1.08,
       );
 
@@ -38,7 +38,7 @@ abstract final class ClientTypography {
       Theme.of(context).textTheme.headlineSmall!.copyWith(
         fontSize: 24,
         fontWeight: FontWeight.w800,
-        letterSpacing: 0,
+        letterSpacing: -0.3,
         height: 1.2,
       );
 
@@ -46,7 +46,7 @@ abstract final class ClientTypography {
       Theme.of(context).textTheme.titleLarge!.copyWith(
         fontSize: 20,
         fontWeight: FontWeight.w700,
-        letterSpacing: 0,
+        letterSpacing: -0.2,
         height: 1.25,
       );
 
@@ -54,7 +54,7 @@ abstract final class ClientTypography {
       Theme.of(context).textTheme.titleMedium!.copyWith(
         fontSize: 17,
         fontWeight: FontWeight.w700,
-        letterSpacing: 0,
+        letterSpacing: -0.2,
         height: 1.3,
       );
 
