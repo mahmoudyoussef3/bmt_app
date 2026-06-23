@@ -77,7 +77,7 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                     ? 'Select route'
                     : 'Continue with this route',
                 expand: true,
-                onPressed: selectedRoute == null ? () {} : _continueToVehicles,
+                onPressed: selectedRoute == null ? null : _continueToVehicles,
               ),
             ),
           ),
@@ -429,9 +429,10 @@ class _RouteTimelineCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final orderedPoints = [...points]
+      ..sort((a, b) => a.order.compareTo(b.order));
 
     return Container(
-      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: ClientColors.surfaceFor(context),
         borderRadius: BorderRadius.circular(18),
@@ -440,34 +441,63 @@ class _RouteTimelineCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Route timeline',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'Pickup and drop-off availability by stop',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurface.withAlpha(150),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 0),
+            child: Row(
+              children: [
+                Container(
+                  width: 42,
+                  height: 42,
+                  decoration: BoxDecoration(
+                    color: ClientColors.primaryContainerFor(context),
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    Icons.alt_route_rounded,
+                    color: ClientColors.primaryFor(context),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Route timeline',
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w900),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        'Pickup and drop-off availability by stop',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurface.withAlpha(150),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           if (points.isEmpty)
-            _InlineEmpty(
-              icon: Icons.alt_route_rounded,
-              title: 'Stops are not published yet',
-              subtitle: 'Route stations will appear here once available.',
+            Padding(
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+              child: _InlineEmpty(
+                icon: Icons.alt_route_rounded,
+                title: 'Stops are not published yet',
+                subtitle: 'Route stations will appear here once available.',
+              ),
             )
           else
-            ...points.asMap().entries.map((entry) {
+            ...orderedPoints.asMap().entries.map((entry) {
               final index = entry.key;
               final point = entry.value;
               return _TimelineStop(
                 point: point,
                 isFirst: index == 0,
-                isLast: index == points.length - 1,
+                isLast: index == orderedPoints.length - 1,
               );
             }),
         ],
@@ -490,70 +520,167 @@ class _TimelineStop extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final color = isFirst
+        ? ClientColors.journeyGreen
+        : isLast
+        ? ClientColors.primaryFor(context)
+        : ClientColors.accent;
+    final bgColor = isFirst
+        ? ClientColors.journeyGreenLight
+        : isLast
+        ? ClientColors.primaryContainerFor(context)
+        : ClientColors.journeyAmberLight;
+    final roleLabel = isFirst
+        ? 'Start'
+        : isLast
+        ? 'End'
+        : 'Stop ${point.order}';
 
-    return IntrinsicHeight(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Column(
-            children: [
-              Container(
-                width: 18,
-                height: 18,
-                decoration: BoxDecoration(
-                  color: isFirst
-                      ? scheme.primary
-                      : isLast
-                      ? scheme.secondary
-                      : scheme.surface,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: scheme.primary, width: 2),
-                ),
-              ),
-              if (!isLast)
-                Expanded(
-                  child: Container(
-                    width: 2,
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    color: scheme.outline.withAlpha(80),
-                  ),
-                ),
-            ],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Padding(
-              padding: EdgeInsets.only(bottom: isLast ? 0 : 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    point.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  Wrap(
-                    spacing: 6,
-                    runSpacing: 6,
-                    children: [
-                      if (point.pickupAllowed)
-                        const _CapabilityChip(
-                          label: 'Pickup',
-                          icon: Icons.login_rounded,
-                        ),
-                      if (point.dropoffAllowed)
-                        const _CapabilityChip(
-                          label: 'Drop-off',
-                          icon: Icons.logout_rounded,
-                        ),
+    return Padding(
+      padding: EdgeInsets.fromLTRB(18, 0, 18, isLast ? 18 : 0),
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Column(
+              children: [
+                Container(
+                  width: 26,
+                  height: 26,
+                  decoration: BoxDecoration(
+                    color: color,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: scheme.surface, width: 4),
+                    boxShadow: [
+                      BoxShadow(
+                        color: color.withAlpha(65),
+                        blurRadius: 12,
+                        offset: const Offset(0, 5),
+                      ),
                     ],
                   ),
-                ],
+                  child: Icon(
+                    isFirst
+                        ? Icons.trip_origin_rounded
+                        : isLast
+                        ? Icons.flag_rounded
+                        : Icons.place_rounded,
+                    size: 13,
+                    color: Colors.white,
+                  ),
+                ),
+                if (!isLast)
+                  Expanded(
+                    child: Container(
+                      width: 3,
+                      margin: const EdgeInsets.symmetric(vertical: 5),
+                      decoration: BoxDecoration(
+                        color: color.withAlpha(95),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Padding(
+                padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: bgColor.withAlpha(
+                      Theme.of(context).brightness == Brightness.dark
+                          ? 34
+                          : 120,
+                    ),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: color.withAlpha(70)),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              point.name,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleSmall
+                                  ?.copyWith(fontWeight: FontWeight.w900),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          _StopRoleChip(label: roleLabel, color: color),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          if (point.pickupAllowed)
+                            const _CapabilityChip(
+                              label: 'Pickup',
+                              icon: Icons.login_rounded,
+                              color: ClientColors.journeyGreen,
+                            ),
+                          if (point.dropoffAllowed)
+                            const _CapabilityChip(
+                              label: 'Drop-off',
+                              icon: Icons.logout_rounded,
+                              color: ClientColors.primary,
+                            ),
+                          if (!point.pickupAllowed && !point.dropoffAllowed)
+                            _CapabilityChip(
+                              label: 'Pass-through',
+                              icon: Icons.route_rounded,
+                              color: scheme.outline,
+                            ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CapabilityChip extends StatelessWidget {
+  const _CapabilityChip({
+    required this.label,
+    required this.icon,
+    required this.color,
+  });
+
+  final String label;
+  final IconData icon;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withAlpha(22),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: color,
+              fontWeight: FontWeight.w900,
             ),
           ),
         ],
@@ -562,35 +689,27 @@ class _TimelineStop extends StatelessWidget {
   }
 }
 
-class _CapabilityChip extends StatelessWidget {
-  const _CapabilityChip({required this.label, required this.icon});
+class _StopRoleChip extends StatelessWidget {
+  const _StopRoleChip({required this.label, required this.color});
 
   final String label;
-  final IconData icon;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: scheme.primary.withAlpha(18),
+        color: color.withAlpha(22),
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: color.withAlpha(55)),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: scheme.primary),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: scheme.primary,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: color,
+          fontWeight: FontWeight.w900,
+        ),
       ),
     );
   }
@@ -995,14 +1114,14 @@ class _RouteEmptyState extends StatelessWidget {
             Icon(Icons.route_outlined, color: scheme.primary, size: 48),
             const SizedBox(height: 16),
             Text(
-              'No route found',
+              'No bookable route found',
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: 8),
             Text(
-              'Try a different departure or destination.',
+              'Try a different departure, destination, or travel time.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: scheme.onSurface.withAlpha(150),

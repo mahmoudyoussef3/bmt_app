@@ -4,24 +4,18 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 
-enum MapSelectionMode { pickup, destination }
-
 /// Production map view backed by OpenStreetMap tiles.
 class GoogleStyleMapView extends StatelessWidget {
   const GoogleStyleMapView({
     super.key,
     required this.pickup,
     required this.destination,
-    required this.selectionMode,
-    required this.onMapTap,
     this.pickupOffset,
     this.destinationOffset,
   });
 
   final MapPinOption? pickup;
   final MapPinOption? destination;
-  final MapSelectionMode selectionMode;
-  final VoidCallback onMapTap;
   final Offset? pickupOffset;
   final Offset? destinationOffset;
 
@@ -43,7 +37,6 @@ class GoogleStyleMapView extends StatelessWidget {
             initialZoom: routePoints.length > 1 ? 11 : 12,
             minZoom: 6,
             maxZoom: 18,
-            onTap: (_, point) => onMapTap(),
           ),
           children: [
             TileLayer(
@@ -70,7 +63,6 @@ class GoogleStyleMapView extends StatelessWidget {
                     point: pickupPoint,
                     label: 'A',
                     color: scheme.secondary,
-                    active: selectionMode == MapSelectionMode.pickup,
                   ),
                 if (destinationPoint != null)
                   _marker(
@@ -78,7 +70,6 @@ class GoogleStyleMapView extends StatelessWidget {
                     point: destinationPoint,
                     label: 'B',
                     color: scheme.error,
-                    active: selectionMode == MapSelectionMode.destination,
                   ),
               ],
             ),
@@ -89,7 +80,7 @@ class GoogleStyleMapView extends StatelessWidget {
           left: 12,
           child: _MapChip(
             icon: Icons.layers_rounded,
-            label: routePoints.length > 1 ? 'Live route map' : 'Stations map',
+            label: routePoints.length > 1 ? 'Route map' : 'Stations map',
           ),
         ),
       ],
@@ -101,24 +92,23 @@ class GoogleStyleMapView extends StatelessWidget {
     required LatLng point,
     required String label,
     required Color color,
-    required bool active,
   }) {
     return Marker(
       point: point,
       width: 54,
-      height: 64,
+      height: 68,
       alignment: Alignment.topCenter,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           AnimatedContainer(
             duration: const Duration(milliseconds: 180),
-            width: active ? 42 : 36,
-            height: active ? 42 : 36,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               color: color,
               shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: active ? 4 : 2),
+              border: Border.all(color: Colors.white, width: 2),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withAlpha(80),

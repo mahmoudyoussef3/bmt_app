@@ -18,7 +18,7 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
       operation_routes (*),
       trip_pricing (*)
     ''')
-        .inFilter('status', ['open_for_booking', 'boarding']);
+        .eq('status', 'open_for_booking');
 
     if (routeId != null) {
       query = query.eq('route_id', routeId);
@@ -26,7 +26,10 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
 
     final response = await query;
 
-    return response.map((data) => _mapToModel(data)).toList();
+    return response
+        .where(_isBookableTrip)
+        .map((data) => _mapToModel(data))
+        .toList();
   }
 
   @override
@@ -43,9 +46,44 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
         .eq('id', id)
         .maybeSingle();
 
-    if (response == null) return null;
+    if (response == null || !_isBookableTrip(response)) return null;
 
     return _mapToModel(response);
+  }
+
+  bool _isBookableTrip(Map<String, dynamic> data) {
+    final status = data['status']?.toString();
+    final tripDate = data['trip_date']?.toString();
+    final today = DateTime.now().toIso8601String().split('T').first;
+    final isUpcoming = tripDate == null || tripDate.compareTo(today) >= 0;
+
+    return status == 'open_for_booking' &&
+        isUpcoming &&
+        _remainingSeats(data) > 0 &&
+        _hasPositivePrice(data);
+  }
+
+  int _remainingSeats(Map<String, dynamic> data) {
+    final vehicle = data['vehicles'] as Map<String, dynamic>? ?? {};
+    final capacity =
+        data['capacity'] as int? ?? vehicle['capacity'] as int? ?? 0;
+    final used =
+        data['passenger_count'] as int? ?? data['booked_seats'] as int? ?? 0;
+    return (capacity - used).clamp(0, capacity).toInt();
+  }
+
+  bool _hasPositivePrice(Map<String, dynamic> data) {
+    final ticketPrice = (data['ticket_price'] as num?)?.toDouble();
+    if (ticketPrice != null && ticketPrice > 0) return true;
+
+    final pricingRows = data['trip_pricing'];
+    if (pricingRows is! List) return false;
+    return pricingRows.any((row) {
+      if (row is! Map<String, dynamic>) return false;
+      final isActive = row['is_active'] as bool? ?? true;
+      final amount = (row['one_time_price'] as num?)?.toDouble();
+      return isActive && amount != null && amount > 0;
+    });
   }
 
   VehicleDetailModel _mapToModel(Map<String, dynamic> data) {

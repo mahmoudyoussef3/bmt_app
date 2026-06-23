@@ -306,10 +306,11 @@ class AppLocalizationsAr extends AppLocalizations {
       'أكثر الرحلات استخداماً في منطقتك';
 
   @override
-  String get booking_selectOnMap => 'اختيار من الخريطة';
+  String get booking_selectOnMap => 'خريطة المسار';
 
   @override
-  String get booking_selectOnMapSubtitle => 'واجهة اختيار الخريطة';
+  String get booking_selectOnMapSubtitle =>
+      'قرّب أو بعّد الخريطة لعرض مسارات الرحلات';
 
   @override
   String get booking_selectPickupPoint => 'اختر نقطة التحرك';
@@ -464,7 +465,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get booking_selectPickupDestMap =>
-      'اختر نقطة التحرك والوصول من الخريطة';
+      'يتم تحديد نقطة التحرك والوصول حسب الرحلة المختارة';
 
   @override
   String get booking_popular => 'شائع';
@@ -473,10 +474,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get booking_pickup => 'نقطة التحرك';
 
   @override
-  String get booking_tapMapPickup => 'اضغط على الخريطة لتغيير نقطة التحرك';
+  String get booking_tapMapPickup => 'قرّب أو بعّد الخريطة لعرض نقاط التحرك';
 
   @override
-  String get booking_tapMapDest => 'اضغط على الخريطة لتغيير نقطة الوصول';
+  String get booking_tapMapDest => 'قرّب أو بعّد الخريطة لعرض نقاط الوصول';
 
   @override
   String get booking_pickupPoint => 'نقطة التحرك';

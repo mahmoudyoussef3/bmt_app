@@ -15,6 +15,10 @@ class PopularRouteListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hasTrips = route.dailyTrips > 0;
+    final pricePending =
+        route.startingPrice.trim().toLowerCase() == 'price pending';
+
     return Material(
       color: ClientColors.surfaceFor(context),
       borderRadius: BorderRadius.circular(18),
@@ -26,6 +30,13 @@ class PopularRouteListCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: ClientColors.borderFor(context)),
+            boxShadow: [
+              BoxShadow(
+                color: ClientColors.shadowFor(context).withAlpha(14),
+                blurRadius: 18,
+                offset: const Offset(0, 8),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -37,12 +48,16 @@ class PopularRouteListCard extends StatelessWidget {
                     width: 44,
                     height: 44,
                     decoration: BoxDecoration(
-                      color: ClientColors.primaryLight,
+                      color: hasTrips
+                          ? ClientColors.primaryContainerFor(context)
+                          : ClientColors.surfaceMutedFor(context),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.route_rounded,
-                      color: ClientColors.primary,
+                      color: hasTrips
+                          ? ClientColors.primaryFor(context)
+                          : ClientColors.textTertiaryFor(context),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -52,69 +67,54 @@ class PopularRouteListCard extends StatelessWidget {
                       children: [
                         Text(
                           route.routeName,
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: ClientTypography.headingSmall(context),
                         ),
                         const SizedBox(height: 6),
-                        Text(
-                          '${route.dailyTrips} available ${route.dailyTrips == 1 ? 'trip' : 'trips'}',
-                          style: ClientTypography.labelMedium(context).copyWith(
-                            color: route.dailyTrips > 0
-                                ? ClientColors.primary
-                                : ClientColors.textTertiaryFor(context),
-                            fontWeight: FontWeight.w800,
-                          ),
+                        _AvailabilityBadge(
+                          label: hasTrips
+                              ? '${route.dailyTrips} ${route.dailyTrips == 1 ? 'trip' : 'trips'} today'
+                              : 'No trips today',
+                          active: hasTrips,
                         ),
                       ],
                     ),
                   ),
                   const SizedBox(width: 10),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        'From',
-                        style: ClientTypography.labelSmall(context).copyWith(
-                          color: ClientColors.textTertiaryFor(context),
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        route.startingPrice,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: ClientTypography.priceMedium(
-                          context,
-                        ).copyWith(fontSize: 17, height: 1.1),
-                      ),
-                    ],
+                  _PriceBlock(
+                    price: route.startingPrice,
+                    pending: pricePending,
                   ),
                 ],
               ),
               const SizedBox(height: 16),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _RouteLine(),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _Endpoint(label: 'Start', value: route.pickup),
-                        const SizedBox(height: 14),
-                        _Endpoint(
-                          label: 'Destination',
-                          value: route.destination,
-                        ),
-                      ],
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: ClientColors.surfaceSubtleFor(context),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: ClientColors.borderFor(context)),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _RouteLine(active: hasTrips),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _Endpoint(label: 'From', value: route.pickup),
+                          const SizedBox(height: 12),
+                          _Endpoint(label: 'To', value: route.destination),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
               Wrap(
                 spacing: 8,
                 runSpacing: 8,
@@ -129,16 +129,18 @@ class PopularRouteListCard extends StatelessWidget {
                   ),
                   _FactChip(
                     icon: Icons.directions_bus_rounded,
-                    label: '${route.dailyTrips} trips',
+                    label: hasTrips ? 'Seats available' : 'Check later',
                   ),
                 ],
               ),
-              const SizedBox(height: 14),
+              const Spacer(),
               Row(
                 children: [
                   Expanded(
                     child: Text(
-                      'Tap to view route options',
+                      hasTrips
+                          ? 'Choose trip time and vehicle'
+                          : 'View route details',
                       style: ClientTypography.labelMedium(context).copyWith(
                         color: ClientColors.textSecondaryFor(context),
                         fontWeight: FontWeight.w700,
@@ -149,12 +151,16 @@ class PopularRouteListCard extends StatelessWidget {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: ClientColors.primaryLight,
+                      color: hasTrips
+                          ? ClientColors.primary
+                          : ClientColors.surfaceMutedFor(context),
                       borderRadius: BorderRadius.circular(12),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.arrow_forward_rounded,
-                      color: ClientColors.primary,
+                      color: hasTrips
+                          ? Colors.white
+                          : ClientColors.textSecondaryFor(context),
                       size: 20,
                     ),
                   ),
@@ -163,6 +169,94 @@ class PopularRouteListCard extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AvailabilityBadge extends StatelessWidget {
+  const _AvailabilityBadge({required this.label, required this.active});
+
+  final String label;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    final background = active
+        ? ClientColors.journeyGreenLight
+        : ClientColors.journeySlateLight;
+    final foreground = active
+        ? ClientColors.onJourneyGreen
+        : ClientColors.onJourneySlate;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            active ? Icons.check_circle_rounded : Icons.info_rounded,
+            size: 14,
+            color: foreground,
+          ),
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ClientTypography.labelMedium(
+                context,
+              ).copyWith(color: foreground, fontWeight: FontWeight.w900),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PriceBlock extends StatelessWidget {
+  const _PriceBlock({required this.price, required this.pending});
+
+  final String price;
+  final bool pending;
+
+  @override
+  Widget build(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(maxWidth: 116),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            pending ? 'Price' : 'From',
+            style: ClientTypography.labelSmall(context).copyWith(
+              color: ClientColors.textTertiaryFor(context),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 3),
+          Text(
+            price,
+            maxLines: pending ? 2 : 1,
+            textAlign: TextAlign.end,
+            overflow: TextOverflow.ellipsis,
+            style: pending
+                ? ClientTypography.labelLarge(context).copyWith(
+                    color: ClientColors.textSecondaryFor(context),
+                    fontWeight: FontWeight.w900,
+                    height: 1.1,
+                  )
+                : ClientTypography.priceMedium(
+                    context,
+                  ).copyWith(fontSize: 18, height: 1.05),
+          ),
+        ],
       ),
     );
   }
@@ -199,6 +293,10 @@ class _Endpoint extends StatelessWidget {
 }
 
 class _RouteLine extends StatelessWidget {
+  const _RouteLine({required this.active});
+
+  final bool active;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -206,7 +304,11 @@ class _RouteLine extends StatelessWidget {
       height: 72,
       child: Column(
         children: [
-          _Dot(color: ClientColors.primary),
+          _Dot(
+            color: active
+                ? ClientColors.primaryFor(context)
+                : ClientColors.textTertiaryFor(context),
+          ),
           Expanded(
             child: Center(
               child: Container(
@@ -215,7 +317,7 @@ class _RouteLine extends StatelessWidget {
               ),
             ),
           ),
-          _Dot(color: ClientColors.journeyAmber),
+          _Dot(color: active ? ClientColors.journeyAmber : ClientColors.border),
         ],
       ),
     );

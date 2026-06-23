@@ -308,10 +308,11 @@ class AppLocalizationsEn extends AppLocalizations {
       'Most used commutes in your network';
 
   @override
-  String get booking_selectOnMap => 'Select on Map';
+  String get booking_selectOnMap => 'Route Map';
 
   @override
-  String get booking_selectOnMapSubtitle => 'Google Maps style picker';
+  String get booking_selectOnMapSubtitle =>
+      'Zoom in or out to view trip routes';
 
   @override
   String get booking_selectPickupPoint => 'Select Pickup Point';
@@ -467,7 +468,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get booking_selectPickupDestMap =>
-      'Select pickup and destination on the map';
+      'Pickup and destination are set by the selected trip';
 
   @override
   String get booking_popular => 'Popular';
@@ -476,10 +477,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get booking_pickup => 'Pickup';
 
   @override
-  String get booking_tapMapPickup => 'Tap the map to cycle pickup points';
+  String get booking_tapMapPickup => 'Zoom in or out to view pickup points';
 
   @override
-  String get booking_tapMapDest => 'Tap the map to cycle destination points';
+  String get booking_tapMapDest => 'Zoom in or out to view destination points';
 
   @override
   String get booking_pickupPoint => 'Pickup Point';

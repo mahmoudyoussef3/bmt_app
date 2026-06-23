@@ -177,13 +177,13 @@ class _PopularRoutesBodyState extends State<_PopularRoutesBody> {
             )
           else
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 116),
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: isTablet ? 2 : 1,
                   mainAxisSpacing: 12,
                   crossAxisSpacing: 12,
-                  mainAxisExtent: 292,
+                  mainAxisExtent: 304,
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   final route = filteredRoutes[index];
@@ -331,21 +331,90 @@ class _RoutesDiscoveryHeader extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(
-          'Find your route fast',
-          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-            fontWeight: FontWeight.w900,
-            height: 1.05,
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: scheme.primary.withAlpha(12),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: scheme.primary.withAlpha(45)),
           ),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          totalRoutes == 0
-              ? 'Search active routes when they become available.'
-              : '$visibleRoutes of $totalRoutes routes available',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: scheme.onSurface.withAlpha(155),
-            fontWeight: FontWeight.w600,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Find your best commute',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                height: 1.05,
+                              ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          totalRoutes == 0
+                              ? 'Search active routes when they become available.'
+                              : '$visibleRoutes of $totalRoutes routes match your search',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: scheme.onSurface.withAlpha(165),
+                                fontWeight: FontWeight.w600,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: scheme.primary,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: scheme.primary.withAlpha(45),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.route_rounded,
+                      color: scheme.onPrimary,
+                      size: 26,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 14),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _HeaderMetricChip(
+                    icon: Icons.route_outlined,
+                    label: '$totalRoutes total',
+                  ),
+                  _HeaderMetricChip(
+                    icon: Icons.filter_alt_outlined,
+                    label: activeFilters == 0
+                        ? 'No filters'
+                        : '$activeFilters filters',
+                  ),
+                  _HeaderMetricChip(
+                    icon: Icons.sort_rounded,
+                    label: _sortLabel(sort),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 16),
@@ -420,6 +489,40 @@ class _RoutesDiscoveryHeader extends StatelessWidget {
         ),
         const SizedBox(height: 8),
       ],
+    );
+  }
+}
+
+class _HeaderMetricChip extends StatelessWidget {
+  const _HeaderMetricChip({required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+      decoration: BoxDecoration(
+        color: scheme.surface.withAlpha(210),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: scheme.outline.withAlpha(55)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 15, color: scheme.primary),
+          const SizedBox(width: 6),
+          Text(
+            label,
+            style: Theme.of(
+              context,
+            ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
     );
   }
 }

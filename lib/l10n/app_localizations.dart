@@ -665,13 +665,13 @@ abstract class AppLocalizations {
   /// No description provided for @booking_selectOnMap.
   ///
   /// In en, this message translates to:
-  /// **'Select on Map'**
+  /// **'Route Map'**
   String get booking_selectOnMap;
 
   /// No description provided for @booking_selectOnMapSubtitle.
   ///
   /// In en, this message translates to:
-  /// **'Google Maps style picker'**
+  /// **'Zoom in or out to view trip routes'**
   String get booking_selectOnMapSubtitle;
 
   /// No description provided for @booking_selectPickupPoint.
@@ -965,7 +965,7 @@ abstract class AppLocalizations {
   /// No description provided for @booking_selectPickupDestMap.
   ///
   /// In en, this message translates to:
-  /// **'Select pickup and destination on the map'**
+  /// **'Pickup and destination are set by the selected trip'**
   String get booking_selectPickupDestMap;
 
   /// No description provided for @booking_popular.
@@ -983,13 +983,13 @@ abstract class AppLocalizations {
   /// No description provided for @booking_tapMapPickup.
   ///
   /// In en, this message translates to:
-  /// **'Tap the map to cycle pickup points'**
+  /// **'Zoom in or out to view pickup points'**
   String get booking_tapMapPickup;
 
   /// No description provided for @booking_tapMapDest.
   ///
   /// In en, this message translates to:
-  /// **'Tap the map to cycle destination points'**
+  /// **'Zoom in or out to view destination points'**
   String get booking_tapMapDest;
 
   /// No description provided for @booking_pickupPoint.

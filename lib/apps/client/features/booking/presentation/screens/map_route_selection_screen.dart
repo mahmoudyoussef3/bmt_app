@@ -11,7 +11,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
-/// Map-based pickup and destination selection (static UI, no map SDK).
+/// Map-based route overview.
 class MapRouteSelectionScreen extends StatefulWidget {
   const MapRouteSelectionScreen({super.key});
 
@@ -24,9 +24,6 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
   late BookingSearchQuery _query;
   MapPinOption? _pickup;
   MapPinOption? _destination;
-  MapSelectionMode _mode = MapSelectionMode.pickup;
-  int _pickupTapIndex = 0;
-  int _destTapIndex = 0;
   bool _didLoad = false;
 
   @override
@@ -57,38 +54,11 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
     }
   }
 
-  void _onMapTap(List<MapPinOption> pickupPins, List<MapPinOption> destPins) {
-    setState(() {
-      if (_mode == MapSelectionMode.pickup && pickupPins.isNotEmpty) {
-        _pickupTapIndex = (_pickupTapIndex + 1) % pickupPins.length;
-        _pickup = pickupPins[_pickupTapIndex];
-      } else if (destPins.isNotEmpty) {
-        _destTapIndex = (_destTapIndex + 1) % destPins.length;
-        _destination = destPins[_destTapIndex];
-      }
-      _query = _query.copyWith(
-        pickup: _pickup?.label ?? '',
-        destination: _destination?.label ?? '',
-      );
-    });
-  }
-
-  void _continue() {
-    if (_pickup == null || _destination == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            AppLocalizations.of(context)!.booking_selectPickupDestMap,
-          ),
-        ),
-      );
-      return;
-    }
-    Navigator.pushNamed(
-      context,
-      BookingRoutes.routeSelection,
-      arguments: _query.toArguments(),
-    );
+  void _openRoutes() {
+    final route = _query.isComplete
+        ? BookingRoutes.routeSelection
+        : BookingRoutes.popularRoutes;
+    Navigator.pushNamed(context, route, arguments: _query.toArguments());
   }
 
   @override
@@ -140,47 +110,14 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
           ),
           body: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _ModeToggle(
-                        label: AppLocalizations.of(context)!.booking_pickup,
-                        icon: Icons.trip_origin_rounded,
-                        color: scheme.secondary,
-                        selected: _mode == MapSelectionMode.pickup,
-                        onTap: () =>
-                            setState(() => _mode = MapSelectionMode.pickup),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: _ModeToggle(
-                        label: AppLocalizations.of(
-                          context,
-                        )!.booking_destination,
-                        icon: Icons.location_on_rounded,
-                        color: scheme.error,
-                        selected: _mode == MapSelectionMode.destination,
-                        onTap: () => setState(
-                          () => _mode = MapSelectionMode.destination,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
                     child: GoogleStyleMapView(
                       pickup: _pickup,
                       destination: _destination,
-                      selectionMode: _mode,
-                      onMapTap: () => _onMapTap(pickupPins, destPins),
                     ),
                   ),
                 ),
@@ -204,9 +141,7 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      _mode == MapSelectionMode.pickup
-                          ? AppLocalizations.of(context)!.booking_tapMapPickup
-                          : AppLocalizations.of(context)!.booking_tapMapDest,
+                      AppLocalizations.of(context)!.booking_selectOnMapSubtitle,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: scheme.onSurface.withAlpha(160),
                       ),
@@ -233,9 +168,11 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
                     ),
                     const SizedBox(height: 16),
                     ClientButton(
-                      label: AppLocalizations.of(context)!.booking_confirmRoute,
+                      label: _query.isComplete
+                          ? AppLocalizations.of(context)!.booking_confirmRoute
+                          : AppLocalizations.of(context)!.booking_popularRoutes,
                       expand: true,
-                      onPressed: _continue,
+                      onPressed: _openRoutes,
                     ),
                   ],
                 ),
@@ -244,58 +181,6 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
           ),
         );
       },
-    );
-  }
-}
-
-class _ModeToggle extends StatelessWidget {
-  const _ModeToggle({
-    required this.label,
-    required this.icon,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final IconData icon;
-  final Color color;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Material(
-      color: selected ? color.withAlpha(40) : scheme.surfaceContainerHighest,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: selected ? color : scheme.outline.withAlpha(100),
-              width: selected ? 2 : 1,
-            ),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 18, color: color),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }
