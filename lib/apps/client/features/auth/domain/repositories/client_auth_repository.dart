@@ -9,6 +9,7 @@ abstract class ClientAuthRepository {
     required String phone,
     required String email,
     required String password,
+    String? referralCode,
   });
 
   Future<void> signOut();

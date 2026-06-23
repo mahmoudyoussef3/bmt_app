@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
+import 'package:bmt_app/core/flavors/app_flavor.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +31,7 @@ class CaptainApp extends StatelessWidget {
       builder: (context, locale) {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
-          title: 'Captain App',
+          title: AppFlavorConfig.current.appName,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: locale,

@@ -10,12 +10,14 @@ class SignUpWithEmailUseCase {
     required String phone,
     required String email,
     required String password,
+    String? referralCode,
   }) async {
     return repository.signUpWithEmail(
       fullName: fullName,
       phone: phone,
       email: email,
       password: password,
+      referralCode: referralCode,
     );
   }
 }

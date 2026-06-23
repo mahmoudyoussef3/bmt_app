@@ -1,0 +1,7 @@
+{
+  "APP_FLAVOR": "dashboard",
+  "DASHBOARD_APP_NAME": "BMT Dashboard",
+  "DASHBOARD_BUNDLE_ID": "com.bmt.dashboard",
+  "DASHBOARD_SUPABASE_URL": "https://nbwzourpbnmewwklewyr.supabase.co",
+  "DASHBOARD_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z"
+}

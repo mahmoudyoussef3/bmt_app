@@ -11,6 +11,7 @@ enum DashboardPermission {
   liveTrips,
   bookings,
   subscriptions,
+  referrals,
   payments,
   paymentVerification,
   tickets,

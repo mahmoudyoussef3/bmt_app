@@ -1,0 +1,3 @@
+APP_FLAVOR=dashboard
+APP_DISPLAY_NAME=BMT Dashboard
+PRODUCT_BUNDLE_IDENTIFIER=com.bmt.dashboard

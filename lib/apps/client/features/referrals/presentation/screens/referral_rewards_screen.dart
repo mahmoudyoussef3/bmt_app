@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/features/referrals/domain/entities/referral_rewards.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_cubit.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_state.dart';
+import 'package:bmt_app/apps/client/features/referrals/presentation/widgets/referral_share_sheet.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 // Particle physics for Confetti celebration
@@ -62,6 +63,11 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
   int get _totalInvites => _data?.totalInvites ?? 0;
 
   int get _successfulReferrals => _data?.successfulReferrals ?? 0;
+
+  int get _pendingReferrals => _data?.pendingReferrals ?? 0;
+
+  List<ReferralLeaderboardEntry> get _leaderboard =>
+      _data?.leaderboard ?? const [];
 
   int get _earnedRewardsTotal => _data?.earnedRewardsTotal ?? 0;
 
@@ -138,15 +144,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
   void _shareReferralLink() {
     final code = _referralCode;
     if (code.isEmpty) return;
-    final message =
-        'Join me on BMT and book your daily commute! '
-        'Use my referral code $code to get started.';
-    Clipboard.setData(ClipboardData(text: message));
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Invite message copied — share it with your friends!'),
-      ),
-    );
+    ReferralShareSheet.show(context, code);
   }
 
   // Trigger custom confetti explosion
@@ -539,9 +537,115 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
         _buildReferralCodeCard(scheme),
         const SizedBox(height: 18),
 
+        // Top referrers leaderboard
+        if (_leaderboard.isNotEmpty) ...[
+          _buildLeaderboardCard(scheme),
+          const SizedBox(height: 18),
+        ],
+
         // Quick Navigation rows
         _buildQuickNavOptions(scheme),
       ],
+    );
+  }
+
+  Widget _buildLeaderboardCard(ColorScheme scheme) {
+    final entries = _leaderboard.take(5).toList();
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: scheme.outline.withAlpha(45)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.emoji_events_rounded,
+                color: Colors.amber.shade700,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'Top referrers',
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          for (final entry in entries) _buildLeaderboardRow(entry, scheme),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLeaderboardRow(
+    ReferralLeaderboardEntry entry,
+    ColorScheme scheme,
+  ) {
+    final medal = switch (entry.rank) {
+      1 => Colors.amber.shade600,
+      2 => Colors.blueGrey.shade300,
+      3 => Colors.brown.shade400,
+      _ => scheme.surfaceContainerHighest,
+    };
+    final highlight = entry.isCurrentUser;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      decoration: BoxDecoration(
+        color: highlight ? scheme.primary.withAlpha(20) : Colors.transparent,
+        borderRadius: BorderRadius.circular(14),
+        border: highlight
+            ? Border.all(color: scheme.primary.withAlpha(70))
+            : null,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(color: medal, shape: BoxShape.circle),
+            child: Text(
+              '${entry.rank}',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 12,
+                color: entry.rank <= 3 ? Colors.white : scheme.onSurfaceVariant,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              highlight ? '${entry.name} (You)' : entry.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            ),
+          ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${entry.successfulCount} referrals',
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                'EGP ${entry.totalRewards}',
+                style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -646,8 +750,8 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 3,
-      childAspectRatio: 0.9,
+      crossAxisCount: 2,
+      childAspectRatio: 1.7,
       crossAxisSpacing: 10,
       mainAxisSpacing: 10,
       children: [
@@ -662,6 +766,12 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
           '$_successfulReferrals',
           Icons.check_circle_outline_rounded,
           Colors.green,
+        ),
+        _buildStatCard(
+          'Pending',
+          '$_pendingReferrals',
+          Icons.hourglass_bottom_rounded,
+          Colors.orange,
         ),
         _buildStatCard(
           'Total Earned',

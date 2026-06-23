@@ -915,4 +915,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String auth_policyComingSoon(String title) {
     return '$title will open when published.';
   }
+
+  @override
+  String get auth_referralCodeSection => 'Referral code (optional)';
+
+  @override
+  String get auth_referralCodeLabel => 'Enter a referral code';
+
+  @override
+  String get auth_referralCodeHint =>
+      'Have a code from a friend? Add it to earn a welcome reward.';
+
+  @override
+  String get referral_pending => 'Pending';
+
+  @override
+  String get referral_leaderboardTitle => 'Top referrers';
+
+  @override
+  String get referral_leaderboardEmpty =>
+      'Be the first to climb the leaderboard.';
+
+  @override
+  String get referral_you => 'You';
 }

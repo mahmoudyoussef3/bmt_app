@@ -1,0 +1,3 @@
+APP_FLAVOR=captain
+APP_DISPLAY_NAME=EasyWay Captain
+PRODUCT_BUNDLE_IDENTIFIER=com.bmt.captain

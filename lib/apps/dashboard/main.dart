@@ -9,13 +9,16 @@ import 'core/theme/dashboard_app_theme.dart';
 import 'core/theme/dashboard_theme_cubit.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/flavors/app_flavor.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  AppFlavorConfig.activate(AppFlavor.dashboard);
+  final config = AppFlavorConfig.current;
   await Supabase.initialize(
-    url: 'https://nbwzourpbnmewwklewyr.supabase.co',
-    publishableKey: 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z',
+    url: config.supabaseUrl,
+    publishableKey: config.supabasePublishableKey,
     httpClient: DioHttpClientAdapter(DioFactory.getDio()),
   );
 
@@ -42,7 +45,7 @@ class DashboardWebApp extends StatelessWidget {
             builder: (context, locale) {
               return MaterialApp(
                 debugShowCheckedModeBanner: false,
-                title: 'لوحة خدمة العملاء',
+                title: AppFlavorConfig.current.appName,
                 localizationsDelegates: AppLocalizations.localizationsDelegates,
                 supportedLocales: AppLocalizations.supportedLocales,
                 locale: locale,

@@ -42,24 +42,44 @@ class ScratchVoucher {
   bool isRevealed;
 }
 
+class ReferralLeaderboardEntry {
+  ReferralLeaderboardEntry({
+    required this.rank,
+    required this.name,
+    required this.successfulCount,
+    required this.totalRewards,
+    this.isCurrentUser = false,
+  });
+
+  final int rank;
+  final String name;
+  final int successfulCount;
+  final int totalRewards;
+  final bool isCurrentUser;
+}
+
 class ReferralRewardsData {
   ReferralRewardsData({
     required this.referralCode,
     required this.totalInvites,
     required this.successfulReferrals,
+    required this.pendingReferrals,
     required this.earnedRewardsTotal,
     required this.walletBalance,
     required this.contacts,
     required this.history,
     required this.vouchers,
+    required this.leaderboard,
   });
 
   final String referralCode;
   int totalInvites;
   final int successfulReferrals;
+  final int pendingReferrals;
   int earnedRewardsTotal;
   int walletBalance;
   final List<ReferralContact> contacts;
   final List<ReferralHistoryItem> history;
   final List<ScratchVoucher> vouchers;
+  final List<ReferralLeaderboardEntry> leaderboard;
 }

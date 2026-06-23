@@ -1,0 +1,7 @@
+{
+  "APP_FLAVOR": "client",
+  "CLIENT_APP_NAME": "EasyWay",
+  "CLIENT_BUNDLE_ID": "com.bmt.client",
+  "CLIENT_SUPABASE_URL": "https://nbwzourpbnmewwklewyr.supabase.co",
+  "CLIENT_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z"
+}

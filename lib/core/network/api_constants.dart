@@ -1,15 +1,15 @@
+import 'package:bmt_app/core/flavors/app_flavor.dart';
+
 class ApiConstants {
   ApiConstants._();
 
   /// Since the project relies heavily on Supabase, we default our base URL to
   /// the Supabase REST URL. This allows Retrofit to call Supabase exactly like
   /// a normal REST API when needed.
-  static const String baseUrl =
-      'https://nbwzourpbnmewwklewyr.supabase.co/rest/v1';
+  static String get baseUrl => AppFlavorConfig.current.supabaseRestUrl;
 
   /// Replace with your actual anon key or service role key if needed for external API calls
-  static const String anonKey =
-      'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z';
+  static String get anonKey => AppFlavorConfig.current.supabasePublishableKey;
 
   // Timeouts
   static const Duration connectTimeout = Duration(seconds: 30);

@@ -21,6 +21,12 @@ import '../../features/bookings/domain/usecases/request_reupload_usecase.dart';
 import '../../features/bookings/domain/usecases/update_booking_status_usecase.dart';
 import '../../features/bookings/domain/usecases/watch_bookings_usecase.dart';
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
+import '../../features/referrals/data/datasources/referral_datasource.dart';
+import '../../features/referrals/data/datasources/supabase_referral_datasource.dart';
+import '../../features/referrals/data/repositories/referral_repository_impl.dart';
+import '../../features/referrals/domain/repositories/referral_repository.dart';
+import '../../features/referrals/domain/usecases/referral_usecases.dart';
+import '../../features/referrals/presentation/cubit/referral_cubit.dart';
 import '../../features/dashboard_home/data/datasources/dashboard_home_datasource.dart';
 import '../../features/dashboard_home/data/datasources/supabase_dashboard_home_datasource.dart';
 import '../../features/dashboard_home/data/repositories/dashboard_home_repository_impl.dart';
@@ -1313,6 +1319,63 @@ void registerDashboardDependencies() {
       () => UsersCubit(
         getUsers: dashboardDi<GetUsersUseCase>(),
         updateRole: dashboardDi<UpdateUserRoleUseCase>(),
+      ),
+    );
+  }
+
+  // ── Referrals ────────────────────────────────────────────────────────
+  if (!dashboardDi.isRegistered<ReferralDatasource>()) {
+    dashboardDi.registerLazySingleton<ReferralDatasource>(
+      () => SupabaseReferralDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<ReferralRepository>()) {
+    dashboardDi.registerLazySingleton<ReferralRepository>(
+      () => ReferralRepositoryImpl(dashboardDi<ReferralDatasource>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetReferralRewardConfigUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetReferralRewardConfigUseCase(dashboardDi<ReferralRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<UpdateReferralRewardConfigUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () =>
+          UpdateReferralRewardConfigUseCase(dashboardDi<ReferralRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetReferralAnalyticsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetReferralAnalyticsUseCase(dashboardDi<ReferralRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetReferralLeaderboardUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetReferralLeaderboardUseCase(dashboardDi<ReferralRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetReferralHistoryUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetReferralHistoryUseCase(dashboardDi<ReferralRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetReferralRewardTransactionsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetReferralRewardTransactionsUseCase(
+        dashboardDi<ReferralRepository>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<ReferralCubit>()) {
+    dashboardDi.registerFactory(
+      () => ReferralCubit(
+        getConfig: dashboardDi<GetReferralRewardConfigUseCase>(),
+        updateConfig: dashboardDi<UpdateReferralRewardConfigUseCase>(),
+        getAnalytics: dashboardDi<GetReferralAnalyticsUseCase>(),
+        getLeaderboard: dashboardDi<GetReferralLeaderboardUseCase>(),
+        getHistory: dashboardDi<GetReferralHistoryUseCase>(),
+        getTransactions: dashboardDi<GetReferralRewardTransactionsUseCase>(),
       ),
     );
   }

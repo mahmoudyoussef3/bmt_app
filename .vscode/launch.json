@@ -5,19 +5,37 @@
       "name": "BMT Client App",
       "request": "launch",
       "type": "dart",
-      "program": "lib/main_client.dart"
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--flavor",
+        "client",
+        "--dart-define-from-file",
+        "config/flavors/client.json"
+      ]
     },
     {
       "name": "BMT Ops Dashboard",
       "request": "launch",
       "type": "dart",
-      "program": "lib/main_dashboard.dart"
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--flavor",
+        "dashboard",
+        "--dart-define-from-file",
+        "config/flavors/dashboard.json"
+      ]
     },
     {
       "name": "BMT Captain App",
       "request": "launch",
       "type": "dart",
-      "program": "lib/main_captain.dart"
+      "program": "lib/main.dart",
+      "toolArgs": [
+        "--flavor",
+        "captain",
+        "--dart-define-from-file",
+        "config/flavors/captain.json"
+      ]
     },
     {
       "name": "BMT Legacy App Router",

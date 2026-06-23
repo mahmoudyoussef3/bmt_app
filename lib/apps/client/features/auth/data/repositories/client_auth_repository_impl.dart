@@ -26,6 +26,7 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
     required String phone,
     required String email,
     required String password,
+    String? referralCode,
   }) async {
     try {
       await _datasource.signUpWithEmail(
@@ -33,6 +34,7 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
         phone: phone,
         email: email,
         password: password,
+        referralCode: referralCode,
       );
     } on FormatException {
       rethrow;

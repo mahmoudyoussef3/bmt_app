@@ -1,5 +1,6 @@
-import 'package:bmt_app/apps/dashboard/main.dart' as dashboard;
+import 'package:bmt_app/core/flavors/app_bootstrap.dart';
+import 'package:bmt_app/core/flavors/app_flavor.dart';
 
-void main() {
-  dashboard.main();
+Future<void> main() {
+  return bootstrapFlavorApp(AppFlavor.dashboard);
 }

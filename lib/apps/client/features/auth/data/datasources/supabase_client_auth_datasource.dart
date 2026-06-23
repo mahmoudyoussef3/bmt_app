@@ -26,29 +26,41 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     required String phone,
     required String email,
     required String password,
+    String? referralCode,
   }) async {
     final emailOk = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email.trim());
     if (fullName.trim().length < 2 || !emailOk || phone.trim().isEmpty) {
       throw const FormatException('Please complete all fields correctly.');
     }
 
+    final code = referralCode?.trim().toUpperCase() ?? '';
+
     try {
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,
-        data: {'full_name': fullName.trim(), 'phone': phone.trim()},
+        data: {
+          'full_name': fullName.trim(),
+          'phone': phone.trim(),
+          // Captured here so the backend trigger can record a pending referral
+          // against this code once the account is created.
+          if (code.isNotEmpty) 'referral_code': code,
+        },
       );
 
       final user = response.user;
       if (user != null) {
-        // Upsert client profile details into the `clients` table
-        await _supabase.from('clients').upsert({
-          'id': user.id,
-          'full_name': fullName.trim(),
-          'phone': phone.trim(),
-          'email': email.trim(),
-          'updated_at': DateTime.now().toIso8601String(),
-        });
+        // Best-effort profile upsert; if RLS defers it until email
+        // confirmation, the account is still created successfully.
+        try {
+          await _supabase.from('clients').upsert({
+            'id': user.id,
+            'full_name': fullName.trim(),
+            'phone': phone.trim(),
+            'email': email.trim(),
+            'updated_at': DateTime.now().toIso8601String(),
+          });
+        } catch (_) {}
       }
     } on AuthException catch (e) {
       throw Exception(e.message);

@@ -296,5 +296,12 @@
   "auth_passwordGood": "جيدة",
   "auth_passwordStrong": "قوية",
   "auth_passwordHint": "استخدم ٨ أحرف على الأقل تتضمن حروفاً وأرقاماً ورمزاً.",
-  "auth_policyComingSoon": "سيتوفر {title} عند نشره."
+  "auth_policyComingSoon": "سيتوفر {title} عند نشره.",
+  "auth_referralCodeSection": "رمز الإحالة (اختياري)",
+  "auth_referralCodeLabel": "أدخل رمز الإحالة",
+  "auth_referralCodeHint": "لديك رمز من صديق؟ أضفه لتحصل على مكافأة ترحيبية.",
+  "referral_pending": "قيد الانتظار",
+  "referral_leaderboardTitle": "أفضل المُحيلين",
+  "referral_leaderboardEmpty": "كن أول من يتصدّر القائمة.",
+  "referral_you": "أنت"
 }

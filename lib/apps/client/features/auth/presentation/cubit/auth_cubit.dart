@@ -40,6 +40,7 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
     required String phone,
     required String email,
     required String password,
+    String? referralCode,
   }) async {
     emit(
       state.copyWith(
@@ -53,6 +54,7 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
         phone: phone,
         email: email,
         password: password,
+        referralCode: referralCode,
       );
       emit(state.copyWith(signUpStatus: AuthSubmissionStatus.success));
     } catch (error) {

@@ -28,11 +28,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
   final _phoneController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _referralController = TextEditingController();
 
   final _nameFocus = FocusNode();
   final _phoneFocus = FocusNode();
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
+  final _referralFocus = FocusNode();
 
   @override
   void dispose() {
@@ -40,11 +42,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     _phoneController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
+    _referralController.dispose();
 
     _nameFocus.dispose();
     _phoneFocus.dispose();
     _emailFocus.dispose();
     _passwordFocus.dispose();
+    _referralFocus.dispose();
 
     super.dispose();
   }
@@ -55,11 +59,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final valid = _formKey.currentState?.validate() ?? false;
     if (!valid) return;
 
+    final referral = _referralController.text.trim();
     context.read<ClientAuthCubit>().signUp(
       fullName: _nameController.text.trim(),
       phone: _normalizeEgyptianPhone(_phoneController.text),
       email: _emailController.text.trim().toLowerCase(),
       password: _passwordController.text,
+      referralCode: referral.isEmpty ? null : referral.toUpperCase(),
     );
   }
 
@@ -220,9 +226,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               labelText: l10n.auth_password,
                               prefixIcon: Icons.lock_outline,
                               isPassword: true,
-                              textInputAction: TextInputAction.done,
+                              textInputAction: TextInputAction.next,
                               autofillHints: const [AutofillHints.newPassword],
-                              onFieldSubmitted: (_) => _submit(),
+                              onFieldSubmitted: (_) =>
+                                  _referralFocus.requestFocus(),
                               validator: (value) {
                                 final password = value ?? '';
                                 if (password.length < 6) {
@@ -235,6 +242,29 @@ class _SignUpScreenState extends State<SignUpScreen> {
                               valueListenable: _passwordController,
                               builder: (context, value, _) =>
                                   PasswordStrengthMeter(password: value.text),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 14),
+
+                        AuthSectionCard(
+                          title: l10n.auth_referralCodeSection,
+                          icon: Icons.card_giftcard_outlined,
+                          children: [
+                            PremiumAuthTextField(
+                              controller: _referralController,
+                              focusNode: _referralFocus,
+                              labelText: l10n.auth_referralCodeLabel,
+                              prefixIcon: Icons.confirmation_number_outlined,
+                              textInputAction: TextInputAction.done,
+                              onFieldSubmitted: (_) => _submit(),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              l10n.auth_referralCodeHint,
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
                         ),

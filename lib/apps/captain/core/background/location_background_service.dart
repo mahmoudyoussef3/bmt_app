@@ -6,14 +6,22 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-const _kTripIdKey = 'bg_service_trip_id';
+import 'package:bmt_app/core/flavors/app_flavor.dart';
 
-// Supabase credentials — same values used in main_captain.dart
-const _supabaseUrl = 'https://nbwzourpbnmewwklewyr.supabase.co';
-const _supabaseAnonKey = 'sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z';
+const _kTripIdKey = 'bg_service_trip_id';
+const _kSupabaseUrlKey = 'bg_service_supabase_url';
+const _kSupabasePublishableKeyKey = 'bg_service_supabase_publishable_key';
 
 /// Configures the background service. Call once at app startup.
-Future<void> initLocationBackgroundService() async {
+Future<void> initLocationBackgroundService([AppFlavorConfig? config]) async {
+  final flavorConfig = config ?? AppFlavorConfig.forFlavor(AppFlavor.captain);
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(_kSupabaseUrlKey, flavorConfig.supabaseUrl);
+  await prefs.setString(
+    _kSupabasePublishableKeyKey,
+    flavorConfig.supabasePublishableKey,
+  );
+
   final service = FlutterBackgroundService();
 
   await service.configure(
@@ -65,8 +73,12 @@ void _onServiceStart(ServiceInstance service) async {
 
   // Initialize Supabase in the background isolate.
   await Supabase.initialize(
-    url: _supabaseUrl,
-    publishableKey: _supabaseAnonKey,
+    url:
+        prefs.getString(_kSupabaseUrlKey) ??
+        AppFlavorConfig.forFlavor(AppFlavor.captain).supabaseUrl,
+    publishableKey:
+        prefs.getString(_kSupabasePublishableKeyKey) ??
+        AppFlavorConfig.forFlavor(AppFlavor.captain).supabasePublishableKey,
   );
   final supabase = Supabase.instance.client;
 

@@ -22,6 +22,8 @@ import '../../features/owner_overview/presentation/cubit/owner_overview_cubit.da
 import '../../features/owner_overview/presentation/screens/owner_overview_screen.dart';
 import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
 import '../../features/subscriptions/presentation/screens/subscriptions_screen.dart';
+import '../../features/referrals/presentation/cubit/referral_cubit.dart';
+import '../../features/referrals/presentation/screens/referral_management_screen.dart';
 import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
 import '../../features/payment_verification/presentation/screens/payment_verification_screen.dart';
 import '../../features/permissions/presentation/screens/permissions_screen.dart';
@@ -144,6 +146,14 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.workspace_premium_outlined,
       selectedIcon: Icons.workspace_premium_rounded,
       permission: DashboardPermission.subscriptions,
+      group: _navFinance,
+    ),
+    _DashboardNavItem(
+      label: 'برنامج الإحالات',
+      route: DashboardRoutes.referrals,
+      icon: Icons.card_giftcard_outlined,
+      selectedIcon: Icons.card_giftcard_rounded,
+      permission: DashboardPermission.referrals,
       group: _navFinance,
     ),
     _DashboardNavItem(
@@ -346,6 +356,10 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.subscriptions => BlocProvider(
         create: (_) => dashboardDi<SubscriptionsCubit>()..load(),
         child: const SubscriptionsScreen(),
+      ),
+      DashboardRoutes.referrals => BlocProvider(
+        create: (_) => dashboardDi<ReferralCubit>()..load(),
+        child: const ReferralManagementScreen(),
       ),
       DashboardRoutes.ownerOverview => BlocProvider(
         create: (_) => dashboardDi<OwnerOverviewCubit>()..load(),

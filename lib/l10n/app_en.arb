@@ -418,5 +418,12 @@
     "placeholders": {
       "title": { "type": "String" }
     }
-  }
+  },
+  "auth_referralCodeSection": "Referral code (optional)",
+  "auth_referralCodeLabel": "Enter a referral code",
+  "auth_referralCodeHint": "Have a code from a friend? Add it to earn a welcome reward.",
+  "referral_pending": "Pending",
+  "referral_leaderboardTitle": "Top referrers",
+  "referral_leaderboardEmpty": "Be the first to climb the leaderboard.",
+  "referral_you": "You"
 }

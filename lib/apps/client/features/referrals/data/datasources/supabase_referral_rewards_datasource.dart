@@ -39,6 +39,8 @@ class SupabaseReferralRewardsDatasource {
     int successfulReferrals = 0;
     int earnedRewardsTotal = 0;
 
+    int pendingReferrals = 0;
+
     try {
       final referrals = await _supabase
           .from('referrals')
@@ -48,24 +50,53 @@ class SupabaseReferralRewardsDatasource {
 
       totalInvites = referrals.length;
       for (final ref in referrals) {
-        final rawStatus = ref['status']?.toString() ?? 'pending';
-        final status = _capitalize(rawStatus);
-        final reward = ref['reward_amount'] as int? ?? 0;
-        if (rawStatus.toLowerCase() == 'completed') {
+        final rawStatus = (ref['status']?.toString() ?? 'pending_registration')
+            .toLowerCase();
+        final reward =
+            (ref['reward_value'] as num?)?.toInt() ??
+            (ref['reward_amount'] as num?)?.toInt() ??
+            0;
+        if (_isSuccessful(rawStatus)) {
           successfulReferrals++;
           earnedRewardsTotal += reward;
+        } else {
+          pendingReferrals++;
         }
         history.add(
           ReferralHistoryItem(
             name: ref['referred_name']?.toString() ?? 'Guest',
             date: _formatDate(ref['created_at']?.toString()),
-            status: status,
+            status: _statusLabel(rawStatus),
             rewardAmount: reward,
           ),
         );
       }
     } catch (_) {
       // referrals table not provisioned yet — show empty state
+    }
+
+    // Top referrers leaderboard — backed by the `referral_leaderboard` view.
+    List<ReferralLeaderboardEntry> leaderboard = [];
+    try {
+      final rows = await _supabase
+          .from('referral_leaderboard')
+          .select()
+          .order('successful_count', ascending: false)
+          .limit(10);
+      var rank = 1;
+      for (final r in rows) {
+        leaderboard.add(
+          ReferralLeaderboardEntry(
+            rank: rank++,
+            name: r['name']?.toString() ?? 'Member',
+            successfulCount: (r['successful_count'] as num?)?.toInt() ?? 0,
+            totalRewards: (r['total_rewards'] as num?)?.toInt() ?? 0,
+            isCurrentUser: r['referrer_id']?.toString() == user.id,
+          ),
+        );
+      }
+    } catch (_) {
+      // leaderboard view not provisioned yet — hide the section
     }
 
     // Derive a deterministic referral code from the user's UUID.
@@ -88,17 +119,31 @@ class SupabaseReferralRewardsDatasource {
       referralCode: referralCode,
       totalInvites: totalInvites,
       successfulReferrals: successfulReferrals,
+      pendingReferrals: pendingReferrals,
       earnedRewardsTotal: earnedRewardsTotal,
       walletBalance: walletBalance,
       contacts: const [],
       history: history,
       vouchers: vouchers,
+      leaderboard: leaderboard,
     );
   }
 
-  static String _capitalize(String s) {
-    if (s.isEmpty) return s;
-    return s[0].toUpperCase() + s.substring(1).toLowerCase();
+  /// A referral counts as successful once the referred user reaches the first
+  /// paid order (or the reward has been granted).
+  static bool _isSuccessful(String rawStatus) {
+    return rawStatus == 'completed' ||
+        rawStatus == 'first_order_completed' ||
+        rawStatus == 'reward_granted';
+  }
+
+  static String _statusLabel(String rawStatus) {
+    return switch (rawStatus) {
+      'registered' => 'Registered',
+      'first_order_completed' => 'First Order Completed',
+      'reward_granted' || 'completed' => 'Reward Granted',
+      _ => 'Pending Registration',
+    };
   }
 
   static String _formatDate(String? iso) {

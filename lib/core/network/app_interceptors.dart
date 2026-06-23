@@ -11,7 +11,7 @@ class AppInterceptors extends Interceptor {
     }
 
     // Inject the Supabase session token into all requests automatically if available.
-    final session = Supabase.instance.client.auth.currentSession;
+    final session = _currentSessionOrNull();
     if (session != null) {
       options.headers['Authorization'] = 'Bearer ${session.accessToken}';
     }
@@ -76,6 +76,14 @@ class AppInterceptors extends Interceptor {
         }
       }
       return data.toString();
+    }
+  }
+
+  Session? _currentSessionOrNull() {
+    try {
+      return Supabase.instance.client.auth.currentSession;
+    } catch (_) {
+      return null;
     }
   }
 }

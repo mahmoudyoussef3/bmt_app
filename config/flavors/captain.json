@@ -1,0 +1,7 @@
+{
+  "APP_FLAVOR": "captain",
+  "CAPTAIN_APP_NAME": "EasyWay Captain",
+  "CAPTAIN_BUNDLE_ID": "com.bmt.captain",
+  "CAPTAIN_SUPABASE_URL": "https://nbwzourpbnmewwklewyr.supabase.co",
+  "CAPTAIN_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z"
+}

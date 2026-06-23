@@ -1783,6 +1783,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{title} will open when published.'**
   String auth_policyComingSoon(String title);
+
+  /// No description provided for @auth_referralCodeSection.
+  ///
+  /// In en, this message translates to:
+  /// **'Referral code (optional)'**
+  String get auth_referralCodeSection;
+
+  /// No description provided for @auth_referralCodeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a referral code'**
+  String get auth_referralCodeLabel;
+
+  /// No description provided for @auth_referralCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Have a code from a friend? Add it to earn a welcome reward.'**
+  String get auth_referralCodeHint;
+
+  /// No description provided for @referral_pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get referral_pending;
+
+  /// No description provided for @referral_leaderboardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Top referrers'**
+  String get referral_leaderboardTitle;
+
+  /// No description provided for @referral_leaderboardEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'Be the first to climb the leaderboard.'**
+  String get referral_leaderboardEmpty;
+
+  /// No description provided for @referral_you.
+  ///
+  /// In en, this message translates to:
+  /// **'You'**
+  String get referral_you;
 }
 
 class _AppLocalizationsDelegate

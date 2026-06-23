@@ -909,4 +909,26 @@ class AppLocalizationsAr extends AppLocalizations {
   String auth_policyComingSoon(String title) {
     return 'سيتوفر $title عند نشره.';
   }
+
+  @override
+  String get auth_referralCodeSection => 'رمز الإحالة (اختياري)';
+
+  @override
+  String get auth_referralCodeLabel => 'أدخل رمز الإحالة';
+
+  @override
+  String get auth_referralCodeHint =>
+      'لديك رمز من صديق؟ أضفه لتحصل على مكافأة ترحيبية.';
+
+  @override
+  String get referral_pending => 'قيد الانتظار';
+
+  @override
+  String get referral_leaderboardTitle => 'أفضل المُحيلين';
+
+  @override
+  String get referral_leaderboardEmpty => 'كن أول من يتصدّر القائمة.';
+
+  @override
+  String get referral_you => 'أنت';
 }

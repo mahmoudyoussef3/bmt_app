@@ -1,9 +1,6 @@
-import 'package:bmt_app/apps/dashboard/main.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
-import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_cubit.dart';
@@ -66,6 +63,7 @@ import 'package:bmt_app/apps/client/features/home/presentation/screens/client_sp
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/screens/onboarding_screen.dart';
+import 'package:bmt_app/core/flavors/app_flavor.dart';
 
 class ClientApp extends StatefulWidget {
   const ClientApp({super.key});
@@ -83,7 +81,6 @@ class _ClientAppState extends State<ClientApp> {
   void initState() {
     super.initState();
     registerClientDependencies();
-    registerCaptainDependencies();
   }
 
   @override
@@ -97,7 +94,7 @@ class _ClientAppState extends State<ClientApp> {
             create: (_) => clientGetIt<OnboardingCubit>()..checkStatus(),
             child: MaterialApp(
               debugShowCheckedModeBanner: false,
-              title: 'EasyWay',
+              title: AppFlavorConfig.current.appName,
               localizationsDelegates: AppLocalizations.localizationsDelegates,
               supportedLocales: AppLocalizations.supportedLocales,
               locale: locale,
@@ -316,8 +313,6 @@ class _ClientAppState extends State<ClientApp> {
                 ),
 
                 // Other Versions
-                '/driver': (_) => const CaptainAppShell(),
-                '/admin': (_) => const DashboardWebApp(),
               },
             ),
           );
