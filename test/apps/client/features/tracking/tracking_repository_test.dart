@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/tracking/domain/usecases/get_tracki
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_state.dart';
+import 'package:bmt_app/apps/client/features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
 
 void main() {
   group('Client tracking', () {
@@ -38,6 +39,7 @@ void main() {
       final cubit = TrackingCubit(
         getTrackingTrip: GetTrackingTripUseCase(repository),
         getTrackingTitle: const GetTrackingTitleUseCase(),
+        watchVehiclePosition: WatchVehiclePositionUseCase(repository),
       );
 
       await cubit.load();
@@ -94,5 +96,10 @@ class _FakeTrackingDatasource implements TrackingDatasource {
       ],
       tripState: TrackingTripState.notStarted,
     );
+  }
+
+  @override
+  Stream<TrackingPointModel> watchVehiclePosition(String tripId) {
+    return const Stream.empty();
   }
 }

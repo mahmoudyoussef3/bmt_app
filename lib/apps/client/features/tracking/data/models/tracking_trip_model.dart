@@ -1,13 +1,21 @@
 import '../../domain/entities/tracking_trip.dart';
 
 class TrackingPointModel {
-  const TrackingPointModel({required this.latitude, required this.longitude});
+  const TrackingPointModel({
+    required this.latitude,
+    required this.longitude,
+    this.recordedAt,
+  });
 
   final double latitude;
   final double longitude;
+  final DateTime? recordedAt;
 
-  TrackingPoint toEntity() =>
-      TrackingPoint(latitude: latitude, longitude: longitude);
+  TrackingPoint toEntity() => TrackingPoint(
+        latitude: latitude,
+        longitude: longitude,
+        recordedAt: recordedAt,
+      );
 }
 
 class TrackingTripDataModel {

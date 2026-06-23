@@ -8,18 +8,11 @@ import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
 
-void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  registerCaptainDependencies();
-  runApp(
-    MultiBlocProvider(
-      providers: [
-        BlocProvider(create: (_) => AppModeCubit()..load()),
-        BlocProvider(create: (_) => LocaleCubit()..load()),
-      ],
-      child: const CaptainApp(),
-    ),
-  );
+import 'package:bmt_app/core/flavors/app_bootstrap.dart';
+import 'package:bmt_app/core/flavors/app_flavor.dart';
+
+Future<void> main() async {
+  await bootstrapFlavorApp(AppFlavor.captain);
 }
 
 class CaptainApp extends StatelessWidget {

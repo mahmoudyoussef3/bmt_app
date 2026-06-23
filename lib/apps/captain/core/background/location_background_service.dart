@@ -121,6 +121,7 @@ void _onServiceStart(ServiceInstance service) async {
             'lng': pos.longitude,
             'accuracy': pos.accuracy,
             'speed': pos.speed,
+            'recorded_at': pos.timestamp.toIso8601String(),
           },
         );
         // Keep notification content current.

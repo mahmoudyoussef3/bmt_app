@@ -178,6 +178,7 @@ void _registerTripExecutionDependencies() {
         startBoarding: captainGetIt<StartBoardingUseCase>(),
         startTrip: captainGetIt<StartTripUseCase>(),
         completeTrip: captainGetIt<CompleteTripUseCase>(),
+        stopLocationSharing: captainGetIt<StopLocationSharingUseCase>(),
       ),
     );
   }

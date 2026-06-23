@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../domain/entities/tracking_trip.dart';
 import '../../domain/repositories/tracking_repository.dart';
 import '../datasources/supabase_tracking_datasource.dart';
@@ -17,5 +19,10 @@ class TrackingRepositoryImpl implements TrackingRepository {
       tripId: tripId,
     );
     return model.toEntity();
+  }
+
+  @override
+  Stream<TrackingPoint> watchVehiclePosition(String tripId) {
+    return _datasource.watchVehiclePosition(tripId).map((model) => model.toEntity());
   }
 }

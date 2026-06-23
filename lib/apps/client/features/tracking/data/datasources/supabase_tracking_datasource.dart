@@ -2,17 +2,47 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/tracking_trip_model.dart';
 import '../../domain/entities/tracking_trip.dart';
 
+import 'dart:async';
+
 abstract class TrackingDatasource {
   Future<TrackingTripDataModel> getTrackingTrip({
     String? bookingId,
     String? tripId,
   });
+  
+  Stream<TrackingPointModel> watchVehiclePosition(String tripId);
 }
 
 class SupabaseTrackingDatasource implements TrackingDatasource {
   const SupabaseTrackingDatasource(this._client);
 
   final SupabaseClient _client;
+
+  @override
+  Stream<TrackingPointModel> watchVehiclePosition(String tripId) {
+    final controller = StreamController<TrackingPointModel>.broadcast();
+    final channel = _client
+        .channel('live_location:$tripId')
+        .onBroadcast(
+          event: 'location',
+          callback: (payload) {
+            try {
+              controller.add(
+                TrackingPointModel(
+                  latitude: (payload['lat'] as num).toDouble(),
+                  longitude: (payload['lng'] as num).toDouble(),
+                  recordedAt: payload['recorded_at'] != null
+                      ? DateTime.tryParse(payload['recorded_at'].toString())?.toLocal()
+                      : null,
+                ),
+              );
+            } catch (_) {}
+          },
+        )
+        .subscribe();
+    controller.onCancel = () => channel.unsubscribe();
+    return controller.stream;
+  }
 
   @override
   Future<TrackingTripDataModel> getTrackingTrip({

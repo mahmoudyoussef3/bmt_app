@@ -7,10 +7,15 @@ enum TrackingTripState {
 }
 
 class TrackingPoint {
-  const TrackingPoint({required this.latitude, required this.longitude});
+  const TrackingPoint({
+    required this.latitude,
+    required this.longitude,
+    this.recordedAt,
+  });
 
   final double latitude;
   final double longitude;
+  final DateTime? recordedAt;
 }
 
 class TrackingTripData {
@@ -92,6 +97,56 @@ class TrackingTripData {
       vehiclePlate == null || vehiclePlate!.trim().isEmpty
       ? 'Plate pending'
       : vehiclePlate!.trim();
+
+  TrackingTripData copyWith({
+    List<TrackingPoint>? routePoints,
+    List<String>? timelineSteps,
+    List<String>? stops,
+    TrackingTripState? tripState,
+    String? tripId,
+    String? bookingId,
+    String? routeName,
+    String? pickupName,
+    String? destinationName,
+    DateTime? departureAt,
+    DateTime? arrivalAt,
+    String? driverName,
+    String? driverPhone,
+    double? driverRating,
+    String? vehicleName,
+    String? vehicleType,
+    String? vehiclePlate,
+    double? vehicleLatitude,
+    double? vehicleLongitude,
+    double? vehicleHeading,
+    double? vehicleSpeed,
+    DateTime? vehicleLocationAt,
+  }) {
+    return TrackingTripData(
+      routePoints: routePoints ?? this.routePoints,
+      timelineSteps: timelineSteps ?? this.timelineSteps,
+      stops: stops ?? this.stops,
+      tripState: tripState ?? this.tripState,
+      tripId: tripId ?? this.tripId,
+      bookingId: bookingId ?? this.bookingId,
+      routeName: routeName ?? this.routeName,
+      pickupName: pickupName ?? this.pickupName,
+      destinationName: destinationName ?? this.destinationName,
+      departureAt: departureAt ?? this.departureAt,
+      arrivalAt: arrivalAt ?? this.arrivalAt,
+      driverName: driverName ?? this.driverName,
+      driverPhone: driverPhone ?? this.driverPhone,
+      driverRating: driverRating ?? this.driverRating,
+      vehicleName: vehicleName ?? this.vehicleName,
+      vehicleType: vehicleType ?? this.vehicleType,
+      vehiclePlate: vehiclePlate ?? this.vehiclePlate,
+      vehicleLatitude: vehicleLatitude ?? this.vehicleLatitude,
+      vehicleLongitude: vehicleLongitude ?? this.vehicleLongitude,
+      vehicleHeading: vehicleHeading ?? this.vehicleHeading,
+      vehicleSpeed: vehicleSpeed ?? this.vehicleSpeed,
+      vehicleLocationAt: vehicleLocationAt ?? this.vehicleLocationAt,
+    );
+  }
 }
 
 class TrackingRatings {

@@ -138,6 +138,7 @@ import '../../features/tracking/data/repositories/tracking_repository_impl.dart'
 import '../../features/tracking/domain/repositories/tracking_repository.dart';
 import '../../features/tracking/domain/usecases/get_tracking_title_usecase.dart';
 import '../../features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
+import '../../features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
 import '../../features/tracking/presentation/cubit/tracking_cubit.dart';
 import '../../../../core/network/network_di.dart';
 
@@ -655,11 +656,18 @@ void _registerTrackingDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<WatchVehiclePositionUseCase>()) {
+    clientGetIt.registerLazySingleton<WatchVehiclePositionUseCase>(
+      () => WatchVehiclePositionUseCase(clientGetIt<TrackingRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<TrackingCubit>()) {
     clientGetIt.registerFactory<TrackingCubit>(
       () => TrackingCubit(
         getTrackingTrip: clientGetIt<GetTrackingTripUseCase>(),
         getTrackingTitle: clientGetIt<GetTrackingTitleUseCase>(),
+        watchVehiclePosition: clientGetIt<WatchVehiclePositionUseCase>(),
       ),
     );
   }

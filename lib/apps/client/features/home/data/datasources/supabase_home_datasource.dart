@@ -81,12 +81,16 @@ class SupabaseHomeDatasource implements HomeDatasource {
       pricingTripsByRoute.putIfAbsent(routeId, () => []).add(trip);
     }
 
-    final sortedRoutesData = [...routesData]
-      ..sort((a, b) {
-        final aTrips = tripsByRoute[a['id']?.toString()]?.length ?? 0;
-        final bTrips = tripsByRoute[b['id']?.toString()]?.length ?? 0;
-        return bTrips.compareTo(aTrips);
-      });
+    final sortedRoutesData =
+        routesData.where((route) {
+          final routeId = route['id']?.toString();
+          return routeId != null &&
+              (tripsByRoute[routeId]?.isNotEmpty ?? false);
+        }).toList()..sort((a, b) {
+          final aTrips = tripsByRoute[a['id']?.toString()]?.length ?? 0;
+          final bTrips = tripsByRoute[b['id']?.toString()]?.length ?? 0;
+          return bTrips.compareTo(aTrips);
+        });
 
     final popularRoutesData = sortedRoutesData.take(8).toList();
     final nearbyTripsData = tripsData.take(3).toList();
