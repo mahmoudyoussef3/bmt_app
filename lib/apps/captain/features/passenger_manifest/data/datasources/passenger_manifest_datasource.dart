@@ -28,8 +28,10 @@ class PassengerManifestDataSource {
         .eq('trip_id', tripId);
     final pickupTimesByName = {
       for (final point in pointsResponse)
-        (point['point_name']?.toString() ??
-            ''): point['departure_offset']?.toString().isNotEmpty == true
+        (point['point_name']?.toString() ?? ''): point['departure_offset']
+                    ?.toString()
+                    .isNotEmpty ==
+                true
             ? point['departure_offset'].toString()
             : point['arrival_offset']?.toString() ?? '',
     };
@@ -47,6 +49,10 @@ class PassengerManifestDataSource {
         case 'no_show':
         case 'غائب':
           status = PassengerBoardingStatus.absent;
+          break;
+        case 'late':
+        case 'متأخر':
+          status = PassengerBoardingStatus.late;
           break;
         case 'cancelled':
         case 'ملغي':
@@ -69,4 +75,22 @@ class PassengerManifestDataSource {
       );
     }).toList();
   }
+
+  Future<void> updatePassengerStatus({
+    required String tripPassengerId,
+    required PassengerBoardingStatus status,
+  }) async {
+    await _supabase
+        .from('trip_passengers')
+        .update({'status': _statusToString(status)})
+        .eq('id', tripPassengerId);
+  }
+
+  String _statusToString(PassengerBoardingStatus status) => switch (status) {
+        PassengerBoardingStatus.boarded => 'boarded',
+        PassengerBoardingStatus.absent => 'absent',
+        PassengerBoardingStatus.late => 'late',
+        PassengerBoardingStatus.pending => 'pending',
+        PassengerBoardingStatus.cancelled => 'cancelled',
+      };
 }

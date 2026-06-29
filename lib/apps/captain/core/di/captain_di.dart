@@ -2,6 +2,20 @@ import '../../../../core/network/network_di.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../features/profile/data/datasources/driver_profile_datasource.dart';
+import '../../features/profile/data/repositories/driver_profile_repository_impl.dart';
+import '../../features/profile/domain/repositories/driver_profile_repository.dart';
+import '../../features/profile/domain/usecases/get_driver_profile_usecase.dart';
+import '../../features/profile/presentation/cubit/driver_profile_cubit.dart';
+
+import '../../features/trip_history/data/datasources/trip_history_datasource.dart';
+import '../../features/trip_history/data/repositories/trip_history_repository_impl.dart';
+import '../../features/trip_history/domain/repositories/trip_history_repository.dart';
+import '../../features/trip_history/domain/usecases/get_trip_history_usecase.dart';
+import '../../features/trip_history/presentation/cubit/trip_history_cubit.dart';
+
+import '../../features/passenger_manifest/domain/usecases/update_passenger_status_usecase.dart';
+
 import '../../features/notifications/data/datasources/supabase_captain_notifications_datasource.dart';
 import '../../features/notifications/data/repositories/captain_notifications_repository_impl.dart';
 import '../../features/notifications/domain/repositories/captain_notifications_repository.dart';
@@ -85,6 +99,8 @@ void registerCaptainDependencies() {
   _registerCheckInDependencies();
   _registerTripStatusUpdateDependencies();
   _registerNotificationsDependencies();
+  _registerProfileDependencies();
+  _registerTripHistoryDependencies();
 }
 
 void _registerAssignedTripsDependencies() {
@@ -146,11 +162,19 @@ void _registerPassengerManifestDependencies() {
       ),
     );
   }
+  if (!captainGetIt.isRegistered<UpdatePassengerStatusUseCase>()) {
+    captainGetIt.registerLazySingleton<UpdatePassengerStatusUseCase>(
+      () => UpdatePassengerStatusUseCase(
+        captainGetIt<PassengerManifestRepository>(),
+      ),
+    );
+  }
   if (!captainGetIt.isRegistered<PassengerManifestCubit>()) {
     captainGetIt.registerFactory<PassengerManifestCubit>(
       () => PassengerManifestCubit(
         getTripPassengers: captainGetIt<GetTripPassengersUseCase>(),
         watchTripPassengers: captainGetIt<WatchTripPassengersUseCase>(),
+        updatePassengerStatus: captainGetIt<UpdatePassengerStatusUseCase>(),
       ),
     );
   }
@@ -398,6 +422,52 @@ void _registerNotificationsDependencies() {
         markAllAsRead:
             captainGetIt<MarkAllCaptainNotificationsReadUseCase>(),
       ),
+    );
+  }
+}
+
+void _registerProfileDependencies() {
+  if (!captainGetIt.isRegistered<DriverProfileDataSource>()) {
+    captainGetIt.registerLazySingleton<DriverProfileDataSource>(
+      () => DriverProfileDataSource(captainGetIt<SupabaseClient>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<DriverProfileRepository>()) {
+    captainGetIt.registerLazySingleton<DriverProfileRepository>(
+      () => DriverProfileRepositoryImpl(captainGetIt<DriverProfileDataSource>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<GetDriverProfileUseCase>()) {
+    captainGetIt.registerLazySingleton<GetDriverProfileUseCase>(
+      () => GetDriverProfileUseCase(captainGetIt<DriverProfileRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<DriverProfileCubit>()) {
+    captainGetIt.registerFactory<DriverProfileCubit>(
+      () => DriverProfileCubit(captainGetIt<GetDriverProfileUseCase>()),
+    );
+  }
+}
+
+void _registerTripHistoryDependencies() {
+  if (!captainGetIt.isRegistered<TripHistoryDataSource>()) {
+    captainGetIt.registerLazySingleton<TripHistoryDataSource>(
+      () => TripHistoryDataSource(captainGetIt<SupabaseClient>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<TripHistoryRepository>()) {
+    captainGetIt.registerLazySingleton<TripHistoryRepository>(
+      () => TripHistoryRepositoryImpl(captainGetIt<TripHistoryDataSource>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<GetTripHistoryUseCase>()) {
+    captainGetIt.registerLazySingleton<GetTripHistoryUseCase>(
+      () => GetTripHistoryUseCase(captainGetIt<TripHistoryRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<TripHistoryCubit>()) {
+    captainGetIt.registerFactory<TripHistoryCubit>(
+      () => TripHistoryCubit(captainGetIt<GetTripHistoryUseCase>()),
     );
   }
 }

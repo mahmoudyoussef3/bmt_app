@@ -1,4 +1,4 @@
-enum PassengerBoardingStatus { pending, boarded, absent, cancelled }
+enum PassengerBoardingStatus { pending, boarded, absent, late, cancelled }
 
 class Passenger {
   const Passenger({

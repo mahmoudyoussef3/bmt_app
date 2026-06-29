@@ -19,3 +19,10 @@ class PassengerManifestError extends PassengerManifestState {
 
   final String message;
 }
+
+class PassengerManifestUpdateError extends PassengerManifestState {
+  const PassengerManifestUpdateError(this.passengers, this.message);
+
+  final List<Passenger> passengers;
+  final String message;
+}

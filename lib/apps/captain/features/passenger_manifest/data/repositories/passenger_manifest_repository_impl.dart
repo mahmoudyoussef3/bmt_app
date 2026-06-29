@@ -16,4 +16,14 @@ class PassengerManifestRepositoryImpl implements PassengerManifestRepository {
   @override
   Stream<void> watchPassengerUpdates(String tripId) =>
       _dataSource.watchPassengerUpdates(tripId);
+
+  @override
+  Future<void> updatePassengerStatus({
+    required String tripPassengerId,
+    required PassengerBoardingStatus status,
+  }) =>
+      _dataSource.updatePassengerStatus(
+        tripPassengerId: tripPassengerId,
+        status: status,
+      );
 }
