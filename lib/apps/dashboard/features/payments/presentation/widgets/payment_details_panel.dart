@@ -241,23 +241,26 @@ class _ActionBar extends StatelessWidget {
         spacing: AppSpacing.small,
         runSpacing: AppSpacing.small,
         children: [
-          AppButton(
-            label: 'قبول',
-            height: 42,
-            onPressed: () => onStatus(PaymentReviewStatus.accepted),
-          ),
-          AppButton(
-            label: 'رفض',
-            height: 42,
-            outline: true,
-            onPressed: () => onStatus(PaymentReviewStatus.rejected),
-          ),
-          AppButton(
-            label: 'طلب مراجعة',
-            height: 42,
-            outline: true,
-            onPressed: () => onStatus(PaymentReviewStatus.needsReview),
-          ),
+          if (payment.status != PaymentReviewStatus.accepted &&
+              payment.status != PaymentReviewStatus.rejected) ...[
+            AppButton(
+              label: 'قبول',
+              height: 42,
+              onPressed: () => onStatus(PaymentReviewStatus.accepted),
+            ),
+            AppButton(
+              label: 'رفض',
+              height: 42,
+              outline: true,
+              onPressed: () => onStatus(PaymentReviewStatus.rejected),
+            ),
+            AppButton(
+              label: 'طلب مراجعة',
+              height: 42,
+              outline: true,
+              onPressed: () => onStatus(PaymentReviewStatus.needsReview),
+            ),
+          ],
           AppButton(
             label: 'إضافة ملاحظة',
             height: 42,
@@ -269,12 +272,13 @@ class _ActionBar extends StatelessWidget {
               );
             },
           ),
-          AppButton(
-            label: 'تحويل الحجز',
-            height: 42,
-            outline: true,
-            onPressed: () => _showReassignDialog(context),
-          ),
+          if (payment.source == FinancePaymentSource.booking)
+            AppButton(
+              label: 'تحويل الحجز',
+              height: 42,
+              outline: true,
+              onPressed: () => _showReassignDialog(context),
+            ),
         ],
       ),
     );
@@ -394,6 +398,7 @@ class _Information extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           _InfoRow(label: 'المستخدم', value: payment.user),
+          _InfoRow(label: 'نوع العملية', value: payment.source.label),
           _InfoRow(label: 'الرحلة', value: payment.trip),
           _InfoRow(label: 'الباقة', value: payment.packageName),
           _InfoRow(label: 'المبلغ', value: payment.amount),

@@ -421,7 +421,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
     final plan = _plan;
     final start = _startDate;
     if (plan == null || start == null) return null;
-    return DateTime(start.year, start.month, start.day + plan.days);
+    return DateTime(start.year, start.month, start.day + plan.days - 1);
   }
 
   @override

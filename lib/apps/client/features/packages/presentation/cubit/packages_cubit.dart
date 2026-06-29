@@ -152,9 +152,11 @@ class PackagesCubit extends Cubit<PackagesState> {
     try {
       final id = await _createSubscription(
         SubscriptionRequest(
+          packageId: package.id,
           packageName: package.name,
           routeName: current.selectedRoute,
           days: package.days,
+          tripsCount: package.tripsCount,
           totalPrice: current.pricing.finalPrice,
         ),
       );

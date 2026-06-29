@@ -62,8 +62,11 @@ class UserSubscription {
   /// Days left until [endDate] (never negative). Real, derived value used in
   /// place of a ride count, which the backend does not track.
   int get remainingDays {
-    final diff = endDate.difference(DateTime.now()).inDays;
-    return diff < 0 ? 0 : diff;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final end = DateTime(endDate.year, endDate.month, endDate.day);
+    final diff = end.difference(today).inDays;
+    return diff < 0 ? 0 : diff + 1;
   }
 
   const UserSubscription({

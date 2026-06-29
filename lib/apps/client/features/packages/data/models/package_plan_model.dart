@@ -2,6 +2,7 @@ import '../../domain/entities/package_plan.dart';
 
 class PackagePlanModel {
   const PackagePlanModel({
+    required this.id,
     required this.name,
     required this.durationLabel,
     required this.days,
@@ -12,6 +13,7 @@ class PackagePlanModel {
     required this.description,
   });
 
+  final String id;
   final String name;
   final String durationLabel;
   final int days;
@@ -23,6 +25,7 @@ class PackagePlanModel {
 
   PackagePlan toEntity() {
     return PackagePlan(
+      id: id,
       name: name,
       durationLabel: durationLabel,
       days: days,

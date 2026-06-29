@@ -17,6 +17,7 @@ class FinancePaymentModel extends FinancePayment {
     super.receiptUrl,
     required super.notes,
     required super.history,
+    super.source,
   });
 
   factory FinancePaymentModel.fromEntity(FinancePayment payment) {
@@ -36,6 +37,7 @@ class FinancePaymentModel extends FinancePayment {
       receiptUrl: payment.receiptUrl,
       notes: payment.notes,
       history: payment.history,
+      source: payment.source,
     );
   }
 }

@@ -58,6 +58,7 @@ class PaymentCard extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.medium),
               _Fact(label: 'المبلغ', value: payment.amount),
+              _Fact(label: 'النوع', value: payment.source.label),
               _Fact(label: 'طريقة الدفع', value: payment.method.label),
               _Fact(label: 'وقت الدفع', value: payment.paidAt),
             ],

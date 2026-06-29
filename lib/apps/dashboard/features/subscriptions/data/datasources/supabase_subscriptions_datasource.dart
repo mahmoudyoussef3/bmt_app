@@ -17,42 +17,17 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
   @override
   Future<List<UserSubscription>> fetchSubscriptions() async {
+    await _client.rpc('expire_overdue_subscriptions');
     final rows = await _client
         .from('subscriptions')
         .select(_select)
         .order('created_at', ascending: false);
-    final all = rows.map((r) => _fromRow(r)).toList();
-    return _expireOverdue(all);
-  }
-
-  // Lazily marks active subscriptions whose endDate has passed as expired.
-  Future<List<UserSubscription>> _expireOverdue(
-    List<UserSubscription> all,
-  ) async {
-    final now = DateTime.now();
-    final ids = all
-        .where(
-          (s) =>
-              s.status == SubscriptionStatus.active && s.endDate.isBefore(now),
-        )
-        .map((s) => s.id)
-        .toList();
-    if (ids.isEmpty) return all;
-    await _client
-        .from('subscriptions')
-        .update({'status': 'expired'})
-        .inFilter('id', ids);
-    return all
-        .map(
-          (s) => ids.contains(s.id)
-              ? s.copyWith(status: SubscriptionStatus.expired)
-              : s,
-        )
-        .toList();
+    return rows.map((r) => _fromRow(r)).toList();
   }
 
   @override
   Future<UserSubscription> fetchSubscriptionDetails(String id) async {
+    await _client.rpc('expire_overdue_subscriptions');
     final row = await _client
         .from('subscriptions')
         .select(_select)
@@ -103,89 +78,43 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
   @override
   Future<UserSubscription> renewSubscription(String id) async {
-    final current = await _client
-        .from('subscriptions')
-        .select('end_date, start_date, renewals_count, package:packages(days)')
-        .eq('id', id)
-        .single();
-
-    final currentEnd =
-        DateTime.tryParse(current['end_date']?.toString() ?? '') ??
-        DateTime.now();
-    final base = currentEnd.isAfter(DateTime.now()) ? currentEnd : DateTime.now();
-
-    // Use the linked package's duration; fall back to the original subscription
-    // span (end_date - start_date) for subscriptions without a package link.
-    final packageDays = (current['package'] as Map?)?['days'] as int?;
-    final int durationDays;
-    if (packageDays != null && packageDays > 0) {
-      durationDays = packageDays;
-    } else {
-      final startDate =
-          DateTime.tryParse(current['start_date']?.toString() ?? '');
-      durationDays = startDate != null
-          ? currentEnd.difference(startDate).inDays.abs().clamp(1, 365)
-          : 30;
-    }
-
-    final newEnd = base.add(Duration(days: durationDays));
-    final renewals = (current['renewals_count'] as int? ?? 0) + 1;
-
+    final created = await _client.rpc(
+      'request_subscription_renewal',
+      params: {'p_subscription_id': id},
+    );
+    final createdId = (created as Map<String, dynamic>)['id'].toString();
     final row = await _client
         .from('subscriptions')
-        .update({
-          'status': 'pending_payment',
-          'end_date': newEnd.toIso8601String(),
-          'renewals_count': renewals,
-          'trips_used': 0,
-        })
-        .eq('id', id)
         .select(_select)
+        .eq('id', createdId)
         .single();
     return _fromRow(row);
   }
 
   @override
   Future<UserSubscription> markRideUsed(String id) async {
-    final row = await _client
-        .from('subscriptions')
-        .select('trips_count, trips_used')
-        .eq('id', id)
-        .single();
-
-    final total = row['trips_count'] as int? ?? 0;
-    final used = row['trips_used'] as int? ?? 0;
-
-    if (total > 0 && used >= total) {
-      throw Exception('لا يوجد رصيد رحلات متبقٍ في هذا الاشتراك');
-    }
-
+    await _client.rpc(
+      'consume_subscription_ride',
+      params: {'p_subscription_id': id},
+    );
     final updated = await _client
         .from('subscriptions')
-        .update({'trips_used': used + 1})
-        .eq('id', id)
         .select(_select)
+        .eq('id', id)
         .single();
     return _fromRow(updated);
   }
 
   @override
   Future<UserSubscription> confirmPayment(String id) async {
-    final current = await _client
-        .from('subscriptions')
-        .select('total_price')
-        .eq('id', id)
-        .single();
-    final totalPrice = _toDouble(current['total_price']);
+    await _client.rpc(
+      'confirm_subscription_payment',
+      params: {'p_subscription_id': id},
+    );
     final row = await _client
         .from('subscriptions')
-        .update({
-          'status': 'active',
-          'paid_amount': totalPrice,
-          'remaining_amount': 0,
-        })
-        .eq('id', id)
         .select(_select)
+        .eq('id', id)
         .single();
     return _fromRow(row);
   }
@@ -233,10 +162,11 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
     final statusStr = json['status']?.toString();
     final mappedStatus = switch (statusStr) {
+      'active' => SubscriptionStatus.active,
       'expired' => SubscriptionStatus.expired,
       'cancelled' => SubscriptionStatus.cancelled,
       'pending_payment' || 'paused' => SubscriptionStatus.pendingPayment,
-      _ => SubscriptionStatus.active,
+      _ => SubscriptionStatus.pendingPayment,
     };
 
     final tripsCount = _toInt(json['trips_count'] ?? pkg?['trips_count']);
@@ -246,16 +176,19 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     return UserSubscriptionModel(
       id: json['id'].toString(),
       userId: json['client_id']?.toString() ?? '',
-      userName: json['customer_name']?.toString() ??
+      userName:
+          json['customer_name']?.toString() ??
           client['full_name']?.toString() ??
           'غير معروف',
-      userPhone: json['customer_phone']?.toString() ??
+      userPhone:
+          json['customer_phone']?.toString() ??
           client['phone']?.toString() ??
           '',
       tripId: '',
       // routeId carries the package_id so the cubit can reference it.
       routeId: json['package_id']?.toString() ?? '',
-      routeName: pkg?['title']?.toString() ??
+      routeName:
+          pkg?['title']?.toString() ??
           json['package_name']?.toString() ??
           json['route_name']?.toString() ??
           'باقة',
@@ -263,7 +196,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
       fromPointName: '',
       toPointId: '',
       toPointName: '',
-      type: SubscriptionType.monthly,
+      type: _typeForDays(_toInt(pkg?['days'])),
       price: _toDouble(json['total_price']),
       currency: 'ج.م',
       totalRides: tripsCount,
@@ -273,13 +206,12 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
       remainingAmount: _toDouble(json['remaining_amount']),
       renewalsCount: _toInt(json['renewals_count']),
       startDate: DateTime.tryParse(json['start_date']?.toString() ?? '') ?? now,
-      endDate: DateTime.tryParse(json['end_date']?.toString() ?? '') ??
+      endDate:
+          DateTime.tryParse(json['end_date']?.toString() ?? '') ??
           now.add(const Duration(days: 30)),
       status: mappedStatus,
-      createdAt:
-          DateTime.tryParse(json['created_at']?.toString() ?? '') ?? now,
-      updatedAt:
-          DateTime.tryParse(json['updated_at']?.toString() ?? '') ?? now,
+      createdAt: DateTime.tryParse(json['created_at']?.toString() ?? '') ?? now,
+      updatedAt: DateTime.tryParse(json['updated_at']?.toString() ?? '') ?? now,
     );
   }
 
@@ -288,4 +220,12 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
   static int _toInt(dynamic v) =>
       v is int ? v : int.tryParse(v?.toString() ?? '') ?? 0;
+
+  static SubscriptionType _typeForDays(int days) {
+    if (days <= 1) return SubscriptionType.oneTime;
+    if (days <= 7) return SubscriptionType.fiveDays;
+    if (days <= 14) return SubscriptionType.tenDaysMonthly;
+    if (days >= 80) return SubscriptionType.threeMonths;
+    return SubscriptionType.monthly;
+  }
 }

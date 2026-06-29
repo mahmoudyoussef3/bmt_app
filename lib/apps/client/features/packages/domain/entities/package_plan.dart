@@ -1,5 +1,6 @@
 class PackagePlan {
   const PackagePlan({
+    required this.id,
     required this.name,
     required this.durationLabel,
     required this.days,
@@ -10,6 +11,7 @@ class PackagePlan {
     required this.description,
   });
 
+  final String id;
   final String name;
   final String durationLabel;
   final int days;

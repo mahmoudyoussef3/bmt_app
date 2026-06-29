@@ -1510,14 +1510,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
         // Confirm Action sticky bottom panel
         _buildStickyCTA(
-          label: 'Confirm Subscription',
+          label: 'Submit for Payment Review',
           onPressed: loaded.agreeTerms
               ? _activateSubscription
               : () {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text(
-                        'Please agree to terms and conditions to activate.',
+                        'Please agree to the terms before submitting.',
                       ),
                     ),
                   );
@@ -1615,16 +1615,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           ),
           const SizedBox(height: 20),
           const Text(
-            'Subscription Activated!',
+            'Request Submitted',
             style: TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
-              color: Colors.green,
+              color: Colors.orange,
             ),
           ),
           const SizedBox(height: 6),
           const Text(
-            'Your travel package is now active. Commute securely.',
+            'Your subscription is pending payment confirmation. It will become usable only after finance approval.',
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 12, color: Colors.grey),
           ),
@@ -1645,7 +1645,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Subscription Receipt',
+                      'Subscription Request',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
@@ -1706,7 +1706,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      'Paid Amount',
+                      'Amount Due',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,

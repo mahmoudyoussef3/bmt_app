@@ -20,6 +20,14 @@ enum FinancePaymentMethod {
   const FinancePaymentMethod(this.label);
 }
 
+enum FinancePaymentSource {
+  booking('حجز رحلة'),
+  subscription('اشتراك');
+
+  final String label;
+  const FinancePaymentSource(this.label);
+}
+
 class FinancePayment {
   final String id;
   final String userName;
@@ -36,6 +44,7 @@ class FinancePayment {
   final String? receiptUrl;
   final List<String> notes;
   final List<PaymentHistoryItem> history;
+  final FinancePaymentSource source;
 
   const FinancePayment({
     required this.id,
@@ -53,6 +62,7 @@ class FinancePayment {
     this.receiptUrl,
     required this.notes,
     required this.history,
+    this.source = FinancePaymentSource.booking,
   });
 
   FinancePayment copyWith({
@@ -76,6 +86,7 @@ class FinancePayment {
       receiptUrl: receiptUrl,
       notes: notes ?? this.notes,
       history: history ?? this.history,
+      source: source,
     );
   }
 }

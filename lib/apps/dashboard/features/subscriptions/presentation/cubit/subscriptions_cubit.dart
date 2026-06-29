@@ -98,7 +98,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       final endDate = DateTime(
         startDate.year,
         startDate.month,
-        startDate.day + plan.days,
+        startDate.day + plan.days - 1,
       );
       final subscription = UserSubscription(
         id: '',
@@ -120,7 +120,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
         remainingRides: plan.tripsCount,
         startDate: startDate,
         endDate: endDate,
-        status: SubscriptionStatus.active,
+        status: SubscriptionStatus.pendingPayment,
         createdAt: now,
         updatedAt: now,
       );

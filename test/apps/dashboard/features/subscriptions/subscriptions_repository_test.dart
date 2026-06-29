@@ -126,6 +126,21 @@ class _FailingDatasource implements SubscriptionsDatasource {
 
 void main() {
   group('Subscriptions clean architecture chain', () {
+    test('validity includes the subscription end date', () {
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final activeToday = _sub(
+        'today',
+        SubscriptionStatus.active,
+      ).copyWith(endDate: today);
+      final expiredYesterday = activeToday.copyWith(
+        endDate: today.subtract(const Duration(days: 1)),
+      );
+
+      expect(activeToday.remainingDays, 1);
+      expect(expiredYesterday.remainingDays, 0);
+    });
+
     test('loads subscribers and details from the datasource', () async {
       final repository = SubscriptionsRepositoryImpl(
         _FakeSubscriptionsDatasource(),

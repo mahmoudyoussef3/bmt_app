@@ -17,20 +17,25 @@ class SupabasePackagesDatasource implements PackagesDatasource {
 
     final meta = user.userMetadata ?? const <String, dynamic>{};
     final now = DateTime.now();
-    final end = now.add(Duration(days: request.days));
+    final durationDays = request.days > 0 ? request.days - 1 : 0;
+    final end = now.add(Duration(days: durationDays));
 
     final payload = {
       'client_id': user.id,
+      'package_id': request.packageId,
       'customer_name': meta['full_name']?.toString() ?? '',
       'customer_phone': meta['phone']?.toString() ?? '',
       'package_name': request.packageName,
       'route_name': request.routeName,
       'start_date': now.toIso8601String(),
       'end_date': end.toIso8601String(),
-      'status': 'active',
+      'status': 'pending_payment',
       'total_price': request.totalPrice,
-      'paid_amount': request.totalPrice,
-      'remaining_amount': 0,
+      'paid_amount': 0,
+      'remaining_amount': request.totalPrice,
+      'trips_count': request.tripsCount,
+      'trips_used': 0,
+      'payment_review_status': 'pending',
     };
 
     final row = await _supabase
@@ -70,6 +75,7 @@ class SupabasePackagesDatasource implements PackagesDatasource {
     final packages = packagesData
         .map(
           (e) => PackagePlanModel(
+            id: e['id']?.toString() ?? '',
             name: e['title']?.toString() ?? '',
             durationLabel: e['subtitle']?.toString() ?? '',
             days: e['days'] as int? ?? 30,
