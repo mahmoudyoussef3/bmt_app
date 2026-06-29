@@ -1,8 +1,9 @@
 import 'dart:async';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
-import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
-import 'package:bmt_app/apps/captain/features/auth/presentation/screens/captain_login_screen.dart';
+import 'package:bmt_app/apps/captain/core/routes/app_router.dart';
+import 'package:bmt_app/apps/captain/modules/settings/auth/presentation/cubit/captain_auth_cubit.dart';
+import 'package:bmt_app/apps/captain/modules/settings/auth/presentation/screens/captain_login_screen.dart';
 import 'package:bmt_app/core/flavors/app_bootstrap.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
@@ -83,6 +84,7 @@ class _CaptainAppState extends State<CaptainApp> {
           darkTheme: AppTheme.darkTheme(),
           themeMode: ThemeMode.system,
           home: const _CaptainAuthGate(),
+          onGenerateRoute: AppRouter.generateRoute,
           routes: {
             '/captain/home': (_) => const CaptainAppShell(),
           },

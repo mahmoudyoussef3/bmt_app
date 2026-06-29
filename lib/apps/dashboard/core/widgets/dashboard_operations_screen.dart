@@ -9,9 +9,9 @@ import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/metric_tile.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
-import '../../features/dashboard_operations/domain/entities/dashboard_workspace.dart';
-import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
-import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_state.dart';
+import 'package:bmt_app/apps/dashboard/modules/trips/dashboard_operations/domain/entities/dashboard_workspace.dart';
+import 'package:bmt_app/apps/dashboard/modules/trips/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
+import 'package:bmt_app/apps/dashboard/modules/trips/dashboard_operations/presentation/cubit/dashboard_workspace_state.dart';
 
 class DashboardOperationsScreen extends StatefulWidget {
   final String workspaceId;

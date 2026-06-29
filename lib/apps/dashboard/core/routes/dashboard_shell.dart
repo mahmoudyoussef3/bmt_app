@@ -6,41 +6,12 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
-import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
-import '../../features/bookings/presentation/screens/bookings_screen.dart';
-import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
-import '../../features/dashboard_home/presentation/screens/dashboard_home_screen.dart';
-import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
-import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
-import '../../features/fleet/overview/presentation/screens/fleet_overview_screen.dart';
-import '../../features/fleet/shared/domain/entities/fleet_common.dart';
-import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
-import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
-import '../../features/finance/presentation/cubit/finance_cubit.dart';
-import '../../features/finance/presentation/screens/finance_screen.dart';
-import '../../features/owner_overview/presentation/cubit/owner_overview_cubit.dart';
-import '../../features/owner_overview/presentation/screens/owner_overview_screen.dart';
-import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
-import '../../features/subscriptions/presentation/screens/subscriptions_screen.dart';
-import '../../features/referrals/presentation/cubit/referral_cubit.dart';
-import '../../features/referrals/presentation/screens/referral_management_screen.dart';
-import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
-import '../../features/payment_verification/presentation/screens/payment_verification_screen.dart';
-import '../../features/permissions/presentation/screens/permissions_screen.dart';
-import '../../features/reports/presentation/cubit/reports_cubit.dart';
-import '../../features/reports/presentation/screens/reports_screen.dart';
-import '../../features/routes/presentation/cubit/routes_cubit.dart';
-import '../../features/routes/presentation/screens/routes_screen.dart';
-import '../../features/settings/presentation/screens/settings_screen.dart';
-import '../../features/tickets/presentation/screens/tickets_screen.dart';
-import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
-import '../../features/trips/presentation/screens/trips_screen.dart';
-import '../../features/users/domain/usecases/get_current_user_role_usecase.dart';
-import '../../features/users/presentation/screens/users_screen.dart';
+import 'package:bmt_app/apps/dashboard/modules/users/domain/usecases/get_current_user_role_usecase.dart';
 import '../di/dashboard_di.dart';
 import '../permissions/dashboard_permission.dart';
 import '../permissions/dashboard_role.dart';
 import '../theme/dashboard_theme_cubit.dart';
+import 'app_router.dart';
 import 'dashboard_routes.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
@@ -71,6 +42,7 @@ class DashboardShell extends StatefulWidget {
 class _DashboardShellState extends State<DashboardShell> {
   DashboardRole _role = DashboardRole.supportAgent;
   String _route = DashboardRoutes.home;
+  final GlobalKey<NavigatorState> _navigatorKey = GlobalKey<NavigatorState>();
 
   @override
   void initState() {
@@ -303,7 +275,10 @@ class _DashboardShellState extends State<DashboardShell> {
       return false;
     }
 
-    setState(() => _route = route);
+    if (_route != route) {
+      setState(() => _route = route);
+      _navigatorKey.currentState?.pushReplacementNamed(route);
+    }
     return true;
   }
 
@@ -318,85 +293,10 @@ class _DashboardShellState extends State<DashboardShell> {
   }
 
   Widget _buildContent() {
-    return switch (_route) {
-      DashboardRoutes.home => BlocProvider(
-        create: (_) => dashboardDi<DashboardHomeCubit>()..load(),
-        child: DashboardHomeScreen(onOpenModule: _openRoute),
-      ),
-      DashboardRoutes.bookings => BlocProvider(
-        create: (_) => dashboardDi<BookingsCubit>()..load(),
-        child: const BookingsScreen(),
-      ),
-      DashboardRoutes.trips => const TripsScreen(),
-      DashboardRoutes.liveTrips => BlocProvider(
-        create: (_) => dashboardDi<LiveTripsCubit>()..loadLiveTrips(),
-        child: const LiveTripsScreen(),
-      ),
-      DashboardRoutes.fleet => BlocProvider(
-        create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
-        child: const FleetOverviewScreen(),
-      ),
-      DashboardRoutes.drivers => BlocProvider(
-        create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
-        child: const FleetOverviewScreen(initialTab: FleetTab.drivers),
-      ),
-      DashboardRoutes.assignments => BlocProvider(
-        create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
-        child: const FleetOverviewScreen(initialTab: FleetTab.drivers),
-      ),
-      DashboardRoutes.vehicles => BlocProvider(
-        create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
-        child: const FleetOverviewScreen(initialTab: FleetTab.vehicles),
-      ),
-      DashboardRoutes.routes => BlocProvider(
-        create: (_) => dashboardDi<RoutesCubit>()..load(),
-        child: const RoutesScreen(),
-      ),
-      DashboardRoutes.users => _workspace('users', const UsersScreen()),
-      DashboardRoutes.subscriptions => BlocProvider(
-        create: (_) => dashboardDi<SubscriptionsCubit>()..load(),
-        child: const SubscriptionsScreen(),
-      ),
-      DashboardRoutes.referrals => BlocProvider(
-        create: (_) => dashboardDi<ReferralCubit>()..load(),
-        child: const ReferralManagementScreen(),
-      ),
-      DashboardRoutes.ownerOverview => BlocProvider(
-        create: (_) => dashboardDi<OwnerOverviewCubit>()..load(),
-        child: const OwnerOverviewScreen(),
-      ),
-      DashboardRoutes.payments => BlocProvider(
-        create: (_) => dashboardDi<FinanceCubit>()..load(),
-        child: const FinanceScreen(),
-      ),
-      DashboardRoutes.paymentVerification => BlocProvider(
-        create: (_) => dashboardDi<PaymentVerificationCubit>()..load(),
-        child: const PaymentVerificationScreen(),
-      ),
-      DashboardRoutes.tickets => BlocProvider(
-        create: (_) => dashboardDi<TicketsCubit>()..load(),
-        child: const TicketsScreen(),
-      ),
-      DashboardRoutes.reports => BlocProvider(
-        create: (_) => dashboardDi<ReportsCubit>()..load(),
-        child: const ReportsScreen(),
-      ),
-      DashboardRoutes.settings => _workspace(
-        'settings',
-        const SettingsScreen(),
-      ),
-      DashboardRoutes.permissions => _workspace(
-        'permissions',
-        const PermissionsScreen(),
-      ),
-      _ => const DashboardHomeScreen(),
-    };
-  }
-
-  Widget _workspace(String workspaceId, Widget child) {
-    return BlocProvider(
-      create: (_) => dashboardDi<DashboardWorkspaceCubit>()..load(workspaceId),
-      child: child,
+    return Navigator(
+      key: _navigatorKey,
+      initialRoute: DashboardRoutes.home,
+      onGenerateRoute: AppRouter.generateRoute,
     );
   }
 }

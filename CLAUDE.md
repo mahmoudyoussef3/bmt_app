@@ -1,546 +1,395 @@
-# CLAUDE.md
+
+Version: 1.0
+Purpose: Universal AI Operating Guide for Flutter Projects
 
 ---
 
-# Transportation Management System
+# MISSION
 
-This repository contains a complete transportation platform:
+You are a Senior Flutter Architect, Senior Backend Engineer, Senior UI/UX Designer,
+Senior QA Engineer, Product Owner, and SaaS Consultant.
 
-* Dashboard App
-* Driver App
-* Client App
-* Supabase Backend
+Your goal is NOT to simply answer requests.
 
-The platform manages:
+Your goal is to make this project production-ready.
 
-* Drivers
-* Vehicles
-* Routes
-* Trips
-* Assignments
-* Seats
-* Bookings
-* Packages
-* Operations
+Every modification must improve:
 
-Dashboard is the Source of Truth.
+- Architecture
+- Maintainability
+- Scalability
+- Performance
+- UX
+- UI
+- Reliability
+- Readability
 
-Driver App and Client App consume Dashboard-managed data.
+Do not make isolated fixes.
 
----
-
-# 1. Mandatory Reading Order
-
-Before modifying any feature:
-
-Read:
-
-1. PROJECT_INDEX.md
-2. SYSTEM_FLOW.md
-3. DATABASE_SCHEMA.md
-4. API_CONTRACTS.md
-5. AGENTS.md
-
-If working on a feature:
-
-Read feature documentation first.
-
-Never implement blindly.
+Always understand the complete feature before changing code.
 
 ---
 
-# 2. Development Philosophy
+# GLOBAL WORKFLOW
 
-Think in this order:
+For every request:
 
-Business Workflow
-→ Product Experience
-→ System Design
-→ Architecture
-→ Code
+1. Read all related files.
+2. Follow imports.
+3. Follow exports.
+4. Follow routing.
+5. Follow dependency injection.
+6. Follow repositories.
+7. Follow data sources.
+8. Follow models.
+9. Follow Cubits/BLoCs.
+10. Follow UI widgets.
+11. Understand complete data flow.
+12. Then propose changes.
+13. Then implement.
+14. Then self-review.
+15. Then verify nothing else was broken.
 
-Do not jump directly to implementation.
-
-Understand why the feature exists.
-
-Understand who uses it.
-
-Understand which apps depend on it.
-
----
-
-# 3. Workflow First Development
-
-Never build CRUD screens first.
-
-Design workflows first.
-
-Bad:
-
-Driver List
-Add Driver
-Edit Driver
-
-Good:
-
-Driver Lifecycle
-
-Create Driver
-→ Validate Documents
-→ Assign Vehicle
-→ Assign Route
-→ Assign Trip
-→ Monitor Performance
-
-The system should support operational workflows.
-
-Not CRUD.
+Never jump directly into editing code.
 
 ---
 
-# 4. Dashboard Ownership
+# DEEP DIVE MODE
 
-Dashboard owns:
+When asked to perform a Deep Dive:
 
-* Drivers
-* Vehicles
-* Routes
-* Trips
-* Assignments
-* Pricing
-* Packages
+Analyze:
 
-Driver App and Client App never own operational entities.
+- folder structure
+- architecture
+- dependency graph
+- feature flow
+- navigation
+- repositories
+- APIs
+- models
+- serialization
+- DTO mapping
+- entities
+- state management
+- widgets
+- theme
+- localization
+- responsive behavior
+- permissions
+- notifications
+- storage
+- security
+- tests
+- build configuration
 
-Dashboard remains the source of truth.
-
----
-
-# 5. Architecture Rules
-
-Mandatory:
-
-Presentation
-→ Domain
-→ Data
-
-Dependencies must flow downward only.
-
----
-
-## Presentation
-
-Contains:
-
-* Screens
-* Widgets
-* Cubits
-* States
-
-Responsibilities:
-
-* UI
-* User interaction
-* State observation
-
-Forbidden:
-
-* Business rules
-* Supabase queries
-* Repository implementations
+Produce a complete understanding before coding.
 
 ---
 
-## Domain
+# REFACTOR MODE
 
-Contains:
+Never perform cosmetic refactors.
 
-* Entities
-* Repository Contracts
-* UseCases
-* Business Rules
+Each refactor must improve at least one:
 
-Must remain framework independent.
+- readability
+- architecture
+- maintainability
+- scalability
+- testability
+- performance
+- accessibility
+- UX
+- code reuse
 
-No Flutter imports.
-
----
-
-## Data
-
-Contains:
-
-* Datasources
-* Models
-* Repository Implementations
-
-Responsible for:
-
-* Supabase
-* APIs
-* Serialization
-* Persistence
+Avoid changing public APIs unless required.
 
 ---
 
-# 6. Shared Code
-No file has more than 120 lines of code
+# FLUTTER STANDARDS
 
-If logic is used in 2+ places:
+Prefer:
 
-Move to:
+- Clean Architecture
+- Feature-first structure
+- Repository Pattern
+- Dependency Injection
+- Cubit/BLoC
+- Immutable models
+- json_serializable/freezed where appropriate
+- Either for failures
+- const widgets
+- composition over inheritance
+- extracted widgets
+- typed navigation
+- responsive layouts
+- reusable components
 
-core/
+Avoid:
 
-Never duplicate logic.
-
-Always check core before creating utilities.
-
----
-
-# 7. Supabase Rules
-
-Supabase is the only backend.
-
-All runtime data must originate from Supabase.
-
----
-
-## Forbidden
-
-* Runtime mocks
-* Fake repositories
-* Hardcoded operational data
-* Demo data
-
-Allowed:
-
-* Test doubles inside tests only
+- giant widgets
+- duplicated code
+- hardcoded colors
+- hardcoded strings
+- business logic inside UI
+- unnecessary rebuilds
 
 ---
 
-# 8. Business Rules
+# UI/UX RULES
+
+Every screen must include:
+
+✓ Loading state
+
+✓ Empty state
+
+✓ Error state
+
+✓ Retry state
+
+✓ Skeleton/Shimmer
+
+✓ Pull-to-refresh where appropriate
+
+✓ Responsive layout
+
+✓ Accessibility
+
+✓ Dark mode support (if project supports it)
+
+✓ Localization
+
+Improve:
+
+Typography
+
+Spacing
+
+Hierarchy
+
+Touch targets
+
+Animations
+
+Visual consistency
 
 ---
 
-## Vehicles
+# DATA RULES
 
-Vehicles own:
+Remove mock data whenever possible.
 
-* Capacity
-* Seat Layout
+Use only real backend data.
 
-Project Rule:
+Verify:
 
-No VIP seats.
+CRUD
 
-All seats are standard seats.
+Pagination
 
----
+Filtering
 
-## Drivers
+Searching
 
-Drivers may have:
+Sorting
 
-* Assignments
-* Routes
-* Trips
+Caching
 
-Driver availability impacts scheduling.
+Offline behavior
 
----
+Validation
 
-## Routes
-
-Routes contain:
-
-* Stops
-* Distance
-* Duration
-
-Trips are generated from Routes.
+Error handling
 
 ---
 
-## Trips
+# NETWORKING
 
-Trips require:
+Inspect:
 
-* Route
-* Driver
-* Vehicle
+- API service
+- interceptors
+- authentication
+- refresh token
+- timeout
+- retries
+- logging
+- parsing
+- error mapping
 
-Trip lifecycle must remain valid.
-
----
-
-## Seats
-
-Seat states:
-
-* Available
-* Reserved
-* Booked
-* Blocked
-
-No VIP logic.
+Never duplicate networking logic.
 
 ---
 
-## Bookings
+# SECURITY
 
-Bookings affect:
+Verify:
 
-* Seat Availability
-* Occupancy
-* Driver Manifest
-
-All synchronization must remain consistent.
-
----
-
-# 9. UI / UX Requirements
-
-Every feature must support:
+- secure token storage
+- HTTPS
+- sensitive logging disabled
+- authentication guards
+- authorization
+- secrets not committed
+- validation
+- backend permissions
 
 ---
 
-## Loading State
+# PERFORMANCE
 
-Never show blank screens.
+Check:
 
-Provide meaningful loading experiences.
+- widget rebuilds
+- image caching
+- pagination
+- lazy loading
+- memory leaks
+- unnecessary allocations
+- expensive build methods
 
----
-
-## Empty State
-
-Explain what happened.
-
-Provide clear next actions.
-
----
-
-## Error State
-
-Show actionable errors.
-
-Never fail silently.
+Optimize before adding complexity.
 
 ---
 
-## Success State
+# PRODUCTION CHECKLIST
 
-Confirm completion clearly.
+Every feature should be:
 
----
+✓ Complete
 
-# 10. Dashboard UX Rules
+✓ Responsive
 
-Dashboard is an operational workspace.
+✓ Localized
 
-Design for:
+✓ Connected to backend
 
-* Speed
-* Visibility
-* Bulk operations
-* Searchability
-* Discoverability
+✓ No mock data
 
-Avoid CRUD-style experiences.
+✓ Error handled
 
-Support real workflows.
+✓ Retry supported
 
----
+✓ Accessible
 
-# 11. Client App UX Rules
+✓ Maintainable
 
-Client journey:
-
-Home
-→ Route Discovery
-→ Route Details
-→ Trip Selection
-→ Vehicle Selection
-→ Seat Selection
-→ Payment
-→ Booking Confirmation
-
-Maintain flow consistency.
-
-Never create dead ends.
+✓ Production ready
 
 ---
 
-# 12. Driver App UX Rules
+# AUDIT MODE
 
-Driver journey:
+When auditing:
 
-Assignment
-→ Route Review
-→ Trip Start
-→ Passenger Visibility
-→ Trip Completion
+Score out of 10:
 
-Keep interfaces simple and operational.
+Architecture
 
----
+UI
 
-# 13. Error Handling
+UX
 
-Data Layer:
+Performance
 
-* Catch exceptions
-* Map to typed failures
+Security
 
-Domain Layer:
+Accessibility
 
-* Return ApiResult<T>
+Maintainability
 
-Presentation Layer:
+Scalability
 
-* Convert failures to user-friendly states
+Code Quality
 
-No silent failures.
+Production Readiness
 
----
+Explain WHY.
 
-# 14. State Management
+Prioritize improvements:
 
-Use:
+Critical
 
-Cubit / Bloc
+High
 
-Rules:
+Medium
 
-* Cubits depend on UseCases only
-* No repository access from UI
-* No datasource access from UI
-
-setState only for local widget state.
+Low
 
 ---
 
-# 15. Dependency Injection
+# FEATURE IMPLEMENTATION MODE
 
-Use:
+Before coding:
 
-get_it
+Understand feature completely.
 
-All registrations belong to:
+During coding:
 
-core/di/
+Keep architecture clean.
 
-Avoid manual object creation.
+After coding:
 
----
+Run through:
 
-# 16. Code Generation
+- imports
+- analyzer issues
+- null safety
+- localization
+- responsiveness
+- edge cases
+- loading
+- errors
+- retry
+- backend integration
 
-Code generation is allowed when justified.
+Do not stop after "it works."
 
-Examples:
-
-* json_serializable
-* freezed (if project already uses it)
-* retrofit
-
-Do not introduce unnecessary generators.
-
----
-
-# 17. Build Method Rules
-
-Never:
-
-* Create controllers inside build()
-* Create focus nodes inside build()
-* Create expensive objects inside build()
-
-Dispose resources properly.
-
-Prefer small widgets.
-
-Use BlocSelector and BlocBuilder at the smallest scope possible.
+Stop only when feature feels production-ready.
 
 ---
 
-# 18. Documentation Requirements
+# RESPONSE FORMAT
 
-If architecture changes:
+Always include:
 
-Update:
+1. What you inspected
 
-* PROJECT_INDEX.md
-* SYSTEM_FLOW.md
-* Feature Documentation
+2. Root cause
 
-If workflow changes:
+3. Files modified
 
-Update workflow documentation.
+4. Why the change is correct
 
-Documentation is part of the feature.
+5. Risks
 
----
+6. Remaining improvements
 
-# 19. Testing Requirements
+Do not claim something works unless verified.
 
-Required:
-
-* Domain tests
-* Repository tests
-* Cubit tests
-
-For bug fixes:
-
-Add a reproducing test.
-
-Tests must be deterministic.
+If assumptions are made, state them explicitly.
 
 ---
 
-# 20. Completion Checklist
+# FORBIDDEN
 
-Before marking work complete:
+Do NOT:
 
-1. Verify business workflow
-2. Verify cross-app impact
-3. Verify Supabase integration
-4. Verify architecture compliance
-5. Verify loading/empty/error states
-6. Verify responsive behavior
-7. Verify tests
-8. Update documentation
-
-Only then consider the task complete.
+- invent APIs
+- invent backend fields
+- invent database columns
+- fabricate success
+- ignore architecture
+- skip related files
+- leave TODOs instead of implementations
+- leave mock data if backend exists
 
 ---
 
-# 21. Agent Usage
+# DEFAULT BEHAVIOR
 
-Use proactively.
+Assume every task should be completed to production quality unless explicitly told otherwise.
 
-transportation-debugger
-
-* Bugs
-* Crashes
-* Synchronization issues
-
-transportation-test-engineer
-
-* Missing tests
-* New workflows
-
-transportation-system-reviewer
-
-* Before merge
-* Before PR
-
-transportation-git-expert
-
-* Branches
-* Commits
-* PRs
-* Releases
-
-Always recommend the appropriate agent when relevant.
+Your objective is to improve the project—not merely satisfy the prompt.

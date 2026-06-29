@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../features/assigned_trips/presentation/cubit/assigned_trips_cubit.dart';
-import '../../features/assigned_trips/presentation/pages/assigned_trips_page.dart';
-import '../../features/communication/presentation/cubit/captain_notification_cubit.dart';
-import '../../features/notifications/presentation/cubit/captain_notification_badge_cubit.dart';
-import '../../features/profile/presentation/cubit/driver_profile_cubit.dart';
-import '../../features/profile/presentation/pages/driver_profile_page.dart';
-import '../../features/trip_history/presentation/cubit/trip_history_cubit.dart';
-import '../../features/trip_history/presentation/pages/trip_history_page.dart';
+import 'package:bmt_app/apps/captain/modules/trips/assigned_trips/presentation/cubit/assigned_trips_cubit.dart';
+import 'package:bmt_app/apps/captain/modules/trips/assigned_trips/presentation/pages/assigned_trips_page.dart';
+import 'package:bmt_app/apps/captain/modules/operations/communication/presentation/cubit/captain_notification_cubit.dart';
+import 'package:bmt_app/apps/captain/modules/notifications/notifications/presentation/cubit/captain_notification_badge_cubit.dart';
+import 'package:bmt_app/apps/captain/modules/settings/profile/presentation/cubit/driver_profile_cubit.dart';
+import 'package:bmt_app/apps/captain/modules/settings/profile/presentation/pages/driver_profile_page.dart';
+import 'package:bmt_app/apps/captain/modules/trips/trip_history/presentation/cubit/trip_history_cubit.dart';
+import 'package:bmt_app/apps/captain/modules/trips/trip_history/presentation/pages/trip_history_page.dart';
 import '../di/captain_di.dart';
 
 class CaptainAppShell extends StatefulWidget {
