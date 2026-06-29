@@ -9,4 +9,9 @@ class BookingRoutes {
   static const availableTrips = '/booking/available-trips';
   static const vehicleListing = '/booking/vehicles';
   static const vehicleDetails = '/booking/vehicle-details';
+
+  // New flow
+  static const wizard = '/booking/wizard';
+  static const approval = '/booking/approval';
+  static const routeOverview = '/booking/route-overview';
 }

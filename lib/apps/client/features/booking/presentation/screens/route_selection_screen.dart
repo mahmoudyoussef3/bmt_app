@@ -96,10 +96,11 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
               );
             },
             onSelectRoute: (route) {
-              setState(() {
-                _selectedRouteId = route.id;
-                _selectedTripId = null;
-              });
+              Navigator.pushNamed(
+                context,
+                BookingRoutes.routeOverview,
+                arguments: route,
+              );
             },
             onSelectTrip: (trip) => setState(() => _selectedTripId = trip.id),
           ),

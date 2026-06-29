@@ -44,11 +44,16 @@ import 'package:bmt_app/apps/client/features/auth/presentation/screens/auth_succ
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/forgot_password_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/forgot_password_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/available_trips_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_approval_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_wizard_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/daily_booking_flow_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/map_route_selection_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/popular_routes_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_overview_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_selection_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/search_trip_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/vehicle_details_screen.dart';
@@ -185,6 +190,36 @@ class _ClientAppState extends State<ClientApp> {
 
                   return _buildBookingScope(
                     VehicleDetailsScreen(vehicleId: vehicleId),
+                  );
+                },
+
+                // New booking wizard flow
+                BookingRoutes.wizard: (context) {
+                  final route = ModalRoute.of(context)?.settings.arguments;
+                  if (route is! RouteOptionData) return const SizedBox.shrink();
+                  return BlocProvider(
+                    create: (_) => BookingWizardCubit(route),
+                    child: const BookingWizardScreen(),
+                  );
+                },
+
+                BookingRoutes.routeOverview: (context) {
+                  final route = ModalRoute.of(context)?.settings.arguments;
+                  if (route is! RouteOptionData) return const SizedBox.shrink();
+                  return RouteOverviewScreen(route: route);
+                },
+
+                BookingRoutes.approval: (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments;
+                  final m = args is Map ? args : <String, dynamic>{};
+                  return BookingApprovalScreen(
+                    routeName: m['routeName']?.toString() ?? '',
+                    pickup: m['pickup']?.toString() ?? '',
+                    dropoff: m['dropoff']?.toString() ?? '',
+                    departure: m['departure']?.toString() ?? '',
+                    seat: m['seat']?.toString() ?? '',
+                    package: m['package']?.toString() ?? '',
+                    total: m['total']?.toString() ?? '0',
                   );
                 },
 
