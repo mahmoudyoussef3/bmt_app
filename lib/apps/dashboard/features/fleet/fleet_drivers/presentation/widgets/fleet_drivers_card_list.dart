@@ -15,6 +15,7 @@ class FleetDriversCardList extends StatelessWidget {
   final ValueChanged<FleetDriver> onDelete;
   final int page;
   final int pageSize;
+  final ValueChanged<int> onPageChanged;
 
   const FleetDriversCardList({
     super.key,
@@ -25,6 +26,7 @@ class FleetDriversCardList extends StatelessWidget {
     required this.onDelete,
     required this.page,
     required this.pageSize,
+    required this.onPageChanged,
   });
 
   String _vehicleName(String vehicleId) {
@@ -62,201 +64,278 @@ class FleetDriversCardList extends StatelessWidget {
       );
     }
 
+    final pages = (drivers.length / pageSize).ceil().clamp(1, 9999);
+
     return Column(
       children: [
-        ListView.separated(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: paged.length,
-          separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.small),
-          itemBuilder: (context, index) {
-            final driver = paged[index];
-            final vehicle = _vehicleName(driver.currentVehicleId);
-            final snapshot = DriverOperations.snapshot(driver, workspace);
-            final healthColor = _healthColor(context, snapshot.health);
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final columns = constraints.maxWidth >= 1180 ? 2 : 1;
+            final gap = AppSpacing.medium;
+            final cardWidth = columns == 1
+                ? constraints.maxWidth
+                : (constraints.maxWidth - gap) / 2;
 
-            return AppCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(AppSpacing.medium),
-                    child: Row(
+            return Wrap(
+              spacing: gap,
+              runSpacing: gap,
+              children: paged.map((driver) {
+                final vehicle = _vehicleName(driver.currentVehicleId);
+                final snapshot = DriverOperations.snapshot(driver, workspace);
+                final healthColor = _healthColor(context, snapshot.health);
+
+                return SizedBox(
+                  width: cardWidth,
+                  child: AppCard(
+                    padding: EdgeInsets.zero,
+                    onTap: () => onViewDetails(driver),
+                    child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        FleetAvatar(
-                          label: driver.imageLabel,
-                          profileImageUrl: driver.profileImageUrl,
-                        ),
-                        const SizedBox(width: AppSpacing.medium),
-                        Expanded(
-                          child: Column(
+                        Padding(
+                          padding: const EdgeInsets.all(AppSpacing.medium),
+                          child: Row(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text(
-                                driver.name,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: textTheme.titleMedium?.copyWith(
-                                  fontWeight: FontWeight.w900,
+                              FleetAvatar(
+                                label: driver.imageLabel,
+                                profileImageUrl: driver.profileImageUrl,
+                              ),
+                              const SizedBox(width: AppSpacing.medium),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      driver.name,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: textTheme.titleMedium?.copyWith(
+                                        fontWeight: FontWeight.w900,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      driver.employeeCode,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: scheme.onSurfaceVariant,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                driver.employeeCode,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: scheme.onSurfaceVariant,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                              const SizedBox(width: AppSpacing.small),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  StatusChip(
+                                    label: snapshot.health.label,
+                                    color: healthColor.withAlpha(24),
+                                    textColor: healthColor,
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(width: AppSpacing.small),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            StatusChip(
-                              label: snapshot.health.label,
-                              color: healthColor.withAlpha(24),
-                              textColor: healthColor,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.medium,
-                    ),
-                    child: _DriverOperationalStrip(
-                      status: snapshot.status.label,
-                      reason: snapshot.primaryReason,
-                      color: healthColor,
-                    ),
-                  ),
-                  if (driver.isLicenseExpired) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.medium,
-                        AppSpacing.small,
-                        AppSpacing.medium,
-                        0,
-                      ),
-                      child: const _DriverAlertBanner(
-                        icon: Icons.warning_rounded,
-                        label: 'الرخصة منتهية',
-                        severity: _DriverAlertSeverity.critical,
-                      ),
-                    ),
-                  ] else if (driver.isLicenseExpiringSoon) ...[
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        AppSpacing.medium,
-                        AppSpacing.small,
-                        AppSpacing.medium,
-                        0,
-                      ),
-                      child: const _DriverAlertBanner(
-                        icon: Icons.schedule_rounded,
-                        label: 'الرخصة تنتهي قريباً',
-                        severity: _DriverAlertSeverity.warning,
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: AppSpacing.small),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.medium,
-                    ),
-                    child: _DriverMetaGrid(
-                      items: [
-                        _DriverMetaItem(
-                          icon: Icons.phone_android_rounded,
-                          label: 'الهاتف',
-                          value: driver.phone,
-                        ),
-                        _DriverMetaItem(
-                          icon: Icons.badge_outlined,
-                          label: 'الرقم القومي',
-                          value: driver.nationalId,
-                        ),
-                        _DriverMetaItem(
-                          icon: Icons.directions_bus_outlined,
-                          label: 'المركبة',
-                          value: vehicle.isEmpty ? 'بدون مركبة' : vehicle,
-                        ),
-                        _DriverMetaItem(
-                          icon: Icons.calendar_today_rounded,
-                          label: 'انتهاء الرخصة',
-                          value: driver.licenseExpiry,
-                          valueColor: healthColor,
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.small),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: AppSpacing.medium,
-                    ),
-                    child: _DriverDecisionLine(
-                      value: snapshot.canAssign
-                          ? 'جاهز للتعيين'
-                          : 'راجع المخاطر',
-                      color: snapshot.canAssign ? scheme.primary : healthColor,
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: scheme.surfaceContainerHighest.withAlpha(38),
-                      border: Border(
-                        top: BorderSide(color: scheme.outlineVariant),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(AppSpacing.medium),
-                      child: Wrap(
-                        spacing: AppSpacing.small,
-                        runSpacing: AppSpacing.small,
-                        alignment: WrapAlignment.end,
-                        children: [
-                          FilledButton.icon(
-                            onPressed: () => onViewDetails(driver),
-                            icon: const Icon(Icons.open_in_new_rounded),
-                            label: const Text('فتح ملف السائق'),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.medium,
                           ),
-                          OutlinedButton.icon(
-                            onPressed: () => onEdit(driver),
-                            icon: const Icon(Icons.edit_outlined, size: 18),
-                            label: const Text('تعديل'),
+                          child: _DriverOperationalStrip(
+                            status: snapshot.status.label,
+                            reason: snapshot.primaryReason,
+                            color: healthColor,
                           ),
-                          OutlinedButton.icon(
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: scheme.error,
+                        ),
+                        if (driver.isLicenseExpired) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.medium,
+                              AppSpacing.small,
+                              AppSpacing.medium,
+                              0,
                             ),
-                            onPressed: () => onDelete(driver),
-                            icon: const Icon(
-                              Icons.delete_outline_rounded,
-                              size: 18,
+                            child: const _DriverAlertBanner(
+                              icon: Icons.warning_rounded,
+                              label: 'الرخصة منتهية',
+                              severity: _DriverAlertSeverity.critical,
                             ),
-                            label: const Text('حذف'),
+                          ),
+                        ] else if (driver.isLicenseExpiringSoon) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(
+                              AppSpacing.medium,
+                              AppSpacing.small,
+                              AppSpacing.medium,
+                              0,
+                            ),
+                            child: const _DriverAlertBanner(
+                              icon: Icons.schedule_rounded,
+                              label: 'الرخصة تنتهي قريباً',
+                              severity: _DriverAlertSeverity.warning,
+                            ),
                           ),
                         ],
-                      ),
+                        const SizedBox(height: AppSpacing.small),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.medium,
+                          ),
+                          child: _DriverMetaGrid(
+                            items: [
+                              _DriverMetaItem(
+                                icon: Icons.phone_android_rounded,
+                                label: 'الهاتف',
+                                value: driver.phone,
+                              ),
+                              _DriverMetaItem(
+                                icon: Icons.badge_outlined,
+                                label: 'الرقم القومي',
+                                value: driver.nationalId,
+                              ),
+                              _DriverMetaItem(
+                                icon: Icons.directions_bus_outlined,
+                                label: 'المركبة',
+                                value: vehicle.isEmpty ? 'بدون مركبة' : vehicle,
+                              ),
+                              _DriverMetaItem(
+                                icon: Icons.calendar_today_rounded,
+                                label: 'انتهاء الرخصة',
+                                value: driver.licenseExpiry,
+                                valueColor: healthColor,
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.small),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.medium,
+                          ),
+                          child: _DriverDecisionLine(
+                            value: snapshot.canAssign
+                                ? 'جاهز للتعيين'
+                                : 'راجع المخاطر',
+                            color: snapshot.canAssign
+                                ? scheme.primary
+                                : healthColor,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.medium),
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest.withAlpha(38),
+                            border: Border(
+                              top: BorderSide(color: scheme.outlineVariant),
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.medium),
+                            child: Wrap(
+                              spacing: AppSpacing.small,
+                              runSpacing: AppSpacing.small,
+                              alignment: WrapAlignment.end,
+                              children: [
+                                FilledButton.icon(
+                                  onPressed: () => onViewDetails(driver),
+                                  icon: const Icon(Icons.open_in_new_rounded),
+                                  label: const Text('فتح ملف السائق'),
+                                ),
+                                OutlinedButton.icon(
+                                  onPressed: () => onEdit(driver),
+                                  icon: const Icon(
+                                    Icons.edit_outlined,
+                                    size: 18,
+                                  ),
+                                  label: const Text('تعديل'),
+                                ),
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: scheme.error,
+                                  ),
+                                  onPressed: () => onDelete(driver),
+                                  icon: const Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 18,
+                                  ),
+                                  label: const Text('حذف'),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
-                ],
-              ),
+                );
+              }).toList(),
             );
           },
         ),
+        const SizedBox(height: AppSpacing.medium),
+        _FleetCardsPagination(
+          total: drivers.length,
+          currentPage: page,
+          pages: pages,
+          onPageChanged: onPageChanged,
+        ),
       ],
+    );
+  }
+}
+
+class _FleetCardsPagination extends StatelessWidget {
+  const _FleetCardsPagination({
+    required this.total,
+    required this.currentPage,
+    required this.pages,
+    required this.onPageChanged,
+  });
+
+  final int total;
+  final int currentPage;
+  final int pages;
+  final ValueChanged<int> onPageChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(36),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: scheme.outlineVariant.withAlpha(80)),
+      ),
+      child: Row(
+        children: [
+          Text('الإجمالي $total'),
+          const Spacer(),
+          Text('صفحة ${currentPage + 1} من $pages'),
+          const SizedBox(width: AppSpacing.small),
+          IconButton(
+            tooltip: 'السابق',
+            onPressed: currentPage == 0
+                ? null
+                : () => onPageChanged(currentPage - 1),
+            icon: const Icon(Icons.chevron_right_rounded),
+          ),
+          IconButton(
+            tooltip: 'التالي',
+            onPressed: currentPage >= pages - 1
+                ? null
+                : () => onPageChanged(currentPage + 1),
+            icon: const Icon(Icons.chevron_left_rounded),
+          ),
+        ],
+      ),
     );
   }
 }

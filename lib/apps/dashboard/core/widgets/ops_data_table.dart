@@ -96,12 +96,10 @@ class OpsDataTable extends StatelessWidget {
                           if (entry.key > 0) {
                             yield Divider(
                               height: 1,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.outline.withAlpha(60),
+                              color: Theme.of(context).colorScheme.outlineVariant.withAlpha(50),
                             );
                           }
-                          yield _OpsBodyRow(
+                          yield _HoverableOpsBodyRow(
                             columns: columns,
                             cells: entry.value,
                           );
@@ -172,7 +170,7 @@ class _OpsHeaderRow extends StatelessWidget {
     ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold);
     return Container(
       color: scheme.surfaceContainerHighest.withAlpha(90),
-      padding: const EdgeInsets.all(AppSpacing.small),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
       child: Row(
         children: columns.asMap().entries.map((e) {
           final col = e.value;
@@ -209,32 +207,40 @@ class _OpsHeaderRow extends StatelessWidget {
   }
 }
 
-class _OpsBodyRow extends StatelessWidget {
+class _HoverableOpsBodyRow extends StatefulWidget {
   final List<OpsColumn> columns;
   final List<Widget> cells;
 
-  const _OpsBodyRow({required this.columns, required this.cells});
+  const _HoverableOpsBodyRow({required this.columns, required this.cells});
+
+  @override
+  State<_HoverableOpsBodyRow> createState() => _HoverableOpsBodyRowState();
+}
+
+class _HoverableOpsBodyRowState extends State<_HoverableOpsBodyRow> {
+  bool _isHovered = false;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.small),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: cells
-            .asMap()
-            .entries
-            .map(
-              (e) => _OpsCell(
-                flex: e.key < columns.length ? columns[e.key].flex : 1,
-                trailingGap: e.key < cells.length - 1,
-                alignment: e.key < columns.length && columns[e.key].numeric
-                    ? AlignmentDirectional.centerEnd
-                    : AlignmentDirectional.centerStart,
-                child: e.value,
-              ),
-            )
-            .toList(),
+    final scheme = Theme.of(context).colorScheme;
+    return MouseRegion(
+      onEnter: (_) => setState(() => _isHovered = true),
+      onExit: (_) => setState(() => _isHovered = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        color: _isHovered ? scheme.surfaceContainerHighest.withAlpha(50) : Colors.transparent,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: widget.cells.asMap().entries.map((e) => _OpsCell(
+            flex: e.key < widget.columns.length ? widget.columns[e.key].flex : 1,
+            trailingGap: e.key < widget.cells.length - 1,
+            alignment: e.key < widget.columns.length && widget.columns[e.key].numeric
+                ? AlignmentDirectional.centerEnd
+                : AlignmentDirectional.centerStart,
+            child: e.value,
+          )).toList(),
+        ),
       ),
     );
   }
@@ -256,7 +262,7 @@ class _OpsPaginationBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(AppSpacing.small),
+      padding: const EdgeInsets.all(AppSpacing.medium),
       child: Row(
         children: [
           Text('الإجمالي $total'),

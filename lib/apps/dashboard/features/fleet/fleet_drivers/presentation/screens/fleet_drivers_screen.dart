@@ -15,10 +15,9 @@ import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubi
 import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/async_state_view.dart';
 
-enum _DriversViewState { list, details, form }
+enum _DriversViewState { list, details }
 
 enum _DriverOpsFilter {
   all('الكل'),
@@ -154,40 +153,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
   ) {
     final cubit = context.read<FleetDriversCubit>();
 
-    // The add/edit wizard takes over the full width in every breakpoint.
-    if (_viewState == _DriversViewState.form) {
-      return FleetDriverFormView(
-        driver: _activeDriver,
-        workspace: workspace,
-        onBack: () => _setView(_DriversViewState.list),
-        onSave: (savedDriver, pendingDocs) async {
-          final docsCubit = context.read<FleetDocumentsCubit>();
-          final overviewCubit = context.read<FleetOverviewCubit>();
-          final messenger = ScaffoldMessenger.of(context);
-          final saved = await cubit.saveDriver(savedDriver);
-          if (saved == null) return; // error state already emitted
-
-          final failed = await FleetPendingDocsUploader.upload(
-            docsCubit,
-            ownerId: saved.id,
-            isDriver: true,
-            docs: pendingDocs,
-          );
-          if (failed.isNotEmpty) {
-            messenger.showSnackBar(
-              SnackBar(
-                content: Text(
-                  'تم حفظ السائق، لكن تعذّر رفع: ${failed.join('، ')}',
-                ),
-              ),
-            );
-          }
-
-          await overviewCubit.loadWorkspace();
-          if (context.mounted) _setView(_DriversViewState.list);
-        },
-      );
-    }
+    // The form is now a Dialog, launched via _showDriverForm()
 
     final sorted = _sortDrivers(
       _applyOperationsFilter(state.filteredDrivers, workspace),
@@ -206,6 +172,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
             state,
             workspace,
             _activeDriver!,
+            cubit,
             onBack: () => _setView(_DriversViewState.list),
           );
         }
@@ -213,24 +180,25 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         final master = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            _buildReadinessSummary(context, state.drivers, workspace),
+            const SizedBox(height: AppSpacing.large),
             _buildToolbar(context, state, cubit, workspace),
             const SizedBox(height: AppSpacing.medium),
-            _buildListBody(context, state, sorted, workspace, isSplit),
+            _buildListBody(context, state, sorted, workspace, cubit, isSplit),
           ],
         );
 
-        if (!isSplit) return master;
+        if (!isSplit || _selectedDriver == null) return master;
 
         // Desktop: keep the list in view alongside the readiness detail pane.
-        final detail = _selectedDriver == null
-            ? null
-            : _detailsView(
-                context,
-                state,
-                workspace,
-                _selectedDriver!,
-                onBack: () => setState(() => _selectedDriver = null),
-              );
+        final detail = _detailsView(
+          context,
+          state,
+          workspace,
+          _selectedDriver!,
+          cubit,
+          onBack: () => setState(() => _selectedDriver = null),
+        );
 
         return MasterDetailLayout(
           master: master,
@@ -247,7 +215,8 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     BuildContext context,
     FleetDriversLoaded state,
     FleetWorkspace workspace,
-    FleetDriver driver, {
+    FleetDriver driver,
+    FleetDriversCubit cubit, {
     required VoidCallback onBack,
   }) {
     final updatedDriver = state.drivers.firstWhere(
@@ -258,7 +227,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
       driver: updatedDriver,
       workspace: workspace,
       onBack: onBack,
-      onEdit: () => _setView(_DriversViewState.form, updatedDriver),
+      onEdit: () => _showDriverForm(context, cubit, workspace, updatedDriver),
     );
   }
 
@@ -267,27 +236,29 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     FleetDriversLoaded state,
     List<FleetDriver> sorted,
     FleetWorkspace workspace,
+    FleetDriversCubit cubit,
     bool isSplit,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final useCards = constraints.maxWidth < 800;
+        final useCards = isSplit || constraints.maxWidth < 1200;
         if (useCards) {
           return FleetDriversCardList(
             drivers: sorted,
             workspace: workspace,
             onViewDetails: (d) => _openDriver(d, isSplit),
-            onEdit: (d) => _setView(_DriversViewState.form, d),
+            onEdit: (d) => _showDriverForm(context, cubit, workspace, d),
             onDelete: _confirmDeleteDriver,
             page: _page,
             pageSize: _pageSize,
+            onPageChanged: (newPage) => setState(() => _page = newPage),
           );
         }
         return FleetDriversTable(
           drivers: sorted,
           workspace: workspace,
           onView: (d) => _openDriver(d, isSplit),
-          onEdit: (d) => _setView(_DriversViewState.form, d),
+          onEdit: (d) => _showDriverForm(context, cubit, workspace, d),
           selectedIds: state.selectedIds,
           selectedId: _selectedDriver?.id,
           page: _page,
@@ -307,85 +278,129 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     FleetDriversCubit cubit,
     FleetWorkspace workspace,
   ) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _buildReadinessSummary(context, state.drivers, workspace),
-          const SizedBox(height: AppSpacing.large),
-          DecoratedBox(
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest.withAlpha(45),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: scheme.outlineVariant.withAlpha(90)),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.medium),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _DriverFilterBar(
-                    selected: _opsFilter,
-                    onSelected: (filter) {
-                      setState(() {
-                        _opsFilter = filter;
-                        _page = 0;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  _DriverSearchSortActions(
-                    selectedCount: state.selectedIds.length,
-                    sortField: _sortField,
-                    sortAscending: _sortAscending,
-                    onSearch: cubit.search,
-                    onSortChanged: (field) =>
-                        setState(() => _sortField = field),
-                    onToggleSort: () =>
-                        setState(() => _sortAscending = !_sortAscending),
-                    onAdd: () => _setView(_DriversViewState.form),
-                    onArchive: state.selectedIds.isEmpty
-                        ? null
-                        : () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                title: const Text('أرشفة السائقين'),
-                                content: Text(
-                                  'هل أنت متأكد من أرشفة ${state.selectedIds.length} من السائقين المحددين؟',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, false),
-                                    child: const Text('إلغاء'),
-                                  ),
-                                  FilledButton(
-                                    onPressed: () =>
-                                        Navigator.pop(context, true),
-                                    child: const Text('تأكيد الأرشفة'),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirm == true) {
-                              await cubit.bulkArchiveDrivers();
-                              if (context.mounted) {
-                                await context
-                                    .read<FleetOverviewCubit>()
-                                    .loadWorkspace();
-                              }
-                            }
-                          },
-                  ),
-                ],
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: _DriverFilterBar(
+                  selected: _opsFilter,
+                  onSelected: (filter) {
+                    setState(() {
+                      _opsFilter = filter;
+                      _page = 0;
+                    });
+                  },
+                ),
               ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: AppSpacing.medium),
+            FilledButton.icon(
+              onPressed: () => _showDriverForm(context, cubit, workspace, null),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('إضافة سائق'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        _DriverSearchSortActions(
+          selectedCount: state.selectedIds.length,
+          sortField: _sortField,
+          sortAscending: _sortAscending,
+          onSearch: cubit.search,
+          onSortChanged: (field) => setState(() => _sortField = field),
+          onToggleSort: () => setState(() => _sortAscending = !_sortAscending),
+          onArchive: state.selectedIds.isEmpty
+              ? null
+              : () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('أرشفة السائقين'),
+                      content: Text(
+                        'هل أنت متأكد من أرشفة ${state.selectedIds.length} من السائقين المحددين؟',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('إلغاء'),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('تأكيد الأرشفة'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    await cubit.bulkArchiveDrivers();
+                    if (context.mounted) {
+                      await context.read<FleetOverviewCubit>().loadWorkspace();
+                    }
+                  }
+                },
+        ),
+      ],
+    );
+  }
+
+  void _showDriverForm(
+    BuildContext context,
+    FleetDriversCubit cubit,
+    FleetWorkspace workspace,
+    FleetDriver? driver,
+  ) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return FleetDriverFormView(
+          driver: driver,
+          workspace: workspace,
+          onBack: () => Navigator.pop(dialogContext),
+          onSave: (savedDriver, pendingDocs) async {
+            final docsCubit = context.read<FleetDocumentsCubit>();
+            final overviewCubit = context.read<FleetOverviewCubit>();
+            final messenger = ScaffoldMessenger.of(context);
+            final saved = await cubit.saveDriver(savedDriver);
+            if (saved == null) return;
+
+            final failed = await FleetPendingDocsUploader.upload(
+              docsCubit,
+              ownerId: saved.id,
+              isDriver: true,
+              docs: pendingDocs,
+            );
+
+            if (context.mounted) Navigator.pop(dialogContext);
+
+            if (failed.isNotEmpty) {
+              messenger.showSnackBar(
+                SnackBar(
+                  content: Text(
+                    'تم حفظ السائق، لكن تعذّر رفع: ${failed.join('، ')}',
+                  ),
+                ),
+              );
+            }
+
+            await overviewCubit.loadWorkspace();
+          },
+        );
+      },
     );
   }
 
@@ -511,15 +526,19 @@ class _DriverFilterBar extends StatelessWidget {
     return Wrap(
       spacing: AppSpacing.small,
       runSpacing: AppSpacing.small,
-      alignment: WrapAlignment.end,
+      alignment: WrapAlignment.start,
       children: _DriverOpsFilter.values.map((filter) {
         final isSelected = selected == filter;
         return ChoiceChip(
           selected: isSelected,
           label: Text(filter.label),
+          showCheckmark: false,
           avatar: isSelected ? const Icon(Icons.check_rounded, size: 16) : null,
           tooltip: 'تصفية السائقين حسب ${filter.label}',
           onSelected: (_) => onSelected(filter),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
         );
       }).toList(),
     );
@@ -534,7 +553,6 @@ class _DriverSearchSortActions extends StatelessWidget {
     required this.onSearch,
     required this.onSortChanged,
     required this.onToggleSort,
-    required this.onAdd,
     required this.onArchive,
   });
 
@@ -544,7 +562,6 @@ class _DriverSearchSortActions extends StatelessWidget {
   final ValueChanged<String> onSearch;
   final ValueChanged<FleetSortField> onSortChanged;
   final VoidCallback onToggleSort;
-  final VoidCallback onAdd;
   final VoidCallback? onArchive;
 
   @override
@@ -559,7 +576,6 @@ class _DriverSearchSortActions extends StatelessWidget {
           sortAscending: sortAscending,
           onSortChanged: onSortChanged,
           onToggleSort: onToggleSort,
-          onAdd: onAdd,
           onArchive: onArchive,
         );
 
@@ -595,14 +611,16 @@ class _DriverSearchField extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return SearchBar(
-      hintText: 'ابحث بالاسم أو كود الموظف أو الهاتف...',
+      hintText: 'ابحث بالاسم، الكود، أو رقم الهاتف...',
       elevation: WidgetStateProperty.all(0),
       padding: WidgetStateProperty.all(
-        const EdgeInsets.symmetric(horizontal: AppSpacing.medium),
+        const EdgeInsets.symmetric(horizontal: AppSpacing.large),
       ),
-      backgroundColor: WidgetStateProperty.all(scheme.surface),
-      side: WidgetStateProperty.all(
-        BorderSide(color: scheme.outlineVariant.withAlpha(120)),
+      backgroundColor: WidgetStateProperty.all(
+        scheme.surfaceContainerHighest.withAlpha(90),
+      ),
+      shape: WidgetStateProperty.all(
+        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       ),
       onChanged: onChanged,
       leading: Icon(Icons.search_rounded, color: scheme.onSurfaceVariant),
@@ -617,7 +635,6 @@ class _DriverSortActions extends StatelessWidget {
     required this.sortAscending,
     required this.onSortChanged,
     required this.onToggleSort,
-    required this.onAdd,
     required this.onArchive,
   });
 
@@ -626,7 +643,6 @@ class _DriverSortActions extends StatelessWidget {
   final bool sortAscending;
   final ValueChanged<FleetSortField> onSortChanged;
   final VoidCallback onToggleSort;
-  final VoidCallback onAdd;
   final VoidCallback? onArchive;
 
   String get _sortLabel {
@@ -694,12 +710,13 @@ class _DriverSortActions extends StatelessWidget {
             onPressed: onArchive,
             icon: const Icon(Icons.archive_outlined),
             label: Text('أرشفة $selectedCount'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
           ),
-        FilledButton.icon(
-          onPressed: onAdd,
-          icon: const Icon(Icons.add_rounded),
-          label: const Text('إضافة سائق'),
-        ),
       ],
     );
   }
@@ -726,11 +743,18 @@ class _DriverSummaryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.small),
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(75),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: scheme.outline.withAlpha(70)),
+        color: scheme.surfaceContainerHighest.withAlpha(50),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: scheme.outlineVariant.withAlpha(70)),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [

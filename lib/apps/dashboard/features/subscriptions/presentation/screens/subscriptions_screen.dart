@@ -16,6 +16,7 @@ import '../../plans/presentation/screens/subscription_plans_screen.dart';
 import '../cubit/subscriptions_cubit.dart';
 import '../cubit/subscriptions_state.dart';
 import '../widgets/subscriptions_analytics.dart';
+import '../widgets/subscription_rides_widget.dart';
 
 class SubscriptionsScreen extends StatelessWidget {
   const SubscriptionsScreen({super.key});
@@ -279,6 +280,10 @@ class _SubscriptionCard extends StatelessWidget {
               ),
             ],
           ),
+          if (subscription.totalRides > 0) ...[
+            const SizedBox(height: AppSpacing.medium),
+            SubscriptionRidesBalancePill(subscription: subscription),
+          ],
           const SizedBox(height: AppSpacing.medium),
           Align(
             alignment: AlignmentDirectional.centerEnd,
@@ -353,6 +358,9 @@ class SubscriptionDetailsScreen extends StatelessWidget {
                   _InfoData('الحالة', subscription.status.label),
                 ],
               ),
+              const Divider(height: AppSpacing.large),
+              _SectionTitle('رصيد الرحلات'),
+              SubscriptionRidesSection(subscription: subscription),
             ],
           ),
         ),

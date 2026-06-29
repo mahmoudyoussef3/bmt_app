@@ -191,6 +191,8 @@ class SubscriptionRecord {
   final DateTime endDate;
   final SubscriptionStatus status;
   final int remainingRides;
+  final int tripsCount;
+  final int tripsUsed;
 
   const SubscriptionRecord({
     required this.id,
@@ -201,6 +203,8 @@ class SubscriptionRecord {
     required this.endDate,
     required this.status,
     required this.remainingRides,
+    this.tripsCount = 0,
+    this.tripsUsed = 0,
   });
 
   SubscriptionRecord copyWith({
@@ -212,6 +216,8 @@ class SubscriptionRecord {
     DateTime? endDate,
     SubscriptionStatus? status,
     int? remainingRides,
+    int? tripsCount,
+    int? tripsUsed,
   }) {
     return SubscriptionRecord(
       id: id ?? this.id,
@@ -222,6 +228,8 @@ class SubscriptionRecord {
       endDate: endDate ?? this.endDate,
       status: status ?? this.status,
       remainingRides: remainingRides ?? this.remainingRides,
+      tripsCount: tripsCount ?? this.tripsCount,
+      tripsUsed: tripsUsed ?? this.tripsUsed,
     );
   }
 }
@@ -245,6 +253,7 @@ class RevenueMetrics {
   final double monthlyRevenue;
   final int activeSubscriptions;
   final double totalBookingsRevenue;
+  final double totalSubscriptionsRevenue;
 
   const RevenueMetrics({
     required this.todayRevenue,
@@ -252,7 +261,10 @@ class RevenueMetrics {
     required this.monthlyRevenue,
     required this.activeSubscriptions,
     required this.totalBookingsRevenue,
+    this.totalSubscriptionsRevenue = 0,
   });
+
+  double get grandTotalRevenue => totalBookingsRevenue + totalSubscriptionsRevenue;
 
   RevenueMetrics copyWith({
     double? todayRevenue,
@@ -260,6 +272,7 @@ class RevenueMetrics {
     double? monthlyRevenue,
     int? activeSubscriptions,
     double? totalBookingsRevenue,
+    double? totalSubscriptionsRevenue,
   }) {
     return RevenueMetrics(
       todayRevenue: todayRevenue ?? this.todayRevenue,
@@ -267,6 +280,8 @@ class RevenueMetrics {
       monthlyRevenue: monthlyRevenue ?? this.monthlyRevenue,
       activeSubscriptions: activeSubscriptions ?? this.activeSubscriptions,
       totalBookingsRevenue: totalBookingsRevenue ?? this.totalBookingsRevenue,
+      totalSubscriptionsRevenue:
+          totalSubscriptionsRevenue ?? this.totalSubscriptionsRevenue,
     );
   }
 }

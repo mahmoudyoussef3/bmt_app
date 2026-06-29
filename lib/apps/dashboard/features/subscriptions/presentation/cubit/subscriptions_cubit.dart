@@ -102,7 +102,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
         userName: user.name,
         userPhone: user.phone,
         tripId: '',
-        routeId: '',
+        routeId: plan.id, // carries package_id to the datasource
         routeName: plan.name,
         fromPointId: '',
         fromPointName: '',

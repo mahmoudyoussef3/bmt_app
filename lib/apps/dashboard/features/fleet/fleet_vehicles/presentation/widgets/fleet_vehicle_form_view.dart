@@ -133,25 +133,68 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     final isEdit = widget.vehicle != null;
     final scheme = Theme.of(context).colorScheme;
 
-    return Form(
-      key: _formKey,
-      autovalidateMode: AutovalidateMode.onUserInteraction,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          FleetBreadcrumbs(
-            currentLabel: isEdit
-                ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}'
-                : 'إضافة مركبة جديدة',
-            onBack: widget.onBack,
-          ),
-          const SizedBox(height: AppSpacing.large),
-          FleetFormHeroCard(
-            icon: Icons.directions_bus_filled_rounded,
-            title: isEdit ? 'تعديل بيانات المركبة' : 'إضافة مركبة جديدة',
-            subtitle:
-                'أدخل بيانات المركبة والصورة والسائق المرتبط بها. الصورة ترفع إلى Supabase Storage قبل الحفظ.',
-          ),
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: Container(
+        constraints: const BoxConstraints(maxWidth: 1000),
+        decoration: BoxDecoration(
+          color: scheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withAlpha(20),
+              blurRadius: 40,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              decoration: BoxDecoration(
+                color: scheme.primary.withAlpha(10),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                border: Border(bottom: BorderSide(color: scheme.outlineVariant.withAlpha(50))),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle),
+                    child: Icon(
+                      isEdit ? Icons.edit_rounded : Icons.directions_bus_rounded,
+                      color: scheme.onPrimary,
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Text(
+                      isEdit ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}' : 'إضافة مركبة جديدة',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: widget.onBack,
+                    icon: const Icon(Icons.close_rounded),
+                    style: IconButton.styleFrom(backgroundColor: scheme.surfaceContainerHighest),
+                  ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
           const SizedBox(height: AppSpacing.large),
           LayoutBuilder(
             builder: (context, constraints) {
@@ -250,17 +293,23 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
               ),
             ),
           ],
-          const SizedBox(height: AppSpacing.large),
-          FleetFormActionsBar(
-            saving: _saving,
-            onCancel: widget.onBack,
-            onSave: _onSave,
-            saveLabel: isEdit ? 'حفظ التعديلات' : 'إضافة المركبة',
+                    const SizedBox(height: AppSpacing.large),
+                    FleetFormActionsBar(
+                      saving: _saving,
+                      onCancel: widget.onBack,
+                      onSave: _onSave,
+                      saveLabel: isEdit ? 'حفظ التعديلات' : 'إضافة المركبة',
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMainFields({required int columns}) {
     return Column(

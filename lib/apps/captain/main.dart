@@ -1,15 +1,12 @@
-import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
 import 'package:bmt_app/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
-import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
 
 import 'package:bmt_app/core/flavors/app_bootstrap.dart';
-import 'package:bmt_app/core/flavors/app_flavor.dart';
 
 Future<void> main() async {
   await bootstrapFlavorApp(AppFlavor.captain);

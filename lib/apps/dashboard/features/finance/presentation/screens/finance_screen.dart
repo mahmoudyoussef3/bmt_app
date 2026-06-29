@@ -188,12 +188,28 @@ class _MetricsRow extends StatelessWidget {
                 ],
               ),
               SizedBox(height: spacing),
-              _MetricCard(
-                title: 'إجمالي إيرادات الحجوزات',
-                value: '${metrics.totalBookingsRevenue.toStringAsFixed(0)} ج.م',
-                icon: Icons.account_balance_wallet,
-                color: AppStatusColors.onNeutralContainer,
-                isFullWidth: true,
+              Row(
+                children: [
+                  Expanded(
+                    child: _MetricCard(
+                      title: 'إيرادات الحجوزات',
+                      value:
+                          '${metrics.totalBookingsRevenue.toStringAsFixed(0)} ج.م',
+                      icon: Icons.receipt_long,
+                      color: AppStatusColors.onNeutralContainer,
+                    ),
+                  ),
+                  SizedBox(width: spacing),
+                  Expanded(
+                    child: _MetricCard(
+                      title: 'إيرادات الاشتراكات',
+                      value:
+                          '${metrics.totalSubscriptionsRevenue.toStringAsFixed(0)} ج.م',
+                      icon: Icons.card_membership,
+                      color: AppStatusColors.onSpecialContainer,
+                    ),
+                  ),
+                ],
               ),
             ],
           );
@@ -239,10 +255,20 @@ class _MetricsRow extends StatelessWidget {
             SizedBox(width: spacing),
             Expanded(
               child: _MetricCard(
-                title: 'إجمالي إيرادات الحجوزات',
+                title: 'إيرادات الحجوزات',
                 value: '${metrics.totalBookingsRevenue.toStringAsFixed(0)} ج.م',
-                icon: Icons.account_balance_wallet,
+                icon: Icons.receipt_long,
                 color: AppStatusColors.onNeutralContainer,
+              ),
+            ),
+            SizedBox(width: spacing),
+            Expanded(
+              child: _MetricCard(
+                title: 'إيرادات الاشتراكات',
+                value:
+                    '${metrics.totalSubscriptionsRevenue.toStringAsFixed(0)} ج.م',
+                icon: Icons.card_membership,
+                color: AppStatusColors.onSpecialContainer,
               ),
             ),
           ],
@@ -257,14 +283,12 @@ class _MetricCard extends StatelessWidget {
   final String value;
   final IconData icon;
   final Color color;
-  final bool isFullWidth;
 
   const _MetricCard({
     required this.title,
     required this.value,
     required this.icon,
     required this.color,
-    this.isFullWidth = false,
   });
 
   @override
@@ -274,7 +298,6 @@ class _MetricCard extends StatelessWidget {
 
     return AppCard(
       child: Container(
-        width: isFullWidth ? double.infinity : null,
         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
         child: Row(
           children: [

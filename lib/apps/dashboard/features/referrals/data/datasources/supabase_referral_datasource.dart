@@ -44,7 +44,8 @@ class SupabaseReferralDatasource implements ReferralDatasource {
   ) async {
     final row = await _client
         .from('referral_rewards')
-        .update({
+        .upsert({
+          'id': 1,
           'enabled': config.enabled,
           'reward_type': config.rewardType,
           'reward_value': config.rewardValue,
@@ -53,9 +54,8 @@ class SupabaseReferralDatasource implements ReferralDatasource {
           'coupon_code': config.couponCode,
           'updated_at': DateTime.now().toIso8601String(),
         })
-        .eq('id', 1)
         .select()
-        .single();
+        .maybeSingle();
     return _mapConfig(row);
   }
 
