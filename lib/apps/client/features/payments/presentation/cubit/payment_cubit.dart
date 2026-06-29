@@ -37,14 +37,22 @@ class PaymentCubit extends Cubit<PaymentState> {
     emit(current.copyWith(selectedMethod: method));
   }
 
-  void applyPromo(String code) {
+  Future<void> applyPromo(String code) async {
     final current = state;
     if (current is! PaymentCheckoutLoaded) return;
     final normalized = code.trim().toUpperCase();
+    if (normalized.isEmpty) {
+      emit(current.copyWith(appliedPromoCode: '', promoDiscount: 0));
+      return;
+    }
+    final discount = await _applyPromoCode(normalized);
+    // Re-read state after the async gap in case it changed.
+    final latest = state;
+    if (latest is! PaymentCheckoutLoaded) return;
     emit(
-      current.copyWith(
-        appliedPromoCode: normalized.isEmpty ? null : normalized,
-        promoDiscount: normalized.isEmpty ? 0 : _applyPromoCode(normalized),
+      latest.copyWith(
+        appliedPromoCode: discount > 0 ? normalized : null,
+        promoDiscount: discount,
       ),
     );
   }

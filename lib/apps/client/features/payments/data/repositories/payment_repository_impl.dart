@@ -15,6 +15,11 @@ class PaymentRepositoryImpl implements PaymentRepository {
   }
 
   @override
+  Future<int> validatePromoCode(String code) {
+    return _datasource.validatePromoCode(code);
+  }
+
+  @override
   Future<String> uploadReceipt({
     required String bookingOrTripId,
     required String fileName,

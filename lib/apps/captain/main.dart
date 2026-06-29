@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
+import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
+import 'package:bmt_app/apps/captain/features/auth/presentation/screens/captain_login_screen.dart';
 import 'package:bmt_app/core/flavors/app_bootstrap.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
@@ -44,8 +47,8 @@ class _CaptainAppState extends State<CaptainApp> {
       );
     }
 
-    _authSub = supabase.auth.onAuthStateChange.listen((state) {
-      final session = state.session;
+    _authSub = supabase.auth.onAuthStateChange.listen((event) {
+      final session = event.session;
       if (session != null) {
         FcmService.instance.initialize(
           userId: session.user.id,
@@ -79,11 +82,34 @@ class _CaptainAppState extends State<CaptainApp> {
           theme: AppTheme.lightTheme(),
           darkTheme: AppTheme.darkTheme(),
           themeMode: ThemeMode.system,
-          home: const CaptainAppShell(),
+          home: const _CaptainAuthGate(),
           routes: {
             '/captain/home': (_) => const CaptainAppShell(),
-            '/captain/trips': (_) => const CaptainAppShell(),
           },
+        );
+      },
+    );
+  }
+}
+
+/// Shows CaptainLoginScreen when no session, CaptainAppShell when signed in.
+class _CaptainAuthGate extends StatelessWidget {
+  const _CaptainAuthGate();
+
+  @override
+  Widget build(BuildContext context) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        final session =
+            snapshot.data?.session ??
+            Supabase.instance.client.auth.currentSession;
+
+        if (session != null) return const CaptainAppShell();
+
+        return BlocProvider(
+          create: (_) => captainGetIt<CaptainAuthCubit>(),
+          child: const CaptainLoginScreen(),
         );
       },
     );

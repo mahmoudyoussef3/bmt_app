@@ -18,6 +18,23 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     } catch (e) {
       throw Exception('Login failed. Please check your credentials.');
     }
+
+    // Role guard: only users registered as clients may use this app.
+    final uid = _supabase.auth.currentUser?.id;
+    if (uid != null) {
+      final row = await _supabase
+          .from('clients')
+          .select('id')
+          .eq('id', uid)
+          .maybeSingle();
+      if (row == null) {
+        await _supabase.auth.signOut();
+        throw Exception(
+          'This account is not registered as a client.\n'
+          'Use the correct app for your account type.',
+        );
+      }
+    }
   }
 
   @override

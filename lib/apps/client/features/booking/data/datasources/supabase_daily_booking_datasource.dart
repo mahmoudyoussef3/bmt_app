@@ -21,12 +21,17 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
 
     final user = _supabase.auth.currentUser;
     List<dynamic> upcomingBookings = [];
+    int reservedSeats = 0;
     if (user != null) {
       upcomingBookings = await _supabase
           .from('operation_bookings')
-          .select('id')
+          .select('id, seats_count')
           .eq('client_id', user.id)
           .inFilter('status', ['newRequest', 'approved', 'active']);
+      reservedSeats = upcomingBookings.fold<int>(
+        0,
+        (sum, b) => sum + ((b['seats_count'] as int?) ?? 1),
+      );
     }
 
     return BookingHubData(
@@ -34,8 +39,7 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
       monthPlans: '${packagesResponse.length} plans',
       activeTrips: tripsResponse.length.toString(),
       upcomingBookings: upcomingBookings.length.toString(),
-      reservedSeats:
-          '0', // Need more robust logic to calculate total seats reserved by user
+      reservedSeats: reservedSeats.toString(),
     );
   }
 
@@ -79,19 +83,17 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
       );
     }).toList();
 
+    final distinctArrivalTimes = tripsResponse
+        .map((t) => t['arrival_time']?.toString() ?? '')
+        .where((t) => t.isNotEmpty)
+        .toSet()
+        .toList()
+      ..sort();
+
     return DailyBookingData(
-      pickupPoints: distinctPickups.isNotEmpty
-          ? distinctPickups
-          : ['Banha Station', 'Banha Center'],
-      destinations: distinctDestinations.isNotEmpty
-          ? distinctDestinations
-          : ['Smart Village', 'Nasr City'],
-      arrivalTimes: [
-        '8:30 AM',
-        '9:00 AM',
-        '9:30 AM',
-        '10:00 AM',
-      ], // Stubbed, format properly in production
+      pickupPoints: distinctPickups.isNotEmpty ? distinctPickups : [],
+      destinations: distinctDestinations.isNotEmpty ? distinctDestinations : [],
+      arrivalTimes: distinctArrivalTimes,
       vehicles: vehicles,
     );
   }

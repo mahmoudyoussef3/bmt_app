@@ -123,4 +123,38 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
       rewards: rewards,
     );
   }
+
+  @override
+  Future<void> redeemReward({
+    required String rewardId,
+    required String rewardTitle,
+    required int pointsCost,
+  }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('User is not authenticated');
+
+    final account = await _supabase
+        .from('loyalty_accounts')
+        .select('points')
+        .eq('client_id', user.id)
+        .maybeSingle();
+
+    final currentPoints = account?['points'] as int? ?? 0;
+    if (currentPoints < pointsCost) {
+      throw Exception('رصيد النقاط غير كافٍ لاستبدال هذه المكافأة');
+    }
+
+    await Future.wait([
+      _supabase
+          .from('loyalty_accounts')
+          .update({'points': currentPoints - pointsCost})
+          .eq('client_id', user.id),
+      _supabase.from('loyalty_transactions').insert({
+        'client_id': user.id,
+        'title': 'استبدال: $rewardTitle',
+        'points': -pointsCost,
+        'is_earned': false,
+      }),
+    ]);
+  }
 }

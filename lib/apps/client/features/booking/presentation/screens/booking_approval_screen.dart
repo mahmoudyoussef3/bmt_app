@@ -33,7 +33,7 @@ class BookingApprovalScreen extends StatefulWidget {
 
 class _BookingApprovalScreenState extends State<BookingApprovalScreen>
     with TickerProviderStateMixin {
-  _ApprovalStatus _status = _ApprovalStatus.pending;
+  final _ApprovalStatus _status = _ApprovalStatus.pending;
   Timer? _pollTimer;
   late final AnimationController _pulseController;
 

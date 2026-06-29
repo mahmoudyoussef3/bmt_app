@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/features/auth/presentation/cubit/dashboard_auth_cubit.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -87,6 +89,47 @@ class SettingsScreen extends StatelessWidget {
                     ),
                   ),
                 ],
+              );
+            },
+          ),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        AppCard(
+          child: Builder(
+            builder: (context) {
+              final scheme = Theme.of(context).colorScheme;
+              return ListTile(
+                leading: Icon(Icons.logout_rounded, color: scheme.error),
+                title: Text(
+                  'تسجيل الخروج',
+                  style: TextStyle(color: scheme.error, fontWeight: FontWeight.w600),
+                ),
+                subtitle: const Text('إنهاء الجلسة الحالية'),
+                onTap: () async {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('تسجيل الخروج'),
+                      content: const Text('هل تريد إنهاء جلستك الحالية؟'),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('إلغاء'),
+                        ),
+                        FilledButton(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: scheme.error,
+                          ),
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('خروج'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) {
+                    await dashboardDi<DashboardAuthCubit>().signOut();
+                  }
+                },
               );
             },
           ),

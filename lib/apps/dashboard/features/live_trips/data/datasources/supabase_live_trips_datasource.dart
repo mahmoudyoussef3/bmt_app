@@ -247,7 +247,8 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
           .single();
 
       final currentStatus = existing['status'] as String;
-      final newStatus = currentStatus == 'confirmed' ? 'reserved' : 'confirmed';
+      // Use 'boarded'/'pending' to match captain app status values.
+      final newStatus = currentStatus == 'boarded' ? 'pending' : 'boarded';
 
       await _client
           .from('trip_passengers')
@@ -261,6 +262,24 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
     } catch (e) {
       throw _handleError(e);
     }
+  }
+
+  @override
+  Stream<void> watchTripStatusChanges() {
+    final controller = StreamController<void>.broadcast();
+    final channel = _client
+        .channel('dashboard_live_trips_status')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'operation_trips',
+          callback: (_) {
+            if (!controller.isClosed) controller.add(null);
+          },
+        )
+        .subscribe();
+    controller.onCancel = () => channel.unsubscribe();
+    return controller.stream;
   }
 
   @override
@@ -405,7 +424,8 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
 
     final mappedPassengers = passengersList.map((p) {
       final pMap = p as Map<String, dynamic>;
-      final isCheckedIn = pMap['status'] == 'confirmed';
+      // 'boarded' is the status set by both the captain app and dashboard toggle.
+      final isCheckedIn = pMap['status'] == 'boarded';
       return LivePassengerCheckin(
         id: pMap['id'] as String,
         passengerName: pMap['passenger_name'] as String? ?? '',

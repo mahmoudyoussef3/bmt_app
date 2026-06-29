@@ -15,7 +15,7 @@ const _methods = [
 
 class WizardPaymentStep extends StatelessWidget {
   const WizardPaymentStep({super.key, required this.onConfirm});
-  final VoidCallback onConfirm;
+  final VoidCallback? onConfirm;
 
   @override
   Widget build(BuildContext context) {

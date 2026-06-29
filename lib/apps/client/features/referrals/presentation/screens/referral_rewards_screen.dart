@@ -188,9 +188,11 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
   }
 
   // Redeem Available points
-  void _redeemRewards() {
+  Future<void> _redeemRewards() async {
     if (_walletBalance == 0) return;
-    final redeemed = context.read<ReferralRewardsCubit>().redeem();
+    final redeemed = await context.read<ReferralRewardsCubit>().redeem();
+
+    if (!mounted) return;
 
     _triggerConfetti();
 

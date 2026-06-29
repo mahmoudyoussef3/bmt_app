@@ -5,6 +5,8 @@ import '../../domain/entities/payment_models.dart';
 abstract class PaymentDatasource {
   Future<List<PaymentMethodData>> getPaymentMethods();
 
+  Future<int> validatePromoCode(String code);
+
   Future<String> uploadReceipt({
     required String bookingOrTripId,
     required String fileName,

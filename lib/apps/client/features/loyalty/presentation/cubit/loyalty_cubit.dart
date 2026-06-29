@@ -25,9 +25,16 @@ class LoyaltyCubit extends Cubit<LoyaltyState> {
     }
   }
 
-  void redeem(RedeemableReward reward) {
+  Future<void> redeem(RedeemableReward reward) async {
     final current = state;
     if (current is! LoyaltyLoaded) return;
-    emit(LoyaltyLoaded(_redeemReward(current.data, reward)));
+    emit(const LoyaltyLoading());
+    try {
+      await _redeemReward(reward);
+      // Reload from Supabase to reflect the actual persisted state.
+      emit(LoyaltyLoaded(await _getData()));
+    } catch (error) {
+      emit(LoyaltyError(error.toString()));
+    }
   }
 }

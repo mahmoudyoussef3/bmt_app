@@ -38,12 +38,20 @@ class ReferralRewardsCubit extends Cubit<ReferralRewardsState> {
     emit(ReferralRewardsLoaded(current.data));
   }
 
-  int redeem() {
+  /// Persists wallet balance redemption to Supabase, then reloads fresh data.
+  /// Returns the amount redeemed (0 if balance was empty).
+  Future<int> redeem() async {
     final current = state;
     if (current is! ReferralRewardsLoaded) return 0;
-    final redeemed = _redeemRewards(current.data);
-    emit(ReferralRewardsLoaded(current.data));
-    return redeemed;
+    try {
+      final redeemed = await _redeemRewards();
+      // Reload from Supabase so the UI reflects the actual persisted balance.
+      emit(ReferralRewardsLoaded(await _getData()));
+      return redeemed;
+    } catch (error) {
+      emit(ReferralRewardsError(error.toString()));
+      return 0;
+    }
   }
 
   void reveal(ScratchVoucher voucher) {

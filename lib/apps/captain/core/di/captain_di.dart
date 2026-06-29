@@ -2,6 +2,9 @@ import '../../../../core/network/network_di.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../features/auth/data/datasources/captain_auth_datasource.dart';
+import '../../features/auth/presentation/cubit/captain_auth_cubit.dart';
+
 import '../../features/profile/data/datasources/driver_profile_datasource.dart';
 import '../../features/profile/data/repositories/driver_profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/driver_profile_repository.dart';
@@ -92,8 +95,8 @@ void registerCaptainDependencies() {
 
   _registerAssignedTripsDependencies();
   _registerPassengerManifestDependencies();
-  _registerTripExecutionDependencies();
   _registerLiveLocationDependencies();
+  _registerTripExecutionDependencies();
   _registerCommunicationDependencies();
   _registerIncidentsDependencies();
   _registerCheckInDependencies();
@@ -101,6 +104,20 @@ void registerCaptainDependencies() {
   _registerNotificationsDependencies();
   _registerProfileDependencies();
   _registerTripHistoryDependencies();
+  _registerAuthDependencies();
+}
+
+void _registerAuthDependencies() {
+  if (!captainGetIt.isRegistered<CaptainAuthDatasource>()) {
+    captainGetIt.registerLazySingleton<CaptainAuthDatasource>(
+      () => CaptainAuthDatasource(captainGetIt<SupabaseClient>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<CaptainAuthCubit>()) {
+    captainGetIt.registerFactory<CaptainAuthCubit>(
+      () => CaptainAuthCubit(captainGetIt<CaptainAuthDatasource>()),
+    );
+  }
 }
 
 void _registerAssignedTripsDependencies() {
@@ -213,6 +230,7 @@ void _registerTripExecutionDependencies() {
         startBoarding: captainGetIt<StartBoardingUseCase>(),
         startTrip: captainGetIt<StartTripUseCase>(),
         completeTrip: captainGetIt<CompleteTripUseCase>(),
+        startLocationSharing: captainGetIt<StartLocationSharingUseCase>(),
         stopLocationSharing: captainGetIt<StopLocationSharingUseCase>(),
       ),
     );

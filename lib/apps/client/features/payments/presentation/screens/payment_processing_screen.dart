@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/client/features/payments/presentation/screens/booki
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/paymob_checkout_webview_screen.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PaymentProcessingScreen extends StatefulWidget {
   final PaymentCheckoutData checkoutData;
@@ -103,8 +104,14 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
         'p_pricing_id': null,
         'p_pickup_point_id': null,
         'p_dropoff_point_id': null,
-        'p_passenger_name': 'Me',
-        'p_phone': '',
+        'p_passenger_name': Supabase.instance.client.auth.currentUser
+                ?.userMetadata?['full_name']
+                ?.toString() ??
+            '',
+        'p_phone': Supabase.instance.client.auth.currentUser
+                ?.userMetadata?['phone']
+                ?.toString() ??
+            '',
         'p_route': widget.checkoutData.route,
         'p_trip_time': widget.checkoutData.departureTime,
         'p_trip_date': widget.checkoutData.tripDate,

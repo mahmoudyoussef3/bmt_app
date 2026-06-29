@@ -15,6 +15,7 @@ import '../../domain/usecases/send_driver_message_usecase.dart';
 import '../../domain/usecases/skip_route_point_usecase.dart';
 import '../../domain/usecases/start_live_trip_usecase.dart';
 import '../../domain/usecases/toggle_passenger_checkin_usecase.dart';
+import '../../domain/usecases/watch_live_trips_usecase.dart';
 import '../../domain/usecases/watch_vehicle_position_usecase.dart';
 import 'live_trips_state.dart';
 
@@ -34,7 +35,10 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
   final TogglePassengerCheckinUseCase _togglePassengerCheckin;
   final WatchVehiclePositionUseCase _watchVehiclePosition;
 
+  final WatchLiveTripsUseCase _watchLiveTrips;
+
   final Map<String, StreamSubscription<VehiclePosition>> _locationSubs = {};
+  StreamSubscription<void>? _tripStatusSub;
   Timer? _refreshTimer;
 
   LiveTripsCubit({
@@ -52,6 +56,7 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     required SendDriverMessageUseCase messageDriver,
     required TogglePassengerCheckinUseCase togglePassengerCheckin,
     required WatchVehiclePositionUseCase watchVehiclePosition,
+    required WatchLiveTripsUseCase watchLiveTrips,
   }) : _getLiveTrips = getLiveTrips,
        _startTrip = startTrip,
        _pauseTrip = pauseTrip,
@@ -66,11 +71,13 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
        _messageDriver = messageDriver,
        _togglePassengerCheckin = togglePassengerCheckin,
        _watchVehiclePosition = watchVehiclePosition,
+       _watchLiveTrips = watchLiveTrips,
        super(const LiveTripsLoading());
 
   @override
   Future<void> close() {
     _cancelLocationSubs();
+    _tripStatusSub?.cancel();
     _refreshTimer?.cancel();
     return super.close();
   }
@@ -87,6 +94,7 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
       );
       _subscribeToLocations(trips);
       _startPeriodicRefresh();
+      _subscribeToTripStatusChanges();
     } catch (error) {
       emit(LiveTripsError(error.toString()));
     }
@@ -282,6 +290,28 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
       return t.copyWith(vehiclePosition: position);
     }).toList();
     emit(current.copyWith(trips: updatedTrips));
+  }
+
+  void _subscribeToTripStatusChanges() {
+    _tripStatusSub?.cancel();
+    _tripStatusSub = _watchLiveTrips().listen((_) async {
+      if (state is! LiveTripsLoaded) return;
+      try {
+        final trips = await _getLiveTrips();
+        final current = state;
+        if (current is! LiveTripsLoaded) return;
+        final positionById = {
+          for (final t in current.trips)
+            if (t.vehiclePosition != null) t.id: t.vehiclePosition!,
+        };
+        final merged = trips.map((t) {
+          final pos = positionById[t.id];
+          return pos != null ? t.copyWith(vehiclePosition: pos) : t;
+        }).toList();
+        emit(current.copyWith(trips: merged));
+        _subscribeToLocations(merged);
+      } catch (_) {}
+    });
   }
 
   // Refresh full trip list every 30 s to pick up new events and passengers.

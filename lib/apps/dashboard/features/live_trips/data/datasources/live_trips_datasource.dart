@@ -27,4 +27,8 @@ abstract class LiveTripsDatasource {
   Future<String> sendDriverMessage(String driverPhone, String message);
   Future<LiveTrip> togglePassengerCheckin(String tripId, String passengerId);
   Stream<VehiclePosition> watchVehiclePosition(String tripId);
+
+  /// Emits whenever an operational trip's status changes (boarding, in_progress,
+  /// completed, etc.) so the dashboard can refresh the live list in real-time.
+  Stream<void> watchTripStatusChanges();
 }

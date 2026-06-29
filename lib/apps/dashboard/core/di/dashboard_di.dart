@@ -1,4 +1,6 @@
 import '../../../../core/network/network_di.dart';
+import '../../features/auth/data/datasources/dashboard_auth_datasource.dart';
+import '../../features/auth/presentation/cubit/dashboard_auth_cubit.dart';
 import '../../features/notifications/data/datasources/supabase_notifications_dispatch_datasource.dart';
 import '../../features/notifications/data/repositories/notifications_dispatch_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notifications_dispatch_repository.dart';
@@ -88,6 +90,7 @@ import '../../features/live_trips/domain/usecases/report_live_trip_alert_usecase
 import '../../features/live_trips/domain/usecases/call_driver_usecase.dart';
 import '../../features/live_trips/domain/usecases/send_driver_message_usecase.dart';
 import '../../features/live_trips/domain/usecases/toggle_passenger_checkin_usecase.dart';
+import '../../features/live_trips/domain/usecases/watch_live_trips_usecase.dart';
 import '../../features/live_trips/domain/usecases/watch_vehicle_position_usecase.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/payments/data/datasources/payments_datasource.dart';
@@ -692,6 +695,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<WatchLiveTripsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => WatchLiveTripsUseCase(dashboardDi<LiveTripsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<LiveTripsCubit>()) {
     dashboardDi.registerFactory(
       () => LiveTripsCubit(
@@ -709,6 +718,7 @@ void registerDashboardDependencies() {
         messageDriver: dashboardDi<SendDriverMessageUseCase>(),
         togglePassengerCheckin: dashboardDi<TogglePassengerCheckinUseCase>(),
         watchVehiclePosition: dashboardDi<WatchVehiclePositionUseCase>(),
+        watchLiveTrips: dashboardDi<WatchLiveTripsUseCase>(),
       ),
     );
   }
@@ -1421,6 +1431,17 @@ void _registerNotificationsDispatchDependencies() {
   if (!dashboardDi.isRegistered<NotificationsDispatchCubit>()) {
     dashboardDi.registerFactory<NotificationsDispatchCubit>(
       () => NotificationsDispatchCubit(dashboardDi<SendNotificationUseCase>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<DashboardAuthDatasource>()) {
+    dashboardDi.registerLazySingleton<DashboardAuthDatasource>(
+      () => DashboardAuthDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<DashboardAuthCubit>()) {
+    dashboardDi.registerFactory<DashboardAuthCubit>(
+      () => DashboardAuthCubit(dashboardDi<DashboardAuthDatasource>()),
     );
   }
 }

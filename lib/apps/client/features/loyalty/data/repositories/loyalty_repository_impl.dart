@@ -9,4 +9,15 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
 
   @override
   Future<LoyaltyData> getLoyaltyData() => _datasource.getLoyaltyData();
+
+  @override
+  Future<void> redeemReward({
+    required String rewardId,
+    required String rewardTitle,
+    required int pointsCost,
+  }) => _datasource.redeemReward(
+    rewardId: rewardId,
+    rewardTitle: rewardTitle,
+    pointsCost: pointsCost,
+  );
 }

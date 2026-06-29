@@ -4,6 +4,7 @@ import '../../domain/entities/trip_execution_state.dart';
 import '../../domain/usecases/complete_trip_usecase.dart';
 import '../../domain/usecases/start_boarding_usecase.dart';
 import '../../domain/usecases/start_trip_usecase.dart';
+import '../../../live_location/domain/usecases/start_location_sharing_usecase.dart';
 import '../../../live_location/domain/usecases/stop_location_sharing_usecase.dart';
 import 'trip_execution_state.dart';
 
@@ -12,16 +13,19 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
     required StartBoardingUseCase startBoarding,
     required StartTripUseCase startTrip,
     required CompleteTripUseCase completeTrip,
+    required StartLocationSharingUseCase startLocationSharing,
     required StopLocationSharingUseCase stopLocationSharing,
   }) : _startBoarding = startBoarding,
        _startTrip = startTrip,
        _completeTrip = completeTrip,
+       _startLocationSharing = startLocationSharing,
        _stopLocationSharing = stopLocationSharing,
        super(const TripExecutionIdle(TripExecutionStatus.scheduled));
 
   final StartBoardingUseCase _startBoarding;
   final StartTripUseCase _startTrip;
   final CompleteTripUseCase _completeTrip;
+  final StartLocationSharingUseCase _startLocationSharing;
   final StopLocationSharingUseCase _stopLocationSharing;
   TripExecutionStatus _status = TripExecutionStatus.scheduled;
 
@@ -46,6 +50,12 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
     try {
       final result = await _startTrip(tripId);
       _status = result.status;
+      // Start broadcasting live location as soon as the trip is in progress.
+      try {
+        await _startLocationSharing(tripId);
+      } catch (_) {
+        // Location sharing failure must not block the trip transition.
+      }
       emit(TripExecutionIdle(result.status));
     } catch (error) {
       emit(TripExecutionError(error.toString(), _status));

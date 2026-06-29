@@ -1,5 +1,8 @@
 import '../entities/referral_rewards.dart';
+import '../repositories/referral_rewards_repository.dart';
 
+/// Local-only: marks a contact as invited in the in-memory list.
+/// Contact invite tracking is not persisted to Supabase in the current schema.
 class InviteContactUseCase {
   const InviteContactUseCase();
 
@@ -10,18 +13,18 @@ class InviteContactUseCase {
   }
 }
 
+/// Persists wallet balance redemption to Supabase via the repository.
+/// Returns the amount actually redeemed.
 class RedeemRewardsUseCase {
-  const RedeemRewardsUseCase();
+  const RedeemRewardsUseCase(this._repository);
 
-  int call(ReferralRewardsData data) {
-    final redeemed = data.walletBalance;
-    if (redeemed == 0) return 0;
-    data.earnedRewardsTotal += redeemed;
-    data.walletBalance = 0;
-    return redeemed;
-  }
+  final ReferralRewardsRepository _repository;
+
+  Future<int> call() => _repository.redeemWalletBalance();
 }
 
+/// Local-only: reveals a scratch voucher in the UI.
+/// Voucher reveal state is not persisted to Supabase in the current schema.
 class RevealVoucherUseCase {
   const RevealVoucherUseCase();
 

@@ -6,6 +6,27 @@ class SupabaseReferralRewardsDatasource {
 
   final SupabaseClient _supabase;
 
+  Future<int> redeemWalletBalance() async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('User not authenticated');
+
+    final account = await _supabase
+        .from('loyalty_accounts')
+        .select('wallet_balance')
+        .eq('client_id', user.id)
+        .maybeSingle();
+
+    final balance = account?['wallet_balance'] as int? ?? 0;
+    if (balance <= 0) return 0;
+
+    await _supabase
+        .from('loyalty_accounts')
+        .update({'wallet_balance': 0})
+        .eq('client_id', user.id);
+
+    return balance;
+  }
+
   Future<ReferralRewardsData> getReferralRewardsData() async {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');

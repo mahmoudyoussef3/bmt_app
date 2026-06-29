@@ -1,11 +1,11 @@
-class ApplyPromoCodeUseCase {
-  const ApplyPromoCodeUseCase();
+import '../repositories/payment_repository.dart';
 
-  int call(String code) {
-    return switch (code.trim().toUpperCase()) {
-      'WELCOME10' => 10,
-      'MEGA20' => 20,
-      _ => 0,
-    };
-  }
+class ApplyPromoCodeUseCase {
+  const ApplyPromoCodeUseCase(this._repository);
+
+  final PaymentRepository _repository;
+
+  /// Returns the discount amount for the given promo code.
+  /// Returns 0 if the code is invalid, expired, or exhausted.
+  Future<int> call(String code) => _repository.validatePromoCode(code);
 }

@@ -547,7 +547,7 @@ void _registerPaymentDependencies() {
 
   if (!clientGetIt.isRegistered<ApplyPromoCodeUseCase>()) {
     clientGetIt.registerLazySingleton<ApplyPromoCodeUseCase>(
-      () => const ApplyPromoCodeUseCase(),
+      () => ApplyPromoCodeUseCase(clientGetIt<PaymentRepository>()),
     );
   }
 
@@ -920,7 +920,7 @@ void _registerReferralRewardsDependencies() {
 
   if (!clientGetIt.isRegistered<RedeemRewardsUseCase>()) {
     clientGetIt.registerLazySingleton<RedeemRewardsUseCase>(
-      () => const RedeemRewardsUseCase(),
+      () => RedeemRewardsUseCase(clientGetIt<ReferralRewardsRepository>()),
     );
   }
 
@@ -963,7 +963,7 @@ void _registerLoyaltyDependencies() {
 
   if (!clientGetIt.isRegistered<RedeemLoyaltyRewardUseCase>()) {
     clientGetIt.registerLazySingleton<RedeemLoyaltyRewardUseCase>(
-      () => const RedeemLoyaltyRewardUseCase(),
+      () => RedeemLoyaltyRewardUseCase(clientGetIt<LoyaltyRepository>()),
     );
   }
 

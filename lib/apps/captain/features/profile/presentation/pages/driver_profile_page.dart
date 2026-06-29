@@ -1,3 +1,5 @@
+import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -82,6 +84,34 @@ class _ProfileSliverHeader extends StatelessWidget {
       pinned: true,
       elevation: 0,
       backgroundColor: scheme.surface,
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.logout_rounded),
+          tooltip: 'تسجيل الخروج',
+          onPressed: () async {
+            final confirmed = await showDialog<bool>(
+              context: context,
+              builder: (_) => AlertDialog(
+                title: const Text('تسجيل الخروج'),
+                content: const Text('هل أنت متأكد من تسجيل الخروج؟'),
+                actions: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context, false),
+                    child: const Text('إلغاء'),
+                  ),
+                  FilledButton(
+                    onPressed: () => Navigator.pop(context, true),
+                    child: const Text('خروج'),
+                  ),
+                ],
+              ),
+            );
+            if (confirmed == true) {
+              await captainGetIt<CaptainAuthCubit>().signOut();
+            }
+          },
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(

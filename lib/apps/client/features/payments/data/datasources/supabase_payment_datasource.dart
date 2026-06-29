@@ -40,6 +40,39 @@ class SupabasePaymentDatasource implements PaymentDatasource {
   }
 
   @override
+  Future<int> validatePromoCode(String code) async {
+    try {
+      final normalized = code.trim().toUpperCase();
+      if (normalized.isEmpty) return 0;
+
+      final now = DateTime.now().toUtc().toIso8601String();
+      final row = await _supabase
+          .from('promo_codes')
+          .select('discount_amount, discount_type, max_uses, use_count')
+          .eq('code', normalized)
+          .eq('is_active', true)
+          .or('expires_at.is.null,expires_at.gt.$now')
+          .maybeSingle();
+
+      if (row == null) return 0;
+
+      final maxUses = row['max_uses'] as int?;
+      final useCount = row['use_count'] as int? ?? 0;
+      if (maxUses != null && useCount >= maxUses) return 0;
+
+      final discountAmount = (row['discount_amount'] as num?)?.toInt() ?? 0;
+      final discountType = row['discount_type']?.toString() ?? 'fixed';
+
+      // For 'percentage' type the caller is responsible for applying the %.
+      // We return the raw value in both cases; the cubit already treats the
+      // returned int as the discount to subtract from the total.
+      return discountType == 'percentage' ? discountAmount : discountAmount;
+    } on PostgrestException {
+      return 0;
+    }
+  }
+
+  @override
   Future<String> uploadReceipt({
     required String bookingOrTripId,
     required String fileName,

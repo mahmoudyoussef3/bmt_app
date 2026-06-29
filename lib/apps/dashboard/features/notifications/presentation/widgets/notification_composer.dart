@@ -161,7 +161,7 @@ class _TargetRow extends StatelessWidget {
       children: [
         Expanded(
           child: DropdownButtonFormField<NotificationTargetApp>(
-            value: target,
+            initialValue: target,
             decoration: const InputDecoration(
               labelText: 'Target App',
               border: OutlineInputBorder(),
@@ -201,7 +201,7 @@ class _CategoryDropdown extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DropdownButtonFormField<DashboardNotificationCategory>(
-      value: value,
+      initialValue: value,
       decoration: const InputDecoration(
         labelText: 'Category',
         border: OutlineInputBorder(),
