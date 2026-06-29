@@ -2,6 +2,16 @@ import '../../../../core/network/network_di.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../features/notifications/data/datasources/supabase_captain_notifications_datasource.dart';
+import '../../features/notifications/data/repositories/captain_notifications_repository_impl.dart';
+import '../../features/notifications/domain/repositories/captain_notifications_repository.dart';
+import '../../features/notifications/domain/usecases/watch_captain_notifications_usecase.dart';
+import '../../features/notifications/domain/usecases/watch_captain_unread_count_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_captain_notification_read_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_all_captain_notifications_read_usecase.dart';
+import '../../features/notifications/presentation/cubit/captain_notifications_cubit.dart';
+import '../../features/notifications/presentation/cubit/captain_notification_badge_cubit.dart';
+
 import '../../features/assigned_trips/data/datasources/captain_trip_remote_datasource.dart';
 import '../../features/assigned_trips/data/repositories/captain_trip_repository_impl.dart';
 import '../../features/assigned_trips/domain/repositories/captain_trip_repository.dart';
@@ -74,6 +84,7 @@ void registerCaptainDependencies() {
   _registerIncidentsDependencies();
   _registerCheckInDependencies();
   _registerTripStatusUpdateDependencies();
+  _registerNotificationsDependencies();
 }
 
 void _registerAssignedTripsDependencies() {
@@ -322,6 +333,70 @@ void _registerTripStatusUpdateDependencies() {
     captainGetIt.registerFactory<TripStatusUpdateCubit>(
       () => TripStatusUpdateCubit(
         captainGetIt<status_updates.UpdateTripStatusUseCase>(),
+      ),
+    );
+  }
+}
+
+void _registerNotificationsDependencies() {
+  if (!captainGetIt.isRegistered<CaptainNotificationsDatasource>()) {
+    captainGetIt.registerLazySingleton<CaptainNotificationsDatasource>(
+      () => SupabaseCaptainNotificationsDatasource(
+        captainGetIt<SupabaseClient>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<CaptainNotificationsRepository>()) {
+    captainGetIt.registerLazySingleton<CaptainNotificationsRepository>(
+      () => CaptainNotificationsRepositoryImpl(
+        captainGetIt<CaptainNotificationsDatasource>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<WatchCaptainNotificationsUseCase>()) {
+    captainGetIt.registerLazySingleton<WatchCaptainNotificationsUseCase>(
+      () => WatchCaptainNotificationsUseCase(
+        captainGetIt<CaptainNotificationsRepository>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<WatchCaptainUnreadCountUseCase>()) {
+    captainGetIt.registerLazySingleton<WatchCaptainUnreadCountUseCase>(
+      () => WatchCaptainUnreadCountUseCase(
+        captainGetIt<CaptainNotificationsRepository>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<MarkCaptainNotificationReadUseCase>()) {
+    captainGetIt.registerLazySingleton<MarkCaptainNotificationReadUseCase>(
+      () => MarkCaptainNotificationReadUseCase(
+        captainGetIt<CaptainNotificationsRepository>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<MarkAllCaptainNotificationsReadUseCase>()) {
+    captainGetIt
+        .registerLazySingleton<MarkAllCaptainNotificationsReadUseCase>(
+      () => MarkAllCaptainNotificationsReadUseCase(
+        captainGetIt<CaptainNotificationsRepository>(),
+      ),
+    );
+  }
+  // Singleton badge cubit — always alive.
+  if (!captainGetIt.isRegistered<CaptainNotificationBadgeCubit>()) {
+    captainGetIt.registerLazySingleton<CaptainNotificationBadgeCubit>(
+      () => CaptainNotificationBadgeCubit(
+        captainGetIt<WatchCaptainUnreadCountUseCase>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<CaptainNotificationsCubit>()) {
+    captainGetIt.registerFactory<CaptainNotificationsCubit>(
+      () => CaptainNotificationsCubit(
+        watchNotifications: captainGetIt<WatchCaptainNotificationsUseCase>(),
+        markAsRead: captainGetIt<MarkCaptainNotificationReadUseCase>(),
+        markAllAsRead:
+            captainGetIt<MarkAllCaptainNotificationsReadUseCase>(),
       ),
     );
   }

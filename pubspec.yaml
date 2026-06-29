@@ -73,6 +73,8 @@ dependencies:
   flutter_background_service: ^5.1.0
   fl_chart: ^1.2.0
   webview_flutter: ^4.14.0
+  firebase_core: ^4.11.0
+  firebase_messaging: ^16.4.1
 
 dev_dependencies:
   flutter_test:

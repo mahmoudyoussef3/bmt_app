@@ -5,45 +5,51 @@ class ClientNotificationModel {
     required this.id,
     required this.title,
     required this.body,
-    required this.type,
+    required this.category,
     required this.isRead,
     required this.createdAt,
+    this.actionUrl,
+    this.data = const {},
+    this.priority = NotificationPriority.normal,
   });
 
   final String id;
   final String title;
   final String body;
-  final String type;
+  final NotificationCategory category;
   final bool isRead;
   final DateTime createdAt;
+  final String? actionUrl;
+  final Map<String, dynamic> data;
+  final NotificationPriority priority;
 
   factory ClientNotificationModel.fromMap(Map<String, dynamic> map) {
     return ClientNotificationModel(
       id: map['id'] as String,
-      title: map['title'] as String,
-      body: map['body'] as String,
-      type: map['type'] as String? ?? 'general',
+      title: map['title'] as String? ?? '',
+      body: map['body'] as String? ?? '',
+      category: NotificationCategory.fromString(
+        map['category'] as String? ?? map['type'] as String? ?? 'general',
+      ),
       isRead: map['is_read'] as bool? ?? false,
       createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
+      actionUrl: map['action_url'] as String?,
+      data: (map['data'] as Map<String, dynamic>?) ?? const {},
+      priority: NotificationPriority.fromString(
+        map['priority'] as String? ?? 'normal',
+      ),
     );
   }
 
-  String get _relativeTime {
-    final diff = DateTime.now().difference(createdAt);
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-    if (diff.inHours < 24) return '${diff.inHours} hr ago';
-    if (diff.inDays == 1) return 'Yesterday';
-    return '${diff.inDays} days ago';
-  }
-
-  ClientNotification toEntity() {
-    return ClientNotification(
-      title: title,
-      description: body,
-      time: _relativeTime,
-      iconKey: type,
-      unread: !isRead,
-    );
-  }
+  ClientNotification toEntity() => ClientNotification(
+        id: id,
+        title: title,
+        body: body,
+        category: category,
+        isRead: isRead,
+        createdAt: createdAt,
+        actionUrl: actionUrl,
+        data: data,
+        priority: priority,
+      );
 }

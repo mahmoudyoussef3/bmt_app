@@ -1,4 +1,9 @@
 import '../../../../core/network/network_di.dart';
+import '../../features/notifications/data/datasources/supabase_notifications_dispatch_datasource.dart';
+import '../../features/notifications/data/repositories/notifications_dispatch_repository_impl.dart';
+import '../../features/notifications/domain/repositories/notifications_dispatch_repository.dart';
+import '../../features/notifications/domain/usecases/send_notification_usecase.dart';
+import '../../features/notifications/presentation/cubit/notifications_dispatch_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/data/datasources/bookings_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/users/data/datasources/users_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/users/domain/repositories/users_repository.dart';
@@ -126,6 +131,7 @@ import '../../features/subscriptions/data/datasources/supabase_subscriptions_dat
 import '../../features/subscriptions/data/repositories/subscriptions_repository_impl.dart';
 import '../../features/subscriptions/domain/repositories/subscriptions_repository.dart';
 import '../../features/subscriptions/domain/usecases/cancel_subscription_usecase.dart';
+import '../../features/subscriptions/domain/usecases/confirm_payment_usecase.dart';
 import '../../features/subscriptions/domain/usecases/create_subscription_usecase.dart';
 import '../../features/subscriptions/domain/usecases/get_subscription_creation_options_usecase.dart';
 import '../../features/subscriptions/domain/usecases/get_subscription_details_usecase.dart';
@@ -980,6 +986,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<ConfirmPaymentUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ConfirmPaymentUseCase(dashboardDi<SubscriptionsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<SubscriptionsCubit>()) {
     dashboardDi.registerFactory(
       () => SubscriptionsCubit(
@@ -989,6 +1001,7 @@ void registerDashboardDependencies() {
         cancelSubscription: dashboardDi<CancelSubscriptionUseCase>(),
         renewSubscription: dashboardDi<RenewSubscriptionUseCase>(),
         markRideUsed: dashboardDi<MarkSubscriptionRideUsedUseCase>(),
+        confirmPayment: dashboardDi<ConfirmPaymentUseCase>(),
         getCreationOptions:
             dashboardDi<GetSubscriptionCreationOptionsUseCase>(),
       ),
@@ -1377,6 +1390,37 @@ void registerDashboardDependencies() {
         getHistory: dashboardDi<GetReferralHistoryUseCase>(),
         getTransactions: dashboardDi<GetReferralRewardTransactionsUseCase>(),
       ),
+    );
+  }
+
+  _registerNotificationsDispatchDependencies();
+}
+
+void _registerNotificationsDispatchDependencies() {
+  if (!dashboardDi.isRegistered<NotificationsDispatchDatasource>()) {
+    dashboardDi.registerLazySingleton<NotificationsDispatchDatasource>(
+      () => SupabaseNotificationsDispatchDatasource(
+        dashboardDi<SupabaseClient>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<NotificationsDispatchRepository>()) {
+    dashboardDi.registerLazySingleton<NotificationsDispatchRepository>(
+      () => NotificationsDispatchRepositoryImpl(
+        dashboardDi<NotificationsDispatchDatasource>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<SendNotificationUseCase>()) {
+    dashboardDi.registerLazySingleton<SendNotificationUseCase>(
+      () => SendNotificationUseCase(
+        dashboardDi<NotificationsDispatchRepository>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<NotificationsDispatchCubit>()) {
+    dashboardDi.registerFactory<NotificationsDispatchCubit>(
+      () => NotificationsDispatchCubit(dashboardDi<SendNotificationUseCase>()),
     );
   }
 }

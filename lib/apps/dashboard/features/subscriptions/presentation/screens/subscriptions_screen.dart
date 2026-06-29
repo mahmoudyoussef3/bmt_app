@@ -370,6 +370,14 @@ class SubscriptionDetailsScreen extends StatelessWidget {
             spacing: AppSpacing.small,
             runSpacing: AppSpacing.small,
             children: [
+              if (subscription.status == SubscriptionStatus.pendingPayment)
+                FilledButton.icon(
+                  onPressed: () => context
+                      .read<SubscriptionsCubit>()
+                      .confirmPayment(subscription.id),
+                  icon: const Icon(Icons.payments_outlined),
+                  label: const Text('تأكيد استلام الدفع'),
+                ),
               FilledButton.icon(
                 onPressed: () =>
                     context.read<SubscriptionsCubit>().renew(subscription.id),

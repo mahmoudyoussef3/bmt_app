@@ -61,7 +61,12 @@ import '../../features/notifications/data/datasources/supabase_notifications_dat
 import '../../features/notifications/data/repositories/notifications_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notifications_repository.dart';
 import '../../features/notifications/domain/usecases/get_notifications_usecase.dart';
+import '../../features/notifications/domain/usecases/watch_notifications_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_as_read_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_all_as_read_usecase.dart';
+import '../../features/notifications/domain/usecases/watch_unread_count_usecase.dart';
 import '../../features/notifications/presentation/cubit/notifications_cubit.dart';
+import '../../features/notifications/presentation/cubit/notification_badge_cubit.dart';
 import '../../features/payments/data/datasources/payment_datasource.dart';
 import '../../features/payments/data/datasources/supabase_payment_datasource.dart';
 import '../../features/payments/data/repositories/payment_repository_impl.dart';
@@ -744,9 +749,44 @@ void _registerNotificationsDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<WatchNotificationsUseCase>()) {
+    clientGetIt.registerLazySingleton<WatchNotificationsUseCase>(
+      () => WatchNotificationsUseCase(clientGetIt<NotificationsRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<MarkAsReadUseCase>()) {
+    clientGetIt.registerLazySingleton<MarkAsReadUseCase>(
+      () => MarkAsReadUseCase(clientGetIt<NotificationsRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<MarkAllAsReadUseCase>()) {
+    clientGetIt.registerLazySingleton<MarkAllAsReadUseCase>(
+      () => MarkAllAsReadUseCase(clientGetIt<NotificationsRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<WatchUnreadCountUseCase>()) {
+    clientGetIt.registerLazySingleton<WatchUnreadCountUseCase>(
+      () => WatchUnreadCountUseCase(clientGetIt<NotificationsRepository>()),
+    );
+  }
+
+  // Singleton badge cubit — always alive, drives the bell badge everywhere.
+  if (!clientGetIt.isRegistered<NotificationBadgeCubit>()) {
+    clientGetIt.registerLazySingleton<NotificationBadgeCubit>(
+      () => NotificationBadgeCubit(clientGetIt<WatchUnreadCountUseCase>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<NotificationsCubit>()) {
     clientGetIt.registerFactory<NotificationsCubit>(
-      () => NotificationsCubit(clientGetIt<GetNotificationsUseCase>()),
+      () => NotificationsCubit(
+        watchNotifications: clientGetIt<WatchNotificationsUseCase>(),
+        markAsRead: clientGetIt<MarkAsReadUseCase>(),
+        markAllAsRead: clientGetIt<MarkAllAsReadUseCase>(),
+      ),
     );
   }
 }

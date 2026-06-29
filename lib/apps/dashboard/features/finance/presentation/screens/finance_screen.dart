@@ -2344,6 +2344,10 @@ class _SubscriptionStatusBadge extends StatelessWidget {
         AppStatusColors.errorContainer,
         AppStatusColors.onErrorContainer,
       ),
+      SubscriptionStatus.pendingPayment => (
+        AppStatusColors.warningContainer,
+        AppStatusColors.onWarningContainer,
+      ),
     };
 
     return Container(

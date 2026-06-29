@@ -1,7 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
+import 'package:bmt_app/core/notifications/fcm_service.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_cubit.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/screens/client_shell_screen.dart';
@@ -79,6 +81,8 @@ class ClientApp extends StatefulWidget {
 
 class _ClientAppState extends State<ClientApp> {
   ThemeMode _themeMode = ThemeMode.system;
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  StreamSubscription<AuthState>? _authSub;
 
   void _setThemeMode(ThemeMode mode) => setState(() => _themeMode = mode);
 
@@ -86,6 +90,43 @@ class _ClientAppState extends State<ClientApp> {
   void initState() {
     super.initState();
     registerClientDependencies();
+    _listenAuth();
+  }
+
+  void _listenAuth() {
+    final supabase = Supabase.instance.client;
+
+    // Initialise FCM for a session that already exists at startup.
+    final current = supabase.auth.currentSession;
+    if (current != null) {
+      FcmService.instance.initialize(
+        userId: current.user.id,
+        appType: 'client',
+        supabase: supabase,
+        navigatorKey: _navigatorKey,
+      );
+    }
+
+    // Track future sign-in / sign-out events.
+    _authSub = supabase.auth.onAuthStateChange.listen((state) {
+      final session = state.session;
+      if (session != null) {
+        FcmService.instance.initialize(
+          userId: session.user.id,
+          appType: 'client',
+          supabase: supabase,
+          navigatorKey: _navigatorKey,
+        );
+      } else {
+        FcmService.instance.deactivateToken(supabase);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _authSub?.cancel();
+    super.dispose();
   }
 
   @override
@@ -98,6 +139,7 @@ class _ClientAppState extends State<ClientApp> {
           return BlocProvider<OnboardingCubit>(
             create: (_) => clientGetIt<OnboardingCubit>()..checkStatus(),
             child: MaterialApp(
+              navigatorKey: _navigatorKey,
               debugShowCheckedModeBanner: false,
               title: AppFlavorConfig.current.appName,
               localizationsDelegates: AppLocalizations.localizationsDelegates,

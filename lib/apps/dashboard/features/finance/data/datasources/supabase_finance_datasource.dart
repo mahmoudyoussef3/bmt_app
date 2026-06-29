@@ -64,7 +64,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     int activeSubs = 0;
     for (final r in (subRows as List).cast<Map<String, dynamic>>()) {
       final status = r['status']?.toString() ?? '';
-      if (status == 'cancelled') continue;
+      if (status == 'cancelled' || status == 'pending_payment') continue;
       if (status == 'active') activeSubs++;
       final amount = _toDouble(r['total_price']);
       final date = DateTime.tryParse(r['created_at']?.toString() ?? '');
@@ -333,8 +333,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
   SubscriptionStatus _subStatus(String? s) => switch (s) {
         'expired' => SubscriptionStatus.expired,
         'cancelled' => SubscriptionStatus.cancelled,
-        // 'paused' treated as cancelled in the finance view (no pending state).
-        'paused' => SubscriptionStatus.cancelled,
+        'pending_payment' || 'paused' => SubscriptionStatus.pendingPayment,
         _ => SubscriptionStatus.active,
       };
 

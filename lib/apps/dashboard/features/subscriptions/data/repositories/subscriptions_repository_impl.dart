@@ -71,4 +71,13 @@ class SubscriptionsRepositoryImpl implements SubscriptionsRepository {
       throw Exception('تعذر تجديد الاشتراك');
     }
   }
+
+  @override
+  Future<UserSubscription> confirmPayment(String id) async {
+    try {
+      return await _datasource.confirmPayment(id);
+    } catch (_) {
+      throw Exception('تعذر تأكيد الدفع');
+    }
+  }
 }

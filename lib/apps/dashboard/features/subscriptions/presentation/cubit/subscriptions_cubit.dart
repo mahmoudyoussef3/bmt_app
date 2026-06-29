@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/user_subscription.dart';
 import '../../domain/usecases/cancel_subscription_usecase.dart';
+import '../../domain/usecases/confirm_payment_usecase.dart';
 import '../../domain/usecases/create_subscription_usecase.dart';
 import '../../domain/usecases/get_subscription_creation_options_usecase.dart';
 import '../../domain/usecases/get_subscription_details_usecase.dart';
@@ -17,6 +18,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   final CancelSubscriptionUseCase _cancelSubscription;
   final RenewSubscriptionUseCase _renewSubscription;
   final MarkSubscriptionRideUsedUseCase _markRideUsed;
+  final ConfirmPaymentUseCase _confirmPayment;
   final GetSubscriptionCreationOptionsUseCase _getCreationOptions;
 
   SubscriptionsCubit({
@@ -26,6 +28,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     required CancelSubscriptionUseCase cancelSubscription,
     required RenewSubscriptionUseCase renewSubscription,
     required MarkSubscriptionRideUsedUseCase markRideUsed,
+    required ConfirmPaymentUseCase confirmPayment,
     required GetSubscriptionCreationOptionsUseCase getCreationOptions,
   }) : _getSubscriptions = getSubscriptions,
        _getDetails = getDetails,
@@ -33,6 +36,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
        _cancelSubscription = cancelSubscription,
        _renewSubscription = renewSubscription,
        _markRideUsed = markRideUsed,
+       _confirmPayment = confirmPayment,
        _getCreationOptions = getCreationOptions,
        super(const SubscriptionsInitial());
 
@@ -154,6 +158,13 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     await _runAction(
       action: () => _markRideUsed(id),
       message: 'تم تسجيل رحلة مستخدمة',
+    );
+  }
+
+  Future<void> confirmPayment(String id) async {
+    await _runAction(
+      action: () => _confirmPayment(id),
+      message: 'تم تأكيد الدفع وتفعيل الاشتراك',
     );
   }
 

@@ -21,7 +21,34 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
         .from('subscriptions')
         .select(_select)
         .order('created_at', ascending: false);
-    return rows.map((r) => _fromRow(r)).toList();
+    final all = rows.map((r) => _fromRow(r)).toList();
+    return _expireOverdue(all);
+  }
+
+  // Lazily marks active subscriptions whose endDate has passed as expired.
+  Future<List<UserSubscription>> _expireOverdue(
+    List<UserSubscription> all,
+  ) async {
+    final now = DateTime.now();
+    final ids = all
+        .where(
+          (s) =>
+              s.status == SubscriptionStatus.active && s.endDate.isBefore(now),
+        )
+        .map((s) => s.id)
+        .toList();
+    if (ids.isEmpty) return all;
+    await _client
+        .from('subscriptions')
+        .update({'status': 'expired'})
+        .inFilter('id', ids);
+    return all
+        .map(
+          (s) => ids.contains(s.id)
+              ? s.copyWith(status: SubscriptionStatus.expired)
+              : s,
+        )
+        .toList();
   }
 
   @override
@@ -48,7 +75,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
       'route_name': subscription.routeName,
       'start_date': subscription.startDate.toIso8601String(),
       'end_date': subscription.endDate.toIso8601String(),
-      'status': 'active',
+      'status': 'pending_payment',
       'total_price': subscription.price,
       'paid_amount': 0,
       'remaining_amount': subscription.price,
@@ -107,10 +134,10 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     final row = await _client
         .from('subscriptions')
         .update({
-          'status': 'active',
+          'status': 'pending_payment',
           'end_date': newEnd.toIso8601String(),
           'renewals_count': renewals,
-          'trips_used': 0, // reset ride balance on renewal
+          'trips_used': 0,
         })
         .eq('id', id)
         .select(_select)
@@ -140,6 +167,27 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
         .select(_select)
         .single();
     return _fromRow(updated);
+  }
+
+  @override
+  Future<UserSubscription> confirmPayment(String id) async {
+    final current = await _client
+        .from('subscriptions')
+        .select('total_price')
+        .eq('id', id)
+        .single();
+    final totalPrice = _toDouble(current['total_price']);
+    final row = await _client
+        .from('subscriptions')
+        .update({
+          'status': 'active',
+          'paid_amount': totalPrice,
+          'remaining_amount': 0,
+        })
+        .eq('id', id)
+        .select(_select)
+        .single();
+    return _fromRow(row);
   }
 
   @override
@@ -187,7 +235,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     final mappedStatus = switch (statusStr) {
       'expired' => SubscriptionStatus.expired,
       'cancelled' => SubscriptionStatus.cancelled,
-      'paused' => SubscriptionStatus.pendingPayment,
+      'pending_payment' || 'paused' => SubscriptionStatus.pendingPayment,
       _ => SubscriptionStatus.active,
     };
 

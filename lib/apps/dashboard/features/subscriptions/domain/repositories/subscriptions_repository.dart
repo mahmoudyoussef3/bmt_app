@@ -13,5 +13,7 @@ abstract class SubscriptionsRepository {
 
   Future<UserSubscription> markRideUsed(String id);
 
+  Future<UserSubscription> confirmPayment(String id);
+
   Future<SubscriptionCreationOptions> getCreationOptions();
 }

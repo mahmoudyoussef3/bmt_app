@@ -10,12 +10,19 @@ import 'package:bmt_app/core/flavors/app_flavor.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/core/network/dio_factory.dart';
 import 'package:bmt_app/core/network/supabase_dio_adapter.dart';
+import 'package:bmt_app/core/notifications/fcm_background_handler.dart';
+import 'package:bmt_app/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> bootstrapFlavorApp(AppFlavor flavor) async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  FirebaseMessaging.onBackgroundMessage(firebaseMessagingBackgroundHandler);
 
   AppFlavorConfig.activate(flavor);
   final config = AppFlavorConfig.forFlavor(flavor);

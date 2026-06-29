@@ -78,6 +78,10 @@ class _FakeSubscriptionsDatasource implements SubscriptionsDatasource {
       throw Exception('تتبع الرحلات غير مدعوم');
 
   @override
+  Future<UserSubscription> confirmPayment(String id) async =>
+      throw Exception('not used in fake');
+
+  @override
   Future<SubscriptionCreationOptions> fetchCreationOptions() async =>
       const SubscriptionCreationOptions(
         users: [
@@ -116,6 +120,8 @@ class _FailingDatasource implements SubscriptionsDatasource {
   @override
   Future<UserSubscription> renewSubscription(String id) =>
       throw StateError('x');
+  @override
+  Future<UserSubscription> confirmPayment(String id) => throw StateError('x');
 }
 
 void main() {

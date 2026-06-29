@@ -40,7 +40,8 @@ enum RefundStatus {
 enum SubscriptionStatus {
   active('نشط'),
   expired('منتهي'),
-  cancelled('ملغي');
+  cancelled('ملغي'),
+  pendingPayment('بانتظار الدفع');
 
   final String label;
   const SubscriptionStatus(this.label);

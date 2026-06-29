@@ -8,8 +8,21 @@ class NotificationsRepositoryImpl implements NotificationsRepository {
   final NotificationsDatasource _datasource;
 
   @override
-  Future<List<ClientNotification>> getNotifications() async {
-    final rows = await _datasource.getNotifications();
-    return rows.map((m) => m.toEntity()).toList();
-  }
+  Future<List<ClientNotification>> getNotifications() async =>
+      (await _datasource.getNotifications()).map((m) => m.toEntity()).toList();
+
+  @override
+  Stream<List<ClientNotification>> watchNotifications() =>
+      _datasource.watchNotifications().map(
+            (rows) => rows.map((m) => m.toEntity()).toList(),
+          );
+
+  @override
+  Stream<int> watchUnreadCount() => _datasource.watchUnreadCount();
+
+  @override
+  Future<void> markAsRead(String id) => _datasource.markAsRead(id);
+
+  @override
+  Future<void> markAllAsRead() => _datasource.markAllAsRead();
 }
