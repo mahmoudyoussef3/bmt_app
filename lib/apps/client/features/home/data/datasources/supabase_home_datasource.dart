@@ -25,9 +25,11 @@ class SupabaseHomeDatasource implements HomeDatasource {
         .limit(50);
 
     final packagesFuture = _supabase
-        .from('packages')
+        .from('transport_packages')
         .select()
-        .eq('status', 'active');
+        .eq('active', true)
+        .order('display_order', ascending: true)
+        .limit(4);
 
     final user = _supabase.auth.currentUser;
     Future<List<Map<String, dynamic>>>? currentTripFuture;
@@ -135,11 +137,11 @@ class SupabaseHomeDatasource implements HomeDatasource {
     final packagePlans = packagesData
         .map(
           (e) => PackagePlanModel(
-            title: e['title'] as String? ?? '',
-            subtitle: e['subtitle'] as String? ?? '',
+            title: e['name_ar'] as String? ?? '',
+            subtitle: '${e['duration_days'] ?? 1} أيام',
             price: e['price']?.toString() ?? '',
-            badge: e['badge'] as String? ?? '',
-            iconKey: e['icon_key'] as String? ?? 'dateRange',
+            badge: '',
+            iconKey: 'dateRange',
           ),
         )
         .toList();

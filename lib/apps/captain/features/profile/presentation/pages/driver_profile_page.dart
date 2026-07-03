@@ -1,4 +1,7 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -45,22 +48,22 @@ class _ProfileBody extends StatelessWidget {
         slivers: [
           _ProfileSliverHeader(profile: profile),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 40),
+            padding: const EdgeInsets.fromLTRB(CaptainSpacing.xl, 0, CaptainSpacing.xl, CaptainSpacing.xxxl),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                const SizedBox(height: 20),
+                const SizedBox(height: CaptainSpacing.xl),
                 _StatsCard(profile: profile),
-                const SizedBox(height: 16),
+                const SizedBox(height: CaptainSpacing.lg),
                 if (profile.hasVehicle) ...[
                   _VehicleCard(profile: profile),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: CaptainSpacing.lg),
                 ],
                 if (profile.hasRating) ...[
                   _RatingCard(rating: profile.averageRating),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: CaptainSpacing.lg),
                 ],
                 _InfoCard(profile: profile),
-                const SizedBox(height: 24),
+                const SizedBox(height: CaptainSpacing.xxl),
                 _SignOutButton(),
               ]),
             ),
@@ -115,24 +118,20 @@ class _ProfileSliverHeader extends StatelessWidget {
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [scheme.primary.withAlpha(200), scheme.surface],
-            ),
+            color: scheme.surface,
           ),
           child: SafeArea(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const SizedBox(height: 20),
+                const SizedBox(height: CaptainSpacing.xl),
                 Container(
                   width: 84,
                   height: 84,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: scheme.primaryContainer,
-                    border: Border.all(color: Colors.white, width: 3),
+                    border: Border.all(color: scheme.surface, width: 3),
                     boxShadow: [
                       BoxShadow(
                         color: scheme.shadow.withAlpha(40),
@@ -152,7 +151,7 @@ class _ProfileSliverHeader extends StatelessWidget {
                         )
                       : _InitialsAvatar(name: profile.name, large: true),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: CaptainSpacing.md),
                 Text(
                   profile.name,
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -161,7 +160,7 @@ class _ProfileSliverHeader extends StatelessWidget {
                       ),
                 ),
                 if (profile.hasRating) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: CaptainSpacing.sm),
                   _StarRating(rating: profile.averageRating),
                 ],
               ],
@@ -175,7 +174,7 @@ class _ProfileSliverHeader extends StatelessWidget {
                 color: scheme.onSurface,
               ),
         ),
-        titlePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        titlePadding: const EdgeInsets.symmetric(horizontal: CaptainSpacing.lg, vertical: CaptainSpacing.md),
       ),
     );
   }
@@ -253,17 +252,17 @@ class _VehicleCard extends StatelessWidget {
               label: 'السعة',
               value: '${profile.vehicleCapacity} راكب',
             ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CaptainSpacing.md),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: CaptainSpacing.md, vertical: CaptainSpacing.sm),
             decoration: BoxDecoration(
               color: scheme.primary.withAlpha(15),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: CaptainRadius.rMd,
             ),
             child: Row(
               children: [
                 Icon(Icons.verified_rounded, size: 16, color: scheme.primary),
-                const SizedBox(width: 8),
+                const SizedBox(width: CaptainSpacing.md),
                 Text(
                   'مركبة جاهزة للتشغيل',
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -301,12 +300,12 @@ class _RatingCard extends StatelessWidget {
                       color: Colors.amber,
                     ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: CaptainSpacing.xl),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _StarRating(rating: rating),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: CaptainSpacing.sm),
                   Text(
                     _ratingLabel(rating),
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -363,7 +362,9 @@ class _InfoCard extends StatelessWidget {
 class _SignOutButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton.icon(
+    return CaptainButton(
+      label: 'تسجيل الخروج',
+      icon: Icons.logout_rounded,
       onPressed: () async {
         final confirmed = await showDialog<bool>(
           context: context,
@@ -384,14 +385,7 @@ class _SignOutButton extends StatelessWidget {
           await Supabase.instance.client.auth.signOut();
         }
       },
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.red,
-        side: const BorderSide(color: Colors.red),
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-      ),
-      icon: const Icon(Icons.logout_rounded),
-      label: const Text('تسجيل الخروج', style: TextStyle(fontWeight: FontWeight.w700)),
+      variant: CaptainButtonVariant.secondary,
     );
   }
 }
@@ -408,36 +402,29 @@ class _SectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(color: scheme.shadow.withAlpha(8), blurRadius: 16, offset: const Offset(0, 4)),
-        ],
-      ),
-      padding: const EdgeInsets.all(20),
+    return CaptainCard(
+      padding: const EdgeInsets.all(CaptainSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(CaptainSpacing.md),
                 decoration: BoxDecoration(
                   color: scheme.primary.withAlpha(15),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: CaptainRadius.rMd,
                 ),
                 child: Icon(icon, size: 18, color: scheme.primary),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: CaptainSpacing.md),
               Text(
                 title,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: CaptainSpacing.lg),
           child,
         ],
       ),
@@ -459,17 +446,17 @@ class _StatTile extends StatelessWidget {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(CaptainSpacing.md),
             decoration: BoxDecoration(color: color.withAlpha(15), shape: BoxShape.circle),
             child: Icon(icon, color: color, size: 22),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: CaptainSpacing.md),
           Text(value,
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: color,
                   )),
-          const SizedBox(height: 4),
+          const SizedBox(height: CaptainSpacing.sm),
           Text(label,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -492,11 +479,11 @@ class _DetailRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: CaptainSpacing.md),
       child: Row(
         children: [
           Icon(icon, size: 18, color: scheme.onSurfaceVariant),
-          const SizedBox(width: 12),
+          const SizedBox(width: CaptainSpacing.md),
           Text(label,
               style: Theme.of(context)
                   .textTheme

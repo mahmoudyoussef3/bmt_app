@@ -1,3 +1,5 @@
+import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -39,24 +41,25 @@ class PassengerCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final statusColor = _statusColor(passenger.status);
 
-    return AppCard(
+    return CaptainCard(
       padding: EdgeInsets.zero,
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: CaptainRadius.rXl,
         child: IntrinsicHeight(
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Status indicator strip
-              Container(width: 4, color: statusColor),
+              Container(width: 6, color: statusColor),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 12, 8, 12),
+                  padding: const EdgeInsets.fromLTRB(
+                      CaptainSpacing.lg, CaptainSpacing.lg, CaptainSpacing.md, CaptainSpacing.lg),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       AppAvatar(initials: passenger.name.isNotEmpty ? passenger.name[0] : '?'),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: CaptainSpacing.lg),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -79,36 +82,38 @@ class PassengerCard extends StatelessWidget {
                               'مقعد ${passenger.seat}  •  ${passenger.pickupPoint}',
                               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                     color: scheme.onSurfaceVariant,
+                                    fontWeight: FontWeight.w600,
                                   ),
                             ),
                             if (passenger.destination.isNotEmpty) ...[
-                              const SizedBox(height: 2),
+                              const SizedBox(height: CaptainSpacing.sm),
                               Row(
                                 children: [
                                   Icon(Icons.arrow_forward_rounded,
-                                      size: 12, color: scheme.onSurfaceVariant),
-                                  const SizedBox(width: 4),
+                                      size: 14, color: scheme.onSurfaceVariant),
+                                  const SizedBox(width: CaptainSpacing.sm),
                                   Text(
                                     passenger.destination,
                                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                           color: scheme.onSurfaceVariant,
+                                          fontWeight: FontWeight.w600,
                                         ),
                                   ),
                                 ],
                               ),
                             ],
                             if (passenger.pickupTime.isNotEmpty) ...[
-                              const SizedBox(height: 2),
+                              const SizedBox(height: CaptainSpacing.sm),
                               Row(
                                 children: [
                                   Icon(Icons.schedule_rounded,
-                                      size: 12, color: scheme.primary),
-                                  const SizedBox(width: 4),
+                                      size: 14, color: scheme.primary),
+                                  const SizedBox(width: CaptainSpacing.sm),
                                   Text(
                                     passenger.pickupTime,
                                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                                           color: scheme.primary,
-                                          fontWeight: FontWeight.w600,
+                                          fontWeight: FontWeight.w700,
                                         ),
                                   ),
                                 ],
@@ -117,8 +122,9 @@ class PassengerCard extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
+                      const SizedBox(width: CaptainSpacing.md),
                       Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           _ActionButton(
                             icon: Icons.edit_rounded,
@@ -126,14 +132,14 @@ class PassengerCard extends StatelessWidget {
                             color: scheme.primary,
                             onPressed: () => _showStatusSheet(context),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: CaptainSpacing.sm),
                           _ActionButton(
                             icon: Icons.call_rounded,
                             tooltip: 'اتصال',
                             color: Colors.green,
                             onPressed: onCall,
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: CaptainSpacing.sm),
                           _ActionButton(
                             icon: Icons.chat_bubble_outline_rounded,
                             tooltip: 'مراسلة',
@@ -174,24 +180,24 @@ class _StatusSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(CaptainRadius.xl)),
       ),
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      padding: const EdgeInsets.fromLTRB(CaptainSpacing.xl, CaptainSpacing.lg, CaptainSpacing.xl, CaptainSpacing.xxxl),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Center(
             child: Container(
-              width: 40,
+              width: 48,
               height: 4,
               decoration: BoxDecoration(
                 color: scheme.outlineVariant,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: CaptainRadius.rSm,
               ),
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: CaptainSpacing.xl),
           Text(
             passenger.name,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
@@ -202,7 +208,7 @@ class _StatusSheet extends StatelessWidget {
                   color: scheme.onSurfaceVariant,
                 ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: CaptainSpacing.xl),
           Text(
             'تحديث الحالة',
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -210,7 +216,7 @@ class _StatusSheet extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                 ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: CaptainSpacing.md),
           ..._statusOptions().map(
             (opt) => _StatusOption(
               label: opt.$1,
@@ -256,17 +262,17 @@ class _StatusOption extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: CaptainSpacing.md),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: isActive ? null : onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: CaptainRadius.rLg,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: CaptainSpacing.lg, vertical: CaptainSpacing.lg),
             decoration: BoxDecoration(
               color: isActive ? color.withAlpha(20) : scheme.surfaceContainerLow,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: CaptainRadius.rLg,
               border: Border.all(
                 color: isActive ? color : Colors.transparent,
                 width: isActive ? 1.5 : 0,
@@ -274,8 +280,8 @@ class _StatusOption extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, color: isActive ? color : scheme.onSurfaceVariant, size: 22),
-                const SizedBox(width: 12),
+                Icon(icon, color: isActive ? color : scheme.onSurfaceVariant, size: 24),
+                const SizedBox(width: CaptainSpacing.md),
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -310,10 +316,10 @@ class _StatusBadge extends StatelessWidget {
       PassengerBoardingStatus.cancelled => ('ملغي', Colors.grey),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: CaptainSpacing.md, vertical: CaptainSpacing.sm),
       decoration: BoxDecoration(
         color: color.withAlpha(30),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: CaptainRadius.rSm,
         border: Border.all(color: color.withAlpha(120)),
       ),
       child: Text(
@@ -346,15 +352,16 @@ class _ActionButton extends StatelessWidget {
       message: tooltip,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: CaptainRadius.rMd,
         child: Container(
-          width: 36,
-          height: 36,
+          width: 40,
+          height: 40,
           decoration: BoxDecoration(
-            color: color.withAlpha(18),
-            borderRadius: BorderRadius.circular(10),
+            color: color.withAlpha(20),
+            borderRadius: CaptainRadius.rMd,
+            border: Border.all(color: color.withAlpha(50)),
           ),
-          child: Icon(icon, size: 18, color: color),
+          child: Icon(icon, size: 20, color: color),
         ),
       ),
     );

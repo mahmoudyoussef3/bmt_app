@@ -1,9 +1,13 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/app_mode/app_mode.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+
+import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_loading_state.dart';
 
 import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/pages/passenger_list_page.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/pages/trip_execution_page.dart';
@@ -126,24 +130,17 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  expandedHeight: 120,
+                  expandedHeight: 100,
                   pinned: true,
                   elevation: 0,
                   backgroundColor: scheme.surface,
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            scheme.primaryContainer.withAlpha(100),
-                            scheme.surface,
-                          ],
-                        ),
-                      ),
+                      color: scheme.surface,
                     ),
-                    titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    titlePadding: const EdgeInsets.symmetric(
+                        horizontal: CaptainSpacing.xl,
+                        vertical: CaptainSpacing.lg),
                     title: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -153,7 +150,7 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'لوحة السائق',
+                              'لوحة القيادة',
                               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                                     fontWeight: FontWeight.w800,
                                     color: scheme.onSurface,
@@ -166,16 +163,9 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                           child: Container(
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              border: Border.all(color: scheme.primary.withAlpha(50), width: 2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: scheme.shadow.withAlpha(20),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                )
-                              ],
+                              color: scheme.surfaceContainerHighest,
                             ),
-                            child: const AppAvatar(initials: 'AM'),
+                            child: const AppAvatar(initials: 'ك'),
                           ),
                         ),
                       ],
@@ -184,7 +174,8 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                    padding: const EdgeInsets.fromLTRB(
+                        CaptainSpacing.xl, CaptainSpacing.md, CaptainSpacing.xl, CaptainSpacing.xl),
                     child: _OverviewPanel(
                       trips: trips.length,
                       passengers: passengers,
@@ -194,10 +185,10 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                   ),
                 ),
                 SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: CaptainSpacing.xl),
                   sliver: SliverToBoxAdapter(
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Expanded(
                           child: Text(
@@ -208,10 +199,11 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                           ),
                         ),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: CaptainSpacing.md, vertical: CaptainSpacing.sm),
                           decoration: BoxDecoration(
                             color: scheme.primary.withAlpha(20),
-                            borderRadius: BorderRadius.circular(20),
+                            borderRadius: CaptainRadius.rPill,
                           ),
                           child: Text(
                             '${trips.length} رحلات',
@@ -229,21 +221,23 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
-                      child: EmptyState(
+                      child: CaptainEmptyState(
                         title: 'لا توجد رحلات اليوم',
                         subtitle: 'ستظهر رحلاتك هنا عند تعيينها من قبل العمليات.',
+                        icon: Icons.route_outlined,
                       ),
                     ),
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
+                    padding: const EdgeInsets.fromLTRB(
+                        CaptainSpacing.xl, CaptainSpacing.lg, CaptainSpacing.xl, CaptainSpacing.xxxl),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate(
                         (context, index) {
                           final trip = trips[index];
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 20),
+                            padding: const EdgeInsets.only(bottom: CaptainSpacing.lg),
                             child: AssignedTripCard(
                               trip: trip,
                               onOpen: () => Navigator.of(context).push(
@@ -290,89 +284,72 @@ class _OverviewPanel extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final progress = passengers == 0 ? 0.0 : boarded / passengers;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: scheme.surface.withAlpha(150),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: scheme.outline.withAlpha(20)),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.shadow.withAlpha(10),
-                blurRadius: 30,
-                offset: const Offset(0, 10),
+    return CaptainCard(
+      color: scheme.surface,
+      padding: const EdgeInsets.all(CaptainSpacing.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              _Metric(
+                label: 'الرحلات',
+                value: trips.toString(),
+                icon: Icons.route_rounded,
+              ),
+              const SizedBox(width: CaptainSpacing.md),
+              _Metric(
+                label: 'نشطة',
+                value: activeTrips.toString(),
+                icon: Icons.bolt_rounded,
+                isHighlight: activeTrips > 0,
+              ),
+              const SizedBox(width: CaptainSpacing.md),
+              _Metric(
+                label: 'الركاب',
+                value: passengers.toString(),
+                icon: Icons.people_alt_rounded,
               ),
             ],
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          const SizedBox(height: CaptainSpacing.xl),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  _Metric(
-                    label: 'الرحلات',
-                    value: trips.toString(),
-                    icon: Icons.route_rounded,
-                  ),
-                  const SizedBox(width: 12),
-                  _Metric(
-                    label: 'نشطة',
-                    value: activeTrips.toString(),
-                    icon: Icons.bolt_rounded,
-                    isHighlight: activeTrips > 0,
-                  ),
-                  const SizedBox(width: 12),
-                  _Metric(
-                    label: 'الركاب',
-                    value: passengers.toString(),
-                    icon: Icons.people_alt_rounded,
-                  ),
-                ],
-              ),
-              const SizedBox(height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'تقدم الصعود',
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                  Text(
-                    '${(progress * 100).round()}%',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(8),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 10,
-                  backgroundColor: scheme.surfaceContainerHighest,
-                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
-                ),
-              ),
-              const SizedBox(height: 8),
               Text(
-                'صعد $boarded من أصل $passengers راكب',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                'تقدم الصعود',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+              Text(
+                '${(progress * 100).round()}%',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w800,
                     ),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: CaptainSpacing.md),
+          ClipRRect(
+            borderRadius: CaptainRadius.rSm,
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 8,
+              backgroundColor: scheme.surfaceContainerHighest,
+              valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+            ),
+          ),
+          const SizedBox(height: CaptainSpacing.sm),
+          Text(
+            'صعد $boarded من أصل $passengers راكب',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
+          ),
+        ],
       ),
     );
   }
@@ -395,33 +372,34 @@ class _Metric extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final color = isHighlight ? Colors.orange : scheme.primary;
-    final bgColor = isHighlight ? Colors.orange.withAlpha(20) : scheme.primary.withAlpha(15);
+    final bgColor = isHighlight ? Colors.orange.withAlpha(20) : scheme.surfaceContainerHighest;
 
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+        padding: const EdgeInsets.symmetric(
+            vertical: CaptainSpacing.lg, horizontal: CaptainSpacing.md),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: CaptainRadius.rLg,
           border: Border.all(color: color.withAlpha(30)),
         ),
         child: Column(
           children: [
             Icon(icon, size: 24, color: color),
-            const SizedBox(height: 12),
+            const SizedBox(height: CaptainSpacing.md),
             Text(
               value,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: scheme.onSurface,
                   ),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: CaptainSpacing.sm),
             Text(
               label,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
             ),
           ],
@@ -438,23 +416,33 @@ class _AssignedTripsSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(CaptainSpacing.xl),
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const SkeletonBox(height: 32, width: 140),
-              SkeletonBox(height: 40, width: 40, borderRadius: BorderRadius.circular(20)),
+              const CaptainSkeleton(height: 32, width: 140),
+              CaptainSkeleton(height: 40, width: 40, borderRadius: CaptainRadius.rPill),
             ],
           ),
-          const SizedBox(height: 24),
-          SkeletonBox(height: 180, borderRadius: BorderRadius.circular(24)),
-          const SizedBox(height: 32),
-          const SkeletonBox(height: 24, width: 120),
-          const SizedBox(height: 16),
+          const SizedBox(height: CaptainSpacing.xl),
+          const CaptainSkeleton(height: 18, width: double.infinity),
+          const SizedBox(height: CaptainSpacing.md),
+          const CaptainSkeleton(height: 16, width: double.infinity),
+          const SizedBox(height: CaptainSpacing.lg),
+          Row(
+            children: [
+              const Expanded(child: CaptainSkeleton(height: 36, width: double.infinity)),
+              const SizedBox(width: CaptainSpacing.md),
+              const Expanded(child: CaptainSkeleton(height: 36, width: double.infinity)),
+            ],
+          ),
+          const SizedBox(height: CaptainSpacing.xxl),
+          const CaptainSkeleton(height: 24, width: 120),
+          const SizedBox(height: CaptainSpacing.lg),
           for (var i = 0; i < 3; i++) ...[
-            SkeletonBox(height: 220, borderRadius: BorderRadius.circular(24)),
-            const SizedBox(height: 20),
+            CaptainSkeleton(height: 220, borderRadius: CaptainRadius.rXl, width: double.infinity),
+            const SizedBox(height: CaptainSpacing.xl),
           ],
         ],
       ),

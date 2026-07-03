@@ -185,6 +185,10 @@ class _PaymentChip extends StatelessWidget {
         ClientColors.journeyAmberLight,
         ClientColors.onJourneyAmber,
       ),
+      PaymentStatus.underReview => (
+        ClientColors.journeyAmberLight,
+        ClientColors.onJourneyAmber,
+      ),
       PaymentStatus.failed => (
         ClientColors.journeyRedLight,
         ClientColors.onJourneyRed,

@@ -12,6 +12,7 @@ class BookingWizardSession {
     this.selectedPackage,
     this.packageStartDate,
     this.paymentMethod,
+    this.receiptUrl,
   });
 
   final RouteOptionData route;
@@ -23,6 +24,7 @@ class BookingWizardSession {
   final PackagePlan? selectedPackage;
   final DateTime? packageStartDate;
   final String? paymentMethod;
+  final String? receiptUrl;
 
   bool get stopsValid =>
       pickupStop != null &&
@@ -32,14 +34,13 @@ class BookingWizardSession {
   bool get tripValid => selectedTrip != null;
   bool get seatValid => selectedSeatId != null;
   bool get packageValid => selectedPackage != null && packageStartDate != null;
+  bool get paymentValid => paymentMethod != null && receiptUrl != null;
 
   double get tripPrice => double.tryParse(selectedTrip?.price ?? '0') ?? 0;
 
   double get totalPrice {
-    final base = tripPrice;
-    final count = selectedPackage?.tripsCount ?? 1;
-    final discount = selectedPackage?.discountPercent ?? 0;
-    return base * count * (1 - discount / 100);
+    if (selectedPackage != null) return selectedPackage!.price;
+    return tripPrice;
   }
 
   String get priceSummary {
@@ -57,6 +58,7 @@ class BookingWizardSession {
     PackagePlan? selectedPackage,
     DateTime? packageStartDate,
     String? paymentMethod,
+    String? receiptUrl,
   }) {
     return BookingWizardSession(
       route: route,
@@ -68,6 +70,7 @@ class BookingWizardSession {
       selectedPackage: selectedPackage ?? this.selectedPackage,
       packageStartDate: packageStartDate ?? this.packageStartDate,
       paymentMethod: paymentMethod ?? this.paymentMethod,
+      receiptUrl: receiptUrl ?? this.receiptUrl,
     );
   }
 }

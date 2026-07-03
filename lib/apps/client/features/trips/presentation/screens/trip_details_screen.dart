@@ -1177,6 +1177,7 @@ class _PaymentCard extends StatelessWidget {
     return switch (status) {
       PaymentStatus.paid => ClientColors.journeyGreen,
       PaymentStatus.pending => ClientColors.journeyAmber,
+      PaymentStatus.underReview => ClientColors.journeyAmber,
       PaymentStatus.refunded => ClientColors.primary,
       PaymentStatus.failed => ClientColors.journeyRed,
     };
@@ -1186,6 +1187,7 @@ class _PaymentCard extends StatelessWidget {
     return switch (status) {
       PaymentStatus.paid => 'Paid',
       PaymentStatus.pending => 'Pending',
+      PaymentStatus.underReview => 'Under Review',
       PaymentStatus.refunded => 'Refunded',
       PaymentStatus.failed => 'Failed',
     };

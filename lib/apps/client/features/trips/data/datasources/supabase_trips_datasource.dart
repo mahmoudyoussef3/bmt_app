@@ -29,9 +29,13 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
-  PaymentStatus _mapPayment(String statusStr) {
+  PaymentStatus _mapPayment(String statusStr, String reviewStatusStr) {
+    if (reviewStatusStr.toLowerCase() == 'pending' || reviewStatusStr.toLowerCase() == 'under_review') {
+      return PaymentStatus.underReview;
+    }
     switch (statusStr.toLowerCase()) {
       case 'paid':
+      case 'approved':
         return PaymentStatus.paid;
       case 'refunded':
         return PaymentStatus.refunded;
@@ -88,7 +92,10 @@ class SupabaseTripsDatasource implements TripsDatasource {
       vehicleType: vehicleObj?['vehicle_type']?.toString() ?? 'Vehicle',
       vehicleId: vehicleObj?['id']?.toString() ?? '',
       seats: [data['seat']?.toString() ?? 'Seat Pending'],
-      paymentStatus: _mapPayment(paymentStatusStr),
+      paymentStatus: _mapPayment(
+        data['payment_status']?.toString() ?? paymentStatusStr,
+        data['payment_review_status']?.toString() ?? 'approved',
+      ),
       fare: 'EGP $fare',
       cancellationReason: data['rejection_reason']?.toString(),
     );

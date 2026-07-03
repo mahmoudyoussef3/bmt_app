@@ -1,27 +1,32 @@
 class PackagePlan {
   const PackagePlan({
     required this.id,
-    required this.name,
-    required this.durationLabel,
-    required this.days,
-    required this.tripsCount,
-    required this.discountPercent,
-    required this.startingPrice,
-    required this.savingsAmount,
-    required this.description,
+    required this.nameAr,
+    required this.nameEn,
+    required this.packageType,
+    required this.durationDays,
+    required this.rideCount,
+    required this.price,
   });
 
   final String id;
-  final String name;
-  final String durationLabel;
-  final int days;
-  final int tripsCount;
-  final int discountPercent;
-  final int startingPrice;
-  final int savingsAmount;
-  final String description;
+  final String nameAr;
+  final String nameEn;
+  final String packageType;
+  final int durationDays;
+  final int rideCount;
+  final double price;
 
-  int get basePrice => startingPrice + savingsAmount;
+  // Helper getters for compatibility
+  String get name => nameAr;
+  String get durationLabel => '$durationDays يوم';
+  int get days => durationDays;
+  int get tripsCount => rideCount;
+  int get discountPercent => 0; 
+  int get startingPrice => price.toInt();
+  int get savingsAmount => 0;
+  int get basePrice => price.toInt();
+  String get description => '';
 }
 
 class PackageVehicleType {

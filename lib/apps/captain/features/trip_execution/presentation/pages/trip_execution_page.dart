@@ -12,6 +12,11 @@ import 'package:bmt_app/apps/captain/features/trip_status_updates/presentation/p
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_status_chip.dart';
+
 import '../../domain/entities/trip_execution_state.dart';
 import '../cubit/trip_execution_cubit.dart';
 import '../cubit/trip_execution_state.dart';
@@ -41,27 +46,18 @@ class TripExecutionPage extends StatelessWidget {
             body: CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  expandedHeight: 100,
+                  expandedHeight: 80,
                   pinned: true,
                   elevation: 0,
                   backgroundColor: scheme.surface,
                   iconTheme: IconThemeData(color: scheme.onSurface),
                   flexibleSpace: FlexibleSpaceBar(
                     background: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            scheme.primaryContainer.withAlpha(100),
-                            scheme.surface,
-                          ],
-                        ),
-                      ),
+                      color: scheme.surface,
                     ),
                     titlePadding: const EdgeInsets.symmetric(
-                      horizontal: 48,
-                      vertical: 16,
+                      horizontal: CaptainSpacing.xxxl,
+                      vertical: CaptainSpacing.lg,
                     ),
                     title: Text(
                       'تنفيذ الرحلة',
@@ -74,7 +70,12 @@ class TripExecutionPage extends StatelessWidget {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+                    padding: const EdgeInsets.fromLTRB(
+                      CaptainSpacing.xl,
+                      CaptainSpacing.lg,
+                      CaptainSpacing.xl,
+                      CaptainSpacing.xxxl,
+                    ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -83,24 +84,24 @@ class TripExecutionPage extends StatelessWidget {
                           status: status,
                           state: state,
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: CaptainSpacing.xl),
                         if (status == TripExecutionStatus.inProgress &&
                             trip.stops.isNotEmpty) ...[
                           _NextStopBanner(stops: trip.stops),
-                          const SizedBox(height: 24),
+                          const SizedBox(height: CaptainSpacing.xl),
                         ],
                         Text(
                           'إجراءات الرحلة',
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.w800),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: CaptainSpacing.lg),
                         GridView.count(
                           crossAxisCount: MediaQuery.sizeOf(context).width > 520
                               ? 3
                               : 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
+                          mainAxisSpacing: CaptainSpacing.lg,
+                          crossAxisSpacing: CaptainSpacing.lg,
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           childAspectRatio: 1.2,
@@ -211,24 +212,9 @@ class _ExecutionHeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withAlpha(12),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: scheme.shadow.withAlpha(4),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(24),
+    return CaptainCard(
+      color: scheme.surface,
+      padding: const EdgeInsets.all(CaptainSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -244,11 +230,11 @@ class _ExecutionHeaderCard extends StatelessWidget {
                   ),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: CaptainSpacing.md),
               _StatusBadge(status: status),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: CaptainSpacing.md),
           Text(
             'المركبة ${trip.vehicleNumber} • ${trip.plateNumber}',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -256,11 +242,11 @@ class _ExecutionHeaderCard extends StatelessWidget {
               fontWeight: FontWeight.w600,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: CaptainSpacing.xl),
           Row(
             children: [
               _TripFact(icon: Icons.schedule_rounded, value: _timeRange(trip)),
-              const SizedBox(width: 12),
+              const SizedBox(width: CaptainSpacing.md),
               _TripFact(
                 icon: Icons.people_alt_rounded,
                 value: '${trip.boardedCount}/${trip.passengerCount} صعدوا',
@@ -268,17 +254,14 @@ class _ExecutionHeaderCard extends StatelessWidget {
             ],
           ),
           if (state is TripExecutionError) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: CaptainSpacing.lg),
             _InlineError(message: (state as TripExecutionError).message),
           ],
-          const SizedBox(height: 24),
+          const SizedBox(height: CaptainSpacing.xl),
           if (state is TripExecutionLoading)
             const Center(child: CircularProgressIndicator())
           else
-            SizedBox(
-              width: double.infinity,
-              child: _actionButton(context, status, trip.id),
-            ),
+            _actionButton(context, status, trip.id),
         ],
       ),
     );
@@ -362,55 +345,38 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, color, icon) = switch (status) {
+    final (label, variant, icon) = switch (status) {
       TripExecutionStatus.scheduled => (
         'مجدولة',
-        Colors.blue,
+        CaptainStatusVariant.info,
         Icons.event_rounded,
       ),
       TripExecutionStatus.boarding => (
         'صعود',
-        Colors.orange,
+        CaptainStatusVariant.warning,
         Icons.people_rounded,
       ),
       TripExecutionStatus.inProgress => (
         'جارية',
-        Colors.green,
+        CaptainStatusVariant.success,
         Icons.electric_car_rounded,
       ),
       TripExecutionStatus.completed => (
         'مكتملة',
-        Colors.grey,
+        CaptainStatusVariant.neutral,
         Icons.check_circle_rounded,
       ),
       TripExecutionStatus.cancelled => (
         'ملغاة',
-        Colors.red,
+        CaptainStatusVariant.error,
         Icons.cancel_rounded,
       ),
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withAlpha(50)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: color),
-          const SizedBox(width: 8),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
-          ),
-        ],
-      ),
+    return CaptainStatusChip(
+      label: label,
+      variant: variant,
+      icon: icon,
     );
   }
 }
@@ -432,20 +398,17 @@ class _NextStopBannerState extends State<_NextStopBanner> {
     final remaining = widget.stops.length - _currentIndex;
     final isLast = _currentIndex >= widget.stops.length;
 
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: scheme.primary.withAlpha(15),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.primary.withAlpha(40)),
-      ),
+    return CaptainCard(
+      color: scheme.primary.withAlpha(15),
+      borderColor: scheme.primary.withAlpha(40),
+      padding: const EdgeInsets.all(CaptainSpacing.xl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Icon(Icons.location_on_rounded, color: scheme.primary, size: 20),
-              const SizedBox(width: 8),
+              const SizedBox(width: CaptainSpacing.md),
               Text(
                 isLast ? 'تم الوصول للوجهة' : 'المحطة القادمة',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
@@ -457,12 +420,12 @@ class _NextStopBannerState extends State<_NextStopBanner> {
               if (!isLast)
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: CaptainSpacing.md,
+                    vertical: CaptainSpacing.sm,
                   ),
                   decoration: BoxDecoration(
                     color: scheme.primary,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: CaptainRadius.rSm,
                   ),
                   child: Text(
                     '$remaining',
@@ -475,7 +438,7 @@ class _NextStopBannerState extends State<_NextStopBanner> {
             ],
           ),
           if (!isLast) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: CaptainSpacing.md),
             Text(
               widget.stops[_currentIndex],
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -483,24 +446,11 @@ class _NextStopBannerState extends State<_NextStopBanner> {
                 color: scheme.onSurface,
               ),
             ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () => setState(() => _currentIndex++),
-                style: FilledButton.styleFrom(
-                  backgroundColor: scheme.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                icon: const Icon(Icons.check_rounded, size: 20),
-                label: const Text(
-                  'تم الوصول للمحطة',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
+            const SizedBox(height: CaptainSpacing.lg),
+            CaptainButton(
+              label: 'تم الوصول للمحطة',
+              icon: Icons.check_rounded,
+              onPressed: () => setState(() => _currentIndex++),
             ),
           ],
         ],
@@ -531,41 +481,41 @@ class _ActionTile extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: CaptainRadius.rLg,
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(CaptainSpacing.lg),
           decoration: BoxDecoration(
             color: scheme.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.shadow.withAlpha(5),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
+            borderRadius: CaptainRadius.rLg,
+            border: Border.all(
+              color: destructive
+                  ? scheme.error.withAlpha(50)
+                  : scheme.outlineVariant.withAlpha(50),
+            ),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          child: Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(CaptainSpacing.md),
                 decoration: BoxDecoration(
                   color: color.withAlpha(20),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 24),
               ),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: destructive ? scheme.error : scheme.onSurface,
+              const SizedBox(width: CaptainSpacing.md),
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: destructive ? scheme.error : scheme.onSurface,
+                      ),
                 ),
+              ),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: scheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -576,7 +526,10 @@ class _ActionTile extends StatelessWidget {
 }
 
 class _TripFact extends StatelessWidget {
-  const _TripFact({required this.icon, required this.value});
+  const _TripFact({
+    required this.icon,
+    required this.value,
+  });
 
   final IconData icon;
   final String value;
@@ -586,15 +539,16 @@ class _TripFact extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Expanded(
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        padding: const EdgeInsets.symmetric(
+            horizontal: CaptainSpacing.md, vertical: CaptainSpacing.md),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest.withAlpha(100),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: CaptainRadius.rLg,
         ),
         child: Row(
           children: [
             Icon(icon, size: 18, color: scheme.primary),
-            const SizedBox(width: 8),
+            const SizedBox(width: CaptainSpacing.md),
             Expanded(
               child: Text(
                 value,
@@ -623,16 +577,16 @@ class _InlineError extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(CaptainSpacing.lg),
       decoration: BoxDecoration(
         color: scheme.errorContainer,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: CaptainRadius.rLg,
         border: Border.all(color: scheme.error.withAlpha(50)),
       ),
       child: Row(
         children: [
           Icon(Icons.error_outline_rounded, color: scheme.error),
-          const SizedBox(width: 12),
+          const SizedBox(width: CaptainSpacing.md),
           Expanded(
             child: Text(
               message,

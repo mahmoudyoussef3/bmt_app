@@ -1,5 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import '../theme/captain_spacing.dart';
 
 import '../../features/assigned_trips/presentation/cubit/assigned_trips_cubit.dart';
 import '../../features/assigned_trips/presentation/pages/assigned_trips_page.dart';
@@ -108,33 +111,39 @@ class _ShellScaffold extends StatelessWidget {
           DriverProfilePage(),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          boxShadow: [
-            BoxShadow(
-              color: scheme.shadow.withAlpha(15),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
+      bottomNavigationBar: ClipRRect(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: Container(
+            decoration: BoxDecoration(
+              color: scheme.surface.withAlpha(220),
+              border: Border(
+                top: BorderSide(
+                  color: scheme.outline.withAlpha(20),
+                  width: 1,
+                ),
+              ),
             ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            child: Row(
-              children: List.generate(tabs.length, (i) {
-                final tab = tabs[i];
-                final isActive = i == currentIndex;
-                return Expanded(
-                  child: _NavItem(
-                    label: tab.label,
-                    icon: isActive ? tab.activeIcon : tab.icon,
-                    isActive: isActive,
-                    onTap: () => onTabChanged(i),
-                  ),
-                );
-              }),
+            child: SafeArea(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: CaptainSpacing.lg,
+                  vertical: CaptainSpacing.md,
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: List.generate(tabs.length, (i) {
+                    final tab = tabs[i];
+                    final isActive = i == currentIndex;
+                    return _NavItem(
+                      label: tab.label,
+                      icon: isActive ? tab.activeIcon : tab.icon,
+                      isActive: isActive,
+                      onTap: () => onTabChanged(i),
+                    );
+                  }),
+                ),
+              ),
             ),
           ),
         ),
@@ -158,30 +167,42 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final color = isActive ? scheme.primary : scheme.onSurfaceVariant;
 
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutCubic,
+        padding: const EdgeInsets.symmetric(
+          horizontal: CaptainSpacing.xl,
+          vertical: CaptainSpacing.md,
+        ),
         decoration: BoxDecoration(
-          color: isActive ? scheme.primary.withAlpha(15) : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          color: isActive ? scheme.primary.withAlpha(20) : Colors.transparent,
+          borderRadius: CaptainRadius.rPill,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 24, color: color),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: color,
-                    fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
-                  ),
+            AnimatedScale(
+              scale: isActive ? 1.1 : 1.0,
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              child: Icon(icon, size: 26, color: color),
+            ),
+            const SizedBox(height: CaptainSpacing.sm),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeOutCubic,
+              style: theme.textTheme.labelSmall!.copyWith(
+                color: color,
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+              ),
+              child: Text(label),
             ),
           ],
         ),

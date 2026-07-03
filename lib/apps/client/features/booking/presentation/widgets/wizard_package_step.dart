@@ -124,7 +124,6 @@ class _PackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final total = tripPrice * plan.tripsCount * (1 - plan.discountPercent / 100);
     final borderColor = isSelected ? ClientColors.journeyPurple : ClientColors.borderFor(context);
     return GestureDetector(
       onTap: onTap,
@@ -145,28 +144,19 @@ class _PackageCard extends StatelessWidget {
                   Text(plan.name,
                       style: ClientTypography.bodyMedium(context)
                           .copyWith(fontWeight: FontWeight.w700)),
-                  Text('${plan.tripsCount} rides · ${plan.durationLabel}',
+                  Text('${plan.tripsCount} رحلة · ${plan.durationLabel}',
                       style: ClientTypography.bodySmall(context)
                           .copyWith(color: ClientColors.textSecondaryFor(context))),
-                  if (plan.discountPercent > 0)
-                    Text('Save ${plan.discountPercent}%',
-                        style: ClientTypography.labelSmall(context)
-                            .copyWith(color: ClientColors.journeyGreen)),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('EGP ${total.toStringAsFixed(0)}',
+                Text('EGP ${plan.price.toStringAsFixed(0)}',
                     style: ClientTypography.headingSmall(context).copyWith(
                       color: isSelected ? ClientColors.journeyPurple : ClientColors.textPrimaryFor(context),
                       fontWeight: FontWeight.w700,
-                    )),
-                Text('EGP ${(tripPrice * plan.tripsCount).toStringAsFixed(0)} full',
-                    style: ClientTypography.labelSmall(context).copyWith(
-                      decoration: TextDecoration.lineThrough,
-                      color: ClientColors.textTertiary,
                     )),
               ],
             ),

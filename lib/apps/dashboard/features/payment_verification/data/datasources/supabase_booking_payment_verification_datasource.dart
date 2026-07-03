@@ -11,9 +11,8 @@ class SupabaseBookingPaymentVerificationDatasource
   final SupabaseClient _client;
 
   static const _verificationStatuses = [
-    'paymentUploaded',
-    'underReview',
-    'requestReupload',
+    'pending',
+    'under_review',
     'approved',
     'rejected',
   ];
@@ -26,7 +25,7 @@ class SupabaseBookingPaymentVerificationDatasource
           .select('''
             id, status, payment_method, payment_receipt_url,
             passenger_name, phone, seat, created_at, notes, timeline,
-            payment_details,
+            payment_details, payment_review_status, payment_status,
             trip:operation_trips(
               id, trip_date, departure_time,
               route:operation_routes(name),
@@ -34,7 +33,7 @@ class SupabaseBookingPaymentVerificationDatasource
               vehicle:vehicles(plate_number)
             )
           ''')
-          .inFilter('status', _verificationStatuses)
+          .inFilter('payment_review_status', _verificationStatuses)
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -52,10 +51,9 @@ class SupabaseBookingPaymentVerificationDatasource
   ) async {
     try {
       await _client.rpc(
-        'approve_booking',
+        'approve_payment',
         params: {
           'p_booking_id': verificationId,
-          'p_reviewer_name': 'خدمة العملاء',
         },
       );
       return _refetch(verificationId);
@@ -71,13 +69,9 @@ class SupabaseBookingPaymentVerificationDatasource
   ) async {
     try {
       await _client.rpc(
-        'reject_booking',
+        'reject_payment',
         params: {
           'p_booking_id': verificationId,
-          'p_rejection_reason': note.isNotEmpty
-              ? note
-              : 'رُفض من قِبَل خدمة العملاء',
-          'p_reviewer_name': 'خدمة العملاء',
         },
       );
       return _refetch(verificationId);
@@ -114,7 +108,7 @@ class SupabaseBookingPaymentVerificationDatasource
       await _client
           .from('operation_bookings')
           .update({
-            'status': 'requestReupload',
+            'payment_review_status': 'under_review',
             'notes': notes,
             'timeline': timeline,
             'updated_at': DateTime.now().toUtc().toIso8601String(),
@@ -161,7 +155,7 @@ class SupabaseBookingPaymentVerificationDatasource
         .select('''
           id, status, payment_method, payment_receipt_url,
           passenger_name, phone, seat, created_at, notes, timeline,
-          payment_details,
+          payment_details, payment_review_status, payment_status,
           trip:operation_trips(
             id, trip_date, departure_time,
             route:operation_routes(name),
@@ -176,7 +170,7 @@ class SupabaseBookingPaymentVerificationDatasource
   }
 
   BookingPaymentVerificationModel _mapToModel(Map<String, dynamic> json) {
-    final statusStr = json['status'] as String? ?? 'paymentUploaded';
+    final reviewStatusStr = json['payment_review_status'] as String? ?? 'pending';
     final methodStr = json['payment_method'] as String? ?? 'cash';
     final tripJson = json['trip'] as Map<String, dynamic>?;
     final routeJson = tripJson?['route'] as Map<String, dynamic>?;
@@ -205,7 +199,7 @@ class SupabaseBookingPaymentVerificationDatasource
         driver: driverJson?['full_name'] as String? ?? '',
       ),
       selectedSeat: json['seat'] as String? ?? '',
-      seatState: _mapSeatState(statusStr),
+      seatState: _mapSeatState(reviewStatusStr),
       amount: paymentDetails?['amount'] as String? ?? '0 ج.م',
       method: _mapPaymentMethod(methodStr),
       referenceNumber: paymentDetails?['reference'] as String? ?? '',
@@ -214,7 +208,7 @@ class SupabaseBookingPaymentVerificationDatasource
           ? 'تم رفع الإيصال'
           : 'لم يُرفع إيصال',
       receiptUrl: json['payment_receipt_url'] as String?,
-      status: _mapVerificationStatus(statusStr),
+      status: _mapVerificationStatus(reviewStatusStr),
       notes: notesList,
       history: timelineList.map((item) {
         return VerificationHistoryItem(
@@ -228,15 +222,15 @@ class SupabaseBookingPaymentVerificationDatasource
 
   BookingVerificationStatus _mapVerificationStatus(String status) =>
       switch (status) {
-        'approved' || 'confirmed' => BookingVerificationStatus.approved,
+        'approved' => BookingVerificationStatus.approved,
         'rejected' => BookingVerificationStatus.rejected,
-        'requestReupload' => BookingVerificationStatus.reviewRequested,
+        'under_review' => BookingVerificationStatus.reviewRequested,
         _ => BookingVerificationStatus.pending,
       };
 
   VerificationSeatState _mapSeatState(String status) => switch (status) {
-    'approved' || 'confirmed' => VerificationSeatState.permanentlyConfirmed,
-    'rejected' || 'cancelled' => VerificationSeatState.released,
+    'approved' => VerificationSeatState.permanentlyConfirmed,
+    'rejected' => VerificationSeatState.released,
     _ => VerificationSeatState.temporaryReserved,
   };
 

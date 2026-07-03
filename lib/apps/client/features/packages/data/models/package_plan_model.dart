@@ -3,37 +3,43 @@ import '../../domain/entities/package_plan.dart';
 class PackagePlanModel {
   const PackagePlanModel({
     required this.id,
-    required this.name,
-    required this.durationLabel,
-    required this.days,
-    required this.tripsCount,
-    required this.discountPercent,
-    required this.startingPrice,
-    required this.savingsAmount,
-    required this.description,
+    required this.nameAr,
+    required this.nameEn,
+    required this.packageType,
+    required this.durationDays,
+    required this.rideCount,
+    required this.price,
   });
 
   final String id;
-  final String name;
-  final String durationLabel;
-  final int days;
-  final int tripsCount;
-  final int discountPercent;
-  final int startingPrice;
-  final int savingsAmount;
-  final String description;
+  final String nameAr;
+  final String nameEn;
+  final String packageType;
+  final int durationDays;
+  final int rideCount;
+  final double price;
+
+  factory PackagePlanModel.fromJson(Map<String, dynamic> json) {
+    return PackagePlanModel(
+      id: json['id'] as String? ?? '',
+      nameAr: json['name_ar'] as String? ?? '',
+      nameEn: json['name_en'] as String? ?? '',
+      packageType: json['package_type'] as String? ?? '',
+      durationDays: json['duration_days'] as int? ?? 1,
+      rideCount: json['ride_count'] as int? ?? 1,
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+    );
+  }
 
   PackagePlan toEntity() {
     return PackagePlan(
       id: id,
-      name: name,
-      durationLabel: durationLabel,
-      days: days,
-      tripsCount: tripsCount,
-      discountPercent: discountPercent,
-      startingPrice: startingPrice,
-      savingsAmount: savingsAmount,
-      description: description,
+      nameAr: nameAr,
+      nameEn: nameEn,
+      packageType: packageType,
+      durationDays: durationDays,
+      rideCount: rideCount,
+      price: price,
     );
   }
 }

@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_status_chip.dart';
+
 import '../../domain/entities/assigned_trip.dart';
 
 class AssignedTripCard extends StatelessWidget {
@@ -21,39 +26,17 @@ class AssignedTripCard extends StatelessWidget {
         ? 0.0
         : trip.boardedCount / trip.passengerCount;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withAlpha(12),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: scheme.shadow.withAlpha(4),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
+    return CaptainCard(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header section with gradient and route info
+          // Header section
           Container(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(CaptainSpacing.xl),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  scheme.primaryContainer.withAlpha(80),
-                  scheme.surface,
-                ],
-              ),
+              color: scheme.surfaceContainerHighest.withAlpha(50),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(CaptainRadius.xl)),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -92,12 +75,11 @@ class AssignedTripCard extends StatelessWidget {
             ),
           ),
 
-          // Divider
-          Divider(height: 1, thickness: 1, color: scheme.outlineVariant.withAlpha(50)),
+          Divider(height: 1, thickness: 1, color: scheme.outline.withAlpha(20)),
 
           // Body section with progress and actions
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(CaptainSpacing.xl),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -132,9 +114,9 @@ class AssignedTripCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: CaptainSpacing.md),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: CaptainRadius.rSm,
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 8,
@@ -144,46 +126,28 @@ class AssignedTripCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: CaptainSpacing.xxl),
 
                 // Action Buttons
                 Row(
                   children: [
                     Expanded(
                       flex: 2,
-                      child: FilledButton.icon(
+                      child: CaptainButton(
+                        label: 'بدء / متابعة',
+                        icon: Icons.navigation_rounded,
                         onPressed: onOpen,
-                        style: FilledButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          elevation: 0,
-                        ),
-                        icon: const Icon(Icons.navigation_rounded, size: 20),
-                        label: const Text(
-                          'بدء / متابعة',
-                          style: TextStyle(fontWeight: FontWeight.w700),
-                        ),
+                        variant: CaptainButtonVariant.primary,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: CaptainSpacing.md),
                     Expanded(
                       flex: 1,
-                      child: OutlinedButton.icon(
+                      child: CaptainButton(
+                        label: 'القائمة',
+                        icon: Icons.group_rounded,
                         onPressed: onManifest,
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          side: BorderSide(color: scheme.outlineVariant),
-                        ),
-                        icon: Icon(Icons.group_rounded, size: 20, color: scheme.onSurface),
-                        label: Text(
-                          'القائمة',
-                          style: TextStyle(fontWeight: FontWeight.w700, color: scheme.onSurface),
-                        ),
+                        variant: CaptainButtonVariant.outline,
                       ),
                     ),
                   ],
@@ -214,34 +178,17 @@ class _StatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (label, color, icon) = switch (status) {
-      AssignedTripStatus.scheduled => ('مجدولة', Colors.blue, Icons.event_rounded),
-      AssignedTripStatus.boarding => ('صعود', Colors.orange, Icons.people_rounded),
-      AssignedTripStatus.inProgress => ('جارية', Colors.green, Icons.electric_car_rounded),
-      AssignedTripStatus.completed => ('مكتملة', Colors.grey, Icons.check_circle_rounded),
+    final (label, variant, icon) = switch (status) {
+      AssignedTripStatus.scheduled => ('مجدولة', CaptainStatusVariant.info, Icons.event_rounded),
+      AssignedTripStatus.boarding => ('صعود', CaptainStatusVariant.warning, Icons.people_rounded),
+      AssignedTripStatus.inProgress => ('جارية', CaptainStatusVariant.success, Icons.electric_car_rounded),
+      AssignedTripStatus.completed => ('مكتملة', CaptainStatusVariant.neutral, Icons.check_circle_rounded),
     };
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withAlpha(50)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-        ],
-      ),
+    return CaptainStatusChip(
+      label: label,
+      variant: variant,
+      icon: icon,
     );
   }
 }

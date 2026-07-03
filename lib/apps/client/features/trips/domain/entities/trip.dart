@@ -22,7 +22,7 @@ extension TripFilterLabel on TripFilter {
   }
 }
 
-enum PaymentStatus { paid, pending, refunded, failed }
+enum PaymentStatus { paid, pending, underReview, refunded, failed }
 
 class TripData {
   const TripData({
@@ -73,6 +73,7 @@ class TripData {
     return switch (paymentStatus) {
       PaymentStatus.paid => 'Paid',
       PaymentStatus.pending => 'Pending',
+      PaymentStatus.underReview => 'Under Review',
       PaymentStatus.refunded => 'Refunded',
       PaymentStatus.failed => 'Failed',
     };

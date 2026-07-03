@@ -35,6 +35,7 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
       selectedPackage: state.selectedPackage,
       packageStartDate: state.packageStartDate,
       paymentMethod: state.paymentMethod,
+      receiptUrl: state.receiptUrl,
     ));
   }
 
@@ -44,5 +45,9 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
 
   void selectPaymentMethod(String method) {
     emit(state.copyWith(paymentMethod: method));
+  }
+
+  void setReceiptUrl(String url) {
+    emit(state.copyWith(receiptUrl: url));
   }
 }

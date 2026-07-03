@@ -79,11 +79,13 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
         'p_route': '${session.pickupStop?.name ?? ''} → ${session.dropoffStop?.name ?? ''}',
         'p_trip_time': session.selectedTrip?.departureTime ?? '',
         'p_trip_date': '',
-        'p_payment_method': session.paymentMethod ?? 'cash_on_boarding',
+        'p_payment_method': session.paymentMethod ?? 'instapay',
         'p_payment_amount': session.totalPrice.round(),
         'p_pickup_point_name': session.pickupStop?.name ?? '',
         'p_dropoff_point_name': session.dropoffStop?.name ?? '',
-        'p_receipt_url': null,
+        'p_package_id': session.selectedPackage?.id,
+        'p_plan_start_date': session.packageStartDate?.toIso8601String().split('T')[0],
+        'p_receipt_url': session.receiptUrl,
       });
 
       if (!mounted) return;

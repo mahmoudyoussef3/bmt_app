@@ -10,53 +10,25 @@ class SupabasePackagesDatasource implements PackagesDatasource {
 
   @override
   Future<String> createSubscription(SubscriptionRequest request) async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) {
-      throw Exception('You must be signed in to subscribe.');
-    }
-
-    final meta = user.userMetadata ?? const <String, dynamic>{};
-    final now = DateTime.now();
-    final durationDays = request.days > 0 ? request.days - 1 : 0;
-    final end = now.add(Duration(days: durationDays));
-
-    final payload = {
-      'client_id': user.id,
-      'package_id': request.packageId,
-      'customer_name': meta['full_name']?.toString() ?? '',
-      'customer_phone': meta['phone']?.toString() ?? '',
-      'package_name': request.packageName,
-      'route_name': request.routeName,
-      'start_date': now.toIso8601String(),
-      'end_date': end.toIso8601String(),
-      'status': 'pending_payment',
-      'total_price': request.totalPrice,
-      'paid_amount': 0,
-      'remaining_amount': request.totalPrice,
-      'trips_count': request.tripsCount,
-      'trips_used': 0,
-      'payment_review_status': 'pending',
-    };
-
-    final row = await _supabase
-        .from('subscriptions')
-        .insert(payload)
-        .select('id')
-        .single();
-
-    return row['id'].toString();
+    // This is no longer directly creating a subscription for SaaS Booking Flow.
+    // The subscription is created by the RPC `approve_payment` when the booking is approved.
+    // So this is technically deprecated or should just throw unimplmented if used in the new flow.
+    throw UnimplementedError('createSubscription is deprecated. Use confirm_seat_booking_v2 instead.');
   }
 
   @override
   Future<PackageSelectionDataModel> getSelectionData() async {
     final packagesFuture = _supabase
-        .from('packages')
+        .from('transport_packages')
         .select()
-        .eq('status', 'active');
+        .eq('active', true)
+        .order('display_order', ascending: true);
+        
     final vehicleTiersFuture = _supabase
         .from('package_vehicle_tiers')
         .select()
         .eq('status', 'active');
+        
     final routesFuture = _supabase
         .from('operation_routes')
         .select('name, start_city, end_city')
@@ -73,19 +45,7 @@ class SupabasePackagesDatasource implements PackagesDatasource {
     final routesData = responses[2] as List<dynamic>;
 
     final packages = packagesData
-        .map(
-          (e) => PackagePlanModel(
-            id: e['id']?.toString() ?? '',
-            name: e['title']?.toString() ?? '',
-            durationLabel: e['subtitle']?.toString() ?? '',
-            days: e['days'] as int? ?? 30,
-            tripsCount: e['trips_count'] as int? ?? 44,
-            discountPercent: e['discount_percent'] as int? ?? 0,
-            startingPrice: (e['price'] as num?)?.toInt() ?? 0,
-            savingsAmount: (e['savings_amount'] as num?)?.toInt() ?? 0,
-            description: e['description']?.toString() ?? '',
-          ),
-        )
+        .map((e) => PackagePlanModel.fromJson(e as Map<String, dynamic>))
         .toList();
 
     final vehicles = vehicleTiersData

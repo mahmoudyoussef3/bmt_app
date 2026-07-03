@@ -143,7 +143,7 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
 
     try {
       final response = await _supabase.rpc(
-        'confirm_seat_booking',
+        'confirm_seat_booking_v2',
         params: rpcParams,
       );
       return Map<String, dynamic>.from(response as Map);

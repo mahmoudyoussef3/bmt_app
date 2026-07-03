@@ -8,9 +8,9 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wiz
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 
 const _methods = [
-  _PaymentMethod('cash', 'Cash on pickup', Icons.payments_rounded, 'Pay the driver on your first ride'),
-  _PaymentMethod('card', 'Debit / Credit Card', Icons.credit_card_rounded, 'Secure online payment'),
-  _PaymentMethod('wallet', 'Digital Wallet', Icons.account_balance_wallet_rounded, 'Wallet balance'),
+  _PaymentMethod('instapay', 'InstaPay', Icons.send_to_mobile_rounded, 'Transfer to 01012345678 (InstaPay)'),
+  _PaymentMethod('vodafone_cash', 'Vodafone Cash', Icons.phone_android_rounded, 'Transfer to 01012345678'),
+  _PaymentMethod('bank_transfer', 'Bank Transfer', Icons.account_balance_rounded, 'Transfer to Bank Account'),
 ];
 
 class WizardPaymentStep extends StatelessWidget {
@@ -39,10 +39,15 @@ class WizardPaymentStep extends StatelessWidget {
                         child: _MethodTile(
                           method: m,
                           isSelected: session.paymentMethod == m.id,
-                          onTap: () =>
-                              context.read<BookingWizardCubit>().selectPaymentMethod(m.id),
+                          onTap: () {
+                            context.read<BookingWizardCubit>().selectPaymentMethod(m.id);
+                          },
                         ),
                       )),
+                  if (session.paymentMethod != null) ...[
+                    const SizedBox(height: 20),
+                    _ReceiptUploadSection(session: session),
+                  ],
                   const SizedBox(height: 20),
                   _TotalBanner(session: session),
                 ],
@@ -52,8 +57,8 @@ class WizardPaymentStep extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                 child: ClientButton(
-                  label: 'Confirm Booking',
-                  onPressed: session.paymentMethod != null ? onConfirm : null,
+                  label: 'Submit for Review',
+                  onPressed: session.paymentValid ? onConfirm : null,
                 ),
               ),
             ),
@@ -137,6 +142,62 @@ class _TotalBanner extends StatelessWidget {
               color: ClientColors.primary, fontWeight: FontWeight.w700,
             )),
       ]),
+    );
+  }
+}
+
+class _ReceiptUploadSection extends StatelessWidget {
+  const _ReceiptUploadSection({required this.session});
+  final BookingWizardSession session;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasReceipt = session.receiptUrl != null;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Payment Proof',
+              style: ClientTypography.bodyMedium(context)
+                  .copyWith(fontWeight: FontWeight.w600)),
+          const SizedBox(height: 4),
+          Text('Please transfer the total amount and upload the receipt to confirm your booking.',
+              style: ClientTypography.bodySmall(context)
+                  .copyWith(color: ClientColors.textSecondaryFor(context))),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                // Simulate file upload
+                context.read<BookingWizardCubit>().setReceiptUrl('https://example.com/receipt.jpg');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Receipt uploaded successfully (Simulated)')),
+                );
+              },
+              icon: Icon(
+                hasReceipt ? Icons.check_circle_rounded : Icons.upload_file_rounded,
+                color: hasReceipt ? ClientColors.journeyGreen : ClientColors.primary,
+              ),
+              label: Text(hasReceipt ? 'Receipt Uploaded' : 'Upload Receipt'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                foregroundColor: hasReceipt ? ClientColors.journeyGreen : ClientColors.primary,
+                side: BorderSide(
+                  color: hasReceipt ? ClientColors.journeyGreen : ClientColors.primary,
+                ),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

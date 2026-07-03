@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
+
 import '../../domain/entities/passenger.dart';
 import '../cubit/passenger_manifest_cubit.dart';
 import '../cubit/passenger_manifest_state.dart';
@@ -117,7 +121,8 @@ class _PassengerListViewState extends State<_PassengerListView> {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    padding: const EdgeInsets.fromLTRB(
+                        CaptainSpacing.xl, CaptainSpacing.md, CaptainSpacing.xl, CaptainSpacing.md),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (v) => setState(() => _search = v),
@@ -135,10 +140,11 @@ class _PassengerListViewState extends State<_PassengerListView> {
                             : null,
                         filled: true,
                         border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: CaptainRadius.rLg,
                           borderSide: BorderSide.none,
                         ),
-                        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                        contentPadding: const EdgeInsets.symmetric(
+                            vertical: CaptainSpacing.md, horizontal: CaptainSpacing.lg),
                       ),
                     ),
                   ),
@@ -153,25 +159,27 @@ class _PassengerListViewState extends State<_PassengerListView> {
                   SliverFillRemaining(
                     hasScrollBody: false,
                     child: Center(
-                      child: EmptyState(
+                      child: CaptainEmptyState(
                         title: _filter != null || _search.isNotEmpty
                             ? 'لا نتائج'
                             : 'لا يوجد ركاب على هذه الرحلة',
                         subtitle: _filter != null || _search.isNotEmpty
                             ? 'جرّب تغيير الفلتر أو كلمة البحث.'
                             : 'ستظهر الحجوزات المؤكدة هنا فور إضافتها.',
+                        icon: Icons.people_alt_rounded,
                       ),
                     ),
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+                    padding: const EdgeInsets.fromLTRB(
+                        CaptainSpacing.xl, CaptainSpacing.lg, CaptainSpacing.xl, CaptainSpacing.xxxl),
                     sliver: SliverList.builder(
                       itemCount: filtered.length,
                       itemBuilder: (context, i) {
                         final p = filtered[i];
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(bottom: CaptainSpacing.lg),
                           child: PassengerCard(
                             passenger: p,
                             onCall: () => launchUrl(Uri.parse('tel:${p.phone}')),
@@ -221,11 +229,11 @@ class _AppBar extends StatelessWidget {
           children: [
             Text(
               'قائمة الركاب',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
             ),
             Text(
               'صعد $boarded من أصل $total',
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
             ),
@@ -252,16 +260,10 @@ class _StatsRow extends StatelessWidget {
     final progress = total == 0 ? 0.0 : boarded / total;
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(color: scheme.shadow.withAlpha(8), blurRadius: 16, offset: const Offset(0, 4)),
-          ],
-        ),
+      padding: const EdgeInsets.fromLTRB(
+          CaptainSpacing.xl, CaptainSpacing.md, CaptainSpacing.xl, CaptainSpacing.md),
+      child: CaptainCard(
+        padding: const EdgeInsets.all(CaptainSpacing.xl),
         child: Column(
           children: [
             Row(
@@ -272,9 +274,9 @@ class _StatsRow extends StatelessWidget {
                 _Stat(label: 'غائب', value: absent, color: Colors.red),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: CaptainSpacing.lg),
             ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: CaptainRadius.rSm,
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 8,

@@ -7,7 +7,7 @@ import 'package:bmt_app/core/flavors/app_bootstrap.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/core/notifications/fcm_service.dart';
-import 'package:bmt_app/core/theme/app_theme.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_theme.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -79,8 +79,8 @@ class _CaptainAppState extends State<CaptainApp> {
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           locale: locale,
-          theme: AppTheme.lightTheme(),
-          darkTheme: AppTheme.darkTheme(),
+          theme: CaptainTheme.light(),
+          darkTheme: CaptainTheme.dark(),
           themeMode: ThemeMode.system,
           home: const _CaptainAuthGate(),
           routes: {
