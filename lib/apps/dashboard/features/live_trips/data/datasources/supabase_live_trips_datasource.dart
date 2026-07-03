@@ -286,19 +286,34 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
   Stream<VehiclePosition> watchVehiclePosition(String tripId) {
     final controller = StreamController<VehiclePosition>.broadcast();
     final channel = _client
-        .channel('live_location:$tripId')
-        .onBroadcast(
-          event: 'location',
-          callback: (payload) {
+        .channel('location_updates:$tripId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'trip_live_locations',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'trip_id',
+            value: tripId,
+          ),
+          callback: (change) {
             try {
+              final payload = change.newRecord;
               controller.add(
                 VehiclePosition(
-                  latitude: (payload['lat'] as num).toDouble(),
-                  longitude: (payload['lng'] as num).toDouble(),
+                  latitude: (payload['latitude'] as num).toDouble(),
+                  longitude: (payload['longitude'] as num).toDouble(),
+                  heading: payload['heading'] != null
+                      ? (payload['heading'] as num).toDouble()
+                      : null,
                   speed: payload['speed'] != null
                       ? (payload['speed'] as num).toDouble()
                       : null,
-                  updatedAt: DateTime.now(),
+                  updatedAt:
+                      DateTime.tryParse(
+                        payload['recorded_at']?.toString() ?? '',
+                      )?.toLocal() ??
+                      DateTime.now(),
                 ),
               );
             } catch (_) {}

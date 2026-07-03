@@ -9,10 +9,8 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_pack
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/popular_routes_preview.dart';
 import 'package:bmt_app/core/localization/failure_l10n_ext.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
-import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/app_dialogs.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
 
@@ -87,362 +85,234 @@ class _HomeContent extends StatefulWidget {
 class _HomeContentState extends State<_HomeContent> {
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final width = MediaQuery.sizeOf(context).width;
     final maxW = AppLayout.maxContentWidth(width);
     final isTablet = width >= 720;
+    final scheme = Theme.of(context).colorScheme;
 
-    return Center(
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxW),
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(
-            parent: AlwaysScrollableScrollPhysics(),
-          ),
-          slivers: [
-            SliverPadding(
-              padding: EdgeInsets.fromLTRB(
-                isTablet ? AppLayout.spaceXl : AppLayout.spaceLg,
-                AppLayout.spaceXl,
-                isTablet ? AppLayout.spaceXl : AppLayout.spaceLg,
-                24,
+    return Container(
+      color: scheme.surface,
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: maxW),
+          child: RefreshIndicator(
+            onRefresh: () => context.read<HomeCubit>().load(),
+            child: CustomScrollView(
+              physics: const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
               ),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  _WelcomeSection(
-                    data: widget.data,
-                    onOpenNotifications: widget.onOpenNotifications,
+              slivers: [
+                SliverPadding(
+                  padding: EdgeInsets.fromLTRB(
+                    isTablet ? AppLayout.spaceXl : AppLayout.spaceLg,
+                    AppLayout.spaceXl + 24, // Top padding
+                    isTablet ? AppLayout.spaceXl : AppLayout.spaceLg,
+                    40,
                   ),
-                  const SizedBox(height: 18),
-                  _SearchEntryBar(onTap: widget.onOpenSearch),
-                  const SizedBox(height: 26),
-                  PopularRoutesPreview(
-                    routes: widget.data.popularRoutes,
-                    previewCount: isTablet ? 4 : 3,
-                    onOpenRoute: widget.onOpenRoute,
-                  ),
-                  const SizedBox(height: 26),
-                  if (widget.data.activePackage == null)
-                    _SubscriptionPromo(
-                      scheme: scheme,
-                      onTap: () => widget.onOpenRoute(
-                        ClientRoutes.subscription,
-                        {'hasActiveSubscription': false},
+                  sliver: SliverList(
+                    delegate: SliverChildListDelegate([
+                      _CleanHeader(
+                        userName: widget.data.userName,
+                        onOpenNotifications: widget.onOpenNotifications,
                       ),
-                    ),
-                  if (widget.data.activePackage == null)
-                    const SizedBox(height: 26),
-                  HomePackagesSection(
-                    plans: widget.data.packagePlans,
-                    activePackage: widget.data.activePackage,
-                    previewCount: 4,
-                    onOpenSubscription: () =>
-                        widget.onOpenRoute(ClientRoutes.subscription, {
-                          'hasActiveSubscription':
-                              widget.data.activePackage != null,
-                        }),
+                      const SizedBox(height: 32),
+                      _CleanSearchBar(onTap: widget.onOpenSearch),
+                      const SizedBox(height: 40),
+                      
+                      if (widget.data.currentTrip != null) ...[
+                        _ActiveTripCard(
+                          trip: widget.data.currentTrip!,
+                          onTap: () => widget.onOpenRoute(ClientRoutes.tracking, {
+                            'bookingId': widget.data.currentTrip!.id,
+                          }),
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+
+                      PopularRoutesPreview(
+                        routes: widget.data.popularRoutes,
+                        previewCount: isTablet ? 4 : 3,
+                        onOpenRoute: widget.onOpenRoute,
+                      ),
+                      const SizedBox(height: 40),
+                      
+                      if (widget.data.activePackage == null) ...[
+                        _CleanSubscriptionPromo(
+                          onTap: () => widget.onOpenRoute(
+                            ClientRoutes.subscription,
+                            {'hasActiveSubscription': false},
+                          ),
+                        ),
+                        const SizedBox(height: 40),
+                      ],
+
+                      HomePackagesSection(
+                        plans: widget.data.packagePlans,
+                        activePackage: widget.data.activePackage,
+                        previewCount: 4,
+                        onOpenSubscription: () =>
+                            widget.onOpenRoute(ClientRoutes.subscription, {
+                              'hasActiveSubscription':
+                                  widget.data.activePackage != null,
+                            }),
+                      ),
+                      const SizedBox(height: 48),
+                      
+                      _SupportLink(
+                        scheme: scheme,
+                        onTap: () => widget.onOpenRoute(ClientRoutes.support),
+                      ),
+                    ]),
                   ),
-                  const SizedBox(height: 26),
-                  _SupportLink(
-                    scheme: scheme,
-                    onTap: () => widget.onOpenRoute(ClientRoutes.support),
-                  ),
-                  const SizedBox(height: 20),
-                ]),
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-class _WelcomeSection extends StatelessWidget {
-  const _WelcomeSection({
-    required this.data,
-    required this.onOpenNotifications,
-  });
+class _CleanHeader extends StatelessWidget {
+  const _CleanHeader({required this.userName, required this.onOpenNotifications});
 
-  final HomeData data;
+  final String? userName;
   final VoidCallback onOpenNotifications;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final firstName = _firstName(data.userName);
-    final routeCount = data.popularRoutes.length;
-    final tripCount = data.popularRoutes.fold<int>(
-      0,
-      (sum, route) => sum + route.tripsAvailable,
-    );
-    final greeting = _greeting();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final firstName = _firstName(userName);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.primary,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.primary.withAlpha(60),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(22),
-        child: Stack(
-          children: [
-            PositionedDirectional(
-              top: -30,
-              end: -20,
-              child: Container(
-                width: 130,
-                height: 130,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white.withAlpha(15),
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                _greeting(),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: scheme.onSurface.withAlpha(160),
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(22),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              greeting,
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(
-                                    color: scheme.onPrimary.withAlpha(210),
-                                    fontWeight: FontWeight.w600,
-                                    letterSpacing: 0.4,
-                                  ),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              firstName,
-                              style: ClientTypography.headingLarge(context)
-                                  .copyWith(
-                                    color: scheme.onPrimary,
-                                    height: 1.05,
-                                  ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      _NotificationButton(onTap: onOpenNotifications, isInverse: true),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Book reliable rides in minutes',
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: scheme.onPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  if (routeCount == 0)
-                    Text(
-                      'Search live routes, compare prices, and reserve your seat when routes are available.',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onPrimary.withAlpha(210),
-                        height: 1.35,
-                      ),
-                    )
-                  else
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 6,
-                      children: [
-                        _WelcomeStatChip(
-                          icon: Icons.route_rounded,
-                          label: '$routeCount active routes',
-                          scheme: scheme,
-                          isInverse: true,
-                        ),
-                        _WelcomeStatChip(
-                          icon: Icons.directions_bus_rounded,
-                          label: '$tripCount upcoming trips',
-                          scheme: scheme,
-                          isInverse: true,
-                        ),
-                      ],
-                    ),
-                ],
+              const SizedBox(height: 4),
+              Text(
+                firstName,
+                style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                  color: scheme.onSurface,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
+        const SizedBox(width: 16),
+        Material(
+          color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainer,
+          shape: const CircleBorder(),
+          child: InkWell(
+            onTap: onOpenNotifications,
+            customBorder: const CircleBorder(),
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Icon(Icons.notifications_outlined, color: scheme.onSurface, size: 24),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Container(
+          width: 48,
+          height: 48,
+          decoration: BoxDecoration(
+            color: scheme.primary,
+            shape: BoxShape.circle,
+          ),
+          child: const Icon(Icons.person_outline_rounded, color: Colors.white, size: 24),
+        ),
+      ],
     );
   }
 
   static String _firstName(String? value) {
     final cleaned = value?.trim();
     if (cleaned == null || cleaned.isEmpty || cleaned.toLowerCase() == 'user') {
-      return 'there';
+      return 'Guest';
     }
     return cleaned.split(RegExp(r'\s+')).first;
   }
 
   static String _greeting() {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning,';
-    if (hour < 17) return 'Good afternoon,';
-    return 'Good evening,';
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 }
 
-class _WelcomeStatChip extends StatelessWidget {
-  const _WelcomeStatChip({
-    required this.icon,
-    required this.label,
-    required this.scheme,
-    this.isInverse = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final ColorScheme scheme;
-  final bool isInverse;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: isInverse ? Colors.white.withAlpha(25) : scheme.surface.withAlpha(190),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: isInverse ? Colors.white.withAlpha(40) : scheme.primary.withAlpha(30)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: isInverse ? scheme.onPrimary : scheme.primary),
-          const SizedBox(width: 5),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: isInverse ? scheme.onPrimary : scheme.onSurface.withAlpha(210),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NotificationButton extends StatelessWidget {
-  const _NotificationButton({required this.onTap, this.isInverse = false});
-
-  final VoidCallback onTap;
-  final bool isInverse;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Material(
-      color: isInverse ? Colors.white.withAlpha(25) : scheme.surface,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Container(
-          width: 46,
-          height: 46,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            border: Border.all(color: isInverse ? Colors.white.withAlpha(40) : scheme.outline.withAlpha(70)),
-          ),
-          child: Icon(
-            Icons.notifications_none_rounded,
-            color: isInverse ? scheme.onPrimary : scheme.onSurface,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SearchEntryBar extends StatelessWidget {
-  const _SearchEntryBar({required this.onTap});
+class _CleanSearchBar extends StatelessWidget {
+  const _CleanSearchBar({required this.onTap});
 
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
           decoration: BoxDecoration(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: scheme.outline.withAlpha(120)),
+            color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
+            ),
           ),
           child: Row(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(18),
-                  borderRadius: BorderRadius.circular(13),
-                ),
-                child: Icon(Icons.search_rounded, color: scheme.primary),
-              ),
-              const SizedBox(width: 14),
+              Icon(Icons.search_rounded, color: scheme.onSurface.withAlpha(150), size: 28),
+              const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Where are you heading?',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w800,
+                      'Where to?',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
                         color: scheme.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 2),
                     Text(
-                      'Route name, city, or destination',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(130),
+                      'Search routes, cities, or stations',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: scheme.onSurface.withAlpha(140),
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 10),
               Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.tune_rounded,
-                  size: 18,
                   color: scheme.primary,
+                  borderRadius: BorderRadius.circular(12),
                 ),
+                child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
               ),
             ],
           ),
@@ -452,158 +322,194 @@ class _SearchEntryBar extends StatelessWidget {
   }
 }
 
-class _SubscriptionPromo extends StatelessWidget {
-  const _SubscriptionPromo({required this.scheme, required this.onTap});
+class _ActiveTripCard extends StatelessWidget {
+  const _ActiveTripCard({required this.trip, required this.onTap});
 
-  final ColorScheme scheme;
+  final HomeCurrentTripData trip;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    final isActive = trip.statusLabel.toLowerCase().contains('active') ||
+                     trip.statusLabel.toLowerCase().contains('progress');
+                     
+    final accentColor = isActive ? const Color(0xFF10B981) : scheme.primary;
 
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
+    return Container(
+      decoration: BoxDecoration(
+        color: accentColor,
         borderRadius: BorderRadius.circular(20),
-        onTap: onTap,
-        child: Ink(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: scheme.outline.withAlpha(80), width: 1),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: accentColor.withAlpha(40),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
+            ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withAlpha(30),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        trip.statusLabel,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    Icon(Icons.directions_bus_rounded, color: Colors.white.withAlpha(200), size: 24),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  trip.routeLabel,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w800,
+                    height: 1.2,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Icon(Icons.access_time_rounded, color: Colors.white.withAlpha(200), size: 16),
+                    const SizedBox(width: 6),
+                    Text(
+                      trip.schedule,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: Colors.white.withAlpha(220),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    isActive ? 'Track Live Location' : 'View Trip Details',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: accentColor,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-          child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: scheme.primary.withAlpha(22),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          Icons.workspace_premium_rounded,
-                          color: scheme.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Commute smarter with ride packages',
-                              style: textTheme.titleMedium?.copyWith(
-                                color: scheme.onSurface,
-                                fontWeight: FontWeight.w900,
-                                height: 1.12,
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              'Lower repeat-trip costs and keep your booking routine fast.',
-                              style: textTheme.bodySmall?.copyWith(
-                                color: scheme.onSurface.withAlpha(154),
-                                height: 1.35,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const _PromoBenefit(
-                    icon: Icons.savings_outlined,
-                    label: 'Save on frequent rides',
-                  ),
-                  const SizedBox(height: 10),
-                  const _PromoBenefit(
-                    icon: Icons.event_available_rounded,
-                    label: 'Pick a plan that matches your schedule',
-                  ),
-                  const SizedBox(height: 10),
-                  const _PromoBenefit(
-                    icon: Icons.flash_on_rounded,
-                    label: 'Book faster with fewer repeat steps',
-                  ),
-                  const SizedBox(height: 18),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          'Weekly to three-month plans',
-                          style: textTheme.labelLarge?.copyWith(
-                            color: scheme.onSurface.withAlpha(170),
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      FilledButton.icon(
-                        onPressed: onTap,
-                        icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                        label: const Text('View plans'),
-                        style: FilledButton.styleFrom(
-                          backgroundColor: scheme.primary,
-                          foregroundColor: scheme.onPrimary,
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 14,
-                            vertical: 12,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
         ),
       ),
     );
   }
 }
 
-class _PromoBenefit extends StatelessWidget {
-  const _PromoBenefit({required this.icon, required this.label});
+class _CleanSubscriptionPromo extends StatelessWidget {
+  const _CleanSubscriptionPromo({required this.onTap});
 
-  final IconData icon;
-  final String label;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Row(
-      children: [
-        Container(
-          width: 28,
-          height: 28,
-          decoration: BoxDecoration(
-            color: scheme.primary.withAlpha(18),
-            borderRadius: BorderRadius.circular(9),
-          ),
-          child: Icon(icon, size: 16, color: scheme.primary),
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
         ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurface.withAlpha(178),
-              fontWeight: FontWeight.w800,
-              height: 1.25,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: scheme.primary.withAlpha(25),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          'Ride Packages',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'Unlock frequent savings',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          color: scheme.onSurface,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Save up to 30% on your daily commute.',
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: scheme.onSurface.withAlpha(160),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: scheme.primary.withAlpha(15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.local_activity_rounded, color: scheme.primary, size: 28),
+                ),
+              ],
             ),
           ),
         ),
-      ],
+      ),
     );
   }
 }
@@ -616,27 +522,19 @@ class _SupportLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppLayout.radiusMd),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: AppLayout.spaceSm),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.support_agent_outlined,
-              size: 18,
-              color: scheme.onSurface.withAlpha(150),
-            ),
-            const SizedBox(width: AppLayout.spaceSm),
-            Text(
-              'Contact support',
-              style: AppTypography.caption(
-                scheme,
-              ).copyWith(color: scheme.onSurface.withAlpha(150)),
-            ),
-          ],
+    return Center(
+      child: TextButton.icon(
+        onPressed: onTap,
+        icon: Icon(Icons.help_outline_rounded, size: 20, color: scheme.onSurface.withAlpha(140)),
+        label: Text(
+          'Help & Support',
+          style: Theme.of(context).textTheme.labelLarge?.copyWith(
+            color: scheme.onSurface.withAlpha(160),
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        style: TextButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         ),
       ),
     );
@@ -656,18 +554,15 @@ class _HomeLoadingSkeleton extends StatelessWidget {
         constraints: BoxConstraints(maxWidth: maxW),
         child: ListView(
           padding: const EdgeInsets.all(AppLayout.spaceLg),
-          children: [
-            const ClientSkeleton(height: 32, width: 180, borderRadius: 8),
-            const SizedBox(height: 10),
-            const ClientSkeleton(height: 18, width: 260, borderRadius: 8),
-            const SizedBox(height: 22),
-            const ClientSkeleton(height: 210, borderRadius: 18),
-            const SizedBox(height: 26),
-            const ClientSkeleton(height: 24, width: 150, borderRadius: 8),
-            const SizedBox(height: 12),
-            const ClientSkeleton(height: 204, borderRadius: 18),
-            const SizedBox(height: 18),
-            const ClientSkeleton(height: 178, borderRadius: 18),
+          children: const [
+            SizedBox(height: 40),
+            ClientSkeleton(height: 50, borderRadius: 12),
+            SizedBox(height: 32),
+            ClientSkeleton(height: 80, borderRadius: 16),
+            SizedBox(height: 40),
+            ClientSkeleton(height: 220, borderRadius: 20),
+            SizedBox(height: 40),
+            ClientSkeleton(height: 200, borderRadius: 20),
           ],
         ),
       ),

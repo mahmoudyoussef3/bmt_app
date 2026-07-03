@@ -1,12 +1,24 @@
 import '../../domain/entities/location_sharing_state.dart';
 
-class LocationSharingModel {
-  const LocationSharingModel({required this.tripId, required this.enabled});
+class LocationUpdateModel {
+  const LocationUpdateModel({
+    required this.tripId,
+    required this.latitude,
+    required this.longitude,
+    required this.recordedAt,
+  });
 
   final String tripId;
-  final bool enabled;
+  final double latitude;
+  final double longitude;
+  final DateTime recordedAt;
 
-  LocationSharingStateData toEntity() {
-    return LocationSharingStateData(tripId: tripId, enabled: enabled);
+  LocationUpdateData toEntity() {
+    return LocationUpdateData(
+      tripId: tripId,
+      latitude: latitude,
+      longitude: longitude,
+      recordedAt: recordedAt,
+    );
   }
 }

@@ -222,7 +222,7 @@ class LiveTripMapPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'الخريطة الحية',
+                  'آخر موقع أرسله السائق',
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                   ),
@@ -257,19 +257,11 @@ class _GpsStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final stale = position.isStale;
-    final moving = position.isMoving;
-    final color = stale ? scheme.error : scheme.primary;
-    final label = stale
-        ? 'إشارة قديمة'
-        : moving
-        ? 'يتحرك'
-        : 'واقف';
-    final icon = stale
-        ? Icons.signal_wifi_statusbar_connected_no_internet_4_rounded
-        : moving
-        ? Icons.directions_bus_rounded
-        : Icons.pause_circle_rounded;
+    final color = scheme.primary;
+    final local = position.updatedAt.toLocal();
+    final label =
+        '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+    const icon = Icons.schedule_rounded;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(

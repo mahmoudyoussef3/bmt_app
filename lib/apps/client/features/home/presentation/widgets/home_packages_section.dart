@@ -2,9 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_package_card.dart';
-import 'package:bmt_app/core/theme/app_layout.dart';
+
 import 'package:bmt_app/core/widgets/badge.dart';
-import 'package:bmt_app/core/widgets/section_header.dart';
 
 class HomePackagesSection extends StatelessWidget {
   const HomePackagesSection({
@@ -24,7 +23,7 @@ class HomePackagesSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final width = MediaQuery.sizeOf(context).width;
-    final cardWidth = width >= 720 ? 248.0 : 226.0;
+    final cardWidth = width >= 720 ? 280.0 : 250.0;
 
     final prioritizedPlans = _prioritizePlans(plans);
     final int safeCount = prioritizedPlans.isEmpty
@@ -36,15 +35,48 @@ class HomePackagesSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        SectionHeader(
-          title: 'Packages preview',
-          subtitle: 'Dynamic plans published from the dashboard',
-          action: TextButton(
-            onPressed: onOpenSubscription,
-            child: const Text('See all'),
-          ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Available Packages',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Save on frequent rides',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurface.withAlpha(150),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            TextButton(
+              onPressed: onOpenSubscription,
+              style: TextButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                foregroundColor: scheme.primary,
+              ),
+              child: Text(
+                'View All',
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: scheme.primary,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: AppLayout.spaceMd),
+        const SizedBox(height: 24),
 
         if (activePackage != null) ...[
           _ActivePackageCard(
@@ -52,7 +84,7 @@ class HomePackagesSection extends StatelessWidget {
             package: activePackage!,
             onTap: onOpenSubscription,
           ),
-          const SizedBox(height: AppLayout.spaceLg),
+          const SizedBox(height: 32),
         ],
 
         if (visiblePlans.isEmpty)
@@ -65,8 +97,7 @@ class HomePackagesSection extends StatelessWidget {
               clipBehavior: Clip.none,
               physics: const BouncingScrollPhysics(),
               itemCount: visiblePlans.length,
-              separatorBuilder: (_, separatorIndex) =>
-                  const SizedBox(width: AppLayout.spaceMd),
+              separatorBuilder: (_, separatorIndex) => const SizedBox(width: 16),
               itemBuilder: (context, index) {
                 return HomePackageCard(
                   plan: visiblePlans[index],
@@ -122,114 +153,110 @@ class _ActivePackageCard extends StatelessWidget {
     final remainingTrips = package.remainingTrips;
     final totalTrips = package.totalTrips;
     final progress = totalTrips > 0 ? remainingTrips / totalTrips : 0.0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(18),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(18),
-        child: Ink(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: scheme.primary.withAlpha(70), width: 1.3),
-            gradient: LinearGradient(
-              colors: [
-                scheme.primary.withAlpha(20),
-                scheme.secondary.withAlpha(12),
-                scheme.surface,
-              ],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
+    return Container(
+      decoration: BoxDecoration(
+        color: isDark ? scheme.surfaceContainerHighest : Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
+        ),
+        boxShadow: [
+          if (!isDark)
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.04),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withAlpha(12),
-                blurRadius: 18,
-                offset: const Offset(0, 8),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: scheme.primary.withAlpha(24),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.stars_rounded,
-                      color: scheme.primary,
-                      size: 22,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          package.title,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.titleSmall
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          package.expiryText,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(
-                                color: scheme.onSurface.withAlpha(145),
-                                fontWeight: FontWeight.w600,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const AppBadge(text: 'Active'),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Trips remaining',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(150),
-                        fontWeight: FontWeight.w700,
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(20),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 48,
+                      height: 48,
+                      decoration: BoxDecoration(
+                        color: scheme.primary.withAlpha(20),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Icon(
+                        Icons.card_membership_rounded,
+                        color: scheme.primary,
+                        size: 24,
                       ),
                     ),
-                  ),
-                  Text(
-                    '$remainingTrips / $totalTrips left',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurface,
-                      fontWeight: FontWeight.w900,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            package.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.w800,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            package.expiryText,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurface.withAlpha(160),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: progress,
-                  minHeight: 7,
-                  backgroundColor: scheme.primary.withAlpha(20),
-                  valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+                    const AppBadge(text: 'ACTIVE'),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Remaining Trips',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: scheme.onSurface.withAlpha(160),
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                    Text(
+                      '$remainingTrips / $totalTrips',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                            color: scheme.onSurface,
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 8,
+                    backgroundColor: scheme.primary.withAlpha(20),
+                    valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -247,54 +274,32 @@ class _EmptyPackagesCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(16),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(16),
         child: Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: scheme.surfaceContainerHighest.withAlpha(50),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: scheme.outline.withAlpha(70), width: 1.5),
+            border: Border.all(color: scheme.outline.withAlpha(40)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(20),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.card_membership_rounded,
-                  color: scheme.primary,
-                  size: 28,
-                ),
-              ),
+              Icon(Icons.local_activity_outlined, color: scheme.primary.withAlpha(150), size: 32),
               const SizedBox(height: 16),
               Text(
-                'Packages are not available yet',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+                'No Packages Available',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
               const SizedBox(height: 8),
               Text(
-                'When plans are published from the dashboard, weekly and monthly options will appear here.',
+                'Check back later for new subscription plans and savings.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurface.withAlpha(150),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                'View packages',
-                style: TextStyle(
-                  color: scheme.primary,
-                  fontWeight: FontWeight.w700,
-                ),
+                      color: scheme.onSurface.withAlpha(150),
+                    ),
               ),
             ],
           ),

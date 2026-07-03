@@ -9,7 +9,7 @@ abstract class TrackingDatasource {
     String? bookingId,
     String? tripId,
   });
-  
+
   Stream<TrackingPointModel> watchVehiclePosition(String tripId);
 }
 
@@ -22,17 +22,27 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
   Stream<TrackingPointModel> watchVehiclePosition(String tripId) {
     final controller = StreamController<TrackingPointModel>.broadcast();
     final channel = _client
-        .channel('live_location:$tripId')
-        .onBroadcast(
-          event: 'location',
-          callback: (payload) {
+        .channel('location_updates:$tripId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'trip_live_locations',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'trip_id',
+            value: tripId,
+          ),
+          callback: (change) {
             try {
+              final payload = change.newRecord;
               controller.add(
                 TrackingPointModel(
-                  latitude: (payload['lat'] as num).toDouble(),
-                  longitude: (payload['lng'] as num).toDouble(),
+                  latitude: (payload['latitude'] as num).toDouble(),
+                  longitude: (payload['longitude'] as num).toDouble(),
                   recordedAt: payload['recorded_at'] != null
-                      ? DateTime.tryParse(payload['recorded_at'].toString())?.toLocal()
+                      ? DateTime.tryParse(
+                          payload['recorded_at'].toString(),
+                        )?.toLocal()
                       : null,
                 ),
               );

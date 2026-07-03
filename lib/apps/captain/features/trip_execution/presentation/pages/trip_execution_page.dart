@@ -24,14 +24,15 @@ class TripExecutionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    
+
     return BlocProvider<TripExecutionCubit>(
-      create: (_) => captainGetIt<TripExecutionCubit>()
-        ..setInitialStatus(_executionStatusFromTrip(trip.status)),
+      create: (_) =>
+          captainGetIt<TripExecutionCubit>()
+            ..setInitialStatus(_executionStatusFromTrip(trip.status)),
       child: BlocBuilder<TripExecutionCubit, TripExecutionCubitState>(
         builder: (context, state) {
           final status = _statusFromState(state);
-          
+
           return Scaffold(
             backgroundColor: scheme.surfaceContainerLowest,
             floatingActionButton: status == TripExecutionStatus.inProgress
@@ -58,13 +59,16 @@ class TripExecutionPage extends StatelessWidget {
                         ),
                       ),
                     ),
-                    titlePadding: const EdgeInsets.symmetric(horizontal: 48, vertical: 16),
+                    titlePadding: const EdgeInsets.symmetric(
+                      horizontal: 48,
+                      vertical: 16,
+                    ),
                     title: Text(
                       'تنفيذ الرحلة',
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: scheme.onSurface,
-                          ),
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurface,
+                      ),
                     ),
                   ),
                 ),
@@ -74,21 +78,27 @@ class TripExecutionPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        _ExecutionHeaderCard(trip: trip, status: status, state: state),
+                        _ExecutionHeaderCard(
+                          trip: trip,
+                          status: status,
+                          state: state,
+                        ),
                         const SizedBox(height: 24),
-                        if (status == TripExecutionStatus.inProgress && trip.stops.isNotEmpty) ...[
+                        if (status == TripExecutionStatus.inProgress &&
+                            trip.stops.isNotEmpty) ...[
                           _NextStopBanner(stops: trip.stops),
                           const SizedBox(height: 24),
                         ],
                         Text(
                           'إجراءات الرحلة',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 16),
                         GridView.count(
-                          crossAxisCount: MediaQuery.sizeOf(context).width > 520 ? 3 : 2,
+                          crossAxisCount: MediaQuery.sizeOf(context).width > 520
+                              ? 3
+                              : 2,
                           mainAxisSpacing: 12,
                           crossAxisSpacing: 12,
                           shrinkWrap: true,
@@ -100,7 +110,8 @@ class TripExecutionPage extends StatelessWidget {
                               icon: Icons.people_alt_rounded,
                               onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => PassengerListPage(tripId: trip.id),
+                                  builder: (_) =>
+                                      PassengerListPage(tripId: trip.id),
                                 ),
                               ),
                             ),
@@ -114,11 +125,12 @@ class TripExecutionPage extends StatelessWidget {
                               ),
                             ),
                             _ActionTile(
-                              label: 'مشاركة الموقع',
-                              icon: Icons.location_on_rounded,
+                              label: 'إرسال الموقع',
+                              icon: Icons.my_location_rounded,
                               onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => LiveLocationPage(tripId: trip.id),
+                                  builder: (_) =>
+                                      LocationUpdatePage(tripId: trip.id),
                                 ),
                               ),
                             ),
@@ -136,7 +148,8 @@ class TripExecutionPage extends StatelessWidget {
                               icon: Icons.sync_rounded,
                               onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => StatusUpdatePage(tripId: trip.id),
+                                  builder: (_) =>
+                                      StatusUpdatePage(tripId: trip.id),
                                 ),
                               ),
                             ),
@@ -146,7 +159,8 @@ class TripExecutionPage extends StatelessWidget {
                               destructive: true,
                               onTap: () => Navigator.of(context).push(
                                 MaterialPageRoute(
-                                  builder: (_) => ReportIncidentPage(tripId: trip.id),
+                                  builder: (_) =>
+                                      ReportIncidentPage(tripId: trip.id),
                                 ),
                               ),
                             ),
@@ -183,7 +197,11 @@ class TripExecutionPage extends StatelessWidget {
 }
 
 class _ExecutionHeaderCard extends StatelessWidget {
-  const _ExecutionHeaderCard({required this.trip, required this.status, required this.state});
+  const _ExecutionHeaderCard({
+    required this.trip,
+    required this.status,
+    required this.state,
+  });
 
   final AssignedTrip trip;
   final TripExecutionStatus status;
@@ -192,7 +210,7 @@ class _ExecutionHeaderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
@@ -221,9 +239,9 @@ class _ExecutionHeaderCard extends StatelessWidget {
                 child: Text(
                   trip.route,
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        height: 1.2,
-                      ),
+                    fontWeight: FontWeight.w900,
+                    height: 1.2,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -234,17 +252,14 @@ class _ExecutionHeaderCard extends StatelessWidget {
           Text(
             'المركبة ${trip.vehicleNumber} • ${trip.plateNumber}',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w600,
-                ),
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: 20),
           Row(
             children: [
-              _TripFact(
-                icon: Icons.schedule_rounded,
-                value: _timeRange(trip),
-              ),
+              _TripFact(icon: Icons.schedule_rounded, value: _timeRange(trip)),
               const SizedBox(width: 12),
               _TripFact(
                 icon: Icons.people_alt_rounded,
@@ -269,37 +284,53 @@ class _ExecutionHeaderCard extends StatelessWidget {
     );
   }
 
-  Widget _actionButton(BuildContext context, TripExecutionStatus status, String tripId) {
+  Widget _actionButton(
+    BuildContext context,
+    TripExecutionStatus status,
+    String tripId,
+  ) {
     return switch (status) {
       TripExecutionStatus.scheduled => FilledButton.icon(
-          onPressed: () => context.read<TripExecutionCubit>().board(tripId),
-          style: _actionStyle(context),
-          icon: const Icon(Icons.people_alt_rounded, size: 22),
-          label: const Text('بدء صعود الركاب', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+        onPressed: () => context.read<TripExecutionCubit>().board(tripId),
+        style: _actionStyle(context),
+        icon: const Icon(Icons.people_alt_rounded, size: 22),
+        label: const Text(
+          'بدء صعود الركاب',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
         ),
+      ),
       TripExecutionStatus.boarding => FilledButton.icon(
-          onPressed: () => context.read<TripExecutionCubit>().start(tripId),
-          style: _actionStyle(context, color: Colors.orange),
-          icon: const Icon(Icons.play_circle_fill_rounded, size: 22),
-          label: const Text('بدء الرحلة', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+        onPressed: () => context.read<TripExecutionCubit>().start(tripId),
+        style: _actionStyle(context, color: Colors.orange),
+        icon: const Icon(Icons.play_circle_fill_rounded, size: 22),
+        label: const Text(
+          'بدء الرحلة',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
         ),
+      ),
       TripExecutionStatus.inProgress => FilledButton.icon(
-          onPressed: () => context.read<TripExecutionCubit>().complete(tripId),
-          style: _actionStyle(context, color: Colors.green),
-          icon: const Icon(Icons.check_circle_rounded, size: 22),
-          label: const Text('إنهاء الرحلة', style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16)),
+        onPressed: () => context.read<TripExecutionCubit>().complete(tripId),
+        style: _actionStyle(context, color: Colors.green),
+        icon: const Icon(Icons.check_circle_rounded, size: 22),
+        label: const Text(
+          'إنهاء الرحلة',
+          style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
         ),
-      TripExecutionStatus.completed || TripExecutionStatus.cancelled => OutlinedButton(
-          onPressed: () {},
-          style: OutlinedButton.styleFrom(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          ),
-          child: Text(
-            status == TripExecutionStatus.completed ? 'مكتملة' : 'ملغاة',
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+      ),
+      TripExecutionStatus.completed ||
+      TripExecutionStatus.cancelled => OutlinedButton(
+        onPressed: () {},
+        style: OutlinedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
         ),
+        child: Text(
+          status == TripExecutionStatus.completed ? 'مكتملة' : 'ملغاة',
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+        ),
+      ),
     };
   }
 
@@ -332,11 +363,31 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, color, icon) = switch (status) {
-      TripExecutionStatus.scheduled => ('مجدولة', Colors.blue, Icons.event_rounded),
-      TripExecutionStatus.boarding => ('صعود', Colors.orange, Icons.people_rounded),
-      TripExecutionStatus.inProgress => ('جارية', Colors.green, Icons.electric_car_rounded),
-      TripExecutionStatus.completed => ('مكتملة', Colors.grey, Icons.check_circle_rounded),
-      TripExecutionStatus.cancelled => ('ملغاة', Colors.red, Icons.cancel_rounded),
+      TripExecutionStatus.scheduled => (
+        'مجدولة',
+        Colors.blue,
+        Icons.event_rounded,
+      ),
+      TripExecutionStatus.boarding => (
+        'صعود',
+        Colors.orange,
+        Icons.people_rounded,
+      ),
+      TripExecutionStatus.inProgress => (
+        'جارية',
+        Colors.green,
+        Icons.electric_car_rounded,
+      ),
+      TripExecutionStatus.completed => (
+        'مكتملة',
+        Colors.grey,
+        Icons.check_circle_rounded,
+      ),
+      TripExecutionStatus.cancelled => (
+        'ملغاة',
+        Colors.red,
+        Icons.cancel_rounded,
+      ),
     };
 
     return Container(
@@ -354,9 +405,9 @@ class _StatusBadge extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w800,
-                ),
+              color: color,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),
@@ -398,14 +449,17 @@ class _NextStopBannerState extends State<_NextStopBanner> {
               Text(
                 isLast ? 'تم الوصول للوجهة' : 'المحطة القادمة',
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      color: scheme.primary,
-                      fontWeight: FontWeight.w700,
-                    ),
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               const Spacer(),
               if (!isLast)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: scheme.primary,
                     borderRadius: BorderRadius.circular(8),
@@ -413,9 +467,9 @@ class _NextStopBannerState extends State<_NextStopBanner> {
                   child: Text(
                     '$remaining',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: scheme.onPrimary,
-                          fontWeight: FontWeight.w800,
-                        ),
+                      color: scheme.onPrimary,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
             ],
@@ -425,9 +479,9 @@ class _NextStopBannerState extends State<_NextStopBanner> {
             Text(
               widget.stops[_currentIndex],
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: scheme.onSurface,
-                  ),
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
+              ),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -437,10 +491,15 @@ class _NextStopBannerState extends State<_NextStopBanner> {
                 style: FilledButton.styleFrom(
                   backgroundColor: scheme.primary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
                 icon: const Icon(Icons.check_rounded, size: 20),
-                label: const Text('تم الوصول للمحطة', style: TextStyle(fontWeight: FontWeight.w700)),
+                label: const Text(
+                  'تم الوصول للمحطة',
+                  style: TextStyle(fontWeight: FontWeight.w700),
+                ),
               ),
             ),
           ],
@@ -467,7 +526,7 @@ class _ActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final color = destructive ? scheme.error : scheme.primary;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -504,9 +563,9 @@ class _ActionTile extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: destructive ? scheme.error : scheme.onSurface,
-                    ),
+                  fontWeight: FontWeight.w800,
+                  color: destructive ? scheme.error : scheme.onSurface,
+                ),
               ),
             ],
           ),
@@ -542,9 +601,9 @@ class _TripFact extends StatelessWidget {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: scheme.onSurfaceVariant,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ),
           ],
@@ -578,9 +637,9 @@ class _InlineError extends StatelessWidget {
             child: Text(
               message,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: scheme.onErrorContainer,
-                    fontWeight: FontWeight.w600,
-                  ),
+                color: scheme.onErrorContainer,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
@@ -663,13 +722,20 @@ class _SosButtonState extends State<_SosButton> {
             foregroundColor: Colors.white,
             elevation: 8,
             icon: const Icon(Icons.sos_rounded, size: 24),
-            label: const Text('طوارئ', style: TextStyle(fontWeight: FontWeight.w900)),
+            label: const Text(
+              'طوارئ',
+              style: TextStyle(fontWeight: FontWeight.w900),
+            ),
             onPressed: () {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: const Text('اضغط مطولاً 3 ثوانٍ لإرسال نداء الاستغاثة'),
+                  content: const Text(
+                    'اضغط مطولاً 3 ثوانٍ لإرسال نداء الاستغاثة',
+                  ),
                   behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                   duration: const Duration(seconds: 2),
                 ),
               );

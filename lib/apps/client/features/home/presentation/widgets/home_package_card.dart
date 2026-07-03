@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/package_plan_icon.dart';
 
@@ -17,143 +15,115 @@ class HomePackageCard extends StatelessWidget {
   final VoidCallback onTap;
   final double width;
 
-  static const double cardHeight = 182;
+  static const double cardHeight = 180;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return SizedBox(
       width: width,
       height: cardHeight,
-      child: Material(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? scheme.surfaceContainerHighest : Colors.white,
           borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: ClientColors.borderFor(context).withAlpha(150),
-                width: 1,
+          border: Border.all(
+            color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
+            width: 1,
+          ),
+          boxShadow: [
+            if (!isDark)
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.04),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Top Row: Icon Container & Badge Tag
-                Row(
-                  children: [
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: ClientColors.primaryLight,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Icon(
-                        iconForPackagePlan(plan.iconKey),
-                        color: ClientColors.primary,
-                        size: 18,
-                      ),
-                    ),
-                    const Spacer(),
-                    if (plan.badge.isNotEmpty)
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
+                        width: 40,
+                        height: 40,
                         decoration: BoxDecoration(
-                          color: ClientColors.primaryLight,
-                          borderRadius: BorderRadius.circular(999),
+                          color: scheme.primary.withAlpha(20),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Text(
-                          plan.badge,
-                          style: ClientTypography.labelSmall(context).copyWith(
-                            color: ClientColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
+                        child: Icon(
+                          iconForPackagePlan(plan.iconKey),
+                          color: scheme.primary,
+                          size: 20,
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Text(
-                  plan.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: ClientTypography.headingSmall(
-                    context,
-                  ).copyWith(fontSize: 15, fontWeight: FontWeight.w800),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  plan.subtitle.isEmpty
-                      ? 'Flexible rides for repeat commutes.'
-                      : plan.subtitle,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: ClientTypography.bodySmall(context).copyWith(
-                    color: ClientColors.textSecondaryFor(context),
-                    fontSize: 11.5,
-                    height: 1.25,
-                  ),
-                ),
-                const Spacer(),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: ClientColors.primaryLight,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.local_offer_rounded,
-                            size: 11,
-                            color: ClientColors.primary,
+                      const Spacer(),
+                      if (plan.badge.isNotEmpty)
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: scheme.primary.withAlpha(20),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          const SizedBox(width: 4),
-                          Text(
-                            plan.badge.isEmpty ? 'Save on rides' : plan.badge,
-                            style: ClientTypography.labelSmall(context)
-                                .copyWith(
-                                  color: ClientColors.primary,
-                                  fontWeight: FontWeight.w700,
+                          child: Text(
+                            plan.badge,
+                            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                                  color: scheme.primary,
+                                  fontWeight: FontWeight.w800,
                                 ),
                           ),
-                        ],
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    plan.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    plan.subtitle.isEmpty ? 'Flexible rides for repeat commutes' : plan.subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurface.withAlpha(160),
+                          height: 1.3,
+                        ),
+                  ),
+                  const Spacer(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'View details',
+                        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                              color: scheme.primary,
+                              fontWeight: FontWeight.w700,
+                            ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'View plan',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.primary,
-                        fontWeight: FontWeight.w900,
+                      Icon(
+                        Icons.arrow_forward_rounded,
+                        size: 16,
+                        color: scheme.primary,
                       ),
-                    ),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 12,
-                      color: ClientColors.primary,
-                    ),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
         ),

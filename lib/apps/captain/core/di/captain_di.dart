@@ -3,6 +3,10 @@ import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/auth/data/datasources/captain_auth_datasource.dart';
+import '../../features/auth/data/repositories/captain_auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/captain_auth_repository.dart';
+import '../../features/auth/domain/usecases/sign_in_captain_usecase.dart';
+import '../../features/auth/domain/usecases/sign_out_captain_usecase.dart';
 import '../../features/auth/presentation/cubit/captain_auth_cubit.dart';
 
 import '../../features/profile/data/datasources/driver_profile_datasource.dart';
@@ -58,8 +62,7 @@ import '../../features/live_location/data/datasources/location_datasource.dart';
 import '../../features/live_location/data/datasources/supabase_location_datasource.dart';
 import '../../features/live_location/data/repositories/location_repository_impl.dart';
 import '../../features/live_location/domain/repositories/location_repository.dart';
-import '../../features/live_location/domain/usecases/start_location_sharing_usecase.dart';
-import '../../features/live_location/domain/usecases/stop_location_sharing_usecase.dart';
+import '../../features/live_location/domain/usecases/send_location_update_usecase.dart';
 import '../../features/live_location/presentation/cubit/live_location_cubit.dart';
 import '../../features/passenger_manifest/data/datasources/passenger_manifest_datasource.dart';
 import '../../features/passenger_manifest/data/repositories/passenger_manifest_repository_impl.dart';
@@ -113,9 +116,27 @@ void _registerAuthDependencies() {
       () => CaptainAuthDatasource(captainGetIt<SupabaseClient>()),
     );
   }
+  if (!captainGetIt.isRegistered<CaptainAuthRepository>()) {
+    captainGetIt.registerLazySingleton<CaptainAuthRepository>(
+      () => CaptainAuthRepositoryImpl(captainGetIt<CaptainAuthDatasource>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<SignInCaptainUseCase>()) {
+    captainGetIt.registerLazySingleton<SignInCaptainUseCase>(
+      () => SignInCaptainUseCase(captainGetIt<CaptainAuthRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<SignOutCaptainUseCase>()) {
+    captainGetIt.registerLazySingleton<SignOutCaptainUseCase>(
+      () => SignOutCaptainUseCase(captainGetIt<CaptainAuthRepository>()),
+    );
+  }
   if (!captainGetIt.isRegistered<CaptainAuthCubit>()) {
     captainGetIt.registerFactory<CaptainAuthCubit>(
-      () => CaptainAuthCubit(captainGetIt<CaptainAuthDatasource>()),
+      () => CaptainAuthCubit(
+        signIn: captainGetIt<SignInCaptainUseCase>(),
+        signOut: captainGetIt<SignOutCaptainUseCase>(),
+      ),
     );
   }
 }
@@ -230,8 +251,6 @@ void _registerTripExecutionDependencies() {
         startBoarding: captainGetIt<StartBoardingUseCase>(),
         startTrip: captainGetIt<StartTripUseCase>(),
         completeTrip: captainGetIt<CompleteTripUseCase>(),
-        startLocationSharing: captainGetIt<StartLocationSharingUseCase>(),
-        stopLocationSharing: captainGetIt<StopLocationSharingUseCase>(),
       ),
     );
   }
@@ -248,21 +267,15 @@ void _registerLiveLocationDependencies() {
       () => LocationRepositoryImpl(captainGetIt<LocationDatasource>()),
     );
   }
-  if (!captainGetIt.isRegistered<StartLocationSharingUseCase>()) {
-    captainGetIt.registerLazySingleton<StartLocationSharingUseCase>(
-      () => StartLocationSharingUseCase(captainGetIt<LocationRepository>()),
-    );
-  }
-  if (!captainGetIt.isRegistered<StopLocationSharingUseCase>()) {
-    captainGetIt.registerLazySingleton<StopLocationSharingUseCase>(
-      () => StopLocationSharingUseCase(captainGetIt<LocationRepository>()),
+  if (!captainGetIt.isRegistered<SendLocationUpdateUseCase>()) {
+    captainGetIt.registerLazySingleton<SendLocationUpdateUseCase>(
+      () => SendLocationUpdateUseCase(captainGetIt<LocationRepository>()),
     );
   }
   if (!captainGetIt.isRegistered<LiveLocationCubit>()) {
     captainGetIt.registerFactory<LiveLocationCubit>(
       () => LiveLocationCubit(
-        startSharing: captainGetIt<StartLocationSharingUseCase>(),
-        stopSharing: captainGetIt<StopLocationSharingUseCase>(),
+        sendLocation: captainGetIt<SendLocationUpdateUseCase>(),
       ),
     );
   }
@@ -417,8 +430,7 @@ void _registerNotificationsDependencies() {
     );
   }
   if (!captainGetIt.isRegistered<MarkAllCaptainNotificationsReadUseCase>()) {
-    captainGetIt
-        .registerLazySingleton<MarkAllCaptainNotificationsReadUseCase>(
+    captainGetIt.registerLazySingleton<MarkAllCaptainNotificationsReadUseCase>(
       () => MarkAllCaptainNotificationsReadUseCase(
         captainGetIt<CaptainNotificationsRepository>(),
       ),
@@ -437,8 +449,7 @@ void _registerNotificationsDependencies() {
       () => CaptainNotificationsCubit(
         watchNotifications: captainGetIt<WatchCaptainNotificationsUseCase>(),
         markAsRead: captainGetIt<MarkCaptainNotificationReadUseCase>(),
-        markAllAsRead:
-            captainGetIt<MarkAllCaptainNotificationsReadUseCase>(),
+        markAllAsRead: captainGetIt<MarkAllCaptainNotificationsReadUseCase>(),
       ),
     );
   }
@@ -452,7 +463,8 @@ void _registerProfileDependencies() {
   }
   if (!captainGetIt.isRegistered<DriverProfileRepository>()) {
     captainGetIt.registerLazySingleton<DriverProfileRepository>(
-      () => DriverProfileRepositoryImpl(captainGetIt<DriverProfileDataSource>()),
+      () =>
+          DriverProfileRepositoryImpl(captainGetIt<DriverProfileDataSource>()),
     );
   }
   if (!captainGetIt.isRegistered<GetDriverProfileUseCase>()) {

@@ -6,171 +6,139 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/live_location_cubit.dart';
 import '../cubit/live_location_state.dart';
 
-class LiveLocationPage extends StatefulWidget {
-  const LiveLocationPage({super.key, required this.tripId});
+class LocationUpdatePage extends StatelessWidget {
+  const LocationUpdatePage({super.key, required this.tripId});
 
   final String tripId;
-
-  @override
-  State<LiveLocationPage> createState() => _LiveLocationPageState();
-}
-
-class _LiveLocationPageState extends State<LiveLocationPage> {
-  bool _batteryWarningShown = false;
-
-  Future<void> _startWithWarning(LiveLocationCubit cubit) async {
-    if (!_batteryWarningShown) {
-      _batteryWarningShown = true;
-      final confirmed = await showDialog<bool>(
-        context: context,
-        builder: (_) => AlertDialog(
-          title: const Text('تنبيه استهلاك البطارية'),
-          content: const Text(
-            'مشاركة الموقع المستمرة تستهلك البطارية.\n'
-            'يُنصح بتوصيل الشاحن أثناء الرحلة.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('إلغاء'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('بدء المشاركة'),
-            ),
-          ],
-        ),
-      );
-      if (confirmed != true) return;
-    }
-    cubit.start(widget.tripId);
-  }
 
   @override
   Widget build(BuildContext context) {
     return BlocProvider<LiveLocationCubit>(
       create: (_) => captainGetIt<LiveLocationCubit>(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('مشاركة الموقع')),
-        body: BlocBuilder<LiveLocationCubit, LiveLocationState>(
+        appBar: AppBar(title: const Text('إرسال الموقع')),
+        body: BlocConsumer<LiveLocationCubit, LiveLocationState>(
+          listener: (context, state) {
+            if (state is LiveLocationReady && state.lastSentAt != null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('تم إرسال موقعك الحالي بنجاح.')),
+              );
+            }
+          },
           builder: (context, state) {
-            final cubit = context.read<LiveLocationCubit>();
-            final enabled = state is LiveLocationReady && state.enabled;
+            final scheme = Theme.of(context).colorScheme;
             final loading = state is LiveLocationLoading;
+            final lastSentAt = state is LiveLocationReady
+                ? state.lastSentAt
+                : null;
 
-            return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
-              children: [
-                Column(
-                  children: [
-                    AppCard(
-                      padding: const EdgeInsets.all(18),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 46,
-                                height: 46,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  color: (enabled ? Colors.green : Colors.grey)
-                                      .withAlpha(32),
-                                ),
-                                child: Icon(
-                                  enabled
-                                      ? Icons.location_on_rounded
-                                      : Icons.location_off_rounded,
-                                  color: enabled ? Colors.green : Colors.grey,
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      enabled
-                                          ? 'الموقع يُبث للعمليات'
-                                          : 'مشاركة الموقع متوقفة',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w800,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'الرحلة: ${widget.tripId}',
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: Theme.of(
-                                              context,
-                                            ).colorScheme.onSurfaceVariant,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+            return Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 520),
+                  child: AppCard(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        CircleAvatar(
+                          radius: 34,
+                          backgroundColor: scheme.primaryContainer,
+                          child: Icon(
+                            Icons.my_location_rounded,
+                            size: 34,
+                            color: scheme.onPrimaryContainer,
                           ),
+                        ),
+                        const SizedBox(height: 20),
+                        Text(
+                          'أرسل موقعك الحالي مرة واحدة',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(fontWeight: FontWeight.w800),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'عند الضغط، سيُحفظ موقع واحد مع وقت الإرسال ليظهر لفريق العمليات والعملاء. لا يوجد تتبع مستمر ولا تشغيل في الخلفية.',
+                          textAlign: TextAlign.center,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: scheme.onSurfaceVariant),
+                        ),
+                        if (lastSentAt != null) ...[
+                          const SizedBox(height: 20),
+                          Container(
+                            padding: const EdgeInsets.all(14),
+                            decoration: BoxDecoration(
+                              color: scheme.primaryContainer.withAlpha(100),
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle_rounded,
+                                  color: scheme.primary,
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    'آخر إرسال: ${_formatTime(lastSentAt)}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        if (state is LiveLocationError) ...[
                           const SizedBox(height: 16),
                           Text(
-                            enabled
-                                ? 'يعمل التتبع في الخلفية ليساعد فريق العمليات على متابعة الرحلة لحظة بلحظة.'
-                                : 'ابدأ مشاركة الموقع عند الاستعداد للتحرك أو عند طلب العمليات ذلك.',
-                            style: Theme.of(context).textTheme.bodyMedium,
+                            state.message,
+                            textAlign: TextAlign.center,
+                            style: TextStyle(color: scheme.error),
                           ),
-                          const SizedBox(height: 18),
-                          if (loading)
-                            const Center(child: CircularProgressIndicator())
-                          else
-                            SizedBox(
-                              width: double.infinity,
-                              child: enabled
-                                  ? OutlinedButton.icon(
-                                      icon: const Icon(
-                                        Icons.location_off_rounded,
-                                      ),
-                                      label: const Text('إيقاف المشاركة'),
-                                      style: OutlinedButton.styleFrom(
-                                        foregroundColor: Colors.red,
-                                      ),
-                                      onPressed: () =>
-                                          cubit.stop(widget.tripId),
-                                    )
-                                  : FilledButton.icon(
-                                      icon: const Icon(
-                                        Icons.location_on_rounded,
-                                      ),
-                                      label: const Text('بدء المشاركة'),
-                                      onPressed: () => _startWithWarning(cubit),
-                                    ),
-                            ),
-                          if (state is LiveLocationError) ...[
-                            const SizedBox(height: 12),
-                            Text(
-                              state.message,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.error,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
                         ],
-                      ),
+                        const SizedBox(height: 24),
+                        FilledButton.icon(
+                          onPressed: loading
+                              ? null
+                              : () => context.read<LiveLocationCubit>().send(
+                                  tripId,
+                                ),
+                          icon: loading
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
+                              : const Icon(Icons.send_rounded),
+                          label: Text(
+                            loading
+                                ? 'جاري تحديد الموقع...'
+                                : lastSentAt == null
+                                ? 'إرسال موقعي الآن'
+                                : 'إرسال موقع جديد',
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-              ],
+              ),
             );
           },
         ),
       ),
     );
+  }
+
+  String _formatTime(DateTime value) {
+    final local = value.toLocal();
+    final hour = local.hour.toString().padLeft(2, '0');
+    final minute = local.minute.toString().padLeft(2, '0');
+    return '${local.year}/${local.month}/${local.day} - $hour:$minute';
   }
 }

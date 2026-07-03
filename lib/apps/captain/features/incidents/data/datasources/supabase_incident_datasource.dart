@@ -11,7 +11,17 @@ class SupabaseIncidentDatasource implements IncidentDatasource {
 
   @override
   Future<IncidentReportModel> reportIncident(IncidentReport report) async {
-    final driverId = _supabase.auth.currentUser?.id ?? '';
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) throw Exception('المستخدم غير مسجّل الدخول');
+
+    final driver = await _supabase
+        .from('drivers')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+    final driverId = driver?['id'] as String?;
+    if (driverId == null) throw Exception('لم يتم العثور على ملف السائق');
+
     await _supabase.from('driver_trip_reports').insert({
       'trip_id': report.tripId,
       'driver_id': driverId,

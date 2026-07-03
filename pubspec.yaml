@@ -70,7 +70,6 @@ dependencies:
   latlong2: ^0.9.1
   shared_preferences: ^2.5.5
   connectivity_plus: ^7.1.1
-  flutter_background_service: ^5.1.0
   fl_chart: ^1.2.0
   webview_flutter: ^4.14.0
   firebase_core: ^4.11.0

@@ -8,12 +8,7 @@ class LocationRepositoryImpl implements LocationRepository {
   final LocationDatasource _dataSource;
 
   @override
-  Future<LocationSharingStateData> startSharing(String tripId) async {
-    return (await _dataSource.startSharing(tripId)).toEntity();
-  }
-
-  @override
-  Future<LocationSharingStateData> stopSharing(String tripId) async {
-    return (await _dataSource.stopSharing(tripId)).toEntity();
+  Future<LocationUpdateData> sendLocation(String tripId) async {
+    return (await _dataSource.sendLocation(tripId)).toEntity();
   }
 }

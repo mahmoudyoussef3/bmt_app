@@ -1,4 +1,3 @@
-import 'package:bmt_app/apps/captain/core/background/location_background_service.dart';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/main.dart';
 import 'package:bmt_app/apps/client/client_app.dart';
@@ -34,7 +33,6 @@ Future<void> bootstrapFlavorApp(AppFlavor flavor) async {
       registerClientDependencies();
       app = const ClientApp();
     case AppFlavor.captain:
-      await initLocationBackgroundService(config);
       registerCaptainDependencies();
       app = const CaptainApp();
     case AppFlavor.dashboard:

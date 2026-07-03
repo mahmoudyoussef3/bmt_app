@@ -140,7 +140,7 @@ class _HeaderCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return DashboardModuleHeader(
       icon: Icons.near_me_rounded,
-      title: 'المتابعة الحية',
+      title: 'متابعة الرحلات',
       subtitle:
           'تابع الرحلات، المحطات، الركاب، السائقين والتنبيهات من مكان واحد.',
       actions: [
@@ -278,7 +278,7 @@ class _TripsListState extends State<_TripsList> {
     Widget listWidget;
     if (widget.state.trips.isEmpty) {
       listWidget = const EmptyState(
-        title: 'لا توجد رحلات مباشرة الآن',
+        title: 'لا توجد رحلات قيد المتابعة الآن',
         subtitle: 'عند بدء الرحلات ستظهر هنا.',
       );
     } else if (filtered.isEmpty) {

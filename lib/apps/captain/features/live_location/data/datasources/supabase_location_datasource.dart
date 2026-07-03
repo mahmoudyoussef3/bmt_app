@@ -1,99 +1,60 @@
-import 'dart:async';
-import 'dart:io';
-
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../../../../core/background/location_background_service.dart';
 import '../models/location_sharing_model.dart';
 import 'location_datasource.dart';
 
 class SupabaseLocationDatasource implements LocationDatasource {
-  SupabaseLocationDatasource(this._supabase);
+  const SupabaseLocationDatasource(this._supabase);
 
   final SupabaseClient _supabase;
 
-  // Foreground stream used on iOS (and as fallback on other platforms).
-  StreamSubscription<Position>? _iosForegroundSub;
-  RealtimeChannel? _iosChannel;
-
   @override
-  Future<LocationSharingModel> startSharing(String tripId) async {
-    final permission = await _ensurePermission();
-    if (!permission) {
-      return LocationSharingModel(tripId: tripId, enabled: false);
-    }
+  Future<LocationUpdateModel> sendLocation(String tripId) async {
+    await _ensureLocationAvailable();
 
-    if (Platform.isAndroid) {
-      await startLocationService(tripId);
-    } else {
-      await _startForegroundSharing(tripId);
-    }
-
-    return LocationSharingModel(tripId: tripId, enabled: true);
-  }
-
-  @override
-  Future<LocationSharingModel> stopSharing(String tripId) async {
-    if (Platform.isAndroid) {
-      await stopLocationService();
-    } else {
-      await _stopForegroundSharing();
-    }
-    return LocationSharingModel(tripId: tripId, enabled: false);
-  }
-
-  Future<void> _startForegroundSharing(String tripId) async {
-    await _stopForegroundSharing();
-
-    final channel = _supabase.channel('live_location:$tripId')..subscribe();
-    _iosChannel = channel;
-
-    _iosForegroundSub = Geolocator.getPositionStream(
+    final position = await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
+        timeLimit: Duration(seconds: 20),
       ),
-    ).listen((pos) {
-      channel.sendBroadcastMessage(
-        event: 'location',
-        payload: {
-          'lat': pos.latitude,
-          'lng': pos.longitude,
-          'accuracy': pos.accuracy,
-          'speed': pos.speed,
-          'recorded_at': pos.timestamp.toIso8601String(),
-        },
-      );
-      // Persist to DB every position update (foreground mode — low frequency
-      // thanks to distanceFilter so this is acceptable).
-      _supabase.from('trip_live_locations').insert({
-        'trip_id': tripId,
-        'latitude': pos.latitude,
-        'longitude': pos.longitude,
-        'accuracy': pos.accuracy,
-        'recorded_at': DateTime.now().toIso8601String(),
-      }).catchError((_) {});
+    );
+    final recordedAt = position.timestamp;
+
+    await _supabase.from('trip_live_locations').insert({
+      'trip_id': tripId,
+      'latitude': position.latitude,
+      'longitude': position.longitude,
+      'accuracy': position.accuracy,
+      'heading': position.heading,
+      'speed': position.speed,
+      'recorded_at': recordedAt.toUtc().toIso8601String(),
     });
+
+    return LocationUpdateModel(
+      tripId: tripId,
+      latitude: position.latitude,
+      longitude: position.longitude,
+      recordedAt: recordedAt.toLocal(),
+    );
   }
 
-  Future<void> _stopForegroundSharing() async {
-    await _iosForegroundSub?.cancel();
-    _iosForegroundSub = null;
-    await _iosChannel?.unsubscribe();
-    _iosChannel = null;
-  }
+  Future<void> _ensureLocationAvailable() async {
+    if (!await Geolocator.isLocationServiceEnabled()) {
+      throw Exception('فعّل خدمة الموقع في الهاتف ثم حاول مرة أخرى.');
+    }
 
-  Future<bool> _ensurePermission() async {
     var permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
     }
-    if (permission == LocationPermission.deniedForever) {
-      await Geolocator.openAppSettings();
-      return false;
+    if (permission == LocationPermission.denied) {
+      throw Exception('يلزم السماح بالوصول للموقع لإرسال موقعك الحالي.');
     }
-    return permission == LocationPermission.always ||
-        permission == LocationPermission.whileInUse;
+    if (permission == LocationPermission.deniedForever) {
+      throw Exception(
+        'صلاحية الموقع مرفوضة نهائياً. فعّلها من إعدادات التطبيق.',
+      );
+    }
   }
 }

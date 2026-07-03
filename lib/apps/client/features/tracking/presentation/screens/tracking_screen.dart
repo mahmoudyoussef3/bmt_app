@@ -6,7 +6,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_trip.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_state.dart';
-import 'package:bmt_app/apps/client/features/tracking/presentation/widgets/live_status_badge.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
@@ -125,8 +124,8 @@ class _TrackingScreenState extends State<TrackingScreen>
     final updatedAt = _trip?.vehicleLocationAt;
     if (updatedAt == null) return 'Waiting for driver location';
     final diff = DateTime.now().difference(updatedAt);
-    if (diff.inMinutes < 1) return 'Live just now';
-    return 'Live ${diff.inMinutes} min ago';
+    if (diff.inMinutes < 1) return 'Location sent just now';
+    return 'Location sent ${diff.inMinutes} min ago';
   }
 
   @override
@@ -196,10 +195,6 @@ class _TrackingScreenState extends State<TrackingScreen>
                   tooltip: 'Preview trip states',
                   onPressed: () => _showStatePreviewSheet(context, scheme),
                 ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 8.0),
-                child: LiveStatusBadge(),
-              ),
             ],
             elevation: 0,
             backgroundColor: ClientColors.surfaceFor(context),
@@ -533,7 +528,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 Text(
                   _trip?.hasLiveVehicleLocation == true
                       ? _liveLocationLabel()
-                      : 'Driver location starts when captain shares it',
+                      : 'Waiting for the captain to send a location',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -1093,7 +1088,7 @@ class _TrackingScreenState extends State<TrackingScreen>
         title = 'Driver On The Way';
         subtitle = _trip?.hasLiveVehicleLocation == true
             ? '${_trip?.displayDriverName ?? 'Captain'} is heading towards $_pickupName'
-            : 'Waiting for live vehicle location';
+            : 'Waiting for the captain to send a location';
         toneColor = ClientColors.journeyGreen;
         break;
       case TripState.boarding:
@@ -1150,9 +1145,9 @@ class _TrackingScreenState extends State<TrackingScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildETACard(
-          _trip?.hasLiveVehicleLocation == true ? 'Live' : '--',
+          _trip?.hasLiveVehicleLocation == true ? 'Received' : '--',
           _trip?.hasLiveVehicleLocation == true
-              ? 'tracking active'
+              ? 'location update'
               : 'no GPS yet',
           _liveLocationLabel(),
           context,
@@ -1230,8 +1225,8 @@ class _TrackingScreenState extends State<TrackingScreen>
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildETACard(
-          _trip?.vehicleSpeed?.round().toString() ?? 'Live',
-          _trip?.vehicleSpeed == null ? 'tracking active' : 'km/h',
+          _trip?.vehicleSpeed?.round().toString() ?? '--',
+          _trip?.vehicleSpeed == null ? 'last location' : 'km/h when sent',
           'Expected arrival: ${_formatTime(_trip?.arrivalAt)}',
           context,
           scheme,
@@ -1242,7 +1237,7 @@ class _TrackingScreenState extends State<TrackingScreen>
         const SizedBox(height: 8),
         _buildStopsProgressTimeline(context, scheme),
         const SizedBox(height: 16),
-        // Live Speed/Metric Card
+        // Latest driver-sent location metrics.
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
@@ -1264,7 +1259,7 @@ class _TrackingScreenState extends State<TrackingScreen>
               _buildMetricItem(
                 Icons.location_on_rounded,
                 'GPS',
-                _trip?.hasLiveVehicleLocation == true ? 'Live' : 'Waiting',
+                _trip?.hasLiveVehicleLocation == true ? 'Received' : 'Waiting',
                 ClientColors.journeyGreen,
               ),
               _buildMetricItem(
@@ -2133,7 +2128,7 @@ class _MapStatusStrip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = hasLiveLocation
-        ? 'Live vehicle location'
+        ? 'Last location sent by captain'
         : currentState == TripState.completed
         ? 'Trip completed'
         : 'Waiting for captain location';

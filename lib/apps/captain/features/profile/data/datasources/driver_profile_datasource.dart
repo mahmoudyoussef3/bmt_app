@@ -71,12 +71,16 @@ class DriverProfileDataSource {
           .eq('driver_id', driverId);
       if ((ratings as List).isNotEmpty) {
         final sum = ratings.fold<double>(
-            0, (acc, r) => acc + ((r['rating'] as num?)?.toDouble() ?? 0));
+          0,
+          (acc, r) => acc + ((r['rating'] as num?)?.toDouble() ?? 0),
+        );
         avgRating = sum / ratings.length;
       }
     } catch (_) {}
 
-    final name = driver['name'] as String? ??
+    final name =
+        driver['full_name'] as String? ??
+        driver['name'] as String? ??
         user.userMetadata?['full_name'] as String? ??
         user.userMetadata?['name'] as String? ??
         'السائق';
@@ -86,7 +90,8 @@ class DriverProfileDataSource {
       name: name,
       phone: driver['phone'] as String? ?? user.phone ?? '',
       licenseNumber: driver['license_number'] as String?,
-      photoUrl: driver['photo_url'] as String? ??
+      photoUrl:
+          driver['photo_url'] as String? ??
           user.userMetadata?['avatar_url'] as String?,
       averageRating: avgRating,
       totalTrips: totalTrips,

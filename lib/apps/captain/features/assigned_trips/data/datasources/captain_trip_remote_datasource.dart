@@ -53,18 +53,10 @@ class CaptainTripRemoteDataSource {
     final direct = await _supabase
         .from('drivers')
         .select('id')
-        .eq('id', user.id)
+        .eq('user_id', user.id)
         .maybeSingle();
     if (direct != null) return direct['id'] as String?;
-
-    final phone = user.phone;
-    if (phone == null || phone.isEmpty) return null;
-    final byPhone = await _supabase
-        .from('drivers')
-        .select('id')
-        .eq('phone', phone)
-        .maybeSingle();
-    return byPhone?['id'] as String?;
+    return null;
   }
 
   AssignedTripModel _mapTrip(Map<String, dynamic> json) {

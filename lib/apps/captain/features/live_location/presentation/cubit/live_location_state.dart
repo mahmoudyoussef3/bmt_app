@@ -3,9 +3,9 @@ sealed class LiveLocationState {
 }
 
 class LiveLocationReady extends LiveLocationState {
-  const LiveLocationReady({this.enabled = false});
+  const LiveLocationReady({this.lastSentAt});
 
-  final bool enabled;
+  final DateTime? lastSentAt;
 }
 
 class LiveLocationLoading extends LiveLocationState {

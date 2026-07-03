@@ -24,14 +24,14 @@ The workspace is divided into several applications under `lib/apps/`:
 
 ### Admin Dashboard (`dashboard`)
 * **Responsibilities:** Centralized operations management for the entire platform.
-* **Features:** Fleet management (drivers, vehicles), route planning, trip creation wizard, dynamic pricing, live tracking, financial reports, and passenger manifests.
+* **Features:** Fleet management (drivers, vehicles), route planning, trip creation wizard, dynamic pricing, driver-sent location updates, financial reports, and passenger manifests.
 * **Data Ownership:** Core operational entities (Routes, Trips, Fleet, Pricing, Global Settings).
 * **Relationships:** Controls the lifecycle of all entities consumed by the Client and Driver apps.
 
 ### Driver / Captain App (`driver` / `captain`)
 * **Responsibilities:** For drivers/captains executing the scheduled trips.
 * **Features:** Viewing assigned trips, starting/completing trips, marking route stations, scanning/checking in passengers, and reporting operational alerts (delays, breakdowns).
-* **Data Ownership:** Trip events, live location updates, passenger check-in status.
+* **Data Ownership:** Trip events, one-time location updates with timestamps, passenger check-in status.
 * **Relationships:** Modifies the live state of `operation_trips` and `trip_passengers` created by the dashboard/client apps.
 
 ---
@@ -147,7 +147,7 @@ The project relies entirely on **Supabase (PostgreSQL)** as its backend.
 * **Route Management:** Admins define interconnected Route Stations and group them into an Operation Route.
 * **Trip Creation Wizard:** Admins select a route, vehicle, and driver. The system automatically snapshots route stations into `trip_route_points` and generates seat layouts into `trip_seats`.
 * **Trip Pricing:** Admins set base prices, multi-day package prices, and subscriptions for specific trips.
-* **Live Monitoring:** Operations team tracks active trips, resolves alerts reported by drivers, and views passenger manifests.
+* **Trip Monitoring:** Operations sees the latest location explicitly sent by the driver with its timestamp, resolves alerts, and views passenger manifests. Continuous/background location sharing is not used.
 
 ---
 
