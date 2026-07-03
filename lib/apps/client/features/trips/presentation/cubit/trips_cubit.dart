@@ -20,8 +20,10 @@ class TripsCubit extends Cubit<TripsState> {
     emit(const TripsLoading());
     try {
       final trips = await _getTrips();
+      if (isClosed) return;
       emit(TripsLoaded(trips: trips));
     } catch (error) {
+      if (isClosed) return;
       emit(TripsError(error.toString()));
     }
   }
@@ -33,8 +35,10 @@ class TripsCubit extends Cubit<TripsState> {
       final selectedTrip = id == null || id.isEmpty
           ? trips.firstOrNull
           : await _getTripDetails(id);
+      if (isClosed) return;
       emit(TripsLoaded(trips: trips, selectedTrip: selectedTrip));
     } catch (error) {
+      if (isClosed) return;
       emit(TripsError(error.toString()));
     }
   }

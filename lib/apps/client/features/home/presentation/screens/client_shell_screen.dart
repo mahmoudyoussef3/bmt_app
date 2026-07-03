@@ -54,7 +54,9 @@ class _ClientShellScreenState extends State<ClientShellScreen> {
     ];
 
     return Scaffold(
-      body: SafeArea(child: pages[_index]),
+      // IndexedStack keeps every tab (and its BlocProvider/cubit) mounted, so an
+      // in-flight load can never be orphaned by a tab switch or a shell rebuild.
+      body: SafeArea(child: IndexedStack(index: _index, children: pages)),
       bottomNavigationBar: ClientBottomNavigation(
         activeTab: _tabForIndex(_index),
         onTabChange: (tab) {

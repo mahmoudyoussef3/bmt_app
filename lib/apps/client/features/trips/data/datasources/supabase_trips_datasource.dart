@@ -36,6 +36,19 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  String _reference(String id) {
+    final clean = id.replaceAll('-', '');
+    final take = clean.length >= 8 ? clean.substring(0, 8) : clean;
+    return 'BMT-${take.toUpperCase()}';
+  }
+
+  String _initials(String? name) {
+    final trimmed = (name ?? '').trim();
+    if (trimmed.length >= 2) return trimmed.substring(0, 2).toUpperCase();
+    if (trimmed.isNotEmpty) return trimmed.toUpperCase();
+    return 'DP';
+  }
+
   TripModel _mapBookingToTripModel(Map<String, dynamic> data) {
     final tripObj = data['operation_trips'] as Map<String, dynamic>?;
     final vehicleObj = tripObj?['vehicles'] as Map<String, dynamic>?;
@@ -52,7 +65,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
     return TripModel(
       id: data['id']?.toString() ?? '',
-      reference: 'BMT-${data['id'].toString().substring(0, 8).toUpperCase()}',
+      reference: _reference(data['id']?.toString() ?? ''),
       status: _mapStatus(data['status']?.toString() ?? 'newRequest'),
       pickup: pickup,
       destination: destination,
@@ -60,16 +73,14 @@ class SupabaseTripsDatasource implements TripsDatasource {
       timeLabel: data['trip_time']?.toString() ?? '',
       driverName: driverObj?['full_name']?.toString() ?? 'Driver Pending',
       driverPhone: driverObj?['phone']?.toString() ?? 'Not available',
-      driverInitials: (driverObj?['full_name']?.toString() ?? 'DP')
-          .substring(0, 2)
-          .toUpperCase(),
+      driverInitials: _initials(driverObj?['full_name']?.toString()),
       driverRating: driverObj?['rating'] != null
           ? (driverObj!['rating'] as num).toDouble()
           : 0.0,
       vehicleName: vehicleObj?['brand']?.toString() ?? 'Vehicle Pending',
       vehicleType: vehicleObj?['vehicle_type']?.toString() ?? 'Vehicle',
       vehicleId: vehicleObj?['id']?.toString() ?? '',
-      seats: [data['seat_label']?.toString() ?? 'Seat Pending'],
+      seats: [data['seat']?.toString() ?? 'Seat Pending'],
       paymentStatus: _mapPayment(paymentStatusStr),
       fare: 'EGP $fare',
       cancellationReason: data['rejection_reason']?.toString(),
