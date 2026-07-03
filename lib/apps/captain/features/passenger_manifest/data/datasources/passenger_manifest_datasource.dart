@@ -40,24 +40,18 @@ class PassengerManifestDataSource {
       final statusString = e['status'] as String? ?? 'pending';
       PassengerBoardingStatus status;
       switch (statusString.toLowerCase()) {
-        case 'boarded':
-        case 'ركب':
-        case 'تم الصعود':
+        case 'confirmed':
+        case 'boarded': // fallback for old data
           status = PassengerBoardingStatus.boarded;
           break;
-        case 'absent':
         case 'no_show':
-        case 'غائب':
+        case 'absent':
           status = PassengerBoardingStatus.absent;
           break;
-        case 'late':
-        case 'متأخر':
-          status = PassengerBoardingStatus.late;
-          break;
         case 'cancelled':
-        case 'ملغي':
           status = PassengerBoardingStatus.cancelled;
           break;
+        case 'reserved':
         default:
           status = PassengerBoardingStatus.pending;
       }
@@ -87,10 +81,10 @@ class PassengerManifestDataSource {
   }
 
   String _statusToString(PassengerBoardingStatus status) => switch (status) {
-        PassengerBoardingStatus.boarded => 'boarded',
-        PassengerBoardingStatus.absent => 'absent',
-        PassengerBoardingStatus.late => 'late',
-        PassengerBoardingStatus.pending => 'pending',
+        PassengerBoardingStatus.boarded => 'confirmed',
+        PassengerBoardingStatus.absent => 'no_show',
+        PassengerBoardingStatus.late => 'reserved',
+        PassengerBoardingStatus.pending => 'reserved',
         PassengerBoardingStatus.cancelled => 'cancelled',
       };
 }

@@ -247,8 +247,8 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
           .single();
 
       final currentStatus = existing['status'] as String;
-      // Use 'boarded'/'pending' to match captain app status values.
-      final newStatus = currentStatus == 'boarded' ? 'pending' : 'boarded';
+      // Toggle between confirmed and reserved
+      final newStatus = currentStatus == 'confirmed' ? 'reserved' : 'confirmed';
 
       await _client
           .from('trip_passengers')
@@ -439,8 +439,8 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
 
     final mappedPassengers = passengersList.map((p) {
       final pMap = p as Map<String, dynamic>;
-      // 'boarded' is the status set by both the captain app and dashboard toggle.
-      final isCheckedIn = pMap['status'] == 'boarded';
+      // Check if passenger status is confirmed (checked in)
+      final isCheckedIn = pMap['status'] == 'confirmed';
       return LivePassengerCheckin(
         id: pMap['id'] as String,
         passengerName: pMap['passenger_name'] as String? ?? '',

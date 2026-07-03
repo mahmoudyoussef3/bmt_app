@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/entities/live_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/repositories/live_trips_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/get_live_trips_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/watch_live_trips_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/start_live_trip_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/pause_live_trip_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/live_trips/domain/usecases/resume_live_trip_usecase.dart';
@@ -26,6 +27,7 @@ void main() {
     final repository = const _EmptyLiveTripsRepository();
     final cubit = LiveTripsCubit(
       getLiveTrips: GetLiveTripsUseCase(repository),
+      watchLiveTrips: WatchLiveTripsUseCase(repository),
       startTrip: StartLiveTripUseCase(repository),
       pauseTrip: PauseLiveTripUseCase(repository),
       resumeTrip: ResumeLiveTripUseCase(repository),
@@ -126,4 +128,7 @@ class _EmptyLiveTripsRepository implements LiveTripsRepository {
   @override
   Stream<VehiclePosition> watchVehiclePosition(String tripId) =>
       const Stream.empty();
+
+  @override
+  Stream<void> watchTripStatusChanges() => const Stream.empty();
 }

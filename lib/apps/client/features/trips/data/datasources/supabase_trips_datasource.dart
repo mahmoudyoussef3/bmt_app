@@ -8,16 +8,20 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
   const SupabaseTripsDatasource(this._supabase);
 
-  TripStatus _mapStatus(String statusStr) {
-    switch (statusStr.toLowerCase()) {
-      case 'newrequest':
-      case 'approved':
+  TripStatus _mapStatus(String tripStatusStr, String bookingStatusStr) {
+    if (bookingStatusStr == 'cancelled' || bookingStatusStr == 'rejected') {
+      return TripStatus.cancelled;
+    }
+
+    switch (tripStatusStr.toLowerCase()) {
+      case 'scheduled':
+      case 'open_for_booking':
         return TripStatus.upcoming;
-      case 'active':
+      case 'boarding':
+      case 'in_progress':
         return TripStatus.inProgress;
       case 'completed':
         return TripStatus.completed;
-      case 'rejected':
       case 'cancelled':
         return TripStatus.cancelled;
       default:
@@ -63,10 +67,13 @@ class SupabaseTripsDatasource implements TripsDatasource {
     final fare = paymentDetails['amount']?.toString() ?? '85.00';
     final paymentStatusStr = paymentDetails['status']?.toString() ?? 'pending';
 
+    final tripStatusStr = tripObj?['status']?.toString() ?? 'scheduled';
+    final bookingStatusStr = data['status']?.toString() ?? 'newRequest';
+
     return TripModel(
       id: data['id']?.toString() ?? '',
       reference: _reference(data['id']?.toString() ?? ''),
-      status: _mapStatus(data['status']?.toString() ?? 'newRequest'),
+      status: _mapStatus(tripStatusStr, bookingStatusStr),
       pickup: pickup,
       destination: destination,
       dateLabel: data['trip_date']?.toString() ?? '',

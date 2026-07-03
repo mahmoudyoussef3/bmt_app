@@ -15,6 +15,11 @@ class FakeLiveTripsDatasource implements LiveTripsDatasource {
   }
 
   @override
+  Stream<void> watchTripStatusChanges() async* {
+    yield null;
+  }
+
+  @override
   Future<LiveTrip> getLiveTripDetails(String tripId) async {
     await Future<void>.delayed(const Duration(milliseconds: 160));
     return _findTrip(tripId);

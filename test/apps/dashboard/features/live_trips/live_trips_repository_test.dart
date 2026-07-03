@@ -146,4 +146,7 @@ class _FailingLiveTripsDatasource implements LiveTripsDatasource {
   @override
   Stream<VehiclePosition> watchVehiclePosition(String tripId) =>
       throw UnimplementedError();
+
+  @override
+  Stream<void> watchTripStatusChanges() => throw UnimplementedError();
 }
