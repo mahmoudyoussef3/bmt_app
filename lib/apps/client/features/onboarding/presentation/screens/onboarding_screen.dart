@@ -3,13 +3,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
-
-import '../animations/animated_background_blob.dart';
-import '../widgets/onboarding_bottom_controls.dart';
-import '../widgets/onboarding_page_content.dart';
-import '../widgets/onboarding_scene.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -19,10 +17,27 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
+  static const _imagePaths = [
+    'assets/images/first_onboarding.png',
+    'assets/images/second_onboarding.png',
+    'assets/images/third_onboarding.png',
+  ];
+
   final PageController _pageController = PageController();
   int _currentPage = 0;
+  bool _imagesPrecached = false;
+  bool _isCompleting = false;
 
-  static const _cyan = Color(0xFF06B6D4);
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_imagesPrecached) return;
+
+    _imagesPrecached = true;
+    for (final path in _imagePaths) {
+      precacheImage(AssetImage(path), context);
+    }
+  }
 
   @override
   void dispose() {
@@ -30,232 +45,416 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  List<OnboardingPageData> _pages(AppLocalizations l10n) => [
-    OnboardingPageData(
+  List<_OnboardingPageData> _pages(AppLocalizations l10n) => [
+    _OnboardingPageData(
+      imagePath: _imagePaths[0],
       title: l10n.onboarding_page1Title,
-      body: l10n.onboarding_page1Body,
-      accent: ClientColors.primary,
-      scene: OnboardingScene(
-        accent: ClientColors.primary,
-        centerIcon: Icons.directions_bus_filled_rounded,
-        cards: const [
-          OnboardingFloatingCard(
-            icon: Icons.near_me_rounded,
-            title: 'Cairo → Zayed',
-            alignment: Alignment(-0.98, -0.86),
-            floatMagnitude: 6,
-            floatSeconds: 5,
-          ),
-          OnboardingFloatingCard(
-            icon: Icons.schedule_rounded,
-            title: '08:40 AM',
-            subtitle: 'Next trip',
-            alignment: Alignment(0.98, -0.46),
-            floatSeconds: 4,
-          ),
-          OnboardingFloatingCard(
-            icon: Icons.event_seat_rounded,
-            title: 'Seat A12',
-            subtitle: 'Confirmed',
-            alignment: Alignment(0.9, 0.92),
-            accent: ClientColors.journeyGreen,
-            floatMagnitude: 8,
-            floatSeconds: 6,
-          ),
-        ],
-      ),
-      features: [
-        OnboardingFeature(
-          Icons.event_seat_rounded,
-          l10n.onboarding_page1FeatureA,
-        ),
-        OnboardingFeature(Icons.route_rounded, l10n.onboarding_page1FeatureB),
-      ],
+      description: l10n.onboarding_page1Body,
+      alignment: Alignment.center,
     ),
-    OnboardingPageData(
+    _OnboardingPageData(
+      imagePath: _imagePaths[1],
       title: l10n.onboarding_page2Title,
-      body: l10n.onboarding_page2Body,
-      accent: _cyan,
-      scene: OnboardingScene(
-        accent: _cyan,
-        centerIcon: Icons.navigation_rounded,
-        cards: const [
-          OnboardingFloatingCard(
-            icon: Icons.my_location_rounded,
-            title: 'Live',
-            subtitle: 'Updated now',
-            alignment: Alignment(-0.98, -0.86),
-            floatSeconds: 5,
-          ),
-          OnboardingFloatingCard(
-            icon: Icons.timer_outlined,
-            title: 'ETA 12 min',
-            subtitle: 'On time',
-            alignment: Alignment(0.98, -0.46),
-            accent: ClientColors.journeyGreen,
-            floatMagnitude: 8,
-            floatSeconds: 4,
-          ),
-          OnboardingFloatingCard(
-            icon: Icons.directions_bus_rounded,
-            title: 'On the way',
-            alignment: Alignment(-0.9, 0.92),
-            floatMagnitude: 6,
-            floatSeconds: 6,
-          ),
-        ],
-      ),
-      features: [
-        OnboardingFeature(
-          Icons.my_location_rounded,
-          l10n.onboarding_page2FeatureA,
-        ),
-        OnboardingFeature(
-          Icons.schedule_rounded,
-          l10n.onboarding_page2FeatureB,
-        ),
-      ],
+      description: l10n.onboarding_page2Body,
+      alignment: const Alignment(0, -0.08),
     ),
-    OnboardingPageData(
+    _OnboardingPageData(
+      imagePath: _imagePaths[2],
       title: l10n.onboarding_page3Title,
-      body: l10n.onboarding_page3Body,
-      accent: ClientColors.journeyPurple,
-      scene: OnboardingScene(
-        accent: ClientColors.journeyPurple,
-        centerIcon: Icons.card_membership_rounded,
-        cards: const [
-          OnboardingFloatingCard(
-            icon: Icons.verified_rounded,
-            title: 'Monthly pass',
-            subtitle: 'Active',
-            alignment: Alignment(-0.98, -0.86),
-            accent: ClientColors.journeyGreen,
-            floatSeconds: 5,
-          ),
-          OnboardingFloatingCard(
-            icon: Icons.lock_rounded,
-            title: 'Paid securely',
-            alignment: Alignment(0.98, -0.46),
-            accent: ClientColors.primary,
-            floatMagnitude: 8,
-            floatSeconds: 4,
-          ),
-          OnboardingFloatingCard(
-            icon: Icons.support_agent_rounded,
-            title: 'Support 24/7',
-            alignment: Alignment(0.9, 0.92),
-            floatMagnitude: 6,
-            floatSeconds: 6,
-          ),
-        ],
-      ),
-      features: [
-        OnboardingFeature(
-          Icons.card_membership_rounded,
-          l10n.onboarding_page3FeatureA,
-        ),
-        OnboardingFeature(Icons.lock_rounded, l10n.onboarding_page4FeatureA),
-        OnboardingFeature(
-          Icons.support_agent_rounded,
-          l10n.onboarding_page4FeatureB,
-        ),
-      ],
+      description: l10n.onboarding_page3Body,
+      alignment: const Alignment(-0.22, -0.04),
     ),
   ];
 
-  void _onNext(int total) {
-    if (_currentPage < total - 1) {
+  void _nextPage(int pageCount) {
+    HapticFeedback.selectionClick();
+    if (_currentPage < pageCount - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 520),
         curve: Curves.easeOutCubic,
       );
-    } else {
-      _complete();
+      return;
     }
+
+    _completeOnboarding();
   }
 
-  void _onSkip() {
+  Future<void> _completeOnboarding() async {
+    if (_isCompleting) return;
+
     HapticFeedback.lightImpact();
-    _complete();
+    setState(() => _isCompleting = true);
+    await context.read<OnboardingCubit>().completeOnboarding();
+    if (mounted) setState(() => _isCompleting = false);
   }
-
-  void _complete() => context.read<OnboardingCubit>().completeOnboarding();
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final pages = _pages(l10n);
-    final size = MediaQuery.sizeOf(context);
-    final isLast = _currentPage == pages.length - 1;
+    final mediaQuery = MediaQuery.of(context);
+    final size = mediaQuery.size;
+    final compact = size.height < 700;
+    final horizontalPadding = size.width < 360
+        ? ClientSpacing.lg
+        : size.width >= 600
+        ? ClientSpacing.section
+        : ClientSpacing.xl;
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light.copyWith(
+        statusBarColor: Colors.transparent,
+        systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+        systemNavigationBarContrastEnforced: false,
+      ),
       child: Scaffold(
-        backgroundColor: ClientColors.surfaceFor(context),
+        backgroundColor: Colors.black,
+        extendBody: true,
         body: Stack(
+          fit: StackFit.expand,
           children: [
-            AnimatedBackgroundBlob(
-              color: ClientColors.primary,
-              size: 400,
-              initialPosition: const Offset(-110, -120),
-              animationDuration: const Duration(seconds: 12),
+            PageView.builder(
+              controller: _pageController,
+              itemCount: pages.length,
+              onPageChanged: (index) {
+                setState(() => _currentPage = index);
+                HapticFeedback.selectionClick();
+              },
+              itemBuilder: (context, index) =>
+                  _OnboardingBackground(data: pages[index]),
             ),
-            AnimatedBackgroundBlob(
-              color: _cyan,
-              size: 300,
-              initialPosition: Offset(size.width - 150, size.height - 300),
-              animationDuration: const Duration(seconds: 15),
-            ),
+            const IgnorePointer(child: _PhotographyOverlay()),
             SafeArea(
-              child: Column(
-                children: [
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: AnimatedOpacity(
-                      duration: const Duration(milliseconds: 250),
-                      opacity: isLast ? 0 : 1,
-                      child: Padding(
-                        padding: const EdgeInsets.only(top: 6, right: 12),
-                        child: TextButton(
-                          onPressed: isLast ? null : _onSkip,
-                          style: TextButton.styleFrom(
-                            foregroundColor: ClientColors.textSecondaryFor(
-                              context,
-                            ),
-                            textStyle: const TextStyle(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          child: Text(l10n.onboarding_skip),
+              minimum: EdgeInsets.fromLTRB(
+                horizontalPadding,
+                compact ? ClientSpacing.sm : ClientSpacing.md,
+                horizontalPadding,
+                compact ? ClientSpacing.md : ClientSpacing.xl,
+              ),
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 680),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _AnimatedPageCopy(
+                        key: ValueKey(_currentPage),
+                        data: pages[_currentPage],
+                        compact: compact,
+                      ),
+                      SizedBox(
+                        height: compact ? ClientSpacing.lg : ClientSpacing.xxl,
+                      ),
+                      Center(
+                        child: _PageIndicator(
+                          controller: _pageController,
+                          currentPage: _currentPage,
+                          pageCount: pages.length,
                         ),
                       ),
-                    ),
-                  ),
-                  Expanded(
-                    child: PageView.builder(
-                      controller: _pageController,
-                      itemCount: pages.length,
-                      onPageChanged: (index) {
-                        setState(() => _currentPage = index);
-                        HapticFeedback.selectionClick();
-                      },
-                      itemBuilder: (context, index) => OnboardingPageContent(
-                        data: pages[index],
-                        isVisible: _currentPage == index,
+                      SizedBox(
+                        height: compact ? ClientSpacing.md : ClientSpacing.xl,
                       ),
-                    ),
+                      _BottomActions(
+                        isLastPage: _currentPage == pages.length - 1,
+                        isCompleting: _isCompleting,
+                        onSkip: _completeOnboarding,
+                        onNext: () => _nextPage(pages.length),
+                      ),
+                    ],
                   ),
-                  OnboardingBottomControls(
-                    currentPage: _currentPage,
-                    totalPages: pages.length,
-                    onNext: () => _onNext(pages.length),
-                  ),
-                ],
+                ),
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _OnboardingPageData {
+  const _OnboardingPageData({
+    required this.imagePath,
+    required this.title,
+    required this.description,
+    required this.alignment,
+  });
+
+  final String imagePath;
+  final String title;
+  final String description;
+  final Alignment alignment;
+}
+
+class _OnboardingBackground extends StatelessWidget {
+  const _OnboardingBackground({required this.data});
+
+  final _OnboardingPageData data;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      image: true,
+      excludeSemantics: true,
+      child: Image.asset(
+        data.imagePath,
+        fit: BoxFit.cover,
+        alignment: data.alignment,
+        filterQuality: FilterQuality.high,
+      ),
+    );
+  }
+}
+
+class _PhotographyOverlay extends StatelessWidget {
+  const _PhotographyOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Colors.black.withAlpha(20),
+            Colors.transparent,
+            Colors.black.withAlpha(10),
+            Colors.black.withAlpha(128),
+            Colors.black.withAlpha(235),
+          ],
+          stops: const [0, 0.32, 0.48, 0.68, 1],
+        ),
+      ),
+    );
+  }
+}
+
+class _AnimatedPageCopy extends StatelessWidget {
+  const _AnimatedPageCopy({
+    super.key,
+    required this.data,
+    required this.compact,
+  });
+
+  final _OnboardingPageData data;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final titleSize = width < 360
+        ? 29.0
+        : width >= 600
+        ? 40.0
+        : 34.0;
+
+    return TweenAnimationBuilder<double>(
+      duration: const Duration(milliseconds: 460),
+      curve: Curves.easeOutCubic,
+      tween: Tween(begin: 0, end: 1),
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, 18 * (1 - value)),
+            child: child,
+          ),
+        );
+      },
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            data.title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.start,
+            style: ClientTypography.displayMedium(context).copyWith(
+              color: Colors.white,
+              fontSize: titleSize,
+              height: 1.16,
+              letterSpacing: 0,
+              shadows: const [
+                Shadow(
+                  color: Color(0x52000000),
+                  blurRadius: 16,
+                  offset: Offset(0, 3),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: compact ? ClientSpacing.sm : ClientSpacing.md),
+          Text(
+            data.description,
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.start,
+            style: ClientTypography.bodyLarge(context).copyWith(
+              color: Colors.white.withAlpha(220),
+              fontSize: width < 360 ? 14.5 : 16,
+              fontWeight: FontWeight.w500,
+              height: 1.55,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PageIndicator extends StatelessWidget {
+  const _PageIndicator({
+    required this.controller,
+    required this.currentPage,
+    required this.pageCount,
+  });
+
+  final PageController controller;
+  final int currentPage;
+  final int pageCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: '${currentPage + 1} / $pageCount',
+      child: AnimatedBuilder(
+        animation: controller,
+        builder: (context, _) {
+          final page =
+              controller.hasClients && controller.position.hasContentDimensions
+              ? controller.page ?? currentPage.toDouble()
+              : currentPage.toDouble();
+
+          return Row(
+            mainAxisSize: MainAxisSize.min,
+            children: List.generate(pageCount, (index) {
+              final proximity = (1 - (page - index).abs()).clamp(0.0, 1.0);
+              return Container(
+                width: 8 + (20 * proximity),
+                height: 8,
+                margin: const EdgeInsetsDirectional.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  color: Color.lerp(
+                    Colors.white.withAlpha(85),
+                    Colors.white,
+                    proximity,
+                  ),
+                  borderRadius: BorderRadius.circular(ClientRadius.pill),
+                ),
+              );
+            }),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _BottomActions extends StatelessWidget {
+  const _BottomActions({
+    required this.isLastPage,
+    required this.isCompleting,
+    required this.onSkip,
+    required this.onNext,
+  });
+
+  final bool isLastPage;
+  final bool isCompleting;
+  final VoidCallback onSkip;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Row(
+      children: [
+        TextButton(
+          onPressed: isCompleting ? null : onSkip,
+          style: TextButton.styleFrom(
+            foregroundColor: Colors.white.withAlpha(220),
+            disabledForegroundColor: Colors.white.withAlpha(110),
+            minimumSize: const Size(64, 54),
+            padding: const EdgeInsets.symmetric(horizontal: ClientSpacing.sm),
+            textStyle: ClientTypography.labelLarge(
+              context,
+            ).copyWith(fontSize: 15),
+          ),
+          child: Text(l10n.onboarding_skip),
+        ),
+        const Spacer(),
+        PressableScale(
+          onTap: isCompleting ? null : onNext,
+          child: AnimatedContainer(
+            duration: ClientMotion.slow,
+            curve: ClientMotion.curve,
+            height: 56,
+            constraints: BoxConstraints(minWidth: isLastPage ? 158 : 132),
+            padding: const EdgeInsets.symmetric(horizontal: ClientSpacing.lg),
+            decoration: BoxDecoration(
+              color: ClientColors.primary,
+              borderRadius: BorderRadius.circular(ClientRadius.pill),
+              border: Border.all(color: Colors.white.withAlpha(34)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(55),
+                  blurRadius: 22,
+                  offset: const Offset(0, 10),
+                ),
+                BoxShadow(
+                  color: ClientColors.primary.withAlpha(90),
+                  blurRadius: 24,
+                  spreadRadius: -4,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedSwitcher(
+                  duration: ClientMotion.slow,
+                  transitionBuilder: (child, animation) =>
+                      FadeTransition(opacity: animation, child: child),
+                  child: Text(
+                    isLastPage
+                        ? l10n.onboarding_getStarted
+                        : l10n.onboarding_next,
+                    key: ValueKey(isLastPage),
+                    maxLines: 1,
+                    style: ClientTypography.labelLarge(context).copyWith(
+                      color: Colors.white,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: ClientSpacing.xs),
+                if (isCompleting)
+                  const SizedBox.square(
+                    dimension: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                else
+                  const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
+                    size: 21,
+                  ),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

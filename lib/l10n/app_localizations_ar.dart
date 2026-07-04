@@ -798,11 +798,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboarding_getStarted => 'ابدأ الآن';
 
   @override
-  String get onboarding_page1Title => 'احجز رحلتك اليومية في ثوانٍ';
+  String get onboarding_page1Title => 'تنقّل يومك بكل ثقة';
 
   @override
   String get onboarding_page1Body =>
-      'اكتشف المسارات، اختر رحلتك، واحجز مقعدك بنقرات بسيطة.';
+      'احجز رحلتك في ثوانٍ، واختر مقعدك، وتابع مركبتك مباشرة حتى تصل إلى وجهتك بأمان وراحة.';
 
   @override
   String get onboarding_page1FeatureA => 'حجز الرحلات';
@@ -811,11 +811,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboarding_page1FeatureB => 'اكتشاف المسارات';
 
   @override
-  String get onboarding_page2Title => 'تابع كل رحلة مباشرةً';
+  String get onboarding_page2Title => 'رحلة أكثر راحة... كل يوم';
 
   @override
   String get onboarding_page2Body =>
-      'تتبّع مركبتك على الخريطة لحظة بلحظة واعرف وقت وصولها بدقة.';
+      'استمتع بمركبات حديثة، مقاعد مريحة، وحجوزات منظمة تمنحك تجربة تنقّل سلسة في كل رحلة.';
 
   @override
   String get onboarding_page2FeatureA => 'تتبّع مباشر';
@@ -824,11 +824,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get onboarding_page2FeatureB => 'وقت الوصول';
 
   @override
-  String get onboarding_page3Title => 'تنقّل بذكاء وراحة بال';
+  String get onboarding_page3Title => 'رحلتك تبدأ باطمئنان';
 
   @override
   String get onboarding_page3Body =>
-      'وفّر مع الباقات الشهرية، وادفع بأمان، وتواصل مع فريق الدعم وقت ما تحتاج.';
+      'سائقون محترفون، تتبع مباشر، وإشعارات لحظية لتبقى على اطلاع بكل تفاصيل رحلتك.';
 
   @override
   String get onboarding_page3FeatureA => 'الاشتراكات';

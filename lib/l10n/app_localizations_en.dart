@@ -803,11 +803,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboarding_getStarted => 'Get Started';
 
   @override
-  String get onboarding_page1Title => 'Book your daily ride in seconds';
+  String get onboarding_page1Title => 'Travel With Confidence';
 
   @override
   String get onboarding_page1Body =>
-      'Discover routes, pick a trip, and reserve your seat — all in a few taps.';
+      'Book your trip in seconds, choose your seat, and track your vehicle live until you reach your destination safely.';
 
   @override
   String get onboarding_page1FeatureA => 'Trip booking';
@@ -816,11 +816,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboarding_page1FeatureB => 'Route discovery';
 
   @override
-  String get onboarding_page2Title => 'Follow every trip live';
+  String get onboarding_page2Title => 'Comfort In Every Ride';
 
   @override
   String get onboarding_page2Body =>
-      'Track your vehicle on the map in real time and know exactly when it arrives.';
+      'Modern vehicles, comfortable seating, and a seamless booking experience designed for your daily commute.';
 
   @override
   String get onboarding_page2FeatureA => 'Live tracking';
@@ -829,11 +829,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onboarding_page2FeatureB => 'Arrival ETA';
 
   @override
-  String get onboarding_page3Title => 'Travel smart, worry-free';
+  String get onboarding_page3Title => 'Every Journey Starts With Trust';
 
   @override
   String get onboarding_page3Body =>
-      'Save with monthly passes, pay securely, and reach our support team whenever you need it.';
+      'Professional drivers, live tracking, and real-time updates keep you informed from departure to arrival.';
 
   @override
   String get onboarding_page3FeatureA => 'Subscriptions';

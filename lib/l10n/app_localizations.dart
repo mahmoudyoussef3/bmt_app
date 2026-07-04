@@ -1577,13 +1577,13 @@ abstract class AppLocalizations {
   /// No description provided for @onboarding_page1Title.
   ///
   /// In en, this message translates to:
-  /// **'Book your daily ride in seconds'**
+  /// **'Travel With Confidence'**
   String get onboarding_page1Title;
 
   /// No description provided for @onboarding_page1Body.
   ///
   /// In en, this message translates to:
-  /// **'Discover routes, pick a trip, and reserve your seat — all in a few taps.'**
+  /// **'Book your trip in seconds, choose your seat, and track your vehicle live until you reach your destination safely.'**
   String get onboarding_page1Body;
 
   /// No description provided for @onboarding_page1FeatureA.
@@ -1601,13 +1601,13 @@ abstract class AppLocalizations {
   /// No description provided for @onboarding_page2Title.
   ///
   /// In en, this message translates to:
-  /// **'Follow every trip live'**
+  /// **'Comfort In Every Ride'**
   String get onboarding_page2Title;
 
   /// No description provided for @onboarding_page2Body.
   ///
   /// In en, this message translates to:
-  /// **'Track your vehicle on the map in real time and know exactly when it arrives.'**
+  /// **'Modern vehicles, comfortable seating, and a seamless booking experience designed for your daily commute.'**
   String get onboarding_page2Body;
 
   /// No description provided for @onboarding_page2FeatureA.
@@ -1625,13 +1625,13 @@ abstract class AppLocalizations {
   /// No description provided for @onboarding_page3Title.
   ///
   /// In en, this message translates to:
-  /// **'Travel smart, worry-free'**
+  /// **'Every Journey Starts With Trust'**
   String get onboarding_page3Title;
 
   /// No description provided for @onboarding_page3Body.
   ///
   /// In en, this message translates to:
-  /// **'Save with monthly passes, pay securely, and reach our support team whenever you need it.'**
+  /// **'Professional drivers, live tracking, and real-time updates keep you informed from departure to arrival.'**
   String get onboarding_page3Body;
 
   /// No description provided for @onboarding_page3FeatureA.

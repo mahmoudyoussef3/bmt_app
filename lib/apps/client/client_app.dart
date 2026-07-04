@@ -71,6 +71,11 @@ import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboa
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/phone_auth_cubit.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/phone_auth_state.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/phone_login_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/otp_verification_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/complete_profile_screen.dart';
 
 class ClientApp extends StatefulWidget {
   const ClientApp({super.key});
@@ -136,8 +141,15 @@ class _ClientAppState extends State<ClientApp> {
       setThemeMode: _setThemeMode,
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {
-          return BlocProvider<OnboardingCubit>(
-            create: (_) => clientGetIt<OnboardingCubit>()..checkStatus(),
+          return MultiBlocProvider(
+            providers: [
+              BlocProvider<OnboardingCubit>(
+                create: (_) => clientGetIt<OnboardingCubit>()..checkStatus(),
+              ),
+              BlocProvider<PhoneAuthCubit>(
+                create: (_) => clientGetIt<PhoneAuthCubit>(),
+              ),
+            ],
             child: MaterialApp(
               navigatorKey: _navigatorKey,
               debugShowCheckedModeBanner: false,
@@ -169,8 +181,14 @@ class _ClientAppState extends State<ClientApp> {
                     return const OnboardingScreen();
                   }
 
-                  return StreamBuilder<AuthState>(
-                    stream: Supabase.instance.client.auth.onAuthStateChange,
+                  return BlocBuilder<PhoneAuthCubit, PhoneAuthState>(
+                    builder: (context, phoneAuthState) {
+                      if (phoneAuthState is AuthAuthenticated) {
+                        return _buildClientShell();
+                      }
+                      
+                      return StreamBuilder<AuthState>(
+                        stream: Supabase.instance.client.auth.onAuthStateChange,
                     builder: (context, snapshot) {
                       // Also check currentSession as initial state might not emit immediately
                       final session =
@@ -179,9 +197,10 @@ class _ClientAppState extends State<ClientApp> {
                       if (session != null) {
                         return _buildClientShell();
                       }
-                      return _buildAuthScope(const WelcomeScreen());
-                    },
-                  );
+                        return _buildAuthScope(const WelcomeScreen());
+                      },
+                    );
+                  });
                 },
               ),
 
@@ -195,6 +214,22 @@ class _ClientAppState extends State<ClientApp> {
                 AuthRoutes.signUp: (_) => _buildAuthScope(const SignUpScreen()),
                 AuthRoutes.forgotPassword: (_) =>
                     _buildForgotPasswordScope(const ForgotPasswordScreen()),
+
+                // Phone Auth Screens
+                '/phone-login': (_) =>
+                    _buildPhoneAuthScope(const PhoneLoginScreen()),
+                '/otp': (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments;
+                  return _buildPhoneAuthScope(OtpVerificationScreen(
+                    phoneNumber: args as String? ?? '',
+                  ));
+                },
+                '/complete-profile': (context) {
+                  final args = ModalRoute.of(context)?.settings.arguments;
+                  return _buildPhoneAuthScope(CompleteProfileScreen(
+                    phoneNumber: args as String? ?? '',
+                  ));
+                },
 
                 AuthRoutes.success: (context) {
                   final args = ModalRoute.of(context)?.settings.arguments;
@@ -441,6 +476,13 @@ class _ClientAppState extends State<ClientApp> {
   Widget _buildForgotPasswordScope(Widget child) {
     return BlocProvider<ForgotPasswordCubit>(
       create: (_) => clientGetIt<ForgotPasswordCubit>(),
+      child: child,
+    );
+  }
+
+  Widget _buildPhoneAuthScope(Widget child) {
+    return BlocProvider.value(
+      value: clientGetIt<PhoneAuthCubit>(),
       child: child,
     );
   }

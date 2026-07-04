@@ -18,6 +18,14 @@ import '../../features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import '../../features/auth/domain/usecases/send_password_reset_email_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/cubit/forgot_password_cubit.dart';
+
+import '../../features/auth/data/datasources/mock_auth_datasource.dart';
+import '../../features/auth/data/repositories/auth_repository_impl.dart';
+import '../../features/auth/domain/repositories/auth_repository.dart';
+import '../../features/auth/domain/usecases/complete_profile_usecase.dart';
+import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
+import '../../features/auth/domain/usecases/verify_phone_usecase.dart';
+import '../../features/auth/presentation/cubit/phone_auth_cubit.dart';
 import '../../features/booking/data/datasources/booking_search_datasource.dart';
 import '../../features/booking/data/datasources/daily_booking_datasource.dart';
 import '../../features/booking/data/datasources/supabase_booking_search_datasource.dart';
@@ -137,12 +145,14 @@ import '../../features/trips/data/repositories/trips_repository_impl.dart';
 import '../../features/trips/domain/repositories/trips_repository.dart';
 import '../../features/trips/domain/usecases/get_trip_details_usecase.dart';
 import '../../features/trips/domain/usecases/get_trips_usecase.dart';
+import '../../features/trips/domain/usecases/watch_trips_usecase.dart';
 import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/tracking/data/datasources/supabase_tracking_datasource.dart';
 import '../../features/tracking/data/repositories/tracking_repository_impl.dart';
 import '../../features/tracking/domain/repositories/tracking_repository.dart';
 import '../../features/tracking/domain/usecases/get_tracking_title_usecase.dart';
 import '../../features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
+import '../../features/tracking/domain/usecases/watch_tracking_trip_usecase.dart';
 import '../../features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
 import '../../features/tracking/presentation/cubit/tracking_cubit.dart';
 import '../../../../core/network/network_di.dart';
@@ -263,6 +273,47 @@ void _registerAuthDependencies() {
       () => ForgotPasswordCubit(clientGetIt<SendPasswordResetEmailUseCase>()),
     );
   }
+
+  // --- Phone Auth Dependencies (Mock) ---
+  if (!clientGetIt.isRegistered<MockAuthDatasource>()) {
+    clientGetIt.registerLazySingleton<MockAuthDatasource>(
+      () => MockAuthDatasource(),
+    );
+  }
+  
+  if (!clientGetIt.isRegistered<AuthRepository>()) {
+    clientGetIt.registerLazySingleton<AuthRepository>(
+      () => AuthRepositoryImpl(clientGetIt<MockAuthDatasource>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<VerifyPhoneUseCase>()) {
+    clientGetIt.registerLazySingleton<VerifyPhoneUseCase>(
+      () => VerifyPhoneUseCase(clientGetIt<AuthRepository>()),
+    );
+  }
+  
+  if (!clientGetIt.isRegistered<VerifyOtpUseCase>()) {
+    clientGetIt.registerLazySingleton<VerifyOtpUseCase>(
+      () => VerifyOtpUseCase(clientGetIt<AuthRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<CompleteProfileUseCase>()) {
+    clientGetIt.registerLazySingleton<CompleteProfileUseCase>(
+      () => CompleteProfileUseCase(clientGetIt<AuthRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<PhoneAuthCubit>()) {
+    clientGetIt.registerFactory<PhoneAuthCubit>(
+      () => PhoneAuthCubit(
+        verifyPhoneUseCase: clientGetIt<VerifyPhoneUseCase>(),
+        verifyOtpUseCase: clientGetIt<VerifyOtpUseCase>(),
+        completeProfileUseCase: clientGetIt<CompleteProfileUseCase>(),
+      ),
+    );
+  }
 }
 
 void _registerHomeDependencies() {
@@ -316,11 +367,18 @@ void _registerTripsDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<WatchTripsUseCase>()) {
+    clientGetIt.registerLazySingleton<WatchTripsUseCase>(
+      () => WatchTripsUseCase(clientGetIt<TripsRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<TripsCubit>()) {
     clientGetIt.registerFactory<TripsCubit>(
       () => TripsCubit(
         getTrips: clientGetIt<GetTripsUseCase>(),
         getTripDetails: clientGetIt<GetTripDetailsUseCase>(),
+        watchTrips: clientGetIt<WatchTripsUseCase>(),
       ),
     );
   }
@@ -667,12 +725,19 @@ void _registerTrackingDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<WatchTrackingTripUseCase>()) {
+    clientGetIt.registerLazySingleton<WatchTrackingTripUseCase>(
+      () => WatchTrackingTripUseCase(clientGetIt<TrackingRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<TrackingCubit>()) {
     clientGetIt.registerFactory<TrackingCubit>(
       () => TrackingCubit(
         getTrackingTrip: clientGetIt<GetTrackingTripUseCase>(),
         getTrackingTitle: clientGetIt<GetTrackingTitleUseCase>(),
         watchVehiclePosition: clientGetIt<WatchVehiclePositionUseCase>(),
+        watchTrackingTrip: clientGetIt<WatchTrackingTripUseCase>(),
       ),
     );
   }

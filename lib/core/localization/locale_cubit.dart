@@ -6,10 +6,14 @@ import 'package:intl/intl.dart';
 class LocaleCubit extends Cubit<Locale> {
   static const _storageKey = 'app_language';
   final FlutterSecureStorage _storage;
+  final String _defaultLanguageCode;
 
-  LocaleCubit({FlutterSecureStorage? storage})
-    : _storage = storage ?? const FlutterSecureStorage(),
-      super(const Locale('en'));
+  LocaleCubit({
+    FlutterSecureStorage? storage,
+    String defaultLanguageCode = 'en',
+  }) : _defaultLanguageCode = defaultLanguageCode,
+       _storage = storage ?? const FlutterSecureStorage(),
+       super(Locale(defaultLanguageCode));
 
   Future<void> load() async {
     try {
@@ -18,12 +22,12 @@ class LocaleCubit extends Cubit<Locale> {
         Intl.defaultLocale = savedCode;
         emit(Locale(savedCode));
       } else {
-        Intl.defaultLocale = 'en';
-        emit(const Locale('en'));
+        Intl.defaultLocale = _defaultLanguageCode;
+        emit(Locale(_defaultLanguageCode));
       }
     } catch (_) {
-      Intl.defaultLocale = 'en';
-      emit(const Locale('en'));
+      Intl.defaultLocale = _defaultLanguageCode;
+      emit(Locale(_defaultLanguageCode));
     }
   }
 
