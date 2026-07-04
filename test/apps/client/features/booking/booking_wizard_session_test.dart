@@ -39,6 +39,27 @@ void main() {
     },
   );
 
+  test('card payment is valid without a manual receipt', () {
+    final session = BookingWizardSession(
+      route: route,
+    ).copyWith(paymentMethod: 'credit_card');
+
+    expect(session.paymentValid, isTrue);
+    expect(session.isCardPayment, isTrue);
+  });
+
+  test('a server package and start date are required', () {
+    final empty = BookingWizardSession(route: route);
+    final withoutDate = empty.copyWith(selectedPackage: package);
+
+    expect(empty.packageValid, isFalse);
+    expect(withoutDate.packageValid, isFalse);
+    expect(
+      withoutDate.copyWith(packageStartDate: DateTime(2026, 7, 5)).packageValid,
+      isTrue,
+    );
+  });
+
   test('package price is the server-facing total shown to the client', () {
     final session = BookingWizardSession(route: route).copyWith(
       selectedPackage: package,

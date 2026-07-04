@@ -59,8 +59,13 @@ BEGIN
         employee_code,
         full_name,
         phone,
+        emergency_phone,
+        address,
+        national_id,
         status,
         license_number,
+        license_expiry_date,
+        hire_date,
         created_at,
         updated_at
     ) VALUES (
@@ -69,8 +74,13 @@ BEGIN
         'EMP-TEST-002',
         'Test Captain',
         '+201111111111',
+        '+201111111112',
+        'Cairo, Egypt',
+        '29001010101010',
         'active',
         'LIC-TEST-002',
+        now() + interval '1 year',
+        now(),
         now(),
         now()
     );

@@ -33,7 +33,7 @@ class TripExecutionPage extends StatelessWidget {
     return BlocProvider<TripExecutionCubit>(
       create: (_) =>
           captainGetIt<TripExecutionCubit>()
-            ..setInitialStatus(_executionStatusFromTrip(trip.status)),
+            ..watch(trip.id, _executionStatusFromTrip(trip.status)),
       child: BlocBuilder<TripExecutionCubit, TripExecutionCubitState>(
         builder: (context, state) {
           final status = _statusFromState(state);
@@ -52,9 +52,7 @@ class TripExecutionPage extends StatelessWidget {
                   backgroundColor: scheme.surface,
                   iconTheme: IconThemeData(color: scheme.onSurface),
                   flexibleSpace: FlexibleSpaceBar(
-                    background: Container(
-                      color: scheme.surface,
-                    ),
+                    background: Container(color: scheme.surface),
                     titlePadding: const EdgeInsets.symmetric(
                       horizontal: CaptainSpacing.xxxl,
                       vertical: CaptainSpacing.lg,
@@ -373,11 +371,7 @@ class _StatusBadge extends StatelessWidget {
       ),
     };
 
-    return CaptainStatusChip(
-      label: label,
-      variant: variant,
-      icon: icon,
-    );
+    return CaptainStatusChip(label: label, variant: variant, icon: icon);
   }
 }
 
@@ -508,15 +502,12 @@ class _ActionTile extends StatelessWidget {
                 child: Text(
                   label,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: destructive ? scheme.error : scheme.onSurface,
-                      ),
+                    fontWeight: FontWeight.w800,
+                    color: destructive ? scheme.error : scheme.onSurface,
+                  ),
                 ),
               ),
-              Icon(
-                Icons.chevron_right_rounded,
-                color: scheme.onSurfaceVariant,
-              ),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
             ],
           ),
         ),
@@ -526,10 +517,7 @@ class _ActionTile extends StatelessWidget {
 }
 
 class _TripFact extends StatelessWidget {
-  const _TripFact({
-    required this.icon,
-    required this.value,
-  });
+  const _TripFact({required this.icon, required this.value});
 
   final IconData icon;
   final String value;
@@ -540,7 +528,9 @@ class _TripFact extends StatelessWidget {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(
-            horizontal: CaptainSpacing.md, vertical: CaptainSpacing.md),
+          horizontal: CaptainSpacing.md,
+          vertical: CaptainSpacing.md,
+        ),
         decoration: BoxDecoration(
           color: scheme.surfaceContainerHighest.withAlpha(100),
           borderRadius: CaptainRadius.rLg,

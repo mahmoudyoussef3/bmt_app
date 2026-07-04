@@ -36,7 +36,9 @@ class AssignedTripCard extends StatelessWidget {
             padding: const EdgeInsets.all(CaptainSpacing.xl),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerHighest.withAlpha(50),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(CaptainRadius.xl)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(CaptainRadius.xl),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -48,9 +50,9 @@ class AssignedTripCard extends StatelessWidget {
                       child: Text(
                         trip.route,
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              height: 1.2,
-                            ),
+                          fontWeight: FontWeight.w800,
+                          height: 1.2,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -62,7 +64,9 @@ class AssignedTripCard extends StatelessWidget {
                   children: [
                     _IconDetail(
                       icon: Icons.directions_bus_rounded,
-                      text: trip.vehicleNumber.isEmpty ? 'مركبة غير محددة' : trip.vehicleNumber,
+                      text: trip.vehicleNumber.isEmpty
+                          ? 'مركبة غير محددة'
+                          : trip.vehicleNumber,
                     ),
                     const SizedBox(width: 16),
                     _IconDetail(
@@ -90,13 +94,14 @@ class AssignedTripCard extends StatelessWidget {
                     Text(
                       'الركاب (${trip.passengerCount})',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: scheme.onSurfaceVariant,
-                          ),
+                        fontWeight: FontWeight.w700,
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
                     RichText(
                       text: TextSpan(
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(
                               fontWeight: FontWeight.w800,
                               color: scheme.primary,
                             ),
@@ -104,7 +109,8 @@ class AssignedTripCard extends StatelessWidget {
                           TextSpan(text: '${trip.boardedCount} '),
                           TextSpan(
                             text: 'صعدوا',
-                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: scheme.onSurfaceVariant,
                                 ),
@@ -179,17 +185,29 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, variant, icon) = switch (status) {
-      AssignedTripStatus.scheduled => ('مجدولة', CaptainStatusVariant.info, Icons.event_rounded),
-      AssignedTripStatus.boarding => ('صعود', CaptainStatusVariant.warning, Icons.people_rounded),
-      AssignedTripStatus.inProgress => ('جارية', CaptainStatusVariant.success, Icons.electric_car_rounded),
-      AssignedTripStatus.completed => ('مكتملة', CaptainStatusVariant.neutral, Icons.check_circle_rounded),
+      AssignedTripStatus.scheduled => (
+        'مجدولة',
+        CaptainStatusVariant.info,
+        Icons.event_rounded,
+      ),
+      AssignedTripStatus.boarding => (
+        'صعود',
+        CaptainStatusVariant.warning,
+        Icons.people_rounded,
+      ),
+      AssignedTripStatus.inProgress => (
+        'جارية',
+        CaptainStatusVariant.success,
+        Icons.electric_car_rounded,
+      ),
+      AssignedTripStatus.completed => (
+        'مكتملة',
+        CaptainStatusVariant.neutral,
+        Icons.check_circle_rounded,
+      ),
     };
 
-    return CaptainStatusChip(
-      label: label,
-      variant: variant,
-      icon: icon,
-    );
+    return CaptainStatusChip(label: label, variant: variant, icon: icon);
   }
 }
 
@@ -210,9 +228,9 @@ class _IconDetail extends StatelessWidget {
         Text(
           text,
           style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w600,
-              ),
+            color: scheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ],
     );

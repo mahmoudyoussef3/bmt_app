@@ -72,7 +72,7 @@ create table if not exists public.booking_payments (
     references public.operation_bookings(id) on delete restrict,
   client_id uuid not null references public.clients(id) on delete restrict,
   method text not null check (
-    method in ('instapay', 'vodafone_cash', 'bank_transfer')
+    method in ('credit_card', 'instapay', 'vodafone_cash', 'bank_transfer')
   ),
   amount numeric(12, 2) not null check (amount > 0),
   currency text not null default 'EGP',
@@ -81,7 +81,7 @@ create table if not exists public.booking_payments (
       'pending', 'submitted', 'under_review', 'approved', 'rejected', 'refunded'
     )
   ),
-  receipt_url text not null,
+  receipt_url text,
   payment_reference text,
   payer_phone text,
   rejection_reason text,
@@ -91,6 +91,15 @@ create table if not exists public.booking_payments (
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+alter table public.booking_payments
+  drop constraint if exists booking_payments_method_check;
+alter table public.booking_payments
+  add constraint booking_payments_method_check check (
+    method in ('credit_card', 'instapay', 'vodafone_cash', 'bank_transfer')
+  );
+alter table public.booking_payments
+  alter column receipt_url drop not null;
 
 create index if not exists idx_booking_payments_review_queue
   on public.booking_payments (status, submitted_at desc);
@@ -150,10 +159,13 @@ begin
   if auth.uid() is null or auth.uid() <> p_client_id then
     raise exception 'not_authorized';
   end if;
-  if p_payment_method not in ('instapay', 'vodafone_cash', 'bank_transfer') then
+  if p_payment_method not in (
+    'credit_card', 'instapay', 'vodafone_cash', 'bank_transfer'
+  ) then
     raise exception 'payment_method_not_allowed';
   end if;
-  if nullif(trim(coalesce(p_receipt_url, '')), '') is null then
+  if p_payment_method <> 'credit_card'
+     and nullif(trim(coalesce(p_receipt_url, '')), '') is null then
     raise exception 'payment_receipt_required';
   end if;
 
@@ -216,14 +228,18 @@ begin
     p_package_id, coalesce(p_plan_start_date, v_trip.trip_date),
     coalesce(p_plan_start_date, v_trip.trip_date)
       + greatest(v_package.duration_days - 1, 0),
-    'submitted', 'pending'
+    case when p_payment_method = 'credit_card' then 'pending'
+         else 'submitted' end,
+    'pending'
   ) returning id into v_booking_id;
 
   insert into public.booking_payments (
     booking_id, client_id, method, amount, status, receipt_url,
     payment_reference, payer_phone
   ) values (
-    v_booking_id, p_client_id, p_payment_method, v_package.price, 'submitted',
+    v_booking_id, p_client_id, p_payment_method, v_package.price,
+    case when p_payment_method = 'credit_card' then 'pending'
+         else 'submitted' end,
     p_receipt_url, nullif(trim(coalesce(p_payment_reference, '')), ''),
     nullif(trim(coalesce(p_payer_phone, '')), '')
   );
@@ -242,13 +258,17 @@ begin
     'payment_review', 'payment', 'all',
     jsonb_build_object('booking_id', v_booking_id, 'trip_id', p_trip_id)
   from public.user_roles ur
-  where ur.role in ('operations_manager', 'dashboard_admin');
+  where ur.role in ('operations_manager', 'dashboard_admin')
+    and p_payment_method <> 'credit_card';
 
   insert into public.notifications (
     user_id, title, body, type, category, target_app, data
   ) values (
     p_client_id, 'تم استلام الحجز',
-    'تم إرسال إثبات الدفع وسيتم إشعارك بعد المراجعة.',
+    case when p_payment_method = 'credit_card'
+      then 'أكمل الدفع الآمن لتأكيد حجزك.'
+      else 'تم إرسال إثبات الدفع وسيتم إشعارك بعد المراجعة.'
+    end,
     'booking_received', 'payment', 'client',
     jsonb_build_object('booking_id', v_booking_id, 'trip_id', p_trip_id)
   );

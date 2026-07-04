@@ -23,6 +23,12 @@ class TrackingRepositoryImpl implements TrackingRepository {
 
   @override
   Stream<TrackingPoint> watchVehiclePosition(String tripId) {
-    return _datasource.watchVehiclePosition(tripId).map((model) => model.toEntity());
+    return _datasource
+        .watchVehiclePosition(tripId)
+        .map((model) => model.toEntity());
   }
+
+  @override
+  Stream<void> watchTripChanges(String tripId) =>
+      _datasource.watchTripChanges(tripId);
 }

@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
 
 class WizardStopStep extends StatelessWidget {
   const WizardStopStep({super.key, required this.onNext});
@@ -16,25 +17,55 @@ class WizardStopStep extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<BookingWizardCubit, BookingWizardSession>(
       builder: (context, session) {
-        final stops = session.route.points
+        final stops = [...session.route.points]
           ..sort((a, b) => a.order.compareTo(b.order));
         final cubit = context.read<BookingWizardCubit>();
         return Column(
           children: [
-            _StopModeHeader(session: session),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                itemCount: stops.length,
-                separatorBuilder: (_, _) => _StopConnector(),
-                itemBuilder: (_, i) => _StopTile(
-                  stop: stops[i],
-                  session: session,
-                  onTap: () => _handleTap(cubit, session, stops[i]),
-                ),
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                children: [
+                  BookingStepIntro(
+                    icon: Icons.alt_route_rounded,
+                    title: 'Where will you get on and off?',
+                    subtitle:
+                        'Choose your pickup first, then a stop further along the route.',
+                    trailing: BookingCountPill(label: '${stops.length} stops'),
+                  ),
+                  const SizedBox(height: 18),
+                  _StopModeHeader(session: session),
+                  const SizedBox(height: 14),
+                  BookingSurfaceCard(
+                    padding: const EdgeInsets.all(12),
+                    child: Column(
+                      children: List.generate(stops.length, (index) {
+                        return Column(
+                          children: [
+                            _StopTile(
+                              stop: stops[index],
+                              session: session,
+                              isFirst: index == 0,
+                              isLast: index == stops.length - 1,
+                              onTap: () =>
+                                  _handleTap(cubit, session, stops[index]),
+                            ),
+                            if (index != stops.length - 1)
+                              _StopConnector(
+                                active:
+                                    session.pickupStop != null &&
+                                    stops[index].order >=
+                                        session.pickupStop!.order &&
+                                    session.dropoffStop != null &&
+                                    stops[index].order <
+                                        session.dropoffStop!.order,
+                              ),
+                          ],
+                        );
+                      }),
+                    ),
+                  ),
+                ],
               ),
             ),
             _StopContinueBar(session: session, onNext: onNext),
@@ -70,38 +101,65 @@ class _StopModeHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final picking = session.pickupStop == null || session.dropoffStop == null;
     final label = session.pickupStop == null
-        ? 'Tap your pickup stop'
+        ? '1  Select your pickup stop'
         : session.dropoffStop == null
-        ? 'Now tap your dropoff stop'
-        : 'Stops selected — review or change below';
+        ? '2  Now select your drop-off stop'
+        : 'Route segment ready';
     return Container(
       width: double.infinity,
-      color: picking
-          ? ClientColors.primaryLight
-          : ClientColors.journeyGreenLight,
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-      child: Text(
-        label,
-        style: ClientTypography.bodySmall(context).copyWith(
-          color: picking ? ClientColors.primary : ClientColors.journeyGreen,
-          fontWeight: FontWeight.w600,
-        ),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: session.stopsValid
+            ? ClientColors.journeyGreenLight
+            : ClientColors.primaryLight,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            session.stopsValid
+                ? Icons.check_circle_rounded
+                : Icons.touch_app_rounded,
+            size: 18,
+            color: session.stopsValid
+                ? ClientColors.journeyGreen
+                : ClientColors.primary,
+          ),
+          const SizedBox(width: 9),
+          Text(
+            label,
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: session.stopsValid
+                  ? ClientColors.journeyGreen
+                  : ClientColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _StopConnector extends StatelessWidget {
+  const _StopConnector({required this.active});
+
+  final bool active;
+
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 31),
-      child: Container(
-        width: 2,
-        height: 20,
-        color: ClientColors.borderFor(context),
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 23),
+        child: Container(
+          width: 2,
+          height: 12,
+          color: active
+              ? ClientColors.primary
+              : ClientColors.borderFor(context),
+        ),
       ),
     );
   }
@@ -111,10 +169,14 @@ class _StopTile extends StatelessWidget {
   const _StopTile({
     required this.stop,
     required this.session,
+    required this.isFirst,
+    required this.isLast,
     required this.onTap,
   });
   final RoutePointData stop;
   final BookingWizardSession session;
+  final bool isFirst;
+  final bool isLast;
   final VoidCallback onTap;
 
   @override
@@ -134,13 +196,14 @@ class _StopTile extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         decoration: BoxDecoration(
           color:
               color?.withAlpha(20) ??
               (isInRange ? ClientColors.primaryLight.withAlpha(80) : null),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(14),
           border: Border.all(
             color: color ?? ClientColors.borderFor(context),
             width: (isPickup || isDropoff) ? 1.5 : 1,
@@ -149,8 +212,8 @@ class _StopTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 24,
-              height: 24,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: color ?? ClientColors.journeySlateLight,
@@ -159,13 +222,13 @@ class _StopTile extends StatelessWidget {
                 child: isPickup
                     ? const Icon(
                         Icons.person_pin_circle_rounded,
-                        size: 14,
+                        size: 16,
                         color: Colors.white,
                       )
                     : isDropoff
                     ? const Icon(
                         Icons.flag_rounded,
-                        size: 14,
+                        size: 16,
                         color: Colors.white,
                       )
                     : Text(
@@ -179,14 +242,30 @@ class _StopTile extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                stop.name,
-                style: ClientTypography.bodyMedium(context).copyWith(
-                  fontWeight: (isPickup || isDropoff)
-                      ? FontWeight.w700
-                      : FontWeight.w400,
-                  color: color ?? ClientColors.textPrimaryFor(context),
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    stop.name,
+                    style: ClientTypography.bodyMedium(context).copyWith(
+                      fontWeight: (isPickup || isDropoff)
+                          ? FontWeight.w800
+                          : FontWeight.w600,
+                      color: color ?? ClientColors.textPrimaryFor(context),
+                    ),
+                  ),
+                  if (!isPickup && !isDropoff)
+                    Text(
+                      isFirst
+                          ? 'Route begins here'
+                          : isLast
+                          ? 'Final destination'
+                          : 'Pickup and drop-off point',
+                      style: ClientTypography.labelSmall(
+                        context,
+                      ).copyWith(color: ClientColors.textTertiaryFor(context)),
+                    ),
+                ],
               ),
             ),
             if (isPickup) _badge('Pickup', ClientColors.primary),
@@ -217,42 +296,37 @@ class _StopContinueBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (session.stopsValid) ...[
-              Row(
-                children: [
-                  Expanded(
-                    child: _stopChip(
-                      context,
-                      'Pickup',
-                      session.pickupStop!.name,
-                      ClientColors.primary,
-                    ),
+    return BookingBottomAction(
+      summary: session.stopsValid
+          ? Row(
+              children: [
+                Expanded(
+                  child: _stopChip(
+                    context,
+                    'PICKUP',
+                    session.pickupStop!.name,
+                    ClientColors.primary,
                   ),
-                  const Icon(Icons.arrow_forward_rounded, size: 16),
-                  Expanded(
-                    child: _stopChip(
-                      context,
-                      'Dropoff',
-                      session.dropoffStop!.name,
-                      ClientColors.journeyGreen,
-                    ),
+                ),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10),
+                  child: Icon(Icons.arrow_forward_rounded, size: 18),
+                ),
+                Expanded(
+                  child: _stopChip(
+                    context,
+                    'DROP-OFF',
+                    session.dropoffStop!.name,
+                    ClientColors.journeyGreen,
                   ),
-                ],
-              ),
-              const SizedBox(height: 12),
-            ],
-            ClientButton(
-              label: 'Continue',
-              onPressed: session.stopsValid ? onNext : null,
-            ),
-          ],
-        ),
+                ),
+              ],
+            )
+          : null,
+      child: ClientButton(
+        label: 'Find available trips',
+        icon: const Icon(Icons.arrow_forward_rounded),
+        onPressed: session.stopsValid ? onNext : null,
       ),
     );
   }

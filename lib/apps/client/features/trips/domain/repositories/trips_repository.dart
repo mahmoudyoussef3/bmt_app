@@ -4,4 +4,6 @@ abstract class TripsRepository {
   Future<List<TripData>> getTrips();
 
   Future<TripData?> getTripById(String id);
+
+  Stream<void> watchTripChanges();
 }

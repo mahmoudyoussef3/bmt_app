@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
@@ -62,19 +63,54 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
         return BookingFlowScaffold(
           title: 'Route details',
           query: _query,
-          extendBodyBehindAppBar: true,
-          bottomBar: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: ClientButton(
-                label: selectedRoute == null
-                    ? 'Select route'
-                    : 'Continue with this route',
-                expand: true,
-                onPressed: selectedRoute == null
-                    ? null
-                    : () => _continueToBooking(selectedRoute),
-              ),
+          bottomBar: BookingBottomAction(
+            summary: selectedRoute == null
+                ? null
+                : Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              selectedRoute.routeName,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: ClientTypography.labelLarge(
+                                context,
+                              ).copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            Text(
+                              '${selectedRoute.duration} · '
+                              '${selectedRoute.availableSeats} seats available',
+                              style: ClientTypography.bodySmall(context)
+                                  .copyWith(
+                                    color: ClientColors.textSecondaryFor(
+                                      context,
+                                    ),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        selectedRoute.startingPrice,
+                        style: ClientTypography.priceSmall(
+                          context,
+                        ).copyWith(color: ClientColors.primaryFor(context)),
+                      ),
+                    ],
+                  ),
+            child: ClientButton(
+              label: selectedRoute == null
+                  ? 'Select route'
+                  : 'Continue with this route',
+              expand: true,
+              onPressed: selectedRoute == null
+                  ? null
+                  : () => _continueToBooking(selectedRoute),
+              icon: const Icon(Icons.arrow_forward_rounded),
             ),
           ),
           body: _RouteDetailsBody(
@@ -92,11 +128,10 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
               );
             },
             onSelectRoute: (route) {
-              Navigator.pushNamed(
-                context,
-                BookingRoutes.routeOverview,
-                arguments: route,
-              );
+              setState(() {
+                _selectedRouteId = route.id;
+                _selectedTripId = null;
+              });
             },
             onSelectTrip: (trip) => setState(() => _selectedTripId = trip.id),
           ),
@@ -159,8 +194,8 @@ class _RouteDetailsBody extends StatelessWidget {
       return _RouteEmptyState(onRetry: onRetry);
     }
 
-    MapPinOption? toPin(RoutePointData? point) {
-      if (point == null || point.latitude == null || point.longitude == null) return null;
+    MapPinOption? toPin(RoutePointData point) {
+      if (point.latitude == null || point.longitude == null) return null;
       return MapPinOption(
         label: point.name,
         subtitle: '',
@@ -169,26 +204,31 @@ class _RouteDetailsBody extends StatelessWidget {
       );
     }
 
-    final pickupPoint = route.points.isNotEmpty ? route.points.first : null;
-    final destPoint = route.points.length > 1 ? route.points.last : null;
+    final orderedPoints = [...route.points]
+      ..sort((a, b) => a.order.compareTo(b.order));
+    final mapPins = orderedPoints.map(toPin).whereType<MapPinOption>().toList();
 
     return Stack(
       children: [
         Positioned.fill(
           child: GoogleStyleMapView(
-            pickup: toPin(pickupPoint),
-            destination: toPin(destPoint),
+            waypoints: mapPins,
+            cameraPadding: const EdgeInsets.fromLTRB(44, 54, 44, 220),
           ),
         ),
         DraggableScrollableSheet(
-          initialChildSize: 0.45,
-          minChildSize: 0.25,
-          maxChildSize: 0.95,
+          initialChildSize: 0.48,
+          minChildSize: 0.30,
+          maxChildSize: 0.96,
+          snap: true,
+          snapSizes: const [0.30, 0.48, 0.96],
           builder: (context, scrollController) {
             return Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withAlpha(20),
@@ -202,62 +242,71 @@ class _RouteDetailsBody extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(16, 24, 16, 110),
                 children: [
                   Center(
-                    child: Container(
-                      width: 40,
-                      height: 5,
-                      margin: const EdgeInsets.only(bottom: 24),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.outline.withAlpha(50),
-                        borderRadius: BorderRadius.circular(10),
+                    child: Semantics(
+                      label: 'Drag to expand route details',
+                      child: Container(
+                        width: 44,
+                        height: 5,
+                        margin: const EdgeInsets.only(bottom: 20),
+                        decoration: BoxDecoration(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withAlpha(80),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ),
                   if (!route.isExactMatch) ...[
-          _ClosestMatchBanner(quality: route.matchQuality),
-          const SizedBox(height: 12),
-        ],
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                route.isExactMatch
-                    ? 'Is this route suitable?'
-                    : 'Closest routes for your search',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  height: 1.05,
-                ),
-              ),
-            ),
-            TextButton.icon(
-              onPressed: onMap,
-              icon: const Icon(Icons.map_rounded, size: 18),
-              label: const Text('Map'),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        _RouteOverviewCard(route: route),
-        const SizedBox(height: 14),
-        _RouteTimelineCard(points: route.points),
-        const SizedBox(height: 14),
-        _PricingCard(route: route),
-        const SizedBox(height: 14),
-        _AvailableTripsSection(
-          trips: route.availableTrips,
-          hasRoutePricing: !_isPendingPrice(route.startingPrice),
-          selectedTripId: selectedTripId,
-          onSelectTrip: onSelectTrip,
-        ),
-        if (routes.length > 1) ...[
-          const SizedBox(height: 18),
-          _AlternativeRoutesSection(
-            routes: routes,
-            selectedRouteId: route.id,
-            onSelectRoute: onSelectRoute,
-          ),
-        ],
-      ],
+                    _ClosestMatchBanner(quality: route.matchQuality),
+                    const SizedBox(height: 12),
+                  ],
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          route.isExactMatch
+                              ? 'Is this route suitable?'
+                              : 'Closest routes for your search',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                height: 1.05,
+                              ),
+                        ),
+                      ),
+                      TextButton.icon(
+                        onPressed: onMap,
+                        icon: const Icon(
+                          Icons.edit_location_alt_rounded,
+                          size: 18,
+                        ),
+                        label: const Text('Edit stops'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _RouteOverviewCard(route: route),
+                  const SizedBox(height: 14),
+                  _RouteTimelineCard(points: orderedPoints),
+                  const SizedBox(height: 14),
+                  _PricingCard(route: route),
+                  const SizedBox(height: 14),
+                  _AvailableTripsSection(
+                    trips: route.availableTrips,
+                    hasRoutePricing: !_isPendingPrice(route.startingPrice),
+                    selectedTripId: selectedTripId,
+                    onSelectTrip: onSelectTrip,
+                  ),
+                  if (routes.length > 1) ...[
+                    const SizedBox(height: 18),
+                    _AlternativeRoutesSection(
+                      routes: routes,
+                      selectedRouteId: route.id,
+                      onSelectRoute: onSelectRoute,
+                    ),
+                  ],
+                ],
               ),
             );
           },
@@ -335,10 +384,14 @@ class _RouteOverviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+        color: isDark
+            ? scheme.surfaceContainerHighest
+            : scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(ClientRadius.xl),
         border: Border.all(
-          color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
+          color: isDark
+              ? scheme.outline.withAlpha(40)
+              : scheme.outline.withAlpha(60),
         ),
         boxShadow: ClientElevation.md(context),
       ),
@@ -354,10 +407,7 @@ class _RouteOverviewCard extends StatelessWidget {
                   color: scheme.primary.withAlpha(isDark ? 30 : 25),
                   borderRadius: BorderRadius.circular(ClientRadius.lg),
                 ),
-                child: Icon(
-                  Icons.route_rounded,
-                  color: scheme.primary,
-                ),
+                child: Icon(Icons.route_rounded, color: scheme.primary),
               ),
               const SizedBox(width: 14),
               Expanded(

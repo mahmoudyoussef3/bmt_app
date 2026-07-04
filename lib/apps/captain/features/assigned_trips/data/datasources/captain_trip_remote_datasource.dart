@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/assigned_trip.dart';
@@ -12,11 +14,44 @@ class CaptainTripRemoteDataSource {
   Stream<void> watchTripUpdates() {
     final driverId = _cachedDriverId;
     if (driverId == null) return const Stream.empty();
-    return _supabase
-        .from('operation_trips')
-        .stream(primaryKey: ['id'])
-        .eq('driver_id', driverId)
-        .map((_) {});
+
+    final controller = StreamController<void>.broadcast();
+    void notify(PostgresChangePayload _) {
+      if (!controller.isClosed) controller.add(null);
+    }
+
+    var channel = _supabase
+        .channel('captain_assigned_trips:$driverId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'operation_trips',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'driver_id',
+            value: driverId,
+          ),
+          callback: notify,
+        );
+
+    for (final table in const [
+      'operation_bookings',
+      'trip_passengers',
+      'trip_events',
+      'trip_route_points',
+      'trip_seats',
+    ]) {
+      channel = channel.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: table,
+        callback: notify,
+      );
+    }
+
+    final subscribedChannel = channel.subscribe();
+    controller.onCancel = subscribedChannel.unsubscribe;
+    return controller.stream;
   }
 
   Future<List<AssignedTripModel>> getAssignedTrips() async {

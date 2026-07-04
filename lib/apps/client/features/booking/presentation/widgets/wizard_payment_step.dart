@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/get_payment_methods_usecase.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/upload_payment_receipt_usecase.dart';
@@ -37,7 +38,8 @@ class _WizardPaymentStepState extends State<WizardPaymentStep> {
     super.initState();
     _methods = clientGetIt<GetPaymentMethodsUseCase>()().then(
       (methods) => methods.where((method) {
-        return method.type == PaymentMethodType.instapay ||
+        return method.type == PaymentMethodType.creditCard ||
+            method.type == PaymentMethodType.instapay ||
             method.type == PaymentMethodType.vodafoneCash ||
             method.type == PaymentMethodType.bankTransfer;
       }).toList(),
@@ -114,17 +116,17 @@ class _WizardPaymentStepState extends State<WizardPaymentStep> {
               child: ListView(
                 padding: const EdgeInsets.all(20),
                 children: [
-                  Text(
-                    'اختر طريقة الدفع',
-                    style: ClientTypography.headingSmall(context),
+                  BookingStepIntro(
+                    icon: Icons.lock_rounded,
+                    title: 'Secure payment',
+                    subtitle:
+                        'Pay by card instantly or upload a transfer receipt.',
+                    trailing: BookingCountPill(
+                      label: '${session.totalPrice.toStringAsFixed(0)} EGP',
+                    ),
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'الدفع النقدي للكابتن غير متاح. حوّل المبلغ ثم أرفق الإيصال.',
-                    style: ClientTypography.bodySmall(
-                      context,
-                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
-                  ),
+                  const SizedBox(height: 18),
+                  _TotalBanner(session: session),
                   const SizedBox(height: 20),
                   FutureBuilder<List<PaymentMethodData>>(
                     future: _methods,
@@ -163,7 +165,12 @@ class _WizardPaymentStepState extends State<WizardPaymentStep> {
                       );
                     },
                   ),
-                  if (session.paymentMethod != null) ...[
+                  if (session.isCardPayment) ...[
+                    const SizedBox(height: 14),
+                    const _SecureCardPreview(),
+                  ],
+                  if (session.paymentMethod != null &&
+                      !session.isCardPayment) ...[
                     const SizedBox(height: 14),
                     _TransferDetails(
                       methodId: session.paymentMethod!,
@@ -196,20 +203,22 @@ class _WizardPaymentStepState extends State<WizardPaymentStep> {
                       onPressed: () => _pickAndUpload(session),
                     ),
                   ],
-                  const SizedBox(height: 20),
-                  _TotalBanner(session: session),
                 ],
               ),
             ),
-            SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                child: ClientButton(
-                  label: 'إرسال للمراجعة',
-                  onPressed: session.paymentValid && !_uploading
-                      ? widget.onConfirm
-                      : null,
+            BookingBottomAction(
+              child: ClientButton(
+                label: session.isCardPayment
+                    ? 'Pay ${session.totalPrice.toStringAsFixed(0)} EGP securely'
+                    : 'Submit payment receipt',
+                icon: Icon(
+                  session.isCardPayment
+                      ? Icons.lock_rounded
+                      : Icons.send_rounded,
                 ),
+                onPressed: session.paymentValid && !_uploading
+                    ? widget.onConfirm
+                    : null,
               ),
             ),
           ],
@@ -219,10 +228,11 @@ class _WizardPaymentStepState extends State<WizardPaymentStep> {
   }
 
   String _methodId(PaymentMethodType type) => switch (type) {
+    PaymentMethodType.creditCard => 'credit_card',
     PaymentMethodType.instapay => 'instapay',
     PaymentMethodType.vodafoneCash => 'vodafone_cash',
     PaymentMethodType.bankTransfer => 'bank_transfer',
-    _ => '',
+    PaymentMethodType.walletBalance => '',
   };
 }
 
@@ -251,12 +261,16 @@ class _MethodTile extends StatelessWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? scheme.primary.withAlpha(isDark ? 30 : 20)
-              : (isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow),
+              : (isDark
+                    ? scheme.surfaceContainerHighest
+                    : scheme.surfaceContainerLow),
           borderRadius: BorderRadius.circular(ClientRadius.xl),
           border: Border.all(
             color: isSelected
                 ? scheme.primary
-                : (isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60)),
+                : (isDark
+                      ? scheme.outline.withAlpha(40)
+                      : scheme.outline.withAlpha(60)),
             width: isSelected ? 2 : 1,
           ),
           boxShadow: isSelected ? ClientElevation.sm(context) : null,
@@ -266,14 +280,19 @@ class _MethodTile extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: isSelected ? scheme.primary : (isDark ? scheme.surface : Colors.white),
+                color: isSelected
+                    ? scheme.primary
+                    : (isDark ? scheme.surface : Colors.white),
                 shape: BoxShape.circle,
                 boxShadow: ClientElevation.sm(context),
               ),
               child: Icon(
-                method.type == PaymentMethodType.bankTransfer
-                    ? Icons.account_balance_rounded
-                    : Icons.send_to_mobile_rounded,
+                switch (method.type) {
+                  PaymentMethodType.creditCard => Icons.credit_card_rounded,
+                  PaymentMethodType.bankTransfer =>
+                    Icons.account_balance_rounded,
+                  _ => Icons.send_to_mobile_rounded,
+                },
                 color: isSelected ? scheme.onPrimary : scheme.primary,
                 size: 22,
               ),
@@ -302,13 +321,74 @@ class _MethodTile extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              Icon(
-                Icons.check_circle_rounded,
-                color: scheme.primary,
-                size: 28,
-              ),
+              Icon(Icons.check_circle_rounded, color: scheme.primary, size: 28),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _SecureCardPreview extends StatelessWidget {
+  const _SecureCardPreview();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 190,
+      padding: const EdgeInsets.all(22),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF172554), Color(0xFF2563EB)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: ClientElevation.md(context),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.contactless_rounded, color: Colors.white),
+              const Spacer(),
+              Text(
+                'BMT SECURE',
+                style: ClientTypography.labelMedium(
+                  context,
+                ).copyWith(color: Colors.white, letterSpacing: 1.1),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            '••••  ••••  ••••  ••••',
+            style: ClientTypography.headingMedium(
+              context,
+            ).copyWith(color: Colors.white, letterSpacing: 2),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Text(
+                'VISA  •  MASTERCARD',
+                style: ClientTypography.labelSmall(
+                  context,
+                ).copyWith(color: Colors.white70),
+              ),
+              const Spacer(),
+              const Icon(Icons.verified_user_rounded, color: Colors.white70),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Card details are entered on Paymob’s encrypted checkout.',
+            style: ClientTypography.labelSmall(
+              context,
+            ).copyWith(color: Colors.white70),
+          ),
+        ],
       ),
     );
   }

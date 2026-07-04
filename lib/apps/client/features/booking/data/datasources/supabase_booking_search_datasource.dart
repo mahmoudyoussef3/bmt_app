@@ -539,37 +539,66 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
     final pinsByName = <String, MapPinOptionModel>{};
     for (final data in response) {
-      final name = data['name']?.toString() ?? 'Station';
+      final name = data['name']?.toString().trim() ?? '';
+      final latitude = _toDouble(data['latitude']);
+      final longitude = _toDouble(data['longitude']);
+      if (name.isEmpty || !_isValidCoordinate(latitude, longitude)) continue;
       pinsByName.putIfAbsent(
         name,
         () => MapPinOptionModel(
           label: name,
           subtitle: 'Pickup station',
-          x: _toDouble(data['latitude']) ?? 30.0444,
-          y: _toDouble(data['longitude']) ?? 31.2357,
+          x: latitude!,
+          y: longitude!,
         ),
       );
     }
 
-    return pinsByName.values.toList();
+    final pins = pinsByName.values.toList()
+      ..sort((a, b) => a.label.compareTo(b.label));
+    return pins;
   }
 
   @override
   Future<List<MapPinOptionModel>> getDestinationMapPins() async {
     final response = await _supabase
         .from('route_stations')
-        .select()
-        .eq('dropoff_allowed', true)
-        .limit(10);
+        .select('name, latitude, longitude, operation_routes!inner(status)')
+        .eq('operation_routes.status', 'active')
+        .eq('dropoff_allowed', true);
 
-    return response.map((data) {
-      return MapPinOptionModel(
-        label: data['name']?.toString() ?? 'Station',
-        subtitle: 'Destination station',
-        x: _toDouble(data['latitude']) ?? 30.0444,
-        y: _toDouble(data['longitude']) ?? 31.2357,
+    final pinsByName = <String, MapPinOptionModel>{};
+    for (final data in response) {
+      final name = data['name']?.toString().trim() ?? '';
+      final latitude = _toDouble(data['latitude']);
+      final longitude = _toDouble(data['longitude']);
+      if (name.isEmpty || !_isValidCoordinate(latitude, longitude)) continue;
+      pinsByName.putIfAbsent(
+        name,
+        () => MapPinOptionModel(
+          label: name,
+          subtitle: 'Destination station',
+          x: latitude!,
+          y: longitude!,
+        ),
       );
-    }).toList();
+    }
+
+    final pins = pinsByName.values.toList()
+      ..sort((a, b) => a.label.compareTo(b.label));
+    return pins;
+  }
+
+  bool _isValidCoordinate(double? latitude, double? longitude) {
+    return latitude != null &&
+        longitude != null &&
+        latitude.isFinite &&
+        longitude.isFinite &&
+        (latitude != 0 || longitude != 0) &&
+        latitude >= -90 &&
+        latitude <= 90 &&
+        longitude >= -180 &&
+        longitude <= 180;
   }
 }
 

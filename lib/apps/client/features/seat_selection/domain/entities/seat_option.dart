@@ -5,13 +5,21 @@ class SeatOption {
     required this.id,
     required this.seatNumber,
     required this.availability,
+    this.seatLabel = '',
+    this.row = 0,
+    this.column = 0,
   });
 
   final String id;
   final int seatNumber;
   final SeatAvailability availability;
+  final String seatLabel;
+  final int row;
+  final int column;
 
   bool get isAvailable => availability == SeatAvailability.available;
+  String get displayLabel =>
+      seatLabel.trim().isEmpty ? '$seatNumber' : seatLabel.trim();
 }
 
 class SeatSelectionData {

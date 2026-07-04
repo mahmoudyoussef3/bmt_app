@@ -177,12 +177,14 @@ class _TrackingScreenState extends State<TrackingScreen>
 
         final loaded = state as TrackingLoaded;
         _tracking = loaded;
-        
+
         final isActive = _currentState != TripState.notStarted;
 
         return Scaffold(
           extendBodyBehindAppBar: isActive,
-          backgroundColor: isActive ? scheme.surface : ClientColors.surfaceMutedFor(context),
+          backgroundColor: isActive
+              ? scheme.surface
+              : ClientColors.surfaceMutedFor(context),
           appBar: AppBar(
             title: Text(
               _stateTitle,
@@ -200,7 +202,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                 ),
             ],
             elevation: 0,
-            backgroundColor: isActive ? Colors.transparent : ClientColors.surfaceFor(context),
+            backgroundColor: isActive
+                ? Colors.transparent
+                : ClientColors.surfaceFor(context),
           ),
           body: Stack(
             children: [
@@ -314,9 +318,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     // Active tracking states: Full-screen map, driver info overlay
     return Stack(
       children: [
-        Positioned.fill(
-          child: _buildMapArea(scheme),
-        ),
+        Positioned.fill(child: _buildMapArea(scheme)),
         DraggableScrollableSheet(
           initialChildSize: 0.4,
           minChildSize: 0.25,
@@ -325,7 +327,9 @@ class _TrackingScreenState extends State<TrackingScreen>
             return Container(
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surface,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: Colors.black.withAlpha(20),
@@ -344,7 +348,9 @@ class _TrackingScreenState extends State<TrackingScreen>
                         height: 5,
                         margin: const EdgeInsets.only(top: 16, bottom: 8),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.outline.withAlpha(50),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.outline.withAlpha(50),
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),

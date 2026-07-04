@@ -37,11 +37,10 @@ class BookingWizardSession {
 
   bool get tripValid => selectedTrip != null;
   bool get seatValid => selectedSeatId != null;
-  bool get packageValid {
-    if (selectedPackage != null) return packageStartDate != null;
-    return true;
-  }
-  bool get paymentValid => paymentMethod != null && receiptUrl != null;
+  bool get packageValid => selectedPackage != null && packageStartDate != null;
+  bool get isCardPayment => paymentMethod == 'credit_card';
+  bool get paymentValid =>
+      paymentMethod != null && (isCardPayment || receiptUrl != null);
 
   double get tripPrice => double.tryParse(selectedTrip?.price ?? '0') ?? 0;
 

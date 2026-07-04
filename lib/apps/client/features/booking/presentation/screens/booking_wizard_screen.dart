@@ -15,6 +15,10 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/wizard
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/wizard_trip_step.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/booking_confirmation_screen.dart';
+import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/apps/client/features/payments/domain/usecases/create_card_payment_session_usecase.dart';
+import 'package:bmt_app/apps/client/features/payments/domain/usecases/get_payment_methods_usecase.dart';
+import 'package:bmt_app/apps/client/features/payments/presentation/screens/paymob_checkout_webview_screen.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/lock_trip_seat_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
@@ -32,15 +36,6 @@ class BookingWizardScreen extends StatefulWidget {
 class _BookingWizardScreenState extends State<BookingWizardScreen> {
   int _step = 0;
   bool _confirming = false;
-
-  static const _titles = [
-    'Choose Stops',
-    'Choose Trip',
-    'Select Seat',
-    'Choose Package',
-    'Review Order',
-    'Payment',
-  ];
 
   void _next() {
     if (_step < _stepCount - 1) setState(() => _step++);
@@ -118,6 +113,55 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
               ? bookingId.substring(0, 8).toUpperCase()
               : null);
 
+      if (session.isCardPayment) {
+        if (bookingId == null || bookingId.isEmpty) {
+          throw Exception('The booking reference was not created.');
+        }
+        final methods = await clientGetIt<GetPaymentMethodsUseCase>()();
+        final cardMethod = methods
+            .where((method) => method.type == PaymentMethodType.creditCard)
+            .firstOrNull;
+        if (cardMethod == null) {
+          throw Exception('Card payment is not available right now.');
+        }
+        final trip = session.selectedTrip!;
+        final checkout = PaymentCheckoutData(
+          tripId: trip.id,
+          pickupPoint: session.pickupStop?.name ?? '',
+          destination: session.dropoffStop?.name ?? '',
+          vehicleNumber: trip.vehicleType,
+          tripDate: trip.tripDate,
+          departureTime: trip.departureTime,
+          arrivalTime: trip.arrivalTime,
+          selectedSeatId: seatId,
+          selectedSeat: session.selectedSeatLabel ?? '',
+          driverName: '',
+          baseFare: session.totalPrice.round(),
+        );
+        final cardSession =
+            await clientGetIt<CreateCardPaymentSessionUseCase>()(
+              checkoutData: checkout,
+              paymentMethod: cardMethod,
+              bookingId: bookingId,
+              amount: session.totalPrice.round(),
+            );
+        if (!mounted) return;
+        final paid = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => PaymobCheckoutWebViewScreen(
+              checkoutUrl: cardSession.checkoutUrl,
+              bookingReference: bookingRef ?? bookingId,
+            ),
+          ),
+        );
+        if (paid != true) {
+          throw Exception(
+            'Card payment was not completed. Your booking remains pending.',
+          );
+        }
+      }
+
+      if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
           builder: (_) => BookingConfirmationScreen(
@@ -209,7 +253,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      _titles[_step],
+                      'Book your seat',
                       style: ClientTypography.bodyMedium(
                         context,
                       ).copyWith(fontWeight: FontWeight.w700),

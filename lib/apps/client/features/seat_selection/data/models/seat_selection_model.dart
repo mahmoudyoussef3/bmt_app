@@ -5,17 +5,26 @@ class SeatOptionModel {
     required this.id,
     required this.seatNumber,
     required this.availability,
+    this.seatLabel = '',
+    this.row = 0,
+    this.column = 0,
   });
 
   final String id;
   final int seatNumber;
   final SeatAvailability availability;
+  final String seatLabel;
+  final int row;
+  final int column;
 
   SeatOption toEntity() {
     return SeatOption(
       id: id,
       seatNumber: seatNumber,
       availability: availability,
+      seatLabel: seatLabel,
+      row: row,
+      column: column,
     );
   }
 }

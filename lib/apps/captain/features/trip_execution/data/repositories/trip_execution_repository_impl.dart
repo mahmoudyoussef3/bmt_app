@@ -21,4 +21,8 @@ class TripExecutionRepositoryImpl implements TripExecutionRepository {
   Future<TripExecutionStateData> completeTrip(String tripId) async {
     return (await _dataSource.completeTrip(tripId)).toEntity();
   }
+
+  @override
+  Stream<TripExecutionStatus> watchTripStatus(String tripId) =>
+      _dataSource.watchTripStatus(tripId);
 }

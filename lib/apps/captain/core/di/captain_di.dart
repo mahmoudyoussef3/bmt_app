@@ -75,6 +75,7 @@ import '../../features/trip_execution/data/repositories/trip_execution_repositor
 import '../../features/trip_execution/domain/repositories/trip_execution_repository.dart';
 import '../../features/trip_execution/domain/usecases/complete_trip_usecase.dart';
 import '../../features/trip_execution/domain/usecases/start_boarding_usecase.dart';
+import '../../features/trip_execution/domain/usecases/watch_trip_execution_status_usecase.dart';
 import '../../features/trip_execution/domain/usecases/start_trip_usecase.dart';
 import '../../features/trip_execution/presentation/cubit/trip_execution_cubit.dart';
 import '../../features/trip_status_updates/data/datasources/trip_status_datasource.dart';
@@ -245,12 +246,20 @@ void _registerTripExecutionDependencies() {
       () => StartBoardingUseCase(captainGetIt<TripExecutionRepository>()),
     );
   }
+  if (!captainGetIt.isRegistered<WatchTripExecutionStatusUseCase>()) {
+    captainGetIt.registerLazySingleton<WatchTripExecutionStatusUseCase>(
+      () => WatchTripExecutionStatusUseCase(
+        captainGetIt<TripExecutionRepository>(),
+      ),
+    );
+  }
   if (!captainGetIt.isRegistered<TripExecutionCubit>()) {
     captainGetIt.registerFactory<TripExecutionCubit>(
       () => TripExecutionCubit(
         startBoarding: captainGetIt<StartBoardingUseCase>(),
         startTrip: captainGetIt<StartTripUseCase>(),
         completeTrip: captainGetIt<CompleteTripUseCase>(),
+        watchTripStatus: captainGetIt<WatchTripExecutionStatusUseCase>(),
       ),
     );
   }

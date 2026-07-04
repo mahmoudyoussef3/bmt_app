@@ -12,10 +12,10 @@ class TrackingPointModel {
   final DateTime? recordedAt;
 
   TrackingPoint toEntity() => TrackingPoint(
-        latitude: latitude,
-        longitude: longitude,
-        recordedAt: recordedAt,
-      );
+    latitude: latitude,
+    longitude: longitude,
+    recordedAt: recordedAt,
+  );
 }
 
 class TrackingTripDataModel {

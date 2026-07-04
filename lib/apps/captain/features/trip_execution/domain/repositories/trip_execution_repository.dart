@@ -4,4 +4,5 @@ abstract class TripExecutionRepository {
   Future<TripExecutionStateData> startBoarding(String tripId);
   Future<TripExecutionStateData> startTrip(String tripId);
   Future<TripExecutionStateData> completeTrip(String tripId);
+  Stream<TripExecutionStatus> watchTripStatus(String tripId);
 }

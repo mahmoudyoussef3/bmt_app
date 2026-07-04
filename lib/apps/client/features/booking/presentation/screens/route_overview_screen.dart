@@ -1,33 +1,63 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
 
 class RouteOverviewScreen extends StatelessWidget {
   const RouteOverviewScreen({super.key, required this.route});
   final RouteOptionData route;
 
-  static const _fallback = LatLng(30.0444, 31.2357);
-
   List<RoutePointData> get _sortedStops =>
       [...route.points]..sort((a, b) => a.order.compareTo(b.order));
-
-  LatLng _latLng(RoutePointData p) => LatLng(
-    p.latitude ?? _fallback.latitude,
-    p.longitude ?? _fallback.longitude,
-  );
 
   @override
   Widget build(BuildContext context) {
     final stops = _sortedStops;
-    final hasCoords = stops.any((s) => s.latitude != null);
+    final mapPins = stops
+        .where(_hasValidCoordinates)
+        .map(
+          (stop) => MapPinOption(
+            label: stop.name,
+            subtitle: '',
+            x: stop.latitude!,
+            y: stop.longitude!,
+          ),
+        )
+        .toList();
     return Scaffold(
       backgroundColor: ClientColors.surfaceSubtleFor(context),
+      bottomNavigationBar: BookingBottomAction(
+        summary: Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Fares from',
+                style: ClientTypography.bodySmall(
+                  context,
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
+              ),
+            ),
+            Text(
+              route.startingPrice,
+              style: ClientTypography.priceSmall(
+                context,
+              ).copyWith(color: ClientColors.primary),
+            ),
+          ],
+        ),
+        child: ClientButton(
+          label: 'Choose this route',
+          icon: const Icon(Icons.arrow_forward_rounded),
+          onPressed: () => Navigator.of(
+            context,
+          ).pushNamed(BookingRoutes.wizard, arguments: route),
+        ),
+      ),
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
@@ -42,8 +72,11 @@ class RouteOverviewScreen extends StatelessWidget {
               ).copyWith(fontWeight: FontWeight.w700),
             ),
             flexibleSpace: FlexibleSpaceBar(
-              background: hasCoords
-                  ? _RouteMap(stops: stops, latLng: _latLng)
+              background: mapPins.isNotEmpty
+                  ? GoogleStyleMapView(
+                      waypoints: mapPins,
+                      cameraPadding: const EdgeInsets.fromLTRB(42, 72, 42, 36),
+                    )
                   : _NoMapPlaceholder(),
             ),
           ),
@@ -53,6 +86,8 @@ class RouteOverviewScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _RouteHero(route: route, stops: stops),
+                  const SizedBox(height: 16),
                   _RouteMetaRow(route: route),
                   const SizedBox(height: 20),
                   Text(
@@ -63,13 +98,6 @@ class RouteOverviewScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 12),
                   _StopTimeline(stops: stops),
-                  const SizedBox(height: 24),
-                  ClientButton(
-                    label: 'Book This Route',
-                    onPressed: () => Navigator.of(
-                      context,
-                    ).pushNamed(BookingRoutes.wizard, arguments: route),
-                  ),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -79,70 +107,107 @@ class RouteOverviewScreen extends StatelessWidget {
       ),
     );
   }
+
+  bool _hasValidCoordinates(RoutePointData point) {
+    final latitude = point.latitude;
+    final longitude = point.longitude;
+    return latitude != null &&
+        longitude != null &&
+        latitude.isFinite &&
+        longitude.isFinite &&
+        (latitude != 0 || longitude != 0) &&
+        latitude >= -90 &&
+        latitude <= 90 &&
+        longitude >= -180 &&
+        longitude <= 180;
+  }
 }
 
-class _RouteMap extends StatelessWidget {
-  const _RouteMap({required this.stops, required this.latLng});
+class _RouteHero extends StatelessWidget {
+  const _RouteHero({required this.route, required this.stops});
+
+  final RouteOptionData route;
   final List<RoutePointData> stops;
-  final LatLng Function(RoutePointData) latLng;
 
   @override
   Widget build(BuildContext context) {
-    final points = stops.map(latLng).toList();
-    final center = points.isNotEmpty
-        ? points[points.length ~/ 2]
-        : const LatLng(30.0444, 31.2357);
-    return FlutterMap(
-      options: MapOptions(initialCenter: center, initialZoom: 11),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.bmt.app',
-        ),
-        if (points.length > 1)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: points,
-                color: ClientColors.primary,
-                strokeWidth: 4,
-                borderColor: Colors.white,
-                borderStrokeWidth: 1.5,
-              ),
-            ],
+    final start = stops.isEmpty ? route.pickup : stops.first.name;
+    final end = stops.isEmpty ? route.destination : stops.last.name;
+    return BookingSurfaceCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'ROUTE OVERVIEW',
+            style: ClientTypography.labelSmall(
+              context,
+            ).copyWith(color: ClientColors.primary, letterSpacing: 1),
           ),
-        MarkerLayer(
-          markers: List.generate(
-            stops.length,
-            (i) => Marker(
-              point: points[i],
-              width: 28,
-              height: 28,
-              child: Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: i == 0
-                      ? ClientColors.primary
-                      : i == stops.length - 1
-                      ? ClientColors.journeyGreen
-                      : Colors.white,
-                  border: Border.all(color: ClientColors.primary, width: 2),
-                ),
-                child: Center(
-                  child: Text(
-                    '${stops[i].order}',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                      color: (i == 0 || i == stops.length - 1)
-                          ? Colors.white
-                          : ClientColors.primary,
-                    ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _RouteEnd(label: 'FROM', value: start),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Container(
+                  width: 44,
+                  height: 44,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: ClientColors.primaryGradient,
+                  ),
+                  child: const Icon(
+                    Icons.arrow_forward_rounded,
+                    color: Colors.white,
                   ),
                 ),
               ),
-            ),
+              Expanded(
+                child: _RouteEnd(label: 'TO', value: end, alignEnd: true),
+              ),
+            ],
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _RouteEnd extends StatelessWidget {
+  const _RouteEnd({
+    required this.label,
+    required this.value,
+    this.alignEnd = false,
+  });
+
+  final String label;
+  final String value;
+  final bool alignEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: alignEnd
+          ? CrossAxisAlignment.end
+          : CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: ClientTypography.labelSmall(
+            context,
+          ).copyWith(color: ClientColors.textTertiaryFor(context)),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          value,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          textAlign: alignEnd ? TextAlign.end : TextAlign.start,
+          style: ClientTypography.headingSmall(
+            context,
+          ).copyWith(fontWeight: FontWeight.w900),
         ),
       ],
     );
@@ -152,12 +217,22 @@ class _RouteMap extends StatelessWidget {
 class _NoMapPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Container(
-    color: ClientColors.journeySlateLight,
-    child: const Center(
-      child: Icon(
-        Icons.map_outlined,
-        size: 64,
-        color: ClientColors.journeySlate,
+    color: ClientColors.surfaceMutedFor(context),
+    child: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.location_off_outlined,
+            size: 48,
+            color: ClientColors.journeySlate,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            'Map coordinates unavailable',
+            style: ClientTypography.labelLarge(context),
+          ),
+        ],
       ),
     ),
   );
@@ -169,23 +244,16 @@ class _RouteMetaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
       children: [
         _chip(context, Icons.schedule_rounded, route.duration),
-        const SizedBox(width: 10),
         _chip(context, Icons.straighten_rounded, route.distance),
-        const SizedBox(width: 10),
         _chip(
           context,
           Icons.event_seat_rounded,
           '${route.availableSeats} seats',
-        ),
-        const Spacer(),
-        Text(
-          route.startingPrice,
-          style: ClientTypography.headingSmall(
-            context,
-          ).copyWith(color: ClientColors.primary, fontWeight: FontWeight.w700),
         ),
       ],
     );

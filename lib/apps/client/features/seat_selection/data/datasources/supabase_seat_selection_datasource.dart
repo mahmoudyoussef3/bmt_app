@@ -33,6 +33,9 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
             availability: state == 'available'
                 ? SeatAvailability.available
                 : SeatAvailability.reserved,
+            seatLabel: label,
+            row: (seatRecord['seat_row'] as num?)?.toInt() ?? 0,
+            column: (seatRecord['seat_column'] as num?)?.toInt() ?? 0,
           ),
         );
       }

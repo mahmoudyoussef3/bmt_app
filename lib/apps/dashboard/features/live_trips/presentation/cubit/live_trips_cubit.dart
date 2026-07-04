@@ -40,6 +40,8 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
   final Map<String, StreamSubscription<VehiclePosition>> _locationSubs = {};
   StreamSubscription<void>? _tripStatusSub;
   Timer? _refreshTimer;
+  Timer? _realtimeRefreshDebounce;
+  bool _refreshingFromSource = false;
 
   LiveTripsCubit({
     required GetLiveTripsUseCase getLiveTrips,
@@ -79,6 +81,7 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
     _cancelLocationSubs();
     _tripStatusSub?.cancel();
     _refreshTimer?.cancel();
+    _realtimeRefreshDebounce?.cancel();
     return super.close();
   }
 
@@ -294,48 +297,45 @@ class LiveTripsCubit extends Cubit<LiveTripsState> {
 
   void _subscribeToTripStatusChanges() {
     _tripStatusSub?.cancel();
-    _tripStatusSub = _watchLiveTrips().listen((_) async {
-      if (state is! LiveTripsLoaded) return;
-      try {
-        final trips = await _getLiveTrips();
-        final current = state;
-        if (current is! LiveTripsLoaded) return;
-        final positionById = {
-          for (final t in current.trips)
-            if (t.vehiclePosition != null) t.id: t.vehiclePosition!,
-        };
-        final merged = trips.map((t) {
-          final pos = positionById[t.id];
-          return pos != null ? t.copyWith(vehiclePosition: pos) : t;
-        }).toList();
-        emit(current.copyWith(trips: merged));
-        _subscribeToLocations(merged);
-      } catch (_) {}
-    });
+    _tripStatusSub = _watchLiveTrips().listen((_) {
+      _realtimeRefreshDebounce?.cancel();
+      _realtimeRefreshDebounce = Timer(
+        const Duration(milliseconds: 250),
+        _refreshFromSource,
+      );
+    }, onError: (_) {});
   }
 
   // Refresh full trip list every 30 s to pick up new events and passengers.
   void _startPeriodicRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
-      if (state is! LiveTripsLoaded) return;
-      try {
-        final trips = await _getLiveTrips();
-        final current = state;
-        if (current is! LiveTripsLoaded) return;
-        // Preserve live GPS positions that arrived via broadcast.
-        final positionById = {
-          for (final t in current.trips)
-            if (t.vehiclePosition != null) t.id: t.vehiclePosition!,
-        };
-        final merged = trips.map((t) {
-          final pos = positionById[t.id];
-          return pos != null ? t.copyWith(vehiclePosition: pos) : t;
-        }).toList();
-        emit(current.copyWith(trips: merged));
-        _subscribeToLocations(merged);
-      } catch (_) {}
+      await _refreshFromSource();
     });
+  }
+
+  Future<void> _refreshFromSource() async {
+    if (_refreshingFromSource || state is! LiveTripsLoaded) return;
+    _refreshingFromSource = true;
+    try {
+      final trips = await _getLiveTrips();
+      final current = state;
+      if (current is! LiveTripsLoaded) return;
+      final positionById = {
+        for (final t in current.trips)
+          if (t.vehiclePosition != null) t.id: t.vehiclePosition!,
+      };
+      final merged = trips.map((t) {
+        final pos = positionById[t.id];
+        return pos != null ? t.copyWith(vehiclePosition: pos) : t;
+      }).toList();
+      emit(current.copyWith(trips: merged));
+      _subscribeToLocations(merged);
+    } catch (_) {
+      // Preserve the last loaded live state if a background refresh fails.
+    } finally {
+      _refreshingFromSource = false;
+    }
   }
 
   Future<void> _runTripAction({

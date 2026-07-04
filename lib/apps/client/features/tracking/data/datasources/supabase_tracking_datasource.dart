@@ -11,6 +11,8 @@ abstract class TrackingDatasource {
   });
 
   Stream<TrackingPointModel> watchVehiclePosition(String tripId);
+
+  Stream<void> watchTripChanges(String tripId);
 }
 
 class SupabaseTrackingDatasource implements TrackingDatasource {
@@ -55,6 +57,52 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
   }
 
   @override
+  Stream<void> watchTripChanges(String tripId) {
+    final controller = StreamController<void>.broadcast();
+    void notify(PostgresChangePayload _) {
+      if (!controller.isClosed) controller.add(null);
+    }
+
+    var channel = _client
+        .channel('client_tracking:$tripId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'operation_trips',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: tripId,
+          ),
+          callback: notify,
+        );
+
+    for (final table in const [
+      'operation_bookings',
+      'trip_events',
+      'trip_passengers',
+      'trip_route_points',
+      'trip_seats',
+    ]) {
+      channel = channel.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: table,
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'trip_id',
+          value: tripId,
+        ),
+        callback: notify,
+      );
+    }
+
+    final subscribedChannel = channel.subscribe();
+    controller.onCancel = subscribedChannel.unsubscribe;
+    return controller.stream;
+  }
+
+  @override
   Future<TrackingTripDataModel> getTrackingTrip({
     String? bookingId,
     String? tripId,
@@ -72,7 +120,7 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
     final resolvedTripId = booking['trip_id'] as String?;
     if (resolvedTripId == null) return _emptyModel();
 
-    final results = await Future.wait([
+    final results = await Future.wait<dynamic>([
       _client
           .from('trip_route_points')
           .select('latitude, longitude, point_name, point_order')
@@ -95,11 +143,13 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
           .order('recorded_at', ascending: false)
           .limit(1)
           .maybeSingle(),
+      _getLatestTripEvent(resolvedTripId),
     ]);
 
     final pointRows = (results[0] as List?) ?? [];
     final tripRow = results[1] as Map<String, dynamic>?;
     final locRow = results[2] as Map<String, dynamic>?;
+    final latestEvent = results[3] as Map<String, dynamic>?;
 
     final routePoints = pointRows.map((r) {
       final m = r as Map<String, dynamic>;
@@ -115,7 +165,11 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
         .toList();
 
     final tripStatus = tripRow?['status'] as String? ?? '';
-    final state = _mapTripState(tripStatus, hasLiveLocation: locRow != null);
+    final state = _mapTripState(
+      tripStatus,
+      hasLiveLocation: locRow != null,
+      latestEventTitle: latestEvent?['title']?.toString(),
+    );
     final departureAt = _combineDateAndTime(
       tripRow?['trip_date']?.toString(),
       tripRow?['departure_time']?.toString(),
@@ -197,19 +251,53 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
         .maybeSingle();
   }
 
+  Future<Map<String, dynamic>?> _getLatestTripEvent(String tripId) async {
+    try {
+      return await _client
+          .from('trip_events')
+          .select('title, created_at')
+          .eq('trip_id', tripId)
+          .order('created_at', ascending: false)
+          .limit(1)
+          .maybeSingle();
+    } on PostgrestException {
+      // Some deployments may not expose operational event text to clients.
+      // Trip status and location remain authoritative fallbacks.
+      return null;
+    }
+  }
+
   TrackingTripState _mapTripState(
     String tripStatus, {
     required bool hasLiveLocation,
+    String? latestEventTitle,
   }) {
     return switch (tripStatus) {
-      'open_for_booking' || 'scheduled' =>
-        hasLiveLocation
-            ? TrackingTripState.driverOnWay
-            : TrackingTripState.notStarted,
       'in_progress' => TrackingTripState.inProgress,
       'boarding' => TrackingTripState.boarding,
       'completed' => TrackingTripState.completed,
-      _ => TrackingTripState.notStarted,
+      'open_for_booking' || 'scheduled' => _stateFromEvent(
+        latestEventTitle,
+        hasLiveLocation: hasLiveLocation,
+      ),
+      _ => _stateFromEvent(latestEventTitle, hasLiveLocation: hasLiveLocation),
+    };
+  }
+
+  TrackingTripState _stateFromEvent(
+    String? title, {
+    required bool hasLiveLocation,
+  }) {
+    return switch (title) {
+      'اكتملت الرحلة' || 'وصلت الرحلة للوجهة' => TrackingTripState.completed,
+      'غادرت الرحلة' => TrackingTripState.inProgress,
+      'صعود الركاب' ||
+      'وصل السائق لنقطة الانطلاق' => TrackingTripState.boarding,
+      'السائق في الطريق' => TrackingTripState.driverOnWay,
+      _ =>
+        hasLiveLocation
+            ? TrackingTripState.driverOnWay
+            : TrackingTripState.notStarted,
     };
   }
 

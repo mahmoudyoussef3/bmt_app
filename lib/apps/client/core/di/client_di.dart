@@ -137,6 +137,7 @@ import '../../features/trips/data/repositories/trips_repository_impl.dart';
 import '../../features/trips/domain/repositories/trips_repository.dart';
 import '../../features/trips/domain/usecases/get_trip_details_usecase.dart';
 import '../../features/trips/domain/usecases/get_trips_usecase.dart';
+import '../../features/trips/domain/usecases/watch_trips_usecase.dart';
 import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/tracking/data/datasources/supabase_tracking_datasource.dart';
 import '../../features/tracking/data/repositories/tracking_repository_impl.dart';
@@ -144,6 +145,7 @@ import '../../features/tracking/domain/repositories/tracking_repository.dart';
 import '../../features/tracking/domain/usecases/get_tracking_title_usecase.dart';
 import '../../features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
 import '../../features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
+import '../../features/tracking/domain/usecases/watch_tracking_trip_usecase.dart';
 import '../../features/tracking/presentation/cubit/tracking_cubit.dart';
 import '../../../../core/network/network_di.dart';
 
@@ -316,11 +318,18 @@ void _registerTripsDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<WatchTripsUseCase>()) {
+    clientGetIt.registerLazySingleton<WatchTripsUseCase>(
+      () => WatchTripsUseCase(clientGetIt<TripsRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<TripsCubit>()) {
     clientGetIt.registerFactory<TripsCubit>(
       () => TripsCubit(
         getTrips: clientGetIt<GetTripsUseCase>(),
         getTripDetails: clientGetIt<GetTripDetailsUseCase>(),
+        watchTrips: clientGetIt<WatchTripsUseCase>(),
       ),
     );
   }
@@ -667,12 +676,19 @@ void _registerTrackingDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<WatchTrackingTripUseCase>()) {
+    clientGetIt.registerLazySingleton<WatchTrackingTripUseCase>(
+      () => WatchTrackingTripUseCase(clientGetIt<TrackingRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<TrackingCubit>()) {
     clientGetIt.registerFactory<TrackingCubit>(
       () => TrackingCubit(
         getTrackingTrip: clientGetIt<GetTrackingTripUseCase>(),
         getTrackingTitle: clientGetIt<GetTrackingTitleUseCase>(),
         watchVehiclePosition: clientGetIt<WatchVehiclePositionUseCase>(),
+        watchTrackingTrip: clientGetIt<WatchTrackingTripUseCase>(),
       ),
     );
   }

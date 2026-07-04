@@ -18,4 +18,7 @@ class TripsRepositoryImpl implements TripsRepository {
     final model = await _datasource.getTripById(id);
     return model?.toEntity();
   }
+
+  @override
+  Stream<void> watchTripChanges() => _datasource.watchTripChanges();
 }

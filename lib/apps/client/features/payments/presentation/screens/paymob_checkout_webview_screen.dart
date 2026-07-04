@@ -32,6 +32,28 @@ class _PaymobCheckoutWebViewScreenState
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setNavigationDelegate(
         NavigationDelegate(
+          onNavigationRequest: (request) {
+            final uri = Uri.tryParse(request.url);
+            if (uri == null) return NavigationDecision.navigate;
+            final success = uri.queryParameters['success']?.toLowerCase();
+            final responseCode = uri.queryParameters['txn_response_code']
+                ?.toUpperCase();
+            if (success == 'true' || responseCode == 'APPROVED') {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) Navigator.of(context).pop(true);
+              });
+              return NavigationDecision.prevent;
+            }
+            if (success == 'false' ||
+                responseCode == 'DECLINED' ||
+                responseCode == 'CANCELLED') {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted) Navigator.of(context).pop(false);
+              });
+              return NavigationDecision.prevent;
+            }
+            return NavigationDecision.navigate;
+          },
           onProgress: (progress) {
             if (!mounted) return;
             setState(() => _progress = progress);

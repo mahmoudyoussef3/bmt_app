@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/trip_execution_state.dart';
@@ -32,6 +34,31 @@ class TripExecutionDataSource {
     );
   }
 
+  Stream<TripExecutionStatus> watchTripStatus(String tripId) {
+    final controller = StreamController<TripExecutionStatus>.broadcast();
+    final channel = _supabase
+        .channel('captain_trip_execution:$tripId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'operation_trips',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: tripId,
+          ),
+          callback: (change) {
+            final status = _mapStatus(change.newRecord['status']?.toString());
+            if (status != null && !controller.isClosed) {
+              controller.add(status);
+            }
+          },
+        )
+        .subscribe();
+    controller.onCancel = channel.unsubscribe;
+    return controller.stream;
+  }
+
   /// Calls the update_trip_status RPC which enforces the valid transition
   /// machine and logs a trip_events entry — all in one transaction.
   Future<void> _transitionStatus(String tripId, String newStatus) async {
@@ -49,5 +76,15 @@ class TripExecutionDataSource {
       }
       rethrow;
     }
+  }
+
+  TripExecutionStatus? _mapStatus(String? status) {
+    return switch (status) {
+      'scheduled' || 'open_for_booking' => TripExecutionStatus.scheduled,
+      'boarding' => TripExecutionStatus.boarding,
+      'in_progress' => TripExecutionStatus.inProgress,
+      'completed' => TripExecutionStatus.completed,
+      _ => null,
+    };
   }
 }

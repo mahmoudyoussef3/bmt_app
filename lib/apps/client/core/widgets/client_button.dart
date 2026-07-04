@@ -69,8 +69,12 @@ class ClientButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            gradient: effective == null ? null : ClientColors.primaryGradientFor(context),
-            color: effective == null ? Theme.of(context).colorScheme.primary.withAlpha(100) : null,
+            gradient: effective == null
+                ? null
+                : ClientColors.primaryGradientFor(context),
+            color: effective == null
+                ? Theme.of(context).colorScheme.primary.withAlpha(100)
+                : null,
             borderRadius: BorderRadius.circular(ClientRadius.md),
             boxShadow: effective == null ? null : ClientElevation.sm(context),
           ),
@@ -140,10 +144,27 @@ class ClientButton extends StatelessWidget {
     if (icon != null) {
       return Row(
         mainAxisSize: MainAxisSize.min,
-        children: [icon!, const SizedBox(width: 8), Text(label)],
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          icon!,
+          const SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
       );
     }
-    return Text(label);
+    return Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.center,
+    );
   }
 }
 

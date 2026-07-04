@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/trip.dart';
 import '../models/trip_model.dart';
@@ -157,5 +159,40 @@ class SupabaseTripsDatasource implements TripsDatasource {
     if (response == null) return null;
 
     return _mapBookingToTripModel(response);
+  }
+
+  @override
+  Stream<void> watchTripChanges() {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return const Stream.empty();
+
+    final controller = StreamController<void>.broadcast();
+    void notify(PostgresChangePayload _) {
+      if (!controller.isClosed) controller.add(null);
+    }
+
+    final channel = _supabase
+        .channel('client_trips:$userId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'operation_bookings',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'client_id',
+            value: userId,
+          ),
+          callback: notify,
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'operation_trips',
+          callback: notify,
+        )
+        .subscribe();
+
+    controller.onCancel = channel.unsubscribe;
+    return controller.stream;
   }
 }

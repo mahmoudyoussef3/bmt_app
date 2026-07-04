@@ -8,15 +8,6 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
 
   final SupabaseClient _client;
 
-  static const _tripSelect = '''
-    id, trip_code, route_id, driver_id, vehicle_id, status,
-    departure_time, trip_date, passenger_count, booked_seats, capacity,
-    route:operation_routes(name),
-    driver:drivers(full_name, phone),
-    vehicle:vehicles(plate_number, vehicle_type),
-    events:trip_events(id, title, description, done, created_at)
-  ''';
-
   static const _tripSelectWithDetails = '''
     id, trip_code, route_id, driver_id, vehicle_id, status,
     departure_time, trip_date, passenger_count, booked_seats, capacity,
@@ -33,12 +24,17 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
     try {
       final response = await _client
           .from('operation_trips')
-          .select(_tripSelect)
+          .select(_tripSelectWithDetails)
           .inFilter('status', ['open_for_booking', 'boarding', 'in_progress'])
           .order('departure_time');
 
       final trips = (response as List)
-          .map((json) => _mapToLiveTrip(json as Map<String, dynamic>))
+          .map(
+            (json) => _mapToLiveTrip(
+              json as Map<String, dynamic>,
+              includeDetails: true,
+            ),
+          )
           .toList();
 
       return _attachLatestLocations(trips);
@@ -267,18 +263,36 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
   @override
   Stream<void> watchTripStatusChanges() {
     final controller = StreamController<void>.broadcast();
-    final channel = _client
-        .channel('dashboard_live_trips_status')
+    void notify(PostgresChangePayload _) {
+      if (!controller.isClosed) controller.add(null);
+    }
+
+    var channel = _client
+        .channel('dashboard_live_trips')
         .onPostgresChanges(
-          event: PostgresChangeEvent.update,
+          event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'operation_trips',
-          callback: (_) {
-            if (!controller.isClosed) controller.add(null);
-          },
-        )
-        .subscribe();
-    controller.onCancel = () => channel.unsubscribe();
+          callback: notify,
+        );
+
+    for (final table in const [
+      'operation_bookings',
+      'trip_events',
+      'trip_passengers',
+      'trip_route_points',
+      'trip_seats',
+    ]) {
+      channel = channel.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: table,
+        callback: notify,
+      );
+    }
+
+    final subscribedChannel = channel.subscribe();
+    controller.onCancel = subscribedChannel.unsubscribe;
     return controller.stream;
   }
 

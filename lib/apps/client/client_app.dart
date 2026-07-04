@@ -44,7 +44,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/screens/available_trips_screen.dart';
+
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_approval_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_wizard_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/map_route_selection_screen.dart';
