@@ -32,7 +32,8 @@ class PaymentCheckoutLoaded extends PaymentState {
 
   bool get requiresReceipt {
     return selectedMethod == PaymentMethodType.instapay ||
-        selectedMethod == PaymentMethodType.vodafoneCash;
+        selectedMethod == PaymentMethodType.vodafoneCash ||
+        selectedMethod == PaymentMethodType.bankTransfer;
   }
 
   PaymentCheckoutLoaded copyWith({

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 /// Search trip form card with pickup, destination, date, and time fields.
@@ -30,12 +31,18 @@ class SearchTripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final scheme = Theme.of(context).colorScheme;
+    
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ClientColors.borderFor(context)),
+        color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(ClientRadius.xl),
+        border: Border.all(
+          color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
+        ),
+        boxShadow: ClientElevation.md(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

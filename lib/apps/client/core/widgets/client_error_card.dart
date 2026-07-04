@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 
 /// Inline error state widget for the client app.
 ///
@@ -49,6 +48,9 @@ class _FullError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
@@ -56,47 +58,54 @@ class _FullError extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 72,
-              height: 72,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
-                color: ClientColors.journeyRedLight,
+                color: scheme.error.withAlpha(isDark ? 30 : 20),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.wifi_off_rounded,
                 size: 36,
-                color: ClientColors.journeyRed,
+                color: scheme.error,
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Text(
               'Something went wrong',
-              style: ClientTypography.headingSmall(context),
+              style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: scheme.onSurface,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
               widget.message,
-              style: ClientTypography.bodyMedium(
-                context,
-              ).copyWith(color: ClientColors.textSecondaryFor(context)),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurface.withAlpha(160),
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
             ),
             if (widget.onRetry != null) ...[
-              const SizedBox(height: 24),
+              const SizedBox(height: 28),
               FilledButton.icon(
                 onPressed: widget.onRetry,
-                icon: const Icon(Icons.refresh_rounded, size: 18),
-                label: Text(widget.retryLabel),
+                icon: const Icon(Icons.refresh_rounded, size: 20),
+                label: Text(
+                  widget.retryLabel,
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
                 style: FilledButton.styleFrom(
-                  backgroundColor: ClientColors.primary,
-                  foregroundColor: ClientColors.textInverse,
+                  backgroundColor: scheme.primary,
+                  foregroundColor: scheme.onPrimary,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 14,
+                    horizontal: 28,
+                    vertical: 16,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(ClientRadius.md),
                   ),
                 ),
               ),
@@ -115,40 +124,47 @@ class _CompactError extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(vertical: 12),
       decoration: BoxDecoration(
-        color: ClientColors.journeyRedLight,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ClientColors.journeyRed.withAlpha(50)),
+        color: scheme.error.withAlpha(isDark ? 20 : 10),
+        borderRadius: BorderRadius.circular(ClientRadius.xl),
+        border: Border.all(
+          color: scheme.error.withAlpha(isDark ? 40 : 30),
+        ),
       ),
       child: Row(
         children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            color: ClientColors.journeyRed,
-            size: 20,
-          ),
-          const SizedBox(width: 10),
+          Icon(Icons.error_outline_rounded, color: scheme.error),
+          const SizedBox(width: 16),
           Expanded(
             child: Text(
               widget.message,
-              style: ClientTypography.bodySmall(
-                context,
-              ).copyWith(color: ClientColors.onJourneyRed),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurface,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
           if (widget.onRetry != null) ...[
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             TextButton(
               onPressed: widget.onRetry,
               style: TextButton.styleFrom(
-                foregroundColor: ClientColors.journeyRed,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                visualDensity: VisualDensity.compact,
-                textStyle: ClientTypography.labelSmall(context),
+                foregroundColor: scheme.error,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(ClientRadius.sm),
+                ),
               ),
-              child: Text(widget.retryLabel),
+              child: Text(
+                widget.retryLabel,
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
             ),
           ],
         ],

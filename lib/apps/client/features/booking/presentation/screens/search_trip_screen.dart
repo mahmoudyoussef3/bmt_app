@@ -104,7 +104,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
     }
     Navigator.pushNamed(
       context,
-      BookingRoutes.routeSelection,
+      BookingRoutes.mapSelection,
       arguments: _query.toArguments(),
     );
   }

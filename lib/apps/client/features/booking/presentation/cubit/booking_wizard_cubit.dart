@@ -8,7 +8,7 @@ import 'package:bmt_app/apps/client/features/packages/domain/entities/package_pl
 /// The session object is the state — each selection emits a new session.
 class BookingWizardCubit extends Cubit<BookingWizardSession> {
   BookingWizardCubit(RouteOptionData route)
-      : super(BookingWizardSession(route: route));
+    : super(BookingWizardSession(route: route));
 
   void selectPickup(RoutePointData stop) {
     emit(state.copyWith(pickupStop: stop, clearDropoff: true));
@@ -27,16 +27,39 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
   }
 
   void clearSeat() {
-    emit(BookingWizardSession(
-      route: state.route,
-      pickupStop: state.pickupStop,
-      dropoffStop: state.dropoffStop,
-      selectedTrip: state.selectedTrip,
-      selectedPackage: state.selectedPackage,
-      packageStartDate: state.packageStartDate,
-      paymentMethod: state.paymentMethod,
-      receiptUrl: state.receiptUrl,
-    ));
+    emit(
+      BookingWizardSession(
+        route: state.route,
+        pickupStop: state.pickupStop,
+        dropoffStop: state.dropoffStop,
+        selectedTrip: state.selectedTrip,
+        selectedPackage: state.selectedPackage,
+        packageStartDate: state.packageStartDate,
+        paymentMethod: state.paymentMethod,
+        receiptUrl: state.receiptUrl,
+        paymentReference: state.paymentReference,
+        payerPhone: state.payerPhone,
+      ),
+    );
+  }
+
+  void clearPackage() {
+    emit(
+      BookingWizardSession(
+        route: state.route,
+        pickupStop: state.pickupStop,
+        dropoffStop: state.dropoffStop,
+        selectedTrip: state.selectedTrip,
+        selectedSeatId: state.selectedSeatId,
+        selectedSeatLabel: state.selectedSeatLabel,
+        selectedPackage: null,
+        packageStartDate: null,
+        paymentMethod: state.paymentMethod,
+        receiptUrl: state.receiptUrl,
+        paymentReference: state.paymentReference,
+        payerPhone: state.payerPhone,
+      ),
+    );
   }
 
   void selectPackage(PackagePlan plan, DateTime startDate) {
@@ -49,5 +72,17 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
 
   void setReceiptUrl(String url) {
     emit(state.copyWith(receiptUrl: url));
+  }
+
+  void setManualPaymentDetails({
+    required String paymentReference,
+    required String payerPhone,
+  }) {
+    emit(
+      state.copyWith(
+        paymentReference: paymentReference.trim(),
+        payerPhone: payerPhone.trim(),
+      ),
+    );
   }
 }

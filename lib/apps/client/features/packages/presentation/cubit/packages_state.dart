@@ -21,7 +21,6 @@ class PackagesLoaded extends PackagesState {
     this.selectedPickup = '',
     this.selectedDestination = '',
     this.selectedVehicleIndex = 0,
-    this.selectedSeats = const {},
     this.agreeTerms = false,
     this.isProcessing = false,
     this.subscriptionId,
@@ -38,7 +37,6 @@ class PackagesLoaded extends PackagesState {
   final String selectedPickup;
   final String selectedDestination;
   final int selectedVehicleIndex;
-  final Set<int> selectedSeats;
   final bool agreeTerms;
   final bool isProcessing;
 
@@ -62,7 +60,6 @@ class PackagesLoaded extends PackagesState {
     String? selectedPickup,
     String? selectedDestination,
     int? selectedVehicleIndex,
-    Set<int>? selectedSeats,
     bool? agreeTerms,
     bool? isProcessing,
     String? subscriptionId,
@@ -80,7 +77,6 @@ class PackagesLoaded extends PackagesState {
       selectedPickup: selectedPickup ?? this.selectedPickup,
       selectedDestination: selectedDestination ?? this.selectedDestination,
       selectedVehicleIndex: selectedVehicleIndex ?? this.selectedVehicleIndex,
-      selectedSeats: selectedSeats ?? this.selectedSeats,
       agreeTerms: agreeTerms ?? this.agreeTerms,
       isProcessing: isProcessing ?? this.isProcessing,
       subscriptionId: subscriptionId ?? this.subscriptionId,

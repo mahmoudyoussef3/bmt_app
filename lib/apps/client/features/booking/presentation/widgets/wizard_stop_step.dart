@@ -24,7 +24,10 @@ class WizardStopStep extends StatelessWidget {
             _StopModeHeader(session: session),
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
                 itemCount: stops.length,
                 separatorBuilder: (_, _) => _StopConnector(),
                 itemBuilder: (_, i) => _StopTile(
@@ -41,13 +44,18 @@ class WizardStopStep extends StatelessWidget {
     );
   }
 
-  void _handleTap(BookingWizardCubit cubit, BookingWizardSession session, RoutePointData stop) {
+  void _handleTap(
+    BookingWizardCubit cubit,
+    BookingWizardSession session,
+    RoutePointData stop,
+  ) {
     if (session.pickupStop == null) {
       if (stop.pickupAllowed) cubit.selectPickup(stop);
     } else if (session.dropoffStop == null) {
       if (stop.dropoffAllowed && stop.order > session.pickupStop!.order) {
         cubit.selectDropoff(stop);
-      } else if (stop.pickupAllowed && stop.order < (session.dropoffStop?.order ?? 999)) {
+      } else if (stop.pickupAllowed &&
+          stop.order < (session.dropoffStop?.order ?? 999)) {
         cubit.selectPickup(stop);
       }
     } else {
@@ -66,11 +74,13 @@ class _StopModeHeader extends StatelessWidget {
     final label = session.pickupStop == null
         ? 'Tap your pickup stop'
         : session.dropoffStop == null
-            ? 'Now tap your dropoff stop'
-            : 'Stops selected — review or change below';
+        ? 'Now tap your dropoff stop'
+        : 'Stops selected — review or change below';
     return Container(
       width: double.infinity,
-      color: picking ? ClientColors.primaryLight : ClientColors.journeyGreenLight,
+      color: picking
+          ? ClientColors.primaryLight
+          : ClientColors.journeyGreenLight,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Text(
         label,
@@ -88,13 +98,21 @@ class _StopConnector extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(left: 31),
-      child: Container(width: 2, height: 20, color: ClientColors.borderFor(context)),
+      child: Container(
+        width: 2,
+        height: 20,
+        color: ClientColors.borderFor(context),
+      ),
     );
   }
 }
 
 class _StopTile extends StatelessWidget {
-  const _StopTile({required this.stop, required this.session, required this.onTap});
+  const _StopTile({
+    required this.stop,
+    required this.session,
+    required this.onTap,
+  });
   final RoutePointData stop;
   final BookingWizardSession session;
   final VoidCallback onTap;
@@ -103,18 +121,25 @@ class _StopTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isPickup = session.pickupStop?.order == stop.order;
     final isDropoff = session.dropoffStop?.order == stop.order;
-    final isInRange = session.pickupStop != null &&
+    final isInRange =
+        session.pickupStop != null &&
         session.dropoffStop != null &&
         stop.order > session.pickupStop!.order &&
         stop.order < session.dropoffStop!.order;
-    final color = isPickup ? ClientColors.primary : isDropoff ? ClientColors.journeyGreen : null;
+    final color = isPickup
+        ? ClientColors.primary
+        : isDropoff
+        ? ClientColors.journeyGreen
+        : null;
 
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: color?.withAlpha(20) ?? (isInRange ? ClientColors.primaryLight.withAlpha(80) : null),
+          color:
+              color?.withAlpha(20) ??
+              (isInRange ? ClientColors.primaryLight.withAlpha(80) : null),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: color ?? ClientColors.borderFor(context),
@@ -124,22 +149,45 @@ class _StopTile extends StatelessWidget {
         child: Row(
           children: [
             Container(
-              width: 24, height: 24,
-              decoration: BoxDecoration(shape: BoxShape.circle, color: color ?? ClientColors.journeySlateLight),
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: color ?? ClientColors.journeySlateLight,
+              ),
               child: Center(
                 child: isPickup
-                    ? const Icon(Icons.person_pin_circle_rounded, size: 14, color: Colors.white)
+                    ? const Icon(
+                        Icons.person_pin_circle_rounded,
+                        size: 14,
+                        color: Colors.white,
+                      )
                     : isDropoff
-                        ? const Icon(Icons.flag_rounded, size: 14, color: Colors.white)
-                        : Text('${stop.order}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700)),
+                    ? const Icon(
+                        Icons.flag_rounded,
+                        size: 14,
+                        color: Colors.white,
+                      )
+                    : Text(
+                        '${stop.order}',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(stop.name, style: ClientTypography.bodyMedium(context).copyWith(
-                fontWeight: (isPickup || isDropoff) ? FontWeight.w700 : FontWeight.w400,
-                color: color ?? ClientColors.textPrimaryFor(context),
-              )),
+              child: Text(
+                stop.name,
+                style: ClientTypography.bodyMedium(context).copyWith(
+                  fontWeight: (isPickup || isDropoff)
+                      ? FontWeight.w700
+                      : FontWeight.w400,
+                  color: color ?? ClientColors.textPrimaryFor(context),
+                ),
+              ),
             ),
             if (isPickup) _badge('Pickup', ClientColors.primary),
             if (isDropoff) _badge('Dropoff', ClientColors.journeyGreen),
@@ -151,8 +199,14 @@ class _StopTile extends StatelessWidget {
 
   Widget _badge(String label, Color color) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(color: color.withAlpha(20), borderRadius: BorderRadius.circular(6)),
-    child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+    decoration: BoxDecoration(
+      color: color.withAlpha(20),
+      borderRadius: BorderRadius.circular(6),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
+    ),
   );
 }
 
@@ -172,9 +226,23 @@ class _StopContinueBar extends StatelessWidget {
             if (session.stopsValid) ...[
               Row(
                 children: [
-                  Expanded(child: _stopChip(context, 'Pickup', session.pickupStop!.name, ClientColors.primary)),
+                  Expanded(
+                    child: _stopChip(
+                      context,
+                      'Pickup',
+                      session.pickupStop!.name,
+                      ClientColors.primary,
+                    ),
+                  ),
                   const Icon(Icons.arrow_forward_rounded, size: 16),
-                  Expanded(child: _stopChip(context, 'Dropoff', session.dropoffStop!.name, ClientColors.journeyGreen)),
+                  Expanded(
+                    child: _stopChip(
+                      context,
+                      'Dropoff',
+                      session.dropoffStop!.name,
+                      ClientColors.journeyGreen,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -189,12 +257,31 @@ class _StopContinueBar extends StatelessWidget {
     );
   }
 
-  Widget _stopChip(BuildContext context, String label, String value, Color color) => Column(
+  Widget _stopChip(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+  ) => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(label, style: TextStyle(fontSize: 10, color: ClientColors.textSecondaryFor(context))),
-      Text(value, style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: color),
-          maxLines: 1, overflow: TextOverflow.ellipsis),
+      Text(
+        label,
+        style: TextStyle(
+          fontSize: 10,
+          color: ClientColors.textSecondaryFor(context),
+        ),
+      ),
+      Text(
+        value,
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          color: color,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
     ],
   );
 }

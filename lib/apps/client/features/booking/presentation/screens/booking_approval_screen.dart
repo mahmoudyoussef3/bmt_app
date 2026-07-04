@@ -45,7 +45,10 @@ class _BookingApprovalScreenState extends State<BookingApprovalScreen>
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
     // Poll every 30 seconds for approval status from Supabase
-    _pollTimer = Timer.periodic(const Duration(seconds: 30), (_) => _checkStatus());
+    _pollTimer = Timer.periodic(
+      const Duration(seconds: 30),
+      (_) => _checkStatus(),
+    );
   }
 
   Future<void> _checkStatus() async {
@@ -69,8 +72,12 @@ class _BookingApprovalScreenState extends State<BookingApprovalScreen>
       appBar: AppBar(
         backgroundColor: ClientColors.surfaceFor(context),
         elevation: 0,
-        title: Text('Booking Status', style: ClientTypography.bodyMedium(context)
-            .copyWith(fontWeight: FontWeight.w700)),
+        title: Text(
+          'Booking Status',
+          style: ClientTypography.bodyMedium(
+            context,
+          ).copyWith(fontWeight: FontWeight.w700),
+        ),
         automaticallyImplyLeading: false,
       ),
       body: SafeArea(
@@ -94,10 +101,13 @@ class _BookingApprovalScreenState extends State<BookingApprovalScreen>
           const SizedBox(height: 20),
           Text(_statusTitle, style: ClientTypography.headingLarge(context)),
           const SizedBox(height: 8),
-          Text(_statusSubtitle,
-              textAlign: TextAlign.center,
-              style: ClientTypography.bodySmall(context)
-                  .copyWith(color: ClientColors.textSecondaryFor(context))),
+          Text(
+            _statusSubtitle,
+            textAlign: TextAlign.center,
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
+          ),
           const SizedBox(height: 28),
           _BookingSummaryCard(
             routeName: widget.routeName,
@@ -118,37 +128,38 @@ class _BookingApprovalScreenState extends State<BookingApprovalScreen>
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
       child: switch (_status) {
         _ApprovalStatus.pending => ClientButton.secondary(
-            label: 'Back to Home',
-            onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-          ),
+          label: 'Back to Home',
+          onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+        ),
         _ApprovalStatus.approved => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClientButton(
-                label: 'Track Vehicle',
-                onPressed: () => Navigator.of(context).pushReplacementNamed('/tracking'),
-              ),
-              const SizedBox(height: 10),
-              ClientButton.secondary(
-                label: 'Back to Home',
-                onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-              ),
-            ],
-          ),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClientButton(
+              label: 'Track Vehicle',
+              onPressed: () =>
+                  Navigator.of(context).pushReplacementNamed('/tracking'),
+            ),
+            const SizedBox(height: 10),
+            ClientButton.secondary(
+              label: 'Back to Home',
+              onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+            ),
+          ],
+        ),
         _ApprovalStatus.rejected => Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ClientButton(
-                label: 'Try Another Route',
-                onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
-              ),
-              const SizedBox(height: 10),
-              ClientButton.secondary(
-                label: 'Contact Support',
-                onPressed: () => Navigator.of(context).pushNamed('/support'),
-              ),
-            ],
-          ),
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ClientButton(
+              label: 'Try Another Route',
+              onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+            ),
+            const SizedBox(height: 10),
+            ClientButton.secondary(
+              label: 'Contact Support',
+              onPressed: () => Navigator.of(context).pushNamed('/support'),
+            ),
+          ],
+        ),
       },
     );
   }
@@ -177,18 +188,30 @@ class _StatusIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon) = switch (status) {
-      _ApprovalStatus.pending => (ClientColors.accent, Icons.hourglass_top_rounded),
-      _ApprovalStatus.approved => (ClientColors.journeyGreen, Icons.check_circle_rounded),
-      _ApprovalStatus.rejected => (ClientColors.journeyRed, Icons.cancel_rounded),
+      _ApprovalStatus.pending => (
+        ClientColors.accent,
+        Icons.hourglass_top_rounded,
+      ),
+      _ApprovalStatus.approved => (
+        ClientColors.journeyGreen,
+        Icons.check_circle_rounded,
+      ),
+      _ApprovalStatus.rejected => (
+        ClientColors.journeyRed,
+        Icons.cancel_rounded,
+      ),
     };
     return AnimatedBuilder(
       animation: pulse,
       builder: (_, child) => Transform.scale(
-        scale: status == _ApprovalStatus.pending ? 0.92 + pulse.value * 0.08 : 1.0,
+        scale: status == _ApprovalStatus.pending
+            ? 0.92 + pulse.value * 0.08
+            : 1.0,
         child: child,
       ),
       child: Container(
-        width: 100, height: 100,
+        width: 100,
+        height: 100,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: color.withAlpha(20),
@@ -202,8 +225,13 @@ class _StatusIndicator extends StatelessWidget {
 
 class _BookingSummaryCard extends StatelessWidget {
   const _BookingSummaryCard({
-    required this.routeName, required this.pickup, required this.dropoff,
-    required this.departure, required this.seat, required this.package, required this.total,
+    required this.routeName,
+    required this.pickup,
+    required this.dropoff,
+    required this.departure,
+    required this.seat,
+    required this.package,
+    required this.total,
   });
   final String routeName, pickup, dropoff, departure, seat, package, total;
 
@@ -232,17 +260,34 @@ class _BookingSummaryCard extends StatelessWidget {
     );
   }
 
-  Widget _row(BuildContext ctx, String label, String value, {bool highlight = false}) =>
-      Padding(
-        padding: const EdgeInsets.symmetric(vertical: 5),
-        child: Row(children: [
-          Expanded(child: Text(label, style: ClientTypography.bodySmall(ctx)
-              .copyWith(color: ClientColors.textSecondaryFor(ctx)))),
-          Text(value, style: ClientTypography.bodySmall(ctx).copyWith(
+  Widget _row(
+    BuildContext ctx,
+    String label,
+    String value, {
+    bool highlight = false,
+  }) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 5),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: ClientTypography.bodySmall(
+              ctx,
+            ).copyWith(color: ClientColors.textSecondaryFor(ctx)),
+          ),
+        ),
+        Text(
+          value,
+          style: ClientTypography.bodySmall(ctx).copyWith(
             fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
-            color: highlight ? ClientColors.primary : ClientColors.textPrimaryFor(ctx),
+            color: highlight
+                ? ClientColors.primary
+                : ClientColors.textPrimaryFor(ctx),
             fontSize: highlight ? 15 : null,
-          )),
-        ]),
-      );
+          ),
+        ),
+      ],
+    ),
+  );
 }

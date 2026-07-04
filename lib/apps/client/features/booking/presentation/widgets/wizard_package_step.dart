@@ -45,7 +45,14 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
       selectableDayPredicate: (d) =>
           d.weekday != DateTime.saturday && d.weekday != DateTime.sunday,
     );
-    if (picked != null) setState(() => _startDate = picked);
+    if (picked != null) {
+      if (!mounted) return;
+      setState(() => _startDate = picked);
+      final session = context.read<BookingWizardCubit>().state;
+      if (session.selectedPackage != null) {
+        context.read<BookingWizardCubit>().selectPackage(session.selectedPackage!, picked);
+      }
+    }
   }
 
   @override
@@ -67,28 +74,44 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
                   child: ListView(
                     padding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                     children: [
-                      Text('Choose a package',
-                          style: ClientTypography.headingSmall(context)),
+                      Text(
+                        'Choose a package (Optional)',
+                        style: ClientTypography.headingSmall(context),
+                      ),
                       const SizedBox(height: 4),
-                      Text('Packages cover working days (Mon–Fri)',
-                          style: ClientTypography.bodySmall(context).copyWith(
-                            color: ClientColors.textSecondaryFor(context),
-                          )),
+                      Text(
+                        'Save more with packages, or skip for a single ride.',
+                        style: ClientTypography.bodySmall(context).copyWith(
+                          color: ClientColors.textSecondaryFor(context),
+                        ),
+                      ),
                       const SizedBox(height: 16),
-                      ...packages.map((p) => Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: _PackageCard(
-                              plan: p,
-                              isSelected: session.selectedPackage?.name == p.name,
-                              tripPrice: session.tripPrice,
-                              onTap: () {
-                                final date = _startDate ?? _nextWorkday(DateTime.now());
-                                context.read<BookingWizardCubit>().selectPackage(p, date);
-                              },
-                            ),
-                          )),
-                      const SizedBox(height: 16),
-                      _StartDatePicker(date: _startDate, onTap: _pickDate),
+                      ...packages.map(
+                        (p) => Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: _PackageCard(
+                            plan: p,
+                            isSelected: session.selectedPackage?.name == p.name,
+                            tripPrice: session.tripPrice,
+                            onTap: () {
+                              if (session.selectedPackage?.name == p.name) {
+                                context.read<BookingWizardCubit>().clearPackage();
+                              } else {
+                                final date =
+                                    _startDate ?? _nextWorkday(DateTime.now());
+                                context.read<BookingWizardCubit>().selectPackage(
+                                  p,
+                                  date,
+                                );
+                              }
+                            },
+                          ),
+                        ),
+                      ),
+                      if (session.selectedPackage != null) ...[
+                        const SizedBox(height: 16),
+                        _StartDatePicker(date: _startDate, onTap: _pickDate),
+                      ],
                     ],
                   ),
                 ),
@@ -96,7 +119,9 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                     child: ClientButton(
-                      label: 'Continue',
+                      label: session.selectedPackage == null 
+                          ? 'Continue (Single Ride)'
+                          : 'Continue with Package',
                       onPressed: session.packageValid ? widget.onNext : null,
                     ),
                   ),
@@ -124,14 +149,18 @@ class _PackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = isSelected ? ClientColors.journeyPurple : ClientColors.borderFor(context);
+    final borderColor = isSelected
+        ? ClientColors.journeyPurple
+        : ClientColors.borderFor(context);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? ClientColors.journeyPurpleLight : ClientColors.surfaceFor(context),
+          color: isSelected
+              ? ClientColors.journeyPurpleLight
+              : ClientColors.surfaceFor(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: borderColor, width: isSelected ? 1.5 : 1),
         ),
@@ -141,28 +170,42 @@ class _PackageCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(plan.name,
-                      style: ClientTypography.bodyMedium(context)
-                          .copyWith(fontWeight: FontWeight.w700)),
-                  Text('${plan.tripsCount} رحلة · ${plan.durationLabel}',
-                      style: ClientTypography.bodySmall(context)
-                          .copyWith(color: ClientColors.textSecondaryFor(context))),
+                  Text(
+                    plan.name,
+                    style: ClientTypography.bodyMedium(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  Text(
+                    '${plan.tripsCount} رحلة · ${plan.durationLabel}',
+                    style: ClientTypography.bodySmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                  ),
                 ],
               ),
             ),
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text('EGP ${plan.price.toStringAsFixed(0)}',
-                    style: ClientTypography.headingSmall(context).copyWith(
-                      color: isSelected ? ClientColors.journeyPurple : ClientColors.textPrimaryFor(context),
-                      fontWeight: FontWeight.w700,
-                    )),
+                Text(
+                  'EGP ${plan.price.toStringAsFixed(0)}',
+                  style: ClientTypography.headingSmall(context).copyWith(
+                    color: isSelected
+                        ? ClientColors.journeyPurple
+                        : ClientColors.textPrimaryFor(context),
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ],
             ),
             if (isSelected) ...[
               const SizedBox(width: 10),
-              const Icon(Icons.check_circle_rounded, color: ClientColors.journeyPurple, size: 22),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: ClientColors.journeyPurple,
+                size: 22,
+              ),
             ],
           ],
         ),
@@ -192,27 +235,38 @@ class _StartDatePicker extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.calendar_today_rounded, size: 18, color: ClientColors.primary),
+            const Icon(
+              Icons.calendar_today_rounded,
+              size: 18,
+              color: ClientColors.primary,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Package start date',
-                      style: ClientTypography.labelSmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      )),
-                  Text(label,
-                      style: ClientTypography.bodyMedium(context).copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: date == null
-                            ? ClientColors.textTertiary
-                            : ClientColors.textPrimaryFor(context),
-                      )),
+                  Text(
+                    'Package start date',
+                    style: ClientTypography.labelSmall(
+                      context,
+                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                  ),
+                  Text(
+                    label,
+                    style: ClientTypography.bodyMedium(context).copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: date == null
+                          ? ClientColors.textTertiary
+                          : ClientColors.textPrimaryFor(context),
+                    ),
+                  ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded, color: ClientColors.journeySlate),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: ClientColors.journeySlate,
+            ),
           ],
         ),
       ),

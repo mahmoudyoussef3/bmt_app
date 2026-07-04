@@ -44,7 +44,7 @@ class BookingFooterSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Selected seats',
+                  'Selected seat',
                   style: ClientTypography.labelMedium(context).copyWith(
                     fontWeight: FontWeight.w700,
                     color: ClientColors.textPrimaryFor(context),
@@ -176,7 +176,7 @@ class _EmptySelectionBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Select one or more seats to continue',
+              'Select one seat to continue',
               style: ClientTypography.bodySmall(context).copyWith(
                 fontWeight: FontWeight.w600,
                 color: ClientColors.textSecondaryFor(context),

@@ -33,7 +33,14 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
   int _step = 0;
   bool _confirming = false;
 
-  static const _titles = ['Choose Stops', 'Choose Trip', 'Select Seat', 'Choose Package', 'Review Order', 'Payment'];
+  static const _titles = [
+    'Choose Stops',
+    'Choose Trip',
+    'Select Seat',
+    'Choose Package',
+    'Review Order',
+    'Payment',
+  ];
 
   void _next() {
     if (_step < _stepCount - 1) setState(() => _step++);
@@ -66,47 +73,64 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
         'p_seat_id': seatId,
         'p_seat_label': session.selectedSeatLabel ?? '',
         'p_pricing_id': null,
-        'p_pickup_point_id': null,
-        'p_dropoff_point_id': null,
-        'p_passenger_name': Supabase.instance.client.auth.currentUser
+        'p_pickup_point_id': session.pickupStop?.id.isEmpty == true
+            ? null
+            : session.pickupStop?.id,
+        'p_dropoff_point_id': session.dropoffStop?.id.isEmpty == true
+            ? null
+            : session.dropoffStop?.id,
+        'p_passenger_name':
+            Supabase
+                .instance
+                .client
+                .auth
+                .currentUser
                 ?.userMetadata?['full_name']
                 ?.toString() ??
             '',
-        'p_phone': Supabase.instance.client.auth.currentUser
-                ?.userMetadata?['phone']
+        'p_phone':
+            Supabase.instance.client.auth.currentUser?.userMetadata?['phone']
                 ?.toString() ??
             '',
-        'p_route': '${session.pickupStop?.name ?? ''} → ${session.dropoffStop?.name ?? ''}',
+        'p_route':
+            '${session.pickupStop?.name ?? ''} → ${session.dropoffStop?.name ?? ''}',
         'p_trip_time': session.selectedTrip?.departureTime ?? '',
-        'p_trip_date': '',
+        'p_trip_date': session.selectedTrip?.tripDate,
         'p_payment_method': session.paymentMethod ?? 'instapay',
         'p_payment_amount': session.totalPrice.round(),
         'p_pickup_point_name': session.pickupStop?.name ?? '',
         'p_dropoff_point_name': session.dropoffStop?.name ?? '',
         'p_package_id': session.selectedPackage?.id,
-        'p_plan_start_date': session.packageStartDate?.toIso8601String().split('T')[0],
+        'p_plan_start_date': session.packageStartDate?.toIso8601String().split(
+          'T',
+        )[0],
         'p_receipt_url': session.receiptUrl,
+        'p_payment_reference': session.paymentReference,
+        'p_payer_phone': session.payerPhone,
       });
 
       if (!mounted) return;
 
       final bookingId = booking['booking_id']?.toString();
-      final bookingRef = booking['booking_number']?.toString() ??
+      final bookingRef =
+          booking['booking_number']?.toString() ??
           (bookingId != null && bookingId.length >= 8
               ? bookingId.substring(0, 8).toUpperCase()
               : null);
 
-      Navigator.of(context).pushReplacement(MaterialPageRoute(
-        builder: (_) => BookingConfirmationScreen(
-          seat: session.selectedSeatLabel ?? '',
-          vehicleId: session.selectedTrip?.vehicleType ?? '',
-          driver: '',
-          departureTime: session.selectedTrip?.departureTime ?? '',
-          destination: session.dropoffStop?.name ?? '',
-          bookingReference: bookingRef,
-          bookingId: bookingId,
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(
+          builder: (_) => BookingConfirmationScreen(
+            seat: session.selectedSeatLabel ?? '',
+            vehicleId: session.selectedTrip?.vehicleType ?? '',
+            driver: '',
+            departureTime: session.selectedTrip?.departureTime ?? '',
+            destination: session.dropoffStop?.name ?? '',
+            bookingReference: bookingRef,
+            bookingId: bookingId,
+          ),
         ),
-      ));
+      );
     } catch (e) {
       if (!mounted) return;
       final reason = e.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
@@ -114,22 +138,30 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
         context: context,
         builder: (_) => AlertDialog(
           backgroundColor: ClientColors.surfaceFor(context),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          title: Text('Booking Failed',
-              style: ClientTypography.headingSmall(context)
-                  .copyWith(color: ClientColors.journeyRed)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          title: Text(
+            'Booking Failed',
+            style: ClientTypography.headingSmall(
+              context,
+            ).copyWith(color: ClientColors.journeyRed),
+          ),
           content: Text(
             reason.contains('seat_unavailable')
                 ? 'This seat was just taken. Please go back and choose another seat.'
                 : reason.contains('lock_expired')
-                    ? 'Your seat hold expired. Please select your seat again.'
-                    : reason,
+                ? 'Your seat hold expired. Please select your seat again.'
+                : reason,
             style: ClientTypography.bodySmall(context),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK', style: TextStyle(color: ClientColors.primary)),
+              child: const Text(
+                'OK',
+                style: TextStyle(color: ClientColors.primary),
+              ),
             ),
           ],
         ),
@@ -143,13 +175,13 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
     0 => WizardStopStep(onNext: _next),
     1 => WizardTripStep(onNext: _next),
     2 => BlocProvider(
-        create: (_) => clientGetIt<SeatSelectionCubit>(),
-        child: WizardSeatStep(onNext: _next),
-      ),
+      create: (_) => clientGetIt<SeatSelectionCubit>(),
+      child: WizardSeatStep(onNext: _next),
+    ),
     3 => BlocProvider(
-        create: (_) => clientGetIt<PackagesCubit>(),
-        child: WizardPackageStep(onNext: _next),
-      ),
+      create: (_) => clientGetIt<PackagesCubit>(),
+      child: WizardPackageStep(onNext: _next),
+    ),
     4 => WizardSummaryStep(onNext: _next),
     _ => WizardPaymentStep(onConfirm: _confirming ? null : _confirmBooking),
   };
@@ -158,7 +190,9 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
   Widget build(BuildContext context) {
     return PopScope(
       canPop: _step == 0,
-      onPopInvokedWithResult: (didPop, _) { if (!didPop) _back(); },
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _back();
+      },
       child: Stack(
         children: [
           Scaffold(
@@ -174,12 +208,18 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
                 builder: (context, session) => Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_titles[_step], style: ClientTypography.bodyMedium(context)
-                        .copyWith(fontWeight: FontWeight.w700)),
-                    Text(session.route.routeName,
-                        style: ClientTypography.labelSmall(context).copyWith(
-                          color: ClientColors.textSecondaryFor(context),
-                        )),
+                    Text(
+                      _titles[_step],
+                      style: ClientTypography.bodyMedium(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      session.route.routeName,
+                      style: ClientTypography.labelSmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                    ),
                   ],
                 ),
               ),
@@ -193,8 +233,10 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
               transitionBuilder: (child, animation) => FadeTransition(
                 opacity: animation,
                 child: SlideTransition(
-                  position: Tween<Offset>(begin: const Offset(0.04, 0), end: Offset.zero)
-                      .animate(animation),
+                  position: Tween<Offset>(
+                    begin: const Offset(0.04, 0),
+                    end: Offset.zero,
+                  ).animate(animation),
                   child: child,
                 ),
               ),

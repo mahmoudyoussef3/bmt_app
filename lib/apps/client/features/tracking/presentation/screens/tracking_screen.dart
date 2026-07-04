@@ -177,9 +177,12 @@ class _TrackingScreenState extends State<TrackingScreen>
 
         final loaded = state as TrackingLoaded;
         _tracking = loaded;
+        
+        final isActive = _currentState != TripState.notStarted;
 
         return Scaffold(
-          backgroundColor: ClientColors.surfaceMutedFor(context),
+          extendBodyBehindAppBar: isActive,
+          backgroundColor: isActive ? scheme.surface : ClientColors.surfaceMutedFor(context),
           appBar: AppBar(
             title: Text(
               _stateTitle,
@@ -197,7 +200,7 @@ class _TrackingScreenState extends State<TrackingScreen>
                 ),
             ],
             elevation: 0,
-            backgroundColor: ClientColors.surfaceFor(context),
+            backgroundColor: isActive ? Colors.transparent : ClientColors.surfaceFor(context),
           ),
           body: Stack(
             children: [
@@ -308,19 +311,51 @@ class _TrackingScreenState extends State<TrackingScreen>
       );
     }
 
-    // Active tracking states: Map at top (60-70%), sheet at bottom
-    return Column(
+    // Active tracking states: Full-screen map, driver info overlay
+    return Stack(
       children: [
-        // Map Area
-        Expanded(
-          flex: 6,
-          child: Padding(
-            padding: EdgeInsets.only(top: widget.shellMode ? 8.0 : 76.0),
-            child: _buildMapArea(scheme),
-          ),
+        Positioned.fill(
+          child: _buildMapArea(scheme),
         ),
-        // Scrollable/Swipeable bottom details panel
-        Expanded(flex: 4, child: _buildActiveStateDetails(context, scheme)),
+        DraggableScrollableSheet(
+          initialChildSize: 0.4,
+          minChildSize: 0.25,
+          maxChildSize: 0.9,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(20),
+                    blurRadius: 24,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                controller: scrollController,
+                child: Column(
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 5,
+                        margin: const EdgeInsets.only(top: 16, bottom: 8),
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).colorScheme.outline.withAlpha(50),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                      ),
+                    ),
+                    _buildActiveStateDetails(context, scheme),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
       ],
     );
   }

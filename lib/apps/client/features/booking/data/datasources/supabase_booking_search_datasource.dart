@@ -30,7 +30,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         : await _supabase
               .from('route_stations')
               .select(
-                'route_id, name, sort_order, latitude, longitude, pickup_allowed, dropoff_allowed',
+                'id, route_id, name, sort_order, latitude, longitude, pickup_allowed, dropoff_allowed',
               )
               .inFilter('route_id', routeIds)
               .order('sort_order');
@@ -56,20 +56,15 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
             id, trip_date, departure_time, arrival_time, capacity, passenger_count, booked_seats,
             ticket_price, currency, status, route_id,
             vehicles(vehicle_type),
-            trip_pricing(one_time_price, currency, is_active)
+            trip_pricing(one_time_price, currency, is_active),
+            trip_seats(state)
           ''')
           .eq('route_id', data['id'])
           .limit(100);
       final trips = pricingTrips.where(_isBookableTrip).toList();
       if (trips.isEmpty) continue;
       final availableSeats = trips.fold<int>(0, (sum, trip) {
-        final capacity = trip['capacity'] as int? ?? 0;
-        final used =
-            trip['passenger_count'] as int? ??
-            trip['booked_seats'] as int? ??
-            0;
-        final remaining = capacity - used;
-        return sum + remaining.clamp(0, capacity).toInt();
+        return sum + _remainingSeats(trip);
       });
       final basePrice = _startingPriceLabel(trips);
       final priceRange = _priceRangeLabel(trips);
@@ -78,6 +73,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
         return RouteTripOptionModel(
           id: trip['id']?.toString() ?? '',
+          tripDate: trip['trip_date']?.toString() ?? '',
           departureTime: trip['departure_time']?.toString() ?? 'Not set',
           arrivalTime: trip['arrival_time']?.toString() ?? 'Not set',
           availableSeats: _remainingSeats(trip),
@@ -253,7 +249,8 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
               .select('''
           route_id, ticket_price, currency, status, trip_date,
           capacity, passenger_count, booked_seats,
-          trip_pricing(one_time_price, currency, is_active)
+          trip_pricing(one_time_price, currency, is_active),
+          trip_seats(state)
         ''')
               .inFilter('route_id', routeIds)
               .eq('status', 'open_for_booking');
@@ -295,6 +292,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
               final name = station['name']?.toString().trim() ?? '';
               if (name.isEmpty) return null;
               return RoutePointModel(
+                id: station['id']?.toString() ?? '',
                 name: name,
                 order: station['sort_order'] as int? ?? 0,
                 pickupAllowed: station['pickup_allowed'] as bool? ?? true,
@@ -409,7 +407,8 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           .select('''
             departure_time, status, trip_date, capacity, passenger_count,
             booked_seats, ticket_price, currency,
-            trip_pricing(one_time_price, currency, is_active)
+            trip_pricing(one_time_price, currency, is_active),
+            trip_seats(state)
           ''')
           .eq('status', 'open_for_booking')
           .gte('trip_date', today),
@@ -469,6 +468,12 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
   int _remainingSeats(dynamic trip) {
     if (trip is! Map<String, dynamic>) return 0;
+    final seats = trip['trip_seats'];
+    if (seats is List) {
+      return seats.where((seat) {
+        return seat is Map && seat['state']?.toString() == 'available';
+      }).length;
+    }
     final capacity = trip['capacity'] as int? ?? 0;
     final used =
         trip['passenger_count'] as int? ?? trip['booked_seats'] as int? ?? 0;
@@ -499,7 +504,8 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           vehicles (vehicle_type, capacity),
           drivers (full_name),
           operation_routes(id, start_city, end_city, duration),
-          trip_pricing(one_time_price, currency)
+          trip_pricing(one_time_price, currency),
+          trip_seats(state)
         ''')
         .eq('status', 'open_for_booking')
         .limit(5);
@@ -509,8 +515,6 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       final driver = (data['drivers'] as Map<String, dynamic>?) ?? {};
       final route = (data['operation_routes'] as Map<String, dynamic>?) ?? {};
 
-      final capacity = vehicle['capacity'] as int? ?? 14;
-      final passengerCount = data['passenger_count'] as int? ?? 0;
       final basePrice = _startingPriceLabel([data]);
 
       return AvailableTripModel(
@@ -519,7 +523,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         driverName: driver['full_name']?.toString() ?? 'Driver',
         estimatedArrival: data['arrival_time']?.toString() ?? 'N/A',
         routeDuration: route['duration']?.toString() ?? 'N/A',
-        availableSeats: capacity - passengerCount,
+        availableSeats: _remainingSeats(data),
         startingPrice: basePrice,
       );
     }).toList();

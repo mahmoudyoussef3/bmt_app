@@ -215,15 +215,13 @@ class SupabasePaymentDatasource implements PaymentDatasource {
       'visa' ||
       'mastercard' => PaymentMethodType.creditCard,
       'instapay' || 'insta_pay' => PaymentMethodType.instapay,
+      'bank_transfer' || 'bank' => PaymentMethodType.bankTransfer,
       'vodafone_cash' ||
       'mobile_wallet' ||
       'wallet_transfer' => PaymentMethodType.vodafoneCash,
       'wallet_balance' ||
       'user_balance' ||
       'balance' => PaymentMethodType.walletBalance,
-      'cash_on_boarding' ||
-      'cash' ||
-      'cash_with_driver' => PaymentMethodType.cashOnBoarding,
       _ => null,
     };
   }
@@ -232,8 +230,8 @@ class SupabasePaymentDatasource implements PaymentDatasource {
     return switch (type) {
       PaymentMethodType.creditCard => 'Card',
       PaymentMethodType.instapay => 'InstaPay',
+      PaymentMethodType.bankTransfer => 'Bank transfer',
       PaymentMethodType.vodafoneCash => 'Mobile wallet',
-      PaymentMethodType.cashOnBoarding => 'Cash with driver',
       PaymentMethodType.walletBalance => 'Wallet balance',
     };
   }
@@ -242,8 +240,9 @@ class SupabasePaymentDatasource implements PaymentDatasource {
     return switch (type) {
       PaymentMethodType.creditCard => 'Pay securely by card',
       PaymentMethodType.instapay => 'Transfer and attach the receipt',
+      PaymentMethodType.bankTransfer =>
+        'Transfer to the configured bank account',
       PaymentMethodType.vodafoneCash => 'Transfer from a mobile wallet',
-      PaymentMethodType.cashOnBoarding => 'Pay when boarding',
       PaymentMethodType.walletBalance => 'Use your available app balance',
     };
   }

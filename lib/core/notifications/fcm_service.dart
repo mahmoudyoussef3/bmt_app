@@ -40,7 +40,12 @@ class FcmService {
       sound: false,
     );
 
-    final token = await FirebaseMessaging.instance.getToken();
+    String? token;
+    try {
+      token = await FirebaseMessaging.instance.getToken();
+    } catch (e) {
+      debugPrint('FCM getToken error: $e');
+    }
     if (token != null) await _saveToken(supabase, token);
 
     FirebaseMessaging.instance.onTokenRefresh.listen(

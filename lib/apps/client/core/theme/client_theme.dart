@@ -59,7 +59,7 @@ abstract final class ClientTheme {
 
   static ThemeData _build(ColorScheme scheme, Brightness brightness) {
     final isDark = brightness == Brightness.dark;
-    final textTheme = GoogleFonts.interTextTheme(
+    final textTheme = GoogleFonts.plusJakartaSansTextTheme(
       _textTheme(scheme),
     ).apply(bodyColor: scheme.onSurface, displayColor: scheme.onSurface);
 

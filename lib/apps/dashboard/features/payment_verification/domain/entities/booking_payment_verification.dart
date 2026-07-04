@@ -40,6 +40,8 @@ class BookingPaymentVerification {
   final String amount;
   final VerificationPaymentMethod method;
   final String referenceNumber;
+  final String payerPhone;
+  final String packageName;
   final String receiptTitle;
   final String receiptMeta;
   final String? receiptUrl;
@@ -57,6 +59,8 @@ class BookingPaymentVerification {
     required this.amount,
     required this.method,
     required this.referenceNumber,
+    this.payerPhone = '',
+    this.packageName = '',
     required this.receiptTitle,
     required this.receiptMeta,
     required this.status,
@@ -81,6 +85,8 @@ class BookingPaymentVerification {
       amount: amount,
       method: method,
       referenceNumber: referenceNumber,
+      payerPhone: payerPhone,
+      packageName: packageName,
       receiptTitle: receiptTitle,
       receiptMeta: receiptMeta,
       receiptUrl: receiptUrl,

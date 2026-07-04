@@ -13,11 +13,6 @@ import 'package:bmt_app/apps/client/features/trips/presentation/screens/my_trips
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/trip_details_screen.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
-import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
-import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_cubit.dart';
-import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_checkout_screen.dart';
-import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
-import 'package:bmt_app/apps/client/features/packages/presentation/screens/subscription_screen.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/screens/tracking_screen.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
@@ -52,16 +47,11 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/available_trips_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_approval_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_wizard_screen.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/screens/daily_booking_flow_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/map_route_selection_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/popular_routes_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_overview_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_selection_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/search_trip_screen.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/screens/vehicle_details_screen.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/screens/vehicle_listing_screen.dart';
-import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
-import 'package:bmt_app/apps/client/features/seat_selection/presentation/screens/seat_selection_screen.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/seat_release_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
@@ -71,6 +61,8 @@ import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboa
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/screens/subscription_screen.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 
 class ClientApp extends StatefulWidget {
   const ClientApp({super.key});
@@ -218,22 +210,11 @@ class _ClientAppState extends State<ClientApp> {
                 BookingRoutes.mapSelection: (_) =>
                     _buildBookingScope(const MapRouteSelectionScreen()),
                 BookingRoutes.availableTrips: (_) =>
-                    _buildBookingScope(const AvailableTripsScreen()),
+                    _buildBookingScope(const SearchTripScreen()),
                 BookingRoutes.vehicleListing: (_) =>
-                    _buildBookingScope(const VehicleListingScreen()),
-
-                BookingRoutes.vehicleDetails: (context) {
-                  final args = ModalRoute.of(context)?.settings.arguments;
-                  String? vehicleId;
-
-                  if (args is Map) {
-                    vehicleId = args['vehicleId']?.toString();
-                  }
-
-                  return _buildBookingScope(
-                    VehicleDetailsScreen(vehicleId: vehicleId),
-                  );
-                },
+                    _buildBookingScope(const SearchTripScreen()),
+                BookingRoutes.vehicleDetails: (_) =>
+                    _buildBookingScope(const SearchTripScreen()),
 
                 // New booking wizard flow
                 BookingRoutes.wizard: (context) {
@@ -266,58 +247,18 @@ class _ClientAppState extends State<ClientApp> {
                 },
 
                 '/daily-booking': (_) =>
-                    _buildBookingScope(const DailyBookingFlowScreen()),
+                    _buildBookingScope(const SearchTripScreen()),
                 '/seat-selection': (_) =>
-                    _buildSeatSelectionScope(const SeatSelectionScreen()),
+                    _buildBookingScope(const SearchTripScreen()),
                 '/seat-release': (_) =>
                     _buildSeatReleaseScope(const SeatReleaseScreen()),
-
-                '/payment-checkout': (context) {
-                  final args = ModalRoute.of(context)?.settings.arguments;
-                  final checkoutData = args is Map
-                      ? PaymentCheckoutData(
-                          tripId: args['tripId']?.toString() ?? '',
-                          pickupPoint: args['pickupPoint']?.toString() ?? '',
-                          destination: args['destination']?.toString() ?? '',
-                          vehicleNumber:
-                              args['vehicleNumber']?.toString() ?? '',
-                          tripDate: args['tripDate']?.toString() ?? '',
-                          departureTime:
-                              args['departureTime']?.toString() ?? '',
-                          arrivalTime: args['arrivalTime']?.toString() ?? '',
-                          selectedSeatId:
-                              args['selectedSeatId']?.toString() ?? '',
-                          selectedSeat: args['selectedSeat']?.toString() ?? '',
-                          driverName: args['driverName']?.toString() ?? '',
-                          baseFare: _parseMoney(args['baseFare']),
-                          serviceFee: _parseMoney(args['serviceFee']),
-                          tax: _parseMoney(args['tax']),
-                        )
-                      : PaymentCheckoutData(
-                          tripId: '',
-                          pickupPoint: '',
-                          destination: '',
-                          vehicleNumber: '',
-                          tripDate: '',
-                          departureTime: '',
-                          arrivalTime: '',
-                          selectedSeatId: '',
-                          selectedSeat: '',
-                          driverName: '',
-                        );
-
-                  return _buildPaymentScope(
-                    PaymentCheckoutScreen(checkoutData: checkoutData),
-                  );
-                },
-
+                '/payment-checkout': (_) =>
+                    _buildBookingScope(const SearchTripScreen()),
                 '/subscription': (context) {
-                  final args = ModalRoute.of(context)?.settings.arguments;
-                  final hasActiveSub =
-                      args is Map && args['hasActiveSubscription'] == true;
-                  return _buildPackagesScope(
-                    SubscriptionScreen(hasActiveSubscription: hasActiveSub),
-                  );
+                  final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ?? {};
+                  return _buildPackagesScope(SubscriptionScreen(
+                    bookingData: args,
+                  ));
                 },
 
                 // Trips
@@ -398,11 +339,6 @@ class _ClientAppState extends State<ClientApp> {
     );
   }
 
-  int _parseMoney(Object? value) {
-    if (value is num) return value.round();
-    return num.tryParse(value?.toString() ?? '')?.round() ?? 0;
-  }
-
   Widget _buildClientShell() {
     return ClientShellScreen(
       routesBuilder: (context) => _buildRoutesHubScope(
@@ -459,12 +395,7 @@ class _ClientAppState extends State<ClientApp> {
     );
   }
 
-  Widget _buildSeatSelectionScope(Widget child) {
-    return BlocProvider<SeatSelectionCubit>(
-      create: (_) => clientGetIt<SeatSelectionCubit>(),
-      child: child,
-    );
-  }
+
 
   Widget _buildSeatReleaseScope(Widget child) {
     return BlocProvider<SeatReleaseCubit>(
@@ -473,12 +404,7 @@ class _ClientAppState extends State<ClientApp> {
     );
   }
 
-  Widget _buildPaymentScope(Widget child) {
-    return BlocProvider<PaymentCubit>(
-      create: (_) => clientGetIt<PaymentCubit>(),
-      child: child,
-    );
-  }
+
 
   Widget _buildPackagesScope(Widget child) {
     return BlocProvider<PackagesCubit>(

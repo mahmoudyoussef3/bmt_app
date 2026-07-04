@@ -2,8 +2,8 @@ enum PaymentMethodType {
   creditCard,
   vodafoneCash,
   instapay,
+  bankTransfer,
   walletBalance,
-  cashOnBoarding,
 }
 
 class PaymentMethodData {

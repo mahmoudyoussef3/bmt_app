@@ -75,15 +75,13 @@ class PackagesCubit extends Cubit<PackagesState> {
   void selectPackage(PackagePlan package) {
     final current = state;
     if (current is! PackagesLoaded) return;
-    final selectedSeats = <int>{5};
     emit(
       current.copyWith(
         selectedPackage: package,
-        selectedSeats: selectedSeats,
         pricing: _pricingFor(
           current,
           package: package,
-          selectedSeatCount: selectedSeats.length,
+          selectedSeatCount: 1, // hardcoded single seat for pricing
         ),
       ),
     );
@@ -109,25 +107,7 @@ class PackagesCubit extends Cubit<PackagesState> {
     );
   }
 
-  void toggleSeat(int seatNo) {
-    final current = state;
-    if (current is! PackagesLoaded) return;
-    if (current.data.occupiedSeats.contains(seatNo)) return;
 
-    final selectedSeats = Set<int>.from(current.selectedSeats);
-    if (selectedSeats.contains(seatNo)) {
-      selectedSeats.remove(seatNo);
-    } else {
-      selectedSeats.add(seatNo);
-    }
-
-    emit(
-      current.copyWith(
-        selectedSeats: selectedSeats,
-        pricing: _pricingFor(current, selectedSeatCount: selectedSeats.length),
-      ),
-    );
-  }
 
   void setAgreeTerms(bool value) {
     final current = state;
@@ -210,7 +190,7 @@ class PackagesCubit extends Cubit<PackagesState> {
     return _calculatePricing(
       package: package ?? current.selectedPackage,
       vehicleAddonFee: vehicleAddonFee,
-      selectedSeatCount: selectedSeatCount ?? current.selectedSeats.length,
+      selectedSeatCount: selectedSeatCount ?? 1,
     );
   }
 }

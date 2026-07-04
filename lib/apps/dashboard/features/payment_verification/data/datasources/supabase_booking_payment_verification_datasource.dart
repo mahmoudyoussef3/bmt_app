@@ -11,7 +11,7 @@ class SupabaseBookingPaymentVerificationDatasource
   final SupabaseClient _client;
 
   static const _verificationStatuses = [
-    'pending',
+    'submitted',
     'under_review',
     'approved',
     'rejected',
@@ -26,6 +26,11 @@ class SupabaseBookingPaymentVerificationDatasource
             id, status, payment_method, payment_receipt_url,
             passenger_name, phone, seat, created_at, notes, timeline,
             payment_details, payment_review_status, payment_status,
+            package:transport_packages(name_ar, name_en),
+            payment:booking_payments(
+              amount, currency, status, payment_reference, payer_phone,
+              receipt_url
+            ),
             trip:operation_trips(
               id, trip_date, departure_time,
               route:operation_routes(name),
@@ -33,7 +38,7 @@ class SupabaseBookingPaymentVerificationDatasource
               vehicle:vehicles(plate_number)
             )
           ''')
-          .inFilter('payment_review_status', _verificationStatuses)
+          .inFilter('payment_status', _verificationStatuses)
           .order('created_at', ascending: false);
 
       return (response as List)
@@ -52,9 +57,7 @@ class SupabaseBookingPaymentVerificationDatasource
     try {
       await _client.rpc(
         'approve_payment',
-        params: {
-          'p_booking_id': verificationId,
-        },
+        params: {'p_booking_id': verificationId, 'p_note': note.trim()},
       );
       return _refetch(verificationId);
     } catch (e) {
@@ -70,9 +73,7 @@ class SupabaseBookingPaymentVerificationDatasource
     try {
       await _client.rpc(
         'reject_payment',
-        params: {
-          'p_booking_id': verificationId,
-        },
+        params: {'p_booking_id': verificationId, 'p_reason': note.trim()},
       );
       return _refetch(verificationId);
     } catch (e) {
@@ -86,34 +87,10 @@ class SupabaseBookingPaymentVerificationDatasource
     String note,
   ) async {
     try {
-      final existing = await _client
-          .from('operation_bookings')
-          .select('notes, timeline')
-          .eq('id', verificationId)
-          .single();
-      final normalizedNote = note.trim();
-      final notes = _readStringList(existing['notes']);
-      if (normalizedNote.isNotEmpty) {
-        notes.insert(0, normalizedNote);
-      }
-      final timeline = _readTimeline(existing['timeline']);
-      timeline.insert(0, {
-        'action': 'طلب مراجعة الدفع',
-        'timestamp': DateTime.now().toUtc().toIso8601String(),
-        'note': normalizedNote.isEmpty
-            ? 'تم طلب إعادة مراجعة أو رفع إيصال أوضح.'
-            : normalizedNote,
-      });
-
-      await _client
-          .from('operation_bookings')
-          .update({
-            'payment_review_status': 'under_review',
-            'notes': notes,
-            'timeline': timeline,
-            'updated_at': DateTime.now().toUtc().toIso8601String(),
-          })
-          .eq('id', verificationId);
+      await _client.rpc(
+        'request_payment_review',
+        params: {'p_booking_id': verificationId, 'p_note': note.trim()},
+      );
       return _refetch(verificationId);
     } catch (e) {
       throw _handleError(e);
@@ -156,6 +133,11 @@ class SupabaseBookingPaymentVerificationDatasource
           id, status, payment_method, payment_receipt_url,
           passenger_name, phone, seat, created_at, notes, timeline,
           payment_details, payment_review_status, payment_status,
+          package:transport_packages(name_ar, name_en),
+          payment:booking_payments(
+            amount, currency, status, payment_reference, payer_phone,
+            receipt_url
+          ),
           trip:operation_trips(
             id, trip_date, departure_time,
             route:operation_routes(name),
@@ -170,13 +152,15 @@ class SupabaseBookingPaymentVerificationDatasource
   }
 
   BookingPaymentVerificationModel _mapToModel(Map<String, dynamic> json) {
-    final reviewStatusStr = json['payment_review_status'] as String? ?? 'pending';
-    final methodStr = json['payment_method'] as String? ?? 'cash';
+    final reviewStatusStr = json['payment_status'] as String? ?? 'submitted';
+    final methodStr = json['payment_method'] as String? ?? 'instapay';
     final tripJson = json['trip'] as Map<String, dynamic>?;
     final routeJson = tripJson?['route'] as Map<String, dynamic>?;
     final driverJson = tripJson?['driver'] as Map<String, dynamic>?;
     final vehicleJson = tripJson?['vehicle'] as Map<String, dynamic>?;
     final paymentDetails = json['payment_details'] as Map<String, dynamic>?;
+    final payment = json['payment'] as Map<String, dynamic>?;
+    final package = json['package'] as Map<String, dynamic>?;
 
     final notesList = _readStringList(json['notes']);
     final timelineList = _readTimeline(json['timeline']);
@@ -200,14 +184,26 @@ class SupabaseBookingPaymentVerificationDatasource
       ),
       selectedSeat: json['seat'] as String? ?? '',
       seatState: _mapSeatState(reviewStatusStr),
-      amount: paymentDetails?['amount'] as String? ?? '0 ج.م',
+      amount:
+          '${payment?['amount'] ?? paymentDetails?['amount'] ?? 0} ${payment?['currency'] ?? 'ج.م'}',
       method: _mapPaymentMethod(methodStr),
-      referenceNumber: paymentDetails?['reference'] as String? ?? '',
+      referenceNumber:
+          payment?['payment_reference']?.toString() ??
+          paymentDetails?['reference']?.toString() ??
+          '',
+      payerPhone: payment?['payer_phone']?.toString() ?? '',
+      packageName:
+          package?['name_ar']?.toString() ??
+          package?['name_en']?.toString() ??
+          '',
       receiptTitle: _receiptTitle(methodStr),
-      receiptMeta: json['payment_receipt_url'] != null
+      receiptMeta:
+          (payment?['receipt_url'] ?? json['payment_receipt_url']) != null
           ? 'تم رفع الإيصال'
           : 'لم يُرفع إيصال',
-      receiptUrl: json['payment_receipt_url'] as String?,
+      receiptUrl:
+          payment?['receipt_url']?.toString() ??
+          json['payment_receipt_url'] as String?,
       status: _mapVerificationStatus(reviewStatusStr),
       notes: notesList,
       history: timelineList.map((item) {
@@ -236,16 +232,20 @@ class SupabaseBookingPaymentVerificationDatasource
 
   VerificationPaymentMethod _mapPaymentMethod(String method) =>
       switch (method) {
+        'bank_transfer' ||
         'bankTransfer' => VerificationPaymentMethod.bankTransfer,
-        'vodafoneCash' || 'instaPay' => VerificationPaymentMethod.wallet,
+        'vodafone_cash' ||
+        'vodafoneCash' ||
+        'instapay' ||
+        'instaPay' => VerificationPaymentMethod.wallet,
         'card' => VerificationPaymentMethod.card,
         _ => VerificationPaymentMethod.cash,
       };
 
   String _receiptTitle(String method) => switch (method) {
-    'bankTransfer' => 'إيصال تحويل بنكي',
-    'instaPay' => 'إيصال إنستا باي',
-    'vodafoneCash' => 'إيصال فودافون كاش',
+    'bank_transfer' || 'bankTransfer' => 'إيصال تحويل بنكي',
+    'instapay' || 'instaPay' => 'إيصال إنستا باي',
+    'vodafone_cash' || 'vodafoneCash' => 'إيصال فودافون كاش',
     'card' => 'إيصال بطاقة',
     _ => 'إيصال نقدي',
   };

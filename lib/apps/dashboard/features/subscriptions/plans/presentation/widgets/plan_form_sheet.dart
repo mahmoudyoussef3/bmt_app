@@ -27,11 +27,10 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _title;
   late final TextEditingController _subtitle;
+  late final TextEditingController _packageType;
   late final TextEditingController _price;
   late final TextEditingController _days;
   late final TextEditingController _trips;
-  late final TextEditingController _discount;
-  late final TextEditingController _description;
   late PlanStatus _status;
 
   @override
@@ -40,27 +39,16 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
     final e = widget.existing;
     _title = TextEditingController(text: e?.title ?? '');
     _subtitle = TextEditingController(text: e?.subtitle ?? '');
+    _packageType = TextEditingController(text: e?.packageType ?? '');
     _price = TextEditingController(text: e?.price.toStringAsFixed(0) ?? '');
     _days = TextEditingController(text: (e?.days ?? 30).toString());
     _trips = TextEditingController(text: (e?.tripsCount ?? 0).toString());
-    _discount = TextEditingController(
-      text: (e?.discountPercent ?? 0).toString(),
-    );
-    _description = TextEditingController(text: e?.description ?? '');
     _status = e?.status ?? PlanStatus.active;
   }
 
   @override
   void dispose() {
-    for (final c in [
-      _title,
-      _subtitle,
-      _price,
-      _days,
-      _trips,
-      _discount,
-      _description,
-    ]) {
+    for (final c in [_title, _subtitle, _packageType, _price, _days, _trips]) {
       c.dispose();
     }
     super.dispose();
@@ -78,8 +66,13 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                _field(_title, 'اسم الباقة', required: true),
-                _field(_subtitle, 'وصف مختصر'),
+                _field(_title, 'اسم الباقة بالعربية', required: true),
+                _field(_subtitle, 'اسم الباقة بالإنجليزية', required: true),
+                _field(
+                  _packageType,
+                  'رمز نوع الباقة (مثال: work_week)',
+                  required: true,
+                ),
                 _field(_price, 'السعر (ج.م)', number: true, required: true),
                 Row(
                   children: [
@@ -90,8 +83,6 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
                     ),
                   ],
                 ),
-                _field(_discount, 'نسبة الخصم %', number: true),
-                _field(_description, 'تفاصيل الباقة', lines: 2),
                 const SizedBox(height: AppSpacing.small),
                 DropdownButtonFormField<PlanStatus>(
                   initialValue: _status,
@@ -153,10 +144,14 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
       price: double.tryParse(_price.text.trim()) ?? 0,
       days: int.tryParse(_days.text.trim()) ?? 30,
       tripsCount: int.tryParse(_trips.text.trim()) ?? 0,
-      discountPercent: int.tryParse(_discount.text.trim()) ?? 0,
+      discountPercent: 0,
       savingsAmount: widget.existing?.savingsAmount ?? 0,
-      description: _description.text.trim(),
+      description: '',
       status: _status,
+      packageType: _packageType.text.trim().toLowerCase().replaceAll(
+        RegExp(r'[^a-z0-9_]+'),
+        '_',
+      ),
     );
     Navigator.of(context).pop(plan);
   }

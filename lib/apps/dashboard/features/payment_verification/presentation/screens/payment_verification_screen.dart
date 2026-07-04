@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -679,6 +680,15 @@ class _ReceiptPreview extends StatelessWidget {
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const Spacer(),
+              if ((item.receiptUrl ?? '').isNotEmpty)
+                IconButton(
+                  tooltip: 'فتح الملف الأصلي',
+                  onPressed: () => launchUrl(
+                    Uri.parse(item.receiptUrl!),
+                    mode: LaunchMode.externalApplication,
+                  ),
+                  icon: const Icon(Icons.open_in_new_rounded),
+                ),
               IconButton(
                 tooltip: 'تصغير',
                 onPressed: () => onZoomChanged(zoom - 0.1),
@@ -792,6 +802,10 @@ class _ReceiptPlaceholder extends StatelessWidget {
             const Divider(height: AppSpacing.large),
             _ReceiptLine(label: 'المبلغ', value: item.amount),
             _ReceiptLine(label: 'الطريقة', value: item.method.label),
+            if (item.packageName.isNotEmpty)
+              _ReceiptLine(label: 'الباقة', value: item.packageName),
+            if (item.payerPhone.isNotEmpty)
+              _ReceiptLine(label: 'هاتف المحوّل', value: item.payerPhone),
             _ReceiptLine(label: 'الحجز', value: item.bookingId),
             const SizedBox(height: AppSpacing.small),
             Text(

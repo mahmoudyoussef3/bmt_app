@@ -2,18 +2,20 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_state.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 class SubscriptionScreen extends StatefulWidget {
-  const SubscriptionScreen({super.key, this.hasActiveSubscription = false});
+  const SubscriptionScreen({super.key, this.hasActiveSubscription = false, this.bookingData});
 
   final bool hasActiveSubscription;
+  final Map<String, dynamic>? bookingData;
 
   @override
   State<SubscriptionScreen> createState() => _SubscriptionScreenState();
@@ -211,15 +213,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           ),
         ),
 
-        // Scrollable List of Package Cards
+        // Premium Card Carousel
         Expanded(
-          child: ListView.builder(
+          child: PageView.builder(
+            controller: PageController(viewportFraction: 0.88),
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(20),
             itemCount: loaded.filteredPackages.length,
             itemBuilder: (context, idx) {
               final package = loaded.filteredPackages[idx];
-              return _buildPackageCard(package, scheme);
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 24),
+                child: _buildPackageCard(package, scheme),
+              );
             },
           ),
         ),
@@ -257,33 +262,31 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   }
 
   Widget _buildPackageCard(PackagePlan package, ColorScheme scheme) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.outline.withAlpha(45)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(12),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return PressableScale(
+      onTap: () {
+        context.read<PackagesCubit>().selectPackage(package);
+        setState(() {
+          _currentStep = 2;
+        });
+      },
+      scale: 0.98,
+      child: Container(
+        decoration: BoxDecoration(
+          color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(ClientRadius.xl),
+          border: Border.all(
+            color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(80),
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () {
-              context.read<PackagesCubit>().selectPackage(package);
-              setState(() {
-                _currentStep = 2;
-              });
-            },
+          boxShadow: ClientElevation.lg(context),
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(ClientRadius.xl),
+          child: Material(
+            color: Colors.transparent,
             child: Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -587,9 +590,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         ),
         // Bottom sticky button
         _buildStickyCTA(
-          label: AppLocalizations.of(context)!.packages_chooseRouteConfig,
+          label: 'Continue to Payment',
           onPressed: () {
-            Navigator.of(context).pushNamed(ClientRoutes.bookingPopularRoutes);
+            final Map<String, dynamic> combinedArgs = {};
+            if (widget.bookingData != null) {
+              combinedArgs.addAll(widget.bookingData!);
+            }
+            combinedArgs['packageId'] = package.id;
+            combinedArgs['package'] = package.name;
+            combinedArgs['baseFare'] = package.startingPrice.toInt();
+
+            Navigator.of(context).pushNamed(
+              '/payment-checkout',
+              arguments: combinedArgs,
+            );
           },
           scheme: scheme,
         ),
@@ -1177,7 +1191,6 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     ColorScheme scheme,
   ) {
     final isOccupied = loaded.data.occupiedSeats.contains(seatNo);
-    final isSelected = loaded.selectedSeats.contains(seatNo);
 
     Color bgColor = Colors.transparent;
     Color borderColor = scheme.outline;
@@ -1187,16 +1200,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
       bgColor = scheme.outline.withAlpha(80);
       borderColor = scheme.outline.withAlpha(50);
       textColor = Colors.grey.withAlpha(150);
-    } else if (isSelected) {
-      bgColor = scheme.primary;
-      borderColor = scheme.primary;
-      textColor = scheme.onPrimary;
     }
 
     return GestureDetector(
-      onTap: isOccupied
-          ? null
-          : () => context.read<PackagesCubit>().toggleSeat(seatNo),
+      onTap: null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         width: 44,
@@ -1259,7 +1266,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Seats Selected: ${loaded.selectedSeats.length}',
+                      'Seats Selected: 1',
                       style: const TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                     Row(
@@ -1303,17 +1310,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   child: ClientButton(
                     label: 'Continue to Summary',
                     expand: true,
-                    onPressed: loaded.selectedSeats.isEmpty
-                        ? () {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Please select at least one seat to proceed.',
-                                ),
-                              ),
-                            );
-                          }
-                        : () {
+                    onPressed: () {
                             setState(() {
                               _currentStep = 4;
                             });
@@ -1401,7 +1398,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     ),
                     _buildSummaryDetailRow(
                       'Selected Seats',
-                      loaded.selectedSeats.join(', '),
+                      '1',
                     ),
                     _buildSummaryDetailRow(
                       'Trips Allocated',
@@ -1689,7 +1686,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 ),
                 _buildReceiptRow(
                   'Selected Seats',
-                  loaded.selectedSeats.join(', '),
+                  '1',
                 ),
                 _buildReceiptRow('Travel Route', loaded.selectedRoute),
                 _buildReceiptRow('Pickup Stop', loaded.selectedPickup),

@@ -12,9 +12,15 @@ class WizardProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final activeColor = isDark ? ClientColors.darkPrimary : ClientColors.primary;
-    final doneColor = isDark ? ClientColors.darkPrimaryStrong : ClientColors.primaryHover;
-    final emptyColor = isDark ? const Color(0xFF2A3A50) : const Color(0xFFE5EAF2);
+    final activeColor = isDark
+        ? ClientColors.darkPrimary
+        : ClientColors.primary;
+    final doneColor = isDark
+        ? ClientColors.darkPrimaryStrong
+        : ClientColors.primaryHover;
+    final emptyColor = isDark
+        ? const Color(0xFF2A3A50)
+        : const Color(0xFFE5EAF2);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -44,16 +50,22 @@ class WizardProgressBar extends StatelessWidget {
                   color: isDone
                       ? doneColor
                       : isActive
-                          ? activeColor
-                          : emptyColor,
+                      ? activeColor
+                      : emptyColor,
                 ),
                 child: Center(
                   child: isDone
-                      ? const Icon(Icons.check_rounded, size: 14, color: Colors.white)
+                      ? const Icon(
+                          Icons.check_rounded,
+                          size: 14,
+                          color: Colors.white,
+                        )
                       : Text(
                           '${idx + 1}',
                           style: ClientTypography.labelSmall(context).copyWith(
-                            color: isActive ? Colors.white : ClientColors.textTertiary,
+                            color: isActive
+                                ? Colors.white
+                                : ClientColors.textTertiary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),
@@ -66,9 +78,9 @@ class WizardProgressBar extends StatelessWidget {
           padding: const EdgeInsets.only(bottom: 8),
           child: Text(
             _labels[step],
-            style: ClientTypography.labelSmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.labelSmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
         ),
       ],

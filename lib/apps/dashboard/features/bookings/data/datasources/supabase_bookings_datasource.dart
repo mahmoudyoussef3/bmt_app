@@ -139,11 +139,9 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
     String? note,
   ) async {
     try {
-      // RPC atomically updates booking status AND transitions trip_seats to 'paid'.
-      // This prevents the booking being approved while the seat stays 'reserved'.
       await _client.rpc(
-        'approve_booking',
-        params: {'p_booking_id': bookingId, 'p_reviewer_name': reviewer},
+        'approve_payment',
+        params: {'p_booking_id': bookingId, 'p_note': note?.trim() ?? ''},
       );
 
       // Append to timeline (non-critical audit trail, separate from atomic write)
@@ -186,14 +184,11 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
     String? note,
   ) async {
     try {
-      // RPC atomically updates booking status, releases the seat, and decrements
-      // the trip counter — all in one transaction.
       await _client.rpc(
-        'reject_booking',
+        'reject_payment',
         params: {
           'p_booking_id': bookingId,
-          'p_rejection_reason': reason,
-          'p_reviewer_name': reviewer,
+          'p_reason': '$reason${note != null ? ' - $note' : ''}',
         },
       );
 
@@ -253,13 +248,13 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
           existing['timeline'] as List<dynamic>? ?? [];
       currentTimeline.insert(0, event.toJson());
 
+      await _client.rpc(
+        'request_payment_review',
+        params: {'p_booking_id': bookingId, 'p_note': reason},
+      );
       final response = await _client
           .from('operation_bookings')
-          .update({
-            'status': BookingStatus.requestReupload.name,
-            'reviewer_name': reviewer,
-            'timeline': currentTimeline,
-          })
+          .update({'reviewer_name': reviewer, 'timeline': currentTimeline})
           .eq('id', bookingId)
           .select()
           .single();

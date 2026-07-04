@@ -10,6 +10,7 @@ class BookingFlowScaffold extends StatelessWidget {
     this.query,
     this.bottomBar,
     this.actions,
+    this.extendBodyBehindAppBar = false,
   });
 
   final String title;
@@ -17,11 +18,19 @@ class BookingFlowScaffold extends StatelessWidget {
   final BookingSearchQuery? query;
   final Widget? bottomBar;
   final List<Widget>? actions;
+  final bool extendBodyBehindAppBar;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(title), actions: actions),
+      extendBodyBehindAppBar: extendBodyBehindAppBar,
+      backgroundColor: extendBodyBehindAppBar ? Theme.of(context).colorScheme.surface : null,
+      appBar: AppBar(
+        title: Text(title),
+        actions: actions,
+        backgroundColor: extendBodyBehindAppBar ? Colors.transparent : null,
+        elevation: extendBodyBehindAppBar ? 0 : null,
+      ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

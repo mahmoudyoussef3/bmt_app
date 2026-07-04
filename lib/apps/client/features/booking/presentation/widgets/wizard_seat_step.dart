@@ -23,7 +23,8 @@ class _WizardSeatStepState extends State<WizardSeatStep> {
   @override
   void initState() {
     super.initState();
-    final tripId = context.read<BookingWizardCubit>().state.selectedTrip?.id ?? '';
+    final tripId =
+        context.read<BookingWizardCubit>().state.selectedTrip?.id ?? '';
     context.read<SeatSelectionCubit>().loadSeatSelection(tripId);
   }
 
@@ -35,14 +36,17 @@ class _WizardSeatStepState extends State<WizardSeatStep> {
           builder: (context, session) {
             return switch (seatState) {
               SeatSelectionLoading() => const _SeatLoadingBody(),
-              SeatSelectionError(:final message) => _SeatErrorBody(message: message,
-                  onRetry: () => context.read<SeatSelectionCubit>()
-                      .loadSeatSelection(session.selectedTrip?.id ?? '')),
+              SeatSelectionError(:final message) => _SeatErrorBody(
+                message: message,
+                onRetry: () => context
+                    .read<SeatSelectionCubit>()
+                    .loadSeatSelection(session.selectedTrip?.id ?? ''),
+              ),
               SeatSelectionLoaded() => _SeatBody(
-                  state: seatState,
-                  session: session,
-                  onNext: widget.onNext,
-                ),
+                state: seatState,
+                session: session,
+                onNext: widget.onNext,
+              ),
             };
           },
         );
@@ -52,7 +56,11 @@ class _WizardSeatStepState extends State<WizardSeatStep> {
 }
 
 class _SeatBody extends StatelessWidget {
-  const _SeatBody({required this.state, required this.session, required this.onNext});
+  const _SeatBody({
+    required this.state,
+    required this.session,
+    required this.onNext,
+  });
   final SeatSelectionLoaded state;
   final BookingWizardSession session;
   final VoidCallback onNext;
@@ -69,15 +77,19 @@ class _SeatBody extends StatelessWidget {
           child: GridView.builder(
             padding: const EdgeInsets.all(20),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: _cols, mainAxisSpacing: 10, crossAxisSpacing: 10,
+              crossAxisCount: _cols,
+              mainAxisSpacing: 10,
+              crossAxisSpacing: 10,
             ),
             itemCount: seats.length,
             itemBuilder: (_, i) => _SeatCell(
               seat: seats[i],
               isSelected: seats[i].id == session.selectedSeatId,
               onTap: seats[i].isAvailable
-                  ? () => context.read<BookingWizardCubit>()
-                      .selectSeat(seats[i].id, 'Seat ${seats[i].seatNumber}')
+                  ? () => context.read<BookingWizardCubit>().selectSeat(
+                      seats[i].id,
+                      'Seat ${seats[i].seatNumber}',
+                    )
                   : null,
             ),
           ),
@@ -91,12 +103,18 @@ class _SeatBody extends StatelessWidget {
                 if (session.seatValid)
                   Padding(
                     padding: const EdgeInsets.only(bottom: 10),
-                    child: Text('Selected: ${session.selectedSeatLabel}',
-                        style: ClientTypography.bodyMedium(context).copyWith(
-                          color: ClientColors.primary, fontWeight: FontWeight.w600,
-                        )),
+                    child: Text(
+                      'Selected: ${session.selectedSeatLabel}',
+                      style: ClientTypography.bodyMedium(context).copyWith(
+                        color: ClientColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ClientButton(label: 'Continue', onPressed: session.seatValid ? onNext : null),
+                ClientButton(
+                  label: 'Continue',
+                  onPressed: session.seatValid ? onNext : null,
+                ),
               ],
             ),
           ),
@@ -115,43 +133,62 @@ class _SeatCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final available = seat.isAvailable;
+    final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     Color bg = isSelected
-        ? ClientColors.primary
+        ? scheme.primary
         : available
-            ? ClientColors.journeyGreenLight
-            : ClientColors.journeySlateLight;
+        ? (isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow)
+        : (isDark ? scheme.surfaceContainerLowest : scheme.surfaceContainerHighest);
+
+    Color border = isSelected
+        ? scheme.primary
+        : available
+        ? scheme.outline.withAlpha(60)
+        : scheme.outline.withAlpha(30);
+
+    Color iconColor = isSelected
+        ? scheme.onPrimary
+        : available
+        ? scheme.primary
+        : scheme.onSurface.withAlpha(80);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         decoration: BoxDecoration(
           color: bg,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? ClientColors.primary : ClientColors.borderFor(context),
-          ),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: border),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: scheme.primary.withAlpha(80),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  )
+                ]
+              : null,
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.event_seat_rounded,
-                size: 22,
-                color: isSelected
-                    ? Colors.white
-                    : available
-                        ? ClientColors.journeyGreen
-                        : ClientColors.journeySlate),
-            const SizedBox(height: 2),
-            Text('${seat.seatNumber}',
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w700,
-                  color: isSelected
-                      ? Colors.white
-                      : available
-                          ? ClientColors.onJourneyGreen
-                          : ClientColors.journeySlate,
-                )),
+            Icon(
+              Icons.event_seat_rounded,
+              size: 24,
+              color: iconColor,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              '${seat.seatNumber}',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w800,
+                color: iconColor,
+              ),
+            ),
           ],
         ),
       ),
@@ -167,11 +204,21 @@ class _SeatLegend extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          _item(context, ClientColors.journeyGreenLight, ClientColors.journeyGreen, 'Available'),
+          _item(
+            context,
+            ClientColors.journeyGreenLight,
+            ClientColors.journeyGreen,
+            'Available',
+          ),
           const SizedBox(width: 16),
           _item(context, ClientColors.primary, Colors.white, 'Selected'),
           const SizedBox(width: 16),
-          _item(context, ClientColors.journeySlateLight, ClientColors.journeySlate, 'Taken'),
+          _item(
+            context,
+            ClientColors.journeySlateLight,
+            ClientColors.journeySlate,
+            'Taken',
+          ),
         ],
       ),
     );
@@ -181,14 +228,21 @@ class _SeatLegend extends StatelessWidget {
     mainAxisSize: MainAxisSize.min,
     children: [
       Container(
-        width: 18, height: 18,
-        decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(4)),
+        width: 18,
+        height: 18,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(4),
+        ),
         child: Icon(Icons.event_seat_rounded, size: 12, color: icon),
       ),
       const SizedBox(width: 5),
-      Text(label, style: ClientTypography.labelSmall(ctx).copyWith(
-        color: ClientColors.textSecondaryFor(ctx),
-      )),
+      Text(
+        label,
+        style: ClientTypography.labelSmall(
+          ctx,
+        ).copyWith(color: ClientColors.textSecondaryFor(ctx)),
+      ),
     ],
   );
 }
@@ -201,11 +255,16 @@ class _SeatLoadingBody extends StatelessWidget {
     return GridView.builder(
       padding: const EdgeInsets.all(20),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 4, mainAxisSpacing: 10, crossAxisSpacing: 10,
+        crossAxisCount: 4,
+        mainAxisSpacing: 10,
+        crossAxisSpacing: 10,
       ),
       itemCount: 20,
-      itemBuilder: (_, _) => ClientSkeleton(width: double.infinity, height: double.infinity,
-          borderRadius: 10),
+      itemBuilder: (_, _) => ClientSkeleton(
+        width: double.infinity,
+        height: double.infinity,
+        borderRadius: 10,
+      ),
     );
   }
 }
@@ -223,14 +282,24 @@ class _SeatErrorBody extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 56, color: ClientColors.journeyRed),
+            const Icon(
+              Icons.error_outline_rounded,
+              size: 56,
+              color: ClientColors.journeyRed,
+            ),
             const SizedBox(height: 16),
-            Text('Could not load seats', style: ClientTypography.headingSmall(context)),
+            Text(
+              'Could not load seats',
+              style: ClientTypography.headingSmall(context),
+            ),
             const SizedBox(height: 8),
-            Text(message, textAlign: TextAlign.center,
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                )),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
+            ),
             const SizedBox(height: 20),
             ClientButton(label: 'Try Again', onPressed: onRetry),
           ],

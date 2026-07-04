@@ -15,7 +15,7 @@ enum PlanStatus {
   String get db => name;
 }
 
-/// A subscription plan, backed by the real `packages` table.
+/// A transport package, backed by `transport_packages`.
 class SubscriptionPlan {
   final String id;
   final String title;
@@ -27,6 +27,7 @@ class SubscriptionPlan {
   final double savingsAmount;
   final String description;
   final PlanStatus status;
+  final String packageType;
 
   const SubscriptionPlan({
     required this.id,
@@ -39,17 +40,18 @@ class SubscriptionPlan {
     required this.savingsAmount,
     required this.description,
     required this.status,
+    this.packageType = '',
   });
 
-  Map<String, dynamic> toInsert() => {
-    'title': title,
-    'subtitle': subtitle,
+  Map<String, dynamic> toTransportPackage() => {
+    'name_ar': title,
+    'name_en': subtitle,
+    'package_type': packageType.isEmpty
+        ? 'custom_${title.hashCode.abs()}'
+        : packageType,
     'price': price,
-    'days': days,
-    'trips_count': tripsCount,
-    'discount_percent': discountPercent,
-    'savings_amount': savingsAmount,
-    'description': description,
-    'status': status.db,
+    'duration_days': days,
+    'ride_count': tripsCount,
+    'active': status == PlanStatus.active,
   };
 }

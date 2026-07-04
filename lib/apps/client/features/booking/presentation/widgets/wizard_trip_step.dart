@@ -24,13 +24,17 @@ class WizardTripStep extends StatelessWidget {
           children: [
             Expanded(
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 16,
+                ),
                 itemCount: trips.length,
                 separatorBuilder: (_, _) => const SizedBox(height: 10),
                 itemBuilder: (_, i) => _TripCard(
                   trip: trips[i],
                   isSelected: session.selectedTrip?.id == trips[i].id,
-                  onTap: () => context.read<BookingWizardCubit>().selectTrip(trips[i]),
+                  onTap: () =>
+                      context.read<BookingWizardCubit>().selectTrip(trips[i]),
                 ),
               ),
             ),
@@ -51,21 +55,29 @@ class WizardTripStep extends StatelessWidget {
 }
 
 class _TripCard extends StatelessWidget {
-  const _TripCard({required this.trip, required this.isSelected, required this.onTap});
+  const _TripCard({
+    required this.trip,
+    required this.isSelected,
+    required this.onTap,
+  });
   final RouteTripOptionData trip;
   final bool isSelected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final borderColor = isSelected ? ClientColors.primary : ClientColors.borderFor(context);
+    final borderColor = isSelected
+        ? ClientColors.primary
+        : ClientColors.borderFor(context);
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? ClientColors.primaryLight : ClientColors.surfaceFor(context),
+          color: isSelected
+              ? ClientColors.primaryLight
+              : ClientColors.surfaceFor(context),
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: borderColor, width: isSelected ? 1.5 : 1),
         ),
@@ -76,26 +88,42 @@ class _TripCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(trip.departureTime,
-                        style: ClientTypography.headingSmall(context).copyWith(
-                          color: ClientColors.textPrimaryFor(context),
-                          fontWeight: FontWeight.w700,
-                        )),
+                    Text(
+                      trip.departureTime,
+                      style: ClientTypography.headingSmall(context).copyWith(
+                        color: ClientColors.textPrimaryFor(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                     const SizedBox(width: 8),
-                    const Icon(Icons.arrow_forward_rounded, size: 14, color: ClientColors.journeySlate),
+                    const Icon(
+                      Icons.arrow_forward_rounded,
+                      size: 14,
+                      color: ClientColors.journeySlate,
+                    ),
                     const SizedBox(width: 8),
-                    Text(trip.arrivalTime,
-                        style: ClientTypography.bodyMedium(context).copyWith(
-                          color: ClientColors.textSecondaryFor(context),
-                        )),
+                    Text(
+                      trip.arrivalTime,
+                      style: ClientTypography.bodyMedium(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 6),
                 Row(
                   children: [
-                    _chip(context, Icons.directions_bus_rounded, trip.vehicleType),
+                    _chip(
+                      context,
+                      Icons.directions_bus_rounded,
+                      trip.vehicleType,
+                    ),
                     const SizedBox(width: 8),
-                    _chip(context, Icons.event_seat_rounded, '${trip.availableSeats} seats'),
+                    _chip(
+                      context,
+                      Icons.event_seat_rounded,
+                      '${trip.availableSeats} seats',
+                    ),
                   ],
                 ),
               ],
@@ -107,18 +135,27 @@ class _TripCard extends StatelessWidget {
                 Text(
                   'EGP ${trip.price}',
                   style: ClientTypography.headingSmall(context).copyWith(
-                    color: isSelected ? ClientColors.primary : ClientColors.textPrimaryFor(context),
+                    color: isSelected
+                        ? ClientColors.primary
+                        : ClientColors.textPrimaryFor(context),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                Text('per ride', style: ClientTypography.labelSmall(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                )),
+                Text(
+                  'per ride',
+                  style: ClientTypography.labelSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                ),
               ],
             ),
             if (isSelected) ...[
               const SizedBox(width: 12),
-              const Icon(Icons.check_circle_rounded, color: ClientColors.primary, size: 22),
+              const Icon(
+                Icons.check_circle_rounded,
+                color: ClientColors.primary,
+                size: 22,
+              ),
             ],
           ],
         ),
@@ -131,9 +168,12 @@ class _TripCard extends StatelessWidget {
     children: [
       Icon(icon, size: 13, color: ClientColors.textSecondaryFor(context)),
       const SizedBox(width: 4),
-      Text(label, style: ClientTypography.labelSmall(context).copyWith(
-        color: ClientColors.textSecondaryFor(context),
-      )),
+      Text(
+        label,
+        style: ClientTypography.labelSmall(
+          context,
+        ).copyWith(color: ClientColors.textSecondaryFor(context)),
+      ),
     ],
   );
 }
@@ -150,15 +190,24 @@ class _EmptyTrips extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.directions_bus_outlined, size: 64, color: ClientColors.journeySlate),
+            const Icon(
+              Icons.directions_bus_outlined,
+              size: 64,
+              color: ClientColors.journeySlate,
+            ),
             const SizedBox(height: 16),
-            Text('No trips available', style: ClientTypography.headingSmall(context)),
+            Text(
+              'No trips available',
+              style: ClientTypography.headingSmall(context),
+            ),
             const SizedBox(height: 8),
-            Text('No trips found for $routeName today.',
-                textAlign: TextAlign.center,
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                )),
+            Text(
+              'No trips found for $routeName today.',
+              textAlign: TextAlign.center,
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
+            ),
           ],
         ),
       ),

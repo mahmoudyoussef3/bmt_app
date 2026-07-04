@@ -11,6 +11,8 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/bookin
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
 
 /// Route details and decision screen for the current search.
 class RouteSelectionScreen extends StatefulWidget {
@@ -36,17 +38,8 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
     context.read<BookingCubit>().loadRoutes(_query);
   }
 
-  void _continueToVehicles() {
-    final routeId = _selectedRouteId;
-    if (routeId == null || routeId.isEmpty) return;
-    final arguments = _query.copyWith(routeId: routeId).toArguments();
-    final tripId = _selectedTripId;
-    if (tripId != null) arguments['tripId'] = tripId;
-    Navigator.pushNamed(
-      context,
-      BookingRoutes.vehicleListing,
-      arguments: arguments,
-    );
+  void _continueToBooking(RouteOptionData route) {
+    Navigator.pushNamed(context, BookingRoutes.wizard, arguments: route);
   }
 
   @override
@@ -69,6 +62,7 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
         return BookingFlowScaffold(
           title: 'Route details',
           query: _query,
+          extendBodyBehindAppBar: true,
           bottomBar: SafeArea(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
@@ -77,7 +71,9 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
                     ? 'Select route'
                     : 'Continue with this route',
                 expand: true,
-                onPressed: selectedRoute == null ? null : _continueToVehicles,
+                onPressed: selectedRoute == null
+                    ? null
+                    : () => _continueToBooking(selectedRoute),
               ),
             ),
           ),
@@ -163,10 +159,60 @@ class _RouteDetailsBody extends StatelessWidget {
       return _RouteEmptyState(onRetry: onRetry);
     }
 
-    return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 110),
+    MapPinOption? toPin(RoutePointData? point) {
+      if (point == null || point.latitude == null || point.longitude == null) return null;
+      return MapPinOption(
+        label: point.name,
+        subtitle: '',
+        x: point.latitude!,
+        y: point.longitude!,
+      );
+    }
+
+    final pickupPoint = route.points.isNotEmpty ? route.points.first : null;
+    final destPoint = route.points.length > 1 ? route.points.last : null;
+
+    return Stack(
       children: [
-        if (!route.isExactMatch) ...[
+        Positioned.fill(
+          child: GoogleStyleMapView(
+            pickup: toPin(pickupPoint),
+            destination: toPin(destPoint),
+          ),
+        ),
+        DraggableScrollableSheet(
+          initialChildSize: 0.45,
+          minChildSize: 0.25,
+          maxChildSize: 0.95,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.surface,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withAlpha(20),
+                    blurRadius: 20,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(16, 24, 16, 110),
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      margin: const EdgeInsets.only(bottom: 24),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.outline.withAlpha(50),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  if (!route.isExactMatch) ...[
           _ClosestMatchBanner(quality: route.matchQuality),
           const SizedBox(height: 12),
         ],
@@ -211,6 +257,11 @@ class _RouteDetailsBody extends StatelessWidget {
             onSelectRoute: onSelectRoute,
           ),
         ],
+      ],
+              ),
+            );
+          },
+        ),
       ],
     );
   }
@@ -279,13 +330,17 @@ class _RouteOverviewCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
-      padding: const EdgeInsets.all(18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: ClientColors.borderFor(context)),
+        color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+        borderRadius: BorderRadius.circular(ClientRadius.xl),
+        border: Border.all(
+          color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
+        ),
+        boxShadow: ClientElevation.md(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -293,37 +348,35 @@ class _RouteOverviewCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: 48,
+                height: 48,
                 decoration: BoxDecoration(
-                  color: ClientColors.primaryLight,
-                  borderRadius: BorderRadius.circular(14),
+                  color: scheme.primary.withAlpha(isDark ? 30 : 25),
+                  borderRadius: BorderRadius.circular(ClientRadius.lg),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.route_rounded,
-                  color: ClientColors.primary,
+                  color: scheme.primary,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       route.routeName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w900,
+                        fontWeight: FontWeight.w800,
+                        color: scheme.onSurface,
+                        letterSpacing: -0.3,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${route.pickup} to ${route.destination}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                      '${route.distance} • ${route.duration}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurface.withAlpha(155),
+                        color: scheme.onSurface.withAlpha(160),
                         fontWeight: FontWeight.w600,
                       ),
                     ),

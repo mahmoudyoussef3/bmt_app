@@ -278,7 +278,7 @@ class _TripsListState extends State<_TripsList> {
     Widget listWidget;
     if (widget.state.trips.isEmpty) {
       listWidget = const EmptyState(
-        title: 'لا توجد رحلات قيد المتابعة الآن',
+        title: 'لا توجد رحلات مباشرة الآن',
         subtitle: 'عند بدء الرحلات ستظهر هنا.',
       );
     } else if (filtered.isEmpty) {

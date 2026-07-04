@@ -30,7 +30,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
   }
 
   PaymentStatus _mapPayment(String statusStr, String reviewStatusStr) {
-    if (reviewStatusStr.toLowerCase() == 'pending' || reviewStatusStr.toLowerCase() == 'under_review') {
+    if (reviewStatusStr.toLowerCase() == 'pending' ||
+        reviewStatusStr.toLowerCase() == 'under_review') {
       return PaymentStatus.underReview;
     }
     switch (statusStr.toLowerCase()) {
@@ -39,6 +40,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
         return PaymentStatus.paid;
       case 'refunded':
         return PaymentStatus.refunded;
+      case 'rejected':
+        return PaymentStatus.failed;
       default:
         return PaymentStatus.pending;
     }
@@ -62,13 +65,18 @@ class SupabaseTripsDatasource implements TripsDatasource {
     final vehicleObj = tripObj?['vehicles'] as Map<String, dynamic>?;
     final driverObj = tripObj?['drivers'] as Map<String, dynamic>?;
 
-    final routeParts = (data['route'] as String? ?? '').split(' - ');
+    final routeParts = (data['route'] as String? ?? '').split(
+      RegExp(r'\s*(?:→|-)\s*'),
+    );
     final pickup = routeParts.isNotEmpty ? routeParts[0] : 'Unknown';
     final destination = routeParts.length > 1 ? routeParts[1] : 'Unknown';
 
     final paymentDetails =
         data['payment_details'] as Map<String, dynamic>? ?? {};
-    final fare = paymentDetails['amount']?.toString() ?? '85.00';
+    final fare =
+        data['payment_amount']?.toString() ??
+        paymentDetails['amount']?.toString() ??
+        '0';
     final paymentStatusStr = paymentDetails['status']?.toString() ?? 'pending';
 
     final tripStatusStr = tripObj?['status']?.toString() ?? 'scheduled';
@@ -76,7 +84,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
     return TripModel(
       id: data['id']?.toString() ?? '',
-      reference: _reference(data['id']?.toString() ?? ''),
+      reference:
+          data['booking_number']?.toString() ??
+          _reference(data['id']?.toString() ?? ''),
       status: _mapStatus(tripStatusStr, bookingStatusStr),
       pickup: pickup,
       destination: destination,
@@ -97,7 +107,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
         data['payment_review_status']?.toString() ?? 'approved',
       ),
       fare: 'EGP $fare',
-      cancellationReason: data['rejection_reason']?.toString(),
+      cancellationReason:
+          data['payment_rejection_reason']?.toString() ??
+          data['rejection_reason']?.toString(),
     );
   }
 

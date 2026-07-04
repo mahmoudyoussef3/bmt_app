@@ -399,8 +399,8 @@ String _paymentMethodNextStep(PaymentMethodType type) {
   return switch (type) {
     PaymentMethodType.creditCard => 'Next: secure card authorization',
     PaymentMethodType.instapay => 'Next: transfer details and receipt',
+    PaymentMethodType.bankTransfer => 'Next: bank details and receipt',
     PaymentMethodType.vodafoneCash => 'Next: wallet transfer and receipt',
-    PaymentMethodType.cashOnBoarding => 'Next: reserve now and pay on boarding',
     PaymentMethodType.walletBalance => 'Next: instant wallet deduction',
   };
 }
@@ -409,8 +409,8 @@ IconData _paymentMethodIcon(PaymentMethodType type) {
   return switch (type) {
     PaymentMethodType.creditCard => Icons.credit_card_rounded,
     PaymentMethodType.instapay => Icons.account_balance_wallet_rounded,
+    PaymentMethodType.bankTransfer => Icons.account_balance_rounded,
     PaymentMethodType.vodafoneCash => Icons.phone_android_rounded,
-    PaymentMethodType.cashOnBoarding => Icons.payments_rounded,
     PaymentMethodType.walletBalance => Icons.account_balance_rounded,
   };
 }

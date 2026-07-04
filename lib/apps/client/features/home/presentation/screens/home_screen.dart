@@ -13,6 +13,8 @@ import 'package:bmt_app/core/widgets/app_dialogs.dart';
 
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
+import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -266,56 +268,54 @@ class _CleanSearchBar extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-          decoration: BoxDecoration(
-            color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
+    return PressableScale(
+      onTap: onTap,
+      scale: 0.98,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: BoxDecoration(
+          color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+          borderRadius: BorderRadius.circular(ClientRadius.md),
+          border: Border.all(
+            color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
+          ),
+          boxShadow: ClientElevation.sm(context),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.search_rounded, color: scheme.onSurface.withAlpha(150), size: 28),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Where to?',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: scheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Search routes, cities, or stations',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: scheme.onSurface.withAlpha(140),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.search_rounded, color: scheme.onSurface.withAlpha(150), size: 28),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Where to?',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: scheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Search routes, cities, or stations',
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: scheme.onSurface.withAlpha(140),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: scheme.primary,
+                borderRadius: BorderRadius.circular(12),
               ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: scheme.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
-              ),
-            ],
-          ),
+              child: const Icon(Icons.arrow_forward_rounded, color: Colors.white, size: 20),
+            ),
+          ],
         ),
       ),
     );

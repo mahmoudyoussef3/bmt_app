@@ -11,18 +11,37 @@ import 'package:flutter/material.dart';
 /// Use the static journey constants directly for status colors.
 abstract final class ClientColors {
   // ── Brand ──────────────────────────────────────────────────────────────────
-  static const Color primary = Color(0xFF1769E8);
-  static const Color primaryHover = Color(0xFF0F58CA);
-  static const Color primaryLight = Color(0xFFEAF2FF);
-  static const Color primaryMuted = Color(0xFF76A8FF);
-  static const Color secondary = Color(0xFF0891B2);
-  static const Color accent = Color(0xFFF59E0B);
+  static const Color primary = Color(0xFF2563EB); // Royal Blue
+  static const Color primaryHover = Color(0xFF1D4ED8);
+  static const Color primaryLight = Color(0xFFDBEAFE);
+  static const Color primaryMuted = Color(0xFF93C5FD);
+  static const Color secondary = Color(0xFF0EA5E9); // Sky Blue
+  static const Color accent = Color(0xFF6366F1); // Indigo
 
-  static const Color darkPrimary = Color(0xFF72A7FF);
-  static const Color darkPrimaryStrong = Color(0xFF4B8BFF);
-  static const Color darkPrimaryLight = Color(0xFF12284A);
+  static const Color darkPrimary = Color(0xFF3B82F6); // Lighter Blue for Dark Mode
+  static const Color darkPrimaryStrong = Color(0xFF60A5FA);
+  static const Color darkPrimaryLight = Color(0xFF1E3A8A);
   static const Color darkSecondary = Color(0xFF38BDF8);
-  static const Color darkAccent = Color(0xFFFBBF24);
+  static const Color darkAccent = Color(0xFF818CF8);
+
+  // ── Gradients ──────────────────────────────────────────────────────────────
+  static const Gradient primaryGradient = LinearGradient(
+    colors: [
+      Color(0xFF2563EB),
+      Color(0xFF0EA5E9),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const Gradient darkPrimaryGradient = LinearGradient(
+    colors: [
+      Color(0xFF3B82F6),
+      Color(0xFF38BDF8),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
 
   // ── Journey status ─────────────────────────────────────────────────────────
   // Green — confirmed booking, on-time, boarded, active trip
@@ -99,6 +118,9 @@ abstract final class ClientColors {
 
   static Color borderStrongFor(BuildContext context) =>
       _isDark(context) ? _darkBorderStrong : borderStrong;
+
+  static Gradient primaryGradientFor(BuildContext context) =>
+      _isDark(context) ? darkPrimaryGradient : primaryGradient;
 
   static Color textPrimaryFor(BuildContext context) =>
       _isDark(context) ? _darkTextPrimary : textPrimary;

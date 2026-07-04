@@ -58,9 +58,11 @@ class RouteTripOptionModel {
     required this.availableSeats,
     required this.vehicleType,
     required this.price,
+    this.tripDate = '',
   });
 
   final String id;
+  final String tripDate;
   final String departureTime;
   final String arrivalTime;
   final int availableSeats;
@@ -70,6 +72,7 @@ class RouteTripOptionModel {
   RouteTripOptionData toEntity() {
     return RouteTripOptionData(
       id: id,
+      tripDate: tripDate,
       departureTime: departureTime,
       arrivalTime: arrivalTime,
       availableSeats: availableSeats,
@@ -83,12 +86,14 @@ class RoutePointModel {
   const RoutePointModel({
     required this.name,
     required this.order,
+    this.id = '',
     this.pickupAllowed = true,
     this.dropoffAllowed = true,
     this.latitude,
     this.longitude,
   });
 
+  final String id;
   final String name;
   final int order;
   final bool pickupAllowed;
@@ -98,6 +103,7 @@ class RoutePointModel {
 
   RoutePointData toEntity() {
     return RoutePointData(
+      id: id,
       name: name,
       order: order,
       pickupAllowed: pickupAllowed,

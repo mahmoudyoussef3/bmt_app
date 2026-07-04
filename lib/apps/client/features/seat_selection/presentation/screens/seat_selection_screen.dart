@@ -500,7 +500,7 @@ class _SeatSelectionContent extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Select one or more seats to continue',
+            'Select one seat to continue',
             textAlign: TextAlign.center,
             style: ClientTypography.bodyMedium(context).copyWith(
               fontWeight: FontWeight.w700,
@@ -509,7 +509,7 @@ class _SeatSelectionContent extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Tap any available seat on the layout above. Your fare updates instantly below.',
+            'Tap one available seat on the layout above.',
             textAlign: TextAlign.center,
             style: ClientTypography.bodySmall(context).copyWith(
               color: ClientColors.textSecondaryFor(context),
@@ -642,7 +642,7 @@ class _SeatSelectionContent extends StatelessWidget {
                             .lockSelectedSeat();
                         if (!locked || !context.mounted) return;
                         Navigator.of(context).pushNamed(
-                          '/payment-checkout',
+                          '/subscription',
                           arguments: {
                             'tripId': data.tripId,
                             'pickupPoint': data.pickupPoint,

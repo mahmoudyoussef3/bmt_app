@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/theme/app_layout.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 
 class ClientBottomNavigation extends StatelessWidget {
   const ClientBottomNavigation({
@@ -18,44 +19,60 @@ class ClientBottomNavigation extends StatelessWidget {
     final tabs = <({String id, String label, IconData icon})>[
       (id: 'home', label: 'Home', icon: Icons.home_rounded),
       (id: 'routes', label: 'Routes', icon: Icons.route_rounded),
-      (id: 'trips', label: 'My Trips', icon: Icons.receipt_long_rounded),
+      (id: 'trips', label: 'Trips', icon: Icons.receipt_long_rounded),
       (id: 'profile', label: 'Profile', icon: Icons.person_rounded),
     ];
 
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
-        border: Border(top: BorderSide(color: scheme.outline.withAlpha(40))),
+        boxShadow: ClientElevation.lg(context),
       ),
       padding: const EdgeInsets.only(
-        top: AppLayout.spaceSm,
-        bottom: AppLayout.spaceSm,
-        left: AppLayout.spaceSm,
-        right: AppLayout.spaceSm,
+        top: ClientSpacing.sm,
+        bottom: ClientSpacing.sm,
+        left: ClientSpacing.xs,
+        right: ClientSpacing.xs,
       ),
       child: SafeArea(
         top: false,
         child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: tabs.map((tab) {
             final isActive = activeTab == tab.id;
             return Expanded(
-              child: InkWell(
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () => onTabChange(tab.id),
-                borderRadius: BorderRadius.circular(AppLayout.radiusLg),
                 child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
+                  duration: ClientMotion.fast,
+                  curve: ClientMotion.curve,
                   padding: const EdgeInsets.symmetric(
-                    vertical: AppLayout.spaceXs,
+                    vertical: ClientSpacing.xs,
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(
-                        tab.icon,
-                        size: 24,
-                        color: isActive
-                            ? scheme.primary
-                            : scheme.onSurfaceVariant.withAlpha(150),
+                      AnimatedContainer(
+                        duration: ClientMotion.fast,
+                        curve: ClientMotion.curve,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isActive ? 20 : 0,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: isActive
+                              ? scheme.primary.withAlpha(20)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(ClientRadius.pill),
+                        ),
+                        child: Icon(
+                          tab.icon,
+                          size: 24,
+                          color: isActive
+                              ? scheme.primary
+                              : scheme.onSurfaceVariant.withAlpha(150),
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -66,6 +83,8 @@ class ClientBottomNavigation extends StatelessWidget {
                               : scheme.onSurfaceVariant.withAlpha(150),
                           fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
                         ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),

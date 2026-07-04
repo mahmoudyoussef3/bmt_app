@@ -40,125 +40,206 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
       textDirection: TextDirection.rtl,
       child: Scaffold(
         backgroundColor: scheme.surface,
-        body: SafeArea(
-          child: BlocConsumer<CaptainAuthCubit, CaptainAuthState>(
-            listener: (context, state) {
-              if (state is CaptainAuthError) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text(state.message),
-                    backgroundColor: scheme.error,
-                    behavior: SnackBarBehavior.floating,
+        body: Stack(
+          children: [
+            // Subtle glowing background element
+            Positioned(
+              top: -100,
+              right: -50,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      scheme.primary.withAlpha(30),
+                      Colors.transparent,
+                    ],
                   ),
-                );
-                context.read<CaptainAuthCubit>().resetError();
-              }
-            },
-            builder: (context, state) {
-              final loading = state is CaptainAuthLoading;
-              return Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 28),
-                  child: Form(
-                    key: _formKey,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(height: 24),
+                ),
+              ),
+            ),
+            SafeArea(
+              child: BlocConsumer<CaptainAuthCubit, CaptainAuthState>(
+                listener: (context, state) {
+                  if (state is CaptainAuthError) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text(state.message),
+                        backgroundColor: scheme.error,
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        margin: const EdgeInsets.all(16),
+                      ),
+                    );
+                    context.read<CaptainAuthCubit>().resetError();
+                  }
+                },
+                builder: (context, state) {
+                  final loading = state is CaptainAuthLoading;
+                  return Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                        const SizedBox(height: 12),
                         Container(
-                          width: 80,
-                          height: 80,
+                          width: 88,
+                          height: 88,
                           decoration: BoxDecoration(
-                            color: scheme.primary,
-                            borderRadius: BorderRadius.circular(20),
+                            gradient: LinearGradient(
+                              colors: [
+                                scheme.primary,
+                                scheme.primary.withAlpha(190),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            borderRadius: BorderRadius.circular(28),
+                            boxShadow: [
+                              BoxShadow(
+                                color: scheme.primary.withAlpha(60),
+                                blurRadius: 24,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
                           ),
                           child: Icon(
                             Icons.directions_bus_rounded,
-                            size: 44,
+                            size: 48,
                             color: scheme.onPrimary,
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 24),
                         Text(
                           'تطبيق السائق',
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                              ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
                           'سجّل دخولك للمتابعة',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                        const SizedBox(height: 36),
-                        TextFormField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
-                          textDirection: TextDirection.ltr,
-                          textAlign: TextAlign.left,
-                          textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.email],
-                          decoration: const InputDecoration(
-                            labelText: 'البريد الإلكتروني',
-                            prefixIcon: Icon(Icons.email_outlined),
-                          ),
-                          validator: (value) {
-                            final email = value?.trim() ?? '';
-                            return RegExp(
-                                  r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
-                                ).hasMatch(email)
-                                ? null
-                                : 'أدخل بريداً إلكترونياً صحيحاً';
-                          },
-                        ),
-                        const SizedBox(height: 14),
-                        TextFormField(
-                          controller: _passwordCtrl,
-                          obscureText: _obscurePassword,
-                          textDirection: TextDirection.ltr,
-                          textAlign: TextAlign.left,
-                          textInputAction: TextInputAction.done,
-                          autofillHints: const [AutofillHints.password],
-                          onFieldSubmitted: (_) => _submit(),
-                          decoration: InputDecoration(
-                            labelText: 'كلمة المرور',
-                            prefixIcon: const Icon(Icons.lock_outline_rounded),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword
-                                    ? Icons.visibility_off_outlined
-                                    : Icons.visibility_outlined,
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
                               ),
-                              onPressed: () => setState(
-                                () => _obscurePassword = !_obscurePassword,
+                        ),
+                        const SizedBox(height: 48),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? scheme.surfaceContainerHighest
+                                : scheme.surface,
+                            borderRadius: BorderRadius.circular(24),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withAlpha(12),
+                                blurRadius: 32,
+                                offset: const Offset(0, 12),
                               ),
+                            ],
+                            border: Border.all(
+                              color: scheme.outlineVariant.withAlpha(50),
                             ),
                           ),
-                          validator: (value) => (value?.isEmpty ?? true)
-                              ? 'أدخل كلمة المرور'
-                              : null,
-                        ),
-                        const SizedBox(height: 28),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 52,
-                          child: FilledButton(
-                            onPressed: loading ? null : _submit,
-                            child: loading
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                    ),
-                                  )
-                                : const Text(
-                                    'دخول',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w700,
+                          child: Column(
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: TextFormField(
+                                  controller: _emailCtrl,
+                                  keyboardType: TextInputType.emailAddress,
+                                  textDirection: TextDirection.ltr,
+                                  textAlign: TextAlign.left,
+                                  textInputAction: TextInputAction.next,
+                                  autofillHints: const [AutofillHints.email],
+                                  decoration: const InputDecoration(
+                                    labelText: 'البريد الإلكتروني',
+                                    prefixIcon: Icon(Icons.email_outlined),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                  ),
+                                  validator: (value) {
+                                    final email = value?.trim() ?? '';
+                                    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)
+                                        ? null
+                                        : 'أدخل بريداً إلكترونياً صحيحاً';
+                                  },
+                                ),
+                              ),
+                              Divider(
+                                height: 1,
+                                color: scheme.outlineVariant.withAlpha(40),
+                                indent: 16,
+                                endIndent: 16,
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                child: TextFormField(
+                                  controller: _passwordCtrl,
+                                  obscureText: _obscurePassword,
+                                  textDirection: TextDirection.ltr,
+                                  textAlign: TextAlign.left,
+                                  textInputAction: TextInputAction.done,
+                                  autofillHints: const [AutofillHints.password],
+                                  onFieldSubmitted: (_) => _submit(),
+                                  decoration: InputDecoration(
+                                    labelText: 'كلمة المرور',
+                                    prefixIcon: const Icon(Icons.lock_outline_rounded),
+                                    border: InputBorder.none,
+                                    enabledBorder: InputBorder.none,
+                                    focusedBorder: InputBorder.none,
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscurePassword
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                      ),
+                                      onPressed: () => setState(
+                                        () => _obscurePassword = !_obscurePassword,
+                                      ),
                                     ),
                                   ),
+                                  validator: (value) =>
+                                      (value?.isEmpty ?? true) ? 'أدخل كلمة المرور' : null,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 36),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: FilledButton(
+                            onPressed: loading ? null : _submit,
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                            child: loading
+                                ? const SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.5,
+                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    ),
+                                  )
+                                : const Text('دخول'),
                           ),
                         ),
                         const SizedBox(height: 32),
@@ -170,7 +251,9 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
             },
           ),
         ),
-      ),
-    );
+      ],
+    ),
+  ),
+);
   }
 }

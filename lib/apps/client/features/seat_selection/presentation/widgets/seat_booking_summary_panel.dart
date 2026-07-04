@@ -47,7 +47,7 @@ class SeatBookingSummaryPanel extends StatelessWidget {
           _SummaryRow(label: 'Vehicle', value: vehicleName),
           _SummaryRow(label: 'Route', value: route),
           _SummaryRow(
-            label: 'Selected seats',
+            label: 'Selected seat',
             value: hasSelection ? 'Seat $selectedSeat' : '—',
             emphasized: hasSelection,
           ),

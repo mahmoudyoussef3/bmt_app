@@ -83,12 +83,13 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
       );
     }).toList();
 
-    final distinctArrivalTimes = tripsResponse
-        .map((t) => t['arrival_time']?.toString() ?? '')
-        .where((t) => t.isNotEmpty)
-        .toSet()
-        .toList()
-      ..sort();
+    final distinctArrivalTimes =
+        tripsResponse
+            .map((t) => t['arrival_time']?.toString() ?? '')
+            .where((t) => t.isNotEmpty)
+            .toSet()
+            .toList()
+          ..sort();
 
     return DailyBookingData(
       pickupPoints: distinctPickups.isNotEmpty ? distinctPickups : [],

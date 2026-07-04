@@ -104,12 +104,17 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
         'p_pricing_id': null,
         'p_pickup_point_id': null,
         'p_dropoff_point_id': null,
-        'p_passenger_name': Supabase.instance.client.auth.currentUser
+        'p_passenger_name':
+            Supabase
+                .instance
+                .client
+                .auth
+                .currentUser
                 ?.userMetadata?['full_name']
                 ?.toString() ??
             '',
-        'p_phone': Supabase.instance.client.auth.currentUser
-                ?.userMetadata?['phone']
+        'p_phone':
+            Supabase.instance.client.auth.currentUser?.userMetadata?['phone']
                 ?.toString() ??
             '',
         'p_route': widget.checkoutData.route,
@@ -177,8 +182,8 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
       PaymentMethodType.creditCard => 'credit_card',
       PaymentMethodType.vodafoneCash => 'mobile_wallet',
       PaymentMethodType.instapay => 'instapay',
+      PaymentMethodType.bankTransfer => 'bank_transfer',
       PaymentMethodType.walletBalance => 'wallet_balance',
-      PaymentMethodType.cashOnBoarding => 'cash_on_boarding',
     };
   }
 

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 
 /// The standard call-to-action button for the client app.
 ///
@@ -59,27 +61,45 @@ class ClientButton extends StatelessWidget {
     final minSize = expand ? const Size.fromHeight(52) : const Size(0, 52);
 
     Widget button = switch (_variant) {
-      _ClientButtonVariant.primary => FilledButton(
-        onPressed: effective,
-        style: FilledButton.styleFrom(
-          backgroundColor: ClientColors.primary,
-          foregroundColor: ClientColors.textInverse,
-          disabledBackgroundColor: ClientColors.primary.withAlpha(100),
-          disabledForegroundColor: ClientColors.textInverse.withAlpha(180),
-          minimumSize: minSize,
-          shape: shape,
-          textStyle: ClientTypography.labelLarge(context),
+      _ClientButtonVariant.primary => PressableScale(
+        onTap: effective,
+        scale: 0.96,
+        child: Container(
+          constraints: BoxConstraints(minHeight: minSize.height),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            gradient: effective == null ? null : ClientColors.primaryGradientFor(context),
+            color: effective == null ? Theme.of(context).colorScheme.primary.withAlpha(100) : null,
+            borderRadius: BorderRadius.circular(ClientRadius.md),
+            boxShadow: effective == null ? null : ClientElevation.sm(context),
+          ),
+          child: DefaultTextStyle(
+            style: ClientTypography.labelLarge(context).copyWith(
+              color: effective == null
+                  ? Theme.of(context).colorScheme.onPrimary.withAlpha(180)
+                  : Theme.of(context).colorScheme.onPrimary,
+            ),
+            child: IconTheme(
+              data: IconThemeData(
+                color: effective == null
+                    ? Theme.of(context).colorScheme.onPrimary.withAlpha(180)
+                    : Theme.of(context).colorScheme.onPrimary,
+                size: 20,
+              ),
+              child: child,
+            ),
+          ),
         ),
-        child: child,
       ),
       _ClientButtonVariant.secondary => OutlinedButton(
         onPressed: effective,
         style: OutlinedButton.styleFrom(
-          foregroundColor: ClientColors.primary,
+          foregroundColor: Theme.of(context).colorScheme.primary,
           side: BorderSide(
             color: isLoading
-                ? ClientColors.primary.withAlpha(80)
-                : ClientColors.primary,
+                ? Theme.of(context).colorScheme.primary.withAlpha(80)
+                : Theme.of(context).colorScheme.primary,
           ),
           minimumSize: minSize,
           shape: shape,
@@ -90,7 +110,7 @@ class ClientButton extends StatelessWidget {
       _ClientButtonVariant.text => TextButton(
         onPressed: effective,
         style: TextButton.styleFrom(
-          foregroundColor: ClientColors.primary,
+          foregroundColor: Theme.of(context).colorScheme.primary,
           minimumSize: const Size(0, 44),
           shape: shape,
           textStyle: ClientTypography.labelLarge(context),
