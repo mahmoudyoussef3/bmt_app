@@ -53,6 +53,14 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     final code = referralCode?.trim().toUpperCase() ?? '';
 
     try {
+      final phoneExists = await _supabase.rpc('check_phone_exists', params: {
+        'p_phone': phone.trim(),
+      });
+
+      if (phoneExists == true) {
+        throw Exception('Phone number is already registered to another account.');
+      }
+
       final response = await _supabase.auth.signUp(
         email: email,
         password: password,

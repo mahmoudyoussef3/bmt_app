@@ -1,16 +1,28 @@
 enum BookingStatus {
-  newRequest('طلب جديد'),
-  paymentUploaded('تم رفع الإيصال'),
-  underReview('قيد المراجعة'),
-  approved('مقبول'),
-  rejected('مرفوض'),
-  requestReupload('طلب إعادة رفع'),
-  confirmed('مؤكد المقعد'),
+  draft('مسودة'),
+  reserved('محجوز'),
+  confirmed('مؤكد'),
+  boarded('تم الصعود'),
+  completed('مكتمل'),
   cancelled('ملغى');
 
   final String label;
 
   const BookingStatus(this.label);
+}
+
+enum PaymentStatus {
+  pending('قيد الانتظار'),
+  submitted('تم الرفع'),
+  underReview('قيد المراجعة'),
+  approved('مقبول'),
+  rejected('مرفوض'),
+  refunded('مسترد'),
+  failed('فاشل');
+
+  final String label;
+
+  const PaymentStatus(this.label);
 }
 
 enum BookingPaymentMethod {
@@ -58,6 +70,7 @@ class OperationBooking {
   final String seat;
   final BookingPaymentMethod paymentMethod;
   final BookingStatus status;
+  final PaymentStatus paymentStatus;
   final BookingPriority priority;
   final String assignedTrip;
   final String? reviewerName;
@@ -80,6 +93,7 @@ class OperationBooking {
     required this.seat,
     required this.paymentMethod,
     required this.status,
+    required this.paymentStatus,
     required this.priority,
     required this.assignedTrip,
     required this.createdAt,
@@ -96,6 +110,7 @@ class OperationBooking {
   OperationBooking copyWith({
     String? id,
     BookingStatus? status,
+    PaymentStatus? paymentStatus,
     BookingPriority? priority,
     String? assignedTrip,
     String? reviewerName,
@@ -112,6 +127,7 @@ class OperationBooking {
       seat: seat,
       paymentMethod: paymentMethod,
       status: status ?? this.status,
+      paymentStatus: paymentStatus ?? this.paymentStatus,
       priority: priority ?? this.priority,
       assignedTrip: assignedTrip ?? this.assignedTrip,
       createdAt: createdAt,

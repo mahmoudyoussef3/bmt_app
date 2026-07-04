@@ -161,6 +161,10 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
         }
       }
 
+      final isManualTransfer = session.paymentMethod == 'instapay' ||
+          session.paymentMethod == 'vodafone_cash' ||
+          session.paymentMethod == 'bank_transfer';
+
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
@@ -172,6 +176,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
             destination: session.dropoffStop?.name ?? '',
             bookingReference: bookingRef,
             bookingId: bookingId,
+            requiresVerification: isManualTransfer,
           ),
         ),
       );

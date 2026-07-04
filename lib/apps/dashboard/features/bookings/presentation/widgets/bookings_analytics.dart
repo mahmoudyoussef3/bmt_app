@@ -104,12 +104,12 @@ class BookingsAnalytics extends StatelessWidget {
   List<ChartDatum> _paymentData() {
     var paid = 0, pending = 0, cancelled = 0;
     for (final b in bookings) {
-      switch (b.status) {
-        case BookingStatus.approved:
-        case BookingStatus.confirmed:
+      switch (b.paymentStatus) {
+        case PaymentStatus.approved:
           paid++;
-        case BookingStatus.cancelled:
-        case BookingStatus.rejected:
+        case PaymentStatus.failed:
+        case PaymentStatus.rejected:
+        case PaymentStatus.refunded:
           cancelled++;
         default:
           pending++;
@@ -170,13 +170,11 @@ class BookingsAnalytics extends StatelessWidget {
   }
 
   Color _statusColor(BookingStatus status) => switch (status) {
-    BookingStatus.newRequest => const Color(0xFF06B6D4),
-    BookingStatus.paymentUploaded => const Color(0xFF0EA5E9),
-    BookingStatus.underReview => const Color(0xFFF59E0B),
-    BookingStatus.approved => const Color(0xFF22C55E),
-    BookingStatus.confirmed => const Color(0xFF16A34A),
-    BookingStatus.requestReupload => const Color(0xFFA855F7),
-    BookingStatus.rejected => const Color(0xFFDC2626),
+    BookingStatus.draft => const Color(0xFF06B6D4),
+    BookingStatus.reserved => const Color(0xFF0EA5E9),
+    BookingStatus.confirmed => const Color(0xFF22C55E),
+    BookingStatus.boarded => const Color(0xFFF59E0B),
+    BookingStatus.completed => const Color(0xFF16A34A),
     BookingStatus.cancelled => const Color(0xFF64748B),
   };
 }

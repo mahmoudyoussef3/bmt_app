@@ -27,7 +27,7 @@ class BookingsLoaded extends BookingsState {
     required this.filters,
     this.selectedIds = const {},
     this.openedBooking,
-    this.activeTab = BookingStatus.underReview,
+    this.activeTab = BookingStatus.reserved,
   });
 
   List<OperationBooking> get filteredBookings {
@@ -66,6 +66,10 @@ class BookingsLoaded extends BookingsState {
 
   int countByStatus(BookingStatus status) {
     return bookings.where((b) => b.status == status).length;
+  }
+
+  int countByPaymentStatus(PaymentStatus status) {
+    return bookings.where((b) => b.paymentStatus == status).length;
   }
 
   BookingsLoaded copyWith({

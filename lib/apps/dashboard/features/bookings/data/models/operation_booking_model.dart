@@ -11,6 +11,7 @@ class OperationBookingModel extends OperationBooking {
     required super.seat,
     required super.paymentMethod,
     required super.status,
+    required super.paymentStatus,
     required super.priority,
     required super.assignedTrip,
     required super.createdAt,
@@ -35,6 +36,7 @@ class OperationBookingModel extends OperationBooking {
       seat: booking.seat,
       paymentMethod: booking.paymentMethod,
       status: booking.status,
+      paymentStatus: booking.paymentStatus,
       priority: booking.priority,
       assignedTrip: booking.assignedTrip,
       createdAt: booking.createdAt,
@@ -56,10 +58,16 @@ class OperationBookingModel extends OperationBooking {
       orElse: () => BookingPaymentMethod.cash,
     );
 
-    final statusStr = json['status'] as String? ?? 'newRequest';
+    final statusStr = json['status'] as String? ?? 'draft';
     final status = BookingStatus.values.firstWhere(
       (s) => s.name == statusStr,
-      orElse: () => BookingStatus.newRequest,
+      orElse: () => BookingStatus.draft,
+    );
+
+    final paymentStatusStr = json['payment_status'] as String? ?? 'pending';
+    final paymentStatus = PaymentStatus.values.firstWhere(
+      (s) => s.name == paymentStatusStr,
+      orElse: () => PaymentStatus.pending,
     );
 
     final priorityStr = json['priority'] as String? ?? 'normal';
@@ -93,6 +101,7 @@ class OperationBookingModel extends OperationBooking {
       seat: json['seat'] as String? ?? '',
       paymentMethod: paymentMethod,
       status: status,
+      paymentStatus: paymentStatus,
       priority: priority,
       assignedTrip: json['assigned_trip'] as String? ?? 'غير مسند',
       createdAt: json['created_at'] != null
@@ -132,6 +141,7 @@ class OperationBookingModel extends OperationBooking {
       'seat': seat,
       'payment_method': paymentMethod.name,
       'status': status.name,
+      'payment_status': paymentStatus.name,
       'priority': priority.name,
       'assigned_trip': assignedTrip,
       'created_at': createdAt.toUtc().toIso8601String(),

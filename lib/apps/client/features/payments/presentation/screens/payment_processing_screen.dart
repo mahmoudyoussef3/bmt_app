@@ -538,6 +538,9 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
           ClientButton(
             label: 'View Ticket',
             onPressed: () {
+              final isManualTransfer = widget.paymentMethod.type == PaymentMethodType.instapay ||
+                  widget.paymentMethod.type == PaymentMethodType.vodafoneCash ||
+                  widget.paymentMethod.type == PaymentMethodType.bankTransfer;
               Navigator.of(context).pushReplacement(
                 MaterialPageRoute(
                   builder: (_) => BookingConfirmationScreen(
@@ -548,6 +551,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     destination: widget.checkoutData.destination,
                     bookingReference: _bookingReference,
                     bookingId: _bookingId,
+                    requiresVerification: isManualTransfer,
                   ),
                 ),
               );

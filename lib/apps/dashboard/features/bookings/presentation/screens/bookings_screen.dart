@@ -71,8 +71,8 @@ class _BookingsLoadedView extends StatelessWidget {
                   const SizedBox(height: AppSpacing.medium),
                   _BookingBulkActions(
                     selectedCount: state.selectedIds.length,
-                    onApprove: () => cubit.bulkUpdate(BookingStatus.approved),
-                    onReject: () => cubit.bulkUpdate(BookingStatus.rejected),
+                    onApprove: () => cubit.bulkUpdate(BookingStatus.confirmed),
+                    onReject: () => cubit.bulkUpdate(BookingStatus.cancelled),
                     onAssign: cubit.assignSelectedToTrip,
                     onClear: cubit.clearSelection,
                   ),
@@ -154,22 +154,22 @@ class _SummaryCards extends StatelessWidget {
   Widget build(BuildContext context) {
     final items = [
       _SummaryItem(
-        'جديدة',
-        state.countByStatus(BookingStatus.newRequest),
+        'مسودة',
+        state.countByStatus(BookingStatus.draft),
         Icons.fiber_new_rounded,
         AppStatusColors.onInfoContainer,
       ),
       _SummaryItem(
-        'تحت المراجعة',
-        state.countByStatus(BookingStatus.underReview) +
-            state.countByStatus(BookingStatus.paymentUploaded),
+        'مراجعة الدفع',
+        state.countByPaymentStatus(PaymentStatus.underReview) +
+            state.countByPaymentStatus(PaymentStatus.submitted),
         Icons.hourglass_top_rounded,
         AppStatusColors.onWarningContainer,
       ),
       _SummaryItem(
-        'مقبولة',
-        state.countByStatus(BookingStatus.approved),
-        Icons.check_circle_outline,
+        'محجوزة',
+        state.countByStatus(BookingStatus.reserved),
+        Icons.book_online_outlined,
         AppStatusColors.onSuccessContainer,
       ),
       _SummaryItem(
@@ -179,8 +179,8 @@ class _SummaryCards extends StatelessWidget {
         AppStatusColors.onSpecialContainer,
       ),
       _SummaryItem(
-        'مرفوضة',
-        state.countByStatus(BookingStatus.rejected),
+        'مرفوضة الدفع',
+        state.countByPaymentStatus(PaymentStatus.rejected),
         Icons.cancel_outlined,
         AppStatusColors.onErrorContainer,
       ),
@@ -657,7 +657,7 @@ class _BookingsTable extends StatelessWidget {
                   DataCell(Text(booking.paymentDetails.amount)),
                   DataCell(Text(booking.paymentMethod.label)),
                   DataCell(_PriorityBadge(priority: booking.priority)),
-                  DataCell(StatusChip(label: booking.status.label)),
+                  DataCell(StatusChip(label: '${booking.status.label} / ${booking.paymentStatus.label}')),
                   DataCell(Text(booking.date)),
                   DataCell(_RowActions(booking: booking, cubit: cubit)),
                 ],
@@ -695,8 +695,8 @@ class _BookingCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final canReview =
-        booking.status == BookingStatus.underReview ||
-        booking.status == BookingStatus.paymentUploaded;
+        booking.paymentStatus == PaymentStatus.underReview ||
+        booking.paymentStatus == PaymentStatus.submitted;
 
     return AppCard(
       onTap: onOpen,
@@ -725,7 +725,7 @@ class _BookingCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                StatusChip(label: booking.status.label),
+                StatusChip(label: '${booking.status.label} / ${booking.paymentStatus.label}'),
               ],
             ),
             const SizedBox(height: AppSpacing.small),
@@ -869,8 +869,8 @@ class _RowActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final canReview =
-        booking.status == BookingStatus.underReview ||
-        booking.status == BookingStatus.paymentUploaded;
+        booking.paymentStatus == PaymentStatus.underReview ||
+        booking.paymentStatus == PaymentStatus.submitted;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -971,6 +971,10 @@ class _BookingDetailsPanel extends StatelessWidget {
                   runSpacing: AppSpacing.small,
                   children: [
                     StatusChip(label: booking.status.label),
+                    StatusChip(
+                      label: booking.paymentStatus.label,
+                      color: AppStatusColors.onWarningContainer,
+                    ),
                     StatusChip(
                       label: booking.priority.label,
                       color: _priorityColor(booking.priority, scheme),

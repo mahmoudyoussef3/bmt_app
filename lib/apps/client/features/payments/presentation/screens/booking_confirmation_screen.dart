@@ -14,6 +14,7 @@ class BookingConfirmationScreen extends StatefulWidget {
   final String destination;
   final String? bookingReference;
   final String? bookingId;
+  final bool requiresVerification;
 
   const BookingConfirmationScreen({
     super.key,
@@ -24,6 +25,7 @@ class BookingConfirmationScreen extends StatefulWidget {
     required this.destination,
     this.bookingReference,
     this.bookingId,
+    this.requiresVerification = false,
   });
 
   @override
@@ -95,7 +97,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                   duration: const Duration(milliseconds: 420),
                   child: _processing
                       ? _buildProcessing(context)
-                      : _buildSuccess(context),
+                      : (widget.requiresVerification
+                          ? _buildVerificationWaiting(context)
+                          : _buildSuccess(context)),
                 ),
               ),
             ),
@@ -158,6 +162,120 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
           style: ClientTypography.bodySmall(
             context,
           ).copyWith(color: ClientColors.textSecondaryFor(context)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVerificationWaiting(BuildContext context) {
+    final bookingReference = widget.bookingReference ?? _bookingId;
+    return SingleChildScrollView(
+      key: const ValueKey('verification'),
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ScaleTransition(
+            scale: Tween(begin: 0.0, end: 1.0).animate(
+              CurvedAnimation(
+                parent: _checkController,
+                curve: Curves.elasticOut,
+              ),
+            ),
+            child: Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: const LinearGradient(
+                  colors: [Colors.orangeAccent, Colors.deepOrange],
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withAlpha(55),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: const Center(
+                child: Icon(Icons.hourglass_top_rounded, size: 60, color: Colors.white),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Payment Receipt Submitted',
+            textAlign: TextAlign.center,
+            style: ClientTypography.headingLarge(
+              context,
+            ).copyWith(color: ClientColors.textPrimaryFor(context)),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            'Your booking request has been received. Our finance team is reviewing your payment.',
+            textAlign: TextAlign.center,
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context), height: 1.5),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            padding: const EdgeInsets.all(18),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: ClientColors.borderFor(context)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildInfoRow(context, 'Booking Reference', bookingReference),
+                const SizedBox(height: 14),
+                Divider(height: 1, color: ClientColors.borderFor(context)),
+                const SizedBox(height: 14),
+                _buildInfoRow(context, 'Booking Status', 'Pending Verification', valueColor: Colors.orange),
+                const SizedBox(height: 14),
+                _buildInfoRow(context, 'Estimated Review Time', '5–15 Minutes'),
+              ],
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'You will receive a notification once your payment has been approved.',
+            textAlign: TextAlign.center,
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(BuildContext context, String label, String value, {Color? valueColor}) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
+        Flexible(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
+            style: ClientTypography.labelMedium(context).copyWith(
+              color: valueColor ?? ClientColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ],
     );
