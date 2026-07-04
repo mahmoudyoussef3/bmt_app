@@ -2,8 +2,9 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../theme/captain_spacing.dart';
-
+import '../theme/captain_colors.dart';
+import '../theme/captain_typography.dart';
+import '../theme/captain_design_tokens.dart';
 import '../../features/assigned_trips/presentation/cubit/assigned_trips_cubit.dart';
 import '../../features/assigned_trips/presentation/pages/assigned_trips_page.dart';
 import '../../features/communication/presentation/cubit/captain_notification_cubit.dart';
@@ -100,9 +101,8 @@ class _ShellScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
+      extendBody: true, // Crucial for floating nav over content
       body: IndexedStack(
         index: currentIndex,
         children: const [
@@ -111,37 +111,42 @@ class _ShellScaffold extends StatelessWidget {
           DriverProfilePage(),
         ],
       ),
-      bottomNavigationBar: ClipRRect(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+      bottomNavigationBar: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            CaptainDesignTokens.s16,
+            0,
+            CaptainDesignTokens.s16,
+            CaptainDesignTokens.s16,
+          ),
           child: Container(
             decoration: BoxDecoration(
-              color: scheme.surface.withAlpha(220),
-              border: Border(
-                top: BorderSide(
-                  color: scheme.outline.withAlpha(20),
-                  width: 1,
-                ),
-              ),
+              color: CaptainColors.surfaceFor(context),
+              borderRadius: CaptainDesignTokens.br32,
+              boxShadow: CaptainDesignTokens.floatingShadow(context),
             ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: CaptainSpacing.lg,
-                  vertical: CaptainSpacing.md,
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: List.generate(tabs.length, (i) {
-                    final tab = tabs[i];
-                    final isActive = i == currentIndex;
-                    return _NavItem(
-                      label: tab.label,
-                      icon: isActive ? tab.activeIcon : tab.icon,
-                      isActive: isActive,
-                      onTap: () => onTabChanged(i),
-                    );
-                  }),
+            child: ClipRRect(
+              borderRadius: CaptainDesignTokens.br32,
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: CaptainDesignTokens.s8,
+                    vertical: CaptainDesignTokens.s12,
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: List.generate(tabs.length, (i) {
+                      final tab = tabs[i];
+                      final isActive = i == currentIndex;
+                      return _NavItem(
+                        label: tab.label,
+                        icon: isActive ? tab.activeIcon : tab.icon,
+                        isActive: isActive,
+                        onTap: () => onTabChanged(i),
+                      );
+                    }),
+                  ),
                 ),
               ),
             ),
@@ -167,9 +172,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final color = isActive ? scheme.primary : scheme.onSurfaceVariant;
+    final color = isActive ? CaptainColors.primary : CaptainColors.textSecondaryFor(context);
 
     return GestureDetector(
       onTap: onTap,
@@ -178,12 +181,12 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 250),
         curve: Curves.easeOutCubic,
         padding: const EdgeInsets.symmetric(
-          horizontal: CaptainSpacing.xl,
-          vertical: CaptainSpacing.md,
+          horizontal: CaptainDesignTokens.s20,
+          vertical: CaptainDesignTokens.s8,
         ),
         decoration: BoxDecoration(
-          color: isActive ? scheme.primary.withAlpha(20) : Colors.transparent,
-          borderRadius: CaptainRadius.rPill,
+          color: isActive ? CaptainColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+          borderRadius: CaptainDesignTokens.br24,
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -192,13 +195,13 @@ class _NavItem extends StatelessWidget {
               scale: isActive ? 1.1 : 1.0,
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutCubic,
-              child: Icon(icon, size: 26, color: color),
+              child: Icon(icon, size: 24, color: color),
             ),
-            const SizedBox(height: CaptainSpacing.sm),
+            const SizedBox(height: CaptainDesignTokens.s4),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 250),
               curve: Curves.easeOutCubic,
-              style: theme.textTheme.labelSmall!.copyWith(
+              style: CaptainTypography.labelSmall(context).copyWith(
                 color: color,
                 fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
               ),

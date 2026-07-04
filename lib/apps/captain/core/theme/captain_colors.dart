@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 class CaptainColors {
   // Brand
-  static const Color primary = Color(0xFF111111); // Uber style deep black/grey
+  static const Color primary = Color(0xFF2563EB); // Vibrant Blue
   static const Color onPrimary = Colors.white;
 
   // Semantic
@@ -22,4 +22,35 @@ class CaptainColors {
   // Borders & Dividers
   static const Color dividerLight = Color(0xFFE2E8F0);
   static const Color dividerDark = Color(0xFF334155);
+
+  // Helper Methods
+  static Color backgroundFor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? backgroundDark
+        : backgroundLight;
+  }
+
+  static Color surfaceFor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? surfaceDark
+        : surfaceLight;
+  }
+
+  static Color textPrimaryFor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? Colors.white
+        : const Color(0xFF0F172A);
+  }
+
+  static Color textSecondaryFor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
+  }
+
+  static Color dividerFor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark
+        ? dividerDark
+        : dividerLight;
+  }
 }

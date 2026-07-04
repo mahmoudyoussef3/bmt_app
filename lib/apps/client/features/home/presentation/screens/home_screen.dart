@@ -416,8 +416,7 @@ class _JourneyPlannerCard extends StatelessWidget {
                   onTap: onTap,
                   scale: 0.98,
                   child: Container(
-                    minHeight: 58,
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
                     decoration: BoxDecoration(
                       color: ClientColors.surfaceFor(context),
                       borderRadius: BorderRadius.circular(ClientRadius.md),
@@ -633,13 +632,11 @@ class _SectionIntro extends StatelessWidget {
     required this.eyebrow,
     required this.title,
     required this.subtitle,
-    this.trailing,
   });
 
   final String eyebrow;
   final String title;
   final String subtitle;
-  final Widget? trailing;
 
   @override
   Widget build(BuildContext context) {
@@ -670,7 +667,6 @@ class _SectionIntro extends StatelessWidget {
             ],
           ),
         ),
-        if (trailing != null) ...[const SizedBox(width: 12), trailing!],
       ],
     );
   }

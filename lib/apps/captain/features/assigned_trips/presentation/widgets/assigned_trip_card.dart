@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_status_chip.dart';
 
 import '../../domain/entities/assigned_trip.dart';
@@ -21,23 +22,26 @@ class AssignedTripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final progress = trip.passengerCount == 0
         ? 0.0
         : trip.boardedCount / trip.passengerCount;
 
-    return CaptainCard(
-      padding: EdgeInsets.zero,
+    return Container(
+      decoration: BoxDecoration(
+        color: CaptainColors.surfaceFor(context),
+        borderRadius: CaptainDesignTokens.br24,
+        boxShadow: CaptainDesignTokens.softShadow(context),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Header section
           Container(
-            padding: const EdgeInsets.all(CaptainSpacing.xl),
+            padding: const EdgeInsets.all(CaptainDesignTokens.s24),
             decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest.withAlpha(50),
+              color: CaptainColors.primary.withValues(alpha: 0.03),
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(CaptainRadius.xl),
+                top: CaptainDesignTokens.r24,
               ),
             ),
             child: Column(
@@ -49,17 +53,18 @@ class AssignedTripCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         trip.route,
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        style: CaptainTypography.titleLarge(context).copyWith(
                           fontWeight: FontWeight.w800,
+                          color: CaptainColors.textPrimaryFor(context),
                           height: 1.2,
                         ),
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: CaptainDesignTokens.s12),
                     _StatusBadge(status: trip.status),
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: CaptainDesignTokens.s16),
                 Row(
                   children: [
                     _IconDetail(
@@ -68,7 +73,7 @@ class AssignedTripCard extends StatelessWidget {
                           ? 'مركبة غير محددة'
                           : trip.vehicleNumber,
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: CaptainDesignTokens.s16),
                     _IconDetail(
                       icon: Icons.schedule_rounded,
                       text: _timeRange(trip),
@@ -79,11 +84,11 @@ class AssignedTripCard extends StatelessWidget {
             ),
           ),
 
-          Divider(height: 1, thickness: 1, color: scheme.outline.withAlpha(20)),
+          Divider(height: 1, thickness: 1, color: CaptainColors.dividerFor(context)),
 
           // Body section with progress and actions
           Padding(
-            padding: const EdgeInsets.all(CaptainSpacing.xl),
+            padding: const EdgeInsets.all(CaptainDesignTokens.s24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -93,26 +98,24 @@ class AssignedTripCard extends StatelessWidget {
                   children: [
                     Text(
                       'الركاب (${trip.passengerCount})',
-                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      style: CaptainTypography.titleSmall(context).copyWith(
                         fontWeight: FontWeight.w700,
-                        color: scheme.onSurfaceVariant,
+                        color: CaptainColors.textSecondaryFor(context),
                       ),
                     ),
                     RichText(
                       text: TextSpan(
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(
+                        style: CaptainTypography.titleMedium(context).copyWith(
                               fontWeight: FontWeight.w800,
-                              color: scheme.primary,
+                              color: CaptainColors.primary,
                             ),
                         children: [
                           TextSpan(text: '${trip.boardedCount} '),
                           TextSpan(
                             text: 'صعدوا',
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(
+                            style: CaptainTypography.bodySmall(context).copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: scheme.onSurfaceVariant,
+                                  color: CaptainColors.textSecondaryFor(context),
                                 ),
                           ),
                         ],
@@ -120,19 +123,19 @@ class AssignedTripCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: CaptainSpacing.md),
+                const SizedBox(height: CaptainDesignTokens.s12),
                 ClipRRect(
-                  borderRadius: CaptainRadius.rSm,
+                  borderRadius: CaptainDesignTokens.br8,
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 8,
-                    backgroundColor: scheme.surfaceContainerHighest,
+                    backgroundColor: CaptainColors.primary.withValues(alpha: 0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      progress == 1.0 ? Colors.green : scheme.primary,
+                      progress == 1.0 ? CaptainColors.success : CaptainColors.primary,
                     ),
                   ),
                 ),
-                const SizedBox(height: CaptainSpacing.xxl),
+                const SizedBox(height: CaptainDesignTokens.s32),
 
                 // Action Buttons
                 Row(
@@ -146,7 +149,7 @@ class AssignedTripCard extends StatelessWidget {
                         variant: CaptainButtonVariant.primary,
                       ),
                     ),
-                    const SizedBox(width: CaptainSpacing.md),
+                    const SizedBox(width: CaptainDesignTokens.s12),
                     Expanded(
                       flex: 1,
                       child: CaptainButton(
@@ -219,16 +222,15 @@ class _IconDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: scheme.onSurfaceVariant),
+        Icon(icon, size: 16, color: CaptainColors.textSecondaryFor(context)),
         const SizedBox(width: 6),
         Text(
           text,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: scheme.onSurfaceVariant,
+          style: CaptainTypography.labelLarge(context).copyWith(
+            color: CaptainColors.textSecondaryFor(context),
             fontWeight: FontWeight.w600,
           ),
         ),

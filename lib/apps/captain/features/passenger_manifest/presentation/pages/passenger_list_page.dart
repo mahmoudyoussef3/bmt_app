@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
 
 import '../../domain/entities/passenger.dart';
@@ -69,7 +70,7 @@ class _PassengerListViewState extends State<_PassengerListView> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text('فشل تحديث الحالة: ${state.message}'),
-              backgroundColor: Theme.of(context).colorScheme.error,
+              backgroundColor: CaptainColors.error,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -90,7 +91,7 @@ class _PassengerListViewState extends State<_PassengerListView> {
         final late = passengers.where((p) => p.status == PassengerBoardingStatus.late).length;
 
         return Scaffold(
-          backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+          backgroundColor: CaptainColors.backgroundFor(context),
           body: CustomScrollView(
             slivers: [
               _AppBar(
@@ -122,7 +123,7 @@ class _PassengerListViewState extends State<_PassengerListView> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
-                        CaptainSpacing.xl, CaptainSpacing.md, CaptainSpacing.xl, CaptainSpacing.md),
+                        CaptainDesignTokens.s24, CaptainDesignTokens.s16, CaptainDesignTokens.s24, CaptainDesignTokens.s16),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (v) => setState(() => _search = v),
@@ -139,12 +140,13 @@ class _PassengerListViewState extends State<_PassengerListView> {
                               )
                             : null,
                         filled: true,
+                        fillColor: CaptainColors.surfaceFor(context),
                         border: OutlineInputBorder(
-                          borderRadius: CaptainRadius.rLg,
+                          borderRadius: CaptainDesignTokens.br16,
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                            vertical: CaptainSpacing.md, horizontal: CaptainSpacing.lg),
+                            vertical: CaptainDesignTokens.s16, horizontal: CaptainDesignTokens.s24),
                       ),
                     ),
                   ),
@@ -173,13 +175,13 @@ class _PassengerListViewState extends State<_PassengerListView> {
                 else
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(
-                        CaptainSpacing.xl, CaptainSpacing.lg, CaptainSpacing.xl, CaptainSpacing.xxxl),
+                        CaptainDesignTokens.s24, CaptainDesignTokens.s24, CaptainDesignTokens.s24, CaptainDesignTokens.s48),
                     sliver: SliverList.builder(
                       itemCount: filtered.length,
                       itemBuilder: (context, i) {
                         final p = filtered[i];
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: CaptainSpacing.lg),
+                          padding: const EdgeInsets.only(bottom: CaptainDesignTokens.s24),
                           child: PassengerCard(
                             passenger: p,
                             onCall: () => launchUrl(Uri.parse('tel:${p.phone}')),
@@ -215,12 +217,11 @@ class _AppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return SliverAppBar(
       pinned: true,
       expandedHeight: 80,
-      backgroundColor: scheme.surface,
-      iconTheme: IconThemeData(color: scheme.onSurface),
+      backgroundColor: CaptainColors.surfaceFor(context),
+      iconTheme: IconThemeData(color: CaptainColors.textPrimaryFor(context)),
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
         title: Column(
@@ -229,12 +230,12 @@ class _AppBar extends StatelessWidget {
           children: [
             Text(
               'قائمة الركاب',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              style: CaptainTypography.titleLarge(context).copyWith(fontWeight: FontWeight.w800),
             ),
             Text(
               'صعد $boarded من أصل $total',
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
+              style: CaptainTypography.labelMedium(context).copyWith(
+                    color: CaptainColors.textSecondaryFor(context),
                   ),
             ),
           ],
@@ -258,31 +259,35 @@ class _StatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final progress = total == 0 ? 0.0 : boarded / total;
-    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
-          CaptainSpacing.xl, CaptainSpacing.md, CaptainSpacing.xl, CaptainSpacing.md),
-      child: CaptainCard(
-        padding: const EdgeInsets.all(CaptainSpacing.xl),
+          CaptainDesignTokens.s24, CaptainDesignTokens.s16, CaptainDesignTokens.s24, CaptainDesignTokens.s16),
+      child: Container(
+        padding: const EdgeInsets.all(CaptainDesignTokens.s24),
+        decoration: BoxDecoration(
+          color: CaptainColors.surfaceFor(context),
+          borderRadius: CaptainDesignTokens.br24,
+          boxShadow: CaptainDesignTokens.softShadow(context),
+        ),
         child: Column(
           children: [
             Row(
               children: [
-                _Stat(label: 'صعد', value: boarded, color: Colors.green),
-                _Stat(label: 'بانتظار', value: pending, color: Colors.blue),
-                _Stat(label: 'متأخر', value: late, color: Colors.orange),
-                _Stat(label: 'غائب', value: absent, color: Colors.red),
+                _Stat(label: 'صعد', value: boarded, color: CaptainColors.success),
+                _Stat(label: 'بانتظار', value: pending, color: CaptainColors.primary),
+                _Stat(label: 'متأخر', value: late, color: CaptainColors.warning),
+                _Stat(label: 'غائب', value: absent, color: CaptainColors.error),
               ],
             ),
-            const SizedBox(height: CaptainSpacing.lg),
+            const SizedBox(height: CaptainDesignTokens.s24),
             ClipRRect(
-              borderRadius: CaptainRadius.rSm,
+              borderRadius: CaptainDesignTokens.br8,
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 8,
-                backgroundColor: scheme.surfaceContainerHighest,
+                backgroundColor: CaptainColors.primary.withValues(alpha: 0.1),
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  progress == 1.0 ? Colors.green : scheme.primary,
+                  progress == 1.0 ? CaptainColors.success : CaptainColors.primary,
                 ),
               ),
             ),
@@ -307,13 +312,13 @@ class _Stat extends StatelessWidget {
         children: [
           Text(
             '$value',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            style: CaptainTypography.headlineMedium(context).copyWith(
                   color: color,
                   fontWeight: FontWeight.w900,
                 ),
           ),
           const SizedBox(height: 2),
-          Text(label, style: Theme.of(context).textTheme.labelSmall),
+          Text(label, style: CaptainTypography.labelSmall(context).copyWith(color: CaptainColors.textSecondaryFor(context), fontWeight: FontWeight.w700)),
         ],
       ),
     );
@@ -329,10 +334,10 @@ class _FilterChips extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chips = [
-      ('صعد', PassengerBoardingStatus.boarded, Colors.green),
-      ('بانتظار', PassengerBoardingStatus.pending, Colors.blue),
-      ('متأخر', PassengerBoardingStatus.late, Colors.orange),
-      ('غائب', PassengerBoardingStatus.absent, Colors.red),
+      ('صعد', PassengerBoardingStatus.boarded, CaptainColors.success),
+      ('بانتظار', PassengerBoardingStatus.pending, CaptainColors.primary),
+      ('متأخر', PassengerBoardingStatus.late, CaptainColors.warning),
+      ('غائب', PassengerBoardingStatus.absent, CaptainColors.error),
     ];
 
     return SizedBox(
@@ -350,9 +355,10 @@ class _FilterChips extends StatelessWidget {
               onSelected: (_) => onSelect(c.$2),
               selectedColor: c.$3.withAlpha(30),
               checkmarkColor: c.$3,
-              labelStyle: TextStyle(
-                color: isActive ? c.$3 : null,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+              backgroundColor: CaptainColors.surfaceFor(context),
+              labelStyle: CaptainTypography.labelMedium(context).copyWith(
+                color: isActive ? c.$3 : CaptainColors.textSecondaryFor(context),
+                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
               ),
               side: BorderSide(color: isActive ? c.$3 : Colors.transparent),
             ),

@@ -4,11 +4,11 @@ import 'package:bmt_app/core/app_mode/app_mode.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
-import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_loading_state.dart';
-
 import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/pages/passenger_list_page.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/pages/trip_execution_page.dart';
 
@@ -143,12 +143,12 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                   expandedHeight: 100,
                   pinned: true,
                   elevation: 0,
-                  backgroundColor: scheme.surface,
+                  backgroundColor: CaptainColors.backgroundFor(context),
                   flexibleSpace: FlexibleSpaceBar(
-                    background: Container(color: scheme.surface),
+                    background: Container(color: CaptainColors.backgroundFor(context)),
                     titlePadding: const EdgeInsets.symmetric(
-                      horizontal: CaptainSpacing.xl,
-                      vertical: CaptainSpacing.lg,
+                      horizontal: CaptainDesignTokens.s24,
+                      vertical: CaptainDesignTokens.s16,
                     ),
                     title: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -160,10 +160,10 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                           children: [
                             Text(
                               'لوحة القيادة',
-                              style: Theme.of(context).textTheme.headlineSmall
-                                  ?.copyWith(
+                              style: CaptainTypography.headlineSmall(context)
+                                  .copyWith(
                                     fontWeight: FontWeight.w800,
-                                    color: scheme.onSurface,
+                                    color: CaptainColors.textPrimaryFor(context),
                                   ),
                             ),
                           ],
@@ -185,10 +185,10 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(
-                      CaptainSpacing.xl,
-                      CaptainSpacing.md,
-                      CaptainSpacing.xl,
-                      CaptainSpacing.xl,
+                      CaptainDesignTokens.s24,
+                      CaptainDesignTokens.s16,
+                      CaptainDesignTokens.s24,
+                      CaptainDesignTokens.s24,
                     ),
                     child: _OverviewPanel(
                       trips: trips.length,
@@ -200,7 +200,7 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                 ),
                 SliverPadding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: CaptainSpacing.xl,
+                    horizontal: CaptainDesignTokens.s24,
                   ),
                   sliver: SliverToBoxAdapter(
                     child: Row(
@@ -209,24 +209,24 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                         Expanded(
                           child: Text(
                             'رحلات اليوم',
-                            style: Theme.of(context).textTheme.titleLarge
-                                ?.copyWith(fontWeight: FontWeight.w800),
+                            style: CaptainTypography.titleLarge(context)
+                                .copyWith(fontWeight: FontWeight.w800),
                           ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: CaptainSpacing.md,
-                            vertical: CaptainSpacing.sm,
+                            horizontal: CaptainDesignTokens.s12,
+                            vertical: CaptainDesignTokens.s8,
                           ),
                           decoration: BoxDecoration(
-                            color: scheme.primary.withAlpha(20),
-                            borderRadius: CaptainRadius.rPill,
+                            color: CaptainColors.primary.withValues(alpha: 0.1),
+                            borderRadius: CaptainDesignTokens.br32,
                           ),
                           child: Text(
                             '${trips.length} رحلات',
-                            style: Theme.of(context).textTheme.labelMedium
-                                ?.copyWith(
-                                  color: scheme.primary,
+                            style: CaptainTypography.labelMedium(context)
+                                .copyWith(
+                                  color: CaptainColors.primary,
                                   fontWeight: FontWeight.w700,
                                 ),
                           ),
@@ -250,17 +250,17 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                 else
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(
-                      CaptainSpacing.xl,
-                      CaptainSpacing.lg,
-                      CaptainSpacing.xl,
-                      CaptainSpacing.xxxl,
+                      CaptainDesignTokens.s24,
+                      CaptainDesignTokens.s16,
+                      CaptainDesignTokens.s24,
+                      CaptainDesignTokens.s48,
                     ),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final trip = trips[index];
                         return Padding(
                           padding: const EdgeInsets.only(
-                            bottom: CaptainSpacing.lg,
+                            bottom: CaptainDesignTokens.s24,
                           ),
                           child: AssignedTripCard(
                             trip: trip,
@@ -304,12 +304,15 @@ class _OverviewPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final progress = passengers == 0 ? 0.0 : boarded / passengers;
 
-    return CaptainCard(
-      color: scheme.surface,
-      padding: const EdgeInsets.all(CaptainSpacing.xl),
+    return Container(
+      decoration: BoxDecoration(
+        color: CaptainColors.surfaceFor(context),
+        borderRadius: CaptainDesignTokens.br24,
+        boxShadow: CaptainDesignTokens.softShadow(context),
+      ),
+      padding: const EdgeInsets.all(CaptainDesignTokens.s24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -320,14 +323,14 @@ class _OverviewPanel extends StatelessWidget {
                 value: trips.toString(),
                 icon: Icons.route_rounded,
               ),
-              const SizedBox(width: CaptainSpacing.md),
+              const SizedBox(width: CaptainDesignTokens.s12),
               _Metric(
                 label: 'نشطة',
                 value: activeTrips.toString(),
                 icon: Icons.bolt_rounded,
                 isHighlight: activeTrips > 0,
               ),
-              const SizedBox(width: CaptainSpacing.md),
+              const SizedBox(width: CaptainDesignTokens.s12),
               _Metric(
                 label: 'الركاب',
                 value: passengers.toString(),
@@ -335,42 +338,40 @@ class _OverviewPanel extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: CaptainSpacing.xl),
+          const SizedBox(height: CaptainDesignTokens.s24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 'تقدم الصعود',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                  color: scheme.onSurfaceVariant,
+                style: CaptainTypography.labelLarge(context).copyWith(
+                  color: CaptainColors.textSecondaryFor(context),
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
                 '${(progress * 100).round()}%',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: scheme.primary,
+                style: CaptainTypography.titleMedium(context).copyWith(
+                  color: CaptainColors.primary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
             ],
           ),
-          const SizedBox(height: CaptainSpacing.md),
+          const SizedBox(height: CaptainDesignTokens.s12),
           ClipRRect(
-            borderRadius: CaptainRadius.rSm,
+            borderRadius: CaptainDesignTokens.br8,
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 8,
-              backgroundColor: scheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+              backgroundColor: CaptainColors.primary.withValues(alpha: 0.1),
+              valueColor: const AlwaysStoppedAnimation<Color>(CaptainColors.primary),
             ),
           ),
-          const SizedBox(height: CaptainSpacing.sm),
+          const SizedBox(height: CaptainDesignTokens.s8),
           Text(
             'صعد $boarded من أصل $passengers راكب',
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+            style: CaptainTypography.labelMedium(context).copyWith(color: CaptainColors.textSecondaryFor(context)),
           ),
         ],
       ),
@@ -393,39 +394,37 @@ class _Metric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = isHighlight ? Colors.orange : scheme.primary;
+    final color = isHighlight ? Colors.orange : CaptainColors.primary;
     final bgColor = isHighlight
-        ? Colors.orange.withAlpha(20)
-        : scheme.surfaceContainerHighest;
+        ? Colors.orange.withValues(alpha: 0.1)
+        : CaptainColors.primary.withValues(alpha: 0.05);
 
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(
-          vertical: CaptainSpacing.lg,
-          horizontal: CaptainSpacing.md,
+          vertical: CaptainDesignTokens.s16,
+          horizontal: CaptainDesignTokens.s12,
         ),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: CaptainRadius.rLg,
-          border: Border.all(color: color.withAlpha(30)),
+          borderRadius: CaptainDesignTokens.br16,
         ),
         child: Column(
           children: [
             Icon(icon, size: 24, color: color),
-            const SizedBox(height: CaptainSpacing.md),
+            const SizedBox(height: CaptainDesignTokens.s12),
             Text(
               value,
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              style: CaptainTypography.headlineMedium(context).copyWith(
                 fontWeight: FontWeight.w900,
-                color: scheme.onSurface,
+                color: CaptainColors.textPrimaryFor(context),
               ),
             ),
-            const SizedBox(height: CaptainSpacing.sm),
+            const SizedBox(height: CaptainDesignTokens.s8),
             Text(
               label,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+              style: CaptainTypography.labelSmall(context).copyWith(
+                color: CaptainColors.textSecondaryFor(context),
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -443,7 +442,7 @@ class _AssignedTripsSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(CaptainSpacing.xl),
+        padding: const EdgeInsets.all(CaptainDesignTokens.s24),
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -452,36 +451,36 @@ class _AssignedTripsSkeleton extends StatelessWidget {
               CaptainSkeleton(
                 height: 40,
                 width: 40,
-                borderRadius: CaptainRadius.rPill,
+                borderRadius: CaptainDesignTokens.br32,
               ),
             ],
           ),
-          const SizedBox(height: CaptainSpacing.xl),
+          const SizedBox(height: CaptainDesignTokens.s24),
           const CaptainSkeleton(height: 18, width: double.infinity),
-          const SizedBox(height: CaptainSpacing.md),
+          const SizedBox(height: CaptainDesignTokens.s12),
           const CaptainSkeleton(height: 16, width: double.infinity),
-          const SizedBox(height: CaptainSpacing.lg),
+          const SizedBox(height: CaptainDesignTokens.s16),
           Row(
             children: [
               const Expanded(
                 child: CaptainSkeleton(height: 36, width: double.infinity),
               ),
-              const SizedBox(width: CaptainSpacing.md),
+              const SizedBox(width: CaptainDesignTokens.s12),
               const Expanded(
                 child: CaptainSkeleton(height: 36, width: double.infinity),
               ),
             ],
           ),
-          const SizedBox(height: CaptainSpacing.xxl),
+          const SizedBox(height: CaptainDesignTokens.s32),
           const CaptainSkeleton(height: 24, width: 120),
-          const SizedBox(height: CaptainSpacing.lg),
+          const SizedBox(height: CaptainDesignTokens.s16),
           for (var i = 0; i < 3; i++) ...[
             CaptainSkeleton(
               height: 220,
-              borderRadius: CaptainRadius.rXl,
+              borderRadius: CaptainDesignTokens.br24,
               width: double.infinity,
             ),
-            const SizedBox(height: CaptainSpacing.xl),
+            const SizedBox(height: CaptainDesignTokens.s24),
           ],
         ],
       ),
