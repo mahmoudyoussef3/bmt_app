@@ -203,7 +203,7 @@ class _DashboardShellState extends State<DashboardShell> {
     final visibleItems = _visibleItems;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: LayoutBuilder(
         builder: (context, constraints) {
           final useCompactNavigation = constraints.maxWidth < 920;

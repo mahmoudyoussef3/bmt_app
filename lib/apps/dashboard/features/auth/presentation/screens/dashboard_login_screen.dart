@@ -37,7 +37,7 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         backgroundColor: scheme.surface,
         body: BlocConsumer<DashboardAuthCubit, DashboardAuthState>(

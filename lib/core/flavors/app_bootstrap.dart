@@ -63,7 +63,7 @@ class _FlavorAppProviders extends StatelessWidget {
         BlocProvider(create: (_) => AppModeCubit()..load()),
         BlocProvider(
           create: (_) => LocaleCubit(
-            defaultLanguageCode: AppFlavorConfig.current.isClient ? 'ar' : 'en',
+            defaultLanguageCode: 'en',
           )..load(),
         ),
       ],

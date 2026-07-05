@@ -17,14 +17,10 @@ class LocaleCubit extends Cubit<Locale> {
 
   Future<void> load() async {
     try {
-      final savedCode = await _storage.read(key: _storageKey);
-      if (savedCode != null) {
-        Intl.defaultLocale = savedCode;
-        emit(Locale(savedCode));
-      } else {
-        Intl.defaultLocale = _defaultLanguageCode;
-        emit(Locale(_defaultLanguageCode));
-      }
+      // Force English as requested
+      Intl.defaultLocale = _defaultLanguageCode;
+      emit(Locale(_defaultLanguageCode));
+      await _storage.write(key: _storageKey, value: _defaultLanguageCode);
     } catch (_) {
       Intl.defaultLocale = _defaultLanguageCode;
       emit(Locale(_defaultLanguageCode));

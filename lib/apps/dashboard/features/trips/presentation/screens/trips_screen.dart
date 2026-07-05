@@ -31,7 +31,7 @@ class TripsScreen extends StatelessWidget {
         BlocProvider(create: (_) => dashboardDi<TripPassengersCubit>()),
       ],
       child: const Directionality(
-        textDirection: TextDirection.rtl,
+        textDirection: TextDirection.ltr,
         child: _TripsView(),
       ),
     );
@@ -117,7 +117,7 @@ class _LoadedTrips extends StatelessWidget {
       builder: (_) => BlocProvider(
         create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
         child: const Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: TextDirection.ltr,
           child: TripCreationWizardDialog(),
         ),
       ),
@@ -564,7 +564,7 @@ class _TripRow extends StatelessWidget {
           BlocProvider.value(value: context.read<TripPricingCubit>()),
         ],
         child: const Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: TextDirection.ltr,
           child: _TripDetailsDialog(),
         ),
       ),
@@ -579,7 +579,7 @@ class _TripRow extends StatelessWidget {
       builder: (_) => BlocProvider(
         create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
         child: Directionality(
-          textDirection: TextDirection.rtl,
+          textDirection: TextDirection.ltr,
           child: TripCreationWizardDialog(prefillTrip: trip),
         ),
       ),

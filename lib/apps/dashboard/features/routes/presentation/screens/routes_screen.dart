@@ -2061,7 +2061,7 @@ void _confirmArchive(BuildContext context, OperationRoute route) {
   showDialog<void>(
     context: context,
     builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: AlertDialog(
         title: const Text('تأكيد أرشفة المسار'),
         content: Text(
@@ -2122,7 +2122,7 @@ void _openStopDialog(
   showDialog<void>(
     context: context,
     builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: _StopDialog(station: station, onSubmit: onSubmit),
     ),
   );

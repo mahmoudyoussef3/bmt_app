@@ -22,7 +22,7 @@ class BookingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: BlocBuilder<BookingsCubit, BookingsState>(
         builder: (context, state) {
           return switch (state) {

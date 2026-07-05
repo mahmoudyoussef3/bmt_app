@@ -64,7 +64,7 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
             borderRadius: BorderRadius.circular(22),
           ),
           child: Directionality(
-            textDirection: TextDirection.rtl,
+            textDirection: TextDirection.ltr,
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 980, maxHeight: 760),
               child: Column(

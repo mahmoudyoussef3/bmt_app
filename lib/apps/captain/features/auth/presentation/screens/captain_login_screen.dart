@@ -37,7 +37,7 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
     final scheme = Theme.of(context).colorScheme;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: TextDirection.ltr,
       child: Scaffold(
         backgroundColor: scheme.surface,
         body: Stack(
