@@ -219,25 +219,15 @@ class _SearchOptionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: ClientColors.surfaceFor(context),
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(4),
-          decoration: BoxDecoration(
-            border: Border.all(color: ClientColors.borderFor(context)),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ListTile(
-            leading: Icon(icon, color: iconColor),
-            title: Text(title),
-            subtitle: Text(subtitle),
-            trailing: const Icon(Icons.chevron_right_rounded),
-          ),
-        ),
+    return ClientCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(4),
+      useShadow: true,
+      child: ListTile(
+        leading: Icon(icon, color: iconColor),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
+        subtitle: Text(subtitle),
+        trailing: const Icon(Icons.chevron_right_rounded),
       ),
     );
   }

@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/cubit/home_cubit.dart';
@@ -121,27 +122,22 @@ class _HomeContent extends StatelessWidget {
                         _JourneyPlannerCard(onTap: onOpenSearch),
                         const SizedBox(height: ClientSpacing.md),
                         _QuickActions(
-                          onRoutes: () => onOpenRoute(
-                            ClientRoutes.bookingPopularRoutes,
-                          ),
+                          onRoutes: () =>
+                              onOpenRoute(ClientRoutes.bookingPopularRoutes),
                           onTrips: () => onOpenRoute(TripsRoutes.myTrips),
-                          onPackages: () => onOpenRoute(
-                            ClientRoutes.subscription,
-                            {
-                              'hasActiveSubscription':
-                                  data.activePackage != null,
-                            },
-                          ),
-                          onSupport: () =>
-                              onOpenRoute(ClientRoutes.support),
+                          onPackages: () =>
+                              onOpenRoute(ClientRoutes.subscription, {
+                                'hasActiveSubscription':
+                                    data.activePackage != null,
+                              }),
+                          onSupport: () => onOpenRoute(ClientRoutes.support),
                         ),
                         if (data.currentTrip != null) ...[
                           const SizedBox(height: ClientSpacing.xxl),
                           _SectionIntro(
                             eyebrow: 'YOUR JOURNEY',
                             title: 'Ready when you are',
-                            subtitle:
-                                'Everything you need for your next trip.',
+                            subtitle: 'Everything you need for your next trip.',
                           ),
                           const SizedBox(height: ClientSpacing.md),
                           _CurrentJourneyCard(
@@ -189,13 +185,11 @@ class _HomeContent extends StatelessWidget {
                           plans: data.packagePlans,
                           activePackage: data.activePackage,
                           previewCount: isTablet ? 4 : 3,
-                          onOpenSubscription: () => onOpenRoute(
-                            ClientRoutes.subscription,
-                            {
-                              'hasActiveSubscription':
-                                  data.activePackage != null,
-                            },
-                          ),
+                          onOpenSubscription: () =>
+                              onOpenRoute(ClientRoutes.subscription, {
+                                'hasActiveSubscription':
+                                    data.activePackage != null,
+                              }),
                         ),
                         const SizedBox(height: ClientSpacing.xxl),
                         _TravelSupportCard(
@@ -230,11 +224,11 @@ class _HomeHeader extends StatelessWidget {
     return Row(
       children: [
         Container(
-          width: 46,
-          height: 46,
+          width: 52,
+          height: 52,
           decoration: BoxDecoration(
-            gradient: ClientColors.primaryGradientFor(context),
-            borderRadius: BorderRadius.circular(ClientRadius.md),
+            color: ClientColors.primaryFor(context),
+            borderRadius: BorderRadius.circular(ClientRadius.pill),
             boxShadow: ClientElevation.sm(context),
           ),
           alignment: Alignment.center,
@@ -342,9 +336,9 @@ class _JourneyPlannerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        gradient: ClientColors.primaryGradientFor(context),
-        borderRadius: BorderRadius.circular(ClientRadius.sheet),
-        boxShadow: ClientElevation.lg(context),
+        color: ClientColors.primaryFor(context),
+        borderRadius: BorderRadius.circular(ClientRadius.xl),
+        boxShadow: ClientElevation.md(context),
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -416,17 +410,14 @@ class _JourneyPlannerCard extends StatelessWidget {
                   onTap: onTap,
                   scale: 0.98,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 16,
+                    ),
                     decoration: BoxDecoration(
                       color: ClientColors.surfaceFor(context),
-                      borderRadius: BorderRadius.circular(ClientRadius.md),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(22),
-                          blurRadius: 14,
-                          offset: const Offset(0, 7),
-                        ),
-                      ],
+                      borderRadius: BorderRadius.circular(ClientRadius.pill),
+                      boxShadow: ClientElevation.sm(context),
                     ),
                     child: Row(
                       children: [
@@ -436,8 +427,10 @@ class _JourneyPlannerCard extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: ClientColors.primaryFor(
                               context,
-                            ).withAlpha(18),
-                            borderRadius: BorderRadius.circular(12),
+                            ).withAlpha(15),
+                            borderRadius: BorderRadius.circular(
+                              ClientRadius.pill,
+                            ),
                           ),
                           child: Icon(
                             Icons.search_rounded,
@@ -586,15 +579,15 @@ class _QuickActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: ClientColors.surfaceFor(context),
-      borderRadius: BorderRadius.circular(ClientRadius.md),
+      borderRadius: BorderRadius.circular(ClientRadius.lg),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(ClientRadius.md),
+        borderRadius: BorderRadius.circular(ClientRadius.lg),
         child: Container(
-          constraints: const BoxConstraints(minHeight: 84),
-          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 11),
+          constraints: const BoxConstraints(minHeight: 96),
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 16),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(ClientRadius.md),
+            borderRadius: BorderRadius.circular(ClientRadius.lg),
             border: Border.all(color: ClientColors.borderFor(context)),
           ),
           child: Column(
@@ -685,133 +678,98 @@ class _CurrentJourneyCard extends StatelessWidget {
         ? ClientColors.journeyGreen
         : ClientColors.primaryFor(context);
 
-    return Material(
-      color: ClientColors.surfaceFor(context),
-      borderRadius: BorderRadius.circular(ClientRadius.xl),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(ClientRadius.xl),
-        child: Container(
-          padding: const EdgeInsets.all(ClientSpacing.lg),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(ClientRadius.xl),
-            border: Border.all(color: ClientColors.borderFor(context)),
-            boxShadow: ClientElevation.md(context),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+    return ClientCard(
+      onTap: onTap,
+      padding: const EdgeInsets.all(ClientSpacing.lg),
+      useShadow: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: statusColor.withAlpha(18),
-                      borderRadius: BorderRadius.circular(ClientRadius.md),
-                    ),
-                    child: Icon(
-                      isActive
-                          ? Icons.location_searching_rounded
-                          : Icons.directions_bus_rounded,
-                      color: statusColor,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          isActive ? 'Trip in progress' : 'Upcoming trip',
-                          style: ClientTypography.labelLarge(
-                            context,
-                          ).copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        Text(
-                          trip.schedule,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: ClientTypography.bodySmall(context).copyWith(
-                            color: ClientColors.textSecondaryFor(context),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  _StatusPill(label: trip.statusLabel, color: statusColor),
-                ],
-              ),
-              const SizedBox(height: 20),
-              _JourneyEndpoints(
-                pickup: trip.pickup,
-                destination: trip.destination,
-              ),
-              if (trip.driverLine?.trim().isNotEmpty == true) ...[
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    color: ClientColors.surfaceMutedFor(context),
-                    borderRadius: BorderRadius.circular(ClientRadius.md),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.person_outline_rounded,
-                        size: 18,
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          trip.driverLine!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: ClientTypography.bodySmall(context).copyWith(
-                            color: ClientColors.textSecondaryFor(context),
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              const SizedBox(height: 18),
               Container(
-                height: 48,
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: statusColor,
+                  color: statusColor.withAlpha(18),
                   borderRadius: BorderRadius.circular(ClientRadius.md),
                 ),
-                alignment: Alignment.center,
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Icon(
+                  isActive
+                      ? Icons.location_searching_rounded
+                      : Icons.directions_bus_rounded,
+                  color: statusColor,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(
-                      isActive
-                          ? Icons.near_me_rounded
-                          : Icons.receipt_long_rounded,
-                      color: Colors.white,
-                      size: 19,
-                    ),
-                    const SizedBox(width: 8),
                     Text(
-                      isActive ? 'Track your bus' : 'View trip details',
+                      isActive ? 'Trip in progress' : 'Upcoming trip',
                       style: ClientTypography.labelLarge(
                         context,
-                      ).copyWith(color: Colors.white),
+                      ).copyWith(fontWeight: FontWeight.w900),
+                    ),
+                    Text(
+                      trip.schedule,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                   ],
                 ),
               ),
+              _StatusPill(label: trip.statusLabel, color: statusColor),
             ],
           ),
-        ),
+          const SizedBox(height: 20),
+          _JourneyEndpoints(pickup: trip.pickup, destination: trip.destination),
+          if (trip.driverLine?.trim().isNotEmpty == true) ...[
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              decoration: BoxDecoration(
+                color: ClientColors.surfaceMutedFor(context),
+                borderRadius: BorderRadius.circular(ClientRadius.md),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.person_outline_rounded,
+                    size: 18,
+                    color: ClientColors.textSecondaryFor(context),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      trip.driverLine!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ClientTypography.bodySmall(context).copyWith(
+                        color: ClientColors.textSecondaryFor(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 18),
+          ClientButton(
+            label: isActive ? 'Track your bus' : 'View trip details',
+            icon: Icon(
+              isActive ? Icons.near_me_rounded : Icons.receipt_long_rounded,
+              color: Colors.white,
+              size: 19,
+            ),
+            onPressed: () {}, // Handled by InkWell wrapper, or we can just pass onTap here and remove the InkWell around the whole card, but let's keep it decorative and just use a non-clickable ClientButton since onTap is on the card.
+          ),
+        ],
       ),
     );
   }
@@ -825,10 +783,7 @@ class _CurrentJourneyCard extends StatelessWidget {
 }
 
 class _JourneyEndpoints extends StatelessWidget {
-  const _JourneyEndpoints({
-    required this.pickup,
-    required this.destination,
-  });
+  const _JourneyEndpoints({required this.pickup, required this.destination});
 
   final String pickup;
   final String destination;
@@ -952,10 +907,7 @@ class _StatusPill extends StatelessWidget {
 }
 
 class _DepartingSoonSection extends StatelessWidget {
-  const _DepartingSoonSection({
-    required this.trips,
-    required this.onSelect,
-  });
+  const _DepartingSoonSection({required this.trips, required this.onSelect});
 
   final List<NearbyTripData> trips;
   final ValueChanged<NearbyTripData> onSelect;
@@ -981,8 +933,7 @@ class _DepartingSoonSection extends StatelessWidget {
             clipBehavior: Clip.none,
             physics: const BouncingScrollPhysics(),
             itemCount: trips.length,
-            separatorBuilder: (_, _) =>
-                const SizedBox(width: ClientSpacing.sm),
+            separatorBuilder: (_, _) => const SizedBox(width: ClientSpacing.sm),
             itemBuilder: (context, index) {
               final trip = trips[index];
               return _DepartureCard(
@@ -1017,127 +968,109 @@ class _DepartureCard extends StatelessWidget {
 
     return SizedBox(
       width: width,
-      child: Material(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(ClientRadius.lg),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(ClientRadius.lg),
-          child: Container(
-            padding: const EdgeInsets.all(ClientSpacing.md),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(ClientRadius.lg),
-              border: Border.all(color: ClientColors.borderFor(context)),
-              boxShadow: ClientElevation.sm(context),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+      child: ClientCard(
+        onTap: onTap,
+        padding: const EdgeInsets.all(ClientSpacing.md),
+        useShadow: true,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: ClientColors.primaryFor(context).withAlpha(18),
+                    borderRadius: BorderRadius.circular(ClientRadius.pill),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.schedule_rounded,
+                        size: 15,
+                        color: ClientColors.primaryFor(context),
                       ),
-                      decoration: BoxDecoration(
-                        color: ClientColors.primaryFor(context).withAlpha(18),
-                        borderRadius: BorderRadius.circular(ClientRadius.pill),
+                      const SizedBox(width: 5),
+                      Text(
+                        trip.departureTime,
+                        style: ClientTypography.labelSmall(context).copyWith(
+                          color: ClientColors.primaryFor(context),
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.schedule_rounded,
-                            size: 15,
-                            color: ClientColors.primaryFor(context),
-                          ),
-                          const SizedBox(width: 5),
-                          Text(
-                            trip.departureTime,
-                            style: ClientTypography.labelSmall(
-                              context,
-                            ).copyWith(
-                              color: ClientColors.primaryFor(context),
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const Spacer(),
-                    if (trip.isLive)
-                      const _StatusPill(
-                        label: 'Boarding',
-                        color: ClientColors.journeyGreen,
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        trip.pickup,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: ClientTypography.headingSmall(context),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 18,
-                        color: ClientColors.textTertiaryFor(context),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        trip.destination,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.end,
-                        style: ClientTypography.headingSmall(context),
-                      ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
                 const Spacer(),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.event_seat_outlined,
-                      size: 17,
-                      color: seatColor,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${trip.seatsLeft.clamp(0, 999)} seats left',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: seatColor,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      'View trip',
-                      style: ClientTypography.labelSmall(context).copyWith(
-                        color: ClientColors.primaryFor(context),
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                    const SizedBox(width: 3),
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      size: 18,
-                      color: ClientColors.primaryFor(context),
-                    ),
-                  ],
+                if (trip.isLive)
+                  const _StatusPill(
+                    label: 'Boarding',
+                    color: ClientColors.journeyGreen,
+                  ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    trip.pickup,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ClientTypography.headingSmall(context),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: Icon(
+                    Icons.arrow_forward_rounded,
+                    size: 18,
+                    color: ClientColors.textTertiaryFor(context),
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    trip.destination,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.end,
+                    style: ClientTypography.headingSmall(context),
+                  ),
                 ),
               ],
             ),
-          ),
+            const Spacer(),
+            Row(
+              children: [
+                Icon(Icons.event_seat_outlined, size: 17, color: seatColor),
+                const SizedBox(width: 6),
+                Text(
+                  '${trip.seatsLeft.clamp(0, 999)} seats left',
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(color: seatColor, fontWeight: FontWeight.w800),
+                ),
+                const Spacer(),
+                Text(
+                  'View trip',
+                  style: ClientTypography.labelSmall(context).copyWith(
+                    color: ClientColors.primaryFor(context),
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                const SizedBox(width: 3),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: ClientColors.primaryFor(context),
+                ),
+              ],
+            ),
+          ],
         ),
       ),
     );
@@ -1163,9 +1096,7 @@ class _PackageInvitation extends StatelessWidget {
               Theme.of(context).brightness == Brightness.dark ? 32 : 14,
             ),
             borderRadius: BorderRadius.circular(ClientRadius.xl),
-            border: Border.all(
-              color: ClientColors.journeyPurple.withAlpha(55),
-            ),
+            border: Border.all(color: ClientColors.journeyPurple.withAlpha(55)),
           ),
           child: Row(
             children: [

@@ -389,13 +389,11 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
   }
 
   Widget _buildReceiptReadyBox(BuildContext context) {
-    return Container(
+    return ClientCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: ClientColors.journeyGreenLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ClientColors.journeyGreen.withAlpha(80)),
-      ),
+      backgroundColor: ClientColors.journeyGreenLight,
+      borderColor: ClientColors.journeyGreen.withAlpha(80),
+      useShadow: false,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

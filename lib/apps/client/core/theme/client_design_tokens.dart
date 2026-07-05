@@ -9,14 +9,14 @@ abstract final class ClientSpacing {
   static const double xs = 8;
   static const double sm = 12;
   static const double md = 16;
-  static const double lg = 20;
-  static const double xl = 24;
-  static const double xxl = 32;
-  static const double section = 40;
+  static const double lg = 24;
+  static const double xl = 32;
+  static const double xxl = 48;
+  static const double section = 56;
 
-  static const EdgeInsets screen = EdgeInsets.fromLTRB(md, sm, md, xl);
-  static const EdgeInsets card = EdgeInsets.all(md);
-  static const EdgeInsets panel = EdgeInsets.all(lg);
+  static const EdgeInsets screen = EdgeInsets.fromLTRB(24, 16, 24, 32);
+  static const EdgeInsets card = EdgeInsets.all(24);
+  static const EdgeInsets panel = EdgeInsets.all(24);
 }
 
 abstract final class ClientRadius {
@@ -25,9 +25,9 @@ abstract final class ClientRadius {
   static const double xs = 8;
   static const double sm = 12;
   static const double md = 16;
-  static const double lg = 20;
-  static const double xl = 24;
-  static const double sheet = 28;
+  static const double lg = 24;
+  static const double xl = 32;
+  static const double sheet = 32;
   static const double pill = 999;
 }
 
@@ -45,25 +45,25 @@ abstract final class ClientElevation {
 
   static List<BoxShadow> sm(BuildContext context) => [
     BoxShadow(
-      color: ClientColors.shadowFor(context).withAlpha(18),
-      blurRadius: 12,
-      offset: const Offset(0, 6),
+      color: ClientColors.shadowFor(context).withAlpha(8),
+      blurRadius: 16,
+      offset: const Offset(0, 4),
     ),
   ];
 
   static List<BoxShadow> md(BuildContext context) => [
     BoxShadow(
-      color: ClientColors.shadowFor(context).withAlpha(24),
-      blurRadius: 22,
-      offset: const Offset(0, 12),
+      color: ClientColors.shadowFor(context).withAlpha(12),
+      blurRadius: 24,
+      offset: const Offset(0, 8),
     ),
   ];
 
   static List<BoxShadow> lg(BuildContext context) => [
     BoxShadow(
-      color: ClientColors.shadowFor(context).withAlpha(34),
-      blurRadius: 34,
-      offset: const Offset(0, 18),
+      color: ClientColors.shadowFor(context).withAlpha(16),
+      blurRadius: 40,
+      offset: const Offset(0, 16),
     ),
   ];
 }

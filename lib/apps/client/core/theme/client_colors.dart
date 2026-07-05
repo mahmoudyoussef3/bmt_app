@@ -28,7 +28,7 @@ abstract final class ClientColors {
   static const Gradient primaryGradient = LinearGradient(
     colors: [
       Color(0xFF2563EB),
-      Color(0xFF0EA5E9),
+      Color(0xFF1D4ED8),
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -37,7 +37,7 @@ abstract final class ClientColors {
   static const Gradient darkPrimaryGradient = LinearGradient(
     colors: [
       Color(0xFF3B82F6),
-      Color(0xFF38BDF8),
+      Color(0xFF2563EB),
     ],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
@@ -77,23 +77,23 @@ abstract final class ClientColors {
 
   // ── Surfaces ───────────────────────────────────────────────────────────────
   static const Color surface = Color(0xFFFFFFFF);
-  static const Color surfaceSubtle = Color(0xFFF6F8FC);
-  static const Color surfaceMuted = Color(0xFFEFF4FA);
+  static const Color surfaceSubtle = Color(0xFFF9FAFB); // Gray 50
+  static const Color surfaceMuted = Color(0xFFF3F4F6); // Gray 100
   static const Color surfaceRaised = Color(0xFFFFFFFF);
-  static const Color border = Color(0xFFDDE6F1);
-  static const Color borderStrong = Color(0xFFB7C6D8);
+  static const Color border = Color(0xFFE5E7EB); // Gray 200
+  static const Color borderStrong = Color(0xFFD1D5DB); // Gray 300
 
   // ── Dark-mode overrides (used when [Brightness.dark]) ─────────────────────
   static const Color _darkBackground = Color(0xFF0B1220);
-  static const Color _darkSurface = Color(0xFF101A2E);
-  static const Color _darkSurfaceSubtle = Color(0xFF0D1728);
-  static const Color _darkSurfaceMuted = Color(0xFF17233A);
-  static const Color _darkSurfaceRaised = Color(0xFF15213A);
-  static const Color _darkBorder = Color(0xFF293B59);
-  static const Color _darkBorderStrong = Color(0xFF3A5174);
-  static const Color _darkTextPrimary = Color(0xFFF6F9FF);
-  static const Color _darkTextSecondary = Color(0xFFC3D0E2);
-  static const Color _darkTextTertiary = Color(0xFF8190A8);
+  static const Color _darkSurface = Color(0xFF111827); // Gray 900
+  static const Color _darkSurfaceSubtle = Color(0xFF1F2937); // Gray 800
+  static const Color _darkSurfaceMuted = Color(0xFF374151); // Gray 700
+  static const Color _darkSurfaceRaised = Color(0xFF1F2937);
+  static const Color _darkBorder = Color(0xFF374151);
+  static const Color _darkBorderStrong = Color(0xFF4B5563);
+  static const Color _darkTextPrimary = Color(0xFFF9FAFB);
+  static const Color _darkTextSecondary = Color(0xFF9CA3AF);
+  static const Color _darkTextTertiary = Color(0xFF6B7280);
 
   // ── Theme-aware accessors ──────────────────────────────────────────────────
 

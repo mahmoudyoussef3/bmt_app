@@ -112,14 +112,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
         return Scaffold(
           body: Container(
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  ClientColors.surfaceFor(context),
-                  ClientColors.surfaceMutedFor(context),
-                ],
-              ),
+              color: ClientColors.backgroundFor(context),
             ),
             child: SafeArea(
               child: Column(

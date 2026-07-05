@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_booking_summary_panel.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_legend.dart';
 import 'package:bmt_app/core/widgets/seat_widget.dart';
 
@@ -79,14 +80,7 @@ class _SeatSelectionContent extends StatelessWidget {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ClientColors.surfaceFor(context),
-              ClientColors.surfaceMutedFor(context),
-            ],
-          ),
+          color: ClientColors.backgroundFor(context),
         ),
         child: SafeArea(
           child: Column(
@@ -178,21 +172,11 @@ class _SeatSelectionContent extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
-    return Container(
+    return ClientCard(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
-      decoration: BoxDecoration(
-        color: ClientColors.primaryContainerFor(context),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: ClientColors.primaryMuted),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(18),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
+      backgroundColor: ClientColors.primaryContainerFor(context),
+      useShadow: true,
       child: Row(
         children: [
           Container(

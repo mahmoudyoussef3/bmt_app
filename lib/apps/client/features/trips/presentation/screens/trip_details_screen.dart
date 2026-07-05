@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubit.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_state.dart';
@@ -1372,7 +1373,9 @@ class _TripActionsBar extends StatelessWidget {
 class _PremiumPanel extends StatelessWidget {
   const _PremiumPanel({
     required this.child,
-    this.padding = const EdgeInsets.all(16),
+    this.padding = const EdgeInsets.all(
+      24,
+    ), // Increased padding for premium feel
   });
 
   final Widget child;
@@ -1380,16 +1383,7 @@ class _PremiumPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: padding,
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      child: child,
-    );
+    return ClientCard(padding: padding, useShadow: false, child: child);
   }
 }
 

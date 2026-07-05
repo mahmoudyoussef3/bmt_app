@@ -56,9 +56,9 @@ class ClientButton extends StatelessWidget {
     final effective = isLoading ? null : onPressed;
     final child = _buildChild(context);
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(ClientRadius.pill),
     );
-    final minSize = expand ? const Size.fromHeight(52) : const Size(0, 52);
+    final minSize = expand ? const Size.fromHeight(56) : const Size(0, 56);
 
     Widget button = switch (_variant) {
       _ClientButtonVariant.primary => PressableScale(
@@ -69,26 +69,22 @@ class ClientButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            gradient: effective == null
-                ? null
-                : ClientColors.primaryGradientFor(context),
             color: effective == null
-                ? Theme.of(context).colorScheme.primary.withAlpha(100)
-                : null,
-            borderRadius: BorderRadius.circular(ClientRadius.md),
-            boxShadow: effective == null ? null : ClientElevation.sm(context),
+                ? ClientColors.surfaceMutedFor(context)
+                : ClientColors.primaryFor(context),
+            borderRadius: BorderRadius.circular(ClientRadius.pill),
           ),
           child: DefaultTextStyle(
             style: ClientTypography.labelLarge(context).copyWith(
               color: effective == null
-                  ? Theme.of(context).colorScheme.onPrimary.withAlpha(180)
-                  : Theme.of(context).colorScheme.onPrimary,
+                  ? ClientColors.textTertiaryFor(context)
+                  : ClientColors.textInverse,
             ),
             child: IconTheme(
               data: IconThemeData(
                 color: effective == null
-                    ? Theme.of(context).colorScheme.onPrimary.withAlpha(180)
-                    : Theme.of(context).colorScheme.onPrimary,
+                    ? ClientColors.textTertiaryFor(context)
+                    : ClientColors.textInverse,
                 size: 20,
               ),
               child: child,

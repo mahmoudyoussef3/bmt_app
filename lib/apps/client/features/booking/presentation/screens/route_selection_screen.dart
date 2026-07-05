@@ -381,20 +381,9 @@ class _RouteOverviewCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
+    return ClientCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: isDark
-            ? scheme.surfaceContainerHighest
-            : scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(ClientRadius.xl),
-        border: Border.all(
-          color: isDark
-              ? scheme.outline.withAlpha(40)
-              : scheme.outline.withAlpha(60),
-        ),
-        boxShadow: ClientElevation.md(context),
-      ),
+      useShadow: true,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

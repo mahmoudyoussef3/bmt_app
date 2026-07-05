@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
@@ -144,16 +145,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         key: ValueKey(_currentPage),
                         data: pages[_currentPage],
                         compact: compact,
-                      ),
-                      SizedBox(
-                        height: compact ? ClientSpacing.lg : ClientSpacing.xxl,
-                      ),
-                      Center(
-                        child: _PageIndicator(
-                          controller: _pageController,
-                          currentPage: _currentPage,
-                          pageCount: pages.length,
-                        ),
                       ),
                       SizedBox(
                         height: compact ? ClientSpacing.md : ClientSpacing.xl,
@@ -307,54 +298,6 @@ class _AnimatedPageCopy extends StatelessWidget {
   }
 }
 
-class _PageIndicator extends StatelessWidget {
-  const _PageIndicator({
-    required this.controller,
-    required this.currentPage,
-    required this.pageCount,
-  });
-
-  final PageController controller;
-  final int currentPage;
-  final int pageCount;
-
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: '${currentPage + 1} / $pageCount',
-      child: AnimatedBuilder(
-        animation: controller,
-        builder: (context, _) {
-          final page =
-              controller.hasClients && controller.position.hasContentDimensions
-              ? controller.page ?? currentPage.toDouble()
-              : currentPage.toDouble();
-
-          return Row(
-            mainAxisSize: MainAxisSize.min,
-            children: List.generate(pageCount, (index) {
-              final proximity = (1 - (page - index).abs()).clamp(0.0, 1.0);
-              return Container(
-                width: 8 + (20 * proximity),
-                height: 8,
-                margin: const EdgeInsetsDirectional.symmetric(horizontal: 4),
-                decoration: BoxDecoration(
-                  color: Color.lerp(
-                    Colors.white.withAlpha(85),
-                    Colors.white,
-                    proximity,
-                  ),
-                  borderRadius: BorderRadius.circular(ClientRadius.pill),
-                ),
-              );
-            }),
-          );
-        },
-      ),
-    );
-  }
-}
-
 class _BottomActions extends StatelessWidget {
   const _BottomActions({
     required this.isLastPage,
@@ -388,70 +331,15 @@ class _BottomActions extends StatelessWidget {
           child: Text(l10n.onboarding_skip),
         ),
         const Spacer(),
-        PressableScale(
-          onTap: isCompleting ? null : onNext,
-          child: AnimatedContainer(
-            duration: ClientMotion.slow,
-            curve: ClientMotion.curve,
-            height: 56,
-            constraints: BoxConstraints(minWidth: isLastPage ? 158 : 132),
-            padding: const EdgeInsets.symmetric(horizontal: ClientSpacing.lg),
-            decoration: BoxDecoration(
-              color: ClientColors.primary,
-              borderRadius: BorderRadius.circular(ClientRadius.pill),
-              border: Border.all(color: Colors.white.withAlpha(34)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(55),
-                  blurRadius: 22,
-                  offset: const Offset(0, 10),
-                ),
-                BoxShadow(
-                  color: ClientColors.primary.withAlpha(90),
-                  blurRadius: 24,
-                  spreadRadius: -4,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                AnimatedSwitcher(
-                  duration: ClientMotion.slow,
-                  transitionBuilder: (child, animation) =>
-                      FadeTransition(opacity: animation, child: child),
-                  child: Text(
-                    isLastPage
-                        ? l10n.onboarding_getStarted
-                        : l10n.onboarding_next,
-                    key: ValueKey(isLastPage),
-                    maxLines: 1,
-                    style: ClientTypography.labelLarge(context).copyWith(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: ClientSpacing.xs),
-                if (isCompleting)
-                  const SizedBox.square(
-                    dimension: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: Colors.white,
-                    ),
-                  )
-                else
-                  const Icon(
-                    Icons.arrow_forward_rounded,
-                    color: Colors.white,
-                    size: 21,
-                  ),
-              ],
-            ),
+        ClientButton(
+          expand: false,
+          label: isLastPage ? l10n.onboarding_getStarted : l10n.onboarding_next,
+          isLoading: isCompleting,
+          onPressed: isCompleting ? () {} : onNext,
+          icon: const Icon(
+            Icons.arrow_forward_rounded,
+            color: Colors.white,
+            size: 21,
           ),
         ),
       ],
