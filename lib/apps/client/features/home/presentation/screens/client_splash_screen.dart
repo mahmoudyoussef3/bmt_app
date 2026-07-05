@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'widgets/splash_glow_backdrop.dart';
+import 'widgets/splash_wordmark.dart';
+import 'widgets/splash_progress_track.dart';
 
 /// Branded animated splash shown while the app resolves onboarding + auth state.
 ///
-/// Animation sequence (total ~900ms):
-///   0ms  – wordmark fades in and scales 0.85 → 1.0 (400ms, easeOut)
-///   300ms – tagline fades in (350ms, easeIn)
-///   700ms – pulsing indicator fades in (200ms)
+/// Motion sequence (intro ~1100ms, then a looping progress shimmer):
+///   0ms   – ambient glow breathes behind the brand
+///   80ms  – brand mark scales 0.7 → 1.0 with a soft settle
+///   260ms – wordmark fades in and slides up
+///   520ms – tagline fades in
+///   760ms – progress track reveals and animates indefinitely
 ///
-/// The parent state machine (OnboardingCubit / StreamBuilder) handles the
+/// The parent state machine (OnboardingCubit / auth StreamBuilder) owns the
 /// actual navigation transition — this widget never self-dismisses.
 class ClientSplashScreen extends StatefulWidget {
   const ClientSplashScreen({super.key});
@@ -19,143 +24,107 @@ class ClientSplashScreen extends StatefulWidget {
 }
 
 class _ClientSplashScreenState extends State<ClientSplashScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-  late final Animation<double> _wordmarkOpacity;
-  late final Animation<double> _wordmarkScale;
+    with TickerProviderStateMixin {
+  late final AnimationController _intro;
+  late final AnimationController _ambient;
+
+  late final Animation<double> _markScale;
+  late final Animation<double> _markOpacity;
+  late final Animation<double> _wordmarkReveal;
   late final Animation<double> _taglineOpacity;
-  late final Animation<double> _indicatorOpacity;
+  late final Animation<double> _progressOpacity;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
+    _intro = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1100),
     );
+    _ambient = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
 
-    _wordmarkOpacity = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
-    );
-    _wordmarkScale = Tween<double>(begin: 0.85, end: 1.0).animate(
+    _markScale = Tween<double>(begin: 0.7, end: 1.0).animate(
       CurvedAnimation(
-        parent: _controller,
-        curve: const Interval(0.0, 0.45, curve: Curves.easeOut),
+        parent: _intro,
+        curve: const Interval(0.07, 0.5, curve: Curves.easeOutBack),
       ),
     );
-    _taglineOpacity = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.33, 0.72, curve: Curves.easeIn),
+    _markOpacity = CurvedAnimation(
+      parent: _intro,
+      curve: const Interval(0.07, 0.4, curve: Curves.easeOut),
     );
-    _indicatorOpacity = CurvedAnimation(
-      parent: _controller,
-      curve: const Interval(0.78, 1.0, curve: Curves.easeIn),
+    _wordmarkReveal = CurvedAnimation(
+      parent: _intro,
+      curve: const Interval(0.24, 0.62, curve: Curves.easeOutCubic),
+    );
+    _taglineOpacity = CurvedAnimation(
+      parent: _intro,
+      curve: const Interval(0.47, 0.78, curve: Curves.easeIn),
+    );
+    _progressOpacity = CurvedAnimation(
+      parent: _intro,
+      curve: const Interval(0.7, 1.0, curve: Curves.easeIn),
     );
 
-    _controller.forward();
+    _intro.forward();
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _intro.dispose();
+    _ambient.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ClientColors.surfaceFor(context),
-      body: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // Wordmark
-            FadeTransition(
-              opacity: _wordmarkOpacity,
-              child: ScaleTransition(scale: _wordmarkScale, child: _Wordmark()),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Tagline
-            FadeTransition(
-              opacity: _taglineOpacity,
-              child: Text(
-                'Your journey, simplified.',
-                style: ClientTypography.bodyMedium(context).copyWith(
-                  color: ClientColors.textTertiaryFor(context),
-                  letterSpacing: 0.3,
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 56),
-
-            // Loading indicator
-            FadeTransition(
-              opacity: _indicatorOpacity,
-              child: SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    ClientColors.primaryMuted,
+      backgroundColor: ClientColors.backgroundFor(context),
+      body: Stack(
+        children: [
+          SplashGlowBackdrop(animation: _ambient),
+          Center(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                FadeTransition(
+                  opacity: _markOpacity,
+                  child: ScaleTransition(
+                    scale: _markScale,
+                    child: const SplashBrandMark(),
                   ),
                 ),
+                const SizedBox(height: 22),
+                SplashWordmark(reveal: _wordmarkReveal),
+                const SizedBox(height: 14),
+                FadeTransition(
+                  opacity: _taglineOpacity,
+                  child: Text(
+                    'Your journey, simplified.',
+                    style: ClientTypography.bodyMedium(context).copyWith(
+                      color: ClientColors.textTertiaryFor(context),
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 56),
+              child: FadeTransition(
+                opacity: _progressOpacity,
+                child: const SplashProgressTrack(),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
-    );
-  }
-}
-
-class _Wordmark extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        // Brand icon
-        Container(
-          width: 44,
-          height: 44,
-          decoration: BoxDecoration(
-            color: ClientColors.primary,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: const Icon(
-            Icons.route_rounded,
-            color: ClientColors.textInverse,
-            size: 26,
-          ),
-        ),
-        const SizedBox(width: 12),
-        // App name
-        RichText(
-          text: TextSpan(
-            children: [
-              TextSpan(
-                text: 'Easy',
-                style: ClientTypography.displayMedium(context).copyWith(
-                  color: ClientColors.textPrimaryFor(context),
-                  height: 1,
-                ),
-              ),
-              TextSpan(
-                text: 'Way',
-                style: ClientTypography.displayMedium(
-                  context,
-                ).copyWith(color: ClientColors.primary, height: 1),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

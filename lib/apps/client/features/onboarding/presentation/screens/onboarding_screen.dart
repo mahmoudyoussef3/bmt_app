@@ -2,11 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
-import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
@@ -145,6 +143,13 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         key: ValueKey(_currentPage),
                         data: pages[_currentPage],
                         compact: compact,
+                      ),
+                      SizedBox(
+                        height: compact ? ClientSpacing.md : ClientSpacing.lg,
+                      ),
+                      _PageDots(
+                        count: pages.length,
+                        currentPage: _currentPage,
                       ),
                       SizedBox(
                         height: compact ? ClientSpacing.md : ClientSpacing.xl,
@@ -294,6 +299,34 @@ class _AnimatedPageCopy extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _PageDots extends StatelessWidget {
+  const _PageDots({required this.count, required this.currentPage});
+
+  final int count;
+  final int currentPage;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: List.generate(count, (index) {
+        final active = index == currentPage;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 320),
+          curve: Curves.easeOutCubic,
+          margin: const EdgeInsets.only(right: 6),
+          height: 6,
+          width: active ? 26 : 6,
+          decoration: BoxDecoration(
+            color: active ? Colors.white : Colors.white.withAlpha(90),
+            borderRadius: BorderRadius.circular(ClientRadius.pill),
+          ),
+        );
+      }),
     );
   }
 }

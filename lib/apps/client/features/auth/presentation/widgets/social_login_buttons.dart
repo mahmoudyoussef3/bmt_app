@@ -1,85 +1,112 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+
+import 'google_g_logo.dart';
+
+/// The third-party sign-in providers offered on the welcome screen.
+///
+/// These are presentation-only (mock) in this build — email/password is the
+/// only real authentication path. Selecting one surfaces a "coming soon"
+/// affordance handled by the caller.
+enum SocialProvider { google, apple, phone }
+
+/// A compact row of three provider buttons under an "or continue with" label.
 class SocialLoginButtons extends StatelessWidget {
-  const SocialLoginButtons({super.key});
+  const SocialLoginButtons({super.key, required this.onSelected});
+
+  final ValueChanged<SocialProvider> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    return Row(
       children: [
-        _SocialButton(
-          title: 'المتابعة باستخدام Google',
-          icon: 'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg',
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            // Mock google login
-          },
+        Expanded(
+          child: _ProviderButton(
+            label: 'Google',
+            glyph: const GoogleGLogo(size: 22),
+            onTap: () => _select(SocialProvider.google),
+          ),
         ),
-        const SizedBox(height: 16),
-        _SocialButton(
-          title: 'المتابعة باستخدام Apple',
-          icon: 'https://upload.wikimedia.org/wikipedia/commons/f/fa/Apple_logo_black.svg',
-          isApple: true,
-          onPressed: () {
-            HapticFeedback.lightImpact();
-            // Mock apple login
-          },
+        const SizedBox(width: ClientSpacing.sm),
+        Expanded(
+          child: _ProviderButton(
+            label: 'Apple',
+            glyph: Icon(
+              Icons.apple,
+              size: 24,
+              color: ClientColors.textPrimaryFor(context),
+            ),
+            onTap: () => _select(SocialProvider.apple),
+          ),
+        ),
+        const SizedBox(width: ClientSpacing.sm),
+        Expanded(
+          child: _ProviderButton(
+            label: 'Phone',
+            glyph: Icon(
+              Icons.phone_iphone_rounded,
+              size: 22,
+              color: ClientColors.primaryFor(context),
+            ),
+            onTap: () => _select(SocialProvider.phone),
+          ),
         ),
       ],
     );
   }
+
+  void _select(SocialProvider provider) {
+    HapticFeedback.lightImpact();
+    onSelected(provider);
+  }
 }
 
-class _SocialButton extends StatelessWidget {
-  final String title;
-  final String icon;
-  final VoidCallback onPressed;
-  final bool isApple;
-
-  const _SocialButton({
-    required this.title,
-    required this.icon,
-    required this.onPressed,
-    this.isApple = false,
+class _ProviderButton extends StatelessWidget {
+  const _ProviderButton({
+    required this.label,
+    required this.glyph,
+    required this.onTap,
   });
+
+  final String label;
+  final Widget glyph;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return OutlinedButton(
-      onPressed: onPressed,
-      style: OutlinedButton.styleFrom(
-        foregroundColor: isDark ? Colors.white : Colors.black87,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        side: BorderSide(
-          color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+    return PressableScale(
+      onTap: onTap,
+      child: Container(
+        height: 56,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: ClientColors.surfaceFor(context),
+          borderRadius: BorderRadius.circular(ClientRadius.md),
+          border: Border.all(color: ClientColors.borderFor(context)),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        backgroundColor: isDark ? Colors.grey[900] : Colors.white,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Image.network(
-            icon,
-            height: 24,
-            width: 24,
-            color: isApple && isDark ? Colors.white : null,
-            errorBuilder: (context, error, stackTrace) => const Icon(Icons.error_outline),
-          ),
-          const SizedBox(width: 16),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            glyph,
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: ClientTypography.labelMedium(context).copyWith(
+                  color: ClientColors.textPrimaryFor(context),
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

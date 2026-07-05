@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/core/widgets/app_dialogs.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../routes/auth_routes.dart';
 import '../widgets/auth_brand_logo.dart';
+import '../widgets/auth_error_banner.dart';
 import '../widgets/auth_section_card.dart';
 import '../widgets/password_strength_meter.dart';
 import '../widgets/premium_auth_button.dart';
@@ -100,17 +100,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
               AuthRoutes.success,
               arguments: {'email': _emailController.text.trim().toLowerCase()},
             );
-            return;
           }
-
-          if (state.signUpStatus == AuthSubmissionStatus.failure) {
-            AppDialogs.showErrorDialog(
-              context,
-              title: 'Failed to create account',
-              message: state.signUpError ?? l10n.auth_registrationFailed,
-              onRetry: _submit,
-            );
-          }
+          // Failures render inline via [AuthErrorBanner] below.
         },
         child: PremiumAuthScaffold(
           logo: const AuthBrandLogo(),
@@ -133,6 +124,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        AuthErrorBanner(
+                          message:
+                              state.signUpStatus ==
+                                  AuthSubmissionStatus.failure
+                              ? (state.signUpError ??
+                                    l10n.auth_registrationFailed)
+                              : null,
+                          onDismiss: context
+                              .read<ClientAuthCubit>()
+                              .dismissSignUpError,
+                        ),
                         _TrustBanner(scheme: scheme),
                         const SizedBox(height: 18),
 

@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
+
 import '../cubit/captain_auth_cubit.dart';
+import '../widgets/captain_auth_error_banner.dart';
+import '../widgets/captain_auth_field.dart';
+import '../widgets/captain_auth_header.dart';
+import '../widgets/captain_auth_scaffold.dart';
+import 'captain_request_access_screen.dart';
 
 class CaptainLoginScreen extends StatefulWidget {
   const CaptainLoginScreen({super.key});
@@ -14,12 +21,13 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailCtrl = TextEditingController();
   final _passwordCtrl = TextEditingController();
-  bool _obscurePassword = true;
+  final _passwordFocus = FocusNode();
 
   @override
   void dispose() {
     _emailCtrl.dispose();
     _passwordCtrl.dispose();
+    _passwordFocus.dispose();
     super.dispose();
   }
 
@@ -32,228 +40,132 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
     );
   }
 
+  void _openRequestAccess() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const CaptainRequestAccessScreen()),
+    );
+  }
+
+  void _forgotPassword() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Contact operations to reset your captain password.'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final cubit = context.read<CaptainAuthCubit>();
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
-        backgroundColor: scheme.surface,
-        body: Stack(
-          children: [
-            // Subtle glowing background element
-            Positioned(
-              top: -100,
-              right: -50,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      scheme.primary.withAlpha(30),
-                      Colors.transparent,
-                    ],
-                  ),
+    return BlocBuilder<CaptainAuthCubit, CaptainAuthState>(
+      builder: (context, state) {
+        final loading = state is CaptainAuthLoading;
+        final error = state is CaptainAuthError ? state.message : null;
+
+        return AbsorbPointer(
+          absorbing: loading,
+          child: CaptainAuthScaffold(
+            child: Form(
+              key: _formKey,
+              autovalidateMode: AutovalidateMode.onUserInteraction,
+              child: AutofillGroup(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const CaptainAuthHeader(
+                      title: 'Captain Sign In',
+                      subtitle: 'Sign in to see your trips and start driving.',
+                    ),
+                    const SizedBox(height: 40),
+                    CaptainAuthErrorBanner(
+                      message: error,
+                      onDismiss: cubit.resetError,
+                    ),
+                    CaptainAuthField(
+                      controller: _emailCtrl,
+                      label: 'Email address',
+                      icon: Icons.email_outlined,
+                      keyboardType: TextInputType.emailAddress,
+                      textInputAction: TextInputAction.next,
+                      autofillHints: const [AutofillHints.email],
+                      onSubmitted: (_) => _passwordFocus.requestFocus(),
+                      validator: (value) {
+                        final email = value?.trim() ?? '';
+                        return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
+                                .hasMatch(email)
+                            ? null
+                            : 'Enter a valid email address';
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    CaptainAuthField(
+                      controller: _passwordCtrl,
+                      focusNode: _passwordFocus,
+                      label: 'Password',
+                      icon: Icons.lock_outline_rounded,
+                      isPassword: true,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.password],
+                      onSubmitted: (_) => _submit(),
+                      validator: (value) =>
+                          (value?.isEmpty ?? true) ? 'Enter your password' : null,
+                    ),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: loading ? null : _forgotPassword,
+                        child: const Text('Forgot password?'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    CaptainButton(
+                      label: loading ? 'Signing in...' : 'Sign In',
+                      isLoading: loading,
+                      onPressed: loading ? null : _submit,
+                    ),
+                    const SizedBox(height: 20),
+                    _RequestAccessLink(
+                      onTap: loading ? null : _openRequestAccess,
+                    ),
+                  ],
                 ),
               ),
             ),
-            SafeArea(
-              child: BlocConsumer<CaptainAuthCubit, CaptainAuthState>(
-                listener: (context, state) {
-                  if (state is CaptainAuthError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(state.message),
-                        backgroundColor: scheme.error,
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        margin: const EdgeInsets.all(16),
-                      ),
-                    );
-                    context.read<CaptainAuthCubit>().resetError();
-                  }
-                },
-                builder: (context, state) {
-                  final loading = state is CaptainAuthLoading;
-                  return Center(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                        const SizedBox(height: 12),
-                        Container(
-                          width: 88,
-                          height: 88,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                scheme.primary,
-                                scheme.primary.withAlpha(190),
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
-                            borderRadius: BorderRadius.circular(28),
-                            boxShadow: [
-                              BoxShadow(
-                                color: scheme.primary.withAlpha(60),
-                                blurRadius: 24,
-                                offset: const Offset(0, 8),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            Icons.directions_bus_rounded,
-                            size: 48,
-                            color: scheme.onPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          'تطبيق السائق',
-                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.5,
-                              ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'سجّل دخولك للمتابعة',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                color: scheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w500,
-                              ),
-                        ),
-                        const SizedBox(height: 48),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Theme.of(context).brightness == Brightness.dark
-                                ? scheme.surfaceContainerHighest
-                                : scheme.surface,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(12),
-                                blurRadius: 32,
-                                offset: const Offset(0, 12),
-                              ),
-                            ],
-                            border: Border.all(
-                              color: scheme.outlineVariant.withAlpha(50),
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                child: TextFormField(
-                                  controller: _emailCtrl,
-                                  keyboardType: TextInputType.emailAddress,
-                                  textDirection: TextDirection.ltr,
-                                  textAlign: TextAlign.left,
-                                  textInputAction: TextInputAction.next,
-                                  autofillHints: const [AutofillHints.email],
-                                  decoration: const InputDecoration(
-                                    labelText: 'البريد الإلكتروني',
-                                    prefixIcon: Icon(Icons.email_outlined),
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                  ),
-                                  validator: (value) {
-                                    final email = value?.trim() ?? '';
-                                    return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$').hasMatch(email)
-                                        ? null
-                                        : 'أدخل بريداً إلكترونياً صحيحاً';
-                                  },
-                                ),
-                              ),
-                              Divider(
-                                height: 1,
-                                color: scheme.outlineVariant.withAlpha(40),
-                                indent: 16,
-                                endIndent: 16,
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                child: TextFormField(
-                                  controller: _passwordCtrl,
-                                  obscureText: _obscurePassword,
-                                  textDirection: TextDirection.ltr,
-                                  textAlign: TextAlign.left,
-                                  textInputAction: TextInputAction.done,
-                                  autofillHints: const [AutofillHints.password],
-                                  onFieldSubmitted: (_) => _submit(),
-                                  decoration: InputDecoration(
-                                    labelText: 'كلمة المرور',
-                                    prefixIcon: const Icon(Icons.lock_outline_rounded),
-                                    border: InputBorder.none,
-                                    enabledBorder: InputBorder.none,
-                                    focusedBorder: InputBorder.none,
-                                    suffixIcon: IconButton(
-                                      icon: Icon(
-                                        _obscurePassword
-                                            ? Icons.visibility_off_outlined
-                                            : Icons.visibility_outlined,
-                                      ),
-                                      onPressed: () => setState(
-                                        () => _obscurePassword = !_obscurePassword,
-                                      ),
-                                    ),
-                                  ),
-                                  validator: (value) =>
-                                      (value?.isEmpty ?? true) ? 'أدخل كلمة المرور' : null,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 36),
-                        SizedBox(
-                          width: double.infinity,
-                          height: 56,
-                          child: FilledButton(
-                            onPressed: loading ? null : _submit,
-                            style: FilledButton.styleFrom(
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                            child: loading
-                                ? const SizedBox(
-                                    width: 24,
-                                    height: 24,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2.5,
-                                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                    ),
-                                  )
-                                : const Text('دخول'),
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                      ],
-                    ),
-                  ),
-                ),
-              );
-            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RequestAccessLink extends StatelessWidget {
+  const _RequestAccessLink({required this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Wrap(
+      alignment: WrapAlignment.center,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        Text(
+          'New to the fleet?',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: scheme.onSurfaceVariant,
+          ),
+        ),
+        TextButton(
+          onPressed: onTap,
+          child: const Text(
+            'Request access',
+            style: TextStyle(fontWeight: FontWeight.w900),
           ),
         ),
       ],
-    ),
-  ),
-);
+    );
   }
 }

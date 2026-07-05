@@ -11,7 +11,7 @@ class CaptainAuthDatasource {
     } on AuthException catch (e) {
       throw Exception(_authMessage(e));
     } catch (_) {
-      throw Exception('فشل تسجيل الدخول. تحقق من البيانات وأعد المحاولة.');
+      throw Exception('Sign in failed. Check your connection and try again.');
     }
   }
 
@@ -33,11 +33,11 @@ class CaptainAuthDatasource {
   String _authMessage(AuthException error) {
     final message = error.message.toLowerCase();
     if (message.contains('invalid login credentials')) {
-      return 'البريد الإلكتروني أو كلمة المرور غير صحيحة.';
+      return 'Incorrect email or password.';
     }
     if (message.contains('rate') || message.contains('seconds')) {
-      return 'محاولات كثيرة. انتظر قليلاً ثم أعد المحاولة.';
+      return 'Too many attempts. Please wait a moment and try again.';
     }
-    return 'تعذر تسجيل الدخول. حاول مرة أخرى.';
+    return 'Could not sign in. Please try again.';
   }
 }

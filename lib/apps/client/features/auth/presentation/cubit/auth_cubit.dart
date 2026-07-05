@@ -67,6 +67,28 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
     }
   }
 
+  void dismissSignInError() {
+    if (state.signInStatus == AuthSubmissionStatus.failure) {
+      emit(
+        state.copyWith(
+          signInStatus: AuthSubmissionStatus.initial,
+          clearSignInError: true,
+        ),
+      );
+    }
+  }
+
+  void dismissSignUpError() {
+    if (state.signUpStatus == AuthSubmissionStatus.failure) {
+      emit(
+        state.copyWith(
+          signUpStatus: AuthSubmissionStatus.initial,
+          clearSignUpError: true,
+        ),
+      );
+    }
+  }
+
   String _messageFor(Object error) {
     if (error is FormatException) {
       return error.message;

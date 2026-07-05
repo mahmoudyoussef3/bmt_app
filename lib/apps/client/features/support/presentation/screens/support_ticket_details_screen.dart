@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 class SupportTicketDetailsScreen extends StatefulWidget {
   final String ticketId;
@@ -24,20 +24,20 @@ class _SupportTicketDetailsScreenState
     context.read<SupportCubit>().openTicketDetails(widget.ticketId);
   }
 
-  Color _getStatusColor(TicketStatus status) {
+  Color _getStatusColor(TicketStatus status, ColorScheme scheme) {
     switch (status) {
       case TicketStatus.submitted:
-        return Colors.blue;
+        return scheme.primary;
       case TicketStatus.underReview:
         return Colors.orange;
       case TicketStatus.contacted:
-        return Colors.purple;
+        return scheme.secondary;
       case TicketStatus.resolved:
         return Colors.green;
       case TicketStatus.closed:
-        return Colors.grey;
+        return scheme.outline;
       case TicketStatus.rejected:
-        return Colors.red;
+        return scheme.error;
     }
   }
 
@@ -60,19 +60,23 @@ class _SupportTicketDetailsScreenState
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: scheme.surfaceContainerHighest.withAlpha(50),
       appBar: AppBar(
         title: Text(
           'Ticket Details',
-          style: GoogleFonts.outfit(
-            color: Colors.black87,
-            fontWeight: FontWeight.w600,
+          style: ClientTypography.headingSmall(context).copyWith(
+            color: scheme.onSurface,
+            fontWeight: FontWeight.w800,
           ),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: scheme.surface,
+        scrolledUnderElevation: 0,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(color: scheme.onSurface),
+        centerTitle: true,
       ),
       body: BlocConsumer<SupportCubit, SupportState>(
         listener: (context, state) {
@@ -80,53 +84,66 @@ class _SupportTicketDetailsScreenState
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(state.message),
-                backgroundColor: Colors.red,
+                backgroundColor: scheme.error,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
             );
           }
         },
         builder: (context, state) {
           if (state is SupportLoading || state is SupportInitial) {
-            return const Center(child: CircularProgressIndicator());
+            return Center(child: CircularProgressIndicator(color: scheme.primary));
           }
 
           if (state is SupportTicketDetailsLoaded) {
             final ticket = state.ticket;
+            final statusColor = _getStatusColor(ticket.status, scheme);
 
             return ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(24),
               children: [
-                // Info Box
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.blue[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.blue[100]!),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.info_outline, color: Colors.blue),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Our customer service team is reviewing your ticket and may contact you by phone soon.',
-                          style: TextStyle(color: Colors.blue[900]),
+                // Status Alert Box
+                if (ticket.status == TicketStatus.submitted || ticket.status == TicketStatus.underReview)
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 24),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: scheme.primary.withAlpha(40)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.info_outline_rounded, color: scheme.primary),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            'Our customer service team is reviewing your ticket and may contact you shortly.',
+                            style: ClientTypography.bodyMedium(context).copyWith(
+                              color: scheme.onSurface,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 16),
 
                 // Details Card
                 Container(
+                  padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.grey[200]!),
+                    color: scheme.surface,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: scheme.shadow.withAlpha(10),
+                        blurRadius: 20,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -135,28 +152,27 @@ class _SupportTicketDetailsScreenState
                         children: [
                           Text(
                             ticket.ticketNumber,
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey,
+                            style: ClientTypography.labelMedium(context).copyWith(
+                              color: scheme.onSurfaceVariant.withAlpha(200),
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 1,
                             ),
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 12,
+                              vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: _getStatusColor(
-                                ticket.status,
-                              ).withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
+                              color: statusColor.withAlpha(20),
+                              borderRadius: BorderRadius.circular(10),
                             ),
                             child: Text(
                               _getStatusLabel(ticket.status),
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                                color: _getStatusColor(ticket.status),
+                              style: ClientTypography.labelSmall(context).copyWith(
+                                fontWeight: FontWeight.w800,
+                                color: statusColor,
+                                letterSpacing: 0.5,
                               ),
                             ),
                           ),
@@ -165,70 +181,82 @@ class _SupportTicketDetailsScreenState
                       const SizedBox(height: 16),
                       Text(
                         ticket.title,
-                        style: GoogleFonts.outfit(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
+                        style: ClientTypography.headingMedium(context).copyWith(
+                          color: scheme.onSurface,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Text(
-                        'Category: ${ticket.category}',
-                        style: TextStyle(color: Colors.grey[600]),
+                      Row(
+                        children: [
+                          Icon(Icons.category_rounded, size: 16, color: scheme.primary),
+                          const SizedBox(width: 6),
+                          Text(
+                            ticket.category,
+                            style: ClientTypography.labelMedium(context).copyWith(
+                              color: scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ],
                       ),
-                      const Divider(height: 32),
+                      const SizedBox(height: 24),
+                      Divider(color: scheme.outlineVariant.withAlpha(50)),
+                      const SizedBox(height: 24),
                       Text(
                         'Description',
-                        style: GoogleFonts.outfit(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
+                        style: ClientTypography.headingSmall(context).copyWith(
+                          color: scheme.onSurface,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 12),
                       Text(
                         ticket.description,
-                        style: const TextStyle(fontSize: 15, height: 1.5),
+                        style: ClientTypography.bodyMedium(context).copyWith(
+                          color: scheme.onSurfaceVariant,
+                          height: 1.6,
+                        ),
                       ),
                     ],
                   ),
                 ),
 
-                // Customer Service Note (if exists)
-                if (ticket.internalNote != null &&
-                    ticket.internalNote!.isNotEmpty) ...[
-                  const SizedBox(height: 16),
+                // Customer Service Note
+                if (ticket.internalNote != null && ticket.internalNote!.isNotEmpty) ...[
+                  const SizedBox(height: 24),
                   Container(
                     decoration: BoxDecoration(
-                      color: Colors.orange[50],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.orange[200]!),
+                      color: Colors.orange.withAlpha(20),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.orange.withAlpha(50)),
                     ),
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.all(24),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Row(
                           children: [
                             const Icon(
-                              Icons.support_agent,
+                              Icons.support_agent_rounded,
                               color: Colors.orange,
                             ),
-                            const SizedBox(width: 8),
+                            const SizedBox(width: 12),
                             Text(
                               'Customer Service Note',
-                              style: GoogleFonts.outfit(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.orange[900],
+                              style: ClientTypography.headingSmall(context).copyWith(
+                                color: Colors.orange.shade800,
+                                fontWeight: FontWeight.w800,
                               ),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: 16),
                         Text(
                           ticket.internalNote!,
-                          style: TextStyle(
-                            fontSize: 15,
-                            color: Colors.orange[900],
+                          style: ClientTypography.bodyMedium(context).copyWith(
+                            color: Colors.orange.shade900,
+                            height: 1.5,
                           ),
                         ),
                       ],
@@ -238,38 +266,54 @@ class _SupportTicketDetailsScreenState
 
                 // Attachments
                 if (state.attachments.isNotEmpty) ...[
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 32),
                   Text(
                     'Attachments',
-                    style: GoogleFonts.outfit(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
+                    style: ClientTypography.headingSmall(context).copyWith(
+                      color: scheme.onSurface,
+                      fontWeight: FontWeight.w800,
                     ),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 16),
                   ...state.attachments.map(
                     (attachment) => Container(
-                      margin: const EdgeInsets.only(bottom: 8),
-                      padding: const EdgeInsets.all(12),
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        border: Border.all(color: Colors.grey[300]!),
-                        borderRadius: BorderRadius.circular(8),
+                        color: scheme.surface,
+                        border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: [
+                          BoxShadow(
+                            color: scheme.shadow.withAlpha(5),
+                            blurRadius: 10,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.attach_file, color: Colors.blue),
-                          const SizedBox(width: 12),
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withAlpha(20),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.attach_file_rounded, color: scheme.primary, size: 20),
+                          ),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Text(
                               attachment.fileName,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w500,
+                              style: ClientTypography.bodyMedium(context).copyWith(
+                                color: scheme.onSurface,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
+                          Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
                         ],
                       ),
                     ),
@@ -279,7 +323,14 @@ class _SupportTicketDetailsScreenState
             );
           }
 
-          return const Center(child: Text('Failed to load ticket details'));
+          return Center(
+            child: Text(
+              'Failed to load ticket details',
+              style: ClientTypography.bodyLarge(context).copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          );
         },
       ),
     );

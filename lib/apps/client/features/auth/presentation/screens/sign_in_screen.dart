@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/core/widgets/app_dialogs.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
 import '../routes/auth_routes.dart';
 import '../widgets/auth_brand_logo.dart';
+import '../widgets/auth_error_banner.dart';
 import '../widgets/premium_auth_button.dart';
 import '../widgets/premium_auth_scaffold.dart';
 import '../widgets/premium_auth_text_field.dart';
@@ -72,17 +72,8 @@ class _SignInScreenState extends State<SignInScreen> {
             Navigator.of(
               context,
             ).pushNamedAndRemoveUntil('/home', (_) => false);
-            return;
           }
-
-          if (state.signInStatus == AuthSubmissionStatus.failure) {
-            AppDialogs.showErrorDialog(
-              context,
-              title: 'Sign in failed',
-              message: state.signInError ?? l10n.auth_signInFailed,
-              onRetry: _submit,
-            );
-          }
+          // Failures render inline via [AuthErrorBanner] below.
         },
         child: PremiumAuthScaffold(
           logo: const AuthBrandLogo(),
@@ -105,6 +96,16 @@ class _SignInScreenState extends State<SignInScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        AuthErrorBanner(
+                          message:
+                              state.signInStatus ==
+                                  AuthSubmissionStatus.failure
+                              ? (state.signInError ?? l10n.auth_signInFailed)
+                              : null,
+                          onDismiss: context
+                              .read<ClientAuthCubit>()
+                              .dismissSignInError,
+                        ),
                         _WelcomeBackCard(scheme: scheme),
                         const SizedBox(height: 18),
 

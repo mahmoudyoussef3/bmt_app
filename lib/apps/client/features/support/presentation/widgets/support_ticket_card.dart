@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
-import '../../domain/entities/support_ticket.dart';
+import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
+import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 
 class SupportTicketCard extends StatelessWidget {
   const SupportTicketCard({
@@ -53,15 +54,21 @@ class SupportTicketCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final statusColor = _getStatusColor(ticket.status);
 
-    return InkWell(
+    return PressableScale(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: scheme.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: scheme.outline.withAlpha(50)),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withAlpha(15),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -69,61 +76,93 @@ class SupportTicketCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  ticket.ticketNumber,
-                  style: ClientTypography.labelMedium(context).copyWith(
-                    color: scheme.onSurface.withAlpha(150),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: statusColor.withAlpha(25),
-                    borderRadius: BorderRadius.circular(8),
+                    color: statusColor.withAlpha(20),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     _getStatusLabel(ticket.status),
                     style: ClientTypography.labelSmall(context).copyWith(
                       fontWeight: FontWeight.w800,
                       color: statusColor,
+                      letterSpacing: 0.5,
                     ),
+                  ),
+                ),
+                Text(
+                  ticket.ticketNumber,
+                  style: ClientTypography.labelMedium(context).copyWith(
+                    color: scheme.onSurfaceVariant.withAlpha(200),
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 1,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
             Text(
               ticket.title,
               style: ClientTypography.headingSmall(context).copyWith(
                 color: scheme.onSurface,
-                height: 1.2,
+                fontWeight: FontWeight.bold,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 8),
             Text(
-              ticket.category,
-              style: ClientTypography.bodySmall(context).copyWith(
-                color: scheme.onSurface.withAlpha(180),
+              ticket.description,
+              style: ClientTypography.bodyMedium(context).copyWith(
+                color: scheme.onSurfaceVariant,
+                height: 1.4,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 16),
-            Divider(color: scheme.outline.withAlpha(40), height: 1),
+            Divider(color: scheme.outlineVariant.withAlpha(50)),
             const SizedBox(height: 12),
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Icon(Icons.access_time_rounded, size: 14, color: scheme.onSurface.withAlpha(130)),
-                const SizedBox(width: 6),
-                Text(
-                  DateFormat('MMM dd, yyyy HH:mm').format(ticket.createdAt),
-                  style: ClientTypography.labelMedium(context).copyWith(
-                    color: scheme.onSurface.withAlpha(150),
-                  ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.category_rounded,
+                      size: 16,
+                      color: scheme.primary.withAlpha(150),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      ticket.category,
+                      style: ClientTypography.labelMedium(context).copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.access_time_rounded,
+                      size: 16,
+                      color: scheme.onSurfaceVariant.withAlpha(150),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      DateFormat('MMM dd, yyyy').format(ticket.createdAt),
+                      style: ClientTypography.labelMedium(context).copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
