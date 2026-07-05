@@ -35,6 +35,11 @@ WHERE status = 'approved';
 ALTER TABLE public.operation_bookings
 ALTER COLUMN status SET DEFAULT 'draft';
 
+-- Catch any remaining legacy statuses that weren't mapped above
+UPDATE public.operation_bookings
+SET status = 'cancelled'
+WHERE status NOT IN ('draft', 'reserved', 'confirmed', 'boarded', 'completed', 'cancelled');
+
 -- Apply new constraint for booking status
 ALTER TABLE public.operation_bookings
 ADD CONSTRAINT valid_booking_status

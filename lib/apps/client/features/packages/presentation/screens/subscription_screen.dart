@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 class SubscriptionScreen extends StatefulWidget {
@@ -213,18 +214,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           ),
         ),
 
-        // Premium Card Carousel
+        // Premium List
         Expanded(
-          child: PageView.builder(
-            controller: PageController(viewportFraction: 0.88),
+          child: ListView.separated(
+            padding: const EdgeInsets.fromLTRB(20, 16, 20, 30),
             physics: const BouncingScrollPhysics(),
             itemCount: loaded.filteredPackages.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
             itemBuilder: (context, idx) {
               final package = loaded.filteredPackages[idx];
-              return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 24),
-                child: _buildPackageCard(package, scheme),
-              );
+              return _buildPackageCard(package, scheme);
             },
           ),
         ),
@@ -266,29 +265,72 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
     return PressableScale(
       onTap: () {
-        context.read<PackagesCubit>().selectPackage(package);
-        setState(() {
-          _currentStep = 2;
-        });
+        if (widget.bookingData == null) {
+          Navigator.of(context).pushNamed(BookingRoutes.popularRoutes);
+        } else {
+          context.read<PackagesCubit>().selectPackage(package);
+          setState(() {
+            _currentStep = 2;
+          });
+        }
       },
       scale: 0.98,
       child: Container(
         decoration: BoxDecoration(
-          color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+          gradient: LinearGradient(
+            colors: isDark
+                ? [scheme.surfaceContainerHighest, scheme.surfaceContainer]
+                : [scheme.surface, scheme.surfaceContainerLow.withAlpha(100)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(ClientRadius.xl),
           border: Border.all(
             color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(80),
           ),
-          boxShadow: ClientElevation.lg(context),
+          boxShadow: [
+            BoxShadow(
+              color: scheme.shadow.withAlpha(isDark ? 10 : 15),
+              blurRadius: 16,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(ClientRadius.xl),
-          child: Material(
-            color: Colors.transparent,
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
+            children: [
+              // Subtle background decoration
+              Positioned(
+                right: -40,
+                top: -40,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: scheme.primary.withAlpha(isDark ? 15 : 8),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: -20,
+                bottom: -20,
+                child: Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: scheme.secondary.withAlpha(isDark ? 15 : 8),
+                  ),
+                ),
+              ),
+              Material(
+                color: Colors.transparent,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Badges
                   Row(
@@ -338,14 +380,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           context,
                         )!.packages_ridesCount(package.tripsCount),
                       ),
-                      _buildMiniDetailColumn(
-                        AppLocalizations.of(context)!.packages_totalSavings,
-                        AppLocalizations.of(
-                          context,
-                        )!.packages_egpAmount(package.savingsAmount.toString()),
-                        isHighlight: true,
-                        color: scheme.secondary,
-                      ),
+                      if (widget.bookingData != null)
+                        _buildMiniDetailColumn(
+                          AppLocalizations.of(context)!.packages_totalSavings,
+                          AppLocalizations.of(
+                            context,
+                          )!.packages_egpAmount(package.savingsAmount.toString()),
+                          isHighlight: true,
+                          color: scheme.secondary,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -355,7 +398,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      if (widget.hasActiveSubscription) ...[
+                      if (widget.bookingData != null && widget.hasActiveSubscription) ...[
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -444,6 +487,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 ],
               ),
             ),
+          ),
+            ],
           ),
         ),
       ),

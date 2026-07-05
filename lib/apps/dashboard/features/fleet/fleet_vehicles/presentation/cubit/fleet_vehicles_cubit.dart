@@ -64,27 +64,23 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
   }
 
   /// Creates or updates a vehicle and returns the persisted entity (with its
-  /// id) on success, or null on failure (an error state is emitted). The
-  /// returned id lets the screen upload any queued documents afterwards.
-  Future<FleetVehicle?> saveVehicle(FleetVehicle vehicle) async {
-    try {
-      final FleetVehicle saved;
-      if (vehicle.id.isEmpty) {
-        debugPrint(
-          '[FleetVehiclesCubit] Creating vehicle: ${vehicle.vehicleCode}',
-        );
-        saved = await _createVehicle(vehicle);
-      } else {
-        debugPrint('[FleetVehiclesCubit] Updating vehicle: ${vehicle.id}');
-        saved = await _updateVehicle(vehicle);
-      }
-      await _reload();
-      return saved;
-    } catch (error) {
-      debugPrint('[FleetVehiclesCubit] Error saving: $error');
-      emit(FleetVehiclesError(error.toString().replaceAll('Exception: ', '')));
-      return null;
+  /// id). Throws on failure — the caller (the form dialog) surfaces the error
+  /// inline and keeps the loaded list intact, rather than replacing the whole
+  /// screen with an error view. The returned id lets the screen upload any
+  /// queued documents afterwards.
+  Future<FleetVehicle> saveVehicle(FleetVehicle vehicle) async {
+    final FleetVehicle saved;
+    if (vehicle.id.isEmpty) {
+      debugPrint(
+        '[FleetVehiclesCubit] Creating vehicle: ${vehicle.vehicleCode}',
+      );
+      saved = await _createVehicle(vehicle);
+    } else {
+      debugPrint('[FleetVehiclesCubit] Updating vehicle: ${vehicle.id}');
+      saved = await _updateVehicle(vehicle);
     }
+    await _reload();
+    return saved;
   }
 
   Future<void> updateVehicleStatus(
@@ -108,12 +104,16 @@ class FleetVehiclesCubit extends Cubit<FleetVehiclesState> {
     await _reload();
   }
 
-  Future<void> deleteVehicle(String vehicleId) async {
+  /// Deletes a vehicle. Returns `null` on success or an error message. The
+  /// loaded list is preserved on failure so a failed delete never blanks the
+  /// screen — the caller surfaces the message instead.
+  Future<String?> deleteVehicle(String vehicleId) async {
     try {
       await _deleteVehicle(vehicleId);
       await _reload();
+      return null;
     } catch (error) {
-      emit(FleetVehiclesError(error.toString().replaceAll('Exception: ', '')));
+      return error.toString().replaceAll('Exception: ', '');
     }
   }
 

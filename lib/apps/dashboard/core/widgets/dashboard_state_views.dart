@@ -9,14 +9,22 @@ class DashboardLoading extends StatelessWidget {
   final int rows;
   final bool showHeader;
 
-  const DashboardLoading({super.key, this.rows = 6, this.showHeader = true});
+  /// When false, renders a non-scrolling [Column] instead of a [ListView].
+  /// Use inside an existing scroll view (e.g. nested tab content) where a
+  /// scrollable would receive unbounded height and fail to lay out.
+  final bool scrollable;
+
+  const DashboardLoading({
+    super.key,
+    this.rows = 6,
+    this.showHeader = true,
+    this.scrollable = true,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      children: [
-        if (showHeader) ...[
+    final children = <Widget>[
+      if (showHeader) ...[
           AppCard(
             padding: const EdgeInsets.all(AppSpacing.large),
             child: Column(
@@ -52,7 +60,18 @@ class DashboardLoading extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.small),
         ],
-      ],
+    ];
+
+    if (!scrollable) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
+
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      children: children,
     );
   }
 }

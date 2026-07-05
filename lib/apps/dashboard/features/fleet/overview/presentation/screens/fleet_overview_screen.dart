@@ -73,8 +73,8 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                   const SizedBox(height: AppSpacing.large),
                   FleetSummaryCards(summary: workspace.summary),
                   const SizedBox(height: AppSpacing.large),
-                  FleetAnalyticsCharts(workspace: workspace),
-                  const SizedBox(height: AppSpacing.large),
+                  // FleetAnalyticsCharts(workspace: workspace),
+                  // const SizedBox(height: AppSpacing.large),
                   FleetTabBar(
                     active: _activeTab,
                     summary: workspace.summary,

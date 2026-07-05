@@ -70,25 +70,21 @@ class FleetDriversCubit extends Cubit<FleetDriversState> {
   }
 
   /// Creates or updates a driver and returns the persisted entity (with its
-  /// id) on success, or null on failure (an error state is emitted). The
-  /// returned id lets the screen upload any queued documents afterwards.
-  Future<FleetDriver?> saveDriver(FleetDriver driver) async {
-    try {
-      final FleetDriver saved;
-      if (driver.id.isEmpty) {
-        debugPrint('[FleetDriversCubit] Creating driver: ${driver.fullName}');
-        saved = await _createDriver(driver);
-      } else {
-        debugPrint('[FleetDriversCubit] Updating driver: ${driver.id}');
-        saved = await _updateDriver(driver);
-      }
-      await _reload();
-      return saved;
-    } catch (error) {
-      debugPrint('[FleetDriversCubit] Error saving driver: $error');
-      emit(FleetDriversError(error.toString().replaceAll('Exception: ', '')));
-      return null;
+  /// id). Throws on failure — the caller (the form dialog) surfaces the error
+  /// inline and keeps the loaded list intact, rather than replacing the whole
+  /// screen with an error view. The returned id lets the screen upload any
+  /// queued documents afterwards.
+  Future<FleetDriver> saveDriver(FleetDriver driver) async {
+    final FleetDriver saved;
+    if (driver.id.isEmpty) {
+      debugPrint('[FleetDriversCubit] Creating driver: ${driver.fullName}');
+      saved = await _createDriver(driver);
+    } else {
+      debugPrint('[FleetDriversCubit] Updating driver: ${driver.id}');
+      saved = await _updateDriver(driver);
     }
+    await _reload();
+    return saved;
   }
 
   Future<void> updateDriverStatus(
@@ -115,12 +111,16 @@ class FleetDriversCubit extends Cubit<FleetDriversState> {
     await _reload();
   }
 
-  Future<void> deleteDriver(String driverId) async {
+  /// Deletes a driver. Returns `null` on success or an error message. The
+  /// loaded list is preserved on failure so a failed delete never blanks the
+  /// screen — the caller surfaces the message instead.
+  Future<String?> deleteDriver(String driverId) async {
     try {
       await _deleteDriver(driverId);
       await _reload();
+      return null;
     } catch (error) {
-      emit(FleetDriversError(error.toString().replaceAll('Exception: ', '')));
+      return error.toString().replaceAll('Exception: ', '');
     }
   }
 

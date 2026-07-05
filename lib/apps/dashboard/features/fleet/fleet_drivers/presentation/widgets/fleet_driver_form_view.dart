@@ -15,9 +15,15 @@ class FleetDriverFormView extends StatefulWidget {
   final FleetDriver? driver;
   final FleetWorkspace workspace;
   final VoidCallback onBack;
-  final void Function(FleetDriver driver, List<PendingFleetDocument> docs)
+
+  /// Persists the driver. Returns `null` on success (the dialog is closed by
+  /// the caller) or an error message to show inline so the user can fix the
+  /// data and retry without losing their input.
+  final Future<String?> Function(
+    FleetDriver driver,
+    List<PendingFleetDocument> docs,
+  )
   onSave;
-  final bool saving;
 
   const FleetDriverFormView({
     super.key,
@@ -25,7 +31,6 @@ class FleetDriverFormView extends StatefulWidget {
     required this.workspace,
     required this.onBack,
     required this.onSave,
-    this.saving = false,
   });
 
   @override
@@ -50,6 +55,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
   List<PendingFleetDocument> _pendingDocs = const [];
   String _globalError = '';
   bool _hasChanges = false;
+  bool _saving = false;
 
   @override
   void initState() {
@@ -107,6 +113,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
   }
 
   Future<void> _handleBack() async {
+    if (_saving) return;
     if (!_hasChanges) {
       widget.onBack();
       return;
@@ -131,7 +138,8 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
     if (confirmed == true) widget.onBack();
   }
 
-  void _onSave() {
+  Future<void> _onSave() async {
+    if (_saving) return;
     setState(() => _globalError = '');
     if (!_formKey.currentState!.validate()) {
       setState(
@@ -160,7 +168,15 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
       documents: existing?.documents ?? const [],
       activityTimeline: existing?.activityTimeline ?? const [],
     );
-    widget.onSave(driver, _pendingDocs);
+
+    setState(() => _saving = true);
+    final error = await widget.onSave(driver, _pendingDocs);
+    // On success the caller closes the dialog, so this widget is gone.
+    if (!mounted) return;
+    setState(() {
+      _saving = false;
+      if (error != null) _globalError = error;
+    });
   }
 
   @override
@@ -170,7 +186,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
     final vehicles = _getAvailableVehicles();
 
     return PopScope(
-      canPop: !_hasChanges,
+      canPop: !_hasChanges && !_saving,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _handleBack();
       },
@@ -380,7 +396,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
               const SizedBox(height: AppSpacing.medium),
             ],
                         FleetFormActionsBar(
-                          saving: widget.saving,
+                          saving: _saving,
                           onCancel: _handleBack,
                           onSave: _onSave,
                           saveLabel: isEdit ? 'حفظ التعديلات' : 'حفظ السائق',

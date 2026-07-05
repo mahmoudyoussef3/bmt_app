@@ -18,7 +18,14 @@ class FleetVehicleFormView extends StatefulWidget {
   final FleetVehicle? vehicle;
   final FleetWorkspace workspace;
   final VoidCallback onBack;
-  final void Function(FleetVehicle vehicle, List<PendingFleetDocument> docs)
+
+  /// Persists the vehicle. Returns `null` on success (the dialog is closed by
+  /// the caller) or an error message to show inline so the user can fix the
+  /// data and retry without losing their input.
+  final Future<String?> Function(
+    FleetVehicle vehicle,
+    List<PendingFleetDocument> docs,
+  )
   onSave;
 
   const FleetVehicleFormView({
@@ -179,7 +186,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
                     ),
                   ),
                   IconButton(
-                    onPressed: widget.onBack,
+                    onPressed: _saving ? null : widget.onBack,
                     icon: const Icon(Icons.close_rounded),
                     style: IconButton.styleFrom(backgroundColor: scheme.surfaceContainerHighest),
                   ),
@@ -597,7 +604,11 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         timeline: existing?.timeline ?? const [],
       );
 
-      widget.onSave(finalVehicle, _pendingDocs);
+      final error = await widget.onSave(finalVehicle, _pendingDocs);
+      // On success the caller closes the dialog, so this widget is gone.
+      if (mounted && error != null) {
+        setState(() => _globalError = error);
+      }
     } catch (e) {
       setState(() => _globalError = e.toString().replaceAll('Exception: ', ''));
     } finally {

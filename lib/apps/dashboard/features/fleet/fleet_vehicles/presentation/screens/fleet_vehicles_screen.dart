@@ -12,9 +12,10 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/utils/
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 
 enum _VehiclesViewState { list, details }
 
@@ -119,28 +120,14 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     return BlocBuilder<FleetVehiclesCubit, FleetVehiclesState>(
       builder: (context, state) {
         if (state is FleetVehiclesLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const DashboardLoading(scrollable: false);
         }
 
         if (state is FleetVehiclesError) {
-          return Center(
-            child: AppCard(
-              padding: const EdgeInsets.all(AppSpacing.large),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    state.message,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  FilledButton(
-                    onPressed: () => context.read<FleetVehiclesCubit>().load(),
-                    child: const Text('إعادة المحاولة'),
-                  ),
-                ],
-              ),
-            ),
+          return DashboardErrorState(
+            title: 'تعذّر تحميل المركبات',
+            message: state.message,
+            onRetry: () => context.read<FleetVehiclesCubit>().load(),
           );
         }
 
@@ -436,30 +423,41 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
           onSave: (savedVehicle, pendingDocs) async {
             final docsCubit = context.read<FleetDocumentsCubit>();
             final overviewCubit = context.read<FleetOverviewCubit>();
-            final messenger = ScaffoldMessenger.of(context);
-            final saved = await cubit.saveVehicle(savedVehicle);
-            if (saved == null) return;
+            final isEdit = savedVehicle.id.isNotEmpty;
+            try {
+              final saved = await cubit.saveVehicle(savedVehicle);
 
-            final failed = await FleetPendingDocsUploader.upload(
-              docsCubit,
-              ownerId: saved.id,
-              isDriver: false,
-              docs: pendingDocs,
-            );
-
-            if (context.mounted) Navigator.pop(dialogContext);
-
-            if (failed.isNotEmpty) {
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'تم حفظ المركبة، لكن تعذّر رفع: ${failed.join('، ')}',
-                  ),
-                ),
+              final failed = await FleetPendingDocsUploader.upload(
+                docsCubit,
+                ownerId: saved.id,
+                isDriver: false,
+                docs: pendingDocs,
               );
-            }
 
-            await overviewCubit.loadWorkspace();
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+
+              if (context.mounted) {
+                if (failed.isEmpty) {
+                  AppSnackbar.success(
+                    context,
+                    isEdit
+                        ? 'تم حفظ تعديلات المركبة بنجاح'
+                        : 'تمت إضافة المركبة بنجاح',
+                  );
+                } else {
+                  AppSnackbar.warning(
+                    context,
+                    'تم حفظ المركبة، لكن تعذّر رفع: ${failed.join('، ')}',
+                  );
+                }
+              }
+
+              await overviewCubit.loadWorkspace();
+              return null;
+            } catch (error) {
+              // Keep the dialog open so the user can fix the data and retry.
+              return error.toString().replaceAll('Exception: ', '');
+            }
           },
         );
       },
@@ -496,8 +494,14 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     if (_selectedVehicle?.id == vehicle.id) {
       setState(() => _selectedVehicle = null);
     }
-    await vehiclesCubit.deleteVehicle(vehicle.id);
-    await overviewCubit.loadWorkspace();
+    final error = await vehiclesCubit.deleteVehicle(vehicle.id);
+    if (!mounted) return;
+    if (error == null) {
+      AppSnackbar.success(context, 'تم حذف المركبة "${vehicle.vehicleNumber}"');
+      await overviewCubit.loadWorkspace();
+    } else {
+      AppSnackbar.error(context, error);
+    }
   }
 }
 

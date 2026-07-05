@@ -14,38 +14,35 @@ class FleetAnalyticsCharts extends StatelessWidget {
       builder: (context, constraints) {
         final isNarrow = constraints.maxWidth < 900;
         
-        final charts = [
-          Expanded(
-            flex: isNarrow ? 0 : 1,
-            child: SizedBox(
-              width: isNarrow ? double.infinity : null,
-              height: 320,
-              child: _DriverStatusChart(workspace: workspace),
-            ),
-          ),
-          SizedBox(
-            width: isNarrow ? 0 : 24,
-            height: isNarrow ? 24 : 0,
-          ),
-          Expanded(
-            flex: isNarrow ? 0 : 1,
-            child: SizedBox(
-              width: isNarrow ? double.infinity : null,
-              height: 320,
-              child: _VehicleStatusChart(workspace: workspace),
-            ),
-          ),
-        ];
+        Widget chart1 = SizedBox(
+          width: isNarrow ? double.infinity : null,
+          height: 320,
+          child: _DriverStatusChart(workspace: workspace),
+        );
+        
+        Widget chart2 = SizedBox(
+          width: isNarrow ? double.infinity : null,
+          height: 320,
+          child: _VehicleStatusChart(workspace: workspace),
+        );
 
         if (isNarrow) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: charts,
+            children: [
+              chart1,
+              const SizedBox(height: 24),
+              chart2,
+            ],
           );
         }
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: charts,
+          children: [
+            Expanded(child: chart1),
+            const SizedBox(width: 24),
+            Expanded(child: chart2),
+          ],
         );
       },
     );

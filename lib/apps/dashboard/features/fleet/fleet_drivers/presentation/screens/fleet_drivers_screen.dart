@@ -13,9 +13,11 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/utils/
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/async_state_view.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 
 enum _DriversViewState { list, details }
 
@@ -134,6 +136,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
 
         return AsyncStateView(
           status: status,
+          loadingPlaceholder: const DashboardLoading(scrollable: false),
           errorMessage: state is FleetDriversError
               ? state.message
               : 'تعذّر تحميل بيانات السائقين',
@@ -374,30 +377,41 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           onSave: (savedDriver, pendingDocs) async {
             final docsCubit = context.read<FleetDocumentsCubit>();
             final overviewCubit = context.read<FleetOverviewCubit>();
-            final messenger = ScaffoldMessenger.of(context);
-            final saved = await cubit.saveDriver(savedDriver);
-            if (saved == null) return;
+            final isEdit = savedDriver.id.isNotEmpty;
+            try {
+              final saved = await cubit.saveDriver(savedDriver);
 
-            final failed = await FleetPendingDocsUploader.upload(
-              docsCubit,
-              ownerId: saved.id,
-              isDriver: true,
-              docs: pendingDocs,
-            );
-
-            if (context.mounted) Navigator.pop(dialogContext);
-
-            if (failed.isNotEmpty) {
-              messenger.showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'تم حفظ السائق، لكن تعذّر رفع: ${failed.join('، ')}',
-                  ),
-                ),
+              final failed = await FleetPendingDocsUploader.upload(
+                docsCubit,
+                ownerId: saved.id,
+                isDriver: true,
+                docs: pendingDocs,
               );
-            }
 
-            await overviewCubit.loadWorkspace();
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+
+              if (context.mounted) {
+                if (failed.isEmpty) {
+                  AppSnackbar.success(
+                    context,
+                    isEdit
+                        ? 'تم حفظ تعديلات السائق بنجاح'
+                        : 'تمت إضافة السائق بنجاح',
+                  );
+                } else {
+                  AppSnackbar.warning(
+                    context,
+                    'تم حفظ السائق، لكن تعذّر رفع: ${failed.join('، ')}',
+                  );
+                }
+              }
+
+              await overviewCubit.loadWorkspace();
+              return null;
+            } catch (error) {
+              // Keep the dialog open so the user can fix the data and retry.
+              return error.toString().replaceAll('Exception: ', '');
+            }
           },
         );
       },
@@ -434,8 +448,14 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     if (_selectedDriver?.id == driver.id) {
       setState(() => _selectedDriver = null);
     }
-    await driversCubit.deleteDriver(driver.id);
-    await overviewCubit.loadWorkspace();
+    final error = await driversCubit.deleteDriver(driver.id);
+    if (!mounted) return;
+    if (error == null) {
+      AppSnackbar.success(context, 'تم حذف السائق "${driver.name}"');
+      await overviewCubit.loadWorkspace();
+    } else {
+      AppSnackbar.error(context, error);
+    }
   }
 
   Widget _buildReadinessSummary(
