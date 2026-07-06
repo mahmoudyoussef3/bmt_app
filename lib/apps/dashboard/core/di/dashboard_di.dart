@@ -7,10 +7,19 @@ import '../../features/captain_requests/domain/repositories/captain_requests_rep
 import '../../features/captain_requests/domain/usecases/captain_requests_usecases.dart';
 import '../../features/captain_requests/presentation/cubit/captain_requests_cubit.dart';
 import '../../features/notifications/data/datasources/supabase_notifications_dispatch_datasource.dart';
+import '../../features/notifications/data/datasources/supabase_operational_alerts_datasource.dart';
 import '../../features/notifications/data/repositories/notifications_dispatch_repository_impl.dart';
+import '../../features/notifications/data/repositories/operational_alerts_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notifications_dispatch_repository.dart';
+import '../../features/notifications/domain/repositories/operational_alerts_repository.dart';
+import '../../features/notifications/domain/usecases/mark_alert_read_usecase.dart';
+import '../../features/notifications/domain/usecases/mark_all_alerts_read_usecase.dart';
 import '../../features/notifications/domain/usecases/send_notification_usecase.dart';
+import '../../features/notifications/domain/usecases/watch_operational_alerts_usecase.dart';
+import '../../features/notifications/domain/usecases/watch_unread_alerts_count_usecase.dart';
 import '../../features/notifications/presentation/cubit/notifications_dispatch_cubit.dart';
+import '../../features/notifications/presentation/cubit/operational_alerts_badge_cubit.dart';
+import '../../features/notifications/presentation/cubit/operational_alerts_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/data/datasources/bookings_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/users/data/datasources/users_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/users/domain/repositories/users_repository.dart';
@@ -1481,6 +1490,8 @@ void _registerNotificationsDispatchDependencies() {
     );
   }
 
+  _registerOperationalAlertsDependencies();
+
   if (!dashboardDi.isRegistered<DashboardAuthDatasource>()) {
     dashboardDi.registerLazySingleton<DashboardAuthDatasource>(
       () => DashboardAuthDatasource(dashboardDi<SupabaseClient>()),
@@ -1489,6 +1500,61 @@ void _registerNotificationsDispatchDependencies() {
   if (!dashboardDi.isRegistered<DashboardAuthCubit>()) {
     dashboardDi.registerFactory<DashboardAuthCubit>(
       () => DashboardAuthCubit(dashboardDi<DashboardAuthDatasource>()),
+    );
+  }
+}
+
+void _registerOperationalAlertsDependencies() {
+  if (!dashboardDi.isRegistered<OperationalAlertsDatasource>()) {
+    dashboardDi.registerLazySingleton<OperationalAlertsDatasource>(
+      () => SupabaseOperationalAlertsDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<OperationalAlertsRepository>()) {
+    dashboardDi.registerLazySingleton<OperationalAlertsRepository>(
+      () => OperationalAlertsRepositoryImpl(
+        dashboardDi<OperationalAlertsDatasource>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<WatchOperationalAlertsUseCase>()) {
+    dashboardDi.registerLazySingleton<WatchOperationalAlertsUseCase>(
+      () => WatchOperationalAlertsUseCase(
+        dashboardDi<OperationalAlertsRepository>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<WatchUnreadAlertsCountUseCase>()) {
+    dashboardDi.registerLazySingleton<WatchUnreadAlertsCountUseCase>(
+      () => WatchUnreadAlertsCountUseCase(
+        dashboardDi<OperationalAlertsRepository>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<MarkAlertReadUseCase>()) {
+    dashboardDi.registerLazySingleton<MarkAlertReadUseCase>(
+      () => MarkAlertReadUseCase(dashboardDi<OperationalAlertsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<MarkAllAlertsReadUseCase>()) {
+    dashboardDi.registerLazySingleton<MarkAllAlertsReadUseCase>(
+      () => MarkAllAlertsReadUseCase(dashboardDi<OperationalAlertsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<OperationalAlertsBadgeCubit>()) {
+    dashboardDi.registerLazySingleton<OperationalAlertsBadgeCubit>(
+      () => OperationalAlertsBadgeCubit(
+        dashboardDi<WatchUnreadAlertsCountUseCase>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<OperationalAlertsCubit>()) {
+    dashboardDi.registerFactory<OperationalAlertsCubit>(
+      () => OperationalAlertsCubit(
+        watchAlerts: dashboardDi<WatchOperationalAlertsUseCase>(),
+        markAsRead: dashboardDi<MarkAlertReadUseCase>(),
+        markAllAsRead: dashboardDi<MarkAllAlertsReadUseCase>(),
+      ),
     );
   }
 }

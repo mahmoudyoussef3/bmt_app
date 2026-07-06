@@ -12,7 +12,7 @@ class SupabaseBookingPaymentVerificationDatasource
 
   static const _verificationStatuses = [
     'submitted',
-    'under_review',
+    'underReview',
     'approved',
     'rejected',
   ];
@@ -220,7 +220,7 @@ class SupabaseBookingPaymentVerificationDatasource
       switch (status) {
         'approved' => BookingVerificationStatus.approved,
         'rejected' => BookingVerificationStatus.rejected,
-        'under_review' => BookingVerificationStatus.reviewRequested,
+        'underReview' || 'under_review' => BookingVerificationStatus.reviewRequested,
         _ => BookingVerificationStatus.pending,
       };
 

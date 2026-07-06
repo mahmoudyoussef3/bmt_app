@@ -6,7 +6,7 @@ import 'notifications_dispatch_state.dart';
 
 class NotificationsDispatchCubit extends Cubit<NotificationsDispatchState> {
   NotificationsDispatchCubit(this._send)
-      : super(const NotificationsDispatchIdle());
+    : super(const NotificationsDispatchIdle());
 
   final SendNotificationUseCase _send;
 

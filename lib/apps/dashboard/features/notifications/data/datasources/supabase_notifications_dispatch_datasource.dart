@@ -36,14 +36,17 @@ class SupabaseNotificationsDispatchDatasource
 
   @override
   Future<int> broadcastRpc(NotificationDraft draft) async {
-    final result = await _client.rpc('broadcast_notification', params: {
-      'p_title': draft.title,
-      'p_body': draft.body,
-      'p_category': draft.category.name,
-      'p_target_app': draft.targetApp.name,
-      'p_action_url': draft.actionUrl,
-      'p_data': draft.data,
-    });
+    final result = await _client.rpc(
+      'broadcast_notification',
+      params: {
+        'p_title': draft.title,
+        'p_body': draft.body,
+        'p_category': draft.category.name,
+        'p_target_app': draft.targetApp.name,
+        'p_action_url': draft.actionUrl,
+        'p_data': draft.data,
+      },
+    );
     return (result as int?) ?? 0;
   }
 }

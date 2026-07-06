@@ -21,4 +21,5 @@ class DashboardRoutes {
   static const ownerOverview = '/owner-overview';
   static const settings = '/settings';
   static const permissions = '/permissions';
+  static const notifications = '/notifications';
 }

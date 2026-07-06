@@ -18,6 +18,10 @@ import '../../features/fleet/overview/presentation/screens/fleet_overview_screen
 import '../../features/fleet/shared/domain/entities/fleet_common.dart';
 import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
 import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
+import '../../features/notifications/presentation/cubit/notifications_dispatch_cubit.dart';
+import '../../features/notifications/presentation/cubit/operational_alerts_badge_cubit.dart';
+import '../../features/notifications/presentation/cubit/operational_alerts_cubit.dart';
+import '../../features/notifications/presentation/screens/notifications_center_screen.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
 import '../../features/finance/presentation/screens/finance_screen.dart';
 import '../../features/owner_overview/presentation/cubit/owner_overview_cubit.dart';
@@ -193,6 +197,14 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navSupport,
     ),
     _DashboardNavItem(
+      label: 'الإشعارات',
+      route: DashboardRoutes.notifications,
+      icon: Icons.notifications_outlined,
+      selectedIcon: Icons.notifications_rounded,
+      permission: DashboardPermission.notifications,
+      group: _navSystem,
+    ),
+    _DashboardNavItem(
       label: 'الصلاحيات',
       route: DashboardRoutes.permissions,
       icon: Icons.admin_panel_settings_outlined,
@@ -245,6 +257,8 @@ class _DashboardShellState extends State<DashboardShell> {
                         title: _activeTitle,
                         role: _role,
                         onOpenMenu: () => Scaffold.of(context).openDrawer(),
+                        onOpenNotifications: () =>
+                            _openRoute(DashboardRoutes.notifications),
                       ),
                       Expanded(child: _buildContent()),
                     ],
@@ -268,7 +282,12 @@ class _DashboardShellState extends State<DashboardShell> {
                   Expanded(
                     child: Column(
                       children: [
-                        _DashboardTopBar(title: _activeTitle, role: _role),
+                        _DashboardTopBar(
+                          title: _activeTitle,
+                          role: _role,
+                          onOpenNotifications: () =>
+                              _openRoute(DashboardRoutes.notifications),
+                        ),
                         Expanded(child: _buildContent()),
                       ],
                     ),
@@ -396,6 +415,17 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.reports => BlocProvider(
         create: (_) => dashboardDi<ReportsCubit>()..load(),
         child: const ReportsScreen(),
+      ),
+      DashboardRoutes.notifications => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => dashboardDi<OperationalAlertsCubit>(),
+          ),
+          BlocProvider(
+            create: (_) => dashboardDi<NotificationsDispatchCubit>(),
+          ),
+        ],
+        child: NotificationsCenterScreen(onOpenRoute: _openRoute),
       ),
       DashboardRoutes.settings => _workspace(
         'settings',
@@ -553,11 +583,13 @@ class _DashboardTopBar extends StatelessWidget {
   final String title;
   final DashboardRole role;
   final VoidCallback? onOpenMenu;
+  final VoidCallback? onOpenNotifications;
 
   const _DashboardTopBar({
     required this.title,
     required this.role,
     this.onOpenMenu,
+    this.onOpenNotifications,
   });
 
   @override
@@ -588,6 +620,10 @@ class _DashboardTopBar extends StatelessWidget {
           Expanded(
             child: Text(title, style: Theme.of(context).textTheme.titleLarge),
           ),
+          if (onOpenNotifications != null) ...[
+            _NotificationsBell(onTap: onOpenNotifications!),
+            const SizedBox(width: AppSpacing.xSmall),
+          ],
           IconButton(
             tooltip: isDark
                 ? AppLocalizations.of(context)!.dashboard_lightMode
@@ -602,6 +638,34 @@ class _DashboardTopBar extends StatelessWidget {
           const SizedBox(width: AppSpacing.small),
           StatusChip(label: role.label),
         ],
+      ),
+    );
+  }
+}
+
+class _NotificationsBell extends StatelessWidget {
+  const _NotificationsBell({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    // The badge cubit is a lazy singleton — provide by value so it is not
+    // closed when this transient top bar rebuilds.
+    return BlocProvider.value(
+      value: dashboardDi<OperationalAlertsBadgeCubit>(),
+      child: BlocBuilder<OperationalAlertsBadgeCubit, int>(
+        builder: (context, count) {
+          return IconButton(
+            tooltip: 'الإشعارات',
+            onPressed: onTap,
+            icon: Badge(
+              isLabelVisible: count > 0,
+              label: Text(count > 99 ? '99+' : '$count'),
+              child: const Icon(Icons.notifications_outlined),
+            ),
+          );
+        },
       ),
     );
   }

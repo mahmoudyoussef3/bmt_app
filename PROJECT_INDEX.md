@@ -188,3 +188,41 @@ During the initial prototyping phase, several features were built using Mock Dat
 * Future AI agents working on any feature MUST audit the respective DI file (e.g., `client_di.dart`, `dashboard_di.dart`) and check if a `Mock*Datasource` is being used.
 * If a mock datasource is found, the agent **MUST** write a real `Supabase*Datasource` equivalent, connect it to the actual Supabase database tables, update the DI registration, and remove the mock class entirely.
 * Never generate temporary fake data, hardcoded lists, or `List.generate()` dummy responses. Always design database tables and pull real data.
+
+---
+
+## 11. Notification System (Event-Driven)
+
+The platform notifies the right audience on **every meaningful action**, generated
+centrally in the database so notifications fire regardless of which app performed
+the action, delivered live over Supabase Realtime.
+
+### Delivery channels
+* **Client** & **Captain** → `public.notifications` (per-user, `user_id → auth.users`),
+  filtered by `target_app` (`client` / `captain` / `all`). Both apps have full receive
+  stacks under `lib/apps/{client,captain}/features/notifications/` (inbox + realtime
+  stream + unread badge + mark-as-read).
+* **Dashboard** → `public.operational_alerts` (**NEW**, RLS disabled, Realtime on). The
+  Dashboard runs as the anon role and cannot own a per-user notification row, so it reads
+  a dedicated ops feed — like `captain_requests`. Feature:
+  `lib/apps/dashboard/features/notifications/` (inbox + composer tabs, top-bar bell badge,
+  route `DashboardRoutes.notifications`, `DashboardPermission.notifications`).
+
+### Backbone
+* **Foundation migration:** `20260629300000_notification_system.sql` (notifications table
+  upgrade, `notification_tokens`, `notification_preferences`, `broadcast_notification`).
+* **Event engine migration:** `20260706140000_notification_event_engine.sql` —
+  `operational_alerts` table + central helpers (`push_notification`,
+  `push_operational_alert`, `captain_user_for_trip`, `notify_trip_passengers`) + AFTER
+  triggers on `operation_trips` (status + driver assignment), `trip_passengers`
+  (insert/delete), `booking_payments`, `captain_requests`, `support_tickets`,
+  `support_messages`, `refund_requests`, `transport_subscriptions`.
+* Booking/payment **client** notifications remain inline in the booking RPCs
+  (`confirm_seat_booking_v2` / `approve_payment` / `reject_payment` /
+  `request_payment_review`).
+
+### Adding a new event
+Prefer a DB trigger calling `push_notification` (per-user) or `push_operational_alert`
+(dashboard). Categories must match the app enums (client: `booking/payment/trip/
+subscription/chat/system`; captain: `trip/passenger/assignment`). FCM/APNs push is not yet
+wired (tables are FCM-ready); in-app Realtime is the delivery mechanism today.

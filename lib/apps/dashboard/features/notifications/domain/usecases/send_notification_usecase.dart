@@ -11,10 +11,7 @@ class SendNotificationUseCase {
     if (draft.isBroadcast) {
       return _repository.broadcast(draft);
     }
-    await _repository.sendToUser(
-      userId: draft.recipientUserId!,
-      draft: draft,
-    );
+    await _repository.sendToUser(userId: draft.recipientUserId!, draft: draft);
     return 1;
   }
 }

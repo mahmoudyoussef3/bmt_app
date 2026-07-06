@@ -165,26 +165,21 @@ class _TargetRow extends StatelessWidget {
             decoration: const InputDecoration(
               labelText: 'Target App',
               border: OutlineInputBorder(),
-              contentPadding:
-                  EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             items: NotificationTargetApp.values
-                .map((t) => DropdownMenuItem(
-                      value: t,
-                      child: Text(t.name),
-                    ))
+                .map((t) => DropdownMenuItem(value: t, child: Text(t.name)))
                 .toList(),
-            onChanged: (v) { if (v != null) onTargetChange(v); },
+            onChanged: (v) {
+              if (v != null) onTargetChange(v);
+            },
           ),
         ),
         const SizedBox(width: 12),
         Column(
           children: [
             const Text('Broadcast', style: TextStyle(fontSize: 12)),
-            Switch(
-              value: broadcast,
-              onChanged: onBroadcastChange,
-            ),
+            Switch(value: broadcast, onChanged: onBroadcastChange),
           ],
         ),
       ],
@@ -208,10 +203,11 @@ class _CategoryDropdown extends StatelessWidget {
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
       items: DashboardNotificationCategory.values
-          .map((c) =>
-              DropdownMenuItem(value: c, child: Text(c.label)))
+          .map((c) => DropdownMenuItem(value: c, child: Text(c.label)))
           .toList(),
-      onChanged: (v) { if (v != null) onChanged(v); },
+      onChanged: (v) {
+        if (v != null) onChanged(v);
+      },
     );
   }
 }

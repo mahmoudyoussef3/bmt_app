@@ -12,16 +12,16 @@ enum DashboardNotificationCategory {
   general;
 
   String get label => switch (this) {
-        DashboardNotificationCategory.booking => 'Booking',
-        DashboardNotificationCategory.payment => 'Payment',
-        DashboardNotificationCategory.trip => 'Trip',
-        DashboardNotificationCategory.announcement => 'Announcement',
-        DashboardNotificationCategory.promotion => 'Promotion',
-        DashboardNotificationCategory.emergency => 'Emergency',
-        DashboardNotificationCategory.subscription => 'Subscription',
-        DashboardNotificationCategory.system => 'System',
-        DashboardNotificationCategory.general => 'General',
-      };
+    DashboardNotificationCategory.booking => 'Booking',
+    DashboardNotificationCategory.payment => 'Payment',
+    DashboardNotificationCategory.trip => 'Trip',
+    DashboardNotificationCategory.announcement => 'Announcement',
+    DashboardNotificationCategory.promotion => 'Promotion',
+    DashboardNotificationCategory.emergency => 'Emergency',
+    DashboardNotificationCategory.subscription => 'Subscription',
+    DashboardNotificationCategory.system => 'System',
+    DashboardNotificationCategory.general => 'General',
+  };
 }
 
 class NotificationDraft {

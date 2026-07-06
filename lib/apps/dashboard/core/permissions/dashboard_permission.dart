@@ -18,6 +18,7 @@ enum DashboardPermission {
   tickets,
   reports,
   ownerOverview,
+  notifications,
   settings,
   permissions,
 }
@@ -37,6 +38,7 @@ class DashboardPermissions {
         DashboardPermission.tickets,
         DashboardPermission.reports,
         DashboardPermission.paymentVerification,
+        DashboardPermission.notifications,
       },
     };
   }

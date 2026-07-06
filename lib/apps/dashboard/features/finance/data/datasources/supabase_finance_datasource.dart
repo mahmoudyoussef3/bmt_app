@@ -7,11 +7,22 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
 
   const SupabaseFinanceDatasource(this._client);
 
-  static const _nonRevenueStatuses = ['rejected', 'cancelled'];
-  static const _receiptStatuses = [
-    'paymentUploaded',
+  // Realised revenue = payments a client actually made AND finance verified.
+  static const _paidPaymentStatus = 'approved';
+  // A "payment" only exists once the client submits it; drafts and unpaid
+  // credit-card intents (payment_status = 'pending') are not payments yet.
+  static const _paidPaymentStatuses = [
+    'submitted',
     'underReview',
-    'requestReupload',
+    'approved',
+    'rejected',
+    'refunded',
+  ];
+  // The review queue keys off the decoupled payment_status column, never the
+  // booking lifecycle status (draft/reserved/confirmed/…).
+  static const _reviewPaymentStatuses = [
+    'submitted',
+    'underReview',
     'approved',
     'rejected',
   ];
@@ -21,8 +32,10 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     final rows = await _client
         .from('operation_bookings')
         .select(
-          'id, passenger_name, route, payment_amount, payment_method, status, created_at',
+          'id, passenger_name, route, payment_amount, payment_method, '
+          'payment_status, created_at',
         )
+        .inFilter('payment_status', _paidPaymentStatuses)
         .order('created_at', ascending: false)
         .limit(500);
     return rows.map((r) => _paymentFromRow(r)).toList();
@@ -32,7 +45,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
   Future<RevenueMetrics> getRevenueMetrics() async {
     final bookingRows = await _client
         .from('operation_bookings')
-        .select('payment_amount, status, created_at');
+        .select('payment_amount, payment_status, created_at');
 
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
@@ -44,7 +57,8 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
         bookingMonthly = 0,
         bookingTotal = 0;
     for (final r in (bookingRows as List).cast<Map<String, dynamic>>()) {
-      if (_nonRevenueStatuses.contains(r['status'])) continue;
+      // Only verified payments count as realised revenue.
+      if (r['payment_status'] != _paidPaymentStatus) continue;
       final amount = _toDouble(r['payment_amount']);
       final date = DateTime.tryParse(r['created_at']?.toString() ?? '');
       bookingTotal += amount;
@@ -107,7 +121,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
       // operation_bookings in-memory for the last 30 days.
       final rows = await _client
           .from('operation_bookings')
-          .select('created_at, payment_amount, status')
+          .select('created_at, payment_amount, payment_status')
           .order('created_at', ascending: true);
 
       final byDay = <String, _DayAgg>{};
@@ -118,7 +132,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
             '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
         final agg = byDay.putIfAbsent(key, () => _DayAgg());
         agg.bookings++;
-        if (!_nonRevenueStatuses.contains(r['status'])) {
+        if (r['payment_status'] == _paidPaymentStatus) {
           agg.revenue += _toDouble(r['payment_amount']);
         }
       }
@@ -139,10 +153,10 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     final rows = await _client
         .from('operation_bookings')
         .select(
-          'id, passenger_name, route, payment_amount, status, created_at, '
-          'payment_receipt_url, payment_details, notes, timeline',
+          'id, passenger_name, route, payment_amount, payment_status, '
+          'created_at, payment_receipt_url, payment_details, notes, timeline',
         )
-        .inFilter('status', _receiptStatuses)
+        .inFilter('payment_status', _reviewPaymentStatuses)
         .order('created_at', ascending: false);
     return rows.map((r) => _receiptFromRow(r)).toList();
   }
@@ -218,24 +232,33 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     ReceiptReviewStatus action, {
     String? notes,
   }) async {
-    final dbStatus = switch (action) {
-      ReceiptReviewStatus.accepted => 'approved',
-      ReceiptReviewStatus.rejected => 'rejected',
-      ReceiptReviewStatus.reuploadRequested => 'requestReupload',
-      ReceiptReviewStatus.pending => 'underReview',
-    };
-    final update = <String, dynamic>{'status': dbStatus};
-    if (notes != null && notes.isNotEmpty) {
-      final current = await _client
-          .from('operation_bookings')
-          .select('notes')
-          .eq('id', id)
-          .single();
-      final currentNotes =
-          (current['notes'] as List?)?.cast<dynamic>() ?? [];
-      update['notes'] = [notes, ...currentNotes];
+    // Route decisions through the same audited RPCs the payment-verification
+    // workflow uses. A raw status write would violate valid_booking_status,
+    // skip the seat/subscription/notification side effects, and leave
+    // booking_payments out of sync.
+    final note = notes?.trim() ?? '';
+    switch (action) {
+      case ReceiptReviewStatus.accepted:
+        await _client.rpc(
+          'approve_payment',
+          params: {'p_booking_id': id, 'p_note': note},
+        );
+      case ReceiptReviewStatus.rejected:
+        await _client.rpc(
+          'reject_payment',
+          params: {
+            'p_booking_id': id,
+            'p_reason': note.isEmpty ? 'رُفض إثبات الدفع' : note,
+          },
+        );
+      case ReceiptReviewStatus.reuploadRequested:
+        await _client.rpc(
+          'request_payment_review',
+          params: {'p_booking_id': id, 'p_note': note},
+        );
+      case ReceiptReviewStatus.pending:
+        break; // Inbound state, not an action.
     }
-    await _client.from('operation_bookings').update(update).eq('id', id);
   }
 
   @override
@@ -265,7 +288,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
       tripCode: r['route']?.toString() ?? '',
       amount: _toDouble(r['payment_amount']),
       paymentMethod: _method(r['payment_method']?.toString() ?? ''),
-      status: _paymentStatus(r['status']?.toString() ?? ''),
+      status: _paymentStatus(r['payment_status']?.toString() ?? ''),
       date: DateTime.tryParse(r['created_at']?.toString() ?? '') ??
           DateTime.now(),
     );
@@ -284,7 +307,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
       date: DateTime.tryParse(r['created_at']?.toString() ?? '') ??
           DateTime.now(),
       receiptUrl: r['payment_receipt_url']?.toString() ?? '',
-      status: _receiptStatus(r['status']?.toString() ?? ''),
+      status: _receiptStatus(r['payment_status']?.toString() ?? ''),
       notes: (r['notes'] as List?)?.cast<dynamic>().join('\n'),
       history: timeline
           .map((e) =>
@@ -306,22 +329,20 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
         _ => FinancePaymentMethod.cash,
       };
 
+  // Maps the decoupled payment_status vocabulary
+  // (pending/submitted/underReview/approved/rejected/refunded/failed).
   PaymentStatus _paymentStatus(String s) => switch (s) {
-        'confirmed' ||
-        'approved' ||
-        'completed' ||
-        'paid' =>
-          PaymentStatus.success,
-        'cancelled' || 'rejected' => PaymentStatus.cancelled,
+        'approved' => PaymentStatus.success,
+        'rejected' || 'failed' => PaymentStatus.cancelled,
         'refunded' => PaymentStatus.refunded,
-        _ => PaymentStatus.pending,
+        _ => PaymentStatus.pending, // pending / submitted / underReview
       };
 
   ReceiptReviewStatus _receiptStatus(String s) => switch (s) {
         'approved' => ReceiptReviewStatus.accepted,
         'rejected' => ReceiptReviewStatus.rejected,
-        'requestReupload' => ReceiptReviewStatus.reuploadRequested,
-        _ => ReceiptReviewStatus.pending,
+        'underReview' => ReceiptReviewStatus.reuploadRequested,
+        _ => ReceiptReviewStatus.pending, // submitted
       };
 
   RefundStatus _refundStatus(String? s) => switch (s) {
