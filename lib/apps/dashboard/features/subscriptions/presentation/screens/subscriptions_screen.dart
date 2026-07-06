@@ -145,7 +145,7 @@ class _SubscriptionsListView extends StatelessWidget {
                 onChanged: cubit.updateSearch,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.search),
-                  labelText: 'ابحث باسم العميل أو رقم الهاتف',
+                  labelText: 'ابحث بالاسم أو الهاتف أو خط السير',
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -258,6 +258,10 @@ class _SubscriptionCard extends StatelessWidget {
             ],
           ),
           const Divider(height: AppSpacing.large),
+          if (subscription.routeLabel.isNotEmpty) ...[
+            _RouteBanner(routeLabel: subscription.routeLabel),
+            const SizedBox(height: AppSpacing.medium),
+          ],
           Wrap(
             spacing: AppSpacing.large,
             runSpacing: AppSpacing.small,
@@ -342,6 +346,12 @@ class SubscriptionDetailsScreen extends StatelessWidget {
               _DetailsGrid(
                 items: [
                   _InfoData('الباقة', subscription.routeName),
+                  _InfoData(
+                    'خط السير',
+                    subscription.routeLabel.isEmpty
+                        ? 'غير محدد'
+                        : subscription.routeLabel,
+                  ),
                   _InfoData('السعر', _money(subscription)),
                   _InfoData('المدفوع', _amount(subscription.paidAmount)),
                   _InfoData('المتبقي', _amount(subscription.remainingAmount)),
@@ -415,6 +425,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
   final _formKey = GlobalKey<FormState>();
   SubscriptionUserOption? _user;
   SubscriptionPlanOption? _plan;
+  SubscriptionRouteOption? _route;
   DateTime? _startDate;
 
   DateTime? get _endDate {
@@ -443,7 +454,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                 DashboardModuleHeader(
                   icon: Icons.workspace_premium_outlined,
                   title: 'إنشاء اشتراك',
-                  subtitle: 'اختر العميل والباقة وتاريخ البداية.',
+                  subtitle: 'اختر العميل والباقة وخط السير وتاريخ البداية.',
                   actions: [
                     OutlinedButton.icon(
                       onPressed: Navigator.of(context).pop,
@@ -471,6 +482,14 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
                         itemLabel: (plan) =>
                             '${plan.name} - ${_toArabicNumber(plan.price)} ${plan.currency}',
                         onChanged: (value) => setState(() => _plan = value),
+                      ),
+                      const SizedBox(height: AppSpacing.medium),
+                      _Dropdown<SubscriptionRouteOption>(
+                        label: 'اختر خط السير',
+                        value: _route,
+                        items: widget.options.routes,
+                        itemLabel: (route) => route.label,
+                        onChanged: (value) => setState(() => _route = value),
                       ),
                       const SizedBox(height: AppSpacing.medium),
                       ListTile(
@@ -528,7 +547,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
 
   void _submit() {
     _formKey.currentState?.validate();
-    if (_user == null || _plan == null || _startDate == null) {
+    if (_user == null || _plan == null || _route == null || _startDate == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('أكمل بيانات الاشتراك المطلوبة')),
       );
@@ -537,6 +556,7 @@ class _CreateSubscriptionScreenState extends State<CreateSubscriptionScreen> {
     context.read<SubscriptionsCubit>().createManualSubscription(
       user: _user!,
       plan: _plan!,
+      route: _route!,
       startDate: _startDate!,
     );
   }
@@ -644,6 +664,52 @@ class _Info extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(value, style: Theme.of(context).textTheme.titleSmall),
+        ],
+      ),
+    );
+  }
+}
+
+class _RouteBanner extends StatelessWidget {
+  final String routeLabel;
+
+  const _RouteBanner({required this.routeLabel});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.primary.withAlpha(20),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: scheme.primary.withAlpha(46)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.alt_route_rounded, size: 20, color: scheme.primary),
+          const SizedBox(width: AppSpacing.small),
+          Text(
+            'خط السير',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: scheme.onSurfaceVariant,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Text(
+              routeLabel,
+              textAlign: TextAlign.end,
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                color: scheme.primary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
         ],
       ),
     );

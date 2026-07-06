@@ -2,6 +2,13 @@ import '../../../../core/network/network_di.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../session/captain_session_store.dart';
+import '../../features/onboarding/data/datasources/captain_onboarding_datasource.dart';
+import '../../features/onboarding/data/repositories/captain_onboarding_repository_impl.dart';
+import '../../features/onboarding/domain/repositories/captain_onboarding_repository.dart';
+import '../../features/onboarding/domain/usecases/onboarding_usecases.dart';
+import '../../features/onboarding/presentation/cubit/captain_onboarding_cubit.dart';
+
 import '../../features/auth/data/datasources/captain_auth_datasource.dart';
 import '../../features/auth/data/repositories/captain_auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/captain_auth_repository.dart';
@@ -109,6 +116,50 @@ void registerCaptainDependencies() {
   _registerProfileDependencies();
   _registerTripHistoryDependencies();
   _registerAuthDependencies();
+  _registerOnboardingDependencies();
+}
+
+void _registerOnboardingDependencies() {
+  if (!captainGetIt.isRegistered<CaptainSessionStore>()) {
+    captainGetIt.registerLazySingleton<CaptainSessionStore>(
+      () => CaptainSessionStore(),
+    );
+  }
+  if (!captainGetIt.isRegistered<CaptainOnboardingDatasource>()) {
+    captainGetIt.registerLazySingleton<CaptainOnboardingDatasource>(
+      () => CaptainOnboardingDatasource(captainGetIt<SupabaseClient>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<CaptainOnboardingRepository>()) {
+    captainGetIt.registerLazySingleton<CaptainOnboardingRepository>(
+      () => CaptainOnboardingRepositoryImpl(
+        captainGetIt<CaptainOnboardingDatasource>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<SubmitCaptainRequestUseCase>()) {
+    captainGetIt.registerLazySingleton<SubmitCaptainRequestUseCase>(
+      () => SubmitCaptainRequestUseCase(
+        captainGetIt<CaptainOnboardingRepository>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<GetCaptainRequestStatusUseCase>()) {
+    captainGetIt.registerLazySingleton<GetCaptainRequestStatusUseCase>(
+      () => GetCaptainRequestStatusUseCase(
+        captainGetIt<CaptainOnboardingRepository>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<CaptainOnboardingCubit>()) {
+    captainGetIt.registerFactory<CaptainOnboardingCubit>(
+      () => CaptainOnboardingCubit(
+        submit: captainGetIt<SubmitCaptainRequestUseCase>(),
+        getStatus: captainGetIt<GetCaptainRequestStatusUseCase>(),
+        store: captainGetIt<CaptainSessionStore>(),
+      ),
+    );
+  }
 }
 
 void _registerAuthDependencies() {

@@ -40,7 +40,8 @@ class SubscriptionsLoaded extends SubscriptionsState {
           final matchesQuery =
               normalizedQuery.isEmpty ||
               subscription.userName.contains(normalizedQuery) ||
-              subscription.userPhone.contains(normalizedQuery);
+              subscription.userPhone.contains(normalizedQuery) ||
+              subscription.routeLabel.contains(normalizedQuery);
           return matchesStatus && matchesQuery;
         })
         .toList(growable: false);

@@ -1,6 +1,11 @@
 import '../../../../core/network/network_di.dart';
 import '../../features/auth/data/datasources/dashboard_auth_datasource.dart';
 import '../../features/auth/presentation/cubit/dashboard_auth_cubit.dart';
+import '../../features/captain_requests/data/datasources/supabase_captain_requests_datasource.dart';
+import '../../features/captain_requests/data/repositories/captain_requests_repository_impl.dart';
+import '../../features/captain_requests/domain/repositories/captain_requests_repository.dart';
+import '../../features/captain_requests/domain/usecases/captain_requests_usecases.dart';
+import '../../features/captain_requests/presentation/cubit/captain_requests_cubit.dart';
 import '../../features/notifications/data/datasources/supabase_notifications_dispatch_datasource.dart';
 import '../../features/notifications/data/repositories/notifications_dispatch_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notifications_dispatch_repository.dart';
@@ -1404,6 +1409,56 @@ void registerDashboardDependencies() {
   }
 
   _registerNotificationsDispatchDependencies();
+  _registerCaptainRequestsDependencies();
+}
+
+void _registerCaptainRequestsDependencies() {
+  if (!dashboardDi.isRegistered<SupabaseCaptainRequestsDatasource>()) {
+    dashboardDi.registerLazySingleton<SupabaseCaptainRequestsDatasource>(
+      () => SupabaseCaptainRequestsDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<CaptainRequestsRepository>()) {
+    dashboardDi.registerLazySingleton<CaptainRequestsRepository>(
+      () => CaptainRequestsRepositoryImpl(
+        dashboardDi<SupabaseCaptainRequestsDatasource>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetCaptainRequestsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetCaptainRequestsUseCase(dashboardDi<CaptainRequestsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<WatchCaptainRequestsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () =>
+          WatchCaptainRequestsUseCase(dashboardDi<CaptainRequestsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<ApproveCaptainRequestUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ApproveCaptainRequestUseCase(
+        dashboardDi<CaptainRequestsRepository>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<RejectCaptainRequestUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () =>
+          RejectCaptainRequestUseCase(dashboardDi<CaptainRequestsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<CaptainRequestsCubit>()) {
+    dashboardDi.registerFactory<CaptainRequestsCubit>(
+      () => CaptainRequestsCubit(
+        getRequests: dashboardDi<GetCaptainRequestsUseCase>(),
+        watchRequests: dashboardDi<WatchCaptainRequestsUseCase>(),
+        approve: dashboardDi<ApproveCaptainRequestUseCase>(),
+        reject: dashboardDi<RejectCaptainRequestUseCase>(),
+      ),
+    );
+  }
 }
 
 void _registerNotificationsDispatchDependencies() {

@@ -91,6 +91,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
   Future<void> createManualSubscription({
     required SubscriptionUserOption user,
     required SubscriptionPlanOption plan,
+    required SubscriptionRouteOption route,
     required DateTime startDate,
   }) async {
     try {
@@ -108,6 +109,7 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
         tripId: '',
         routeId: plan.id, // carries package_id to the datasource
         routeName: plan.name,
+        routeLabel: route.label,
         fromPointId: '',
         fromPointName: '',
         toPointId: '',

@@ -8,6 +8,8 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
 import '../../features/bookings/presentation/screens/bookings_screen.dart';
+import '../../features/captain_requests/presentation/cubit/captain_requests_cubit.dart';
+import '../../features/captain_requests/presentation/screens/captain_requests_screen.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
 import '../../features/dashboard_home/presentation/screens/dashboard_home_screen.dart';
 import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
@@ -130,6 +132,14 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.local_shipping_outlined,
       selectedIcon: Icons.local_shipping_rounded,
       permission: DashboardPermission.fleet,
+      group: _navFleet,
+    ),
+    _DashboardNavItem(
+      label: 'طلبات الكباتن',
+      route: DashboardRoutes.captainRequests,
+      icon: Icons.how_to_reg_outlined,
+      selectedIcon: Icons.how_to_reg_rounded,
+      permission: DashboardPermission.captainRequests,
       group: _navFleet,
     ),
     _DashboardNavItem(
@@ -335,6 +345,10 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.fleet => BlocProvider(
         create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
         child: const FleetOverviewScreen(),
+      ),
+      DashboardRoutes.captainRequests => BlocProvider(
+        create: (_) => dashboardDi<CaptainRequestsCubit>()..load(),
+        child: const CaptainRequestsScreen(),
       ),
       DashboardRoutes.drivers => BlocProvider(
         create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),

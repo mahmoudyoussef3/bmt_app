@@ -1,8 +1,12 @@
 import 'dart:async';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
+import 'package:bmt_app/apps/captain/core/session/captain_session_store.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/screens/captain_login_screen.dart';
+import 'package:bmt_app/apps/captain/features/onboarding/presentation/cubit/captain_onboarding_cubit.dart';
+import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_onboarding_flow.dart';
+import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_welcome_home_screen.dart';
 import 'package:bmt_app/core/flavors/app_bootstrap.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
@@ -92,9 +96,42 @@ class _CaptainAppState extends State<CaptainApp> {
   }
 }
 
-/// Shows CaptainLoginScreen when no session, CaptainAppShell when signed in.
-class _CaptainAuthGate extends StatelessWidget {
+/// Routes the captain to the right root:
+/// 1. Supabase auth session  → operational shell (existing captains)
+/// 2. Local approved session → welcome home (self-service onboarding)
+/// 3. A submitted request     → onboarding flow resumed at pending
+/// 4. Otherwise               → sign in (with a request-access entry)
+class _CaptainAuthGate extends StatefulWidget {
   const _CaptainAuthGate();
+
+  @override
+  State<_CaptainAuthGate> createState() => _CaptainAuthGateState();
+}
+
+class _CaptainAuthGateState extends State<_CaptainAuthGate> {
+  final _store = captainGetIt<CaptainSessionStore>();
+
+  bool _loading = true;
+  CaptainLocalSession? _session;
+  String? _pendingPhone;
+  bool _requesting = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _reloadLocal();
+  }
+
+  Future<void> _reloadLocal() async {
+    final session = await _store.readSession();
+    final pending = await _store.readPendingPhone();
+    if (!mounted) return;
+    setState(() {
+      _session = session;
+      _pendingPhone = pending;
+      _loading = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -104,14 +141,56 @@ class _CaptainAuthGate extends StatelessWidget {
         final session =
             snapshot.data?.session ??
             Supabase.instance.client.auth.currentSession;
-
         if (session != null) return const CaptainAppShell();
+
+        if (_loading) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+        if (_session != null) return _welcomeHome(_session!);
+        if (_pendingPhone != null || _requesting) return _onboarding();
 
         return BlocProvider(
           create: (_) => captainGetIt<CaptainAuthCubit>(),
-          child: const CaptainLoginScreen(),
+          child: CaptainLoginScreen(
+            onRequestAccess: () => setState(() => _requesting = true),
+          ),
         );
       },
+    );
+  }
+
+  Widget _welcomeHome(CaptainLocalSession session) {
+    return CaptainWelcomeHomeScreen(
+      session: session,
+      onSignOut: () async {
+        await _store.clearSession();
+        if (!mounted) return;
+        setState(() {
+          _session = null;
+          _pendingPhone = null;
+          _requesting = false;
+        });
+      },
+    );
+  }
+
+  Widget _onboarding() {
+    return BlocProvider(
+      create: (_) =>
+          captainGetIt<CaptainOnboardingCubit>()..init(_pendingPhone),
+      child: CaptainOnboardingFlow(
+        onEnterHome: (session) => setState(() {
+          _session = session;
+          _pendingPhone = null;
+          _requesting = false;
+        }),
+        onBackToLogin: () => setState(() {
+          _pendingPhone = null;
+          _requesting = false;
+        }),
+      ),
     );
   }
 }

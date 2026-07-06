@@ -4,6 +4,7 @@ enum DashboardPermission {
   users,
   drivers,
   fleet,
+  captainRequests,
   assignments,
   vehicles,
   routes,

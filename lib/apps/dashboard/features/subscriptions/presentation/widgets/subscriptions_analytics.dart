@@ -41,6 +41,12 @@ class SubscriptionsAnalytics extends StatelessWidget {
       subtitle: 'أعلى الباقات حسب عدد المشتركين',
       child: DashboardRankedBars(data: _byPlan(scheme)),
     );
+    final routes = DashboardPanel(
+      icon: Icons.alt_route_rounded,
+      title: 'المشتركون حسب خط السير',
+      subtitle: 'أكثر خطوط السير طلبًا للاشتراك',
+      child: DashboardRankedBars(data: _byRoute(scheme)),
+    );
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -52,6 +58,8 @@ class SubscriptionsAnalytics extends StatelessWidget {
               trend,
               const SizedBox(height: AppSpacing.medium),
               plans,
+              const SizedBox(height: AppSpacing.medium),
+              routes,
             ],
           );
         }
@@ -66,7 +74,14 @@ class SubscriptionsAnalytics extends StatelessWidget {
               ],
             ),
             const SizedBox(height: AppSpacing.medium),
-            plans,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(child: plans),
+                const SizedBox(width: AppSpacing.medium),
+                Expanded(child: routes),
+              ],
+            ),
           ],
         );
       },
@@ -125,6 +140,24 @@ class SubscriptionsAnalytics extends StatelessWidget {
           label: entry.key,
           value: entry.value.toDouble(),
           color: scheme.primary,
+        ),
+    ];
+  }
+
+  List<ChartDatum> _byRoute(ColorScheme scheme) {
+    final counts = <String, int>{};
+    for (final s in subscriptions) {
+      if (s.routeLabel.isEmpty) continue;
+      counts[s.routeLabel] = (counts[s.routeLabel] ?? 0) + 1;
+    }
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
+    return [
+      for (final entry in sorted.take(6))
+        ChartDatum(
+          label: entry.key,
+          value: entry.value.toDouble(),
+          color: scheme.tertiary,
         ),
     ];
   }

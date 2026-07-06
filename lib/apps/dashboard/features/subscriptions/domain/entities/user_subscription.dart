@@ -32,6 +32,12 @@ class UserSubscription {
   final String routeId;
   final String routeName;
 
+  /// The route/line the subscriber actually rides (e.g. "بنها - مدينة نصر").
+  /// Sourced from the `route_name` column and kept distinct from the package
+  /// title held in [routeName], so the dashboard can show each subscriber the
+  /// exact route they signed up for.
+  final String routeLabel;
+
   final String fromPointId;
   final String fromPointName;
   final String toPointId;
@@ -77,6 +83,7 @@ class UserSubscription {
     required this.tripId,
     required this.routeId,
     required this.routeName,
+    this.routeLabel = '',
     required this.fromPointId,
     required this.fromPointName,
     required this.toPointId,
@@ -105,6 +112,7 @@ class UserSubscription {
     String? tripId,
     String? routeId,
     String? routeName,
+    String? routeLabel,
     String? fromPointId,
     String? fromPointName,
     String? toPointId,
@@ -132,6 +140,7 @@ class UserSubscription {
       tripId: tripId ?? this.tripId,
       routeId: routeId ?? this.routeId,
       routeName: routeName ?? this.routeName,
+      routeLabel: routeLabel ?? this.routeLabel,
       fromPointId: fromPointId ?? this.fromPointId,
       fromPointName: fromPointName ?? this.fromPointName,
       toPointId: toPointId ?? this.toPointId,
@@ -185,9 +194,23 @@ class SubscriptionPlanOption {
   });
 }
 
+/// A route the subscriber can be attached to, sourced from the `routes` table
+/// (rendered as "pickup - destination").
+class SubscriptionRouteOption {
+  final String id;
+  final String label;
+
+  const SubscriptionRouteOption({required this.id, required this.label});
+}
+
 class SubscriptionCreationOptions {
   final List<SubscriptionUserOption> users;
   final List<SubscriptionPlanOption> plans;
+  final List<SubscriptionRouteOption> routes;
 
-  const SubscriptionCreationOptions({required this.users, required this.plans});
+  const SubscriptionCreationOptions({
+    required this.users,
+    required this.plans,
+    this.routes = const [],
+  });
 }

@@ -11,7 +11,11 @@ import '../widgets/captain_auth_scaffold.dart';
 import 'captain_request_access_screen.dart';
 
 class CaptainLoginScreen extends StatefulWidget {
-  const CaptainLoginScreen({super.key});
+  const CaptainLoginScreen({super.key, this.onRequestAccess});
+
+  /// When provided (by the auth gate), tapping "Request access" swaps the
+  /// top-level screen to the onboarding flow instead of pushing a route.
+  final VoidCallback? onRequestAccess;
 
   @override
   State<CaptainLoginScreen> createState() => _CaptainLoginScreenState();
@@ -41,6 +45,11 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
   }
 
   void _openRequestAccess() {
+    final swap = widget.onRequestAccess;
+    if (swap != null) {
+      swap();
+      return;
+    }
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const CaptainRequestAccessScreen()),
     );

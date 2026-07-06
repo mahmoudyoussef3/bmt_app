@@ -34,6 +34,11 @@ The workspace is divided into several applications under `lib/apps/`:
 * **Data Ownership:** Trip events, one-time location updates with timestamps, passenger check-in status.
 * **Relationships:** Modifies the live state of `operation_trips` and `trip_passengers` created by the dashboard/client apps.
 
+#### Captain Onboarding (Self-Service Access Requests)
+* **Flow:** Captain app → sign up (name + phone) → `submit_captain_request` RPC inserts a `captain_requests` row (pending). The app polls `get_captain_request_status` (no SMS/OTP). Dashboard → **طلبات الكباتن** queue (`captain_requests` feature, under Fleet) → operator **accepts** (reuses the fleet driver form to complete the full driver record, creating an *active* `drivers` row linked back via `captain_requests.driver_id`) or **rejects** with a reason. On approval the captain's poll flips to an approved welcome home (local session, `CaptainSessionStore`); a rejection shows the operator's reason with re-apply.
+* **Ownership:** The Dashboard remains the source of truth — the driver record only exists once an operator completes it. `captain_requests` review is admin-gated (`DashboardPermission.captainRequests`).
+* **Migration:** `supabase/migrations/20260705120000_captain_access_requests.sql`.
+
 ---
 
 ## 3. Core Business Flow

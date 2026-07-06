@@ -420,6 +420,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
           vehicle: vehicle,
           workspace: workspace,
           onBack: () => Navigator.pop(dialogContext),
+          onUploadFile: cubit.uploadVehicleFile,
           onSave: (savedVehicle, pendingDocs) async {
             final docsCubit = context.read<FleetDocumentsCubit>();
             final overviewCubit = context.read<FleetOverviewCubit>();

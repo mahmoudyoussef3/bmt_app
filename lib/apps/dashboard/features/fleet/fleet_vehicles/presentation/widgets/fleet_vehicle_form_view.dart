@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/pending_fleet_document.dart';
@@ -10,7 +9,6 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widget
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_upload_helpers.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/cubit/fleet_vehicles_cubit.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -28,12 +26,19 @@ class FleetVehicleFormView extends StatefulWidget {
   )
   onSave;
 
+  /// Uploads a picked file to Supabase Storage and returns its public URL, or
+  /// `null` on failure. Passed in so the form stays decoupled from the cubit
+  /// provider scope (the dialog is mounted above that scope in the tree).
+  final Future<String?> Function(String bucket, String path, List<int> bytes)
+  onUploadFile;
+
   const FleetVehicleFormView({
     super.key,
     this.vehicle,
     required this.workspace,
     required this.onBack,
     required this.onSave,
+    required this.onUploadFile,
   });
 
   @override
@@ -563,11 +568,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         final path =
             'vehicles/${existing?.id.isNotEmpty == true ? existing!.id : 'new'}/${DateTime.now().millisecondsSinceEpoch}_${i}_$fileName';
 
-        final url = await context.read<FleetVehiclesCubit>().uploadVehicleFile(
-          'vehicle-images',
-          path,
-          bytes,
-        );
+        final url = await widget.onUploadFile('vehicle-images', path, bytes);
 
         if (url == null || url.isEmpty) {
           throw Exception('فشل رفع إحدى صور المركبة إلى Supabase Storage.');

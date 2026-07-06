@@ -47,7 +47,11 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
       // routeId is repurposed to carry the package_id from the cubit.
       if (subscription.routeId.isNotEmpty) 'package_id': subscription.routeId,
       'package_name': subscription.routeName,
-      'route_name': subscription.routeName,
+      // Persist the route the subscriber signed up for; fall back to the
+      // package name only if no route was chosen.
+      'route_name': subscription.routeLabel.isNotEmpty
+          ? subscription.routeLabel
+          : subscription.routeName,
       'start_date': subscription.startDate.toIso8601String(),
       'end_date': subscription.endDate.toIso8601String(),
       'status': 'pending_payment',
@@ -131,6 +135,11 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
         .select('id, title, price, days, trips_count, status')
         .neq('status', 'archived')
         .order('price');
+    final routes = await _client
+        .from('routes')
+        .select('id, pickup, destination, status')
+        .neq('status', 'archived')
+        .order('pickup');
 
     final users = (clients as List).map((c) {
       final m = c as Map<String, dynamic>;
@@ -153,7 +162,22 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
       );
     }).toList();
 
-    return SubscriptionCreationOptions(users: users, plans: plans);
+    final routeOptions = (routes as List).map((r) {
+      final m = r as Map<String, dynamic>;
+      final pickup = m['pickup']?.toString() ?? '';
+      final destination = m['destination']?.toString() ?? '';
+      final label = [pickup, destination].where((s) => s.isNotEmpty).join(' - ');
+      return SubscriptionRouteOption(
+        id: m['id'].toString(),
+        label: label.isEmpty ? 'مسار' : label,
+      );
+    }).toList();
+
+    return SubscriptionCreationOptions(
+      users: users,
+      plans: plans,
+      routes: routeOptions,
+    );
   }
 
   UserSubscriptionModel _fromRow(Map<String, dynamic> json) {
@@ -190,8 +214,10 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
       routeName:
           pkg?['title']?.toString() ??
           json['package_name']?.toString() ??
-          json['route_name']?.toString() ??
           'باقة',
+      // The actual route/line the subscriber rides — kept separate from the
+      // package title so both can be shown in the dashboard.
+      routeLabel: json['route_name']?.toString() ?? '',
       fromPointId: '',
       fromPointName: '',
       toPointId: '',
