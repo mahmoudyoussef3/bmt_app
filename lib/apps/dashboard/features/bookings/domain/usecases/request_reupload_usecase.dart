@@ -6,11 +6,7 @@ class RequestReuploadUseCase {
 
   const RequestReuploadUseCase(this._repository);
 
-  Future<OperationBooking> call(
-    String bookingId,
-    String reviewer,
-    String reason,
-  ) {
-    return _repository.requestReupload(bookingId, reviewer, reason);
+  Future<OperationBooking> call(String bookingId, String reason) {
+    return _repository.requestReupload(bookingId, reason);
   }
 }

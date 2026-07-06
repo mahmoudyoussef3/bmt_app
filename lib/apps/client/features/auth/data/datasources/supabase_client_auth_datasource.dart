@@ -14,9 +14,9 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     try {
       await _supabase.auth.signInWithPassword(email: email, password: password);
     } on AuthException catch (e) {
+      // Surface the real reason (e.g. invalid credentials, email not
+      // confirmed) instead of a blanket message the user can't act on.
       throw Exception(e.message);
-    } catch (e) {
-      throw Exception('Login failed. Please check your credentials.');
     }
 
     // Role guard: only users registered as clients may use this app.
@@ -50,23 +50,26 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
       throw const FormatException('Please complete all fields correctly.');
     }
 
+    final phone_ = phone.trim();
     final code = referralCode?.trim().toUpperCase() ?? '';
 
+    // Guard the phone UNIQUE constraint up front so a duplicate produces a
+    // clear, actionable message rather than an opaque trigger error. This
+    // check is thrown OUTSIDE the sign-up try/catch so its message survives.
+    if (await _phoneAlreadyRegistered(phone_)) {
+      throw Exception(
+        'This phone number is already registered.\n'
+        'Please sign in instead, or use a different number.',
+      );
+    }
+
     try {
-      final phoneExists = await _supabase.rpc('check_phone_exists', params: {
-        'p_phone': phone.trim(),
-      });
-
-      if (phoneExists == true) {
-        throw Exception('Phone number is already registered to another account.');
-      }
-
       final response = await _supabase.auth.signUp(
-        email: email,
+        email: email.trim(),
         password: password,
         data: {
           'full_name': fullName.trim(),
-          'phone': phone.trim(),
+          'phone': phone_,
           // Captured here so the backend trigger can record a pending referral
           // against this code once the account is created.
           if (code.isNotEmpty) 'referral_code': code,
@@ -75,22 +78,36 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
 
       final user = response.user;
       if (user != null) {
-        // Best-effort profile upsert; if RLS defers it until email
-        // confirmation, the account is still created successfully.
+        // Best-effort profile upsert; the backend trigger already inserts the
+        // row, so a failure here (e.g. RLS) does not fail the sign-up.
         try {
           await _supabase.from('clients').upsert({
             'id': user.id,
             'full_name': fullName.trim(),
-            'phone': phone.trim(),
+            'phone': phone_,
             'email': email.trim(),
             'updated_at': DateTime.now().toIso8601String(),
           });
         } catch (_) {}
       }
     } on AuthException catch (e) {
+      // e.g. "User already registered" — surface it so the user can react.
       throw Exception(e.message);
-    } catch (e) {
-      throw Exception('Unable to create account. Please try again later.');
+    }
+  }
+
+  /// Returns true when [phone] already belongs to a client. Fails open: if the
+  /// pre-check itself errors, sign-up still proceeds and any real failure is
+  /// surfaced by [signUpWithEmail] instead of being swallowed here.
+  Future<bool> _phoneAlreadyRegistered(String phone) async {
+    try {
+      final result = await _supabase.rpc(
+        'check_phone_exists',
+        params: {'p_phone': phone},
+      );
+      return result == true;
+    } catch (_) {
+      return false;
     }
   }
 

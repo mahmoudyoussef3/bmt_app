@@ -3,6 +3,8 @@ import '../../domain/entities/operation_booking.dart';
 class OperationBookingModel extends OperationBooking {
   const OperationBookingModel({
     required super.id,
+    required super.bookingNumber,
+    required super.clientId,
     required super.passengerName,
     required super.phone,
     required super.route,
@@ -12,322 +14,142 @@ class OperationBookingModel extends OperationBooking {
     required super.paymentMethod,
     required super.status,
     required super.paymentStatus,
-    required super.priority,
-    required super.assignedTrip,
+    required super.paymentAmount,
+    required super.packageName,
     required super.createdAt,
-    required super.customerProfile,
     required super.tripDetails,
-    required super.paymentDetails,
-    required super.attachments,
     required super.notes,
     required super.timeline,
-    super.reviewerName,
+    super.receiptUrl,
     super.rejectionReason,
+    super.reviewedAt,
   });
 
-  factory OperationBookingModel.fromEntity(OperationBooking booking) {
-    return OperationBookingModel(
-      id: booking.id,
-      passengerName: booking.passengerName,
-      phone: booking.phone,
-      route: booking.route,
-      tripTime: booking.tripTime,
-      date: booking.date,
-      seat: booking.seat,
-      paymentMethod: booking.paymentMethod,
-      status: booking.status,
-      paymentStatus: booking.paymentStatus,
-      priority: booking.priority,
-      assignedTrip: booking.assignedTrip,
-      createdAt: booking.createdAt,
-      customerProfile: booking.customerProfile,
-      tripDetails: booking.tripDetails,
-      paymentDetails: booking.paymentDetails,
-      attachments: booking.attachments,
-      notes: booking.notes,
-      timeline: booking.timeline,
-      reviewerName: booking.reviewerName,
-      rejectionReason: booking.rejectionReason,
-    );
-  }
+  /// Columns selected by [SupabaseBookingsDatasource]. Kept in one place so the
+  /// list query and single-row refetch never drift apart.
+  static const columns = '''
+    id, booking_number, client_id, passenger_name, phone, route, trip_time,
+    trip_date, seat, payment_method, status, payment_status, payment_amount,
+    payment_receipt_url, payment_rejection_reason, reviewed_at, created_at,
+    notes,
+    package:transport_packages(name_ar, name_en),
+    trip:operation_trips(
+      id, trip_date, departure_time,
+      route:operation_routes(name),
+      driver:drivers(full_name),
+      vehicle:vehicles(plate_number)
+    )
+  ''';
 
   factory OperationBookingModel.fromJson(Map<String, dynamic> json) {
-    final methodStr = json['payment_method'] as String? ?? 'cash';
-    final paymentMethod = BookingPaymentMethod.values.firstWhere(
-      (m) => m.name == methodStr,
-      orElse: () => BookingPaymentMethod.cash,
+    final tripJson = json['trip'] as Map<String, dynamic>?;
+    final routeJson = tripJson?['route'] as Map<String, dynamic>?;
+    final driverJson = tripJson?['driver'] as Map<String, dynamic>?;
+    final vehicleJson = tripJson?['vehicle'] as Map<String, dynamic>?;
+    final packageJson = json['package'] as Map<String, dynamic>?;
+
+    final createdAt = _parseDate(json['created_at']) ?? DateTime.now();
+    final reviewedAt = _parseDate(json['reviewed_at']);
+    final route = json['route'] as String? ?? '';
+    final tripTime = json['trip_time'] as String? ?? '';
+    final tripDate = json['trip_date'] as String? ?? '';
+    final status = _enumByName(
+      BookingStatus.values,
+      json['status'] as String?,
+      BookingStatus.draft,
     );
-
-    final statusStr = json['status'] as String? ?? 'draft';
-    final status = BookingStatus.values.firstWhere(
-      (s) => s.name == statusStr,
-      orElse: () => BookingStatus.draft,
+    final paymentStatus = _enumByName(
+      PaymentStatus.values,
+      json['payment_status'] as String?,
+      PaymentStatus.pending,
     );
-
-    final paymentStatusStr = json['payment_status'] as String? ?? 'pending';
-    final paymentStatus = PaymentStatus.values.firstWhere(
-      (s) => s.name == paymentStatusStr,
-      orElse: () => PaymentStatus.pending,
-    );
-
-    final priorityStr = json['priority'] as String? ?? 'normal';
-    final priority = BookingPriority.values.firstWhere(
-      (p) => p.name == priorityStr,
-      orElse: () => BookingPriority.normal,
-    );
-
-    final attachmentsList =
-        (json['attachments'] as List?)?.map((e) => e.toString()).toList() ?? [];
-
-    final notesList =
-        (json['notes'] as List?)?.map((e) => e.toString()).toList() ?? [];
-
-    final timelineList =
-        (json['timeline'] as List?)
-            ?.map(
-              (e) =>
-                  BookingTimelineEventModel.fromJson(e as Map<String, dynamic>),
-            )
-            .toList() ??
-        [];
+    final rejection = (json['payment_rejection_reason'] as String?)?.trim();
 
     return OperationBookingModel(
       id: json['id'] as String? ?? '',
+      bookingNumber: json['booking_number'] as String? ?? '',
+      clientId: json['client_id'] as String? ?? '',
       passengerName: json['passenger_name'] as String? ?? 'غير معروف',
       phone: json['phone'] as String? ?? '',
-      route: json['route'] as String? ?? '',
-      tripTime: json['trip_time'] as String? ?? '',
-      date: json['trip_date'] as String? ?? '',
+      route: route,
+      tripTime: tripTime,
+      date: tripDate,
       seat: json['seat'] as String? ?? '',
-      paymentMethod: paymentMethod,
+      paymentMethod: _method(json['payment_method'] as String?),
       status: status,
       paymentStatus: paymentStatus,
-      priority: priority,
-      assignedTrip: json['assigned_trip'] as String? ?? 'غير مسند',
-      createdAt: json['created_at'] != null
-          ? DateTime.parse(json['created_at'] as String).toLocal()
-          : DateTime.now(),
-      reviewerName: json['reviewer_name'] as String?,
-      rejectionReason: json['rejection_reason'] as String?,
-      customerProfile: json['customer_profile'] != null
-          ? BookingCustomerProfileModel.fromJson(
-              json['customer_profile'] as Map<String, dynamic>,
-            )
-          : BookingCustomerProfileModel.empty(),
-      tripDetails: json['trip_details'] != null
-          ? BookingTripDetailsModel.fromJson(
-              json['trip_details'] as Map<String, dynamic>,
-            )
-          : BookingTripDetailsModel.empty(),
-      paymentDetails: BookingPaymentDetailsModel.fromJson({
-        if (json['payment_details'] != null)
-          ...(json['payment_details'] as Map<String, dynamic>),
-        'receipt_url': json['payment_receipt_url'],
-      }),
-      attachments: attachmentsList,
-      notes: notesList,
-      timeline: timelineList,
+      paymentAmount: _toDouble(json['payment_amount']),
+      packageName:
+          packageJson?['name_ar'] as String? ??
+          packageJson?['name_en'] as String? ??
+          '',
+      receiptUrl: json['payment_receipt_url'] as String?,
+      rejectionReason: (rejection?.isEmpty ?? true) ? null : rejection,
+      reviewedAt: reviewedAt,
+      createdAt: createdAt,
+      tripDetails: BookingTripDetails(
+        tripId: tripJson?['id'] as String? ?? '',
+        route: routeJson?['name'] as String? ?? route,
+        date: tripJson?['trip_date'] as String? ?? tripDate,
+        time: tripJson?['departure_time'] as String? ?? tripTime,
+        vehicle: vehicleJson?['plate_number'] as String? ?? '',
+        driver: driverJson?['full_name'] as String? ?? '',
+      ),
+      notes: (json['notes'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      timeline: _timeline(
+        createdAt: createdAt,
+        reviewedAt: reviewedAt,
+        status: status,
+        paymentStatus: paymentStatus,
+        rejection: rejection,
+      ),
     );
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'passenger_name': passengerName,
-      'phone': phone,
-      'route': route,
-      'trip_time': tripTime,
-      'trip_date': date,
-      'seat': seat,
-      'payment_method': paymentMethod.name,
-      'status': status.name,
-      'payment_status': paymentStatus.name,
-      'priority': priority.name,
-      'assigned_trip': assignedTrip,
-      'created_at': createdAt.toUtc().toIso8601String(),
-      'reviewer_name': reviewerName,
-      'rejection_reason': rejectionReason,
-      'customer_profile': (customerProfile as BookingCustomerProfileModel)
-          .toJson(),
-      'trip_details': (tripDetails as BookingTripDetailsModel).toJson(),
-      'payment_details': (paymentDetails as BookingPaymentDetailsModel)
-          .toJson(),
-      'attachments': attachments,
-      'notes': notes,
-      'timeline': timeline
-          .map((e) => (e as BookingTimelineEventModel).toJson())
-          .toList(),
-    };
-  }
-}
-
-class BookingCustomerProfileModel extends BookingCustomerProfile {
-  const BookingCustomerProfileModel({
-    required super.name,
-    required super.phone,
-    required super.email,
-    required super.tripsCount,
-    required super.accountStatus,
-  });
-
-  factory BookingCustomerProfileModel.fromJson(Map<String, dynamic> json) {
-    return BookingCustomerProfileModel(
-      name: json['name'] as String? ?? '',
-      phone: json['phone'] as String? ?? '',
-      email: json['email'] as String? ?? '',
-      tripsCount: json['trips_count'] as String? ?? '0',
-      accountStatus: json['account_status'] as String? ?? 'جديد',
-    );
+  /// Builds the lifecycle history from real row timestamps rather than a
+  /// separately-maintained (and easily stale) audit blob.
+  static List<BookingTimelineEvent> _timeline({
+    required DateTime createdAt,
+    required DateTime? reviewedAt,
+    required BookingStatus status,
+    required PaymentStatus paymentStatus,
+    required String? rejection,
+  }) {
+    final events = <BookingTimelineEvent>[
+      BookingTimelineEvent(timestamp: createdAt, action: 'تم إنشاء الحجز'),
+    ];
+    if (reviewedAt != null) {
+      final approved = paymentStatus == PaymentStatus.approved;
+      events.add(
+        BookingTimelineEvent(
+          timestamp: reviewedAt,
+          action: approved ? 'تم اعتماد الدفع' : 'تم رفض الدفع',
+          note: approved ? null : rejection,
+        ),
+      );
+    }
+    return events;
   }
 
-  factory BookingCustomerProfileModel.empty() {
-    return const BookingCustomerProfileModel(
-      name: '',
-      phone: '',
-      email: '',
-      tripsCount: '0',
-      accountStatus: 'جديد',
-    );
+  static BookingPaymentMethod _method(String? raw) => switch (raw) {
+    'bank_transfer' || 'bankTransfer' => BookingPaymentMethod.bankTransfer,
+    'vodafone_cash' || 'vodafoneCash' => BookingPaymentMethod.vodafoneCash,
+    'instapay' || 'instaPay' => BookingPaymentMethod.instaPay,
+    'credit_card' || 'card' => BookingPaymentMethod.card,
+    _ => BookingPaymentMethod.cash,
+  };
+
+  static T _enumByName<T extends Enum>(List<T> values, String? name, T fallback) {
+    return values.firstWhere((v) => v.name == name, orElse: () => fallback);
   }
 
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'phone': phone,
-      'email': email,
-      'trips_count': tripsCount,
-      'account_status': accountStatus,
-    };
-  }
-}
-
-class BookingTripDetailsModel extends BookingTripDetails {
-  const BookingTripDetailsModel({
-    required super.route,
-    required super.date,
-    required super.time,
-    required super.vehicle,
-    required super.driver,
-  });
-
-  factory BookingTripDetailsModel.fromJson(Map<String, dynamic> json) {
-    return BookingTripDetailsModel(
-      route: json['route'] as String? ?? '',
-      date: json['date'] as String? ?? '',
-      time: json['time'] as String? ?? '',
-      vehicle: json['vehicle'] as String? ?? '',
-      driver: json['driver'] as String? ?? '',
-    );
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    return DateTime.tryParse(value.toString())?.toLocal();
   }
 
-  factory BookingTripDetailsModel.empty() {
-    return const BookingTripDetailsModel(
-      route: '',
-      date: '',
-      time: '',
-      vehicle: '',
-      driver: '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'route': route,
-      'date': date,
-      'time': time,
-      'vehicle': vehicle,
-      'driver': driver,
-    };
-  }
-}
-
-class BookingPaymentDetailsModel extends BookingPaymentDetails {
-  const BookingPaymentDetailsModel({
-    required super.amount,
-    required super.method,
-    required super.status,
-    required super.reference,
-    super.receiptReference,
-    super.receiptUploadedAt,
-    super.receiptUrl,
-  });
-
-  factory BookingPaymentDetailsModel.fromJson(Map<String, dynamic> json) {
-    final methodStr = json['method'] as String? ?? 'cash';
-    final paymentMethod = BookingPaymentMethod.values.firstWhere(
-      (m) => m.name == methodStr,
-      orElse: () => BookingPaymentMethod.cash,
-    );
-
-    return BookingPaymentDetailsModel(
-      amount: json['amount'] as String? ?? '0 ج.م',
-      method: paymentMethod,
-      status: json['status'] as String? ?? '',
-      reference: json['reference'] as String? ?? '',
-      receiptReference: json['receipt_reference'] as String?,
-      receiptUploadedAt: json['receipt_uploaded_at'] != null
-          ? DateTime.parse(json['receipt_uploaded_at'] as String).toLocal()
-          : null,
-      receiptUrl: json['receipt_url'] as String?,
-    );
-  }
-
-  factory BookingPaymentDetailsModel.empty(BookingPaymentMethod method) {
-    return BookingPaymentDetailsModel(
-      amount: '0 ج.م',
-      method: method,
-      status: 'غير مدفوع',
-      reference: '',
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'amount': amount,
-      'method': method.name,
-      'status': status,
-      'reference': reference,
-      'receipt_reference': receiptReference,
-      'receipt_uploaded_at': receiptUploadedAt?.toUtc().toIso8601String(),
-      'receipt_url': receiptUrl,
-    };
-  }
-}
-
-class BookingTimelineEventModel extends BookingTimelineEvent {
-  const BookingTimelineEventModel({
-    required super.timestamp,
-    required super.action,
-    required super.actor,
-    super.note,
-  });
-
-  factory BookingTimelineEventModel.fromJson(Map<String, dynamic> json) {
-    return BookingTimelineEventModel(
-      timestamp: json['timestamp'] != null
-          ? DateTime.parse(json['timestamp'] as String).toLocal()
-          : DateTime.now(),
-      action: json['action'] as String? ?? '',
-      actor: json['actor'] as String? ?? '',
-      note: json['note'] as String?,
-    );
-  }
-
-  factory BookingTimelineEventModel.fromEntity(BookingTimelineEvent event) {
-    return BookingTimelineEventModel(
-      timestamp: event.timestamp,
-      action: event.action,
-      actor: event.actor,
-      note: event.note,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'timestamp': timestamp.toUtc().toIso8601String(),
-      'action': action,
-      'actor': actor,
-      'note': note,
-    };
+  static double _toDouble(dynamic value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 }

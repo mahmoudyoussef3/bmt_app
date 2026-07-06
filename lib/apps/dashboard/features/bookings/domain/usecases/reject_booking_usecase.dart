@@ -6,12 +6,7 @@ class RejectBookingUseCase {
 
   const RejectBookingUseCase(this._repository);
 
-  Future<OperationBooking> call(
-    String bookingId,
-    String reviewer,
-    String reason,
-    String? note,
-  ) {
-    return _repository.rejectBooking(bookingId, reviewer, reason, note);
+  Future<OperationBooking> call(String bookingId, String reason) {
+    return _repository.rejectBooking(bookingId, reason);
   }
 }

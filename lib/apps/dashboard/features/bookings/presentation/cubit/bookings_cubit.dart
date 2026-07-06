@@ -4,44 +4,40 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/operation_booking.dart';
 import '../../domain/usecases/approve_booking_usecase.dart';
-import '../../domain/usecases/assign_bookings_to_trip_usecase.dart';
-import '../../domain/usecases/bulk_update_bookings_status_usecase.dart';
+import '../../domain/usecases/bulk_approve_bookings_usecase.dart';
+import '../../domain/usecases/bulk_reject_bookings_usecase.dart';
 import '../../domain/usecases/get_operation_bookings_usecase.dart';
 import '../../domain/usecases/reject_booking_usecase.dart';
 import '../../domain/usecases/request_reupload_usecase.dart';
-import '../../domain/usecases/update_booking_status_usecase.dart';
 import '../../domain/usecases/watch_bookings_usecase.dart';
 import '../models/booking_filters.dart';
 import 'bookings_state.dart';
 
 class BookingsCubit extends Cubit<BookingsState> {
   final GetOperationBookingsUseCase _getBookings;
-  final UpdateBookingStatusUseCase _updateStatus;
-  final BulkUpdateBookingsStatusUseCase _bulkUpdateStatus;
-  final AssignBookingsToTripUseCase _assignToTrip;
   final ApproveBookingUseCase _approveBooking;
   final RejectBookingUseCase _rejectBooking;
   final RequestReuploadUseCase _requestReupload;
+  final BulkApproveBookingsUseCase _bulkApprove;
+  final BulkRejectBookingsUseCase _bulkReject;
   final WatchBookingsUseCase _watchBookings;
 
   StreamSubscription<List<OperationBooking>>? _bookingsSubscription;
 
   BookingsCubit({
     required GetOperationBookingsUseCase getBookings,
-    required UpdateBookingStatusUseCase updateStatus,
-    required BulkUpdateBookingsStatusUseCase bulkUpdateStatus,
-    required AssignBookingsToTripUseCase assignToTrip,
     required ApproveBookingUseCase approveBooking,
     required RejectBookingUseCase rejectBooking,
     required RequestReuploadUseCase requestReupload,
+    required BulkApproveBookingsUseCase bulkApprove,
+    required BulkRejectBookingsUseCase bulkReject,
     required WatchBookingsUseCase watchBookings,
   }) : _getBookings = getBookings,
-       _updateStatus = updateStatus,
-       _bulkUpdateStatus = bulkUpdateStatus,
-       _assignToTrip = assignToTrip,
        _approveBooking = approveBooking,
        _rejectBooking = rejectBooking,
        _requestReupload = requestReupload,
+       _bulkApprove = bulkApprove,
+       _bulkReject = bulkReject,
        _watchBookings = watchBookings,
        super(const BookingsLoading());
 
@@ -51,7 +47,12 @@ class BookingsCubit extends Cubit<BookingsState> {
       final bookings = await _getBookings();
       emit(BookingsLoaded(bookings: bookings, filters: const BookingFilters()));
       _bookingsSubscription?.cancel();
-      _bookingsSubscription = _watchBookings().listen(_onRealtimeUpdate);
+      // A transient realtime/refetch error must not tear down the live view or
+      // replace the loaded list with an error screen; keep the last good data.
+      _bookingsSubscription = _watchBookings().listen(
+        _onRealtimeUpdate,
+        onError: (_) {},
+      );
     } catch (error) {
       emit(BookingsError(error.toString()));
     }
@@ -115,81 +116,47 @@ class BookingsCubit extends Cubit<BookingsState> {
     emit(current.copyWith(filters: filters, selectedIds: const {}));
   }
 
-  Future<void> updateStatus(
-    OperationBooking booking,
-    BookingStatus status,
-  ) async {
-    final current = state;
-    if (current is! BookingsLoaded) return;
-    try {
-      final updated = await _updateStatus(booking.id, status);
-      _emitUpdated(current, [updated]);
-    } catch (error) {
-      emit(BookingsError(error.toString()));
-    }
-  }
-
   Future<void> approveBooking(String bookingId, String? note) async {
-    final current = state;
-    if (current is! BookingsLoaded) return;
-    try {
-      final updated = await _approveBooking(bookingId, 'خدمة العملاء', note);
-      _emitUpdated(current, [updated]);
-    } catch (error) {
-      emit(BookingsError(error.toString()));
-    }
+    await _runReview(() => _approveBooking(bookingId, note));
   }
 
-  Future<void> rejectBooking(
-    String bookingId,
-    String reason,
-    String? note,
-  ) async {
-    final current = state;
-    if (current is! BookingsLoaded) return;
-    try {
-      final updated = await _rejectBooking(
-        bookingId,
-        'خدمة العملاء',
-        reason,
-        note,
-      );
-      _emitUpdated(current, [updated]);
-    } catch (error) {
-      emit(BookingsError(error.toString()));
-    }
+  Future<void> rejectBooking(String bookingId, String reason) async {
+    await _runReview(() => _rejectBooking(bookingId, reason));
   }
 
   Future<void> requestReupload(String bookingId, String reason) async {
+    await _runReview(() => _requestReupload(bookingId, reason));
+  }
+
+  Future<void> _runReview(
+    Future<OperationBooking> Function() action,
+  ) async {
     final current = state;
     if (current is! BookingsLoaded) return;
     try {
-      final updated = await _requestReupload(bookingId, 'خدمة العملاء', reason);
+      final updated = await action();
       _emitUpdated(current, [updated]);
     } catch (error) {
       emit(BookingsError(error.toString()));
     }
   }
 
-  Future<void> bulkUpdate(BookingStatus status) async {
+  Future<void> bulkApprove(String? note) async {
     final current = state;
     if (current is! BookingsLoaded || current.selectedIds.isEmpty) return;
     try {
-      final updated = await _bulkUpdateStatus(
-        current.selectedIds.toList(),
-        status,
-      );
+      final updated = await _bulkApprove(current.selectedIds.toList(), note);
       _emitUpdated(current, updated, clearSelection: true);
     } catch (error) {
       emit(BookingsError(error.toString()));
     }
   }
 
-  Future<void> assignSelectedToTrip(String tripId) async {
+  Future<void> bulkReject(String reason) async {
     final current = state;
     if (current is! BookingsLoaded || current.selectedIds.isEmpty) return;
     try {
-      final updated = await _assignToTrip(current.selectedIds.toList(), tripId);
+      final updated = await _bulkReject(current.selectedIds.toList(), reason);
       _emitUpdated(current, updated, clearSelection: true);
     } catch (error) {
       emit(BookingsError(error.toString()));

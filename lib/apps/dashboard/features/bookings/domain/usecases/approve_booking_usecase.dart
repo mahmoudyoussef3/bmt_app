@@ -6,11 +6,7 @@ class ApproveBookingUseCase {
 
   const ApproveBookingUseCase(this._repository);
 
-  Future<OperationBooking> call(
-    String bookingId,
-    String reviewer,
-    String? note,
-  ) {
-    return _repository.approveBooking(bookingId, reviewer, note);
+  Future<OperationBooking> call(String bookingId, String? note) {
+    return _repository.approveBooking(bookingId, note);
   }
 }

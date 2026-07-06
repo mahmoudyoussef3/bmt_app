@@ -71,7 +71,9 @@ class DashboardShell extends StatefulWidget {
 }
 
 class _DashboardShellState extends State<DashboardShell> {
-  DashboardRole _role = DashboardRole.supportAgent;
+  // Single-owner dashboard with no login gate: default to full access. When an
+  // auth session exists, _loadRole() still refines this from user_roles.
+  DashboardRole _role = DashboardRole.admin;
   String _route = DashboardRoutes.home;
 
   @override

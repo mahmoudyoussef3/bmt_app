@@ -25,12 +25,11 @@ import '../../features/bookings/data/datasources/supabase_bookings_datasource.da
 import '../../features/bookings/data/repositories/bookings_repository_impl.dart';
 import '../../features/bookings/domain/repositories/bookings_repository.dart';
 import '../../features/bookings/domain/usecases/approve_booking_usecase.dart';
-import '../../features/bookings/domain/usecases/assign_bookings_to_trip_usecase.dart';
-import '../../features/bookings/domain/usecases/bulk_update_bookings_status_usecase.dart';
+import '../../features/bookings/domain/usecases/bulk_approve_bookings_usecase.dart';
+import '../../features/bookings/domain/usecases/bulk_reject_bookings_usecase.dart';
 import '../../features/bookings/domain/usecases/get_operation_bookings_usecase.dart';
 import '../../features/bookings/domain/usecases/reject_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/request_reupload_usecase.dart';
-import '../../features/bookings/domain/usecases/update_booking_status_usecase.dart';
 import '../../features/bookings/domain/usecases/watch_bookings_usecase.dart';
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
 import '../../features/referrals/data/datasources/referral_datasource.dart';
@@ -539,21 +538,15 @@ void registerDashboardDependencies() {
     );
   }
 
-  if (!dashboardDi.isRegistered<UpdateBookingStatusUseCase>()) {
+  if (!dashboardDi.isRegistered<BulkApproveBookingsUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => UpdateBookingStatusUseCase(dashboardDi<BookingsRepository>()),
+      () => BulkApproveBookingsUseCase(dashboardDi<BookingsRepository>()),
     );
   }
 
-  if (!dashboardDi.isRegistered<BulkUpdateBookingsStatusUseCase>()) {
+  if (!dashboardDi.isRegistered<BulkRejectBookingsUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => BulkUpdateBookingsStatusUseCase(dashboardDi<BookingsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<AssignBookingsToTripUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => AssignBookingsToTripUseCase(dashboardDi<BookingsRepository>()),
+      () => BulkRejectBookingsUseCase(dashboardDi<BookingsRepository>()),
     );
   }
 
@@ -585,12 +578,11 @@ void registerDashboardDependencies() {
     dashboardDi.registerFactory(
       () => BookingsCubit(
         getBookings: dashboardDi<GetOperationBookingsUseCase>(),
-        updateStatus: dashboardDi<UpdateBookingStatusUseCase>(),
-        bulkUpdateStatus: dashboardDi<BulkUpdateBookingsStatusUseCase>(),
-        assignToTrip: dashboardDi<AssignBookingsToTripUseCase>(),
         approveBooking: dashboardDi<ApproveBookingUseCase>(),
         rejectBooking: dashboardDi<RejectBookingUseCase>(),
         requestReupload: dashboardDi<RequestReuploadUseCase>(),
+        bulkApprove: dashboardDi<BulkApproveBookingsUseCase>(),
+        bulkReject: dashboardDi<BulkRejectBookingsUseCase>(),
         watchBookings: dashboardDi<WatchBookingsUseCase>(),
       ),
     );

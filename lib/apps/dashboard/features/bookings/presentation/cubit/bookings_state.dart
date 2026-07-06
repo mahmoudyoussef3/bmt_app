@@ -32,8 +32,9 @@ class BookingsLoaded extends BookingsState {
 
   List<OperationBooking> get filteredBookings {
     final search = filters.search.trim().toLowerCase();
+    final route = filters.route.trim();
+    final date = filters.date.trim();
     return bookings.where((booking) {
-      // Tab filter
       if (booking.status != activeTab) return false;
 
       final searchText = [
@@ -41,35 +42,30 @@ class BookingsLoaded extends BookingsState {
         booking.phone,
         booking.route,
         booking.seat,
-        booking.paymentMethod.label,
+        booking.bookingNumber,
         booking.id,
       ].join(' ').toLowerCase();
       final searchMatch = search.isEmpty || searchText.contains(search);
-      final routeMatch =
-          filters.route.trim().isEmpty ||
-          booking.route.contains(filters.route.trim());
-      final dateMatch =
-          filters.date.trim().isEmpty ||
-          booking.date.contains(filters.date.trim());
+      final routeMatch = route.isEmpty || booking.route.contains(route);
+      final dateMatch = date.isEmpty || booking.date.contains(date);
       final paymentMatch =
           filters.paymentMethod == null ||
           booking.paymentMethod == filters.paymentMethod;
-      final priorityMatch =
-          filters.priority == null || booking.priority == filters.priority;
-      return searchMatch &&
-          routeMatch &&
-          dateMatch &&
-          paymentMatch &&
-          priorityMatch;
+      return searchMatch && routeMatch && dateMatch && paymentMatch;
     }).toList();
   }
 
-  int countByStatus(BookingStatus status) {
-    return bookings.where((b) => b.status == status).length;
-  }
+  int countByStatus(BookingStatus status) =>
+      bookings.where((b) => b.status == status).length;
 
-  int countByPaymentStatus(PaymentStatus status) {
-    return bookings.where((b) => b.paymentStatus == status).length;
+  int countByPaymentStatus(PaymentStatus status) =>
+      bookings.where((b) => b.paymentStatus == status).length;
+
+  /// Number of bookings the given client has ever made — a real cross-booking
+  /// relationship derived from the loaded dataset (no extra query, no PII join).
+  int bookingsForClient(String clientId) {
+    if (clientId.isEmpty) return 0;
+    return bookings.where((b) => b.clientId == clientId).length;
   }
 
   BookingsLoaded copyWith({

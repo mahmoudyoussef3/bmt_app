@@ -5,14 +5,12 @@ class BookingFilters {
   final String route;
   final String date;
   final BookingPaymentMethod? paymentMethod;
-  final BookingPriority? priority;
 
   const BookingFilters({
     this.search = '',
     this.route = '',
     this.date = '',
     this.paymentMethod,
-    this.priority,
   });
 
   BookingFilters copyWith({
@@ -20,9 +18,7 @@ class BookingFilters {
     String? route,
     String? date,
     BookingPaymentMethod? paymentMethod,
-    BookingPriority? priority,
     bool clearPaymentMethod = false,
-    bool clearPriority = false,
   }) {
     return BookingFilters(
       search: search ?? this.search,
@@ -31,7 +27,6 @@ class BookingFilters {
       paymentMethod: clearPaymentMethod
           ? null
           : paymentMethod ?? this.paymentMethod,
-      priority: clearPriority ? null : priority ?? this.priority,
     );
   }
 }

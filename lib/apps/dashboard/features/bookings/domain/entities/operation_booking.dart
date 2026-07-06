@@ -37,31 +37,54 @@ enum BookingPaymentMethod {
   const BookingPaymentMethod(this.label);
 }
 
-enum BookingPriority {
-  normal('عادي'),
-  urgent('مستعجل');
-
-  final String label;
-
-  const BookingPriority(this.label);
-}
-
+/// One entry in a booking's lifecycle history, derived from real timestamps
+/// on the row (creation, payment review outcome) — never fabricated.
 class BookingTimelineEvent {
   final DateTime timestamp;
   final String action;
-  final String actor;
   final String? note;
 
   const BookingTimelineEvent({
     required this.timestamp,
     required this.action,
-    required this.actor,
     this.note,
   });
 }
 
+/// Real trip context joined from `operation_trips` (route, driver, vehicle).
+class BookingTripDetails {
+  final String tripId;
+  final String route;
+  final String date;
+  final String time;
+  final String vehicle;
+  final String driver;
+
+  const BookingTripDetails({
+    required this.tripId,
+    required this.route,
+    required this.date,
+    required this.time,
+    required this.vehicle,
+    required this.driver,
+  });
+
+  static const empty = BookingTripDetails(
+    tripId: '',
+    route: '',
+    date: '',
+    time: '',
+    vehicle: '',
+    driver: '',
+  );
+}
+
+/// A single operational booking, mapped 1:1 from a real `operation_bookings`
+/// row and the entities it references (client, trip, package).
 class OperationBooking {
   final String id;
+  final String bookingNumber;
+  final String clientId;
   final String passengerName;
   final String phone;
   final String route;
@@ -71,20 +94,20 @@ class OperationBooking {
   final BookingPaymentMethod paymentMethod;
   final BookingStatus status;
   final PaymentStatus paymentStatus;
-  final BookingPriority priority;
-  final String assignedTrip;
-  final String? reviewerName;
+  final double paymentAmount;
+  final String packageName;
+  final String? receiptUrl;
   final String? rejectionReason;
+  final DateTime? reviewedAt;
   final DateTime createdAt;
-  final BookingCustomerProfile customerProfile;
   final BookingTripDetails tripDetails;
-  final BookingPaymentDetails paymentDetails;
-  final List<String> attachments;
   final List<String> notes;
   final List<BookingTimelineEvent> timeline;
 
   const OperationBooking({
     required this.id,
+    required this.bookingNumber,
+    required this.clientId,
     required this.passengerName,
     required this.phone,
     required this.route,
@@ -94,103 +117,28 @@ class OperationBooking {
     required this.paymentMethod,
     required this.status,
     required this.paymentStatus,
-    required this.priority,
-    required this.assignedTrip,
+    required this.paymentAmount,
+    required this.packageName,
     required this.createdAt,
-    required this.customerProfile,
     required this.tripDetails,
-    required this.paymentDetails,
-    required this.attachments,
     required this.notes,
     required this.timeline,
-    this.reviewerName,
-    this.rejectionReason,
-  });
-
-  OperationBooking copyWith({
-    String? id,
-    BookingStatus? status,
-    PaymentStatus? paymentStatus,
-    BookingPriority? priority,
-    String? assignedTrip,
-    String? reviewerName,
-    String? rejectionReason,
-    List<BookingTimelineEvent>? timeline,
-  }) {
-    return OperationBooking(
-      id: id ?? this.id,
-      passengerName: passengerName,
-      phone: phone,
-      route: route,
-      tripTime: tripTime,
-      date: date,
-      seat: seat,
-      paymentMethod: paymentMethod,
-      status: status ?? this.status,
-      paymentStatus: paymentStatus ?? this.paymentStatus,
-      priority: priority ?? this.priority,
-      assignedTrip: assignedTrip ?? this.assignedTrip,
-      createdAt: createdAt,
-      customerProfile: customerProfile,
-      tripDetails: tripDetails,
-      paymentDetails: paymentDetails,
-      attachments: attachments,
-      notes: notes,
-      timeline: timeline ?? this.timeline,
-      reviewerName: reviewerName ?? this.reviewerName,
-      rejectionReason: rejectionReason ?? this.rejectionReason,
-    );
-  }
-}
-
-class BookingCustomerProfile {
-  final String name;
-  final String phone;
-  final String email;
-  final String tripsCount;
-  final String accountStatus;
-
-  const BookingCustomerProfile({
-    required this.name,
-    required this.phone,
-    required this.email,
-    required this.tripsCount,
-    required this.accountStatus,
-  });
-}
-
-class BookingTripDetails {
-  final String route;
-  final String date;
-  final String time;
-  final String vehicle;
-  final String driver;
-
-  const BookingTripDetails({
-    required this.route,
-    required this.date,
-    required this.time,
-    required this.vehicle,
-    required this.driver,
-  });
-}
-
-class BookingPaymentDetails {
-  final String amount;
-  final BookingPaymentMethod method;
-  final String status;
-  final String reference;
-  final String? receiptReference;
-  final DateTime? receiptUploadedAt;
-  final String? receiptUrl;
-
-  const BookingPaymentDetails({
-    required this.amount,
-    required this.method,
-    required this.status,
-    required this.reference,
-    this.receiptReference,
-    this.receiptUploadedAt,
     this.receiptUrl,
+    this.rejectionReason,
+    this.reviewedAt,
   });
+
+  /// A payment awaiting a dashboard decision (the actionable review queue).
+  bool get awaitingReview =>
+      paymentStatus == PaymentStatus.submitted ||
+      paymentStatus == PaymentStatus.underReview;
+
+  bool get hasReceipt => (receiptUrl ?? '').isNotEmpty;
+
+  String get amountLabel {
+    final rounded = paymentAmount == paymentAmount.roundToDouble()
+        ? paymentAmount.toStringAsFixed(0)
+        : paymentAmount.toStringAsFixed(2);
+    return '$rounded ج.م';
+  }
 }
