@@ -119,6 +119,7 @@ import '../../features/seat_selection/domain/usecases/select_seat_usecase.dart';
 import '../../features/seat_selection/domain/usecases/book_trip_seat_usecase.dart';
 import '../../features/seat_selection/domain/usecases/lock_trip_seat_usecase.dart';
 import '../../features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
+import '../../features/seat_selection/domain/usecases/update_existing_booking_payment_usecase.dart';
 import '../../features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import '../../features/seat_release/data/datasources/supabase_seat_release_datasource.dart';
 import '../../features/seat_release/data/repositories/seat_release_repository_impl.dart';
@@ -530,6 +531,12 @@ void _registerSeatSelectionDependencies() {
   if (!clientGetIt.isRegistered<ConfirmSeatBookingUseCase>()) {
     clientGetIt.registerLazySingleton<ConfirmSeatBookingUseCase>(
       () => ConfirmSeatBookingUseCase(clientGetIt<SeatSelectionRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<UpdateExistingBookingPaymentUseCase>()) {
+    clientGetIt.registerLazySingleton<UpdateExistingBookingPaymentUseCase>(
+      () => UpdateExistingBookingPaymentUseCase(clientGetIt<SeatSelectionRepository>()),
     );
   }
 

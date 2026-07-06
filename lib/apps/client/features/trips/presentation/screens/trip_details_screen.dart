@@ -4,9 +4,6 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
-import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
-import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
-import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubit.dart';

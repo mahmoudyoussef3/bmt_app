@@ -15,6 +15,8 @@ class BookingWizardSession {
     this.receiptUrl,
     this.paymentReference,
     this.payerPhone,
+    this.bookingId,
+    this.bookingRef,
   });
 
   final RouteOptionData route;
@@ -29,6 +31,8 @@ class BookingWizardSession {
   final String? receiptUrl;
   final String? paymentReference;
   final String? payerPhone;
+  final String? bookingId;
+  final String? bookingRef;
 
   bool get stopsValid =>
       pickupStop != null &&
@@ -67,6 +71,8 @@ class BookingWizardSession {
     String? receiptUrl,
     String? paymentReference,
     String? payerPhone,
+    String? bookingId,
+    String? bookingRef,
   }) {
     return BookingWizardSession(
       route: route,
@@ -81,6 +87,8 @@ class BookingWizardSession {
       receiptUrl: receiptUrl ?? this.receiptUrl,
       paymentReference: paymentReference ?? this.paymentReference,
       payerPhone: payerPhone ?? this.payerPhone,
+      bookingId: bookingId ?? this.bookingId,
+      bookingRef: bookingRef ?? this.bookingRef,
     );
   }
 }

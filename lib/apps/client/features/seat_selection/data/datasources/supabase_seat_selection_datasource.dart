@@ -177,4 +177,22 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
     final response = await _supabase.rpc('book_trip_seat', params: finalParams);
     return response.toString();
   }
+
+  @override
+  Future<Map<String, dynamic>> updateExistingBookingPayment(
+    Map<String, dynamic> params,
+  ) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) throw Exception('User not logged in');
+
+    try {
+      final response = await _supabase.rpc(
+        'update_existing_booking_payment',
+        params: params,
+      );
+      return Map<String, dynamic>.from(response as Map);
+    } on PostgrestException {
+      rethrow;
+    }
+  }
 }

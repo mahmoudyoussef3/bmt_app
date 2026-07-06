@@ -17,4 +17,8 @@ abstract class SeatSelectionDatasource {
   /// Legacy single-step booking — kept for backward compatibility.
   @Deprecated('Use lockTripSeat + confirmSeatBooking instead')
   Future<String> bookTripSeat(Map<String, dynamic> params);
+
+  Future<Map<String, dynamic>> updateExistingBookingPayment(
+    Map<String, dynamic> params,
+  );
 }

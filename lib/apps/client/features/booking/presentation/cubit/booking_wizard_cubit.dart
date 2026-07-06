@@ -39,6 +39,8 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
         receiptUrl: state.receiptUrl,
         paymentReference: state.paymentReference,
         payerPhone: state.payerPhone,
+        bookingId: state.bookingId,
+        bookingRef: state.bookingRef,
       ),
     );
   }
@@ -58,6 +60,8 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
         receiptUrl: state.receiptUrl,
         paymentReference: state.paymentReference,
         payerPhone: state.payerPhone,
+        bookingId: state.bookingId,
+        bookingRef: state.bookingRef,
       ),
     );
   }
@@ -84,5 +88,9 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
         payerPhone: payerPhone.trim(),
       ),
     );
+  }
+
+  void setBookingId({required String bookingId, required String bookingRef}) {
+    emit(state.copyWith(bookingId: bookingId, bookingRef: bookingRef));
   }
 }

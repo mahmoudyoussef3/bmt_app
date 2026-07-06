@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-
 
 class ClientBottomNavigation extends StatelessWidget {
   const ClientBottomNavigation({

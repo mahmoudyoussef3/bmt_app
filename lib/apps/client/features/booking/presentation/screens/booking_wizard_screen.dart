@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
@@ -21,6 +20,7 @@ import 'package:bmt_app/apps/client/features/payments/domain/usecases/get_paymen
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/paymob_checkout_webview_screen.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/lock_trip_seat_usecase.dart';
+import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/update_existing_booking_payment_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -59,50 +59,62 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
     setState(() => _confirming = true);
 
     try {
-      // 1. Lock the seat for 5 minutes.
-      await clientGetIt<LockTripSeatUseCase>()(tripId: tripId, seatId: seatId);
+      late final Map<String, dynamic> booking;
 
-      // 2. Confirm the booking and persist to Supabase.
-      final booking = await clientGetIt<ConfirmSeatBookingUseCase>()({
-        'p_trip_id': tripId,
-        'p_seat_id': seatId,
-        'p_seat_label': session.selectedSeatLabel ?? '',
-        'p_pricing_id': null,
-        'p_pickup_point_id': session.pickupStop?.id.isEmpty == true
-            ? null
-            : session.pickupStop?.id,
-        'p_dropoff_point_id': session.dropoffStop?.id.isEmpty == true
-            ? null
-            : session.dropoffStop?.id,
-        'p_passenger_name':
-            Supabase
-                .instance
-                .client
-                .auth
-                .currentUser
-                ?.userMetadata?['full_name']
-                ?.toString() ??
-            '',
-        'p_phone':
-            Supabase.instance.client.auth.currentUser?.userMetadata?['phone']
-                ?.toString() ??
-            '',
-        'p_route':
-            '${session.pickupStop?.name ?? ''} → ${session.dropoffStop?.name ?? ''}',
-        'p_trip_time': session.selectedTrip?.departureTime ?? '',
-        'p_trip_date': session.selectedTrip?.tripDate,
-        'p_payment_method': session.paymentMethod ?? 'instapay',
-        'p_payment_amount': session.totalPrice.round(),
-        'p_pickup_point_name': session.pickupStop?.name ?? '',
-        'p_dropoff_point_name': session.dropoffStop?.name ?? '',
-        'p_package_id': session.selectedPackage?.id,
-        'p_plan_start_date': session.packageStartDate?.toIso8601String().split(
-          'T',
-        )[0],
-        'p_receipt_url': session.receiptUrl,
-        'p_payment_reference': session.paymentReference,
-        'p_payer_phone': session.payerPhone,
-      });
+      if (session.bookingId != null) {
+        booking = await clientGetIt<UpdateExistingBookingPaymentUseCase>()({
+          'p_booking_id': session.bookingId,
+          'p_payment_method': session.paymentMethod ?? 'instapay',
+          'p_receipt_url': session.receiptUrl,
+          'p_payment_reference': session.paymentReference,
+          'p_payer_phone': session.payerPhone,
+        });
+      } else {
+        // 1. Lock the seat for 5 minutes.
+        await clientGetIt<LockTripSeatUseCase>()(tripId: tripId, seatId: seatId);
+
+        // 2. Confirm the booking and persist to Supabase.
+        booking = await clientGetIt<ConfirmSeatBookingUseCase>()({
+          'p_trip_id': tripId,
+          'p_seat_id': seatId,
+          'p_seat_label': session.selectedSeatLabel ?? '',
+          'p_pricing_id': null,
+          'p_pickup_point_id': session.pickupStop?.id.isEmpty == true
+              ? null
+              : session.pickupStop?.id,
+          'p_dropoff_point_id': session.dropoffStop?.id.isEmpty == true
+              ? null
+              : session.dropoffStop?.id,
+          'p_passenger_name':
+              Supabase
+                  .instance
+                  .client
+                  .auth
+                  .currentUser
+                  ?.userMetadata?['full_name']
+                  ?.toString() ??
+              '',
+          'p_phone':
+              Supabase.instance.client.auth.currentUser?.userMetadata?['phone']
+                  ?.toString() ??
+              '',
+          'p_route':
+              '${session.pickupStop?.name ?? ''} → ${session.dropoffStop?.name ?? ''}',
+          'p_trip_time': session.selectedTrip?.departureTime ?? '',
+          'p_trip_date': session.selectedTrip?.tripDate,
+          'p_payment_method': session.paymentMethod ?? 'instapay',
+          'p_payment_amount': session.totalPrice.round(),
+          'p_pickup_point_name': session.pickupStop?.name ?? '',
+          'p_dropoff_point_name': session.dropoffStop?.name ?? '',
+          'p_package_id': session.selectedPackage?.id,
+          'p_plan_start_date': session.packageStartDate?.toIso8601String().split(
+            'T',
+          )[0],
+          'p_receipt_url': session.receiptUrl,
+          'p_payment_reference': session.paymentReference,
+          'p_payer_phone': session.payerPhone,
+        });
+      }
 
       if (!mounted) return;
 
@@ -112,6 +124,13 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
           (bookingId != null && bookingId.length >= 8
               ? bookingId.substring(0, 8).toUpperCase()
               : null);
+
+      if (session.bookingId == null && bookingId != null && bookingRef != null) {
+        context.read<BookingWizardCubit>().setBookingId(
+          bookingId: bookingId,
+          bookingRef: bookingRef,
+        );
+      }
 
       if (session.isCardPayment) {
         if (bookingId == null || bookingId.isEmpty) {
@@ -201,17 +220,31 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
                 ? 'This seat was just taken. Please go back and choose another seat.'
                 : reason.contains('lock_expired')
                 ? 'Your seat hold expired. Please select your seat again.'
+                : reason.contains('duplicate_active_booking')
+                ? 'You already have a pending booking for this trip. Please continue payment from your existing booking.'
                 : reason,
             style: ClientTypography.bodySmall(context),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'OK',
-                style: TextStyle(color: ClientColors.primary),
+            if (reason.contains('duplicate_active_booking'))
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Close dialog
+                  Navigator.of(context).popUntil((route) => route.isFirst); // Close wizard
+                },
+                child: const Text(
+                  'Open My Bookings',
+                  style: TextStyle(color: ClientColors.primary),
+                ),
+              )
+            else
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text(
+                  'OK',
+                  style: TextStyle(color: ClientColors.primary),
+                ),
               ),
-            ),
           ],
         ),
       );

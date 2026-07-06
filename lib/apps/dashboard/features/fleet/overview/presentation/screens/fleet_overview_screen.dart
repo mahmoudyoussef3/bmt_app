@@ -7,7 +7,6 @@ import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubi
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_summary_cards.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_tab_bar.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_analytics_charts.dart';
 
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/cubit/fleet_drivers_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/screens/fleet_drivers_screen.dart';

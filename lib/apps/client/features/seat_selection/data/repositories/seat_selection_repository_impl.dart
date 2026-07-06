@@ -31,4 +31,11 @@ class SeatSelectionRepositoryImpl implements SeatSelectionRepository {
   Future<String> bookTripSeat(Map<String, dynamic> params) {
     return _datasource.bookTripSeat(params);
   }
+
+  @override
+  Future<Map<String, dynamic>> updateExistingBookingPayment(
+    Map<String, dynamic> params,
+  ) {
+    return _datasource.updateExistingBookingPayment(params);
+  }
 }
