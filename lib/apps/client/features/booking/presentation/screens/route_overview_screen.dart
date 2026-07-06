@@ -76,6 +76,11 @@ class RouteOverviewScreen extends StatelessWidget {
                   ? GoogleStyleMapView(
                       waypoints: mapPins,
                       cameraPadding: const EdgeInsets.fromLTRB(42, 72, 42, 36),
+                      info: RouteMapInfoData(
+                        distance: route.distance,
+                        duration: route.duration,
+                        availableSeats: route.availableSeats,
+                      ),
                     )
                   : _NoMapPlaceholder(),
             ),

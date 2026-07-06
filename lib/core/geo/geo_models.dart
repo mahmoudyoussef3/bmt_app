@@ -45,10 +45,15 @@ class RouteGeometry {
   final double totalDurationSeconds;
   final List<RouteLeg> legs;
 
+  /// Decoded road shape (start → end). Empty when the provider returned no
+  /// geometry; callers should then draw straight lines between stops.
+  final List<GeoPoint> path;
+
   const RouteGeometry({
     required this.totalDistanceMeters,
     required this.totalDurationSeconds,
     required this.legs,
+    this.path = const [],
   });
 }
 

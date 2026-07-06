@@ -1,11 +1,36 @@
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_overview_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_geometry_service.dart';
+import 'package:bmt_app/core/geo/geo_models.dart';
+import 'package:bmt_app/core/geo/geo_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+/// Keeps widget tests offline: road geometry resolves to "unavailable"
+/// synchronously, exercising the straight-line fallback path.
+class _OfflineGeoService implements GeoService {
+  @override
+  bool get enabled => false;
+
+  @override
+  Future<List<GeoPlace>> autocomplete(String query, {GeoPoint? focus}) async =>
+      const [];
+
+  @override
+  Future<RouteGeometry> directions(List<GeoPoint> orderedPoints) async =>
+      throw const GeoException('offline');
+}
+
 void main() {
+  setUp(() {
+    RouteGeometryService.instance.debugGeoService = _OfflineGeoService();
+  });
+  tearDown(() {
+    RouteGeometryService.instance.debugGeoService = null;
+  });
+
   group('GoogleStyleMapView', () {
     testWidgets('does not fabricate a marker when coordinates are missing', (
       tester,
@@ -43,7 +68,7 @@ void main() {
       final markers = tester.widget<MarkerLayer>(find.byType(MarkerLayer));
       expect(map.options.initialCameraFit, isNotNull);
       expect(markers.markers, hasLength(3));
-      expect(find.text('3 mapped stations'), findsOneWidget);
+      expect(find.text('3 stops'), findsOneWidget);
     });
   });
 

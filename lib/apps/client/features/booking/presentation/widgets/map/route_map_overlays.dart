@@ -5,54 +5,25 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_models.dart';
 
-/// Top-start pills: how many stops the route has, plus a Start/End legend so
-/// the marker colors are immediately understandable.
-class RouteMapInfoPills extends StatelessWidget {
-  const RouteMapInfoPills({super.key, required this.stopCount});
-
-  final int stopCount;
+/// Start/End legend pill so the marker colors are immediately understandable.
+class RouteMapLegendPill extends StatelessWidget {
+  const RouteMapLegendPill({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        _Pill(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.route_rounded,
-                size: 15,
-                color: RouteMapStyle.stop(context),
-              ),
-              const SizedBox(width: 6),
-              Text(
-                stopCount == 1 ? '1 stop' : '$stopCount stops',
-                style: RouteMapStyle.pillLabel(context),
-              ),
-            ],
-          ),
-        ),
-        if (stopCount > 1) ...[
-          const SizedBox(height: 8),
-          _Pill(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _LegendDot(color: RouteMapStyle.start(context)),
-                const SizedBox(width: 5),
-                Text('Start', style: RouteMapStyle.pillLabel(context)),
-                const SizedBox(width: 10),
-                _LegendDot(color: RouteMapStyle.end(context)),
-                const SizedBox(width: 5),
-                Text('End', style: RouteMapStyle.pillLabel(context)),
-              ],
-            ),
-          ),
+    return _Pill(
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _LegendDot(color: RouteMapStyle.start(context)),
+          const SizedBox(width: 5),
+          Text('Start', style: RouteMapStyle.pillLabel(context)),
+          const SizedBox(width: 10),
+          _LegendDot(color: RouteMapStyle.end(context)),
+          const SizedBox(width: 5),
+          Text('End', style: RouteMapStyle.pillLabel(context)),
         ],
-      ],
+      ),
     );
   }
 }
@@ -175,9 +146,12 @@ class _ControlButton extends StatelessWidget {
   }
 }
 
-/// Basemap attribution required by OpenStreetMap + CARTO usage terms.
+/// Basemap attribution required by OpenStreetMap + CARTO usage terms, with
+/// OpenRouteService credited when its road geometry is on screen.
 class RouteMapAttribution extends StatelessWidget {
-  const RouteMapAttribution({super.key});
+  const RouteMapAttribution({super.key, this.showRouting = false});
+
+  final bool showRouting;
 
   @override
   Widget build(BuildContext context) {
@@ -188,7 +162,9 @@ class RouteMapAttribution extends StatelessWidget {
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        '© OpenStreetMap · CARTO',
+        showRouting
+            ? '© OpenStreetMap · CARTO · openrouteservice'
+            : '© OpenStreetMap · CARTO',
         style: ClientTypography.labelSmall(context).copyWith(fontSize: 9),
       ),
     );

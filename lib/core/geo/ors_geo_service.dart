@@ -5,6 +5,7 @@ import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'geo_models.dart';
 import 'geo_service.dart';
 import 'ors_config.dart';
+import 'polyline_codec.dart';
 
 /// OpenRouteService implementation of [GeoService].
 ///
@@ -97,6 +98,7 @@ class OrsGeoService implements GeoService {
       return RouteGeometry(
         totalDistanceMeters: (summary['distance'] as num?)?.toDouble() ?? 0,
         totalDurationSeconds: (summary['duration'] as num?)?.toDouble() ?? 0,
+        path: PolylineCodec.decode(route['geometry']?.toString() ?? ''),
         legs: segments
             .map(
               (s) => RouteLeg(

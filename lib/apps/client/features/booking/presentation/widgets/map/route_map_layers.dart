@@ -28,8 +28,41 @@ class RouteMapTileLayer extends StatelessWidget {
   }
 }
 
-/// The route path drawn as a layered stroke: a soft glow underneath, a light
-/// casing, then a vivid rounded line on top — the "premium navigation" look.
+/// Builds the layered "premium navigation" stroke — soft glow, casing, then a
+/// vivid rounded line — with independent per-layer opacity so the route can
+/// fade in progressively. The glow is dimmer and the casing darker in dark
+/// mode so the line sits into the basemap instead of blooming over it.
+List<Polyline> buildRoutePolylines(
+  BuildContext context,
+  List<LatLng> points, {
+  double glowOpacity = 1,
+  double casingOpacity = 1,
+  double lineOpacity = 1,
+}) {
+  if (points.length < 2) return const [];
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final line = RouteMapStyle.routeLine(context);
+  final glowAlpha = isDark ? 22 : 38;
+  final casing = isDark ? const Color(0xFF10151D) : Colors.white;
+
+  Polyline stroke(Color color, int alpha, double width) => Polyline(
+    points: points,
+    color: color.withAlpha(alpha),
+    strokeWidth: width,
+    strokeJoin: StrokeJoin.round,
+    strokeCap: StrokeCap.round,
+  );
+
+  return [
+    if (glowOpacity > 0) stroke(line, (glowAlpha * glowOpacity).round(), 15),
+    if (casingOpacity > 0) stroke(casing, (255 * casingOpacity).round(), 11),
+    if (lineOpacity > 0) stroke(line, (255 * lineOpacity).round(), 6),
+  ];
+}
+
+/// The static route path. Used when the line is already fully revealed (or
+/// animation is not wanted); the animated variant lives in
+/// `animated_route_line.dart`.
 class RouteMapPolylineLayer extends StatelessWidget {
   const RouteMapPolylineLayer({super.key, required this.coordinates});
 
@@ -37,26 +70,6 @@ class RouteMapPolylineLayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final line = RouteMapStyle.routeLine(context);
-    return PolylineLayer(
-      polylines: [
-        Polyline(
-          points: coordinates,
-          color: line.withAlpha(38),
-          strokeWidth: 15,
-          strokeJoin: StrokeJoin.round,
-          strokeCap: StrokeCap.round,
-        ),
-        Polyline(
-          points: coordinates,
-          color: line,
-          strokeWidth: 6,
-          borderColor: Colors.white,
-          borderStrokeWidth: 3,
-          strokeJoin: StrokeJoin.round,
-          strokeCap: StrokeCap.round,
-        ),
-      ],
-    );
+    return PolylineLayer(polylines: buildRoutePolylines(context, coordinates));
   }
 }
