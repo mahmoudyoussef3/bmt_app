@@ -145,8 +145,16 @@ class _HomeContent extends StatelessWidget {
                             }),
                           ),
                         ],
-                        if (data.nearbyTrips.isNotEmpty) ...[
+                        if (data.nearbyTrips.isNotEmpty || data.popularRoutes.isNotEmpty) ...[
                           const SizedBox(height: ClientSpacing.xxl),
+                          _SectionIntro(
+                            eyebrow: 'DISCOVER',
+                            title: 'Find your next trip',
+                            subtitle: 'Explore live operations and popular routes.',
+                          ),
+                          const SizedBox(height: ClientSpacing.md),
+                        ],
+                        if (data.nearbyTrips.isNotEmpty) ...[
                           _DepartingSoonSection(
                             trips: data.nearbyTrips,
                             onSelect: (trip) => onOpenRoute(
@@ -162,13 +170,16 @@ class _HomeContent extends StatelessWidget {
                               },
                             ),
                           ),
+                          if (data.popularRoutes.isNotEmpty)
+                            const SizedBox(height: ClientSpacing.xl),
                         ],
-                        const SizedBox(height: ClientSpacing.xl),
-                        PopularRoutesPreview(
-                          routes: data.popularRoutes,
-                          previewCount: isTablet ? 4 : 3,
-                          onOpenRoute: onOpenRoute,
-                        ),
+                        if (data.popularRoutes.isNotEmpty) ...[
+                          PopularRoutesPreview(
+                            routes: data.popularRoutes,
+                            previewCount: isTablet ? 4 : 3,
+                            onOpenRoute: onOpenRoute,
+                          ),
+                        ],
                         if (data.activePackage == null) ...[
                           const SizedBox(height: ClientSpacing.xl),
                           _PackageInvitation(
@@ -918,12 +929,6 @@ class _DepartingSoonSection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _SectionIntro(
-          eyebrow: 'DEPARTING SOON',
-          title: 'Trips near you',
-          subtitle: 'Upcoming departures from live operations.',
-        ),
-        const SizedBox(height: ClientSpacing.md),
         SizedBox(
           height: 162,
           child: ListView.separated(
@@ -960,115 +965,153 @@ class _DepartureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
     final seatColor = trip.seatsLeft <= 5
         ? ClientColors.journeyAmber
         : ClientColors.journeyGreen;
 
     return SizedBox(
       width: width,
-      child: ClientCard(
+      child: GestureDetector(
         onTap: onTap,
-        padding: const EdgeInsets.all(ClientSpacing.md),
-        useShadow: true,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: ClientColors.primaryFor(context).withAlpha(18),
-                    borderRadius: BorderRadius.circular(ClientRadius.pill),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.schedule_rounded,
-                        size: 15,
-                        color: ClientColors.primaryFor(context),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        trip.departureTime,
-                        style: ClientTypography.labelSmall(context).copyWith(
-                          color: ClientColors.primaryFor(context),
-                          fontWeight: FontWeight.w900,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: cs.outlineVariant.withAlpha(50)),
+            boxShadow: [
+              BoxShadow(
+                color: cs.shadow.withAlpha(10),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: cs.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.schedule_rounded, size: 14, color: cs.primary),
+                        const SizedBox(width: 6),
+                        Text(
+                          trip.departureTime,
+                          style: ClientTypography.labelSmall(context).copyWith(
+                            color: cs.primary,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
+                      ],
+                    ),
+                  ),
+                  const Spacer(),
+                  if (trip.isLive)
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: ClientColors.journeyGreen.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ],
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: ClientColors.journeyGreen,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            'Boarding',
+                            style: ClientTypography.labelSmall(context).copyWith(
+                              color: ClientColors.journeyGreen,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      trip.pickup,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: ClientTypography.headingSmall(context).copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
-                ),
-                const Spacer(),
-                if (trip.isLive)
-                  const _StatusPill(
-                    label: 'Boarding',
-                    color: ClientColors.journeyGreen,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Icon(Icons.arrow_forward_rounded, size: 16, color: cs.onSurfaceVariant.withAlpha(100)),
                   ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    trip.pickup,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: ClientTypography.headingSmall(context),
+                  Expanded(
+                    child: Text(
+                      trip.destination,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.end,
+                      style: ClientTypography.headingSmall(context).copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
                   ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Icon(
-                    Icons.arrow_forward_rounded,
-                    size: 18,
-                    color: ClientColors.textTertiaryFor(context),
+                ],
+              ),
+              const Spacer(),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: seatColor.withAlpha(15),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.event_seat_rounded, size: 14, color: seatColor),
+                        const SizedBox(width: 4),
+                        Text(
+                          '${trip.seatsLeft.clamp(0, 999)} seats',
+                          style: ClientTypography.labelSmall(context).copyWith(
+                            color: seatColor,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: Text(
-                    trip.destination,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    textAlign: TextAlign.end,
-                    style: ClientTypography.headingSmall(context),
+                  const Spacer(),
+                  Text(
+                    'Book now',
+                    style: ClientTypography.labelMedium(context).copyWith(
+                      color: cs.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-              ],
-            ),
-            const Spacer(),
-            Row(
-              children: [
-                Icon(Icons.event_seat_outlined, size: 17, color: seatColor),
-                const SizedBox(width: 6),
-                Text(
-                  '${trip.seatsLeft.clamp(0, 999)} seats left',
-                  style: ClientTypography.bodySmall(
-                    context,
-                  ).copyWith(color: seatColor, fontWeight: FontWeight.w800),
-                ),
-                const Spacer(),
-                Text(
-                  'View trip',
-                  style: ClientTypography.labelSmall(context).copyWith(
-                    color: ClientColors.primaryFor(context),
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(width: 3),
-                Icon(
-                  Icons.chevron_right_rounded,
-                  size: 18,
-                  color: ClientColors.primaryFor(context),
-                ),
-              ],
-            ),
-          ],
+                  const SizedBox(width: 4),
+                  Icon(Icons.arrow_forward_rounded, size: 16, color: cs.primary),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

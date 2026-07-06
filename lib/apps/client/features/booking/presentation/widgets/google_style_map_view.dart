@@ -2,17 +2,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_layers.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_markers.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_models.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_overlays.dart';
 
-/// A route map backed by OpenStreetMap.
+/// A route map backed by a clean, theme-aware basemap.
 ///
 /// The camera always fits the supplied route instead of relying on a fixed
 /// city-level zoom. Invalid coordinates are ignored so the UI never renders a
-/// plausible-looking marker for data that does not exist.
-class GoogleStyleMapView extends StatelessWidget {
+/// plausible-looking marker for data that does not exist. Stops are tappable to
+/// reveal their name, and zoom / recenter controls keep the route readable.
+class GoogleStyleMapView extends StatefulWidget {
   const GoogleStyleMapView({
     super.key,
     this.pickup,
@@ -29,110 +31,129 @@ class GoogleStyleMapView extends StatelessWidget {
   final bool interactive;
 
   @override
-  Widget build(BuildContext context) {
-    final mapPoints = _mapPoints();
-    if (mapPoints.isEmpty) return const _NoCoordinatesPanel();
+  State<GoogleStyleMapView> createState() => _GoogleStyleMapViewState();
+}
 
-    final coordinates = mapPoints.map((item) => item.coordinate).toList();
-    final center = _centerFor(coordinates);
+class _GoogleStyleMapViewState extends State<GoogleStyleMapView> {
+  final MapController _mapController = MapController();
+  int? _activeIndex;
+
+  @override
+  Widget build(BuildContext context) {
+    final stops = _mapPoints();
+    if (stops.isEmpty) return const RouteMapEmptyPanel();
+
+    final coordinates = stops.map((stop) => stop.coordinate).toList();
     final cameraFit = coordinates.length > 1
         ? CameraFit.bounds(
             bounds: LatLngBounds.fromPoints(coordinates),
-            padding: cameraPadding,
+            padding: widget.cameraPadding,
             maxZoom: 15,
           )
         : null;
-    final mapKey = ValueKey(
-      coordinates
-          .map(
-            (point) =>
-                '${point.latitude.toStringAsFixed(5)},'
-                '${point.longitude.toStringAsFixed(5)}',
-          )
-          .join('|'),
-    );
+    final active = _activeIndex != null && _activeIndex! < stops.length
+        ? stops[_activeIndex!]
+        : null;
 
     return Stack(
       children: [
         FlutterMap(
-          key: mapKey,
+          key: ValueKey(_coordinatesSignature(coordinates)),
+          mapController: _mapController,
           options: MapOptions(
-            initialCenter: center,
+            initialCenter: _centerFor(coordinates),
             initialZoom: 14,
             initialCameraFit: cameraFit,
             minZoom: 5,
             maxZoom: 18,
+            onTap: (_, _) => _dismissCallout(),
             interactionOptions: InteractionOptions(
-              flags: interactive
+              flags: widget.interactive
                   ? InteractiveFlag.drag |
                         InteractiveFlag.pinchZoom |
-                        InteractiveFlag.doubleTapZoom
+                        InteractiveFlag.doubleTapZoom |
+                        InteractiveFlag.flingAnimation
                   : InteractiveFlag.none,
             ),
           ),
           children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.bmt.app',
-            ),
+            const RouteMapTileLayer(),
             if (coordinates.length > 1)
-              PolylineLayer(
-                polylines: [
-                  Polyline(
-                    points: coordinates,
-                    color: ClientColors.primaryFor(context),
-                    strokeWidth: 5,
-                    borderColor: Colors.white,
-                    borderStrokeWidth: 2,
-                  ),
-                ],
-              ),
+              RouteMapPolylineLayer(coordinates: coordinates),
             MarkerLayer(
-              markers: mapPoints.indexed.map((entry) {
-                final index = entry.$1;
-                final item = entry.$2;
-                return _marker(
-                  context,
-                  point: item.coordinate,
-                  label: _markerLabel(index, mapPoints.length),
-                  color: _markerColor(context, index, mapPoints.length),
-                  prominent: index == 0 || index == mapPoints.length - 1,
-                );
-              }).toList(),
+              markers: [
+                for (final entry in stops.indexed)
+                  buildStationMarker(
+                    context,
+                    stop: entry.$2,
+                    index: entry.$1,
+                    count: stops.length,
+                    onTap: () => _toggleCallout(entry.$1),
+                  ),
+              ],
             ),
+            if (active != null)
+              MarkerLayer(
+                markers: [buildCalloutMarker(context, stop: active)],
+              ),
           ],
         ),
         PositionedDirectional(
           top: 12,
           start: 12,
-          child: _MapChip(
-            icon: Icons.route_rounded,
-            label: mapPoints.length == 1
-                ? '1 mapped station'
-                : '${mapPoints.length} mapped stations',
-          ),
+          child: RouteMapInfoPills(stopCount: stops.length),
         ),
-        PositionedDirectional(
-          end: 5,
-          bottom: 5,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
-            color: ClientColors.surfaceFor(context).withAlpha(215),
-            child: Text(
-              '© OpenStreetMap',
-              style: ClientTypography.labelSmall(context).copyWith(fontSize: 9),
+        if (widget.interactive)
+          PositionedDirectional(
+            top: 0,
+            bottom: 0,
+            end: 12,
+            child: Align(
+              alignment: const Alignment(0, -0.15),
+              child: RouteMapControls(
+                onRecenter: () => _recenter(cameraFit, coordinates),
+                onZoomIn: () => _zoomBy(1),
+                onZoomOut: () => _zoomBy(-1),
+              ),
             ),
           ),
+        const PositionedDirectional(
+          end: 6,
+          bottom: 6,
+          child: RouteMapAttribution(),
         ),
       ],
     );
   }
 
-  List<_MapPoint> _mapPoints() {
-    final pins = waypoints.isNotEmpty
-        ? waypoints
-        : <MapPinOption>[?pickup, ?destination];
-    final points = <_MapPoint>[];
+  void _toggleCallout(int index) {
+    setState(() => _activeIndex = _activeIndex == index ? null : index);
+  }
+
+  void _dismissCallout() {
+    if (_activeIndex != null) setState(() => _activeIndex = null);
+  }
+
+  void _zoomBy(double delta) {
+    final camera = _mapController.camera;
+    final target = (camera.zoom + delta).clamp(5.0, 18.0);
+    _mapController.move(camera.center, target);
+  }
+
+  void _recenter(CameraFit? cameraFit, List<LatLng> coordinates) {
+    _dismissCallout();
+    if (cameraFit != null) {
+      _mapController.fitCamera(cameraFit);
+    } else if (coordinates.isNotEmpty) {
+      _mapController.move(coordinates.first, 15);
+    }
+  }
+
+  List<RouteMapStop> _mapPoints() {
+    final pins = widget.waypoints.isNotEmpty
+        ? widget.waypoints
+        : <MapPinOption>[?widget.pickup, ?widget.destination];
+    final points = <RouteMapStop>[];
     final seen = <String>{};
 
     for (final pin in pins) {
@@ -142,75 +163,9 @@ class GoogleStyleMapView extends StatelessWidget {
           '${coordinate.latitude.toStringAsFixed(6)}:'
           '${coordinate.longitude.toStringAsFixed(6)}';
       if (!seen.add(key)) continue;
-      points.add(_MapPoint(coordinate: coordinate));
+      points.add(RouteMapStop(coordinate: coordinate, name: pin.label.trim()));
     }
     return points;
-  }
-
-  Marker _marker(
-    BuildContext context, {
-    required LatLng point,
-    required String label,
-    required Color color,
-    required bool prominent,
-  }) {
-    final size = prominent ? 42.0 : 32.0;
-    return Marker(
-      point: point,
-      width: prominent ? 54 : 40,
-      height: prominent ? 70 : 54,
-      alignment: Alignment.topCenter,
-      child: Semantics(
-        label: 'Route station $label',
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: size,
-              height: size,
-              decoration: BoxDecoration(
-                color: color,
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2.5),
-                boxShadow: [
-                  BoxShadow(
-                    color: ClientColors.shadowFor(context).withAlpha(70),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              alignment: Alignment.center,
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: prominent ? 13 : 11,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-            Icon(
-              Icons.arrow_drop_down_rounded,
-              color: color,
-              size: prominent ? 26 : 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _markerLabel(int index, int count) {
-    if (index == 0) return 'A';
-    if (index == count - 1) return 'B';
-    return '${index + 1}';
-  }
-
-  Color _markerColor(BuildContext context, int index, int count) {
-    if (index == 0) return ClientColors.journeyGreen;
-    if (index == count - 1) return Theme.of(context).colorScheme.error;
-    return ClientColors.primaryFor(context);
   }
 
   LatLng? _latLngFor(MapPinOption pin) {
@@ -233,90 +188,14 @@ class GoogleStyleMapView extends StatelessWidget {
     final lng = points.map((point) => point.longitude).reduce((a, b) => a + b);
     return LatLng(lat / points.length, lng / points.length);
   }
-}
 
-class _MapPoint {
-  const _MapPoint({required this.coordinate});
-
-  final LatLng coordinate;
-}
-
-class _NoCoordinatesPanel extends StatelessWidget {
-  const _NoCoordinatesPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: ClientColors.surfaceMutedFor(context),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: ClientColors.surfaceFor(context),
-                  borderRadius: BorderRadius.circular(ClientRadius.lg),
-                ),
-                child: Icon(
-                  Icons.location_off_outlined,
-                  color: ClientColors.textTertiaryFor(context),
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'Map coordinates unavailable',
-                textAlign: TextAlign.center,
-                style: ClientTypography.labelLarge(context),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'The route details are still available below.',
-                textAlign: TextAlign.center,
-                style: ClientTypography.bodySmall(
-                  context,
-                ).copyWith(color: ClientColors.textSecondaryFor(context)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MapChip extends StatelessWidget {
-  const _MapChip({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context).withAlpha(235),
-        borderRadius: BorderRadius.circular(ClientRadius.pill),
-        border: Border.all(color: ClientColors.borderFor(context)),
-        boxShadow: ClientElevation.sm(context),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 15, color: ClientColors.primaryFor(context)),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: ClientTypography.labelSmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w800),
-          ),
-        ],
-      ),
-    );
+  String _coordinatesSignature(List<LatLng> coordinates) {
+    return coordinates
+        .map(
+          (point) =>
+              '${point.latitude.toStringAsFixed(5)},'
+              '${point.longitude.toStringAsFixed(5)}',
+        )
+        .join('|');
   }
 }

@@ -23,111 +23,145 @@ class PopularRouteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+
     return SizedBox(
       width: width,
       height: listHeight,
-      child: Material(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: ClientColors.borderFor(context).withAlpha(150)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: ClientColors.primaryLight,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.route_rounded,
-                        size: 21,
-                        color: ClientColors.primary,
-                      ),
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: cs.outlineVariant.withAlpha(50)),
+            boxShadow: [
+              BoxShadow(
+                color: cs.shadow.withAlpha(10),
+                blurRadius: 16,
+                offset: const Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: ClientColors.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        route.routeName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: ClientTypography.headingSmall(context),
-                      ),
+                    child: const Icon(
+                      Icons.route_rounded,
+                      size: 22,
+                      color: ClientColors.primary,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                Expanded(
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _RouteTimeline(context: context),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _EndpointLabel(label: route.pickup),
-                            const Spacer(),
-                            _EndpointLabel(label: route.destination),
-                          ],
-                        ),
-                      ),
-                    ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                Divider(height: 1, color: ClientColors.borderFor(context)),
-                const SizedBox(height: 12),
-                Row(
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          route.routeName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: ClientTypography.headingSmall(context).copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${route.tripsAvailable} trips available',
+                          style: ClientTypography.labelSmall(context).copyWith(
+                            color: ClientColors.textSecondaryFor(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: _RouteMetric(
-                        label: 'From',
-                        value: route.startingPrice,
-                        emphasize: true,
-                      ),
-                    ),
-                    _RouteMetric(
-                      label: 'Duration',
-                      value: route.duration.isEmpty
-                          ? 'Not set'
-                          : route.duration,
-                    ),
+                    _RouteTimeline(context: context),
                     const SizedBox(width: 14),
-                    _RouteMetric(
-                      label: 'Trips',
-                      value: route.tripsAvailable.toString(),
-                    ),
-                    const SizedBox(width: 12),
-                    Container(
-                      width: 34,
-                      height: 34,
-                      decoration: BoxDecoration(
-                        color: ClientColors.primaryLight,
-                        borderRadius: BorderRadius.circular(11),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 19,
-                        color: ClientColors.primary,
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: _EndpointLabel(label: route.pickup),
+                            ),
+                          ),
+                          Expanded(
+                            child: Align(
+                              alignment: Alignment.centerLeft,
+                              child: _EndpointLabel(label: route.destination),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: cs.surfaceContainerHighest.withAlpha(100),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.schedule_rounded, size: 14, color: cs.onSurfaceVariant),
+                              const SizedBox(width: 6),
+                              Text(
+                                route.duration.isEmpty ? 'Not set' : route.duration,
+                                style: ClientTypography.labelSmall(context).copyWith(
+                                  color: cs.onSurfaceVariant,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Text(
+                    'From ',
+                    style: ClientTypography.labelSmall(context).copyWith(
+                      color: ClientColors.textTertiaryFor(context),
+                    ),
+                  ),
+                  Text(
+                    route.startingPrice,
+                    style: ClientTypography.priceMedium(context).copyWith(
+                      color: ClientColors.primary,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -135,45 +169,7 @@ class PopularRouteCard extends StatelessWidget {
   }
 }
 
-class _RouteMetric extends StatelessWidget {
-  const _RouteMetric({
-    required this.label,
-    required this.value,
-    this.emphasize = false,
-  });
-
-  final String label;
-  final String value;
-  final bool emphasize;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          label,
-          style: ClientTypography.labelSmall(
-            context,
-          ).copyWith(color: ClientColors.textTertiaryFor(context)),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          value,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: emphasize
-              ? ClientTypography.priceMedium(context)
-              : ClientTypography.labelLarge(context).copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: ClientColors.textPrimaryFor(context),
-                ),
-        ),
-      ],
-    );
-  }
-}
+// Removed _RouteMetric
 
 class _EndpointLabel extends StatelessWidget {
   const _EndpointLabel({required this.label});
