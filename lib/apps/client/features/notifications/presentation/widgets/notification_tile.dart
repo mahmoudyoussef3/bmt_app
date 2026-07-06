@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../domain/entities/client_notification.dart';
-import 'notification_icon_resolver.dart';
 
 class NotificationTile extends StatelessWidget {
   const NotificationTile({
@@ -19,18 +19,17 @@ class NotificationTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final (iconColor, iconBg, icon) =
-        NotificationIconResolver.resolve(notification.category);
 
     return Dismissible(
       key: ValueKey(notification.id),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        padding: const EdgeInsets.only(right: 24),
         decoration: BoxDecoration(
           color: cs.primaryContainer,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(24),
         ),
         child: Icon(Icons.done_all_rounded, color: cs.onPrimaryContainer),
       ),
@@ -41,69 +40,91 @@ class NotificationTile extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.all(14),
+          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: notification.isRead ? cs.surface : cs.primaryContainer.withAlpha(60),
-            borderRadius: BorderRadius.circular(16),
+            color: notification.isRead ? cs.surface : cs.primaryContainer.withAlpha(40),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: notification.isRead
-                  ? cs.outlineVariant
-                  : cs.primary.withAlpha(50),
+                  ? cs.outlineVariant.withAlpha(50)
+                  : cs.primary.withAlpha(60),
+              width: 1,
             ),
+            boxShadow: [
+              if (!notification.isRead)
+                BoxShadow(
+                  color: cs.primary.withAlpha(10),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                )
+              else
+                BoxShadow(
+                  color: cs.shadow.withAlpha(5),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+            ],
           ),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: iconBg,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(icon, color: iconColor, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
                       notification.title,
-                      style: tt.labelLarge?.copyWith(
-                        fontWeight: notification.isRead
-                            ? FontWeight.w500
-                            : FontWeight.w700,
+                      style: tt.titleMedium?.copyWith(
+                        fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.w800,
+                        color: cs.onSurface,
+                        letterSpacing: -0.3,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      notification.body,
-                      style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _relativeTime(notification.createdAt),
-                      style: tt.labelSmall?.copyWith(
-                        color: cs.onSurfaceVariant.withAlpha(140),
+                  ),
+                  if (!notification.isRead) ...[
+                    const SizedBox(width: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: cs.primary.withAlpha(20),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'New',
+                        style: tt.labelSmall?.copyWith(
+                          color: cs.primary,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ],
-                ),
+                ],
               ),
-              if (!notification.isRead) ...[
-                const SizedBox(width: 8),
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: cs.primary,
-                    shape: BoxShape.circle,
-                  ),
+              const SizedBox(height: 8),
+              Text(
+                notification.body,
+                style: tt.bodyMedium?.copyWith(
+                  color: cs.onSurfaceVariant.withAlpha(220),
+                  height: 1.5,
                 ),
-              ],
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Icon(Icons.access_time_rounded, size: 14, color: cs.onSurfaceVariant.withAlpha(150)),
+                  const SizedBox(width: 6),
+                  Text(
+                    _formatDate(notification.createdAt),
+                    style: tt.labelMedium?.copyWith(
+                      color: cs.onSurfaceVariant.withAlpha(150),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
             ],
           ),
         ),
@@ -111,12 +132,7 @@ class NotificationTile extends StatelessWidget {
     );
   }
 
-  String _relativeTime(DateTime t) {
-    final d = DateTime.now().difference(t);
-    if (d.inMinutes < 1) return 'Just now';
-    if (d.inMinutes < 60) return '${d.inMinutes}m ago';
-    if (d.inHours < 24) return '${d.inHours}h ago';
-    if (d.inDays == 1) return 'Yesterday';
-    return '${d.inDays}d ago';
+  String _formatDate(DateTime date) {
+    return DateFormat('MMM dd, yyyy • hh:mm a').format(date);
   }
 }

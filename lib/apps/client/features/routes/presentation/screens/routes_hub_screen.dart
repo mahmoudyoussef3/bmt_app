@@ -70,7 +70,7 @@ class _LoadingBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      padding: AppLayout.pagePaddingWithTop,
       children: [
         ClientSkeleton.routeCard(),
         const SizedBox(height: 16),
@@ -93,7 +93,7 @@ class _LoadedBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+      padding: AppLayout.pagePaddingWithTop,
       children: [
         _GradientHeader(title: data.title, subtitle: data.subtitle),
         const SizedBox(height: 24),
@@ -135,27 +135,32 @@ class _GradientHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(0, 8, 0, 8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: ClientTypography.headingLarge(
-                context,
-              ).copyWith(color: ClientColors.textPrimaryFor(context)),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              subtitle,
-              style: ClientTypography.bodyMedium(
-                context,
-              ).copyWith(color: ClientColors.textTertiaryFor(context)),
-            ),
-          ],
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [ClientColors.primary, Color(0xFF1554C8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            title,
+            style: ClientTypography.headingSmall(context).copyWith(
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            style: ClientTypography.bodySmall(context).copyWith(
+              color: Colors.white.withAlpha(200),
+            ),
+          ),
+        ],
       ),
     );
   }

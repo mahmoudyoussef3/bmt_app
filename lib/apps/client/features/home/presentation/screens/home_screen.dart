@@ -5,8 +5,6 @@ import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
-import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
-import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
@@ -165,14 +163,14 @@ class _HomeContent extends StatelessWidget {
                             ),
                           ),
                         ],
-                        const SizedBox(height: ClientSpacing.xxl),
+                        const SizedBox(height: ClientSpacing.xl),
                         PopularRoutesPreview(
                           routes: data.popularRoutes,
                           previewCount: isTablet ? 4 : 3,
                           onOpenRoute: onOpenRoute,
                         ),
                         if (data.activePackage == null) ...[
-                          const SizedBox(height: ClientSpacing.xxl),
+                          const SizedBox(height: ClientSpacing.xl),
                           _PackageInvitation(
                             onTap: () => onOpenRoute(
                               ClientRoutes.subscription,
@@ -180,7 +178,7 @@ class _HomeContent extends StatelessWidget {
                             ),
                           ),
                         ],
-                        const SizedBox(height: ClientSpacing.xxl),
+                        const SizedBox(height: ClientSpacing.xl),
                         HomePackagesSection(
                           plans: data.packagePlans,
                           activePackage: data.activePackage,
@@ -1092,11 +1090,11 @@ class _PackageInvitation extends StatelessWidget {
         child: Ink(
           padding: const EdgeInsets.all(ClientSpacing.lg),
           decoration: BoxDecoration(
-            color: ClientColors.journeyPurple.withAlpha(
+            color: ClientColors.primary.withAlpha(
               Theme.of(context).brightness == Brightness.dark ? 32 : 14,
             ),
             borderRadius: BorderRadius.circular(ClientRadius.xl),
-            border: Border.all(color: ClientColors.journeyPurple.withAlpha(55)),
+            border: Border.all(color: ClientColors.primary.withAlpha(55)),
           ),
           child: Row(
             children: [
@@ -1104,7 +1102,7 @@ class _PackageInvitation extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: ClientColors.journeyPurple,
+                  color: ClientColors.primary,
                   borderRadius: BorderRadius.circular(ClientRadius.md),
                 ),
                 child: const Icon(
@@ -1136,7 +1134,7 @@ class _PackageInvitation extends StatelessWidget {
               const SizedBox(width: 10),
               const Icon(
                 Icons.arrow_forward_rounded,
-                color: ClientColors.journeyPurple,
+                color: ClientColors.primary,
               ),
             ],
           ),
@@ -1171,12 +1169,12 @@ class _TravelSupportCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(
-                  color: ClientColors.journeyGreen.withAlpha(18),
+                  color: ClientColors.primary.withAlpha(18),
                   borderRadius: BorderRadius.circular(ClientRadius.md),
                 ),
                 child: const Icon(
                   Icons.support_agent_rounded,
-                  color: ClientColors.journeyGreen,
+                  color: ClientColors.primary,
                 ),
               ),
               const SizedBox(width: 12),

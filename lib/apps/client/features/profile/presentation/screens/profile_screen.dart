@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
-import 'package:bmt_app/core/app_mode/app_mode.dart';
-import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
@@ -58,7 +55,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ProfileLoaded(:final data) => ListView(
                 padding: AppLayout.pagePaddingWithTop,
                 children: [
-                  // ── Premium profile header ──────────────────────────────
                   Container(
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
@@ -129,8 +125,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       const SizedBox(height: AppLayout.spaceSm),
                     ],
                   ],
-                  const SizedBox(height: AppLayout.spaceLg),
-                  const _DevVersionSwitcher(),
                   const SizedBox(height: 120),
                 ],
               ),
@@ -144,7 +138,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   IconData _iconForMenuItem(ProfileMenuItem item) {
     return switch (item.iconKey) {
       'person' => Icons.person_outline_rounded,
-      'trips' => Icons.luggage_rounded,
       'packages' => Icons.card_membership_outlined,
       'search' => Icons.search_rounded,
       'wallet' => Icons.account_balance_wallet_outlined,
@@ -158,56 +151,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 }
 
-class _DevVersionSwitcher extends StatelessWidget {
-  const _DevVersionSwitcher();
-
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<AppModeCubit, AppModeState>(
-      builder: (context, state) {
-        final cubit = context.read<AppModeCubit>();
-        final current = state.mode;
-
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: ClientColors.surfaceFor(context),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: ClientColors.borderFor(context)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Developer',
-                style: ClientTypography.bodySmall(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w700),
-              ),
-              const SizedBox(height: AppLayout.spaceSm),
-              Text(
-                'Switch app mode (dev only)',
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
-              const SizedBox(height: AppLayout.spaceSm),
-              Wrap(
-                spacing: AppLayout.spaceSm,
-                runSpacing: AppLayout.spaceSm,
-                children: AppMode.values.map((m) {
-                  final active = m == current;
-                  return FilterChip(
-                    label: Text(m.displayLabel),
-                    selected: active,
-                    onSelected: (_) {
-                      if (!active) cubit.changeMode(m);
-                    },
-                  );
-                }).toList(),
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-}

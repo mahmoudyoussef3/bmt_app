@@ -18,80 +18,73 @@ class ClientBottomNavigation extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final tabs = <({String id, String label, IconData icon})>[
       (id: 'home', label: 'Home', icon: Icons.home_rounded),
-      (id: 'routes', label: 'Routes', icon: Icons.route_rounded),
-      (id: 'trips', label: 'Trips', icon: Icons.receipt_long_rounded),
-      (id: 'profile', label: 'Profile', icon: Icons.person_rounded),
+      (id: 'routes', label: 'Routes', icon: Icons.map_rounded),
+      (id: 'trips', label: 'Trips', icon: Icons.directions_bus_rounded),
+      (id: 'profile', label: 'Profile', icon: Icons.person_outline_rounded),
     ];
 
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
-        boxShadow: ClientElevation.lg(context),
-      ),
-      padding: const EdgeInsets.only(
-        top: ClientSpacing.sm,
-        bottom: ClientSpacing.sm,
-        left: ClientSpacing.xs,
-        right: ClientSpacing.xs,
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withAlpha(15),
+            blurRadius: 30,
+            offset: const Offset(0, -10),
+          ),
+        ],
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(32),
+          topRight: Radius.circular(32),
+        ),
       ),
       child: SafeArea(
         top: false,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: tabs.map((tab) {
-            final isActive = activeTab == tab.id;
-            return Expanded(
-              child: GestureDetector(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: tabs.map((tab) {
+              final isActive = activeTab == tab.id;
+              return GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => onTabChange(tab.id),
                 child: AnimatedContainer(
-                  duration: ClientMotion.fast,
-                  curve: ClientMotion.curve,
-                  padding: const EdgeInsets.symmetric(
-                    vertical: ClientSpacing.xs,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOutQuint,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isActive ? 20 : 16,
+                    vertical: 12,
                   ),
-                  child: Column(
+                  decoration: BoxDecoration(
+                    color: isActive ? scheme.primary.withAlpha(25) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      AnimatedContainer(
-                        duration: ClientMotion.fast,
-                        curve: ClientMotion.curve,
-                        padding: EdgeInsets.symmetric(
-                          horizontal: isActive ? 20 : 0,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: isActive
-                              ? scheme.primary.withAlpha(20)
-                              : Colors.transparent,
-                          borderRadius: BorderRadius.circular(ClientRadius.pill),
-                        ),
-                        child: Icon(
-                          tab.icon,
-                          size: 24,
-                          color: isActive
-                              ? scheme.primary
-                              : scheme.onSurfaceVariant.withAlpha(150),
-                        ),
+                      Icon(
+                        tab.icon,
+                        size: 26,
+                        color: isActive ? scheme.primary : scheme.onSurfaceVariant.withAlpha(150),
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        tab.label,
-                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: isActive
-                              ? scheme.primary
-                              : scheme.onSurfaceVariant.withAlpha(150),
-                          fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+                      if (isActive) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          tab.label,
+                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            color: scheme.primary,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.2,
+                          ),
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                      ],
                     ],
                   ),
                 ),
-              ),
-            );
-          }).toList(),
+              );
+            }).toList(),
+          ),
         ),
       ),
     );

@@ -5,7 +5,6 @@ import '../../domain/entities/client_notification.dart';
 import '../cubit/notifications_cubit.dart';
 import '../cubit/notifications_state.dart';
 import '../widgets/notification_tile.dart';
-import '../widgets/notifications_category_bar.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -27,35 +26,29 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final tt = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: cs.surfaceContainerLowest,
+      backgroundColor: cs.surface,
       body: BlocBuilder<NotificationsCubit, NotificationsState>(
         builder: (context, state) {
           return CustomScrollView(
             slivers: [
               SliverAppBar(
-                title: Text('Notifications', style: tt.titleLarge),
+                title: Text('Notifications', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                 backgroundColor: cs.surface,
                 pinned: true,
                 floating: true,
                 elevation: 0,
                 scrolledUnderElevation: 0,
+                centerTitle: true,
                 actions: [
                   if (state is NotificationsLoaded && state.unreadCount > 0)
                     TextButton(
                       onPressed: () =>
                           context.read<NotificationsCubit>().markAllAsRead(),
-                      child: const Text('Mark all read'),
+                      child: Text('Mark all read', style: TextStyle(color: cs.primary, fontWeight: FontWeight.w700)),
                     ),
                 ],
               ),
               if (state is NotificationsLoaded) ...[
-                SliverToBoxAdapter(
-                  child: NotificationsCategoryBar(
-                    active: state.activeCategory,
-                    onSelect: (cat) =>
-                        context.read<NotificationsCubit>().filterByCategory(cat),
-                  ),
-                ),
                 _buildList(context, state),
               ] else if (state is NotificationsLoading)
                 _buildSkeletons()
@@ -89,17 +82,14 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   }
 
   Widget _buildList(BuildContext context, NotificationsLoaded state) {
-    final items = state.filtered;
+    final items = state.notifications;
     if (items.isEmpty) {
-      return SliverFillRemaining(child: _EmptyState(
-        filtered: state.activeCategory != null,
-      ));
+      return SliverFillRemaining(child: _EmptyState());
     }
     return SliverPadding(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
-      sliver: SliverList.separated(
+      padding: const EdgeInsets.only(top: 8, bottom: 40),
+      sliver: SliverList.builder(
         itemCount: items.length,
-        separatorBuilder: (_, index) => const SizedBox(height: 8),
         itemBuilder: (ctx, i) => NotificationTile(
           notification: items[i],
           onTap: () => _handleTap(context, items[i]),
@@ -113,12 +103,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   SliverList _buildSkeletons() => SliverList.builder(
         itemCount: 5,
         itemBuilder: (_, index) => Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
           child: Container(
-            height: 80,
+            height: 100,
             decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHigh,
-              borderRadius: BorderRadius.circular(16),
+              color: Theme.of(context).colorScheme.surfaceContainerHigh.withAlpha(100),
+              borderRadius: BorderRadius.circular(24),
             ),
           ),
         ),
@@ -133,9 +123,6 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.filtered});
-  final bool filtered;
-
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
@@ -146,19 +133,25 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.notifications_none_rounded, size: 56,
-                color: cs.onSurfaceVariant),
-            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: cs.primary.withAlpha(20),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.notifications_active_rounded, size: 64,
+                  color: cs.primary),
+            ),
+            const SizedBox(height: 24),
             Text(
-              filtered ? 'No notifications in this category'
-                       : 'No notifications yet',
-              style: tt.titleMedium,
+              'No notifications yet',
+              style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 12),
             Text(
-              'Trip updates, booking confirmations and reminders will appear here.',
-              style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+              'Trip updates, booking confirmations and reminders will appear here when they arrive.',
+              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
               textAlign: TextAlign.center,
             ),
           ],
