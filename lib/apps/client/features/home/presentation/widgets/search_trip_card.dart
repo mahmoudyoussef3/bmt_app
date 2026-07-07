@@ -3,6 +3,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/search_field_row.dart';
 
 /// Search trip form card with pickup, destination, date, and time fields.
 class SearchTripCard extends StatelessWidget {
@@ -17,6 +18,7 @@ class SearchTripCard extends StatelessWidget {
     required this.onDateTap,
     required this.onTimeTap,
     required this.onSearch,
+    this.onSwap,
   });
 
   final String pickup;
@@ -28,6 +30,9 @@ class SearchTripCard extends StatelessWidget {
   final VoidCallback onDateTap;
   final VoidCallback onTimeTap;
   final VoidCallback onSearch;
+
+  /// Swaps pickup and destination in one tap. Omit to hide the swap button.
+  final VoidCallback? onSwap;
 
   @override
   Widget build(BuildContext context) {
@@ -84,28 +89,43 @@ class SearchTripCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _SearchFieldRow(
-            icon: Icons.trip_origin_rounded,
-            iconColor: ClientColors.journeyGreen,
-            label: 'Pickup Location',
-            value: pickup,
-            placeholder: 'Select pickup point',
-            onTap: onPickupTap,
-          ),
-          const SizedBox(height: 10),
-          _SearchFieldRow(
-            icon: Icons.location_on_rounded,
-            iconColor: ClientColors.journeyAmber,
-            label: 'Destination',
-            value: destination,
-            placeholder: 'Where are you going?',
-            onTap: onDestinationTap,
+          Stack(
+            children: [
+              Column(
+                children: [
+                  SearchFieldRow(
+                    icon: Icons.trip_origin_rounded,
+                    iconColor: ClientColors.journeyGreen,
+                    label: 'Pickup Location',
+                    value: pickup,
+                    placeholder: 'Select pickup point',
+                    onTap: onPickupTap,
+                  ),
+                  const SizedBox(height: 10),
+                  SearchFieldRow(
+                    icon: Icons.location_on_rounded,
+                    iconColor: ClientColors.journeyAmber,
+                    label: 'Destination',
+                    value: destination,
+                    placeholder: 'Where are you going?',
+                    onTap: onDestinationTap,
+                  ),
+                ],
+              ),
+              if (onSwap != null)
+                Positioned(
+                  right: 8,
+                  top: 0,
+                  bottom: 0,
+                  child: Center(child: _SwapButton(onTap: onSwap!)),
+                ),
+            ],
           ),
           const SizedBox(height: 10),
           Row(
             children: [
               Expanded(
-                child: _SearchFieldRow(
+                child: SearchFieldRow(
                   icon: Icons.calendar_today_rounded,
                   iconColor: ClientColors.primary,
                   label: 'Date',
@@ -117,7 +137,7 @@ class SearchTripCard extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: _SearchFieldRow(
+                child: SearchFieldRow(
                   icon: Icons.schedule_rounded,
                   iconColor: ClientColors.primary,
                   label: 'Time',
@@ -141,193 +161,34 @@ class SearchTripCard extends StatelessWidget {
   }
 }
 
-class _SearchFieldRow extends StatelessWidget {
-  const _SearchFieldRow({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
-    required this.placeholder,
-    required this.onTap,
-    this.compact = false,
-  });
+/// Circular button that swaps pickup and destination in one tap, sitting on
+/// the seam between the two fields (the pattern riders already know from
+/// maps/ride-hailing apps).
+class _SwapButton extends StatelessWidget {
+  const _SwapButton({required this.onTap});
 
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final String value;
-  final String placeholder;
   final VoidCallback onTap;
-  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    final hasValue = value.isNotEmpty;
-    final display = hasValue ? value : placeholder;
-
     return Material(
-      color: Colors.transparent,
+      color: ClientColors.surfaceFor(context),
+      shape: CircleBorder(
+        side: BorderSide(color: ClientColors.borderFor(context)),
+      ),
+      elevation: 2,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          padding: EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: compact ? 10 : 12,
-          ),
-          decoration: BoxDecoration(
-            color: ClientColors.surfaceSubtleFor(context),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: ClientColors.borderFor(context)),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, size: 20, color: iconColor),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: ClientTypography.labelSmall(
-                        context,
-                      ).copyWith(color: ClientColors.textTertiaryFor(context)),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      display,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: ClientTypography.bodyMedium(context).copyWith(
-                        fontWeight: hasValue
-                            ? FontWeight.w600
-                            : FontWeight.w400,
-                        color: hasValue
-                            ? ClientColors.textPrimaryFor(context)
-                            : ClientColors.textTertiaryFor(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.keyboard_arrow_down_rounded,
-                color: ClientColors.textTertiaryFor(context),
-              ),
-            ],
+        customBorder: const CircleBorder(),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(
+            Icons.swap_vert_rounded,
+            size: 20,
+            color: ClientColors.primaryFor(context),
           ),
         ),
       ),
     );
   }
-}
-
-/// Bottom sheet picker for search fields.
-Future<String?> showHomePickerSheet({
-  required BuildContext context,
-  required String title,
-  required List<String> options,
-  String? selected,
-}) {
-  return showModalBottomSheet<String>(
-    context: context,
-    backgroundColor: ClientColors.surfaceFor(context),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    isScrollControlled: true,
-    builder: (ctx) {
-      final maxHeight = MediaQuery.sizeOf(ctx).height * 0.7;
-      return SafeArea(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(maxHeight: maxHeight),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 12),
-              Center(
-                child: Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: ClientColors.borderFor(ctx),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: Text(title, style: ClientTypography.headingMedium(ctx)),
-              ),
-              const SizedBox(height: 12),
-              if (options.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
-                  child: Text(
-                    'No options available yet',
-                    style: ClientTypography.bodyMedium(
-                      ctx,
-                    ).copyWith(color: ClientColors.textSecondaryFor(ctx)),
-                  ),
-                )
-              else
-                Flexible(
-                  child: ListView.separated(
-                    shrinkWrap: true,
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    itemCount: options.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final option = options[index];
-                      final isSelected = option == selected;
-                      return Material(
-                        color: isSelected
-                            ? ClientColors.primaryLight
-                            : ClientColors.surfaceSubtleFor(ctx),
-                        borderRadius: BorderRadius.circular(14),
-                        child: InkWell(
-                          onTap: () => Navigator.pop(ctx, option),
-                          borderRadius: BorderRadius.circular(14),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(14),
-                              border: isSelected
-                                  ? Border.all(
-                                      color: ClientColors.primary,
-                                      width: 2,
-                                    )
-                                  : Border.all(
-                                      color: ClientColors.borderFor(ctx),
-                                    ),
-                            ),
-                            child: Text(
-                              option,
-                              style: ClientTypography.bodyLarge(ctx).copyWith(
-                                color: isSelected
-                                    ? ClientColors.primary
-                                    : ClientColors.textPrimaryFor(ctx),
-                                fontWeight: isSelected
-                                    ? FontWeight.w600
-                                    : FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-            ],
-          ),
-        ),
-      );
-    },
-  );
 }

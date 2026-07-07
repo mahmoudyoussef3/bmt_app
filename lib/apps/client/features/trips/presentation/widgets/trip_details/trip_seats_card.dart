@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/mini_seat_layout.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/screens/full_screen_seat_map_screen.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_cabin.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_summary.dart';
 
-/// The passenger's reserved seat(s) for this trip, with a compact seat-map
-/// preview.
+/// The passenger's reserved seat(s) rendered on the vehicle's real seat map —
+/// the same live layout the passenger saw while booking, not a mock preview.
 class TripSeatsCard extends StatelessWidget {
   const TripSeatsCard({super.key, required this.trip});
 
@@ -14,31 +16,53 @@ class TripSeatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final mySeats = trip.mySeatLabels;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          trip.seats.isEmpty ? 'No seat selected' : _selectedSeatsText,
-          style: ClientTypography.bodyMedium(
-            context,
-          ).copyWith(
-            color: ClientColors.textPrimaryFor(context),
-            fontWeight: FontWeight.w600,
-          ),
+        TripSeatSummary(
+          mySeatLabels: mySeats,
+          availableSeats: trip.availableSeatCount,
+          totalSeats: trip.vehicleCapacity,
         ),
-        if (trip.seats.isNotEmpty) ...[
+        if (trip.hasSeatMap) ...[
           const SizedBox(height: 16),
-          MiniSeatLayout(
-            selectedSeats: trip.seats,
-            vehicleName: trip.vehicleName,
+          TripSeatCabin(seats: trip.seatMap),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => FullScreenSeatMapScreen(
+                    seats: trip.seatMap,
+                    vehicleName: trip.vehicleName,
+                  ),
+                ),
+              ),
+              icon: const Icon(Icons.fullscreen_rounded, size: 20),
+              label: const Text('View full seat map'),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                foregroundColor: ClientColors.primary,
+                side: BorderSide(color: ClientColors.borderFor(context)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+            ),
+          ),
+        ] else if (mySeats.isEmpty) ...[
+          const SizedBox(height: 8),
+          Text(
+            'A seat will be assigned once your booking is confirmed.',
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
         ],
       ],
     );
-  }
-
-  String get _selectedSeatsText {
-    if (trip.seats.length == 1) return 'Selected seat: ${trip.seats.first}';
-    return 'Selected seats: ${trip.seats.join(', ')}';
   }
 }

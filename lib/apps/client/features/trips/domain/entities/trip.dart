@@ -1,3 +1,5 @@
+import 'trip_seat.dart';
+
 enum TripStatus { upcoming, inProgress, completed, cancelled }
 
 enum TripFilter { upcoming, active, completed, cancelled }
@@ -43,11 +45,22 @@ class TripData {
     required this.seats,
     required this.paymentStatus,
     required this.fare,
+    this.tripId = '',
+    this.seatMap = const [],
     this.cancellationReason,
     this.completedAt,
   });
 
   final String id;
+
+  /// The `operation_trips` id (distinct from the booking [id]) — needed to
+  /// resolve the trip's real seat layout.
+  final String tripId;
+
+  /// The vehicle's real seat layout for this trip, with the passenger's own
+  /// seat flagged. Empty until details are loaded (list cards omit it).
+  final List<TripSeat> seatMap;
+
   final String reference;
   final TripStatus status;
   final String pickup;
@@ -68,6 +81,23 @@ class TripData {
   final String? completedAt;
 
   String get routeLine => '$pickup → $destination';
+
+  bool get hasSeatMap => seatMap.isNotEmpty;
+
+  int get vehicleCapacity => seatMap.length;
+
+  int get availableSeatCount => seatMap.where((seat) => seat.isAvailable).length;
+
+  /// The passenger's own seats — from the live layout when available, else the
+  /// booking's seat labels (so the summary never goes blank).
+  List<String> get mySeatLabels {
+    final fromMap = seatMap
+        .where((seat) => seat.isMine)
+        .map((seat) => seat.displayLabel)
+        .toList();
+    if (fromMap.isNotEmpty) return fromMap;
+    return seats.where((seat) => seat.trim().isNotEmpty).toList();
+  }
 
   String get paymentLabel {
     return switch (paymentStatus) {

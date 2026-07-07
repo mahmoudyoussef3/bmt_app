@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_cancellation_flow.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_actions_bar.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_boarding_card.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_brand_app_bar.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_detail_sections.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_hero_card.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_ticket_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_live_tracking_card.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
@@ -22,22 +22,12 @@ class TripDetailsView extends StatelessWidget {
     final canCancel = trip.status == TripStatus.upcoming;
     final canReview = trip.status == TripStatus.completed;
     final canTrack = trip.status == TripStatus.inProgress;
-    final showQr =
-        trip.status == TripStatus.upcoming ||
-        trip.status == TripStatus.inProgress;
+    final showBoarding = canCancel || canTrack;
 
     return Scaffold(
       extendBody: true,
       backgroundColor: ClientColors.surfaceSubtleFor(context),
-      appBar: AppBar(
-        backgroundColor: ClientColors.surfaceFor(context),
-        title: Text(
-          'Trip Details',
-          style: ClientTypography.headingSmall(
-            context,
-          ).copyWith(color: ClientColors.textPrimaryFor(context)),
-        ),
-        centerTitle: false,
+      appBar: TripBrandAppBar(
         actions: [
           if (canCancel)
             TextButton.icon(
@@ -72,8 +62,8 @@ class TripDetailsView extends StatelessWidget {
             children: [
               TripHeroCard(trip: trip),
               const SizedBox(height: 16),
-              if (showQr) ...[
-                TripTicketCard(trip: trip),
+              if (showBoarding) ...[
+                TripBoardingCard(trip: trip),
                 const SizedBox(height: 16),
               ],
               if (canTrack) ...[

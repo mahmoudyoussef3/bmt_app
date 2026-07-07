@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/storage/recent_search_store.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/apps/client/core/widgets/selection_picker_sheet.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/search_trip_card.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_state.dart';
@@ -10,37 +12,12 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/search_options.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/search_date_options.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/search_option_tile.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
-/// Generates the next [count] selectable dates as display strings.
-List<String> _buildDateOptions({int count = 7}) {
-  const months = [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
-  const weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-  final now = DateTime.now();
-  return List.generate(count, (i) {
-    final d = now.add(Duration(days: i));
-    final month = months[d.month - 1];
-    final day = d.day;
-    if (i == 0) return 'Today, $month $day';
-    if (i == 1) return 'Tomorrow, $month $day';
-    return '${weekdays[d.weekday - 1]}, $month $day';
-  });
-}
-
-String _todayLabel() => _buildDateOptions(count: 1).first;
+const _recentPickupsKey = 'booking_recent_pickups';
+const _recentDestinationsKey = 'booking_recent_destinations';
 
 class SearchTripScreen extends StatefulWidget {
   const SearchTripScreen({super.key, this.initialQuery});
@@ -52,8 +29,14 @@ class SearchTripScreen extends StatefulWidget {
 }
 
 class _SearchTripScreenState extends State<SearchTripScreen> {
+  static const _recentStore = RecentSearchStore();
+
   late BookingSearchQuery _query;
   TripSearchOptions? _options;
+  bool _optionsLoading = true;
+  String? _optionsError;
+  List<String> _recentPickups = const [];
+  List<String> _recentDestinations = const [];
 
   @override
   void initState() {
@@ -61,33 +44,83 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
     _query = (widget.initialQuery ?? const BookingSearchQuery()).copyWith(
       date: widget.initialQuery?.date.isNotEmpty == true
           ? widget.initialQuery!.date
-          : _todayLabel(),
+          : todaySearchDateLabel(),
     );
-    context.read<BookingCubit>().loadSearchOptions();
+    final cubit = context.read<BookingCubit>();
+    final currentState = cubit.state;
+    if (currentState is SearchOptionsLoaded) {
+      _options = currentState.options;
+      _optionsLoading = false;
+    } else {
+      cubit.loadSearchOptions();
+    }
+    _recentStore.get(_recentPickupsKey).then((value) {
+      if (mounted) setState(() => _recentPickups = value);
+    });
+    _recentStore.get(_recentDestinationsKey).then((value) {
+      if (mounted) setState(() => _recentDestinations = value);
+    });
   }
 
   List<String> get _pickupOptions => _options?.pickupPoints ?? [];
   List<String> get _destinationOptions => _options?.destinations ?? [];
   List<String> get _timeOptions => _options?.departureTimes ?? [];
-  List<String> get _dateOptions => _buildDateOptions();
+  List<String> get _dateOptions => buildSearchDateOptions();
+
+  void _retryLoadOptions() {
+    setState(() {
+      _optionsLoading = true;
+      _optionsError = null;
+    });
+    context.read<BookingCubit>().loadSearchOptions(force: true);
+  }
 
   Future<void> _pickLocation({
     required String title,
     required List<String> options,
     required String field,
+    required String emptyMessage,
   }) async {
-    final current = field == 'pickup' ? _query.pickup : _query.destination;
-    final value = await showHomePickerSheet(
+    final isPickup = field == 'pickup';
+    final current = isPickup ? _query.pickup : _query.destination;
+    final recentKey = isPickup ? _recentPickupsKey : _recentDestinationsKey;
+    final recent = isPickup ? _recentPickups : _recentDestinations;
+    final value = await SelectionPickerSheet.show(
       context: context,
       title: title,
       options: options,
       selected: current.isEmpty ? null : current,
+      recent: recent,
+      enableSearch: true,
+      searchHint: 'Search $title',
+      isLoading: _optionsLoading,
+      errorMessage: _optionsError,
+      onRetry: _retryLoadOptions,
+      emptyMessage: emptyMessage,
     );
     if (value == null) return;
     setState(() {
-      _query = field == 'pickup'
+      _query = isPickup
           ? _query.copyWith(pickup: value)
           : _query.copyWith(destination: value);
+    });
+    await _recentStore.add(recentKey, value);
+    final updatedRecent = [value, ...recent.where((r) => r != value)];
+    setState(() {
+      if (isPickup) {
+        _recentPickups = updatedRecent.take(5).toList();
+      } else {
+        _recentDestinations = updatedRecent.take(5).toList();
+      }
+    });
+  }
+
+  void _swapPickupAndDestination() {
+    setState(() {
+      _query = _query.copyWith(
+        pickup: _query.destination,
+        destination: _query.pickup,
+      );
     });
   }
 
@@ -113,8 +146,20 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
   Widget build(BuildContext context) {
     return BlocListener<BookingCubit, BookingState>(
       listener: (context, state) {
+        if (_options != null) return;
         if (state is SearchOptionsLoaded) {
-          setState(() => _options = state.options);
+          setState(() {
+            _options = state.options;
+            _optionsLoading = false;
+            _optionsError = null;
+          });
+        } else if (state is BookingLoading) {
+          setState(() => _optionsLoading = true);
+        } else if (state is BookingError) {
+          setState(() {
+            _optionsLoading = false;
+            _optionsError = state.message;
+          });
         }
       },
       child: BookingFlowScaffold(
@@ -127,18 +172,22 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
               destination: _query.destination,
               date: _query.date,
               time: _query.time,
+              onSwap: _swapPickupAndDestination,
               onPickupTap: () => _pickLocation(
                 title: AppLocalizations.of(context)!.booking_pickupLocation,
                 options: _pickupOptions,
                 field: 'pickup',
+                emptyMessage:
+                    'No pickup points available yet. Please check back soon.',
               ),
               onDestinationTap: () => _pickLocation(
                 title: AppLocalizations.of(context)!.booking_destination,
                 options: _destinationOptions,
                 field: 'destination',
+                emptyMessage: 'No destinations available yet.',
               ),
               onDateTap: () async {
-                final value = await showHomePickerSheet(
+                final value = await SelectionPickerSheet.show(
                   context: context,
                   title: AppLocalizations.of(context)!.booking_selectDate,
                   options: _dateOptions,
@@ -149,11 +198,16 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
                 }
               },
               onTimeTap: () async {
-                final value = await showHomePickerSheet(
+                final value = await SelectionPickerSheet.show(
                   context: context,
                   title: AppLocalizations.of(context)!.booking_selectTime,
                   options: _timeOptions,
                   selected: _query.time.isEmpty ? null : _query.time,
+                  isLoading: _optionsLoading,
+                  errorMessage: _optionsError,
+                  onRetry: _retryLoadOptions,
+                  emptyMessage:
+                      'No departure times available for this route yet.',
                 );
                 if (value != null) {
                   setState(() => _query = _query.copyWith(time: value));
@@ -167,7 +221,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
               subtitle: AppLocalizations.of(context)!.booking_browseOrPickMap,
             ),
             const SizedBox(height: 12),
-            _SearchOptionTile(
+            SearchOptionTile(
               icon: Icons.trending_up_rounded,
               iconColor: ClientColors.primary,
               title: AppLocalizations.of(context)!.booking_popularRoutes,
@@ -197,37 +251,6 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             */
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _SearchOptionTile extends StatelessWidget {
-  const _SearchOptionTile({
-    required this.icon,
-    required this.iconColor,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final Color iconColor;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClientCard(
-      onTap: onTap,
-      padding: const EdgeInsets.all(4),
-      useShadow: true,
-      child: ListTile(
-        leading: Icon(icon, color: iconColor),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(subtitle),
-        trailing: const Icon(Icons.chevron_right_rounded),
       ),
     );
   }

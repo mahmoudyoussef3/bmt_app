@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/trip.dart';
+import '../../domain/entities/trip_seat.dart';
 import '../models/trip_model.dart';
 import 'trips_datasource.dart';
 
@@ -63,7 +64,10 @@ class SupabaseTripsDatasource implements TripsDatasource {
     return 'DP';
   }
 
-  TripModel _mapBookingToTripModel(Map<String, dynamic> data) {
+  TripModel _mapBookingToTripModel(
+    Map<String, dynamic> data, {
+    List<TripSeat> seatMap = const [],
+  }) {
     final tripObj = data['operation_trips'] as Map<String, dynamic>?;
     final vehicleObj = tripObj?['vehicles'] as Map<String, dynamic>?;
     final driverObj = tripObj?['drivers'] as Map<String, dynamic>?;
@@ -86,6 +90,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
     return TripModel(
       id: data['id']?.toString() ?? '',
+      tripId: tripObj?['id']?.toString() ?? '',
+      seatMap: seatMap,
       reference:
           data['booking_number']?.toString() ??
           _reference(data['id']?.toString() ?? ''),
@@ -155,7 +161,62 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
     if (response == null) return null;
 
-    return _mapBookingToTripModel(response);
+    final tripId =
+        (response['operation_trips'] as Map<String, dynamic>?)?['id']
+            ?.toString() ??
+        '';
+    final seatMap = await _loadSeatMap(
+      tripId: tripId,
+      mySeatLabel: response['seat']?.toString() ?? '',
+    );
+
+    return _mapBookingToTripModel(response, seatMap: seatMap);
+  }
+
+  /// Loads the trip's real seat layout from `trip_seats` and flags the
+  /// passenger's own seat. Best-effort: a seat-map failure must never block
+  /// the whole Trip Details screen, so it degrades to an empty layout.
+  Future<List<TripSeat>> _loadSeatMap({
+    required String tripId,
+    required String mySeatLabel,
+  }) async {
+    if (tripId.isEmpty) return const [];
+    try {
+      final rows = await _supabase
+          .from('trip_seats')
+          .select('seat_label, seat_row, seat_column, state')
+          .eq('trip_id', tripId)
+          .order('seat_row', ascending: true)
+          .order('seat_column', ascending: true);
+
+      final mine = mySeatLabel.trim().toLowerCase();
+      final seats = <TripSeat>[];
+      for (var index = 0; index < rows.length; index++) {
+        final row = rows[index];
+        final label = row['seat_label']?.toString() ?? '';
+        final number =
+            int.tryParse(label.replaceAll(RegExp(r'[^0-9]'), '')) ?? index + 1;
+        final state = row['state']?.toString().toLowerCase() ?? 'reserved';
+        final isMine =
+            mine.isNotEmpty && label.trim().toLowerCase() == mine;
+        seats.add(
+          TripSeat(
+            label: label,
+            number: number,
+            row: (row['seat_row'] as num?)?.toInt() ?? 0,
+            column: (row['seat_column'] as num?)?.toInt() ?? 0,
+            state: isMine
+                ? TripSeatState.mine
+                : state == 'available'
+                ? TripSeatState.available
+                : TripSeatState.occupied,
+          ),
+        );
+      }
+      return seats;
+    } catch (_) {
+      return const [];
+    }
   }
 
   @override

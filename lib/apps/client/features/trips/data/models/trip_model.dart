@@ -1,4 +1,5 @@
 import '../../domain/entities/trip.dart';
+import '../../domain/entities/trip_seat.dart';
 
 class TripModel {
   const TripModel({
@@ -19,11 +20,15 @@ class TripModel {
     required this.seats,
     required this.paymentStatus,
     required this.fare,
+    this.tripId = '',
+    this.seatMap = const [],
     this.cancellationReason,
     this.completedAt,
   });
 
   final String id;
+  final String tripId;
+  final List<TripSeat> seatMap;
   final String reference;
   final TripStatus status;
   final String pickup;
@@ -46,6 +51,8 @@ class TripModel {
   TripData toEntity() {
     return TripData(
       id: id,
+      tripId: tripId,
+      seatMap: seatMap,
       reference: reference,
       status: status,
       pickup: pickup,
