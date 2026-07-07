@@ -1,5 +1,8 @@
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bmt_app/core/tracking/progress/route_progress_engine.dart';
+import 'package:bmt_app/core/tracking/progress/route_stop.dart';
+import 'package:bmt_app/core/tracking/progress/stop_progress.dart';
 import '../../domain/entities/live_trip.dart';
 import 'live_trips_datasource.dart';
 
@@ -14,7 +17,7 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
     route:operation_routes(name),
     driver:drivers(full_name, phone),
     vehicle:vehicles(plate_number, vehicle_type),
-    route_points:trip_route_points(id, point_name, point_order, latitude, longitude),
+    route_points:trip_route_points(id, point_name, point_order, latitude, longitude, arrival_offset, departure_offset),
     passengers:trip_passengers(id, status, passenger_name, phone, pickup_point_name),
     events:trip_events(id, title, description, done, created_at)
   ''';
@@ -49,7 +52,9 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
     try {
       final locs = await _client
           .from('trip_live_locations')
-          .select('trip_id, latitude, longitude, heading, speed, recorded_at')
+          .select(
+            'trip_id, latitude, longitude, heading, speed, accuracy, recorded_at',
+          )
           .inFilter('trip_id', tripIds)
           .order('recorded_at', ascending: false);
 
@@ -62,11 +67,13 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
 
       return trips.map((t) {
         final loc = latestByTrip[t.id];
-        if (loc == null) return t;
-        return t.copyWith(vehiclePosition: _mapPosition(loc));
+        final withLocation = loc == null
+            ? t
+            : t.copyWith(vehiclePosition: _mapPosition(loc));
+        return _withSmartProgress(withLocation);
       }).toList();
     } catch (_) {
-      return trips;
+      return trips.map(_withSmartProgress).toList();
     }
   }
 
@@ -81,7 +88,7 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
             .single(),
         _client
             .from('trip_live_locations')
-            .select('latitude, longitude, heading, speed, recorded_at')
+            .select('latitude, longitude, heading, speed, accuracy, recorded_at')
             .eq('trip_id', tripId)
             .order('recorded_at', ascending: false)
             .limit(1)
@@ -93,8 +100,10 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
         includeDetails: true,
       );
       final locRow = results[1];
-      if (locRow == null) return trip;
-      return trip.copyWith(vehiclePosition: _mapPosition(locRow));
+      if (locRow == null) return _withSmartProgress(trip);
+      return _withSmartProgress(
+        trip.copyWith(vehiclePosition: _mapPosition(locRow)),
+      );
     } catch (e) {
       throw _handleError(e);
     }
@@ -312,24 +321,7 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
           ),
           callback: (change) {
             try {
-              final payload = change.newRecord;
-              controller.add(
-                VehiclePosition(
-                  latitude: (payload['latitude'] as num).toDouble(),
-                  longitude: (payload['longitude'] as num).toDouble(),
-                  heading: payload['heading'] != null
-                      ? (payload['heading'] as num).toDouble()
-                      : null,
-                  speed: payload['speed'] != null
-                      ? (payload['speed'] as num).toDouble()
-                      : null,
-                  updatedAt:
-                      DateTime.tryParse(
-                        payload['recorded_at']?.toString() ?? '',
-                      )?.toLocal() ??
-                      DateTime.now(),
-                ),
-              );
+              controller.add(_mapPosition(change.newRecord));
             } catch (_) {}
           },
         )
@@ -364,6 +356,97 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
     });
   }
 
+  /// Layers geometric route progress on top of the event-based floor: the
+  /// operator's per-station arrival log seeds the engine, then the latest
+  /// GPS fix advances continuous progress, per-stop states, and ETAs.
+  LiveTrip _withSmartProgress(LiveTrip trip) {
+    if (trip.status == LiveTripStatus.cancelled || trip.routePoints.isEmpty) {
+      return trip;
+    }
+    final phase = switch (trip.status) {
+      LiveTripStatus.notStarted => TripProgressPhase.headingToPickup,
+      LiveTripStatus.preparing => TripProgressPhase.boarding,
+      LiveTripStatus.inProgress ||
+      LiveTripStatus.paused => TripProgressPhase.enRoute,
+      _ => TripProgressPhase.completed,
+    };
+    final engine = RouteProgressEngine(
+      stops: [
+        for (final p in trip.routePoints)
+          RouteStop(
+            id: p.id,
+            name: p.name,
+            latitude: p.latitude,
+            longitude: p.longitude,
+            order: p.order,
+            plannedArrival: p.plannedArrivalTime,
+          ),
+      ],
+      phase: phase,
+      scheduledDeparture: trip.scheduledStartTime,
+    );
+    final arrivalFloor = trip.routePoints
+        .where((p) => p.status == LivePointStatus.completed)
+        .length;
+    if (arrivalFloor > 0) engine.seedVisited(arrivalFloor);
+    final position = trip.vehiclePosition;
+    if (position != null) {
+      // Receipt time = the fix timestamp, so hours-old rows read as stale.
+      engine.addFix(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        speedKmh: position.speed == null || position.speed! < 0
+            ? null
+            : position.speed! * 3.6,
+        now: position.updatedAt,
+      );
+    }
+    final snapshot = engine.snapshot(DateTime.now());
+    final progressById = {
+      for (final stop in snapshot.stops)
+        if (stop.stop.id != null) stop.stop.id!: stop,
+    };
+    final points = [
+      for (final p in trip.routePoints)
+        _mergePointProgress(p, progressById[p.id], trip.status),
+    ];
+    var currentIdx = points.indexWhere(
+      (p) =>
+          p.status == LivePointStatus.arrived ||
+          p.status == LivePointStatus.current,
+    );
+    if (currentIdx < 0) currentIdx = trip.currentPointIndex;
+    return trip.copyWith(
+      progressPercent: (snapshot.routeFraction * 100).round(),
+      routePoints: points,
+      currentPointIndex: currentIdx,
+      expectedArrivalTime:
+          snapshot.etaToDestination ?? trip.expectedArrivalTime,
+    );
+  }
+
+  LiveRoutePoint _mergePointProgress(
+    LiveRoutePoint point,
+    StopProgress? progress,
+    LiveTripStatus tripStatus,
+  ) {
+    if (progress == null) return point; // Point without valid coordinates.
+    final status = switch (progress.status) {
+      StopVisitStatus.departed => LivePointStatus.completed,
+      StopVisitStatus.arrived => LivePointStatus.arrived,
+      StopVisitStatus.next =>
+        tripStatus == LiveTripStatus.inProgress
+            ? LivePointStatus.current
+            : LivePointStatus.pending,
+      StopVisitStatus.upcoming => LivePointStatus.pending,
+    };
+    return point.copyWith(
+      status: status,
+      estimatedArrival: progress.eta,
+      clearEstimatedArrival: progress.eta == null,
+    );
+  }
+
   VehiclePosition _mapPosition(Map<String, dynamic> loc) {
     return VehiclePosition(
       latitude: (loc['latitude'] as num).toDouble(),
@@ -372,6 +455,9 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
           ? (loc['heading'] as num).toDouble()
           : null,
       speed: loc['speed'] != null ? (loc['speed'] as num).toDouble() : null,
+      accuracy: loc['accuracy'] != null
+          ? (loc['accuracy'] as num).toDouble()
+          : null,
       updatedAt: loc['recorded_at'] != null
           ? DateTime.tryParse(loc['recorded_at'] as String)?.toLocal() ??
                 DateTime.now()
@@ -439,15 +525,28 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
       } else {
         pointStatus = LivePointStatus.pending;
       }
+      final pointName = point['point_name'] as String? ?? '';
       return LiveRoutePoint(
         id: point['id'] as String,
-        name: point['point_name'] as String? ?? '',
+        name: pointName,
         latitude: (point['latitude'] as num?)?.toDouble() ?? 0,
         longitude: (point['longitude'] as num?)?.toDouble() ?? 0,
         order: point['point_order'] as int? ?? idx,
         status: pointStatus,
-        waitingPassengersCount: 0,
-        boardedPassengersCount: 0,
+        plannedArrivalTime: _pointTime(
+          dateStr,
+          point['arrival_offset']?.toString(),
+        ),
+        waitingPassengersCount: _passengersAtStop(
+          passengersList,
+          pointName,
+          boarded: false,
+        ),
+        boardedPassengersCount: _passengersAtStop(
+          passengersList,
+          pointName,
+          boarded: true,
+        ),
       );
     }).toList();
 
@@ -510,6 +609,35 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
       alerts: mappedAlerts,
       passengers: mappedPassengers,
     );
+  }
+
+  /// Resolves a stop's "HH:mm" clock time against the trip date.
+  DateTime? _pointTime(String? date, String? clockTime) {
+    if (date == null || clockTime == null || clockTime.isEmpty) return null;
+    return DateTime.tryParse('${date}T$clockTime');
+  }
+
+  /// Passenger flow per stop: manifest rows whose pickup point matches the
+  /// stop name. `confirmed` means the captain checked the passenger in.
+  int _passengersAtStop(
+    List<dynamic> passengers,
+    String pointName, {
+    required bool boarded,
+  }) {
+    final needle = pointName.trim().toLowerCase();
+    if (needle.isEmpty) return 0;
+    var count = 0;
+    for (final p in passengers) {
+      final m = p as Map<String, dynamic>;
+      final pickup = (m['pickup_point_name'] as String? ?? '')
+          .trim()
+          .toLowerCase();
+      if (pickup != needle) continue;
+      final status = m['status'] as String? ?? '';
+      if (status == 'cancelled' || status == 'no_show') continue;
+      if ((status == 'confirmed') == boarded) count++;
+    }
+    return count;
   }
 
   LiveTripStatus _mapStatus(String status) => switch (status) {

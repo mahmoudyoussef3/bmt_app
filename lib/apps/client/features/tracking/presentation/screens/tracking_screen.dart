@@ -1,13 +1,14 @@
-import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_trip.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_state.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/widgets/tracking_eta_panel.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/widgets/tracking_live_map.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/widgets/tracking_stops_timeline.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
 
 typedef TripState = TrackingTripState;
 
@@ -27,9 +28,7 @@ class TrackingScreen extends StatefulWidget {
   State<TrackingScreen> createState() => _TrackingScreenState();
 }
 
-class _TrackingScreenState extends State<TrackingScreen>
-    with TickerProviderStateMixin {
-  late final AnimationController _pulseController;
+class _TrackingScreenState extends State<TrackingScreen> {
   TrackingLoaded? _tracking;
 
   TripState get _currentState =>
@@ -59,14 +58,6 @@ class _TrackingScreenState extends State<TrackingScreen>
         (trip?.stops.isNotEmpty == true ? trip!.stops.last : 'Destination');
   }
 
-  LatLng? get _vehicleLatLng {
-    final trip = _trip;
-    if (trip?.vehicleLatitude == null || trip?.vehicleLongitude == null) {
-      return null;
-    }
-    return LatLng(trip!.vehicleLatitude!, trip.vehicleLongitude!);
-  }
-
   int get _currentTimelineStep {
     return switch (_currentState) {
       TripState.notStarted => 1,
@@ -77,29 +68,7 @@ class _TrackingScreenState extends State<TrackingScreen>
     };
   }
 
-  int get _currentStopIndex {
-    final trip = _trip;
-    final vehicle = _vehicleLatLng;
-    final points = trip?.routePoints ?? const <TrackingPoint>[];
-    if (_currentState == TripState.completed && points.isNotEmpty) {
-      return points.length - 1;
-    }
-    if (vehicle == null || points.isEmpty) return 0;
-
-    var bestIndex = 0;
-    var bestDistance = double.infinity;
-    for (var i = 0; i < points.length; i++) {
-      final point = points[i];
-      final distance =
-          math.pow(point.latitude - vehicle.latitude, 2) +
-          math.pow(point.longitude - vehicle.longitude, 2);
-      if (distance < bestDistance) {
-        bestDistance = distance.toDouble();
-        bestIndex = i;
-      }
-    }
-    return bestIndex;
-  }
+  RouteProgressSnapshot? get _progress => _tracking?.progress;
 
   String _formatTime(DateTime? value) {
     if (value == null) return 'Pending';
@@ -131,21 +100,10 @@ class _TrackingScreenState extends State<TrackingScreen>
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    )..repeat(reverse: true);
-
     context.read<TrackingCubit>().load(
       bookingId: widget.bookingId,
       tripId: widget.tripId,
     );
-  }
-
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
   }
 
   void _changeState(TripState state) {
@@ -441,14 +399,12 @@ class _TrackingScreenState extends State<TrackingScreen>
 
   // --- MAP COMPONENT ---
   Widget _buildMapArea(ColorScheme scheme) {
-    return AnimatedBuilder(
-      animation: _pulseController,
-      builder: (context, child) => PremiumMap(
-        routePoints: _trip?.routePoints ?? const <TrackingPoint>[],
-        vehiclePosition: _vehicleLatLng,
-        currentState: _currentState,
-        pulseValue: _pulseController.value,
-      ),
+    return TrackingLiveMap(
+      routePoints: _trip?.routePoints ?? const <TrackingPoint>[],
+      vehicleFix: _trip?.vehicleFix,
+      currentState: _currentState,
+      progress: _progress,
+      onRefresh: () => context.read<TrackingCubit>().refresh(),
     );
   }
 
@@ -975,10 +931,10 @@ class _TrackingScreenState extends State<TrackingScreen>
                 context,
               ),
               const SizedBox(width: 8),
-              if (_trip?.vehicleSpeed != null)
+              if (_trip?.vehicleSpeedKmh != null)
                 _buildFeatureIconBadge(
                   Icons.speed_rounded,
-                  '${_trip!.vehicleSpeed!.round()} km/h',
+                  '${_trip!.vehicleSpeedKmh!.round()} km/h',
                   context,
                 ),
             ],
@@ -1185,14 +1141,11 @@ class _TrackingScreenState extends State<TrackingScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildETACard(
-          _trip?.hasLiveVehicleLocation == true ? 'Received' : '--',
-          _trip?.hasLiveVehicleLocation == true
-              ? 'location update'
-              : 'no GPS yet',
-          _liveLocationLabel(),
-          context,
-          scheme,
+        TrackingEtaPanel(
+          progress: _progress,
+          riderPickupName: _trip?.passengerPickupName ?? _pickupName,
+          riderBoarded: _trip?.passengerBoarded ?? false,
+          fallbackArrival: _trip?.departureAt,
         ),
         const SizedBox(height: 16),
         _buildDriverActionCard(context, scheme),
@@ -1207,12 +1160,11 @@ class _TrackingScreenState extends State<TrackingScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildETACard(
-          'Now',
-          'boarding window',
-          'Departure: ${_formatTime(_trip?.departureAt)}',
-          context,
-          scheme,
+        TrackingEtaPanel(
+          progress: _progress,
+          riderPickupName: _trip?.passengerPickupName ?? _pickupName,
+          riderBoarded: _trip?.passengerBoarded ?? false,
+          fallbackArrival: _trip?.departureAt,
         ),
         const SizedBox(height: 16),
         // Boarding instructions & OTP Code
@@ -1265,18 +1217,19 @@ class _TrackingScreenState extends State<TrackingScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildETACard(
-          _trip?.vehicleSpeed?.round().toString() ?? '--',
-          _trip?.vehicleSpeed == null ? 'last location' : 'km/h when sent',
-          'Expected arrival: ${_formatTime(_trip?.arrivalAt)}',
-          context,
-          scheme,
+        TrackingEtaPanel(
+          progress: _progress,
+          riderPickupName: _trip?.passengerPickupName ?? _pickupName,
+          riderBoarded: _trip?.passengerBoarded ?? false,
+          fallbackArrival: _trip?.arrivalAt,
         ),
         const SizedBox(height: 16),
-        // Remaining Stops section
-        _buildRemainingStopsHeader(context, scheme),
-        const SizedBox(height: 8),
-        _buildStopsProgressTimeline(context, scheme),
+        // Smart per-stop progress with live ETAs
+        TrackingStopsTimeline(
+          progress: _progress,
+          riderPickupName: _trip?.passengerPickupName ?? _pickupName,
+          riderBoarded: _trip?.passengerBoarded ?? false,
+        ),
         const SizedBox(height: 16),
         // Latest driver-sent location metrics.
         Container(
@@ -1292,9 +1245,9 @@ class _TrackingScreenState extends State<TrackingScreen>
               _buildMetricItem(
                 Icons.speed_rounded,
                 'Speed',
-                _trip?.vehicleSpeed == null
+                _trip?.vehicleSpeedKmh == null
                     ? 'Pending'
-                    : '${_trip!.vehicleSpeed!.round()} km/h',
+                    : '${_trip!.vehicleSpeedKmh!.round()} km/h',
                 ClientColors.primary,
               ),
               _buildMetricItem(
@@ -1432,80 +1385,6 @@ class _TrackingScreenState extends State<TrackingScreen>
   }
 
   // --- REUSABLE CARD COMPONENTS ---
-
-  // ETA Card
-  Widget _buildETACard(
-    String boldValue,
-    String label,
-    String details,
-    BuildContext context,
-    ColorScheme scheme,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
-                  children: [
-                    Text(
-                      boldValue,
-                      style: TextStyle(
-                        fontSize: 48,
-                        fontWeight: FontWeight.w900,
-                        color: ClientColors.primary,
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        label,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  details,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: ClientColors.textSecondaryFor(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(
-              color: ClientColors.primary.withAlpha(20),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              Icons.av_timer_rounded,
-              size: 28,
-              color: ClientColors.primary,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   // Interactive Rate Row
   Widget _buildInteractiveRatingRow(
@@ -1648,165 +1527,6 @@ class _TrackingScreenState extends State<TrackingScreen>
     );
   }
 
-  // Stops progress section
-  Widget _buildRemainingStopsHeader(BuildContext context, ColorScheme scheme) {
-    final stops = _trip?.stops ?? const <String>[];
-    final remaining = stops.isEmpty
-        ? 0
-        : (stops.length - _currentStopIndex - 1).clamp(0, stops.length);
-    final nextStop = stops.isEmpty
-        ? _destinationName
-        : stops[_currentStopIndex.clamp(0, stops.length - 1)];
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Row(
-          children: [
-            Icon(
-              Icons.event_seat_rounded,
-              size: 18,
-              color: ClientColors.primary,
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '$remaining Stops Remaining',
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
-            ),
-          ],
-        ),
-        Text(
-          'Next stop: $nextStop',
-          style: TextStyle(
-            fontSize: 12,
-            color: ClientColors.journeyGreen,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStopsProgressTimeline(BuildContext context, ColorScheme scheme) {
-    final stops = _trip?.stops ?? const <String>[];
-    final currentStopIndex = stops.isEmpty ? 0 : _currentStopIndex;
-    if (stops.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: ClientColors.surfaceFor(context),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: ClientColors.borderFor(context)),
-        ),
-        child: Text(
-          'No route stations were found for this trip.',
-          style: TextStyle(color: ClientColors.textSecondaryFor(context)),
-        ),
-      );
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      child: Column(
-        children: List.generate(stops.length, (index) {
-          final isPast = index < currentStopIndex;
-          final isCurrent = index == currentStopIndex;
-          final isFuture = index > currentStopIndex;
-
-          Color dotColor;
-          if (isPast) {
-            dotColor = ClientColors.journeyGreen;
-          } else if (isCurrent) {
-            dotColor = ClientColors.primary;
-          } else {
-            dotColor = ClientColors.borderFor(context);
-          }
-
-          return IntrinsicHeight(
-            child: Row(
-              children: [
-                Column(
-                  children: [
-                    Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: isCurrent ? dotColor : Colors.transparent,
-                        border: Border.all(
-                          color: dotColor,
-                          width: isCurrent ? 4 : 2,
-                        ),
-                      ),
-                    ),
-                    if (index < stops.length - 1)
-                      Expanded(
-                        child: Container(
-                          width: 2,
-                          color: isPast
-                              ? ClientColors.journeyGreen
-                              : ClientColors.borderFor(context),
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 6.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          stops[index],
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: isCurrent
-                                ? FontWeight.bold
-                                : FontWeight.normal,
-                            color: isCurrent
-                                ? ClientColors.primary
-                                : isFuture
-                                ? Colors.grey
-                                : ClientColors.textPrimaryFor(context),
-                          ),
-                        ),
-                        if (isCurrent)
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: ClientColors.primary.withAlpha(20),
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'Current Loc',
-                              style: TextStyle(
-                                fontSize: 9,
-                                color: ClientColors.primary,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          );
-        }),
-      ),
-    );
-  }
-
   Widget _buildMetricItem(
     IconData icon,
     String label,
@@ -1931,283 +1651,3 @@ class _BackgroundGlow extends StatelessWidget {
   }
 }
 
-class PremiumMap extends StatelessWidget {
-  const PremiumMap({
-    super.key,
-    required this.routePoints,
-    required this.vehiclePosition,
-    required this.currentState,
-    required this.pulseValue,
-  });
-
-  final List<TrackingPoint> routePoints;
-  final LatLng? vehiclePosition;
-  final TripState currentState;
-  final double pulseValue;
-
-  @override
-  Widget build(BuildContext context) {
-    final route = routePoints
-        .where((point) => point.latitude != 0 && point.longitude != 0)
-        .map((point) => LatLng(point.latitude, point.longitude))
-        .toList();
-    final center = vehiclePosition ?? (route.isNotEmpty ? route.first : null);
-
-    if (center == null) {
-      return _NoMapDataPanel(
-        onRefresh: () => context.read<TrackingCubit>().refresh(),
-      );
-    }
-
-    final boundsPoints = [...route, ?vehiclePosition];
-    final cameraFit = boundsPoints.length > 1
-        ? CameraFit.bounds(
-            bounds: LatLngBounds.fromPoints(boundsPoints),
-            padding: const EdgeInsets.all(48),
-          )
-        : null;
-
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Stack(
-        children: [
-          FlutterMap(
-            options: MapOptions(
-              initialCenter: center,
-              initialZoom: 13,
-              initialCameraFit: cameraFit,
-              interactionOptions: const InteractionOptions(
-                flags:
-                    InteractiveFlag.drag |
-                    InteractiveFlag.pinchZoom |
-                    InteractiveFlag.doubleTapZoom,
-              ),
-            ),
-            children: [
-              TileLayer(
-                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                userAgentPackageName: 'com.bmt.app',
-              ),
-              if (route.length > 1)
-                PolylineLayer(
-                  polylines: [
-                    Polyline(
-                      points: route,
-                      strokeWidth: 5,
-                      color: ClientColors.primary,
-                    ),
-                  ],
-                ),
-              MarkerLayer(
-                markers: [
-                  if (route.isNotEmpty)
-                    Marker(
-                      point: route.first,
-                      width: 44,
-                      height: 44,
-                      child: _MapMarker(
-                        icon: Icons.trip_origin_rounded,
-                        color: ClientColors.journeyGreen,
-                      ),
-                    ),
-                  if (route.length > 1)
-                    Marker(
-                      point: route.last,
-                      width: 44,
-                      height: 44,
-                      child: _MapMarker(
-                        icon: Icons.location_on_rounded,
-                        color: Theme.of(context).colorScheme.tertiary,
-                      ),
-                    ),
-                  if (vehiclePosition != null)
-                    Marker(
-                      point: vehiclePosition!,
-                      width: 58,
-                      height: 58,
-                      child: _VehicleMarker(pulseValue: pulseValue),
-                    ),
-                ],
-              ),
-            ],
-          ),
-          Positioned(
-            left: 12,
-            right: 12,
-            bottom: 12,
-            child: _MapStatusStrip(
-              hasLiveLocation: vehiclePosition != null,
-              currentState: currentState,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _NoMapDataPanel extends StatelessWidget {
-  const _NoMapDataPanel({required this.onRefresh});
-
-  final VoidCallback onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.map_outlined, color: ClientColors.primary, size: 40),
-          const SizedBox(height: 10),
-          Text(
-            'Map data unavailable',
-            style: TextStyle(
-              fontWeight: FontWeight.w800,
-              color: ClientColors.textPrimaryFor(context),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'No route coordinates were found for this trip.',
-            textAlign: TextAlign.center,
-            style: TextStyle(color: ClientColors.textSecondaryFor(context)),
-          ),
-          const SizedBox(height: 14),
-          ClientButton.secondary(
-            label: 'Refresh',
-            expand: false,
-            onPressed: onRefresh,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MapMarker extends StatelessWidget {
-  const _MapMarker({required this.icon, required this.color});
-
-  final IconData icon;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        border: Border.all(color: color, width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(45),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Icon(icon, color: color, size: 22),
-    );
-  }
-}
-
-class _VehicleMarker extends StatelessWidget {
-  const _VehicleMarker({required this.pulseValue});
-
-  final double pulseValue;
-
-  @override
-  Widget build(BuildContext context) {
-    final alpha = (55 + 90 * math.sin(pulseValue * math.pi)).toInt().clamp(
-      0,
-      255,
-    );
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        Container(
-          width: 54,
-          height: 54,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: ClientColors.primary.withAlpha(alpha),
-          ),
-        ),
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: ClientColors.primary,
-            shape: BoxShape.circle,
-            border: Border.all(color: Colors.white, width: 3),
-          ),
-          child: const Icon(
-            Icons.directions_bus_rounded,
-            size: 18,
-            color: Colors.white,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _MapStatusStrip extends StatelessWidget {
-  const _MapStatusStrip({
-    required this.hasLiveLocation,
-    required this.currentState,
-  });
-
-  final bool hasLiveLocation;
-  final TripState currentState;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = hasLiveLocation
-        ? 'Last location sent by captain'
-        : currentState == TripState.completed
-        ? 'Trip completed'
-        : 'Waiting for captain location';
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context).withAlpha(235),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
-        child: Row(
-          children: [
-            Icon(
-              hasLiveLocation
-                  ? Icons.my_location_rounded
-                  : Icons.location_searching_rounded,
-              color: hasLiveLocation
-                  ? ClientColors.journeyGreen
-                  : ClientColors.textSecondaryFor(context),
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                  color: ClientColors.textPrimaryFor(context),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

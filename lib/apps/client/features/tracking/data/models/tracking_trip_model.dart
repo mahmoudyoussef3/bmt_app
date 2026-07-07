@@ -1,3 +1,5 @@
+import 'package:bmt_app/core/tracking/progress/route_stop.dart';
+
 import '../../domain/entities/tracking_trip.dart';
 
 class TrackingPointModel {
@@ -5,16 +7,38 @@ class TrackingPointModel {
     required this.latitude,
     required this.longitude,
     this.recordedAt,
+    this.heading,
+    this.speed,
+    this.accuracy,
   });
+
+  factory TrackingPointModel.fromLiveLocationRow(Map<String, dynamic> row) {
+    return TrackingPointModel(
+      latitude: (row['latitude'] as num).toDouble(),
+      longitude: (row['longitude'] as num).toDouble(),
+      recordedAt: row['recorded_at'] != null
+          ? DateTime.tryParse(row['recorded_at'].toString())?.toLocal()
+          : null,
+      heading: (row['heading'] as num?)?.toDouble(),
+      speed: (row['speed'] as num?)?.toDouble(),
+      accuracy: (row['accuracy'] as num?)?.toDouble(),
+    );
+  }
 
   final double latitude;
   final double longitude;
   final DateTime? recordedAt;
+  final double? heading;
+  final double? speed;
+  final double? accuracy;
 
   TrackingPoint toEntity() => TrackingPoint(
     latitude: latitude,
     longitude: longitude,
     recordedAt: recordedAt,
+    heading: heading,
+    speed: speed,
+    accuracy: accuracy,
   );
 }
 
@@ -24,6 +48,10 @@ class TrackingTripDataModel {
     required this.timelineSteps,
     required this.stops,
     required this.tripState,
+    this.routeStops = const [],
+    this.passengerPickupName,
+    this.passengerDropoffName,
+    this.passengerStatus,
     this.tripId,
     this.bookingId,
     this.routeName,
@@ -41,6 +69,7 @@ class TrackingTripDataModel {
     this.vehicleLongitude,
     this.vehicleHeading,
     this.vehicleSpeed,
+    this.vehicleAccuracy,
     this.vehicleLocationAt,
   });
 
@@ -48,6 +77,10 @@ class TrackingTripDataModel {
   final List<String> timelineSteps;
   final List<String> stops;
   final TrackingTripState tripState;
+  final List<RouteStop> routeStops;
+  final String? passengerPickupName;
+  final String? passengerDropoffName;
+  final String? passengerStatus;
   final String? tripId;
   final String? bookingId;
   final String? routeName;
@@ -65,6 +98,7 @@ class TrackingTripDataModel {
   final double? vehicleLongitude;
   final double? vehicleHeading;
   final double? vehicleSpeed;
+  final double? vehicleAccuracy;
   final DateTime? vehicleLocationAt;
 
   TrackingTripData toEntity() {
@@ -73,6 +107,10 @@ class TrackingTripDataModel {
       timelineSteps: timelineSteps,
       stops: stops,
       tripState: tripState,
+      routeStops: routeStops,
+      passengerPickupName: passengerPickupName,
+      passengerDropoffName: passengerDropoffName,
+      passengerStatus: passengerStatus,
       tripId: tripId,
       bookingId: bookingId,
       routeName: routeName,
@@ -90,6 +128,7 @@ class TrackingTripDataModel {
       vehicleLongitude: vehicleLongitude,
       vehicleHeading: vehicleHeading,
       vehicleSpeed: vehicleSpeed,
+      vehicleAccuracy: vehicleAccuracy,
       vehicleLocationAt: vehicleLocationAt,
     );
   }

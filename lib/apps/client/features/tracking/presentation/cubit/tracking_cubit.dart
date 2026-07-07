@@ -3,6 +3,10 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/core/tracking/progress/route_progress_engine.dart';
+import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
+import 'package:bmt_app/core/tracking/progress/stop_progress.dart';
+
 import '../../domain/entities/tracking_trip.dart';
 import '../../domain/usecases/get_tracking_title_usecase.dart';
 import '../../domain/usecases/get_tracking_trip_usecase.dart';
@@ -30,6 +34,10 @@ class TrackingCubit extends Cubit<TrackingState> {
   StreamSubscription<TrackingPoint>? _locationSub;
   StreamSubscription<void>? _tripChangesSub;
   Timer? _refreshDebounce;
+  Timer? _etaTicker;
+  RouteProgressEngine? _engine;
+  String? _engineTripId;
+  int _engineStopCount = 0;
   String? _subscribedTripId;
   String? _subscribedChangesTripId;
   String? _bookingId;
@@ -49,12 +57,14 @@ class TrackingCubit extends Cubit<TrackingState> {
           data: data,
           currentState: state,
           title: _getTrackingTitle(state),
+          progress: _syncEngine(data, state),
         ),
       );
       if (data.tripId != null) {
         _subscribeToLocationIfNeeded(state, data.tripId!);
         _subscribeToTripChanges(data.tripId!);
       }
+      _startEtaTicker();
     } catch (error) {
       emit(TrackingError(error.toString()));
     }
@@ -80,6 +90,7 @@ class TrackingCubit extends Cubit<TrackingState> {
           data: data,
           currentState: nextState,
           title: _getTrackingTitle(nextState),
+          progress: _syncEngine(data, nextState),
           ratings: loaded?.ratings ?? const TrackingRatings(),
         ),
       );
@@ -95,15 +106,74 @@ class TrackingCubit extends Cubit<TrackingState> {
   void changeState(TrackingTripState state) {
     final current = this.state;
     if (current is! TrackingLoaded) return;
+    _engine?.updatePhase(_phaseFor(state));
     emit(
       current.copyWith(
         currentState: state,
         title: _getTrackingTitle(state),
+        progress: _engine?.snapshot(DateTime.now()),
         ratings: state == TrackingTripState.completed
             ? const TrackingRatings()
             : current.ratings,
       ),
     );
+  }
+
+  TripProgressPhase _phaseFor(TrackingTripState state) => switch (state) {
+    TrackingTripState.notStarted ||
+    TrackingTripState.driverOnWay => TripProgressPhase.headingToPickup,
+    TrackingTripState.boarding => TripProgressPhase.boarding,
+    TrackingTripState.inProgress => TripProgressPhase.enRoute,
+    TrackingTripState.completed => TripProgressPhase.completed,
+  };
+
+  /// Keeps one progress engine alive per trip so stop states stay monotonic
+  /// across silent refreshes; rebuilds only when the trip or its stop list
+  /// actually changes. Returns a fresh snapshot for the emitted state.
+  RouteProgressSnapshot? _syncEngine(
+    TrackingTripData data,
+    TrackingTripState state,
+  ) {
+    final now = DateTime.now();
+    final rebuild =
+        _engine == null ||
+        _engineTripId != data.tripId ||
+        _engineStopCount != data.routeStops.length;
+    if (rebuild) {
+      _engine = RouteProgressEngine(
+        stops: data.routeStops,
+        scheduledDeparture: data.departureAt,
+        scheduledArrival: data.arrivalAt,
+        phase: _phaseFor(state),
+      );
+      _engineTripId = data.tripId;
+      _engineStopCount = data.routeStops.length;
+    } else {
+      _engine!.updatePhase(_phaseFor(state));
+    }
+    final fix = data.vehicleFix;
+    if (fix != null) {
+      _engine!.addFix(
+        latitude: fix.latitude,
+        longitude: fix.longitude,
+        speedKmh: data.vehicleSpeedKmh,
+        now: now,
+      );
+    }
+    return _engine!.snapshot(now);
+  }
+
+  /// ETAs are moments in time; re-emit periodically so countdown labels and
+  /// staleness flags stay honest between fixes.
+  void _startEtaTicker() {
+    _etaTicker?.cancel();
+    _etaTicker = Timer.periodic(const Duration(seconds: 30), (_) {
+      final current = state;
+      final engine = _engine;
+      if (current is! TrackingLoaded || engine == null) return;
+      if (current.currentState == TrackingTripState.completed) return;
+      emit(current.copyWith(progress: engine.snapshot(DateTime.now())));
+    });
   }
 
   void _subscribeToLocationIfNeeded(TrackingTripState state, String tripId) {
@@ -123,19 +193,33 @@ class TrackingCubit extends Cubit<TrackingState> {
       (point) {
         final current = this.state;
         if (current is! TrackingLoaded) return;
+        final now = DateTime.now();
         final data = current.data;
         final nextState = current.currentState == TrackingTripState.notStarted
             ? TrackingTripState.driverOnWay
             : current.currentState;
+        _engine?.updatePhase(_phaseFor(nextState));
+        _engine?.addFix(
+          latitude: point.latitude,
+          longitude: point.longitude,
+          speedKmh: point.speed == null || point.speed! < 0
+              ? null
+              : point.speed! * 3.6,
+          now: now,
+        );
         emit(
           current.copyWith(
             currentState: nextState,
             title: _getTrackingTitle(nextState),
+            progress: _engine?.snapshot(now),
             data: data.copyWith(
               tripState: nextState,
               vehicleLatitude: point.latitude,
               vehicleLongitude: point.longitude,
-              vehicleLocationAt: point.recordedAt ?? DateTime.now(),
+              vehicleHeading: point.heading,
+              vehicleSpeed: point.speed,
+              vehicleAccuracy: point.accuracy,
+              vehicleLocationAt: point.recordedAt ?? now,
             ),
           ),
         );
@@ -200,6 +284,7 @@ class TrackingCubit extends Cubit<TrackingState> {
 
   @override
   Future<void> close() {
+    _etaTicker?.cancel();
     _cancelLocationSubscription();
     _cancelTripChangesSubscription();
     return super.close();

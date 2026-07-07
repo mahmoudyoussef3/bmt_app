@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
@@ -38,25 +39,39 @@ class _ClientShellScreenState extends State<ClientShellScreen> {
     );
   }
 
+  /// Home draws its own gradient behind the status bar, so it manages the top
+  /// inset itself and forces light status-bar icons. Other tabs keep the
+  /// standard SafeArea and theme-appropriate icons.
+  Widget _standardTab(Widget child) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+      child: SafeArea(child: child),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = <Widget>[
-      BlocProvider<HomeCubit>(
-        create: (_) => clientGetIt<HomeCubit>()..load(),
-        child: HomeScreen(
-          onOpenRoute: _openRoute,
-          onOpenNotifications: _openNotifications,
+      AnnotatedRegion<SystemUiOverlayStyle>(
+        value: SystemUiOverlayStyle.light,
+        child: BlocProvider<HomeCubit>(
+          create: (_) => clientGetIt<HomeCubit>()..load(),
+          child: HomeScreen(
+            onOpenRoute: _openRoute,
+            onOpenNotifications: _openNotifications,
+          ),
         ),
       ),
-      widget.routesBuilder(context),
-      widget.tripsBuilder(context),
-      widget.profileBuilder(context),
+      _standardTab(widget.routesBuilder(context)),
+      _standardTab(widget.tripsBuilder(context)),
+      _standardTab(widget.profileBuilder(context)),
     ];
 
     return Scaffold(
       // IndexedStack keeps every tab (and its BlocProvider/cubit) mounted, so an
       // in-flight load can never be orphaned by a tab switch or a shell rebuild.
-      body: SafeArea(child: IndexedStack(index: _index, children: pages)),
+      body: IndexedStack(index: _index, children: pages),
       bottomNavigationBar: ClientBottomNavigation(
         activeTab: _tabForIndex(_index),
         onTabChange: (tab) {

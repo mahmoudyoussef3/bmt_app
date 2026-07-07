@@ -153,6 +153,8 @@ The project relies entirely on **Supabase (PostgreSQL)** as its backend.
 * **Trip Creation Wizard:** Admins select a route, vehicle, and driver. The system automatically snapshots route stations into `trip_route_points` and generates seat layouts into `trip_seats`.
 * **Trip Pricing:** Admins set base prices, multi-day package prices, and subscriptions for specific trips.
 * **Trip Monitoring:** Operations sees the latest location explicitly sent by the driver with its timestamp, resolves alerts, and views passenger manifests. Continuous/background location sharing is not used.
+* **Live Vehicle Tracking Engine:** Driver-sent fixes are rendered through a shared engine (`lib/core/tracking/` + `lib/core/widgets/tracking/`) that validates fixes, interpolates marker movement, rotates heading, estimates speed (km/h), draws the GPS accuracy circle, and flags stale signals. Used by both the Dashboard live monitoring map and the Client tracking map. See `docs/architecture/LIVE_TRACKING_ENGINE.md`.
+* **Smart Route Progress & ETA System:** A shared pure-Dart engine (`lib/core/tracking/progress/`) projects GPS fixes onto the route polyline to produce continuous route progress, per-stop visit states (upcoming → arrived → departed, with hysteresis and operator-event seeding), per-stop ETAs with explicit confidence (live / estimated / scheduled), and per-stop passenger flow (waiting/boarded). Powers the Client tracking screen (pickup countdown, smart stops timeline, split route polyline) and the Dashboard live monitoring panel (continuous progress %, per-station ETAs). See `docs/architecture/ROUTE_PROGRESS_ETA.md`.
 
 ---
 

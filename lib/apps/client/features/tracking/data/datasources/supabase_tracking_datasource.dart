@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bmt_app/core/tracking/progress/route_stop.dart';
 import '../models/tracking_trip_model.dart';
 import '../../domain/entities/tracking_trip.dart';
 
@@ -36,17 +37,8 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
           ),
           callback: (change) {
             try {
-              final payload = change.newRecord;
               controller.add(
-                TrackingPointModel(
-                  latitude: (payload['latitude'] as num).toDouble(),
-                  longitude: (payload['longitude'] as num).toDouble(),
-                  recordedAt: payload['recorded_at'] != null
-                      ? DateTime.tryParse(
-                          payload['recorded_at'].toString(),
-                        )?.toLocal()
-                      : null,
-                ),
+                TrackingPointModel.fromLiveLocationRow(change.newRecord),
               );
             } catch (_) {}
           },
@@ -123,7 +115,10 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
     final results = await Future.wait<dynamic>([
       _client
           .from('trip_route_points')
-          .select('latitude, longitude, point_name, point_order')
+          .select(
+            'id, latitude, longitude, point_name, point_order, '
+            'arrival_offset, departure_offset',
+          )
           .eq('trip_id', resolvedTripId)
           .order('point_order'),
       _client
@@ -138,18 +133,20 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
           .maybeSingle(),
       _client
           .from('trip_live_locations')
-          .select('latitude, longitude, heading, speed, recorded_at')
+          .select('latitude, longitude, heading, speed, accuracy, recorded_at')
           .eq('trip_id', resolvedTripId)
           .order('recorded_at', ascending: false)
           .limit(1)
           .maybeSingle(),
       _getLatestTripEvent(resolvedTripId),
+      _getPassengerRow(resolvedTripId, userId),
     ]);
 
     final pointRows = (results[0] as List?) ?? [];
     final tripRow = results[1] as Map<String, dynamic>?;
     final locRow = results[2] as Map<String, dynamic>?;
     final latestEvent = results[3] as Map<String, dynamic>?;
+    final passengerRow = results[4] as Map<String, dynamic>?;
 
     final routePoints = pointRows.map((r) {
       final m = r as Map<String, dynamic>;
@@ -170,14 +167,16 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
       hasLiveLocation: locRow != null,
       latestEventTitle: latestEvent?['title']?.toString(),
     );
+    final tripDate = tripRow?['trip_date']?.toString();
     final departureAt = _combineDateAndTime(
-      tripRow?['trip_date']?.toString(),
+      tripDate,
       tripRow?['departure_time']?.toString(),
     );
     final arrivalAt = _combineDateAndTime(
-      tripRow?['trip_date']?.toString(),
+      tripDate,
       tripRow?['arrival_time']?.toString(),
     );
+    final routeStops = _buildRouteStops(pointRows, tripDate, departureAt);
     final route = tripRow?['route'] as Map<String, dynamic>?;
     final driver = tripRow?['driver'] as Map<String, dynamic>?;
     final vehicle = tripRow?['vehicle'] as Map<String, dynamic>?;
@@ -187,6 +186,10 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
       timelineSteps: _buildTimeline(state),
       stops: stops.isEmpty ? const ['Origin', 'Destination'] : stops,
       tripState: state,
+      routeStops: routeStops,
+      passengerPickupName: passengerRow?['pickup_point_name']?.toString(),
+      passengerDropoffName: passengerRow?['dropoff_point_name']?.toString(),
+      passengerStatus: passengerRow?['status']?.toString(),
       tripId: resolvedTripId,
       bookingId: booking['id']?.toString(),
       routeName: route?['name']?.toString(),
@@ -213,6 +216,9 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
           : null,
       vehicleSpeed: locRow != null
           ? (locRow['speed'] as num?)?.toDouble()
+          : null,
+      vehicleAccuracy: locRow != null
+          ? (locRow['accuracy'] as num?)?.toDouble()
           : null,
       vehicleLocationAt: locRow?['recorded_at'] != null
           ? DateTime.tryParse(locRow!['recorded_at'].toString())?.toLocal()
@@ -249,6 +255,63 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
         .order('created_at', ascending: false)
         .limit(1)
         .maybeSingle();
+  }
+
+  /// The rider's own manifest row (pickup/dropoff point + boarding status).
+  /// Deployments that hide the manifest from clients degrade gracefully.
+  Future<Map<String, dynamic>?> _getPassengerRow(
+    String tripId,
+    String userId,
+  ) async {
+    try {
+      return await _client
+          .from('trip_passengers')
+          .select('pickup_point_name, dropoff_point_name, status')
+          .eq('trip_id', tripId)
+          .eq('customer_id', userId)
+          .limit(1)
+          .maybeSingle();
+    } on PostgrestException {
+      return null;
+    }
+  }
+
+  List<RouteStop> _buildRouteStops(
+    List<dynamic> pointRows,
+    String? tripDate,
+    DateTime? departureAt,
+  ) {
+    return pointRows.map((r) {
+      final m = r as Map<String, dynamic>;
+      return RouteStop(
+        id: m['id']?.toString(),
+        name: m['point_name'] as String? ?? '',
+        latitude: (m['latitude'] as num?)?.toDouble() ?? 0,
+        longitude: (m['longitude'] as num?)?.toDouble() ?? 0,
+        order: m['point_order'] as int? ?? 0,
+        plannedArrival: _stopTime(
+          tripDate,
+          m['arrival_offset']?.toString(),
+          departureAt,
+        ),
+        plannedDeparture: _stopTime(
+          tripDate,
+          m['departure_offset']?.toString(),
+          departureAt,
+        ),
+      );
+    }).toList();
+  }
+
+  /// Resolves a stop's "HH:mm" clock time against the trip date. Times more
+  /// than 6 h before departure belong to a run that crosses midnight and
+  /// roll forward one day.
+  DateTime? _stopTime(String? date, String? clockTime, DateTime? departureAt) {
+    final parsed = _combineDateAndTime(date, clockTime);
+    if (parsed == null || departureAt == null) return parsed;
+    return departureAt.difference(parsed).inHours >= 6
+        ? parsed.add(const Duration(days: 1))
+        : parsed;
   }
 
   Future<Map<String, dynamic>?> _getLatestTripEvent(String tripId) async {

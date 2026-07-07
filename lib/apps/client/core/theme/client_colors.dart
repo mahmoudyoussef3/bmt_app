@@ -43,6 +43,28 @@ abstract final class ClientColors {
     end: Alignment.bottomRight,
   );
 
+  // Deep three-stop sweep used by the home hero canvas. Kept darker than
+  // [primaryGradient] so white text and the search pill hold AAA contrast.
+  static const Gradient heroGradient = LinearGradient(
+    colors: [
+      Color(0xFF1E3A8A),
+      Color(0xFF1D4ED8),
+      Color(0xFF2563EB),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
+  static const Gradient darkHeroGradient = LinearGradient(
+    colors: [
+      Color(0xFF0F172A),
+      Color(0xFF1E3A8A),
+      Color(0xFF1D4ED8),
+    ],
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+  );
+
   // ── Journey status ─────────────────────────────────────────────────────────
   // Green — confirmed booking, on-time, boarded, active trip
   static const Color journeyGreen = Color(0xFF16A34A);
@@ -121,6 +143,14 @@ abstract final class ClientColors {
 
   static Gradient primaryGradientFor(BuildContext context) =>
       _isDark(context) ? darkPrimaryGradient : primaryGradient;
+
+  static Gradient heroGradientFor(BuildContext context) =>
+      _isDark(context) ? darkHeroGradient : heroGradient;
+
+  /// First stop of the hero gradient — used for the pinned status-bar strip
+  /// and the overscroll fill so the hero reads as one continuous surface.
+  static Color heroTopFor(BuildContext context) =>
+      _isDark(context) ? const Color(0xFF0F172A) : const Color(0xFF1E3A8A);
 
   static Color textPrimaryFor(BuildContext context) =>
       _isDark(context) ? _darkTextPrimary : textPrimary;

@@ -10,9 +10,13 @@ class HomeLoading extends HomeState {
 }
 
 class HomeLoaded extends HomeState {
-  const HomeLoaded(this.data);
+  const HomeLoaded(this.data, {this.refreshFailure});
 
   final HomeData data;
+
+  /// Set when a pull-to-refresh failed while this data was on screen —
+  /// the UI keeps the content and surfaces the failure non-destructively.
+  final Failure? refreshFailure;
 }
 
 class HomeError extends HomeState {

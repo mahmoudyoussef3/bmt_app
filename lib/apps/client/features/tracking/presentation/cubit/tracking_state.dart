@@ -1,3 +1,5 @@
+import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
+
 import '../../domain/entities/tracking_trip.dart';
 
 sealed class TrackingState {
@@ -13,6 +15,7 @@ class TrackingLoaded extends TrackingState {
     required this.data,
     required this.currentState,
     required this.title,
+    this.progress,
     this.ratings = const TrackingRatings(),
     this.isRefreshing = false,
   });
@@ -20,6 +23,10 @@ class TrackingLoaded extends TrackingState {
   final TrackingTripData data;
   final TrackingTripState currentState;
   final String title;
+
+  /// Live route progress & ETAs from the shared progress engine; null until
+  /// the trip has trackable stops.
+  final RouteProgressSnapshot? progress;
   final TrackingRatings ratings;
   final bool isRefreshing;
 
@@ -27,6 +34,7 @@ class TrackingLoaded extends TrackingState {
     TrackingTripData? data,
     TrackingTripState? currentState,
     String? title,
+    RouteProgressSnapshot? progress,
     TrackingRatings? ratings,
     bool? isRefreshing,
   }) {
@@ -34,6 +42,7 @@ class TrackingLoaded extends TrackingState {
       data: data ?? this.data,
       currentState: currentState ?? this.currentState,
       title: title ?? this.title,
+      progress: progress ?? this.progress,
       ratings: ratings ?? this.ratings,
       isRefreshing: isRefreshing ?? this.isRefreshing,
     );

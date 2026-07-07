@@ -79,6 +79,7 @@ class VehiclePosition {
     required this.longitude,
     this.heading,
     this.speed,
+    this.accuracy,
     required this.updatedAt,
   });
 
@@ -86,6 +87,7 @@ class VehiclePosition {
   final double longitude;
   final double? heading;
   final double? speed; // m/s from Geolocator
+  final double? accuracy; // horizontal accuracy radius in meters
   final DateTime updatedAt;
 
   bool get isMoving => speed != null && speed! > 0.5;
@@ -104,6 +106,7 @@ class LiveRoutePoint {
     required this.boardedPassengersCount,
     this.plannedArrivalTime,
     this.actualArrivalTime,
+    this.estimatedArrival,
   });
 
   final String id;
@@ -113,6 +116,10 @@ class LiveRoutePoint {
   final int order;
   final DateTime? plannedArrivalTime;
   final DateTime? actualArrivalTime;
+
+  /// Live ETA from the route progress engine; null once visited or when no
+  /// estimate is possible.
+  final DateTime? estimatedArrival;
   final LivePointStatus status;
   final int waitingPassengersCount;
   final int boardedPassengersCount;
@@ -125,6 +132,8 @@ class LiveRoutePoint {
     int? order,
     DateTime? plannedArrivalTime,
     DateTime? actualArrivalTime,
+    DateTime? estimatedArrival,
+    bool clearEstimatedArrival = false,
     LivePointStatus? status,
     int? waitingPassengersCount,
     int? boardedPassengersCount,
@@ -137,6 +146,9 @@ class LiveRoutePoint {
       order: order ?? this.order,
       plannedArrivalTime: plannedArrivalTime ?? this.plannedArrivalTime,
       actualArrivalTime: actualArrivalTime ?? this.actualArrivalTime,
+      estimatedArrival: clearEstimatedArrival
+          ? null
+          : estimatedArrival ?? this.estimatedArrival,
       status: status ?? this.status,
       waitingPassengersCount:
           waitingPassengersCount ?? this.waitingPassengersCount,

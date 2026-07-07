@@ -10,14 +10,23 @@ class HomeCubit extends Cubit<HomeState> {
 
   final GetHomeDataUseCase _getHomeData;
 
+  /// Loads home data. When content is already on screen (pull-to-refresh),
+  /// the loaded state is kept instead of flashing the skeleton; a refresh
+  /// failure also keeps the existing content rather than replacing it with a
+  /// full-screen error.
   Future<void> load() async {
-    emit(const HomeLoading());
+    final previous = state;
+    if (previous is! HomeLoaded) emit(const HomeLoading());
     try {
       final data = await _getHomeData();
       emit(HomeLoaded(data));
     } catch (error) {
       final failure = ApiErrorHandler.handle(error);
-      emit(HomeError(failure));
+      if (previous is HomeLoaded) {
+        emit(HomeLoaded(previous.data, refreshFailure: failure));
+      } else {
+        emit(HomeError(failure));
+      }
     }
   }
 }

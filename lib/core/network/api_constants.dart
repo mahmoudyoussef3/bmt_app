@@ -12,9 +12,9 @@ class ApiConstants {
   static String get anonKey => AppFlavorConfig.current.supabasePublishableKey;
 
   // Timeouts
-  static const Duration connectTimeout = Duration(seconds: 30);
-  static const Duration receiveTimeout = Duration(seconds: 30);
-  static const Duration sendTimeout = Duration(seconds: 30);
+  static const Duration connectTimeout = Duration(seconds: 60);
+  static const Duration receiveTimeout = Duration(seconds: 60);
+  static const Duration sendTimeout = Duration(seconds: 60);
 
   // Headers
   static const String contentType = 'application/json';

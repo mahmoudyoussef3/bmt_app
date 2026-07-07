@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/progress_bar.dart';
 import '../../domain/entities/live_trip.dart';
 import '../cubit/live_trips_cubit.dart';
+import 'live_trip_map.dart';
 
 class LiveMonitoringPanel extends StatelessWidget {
   const LiveMonitoringPanel({
@@ -238,7 +236,7 @@ class LiveTripMapPanel extends StatelessWidget {
             child: SizedBox(
               height: 260,
               child: hasCoords
-                  ? _RealMap(trip: trip, scheme: scheme)
+                  ? LiveTripMap(trip: trip)
                   : _PlaceholderMap(trip: trip, scheme: scheme),
             ),
           ),
@@ -283,135 +281,6 @@ class _GpsStatusBadge extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _RealMap extends StatelessWidget {
-  const _RealMap({required this.trip, required this.scheme});
-  final LiveTrip trip;
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    final points = trip.routePoints;
-    final latlngs = points.map((p) => LatLng(p.latitude, p.longitude)).toList();
-    final currentIdx = points
-        .indexWhere((p) => p.status == LivePointStatus.current)
-        .clamp(0, latlngs.length - 1);
-    final center = trip.vehiclePosition != null
-        ? LatLng(
-            trip.vehiclePosition!.latitude,
-            trip.vehiclePosition!.longitude,
-          )
-        : latlngs[currentIdx];
-
-    return FlutterMap(
-      options: MapOptions(initialCenter: center, initialZoom: 12),
-      children: [
-        TileLayer(
-          urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-          userAgentPackageName: 'com.bmt.app',
-        ),
-        PolylineLayer(
-          polylines: [
-            Polyline(points: latlngs, color: scheme.primary, strokeWidth: 3),
-          ],
-        ),
-        MarkerLayer(
-          markers: [
-            for (final p in points)
-              Marker(
-                point: LatLng(p.latitude, p.longitude),
-                child: _StopDot(status: p.status),
-              ),
-            if (trip.vehiclePosition != null)
-              Marker(
-                point: LatLng(
-                  trip.vehiclePosition!.latitude,
-                  trip.vehiclePosition!.longitude,
-                ),
-                child: _LiveVehicleMarker(
-                  label: trip.vehiclePlate,
-                  isStale: trip.vehiclePosition!.isStale,
-                  isMoving: trip.vehiclePosition!.isMoving,
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _LiveVehicleMarker extends StatelessWidget {
-  const _LiveVehicleMarker({
-    required this.label,
-    required this.isStale,
-    required this.isMoving,
-  });
-  final String label;
-  final bool isStale;
-  final bool isMoving;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = isStale ? scheme.error : scheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [BoxShadow(color: color.withAlpha(100), blurRadius: 6)],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isMoving
-                ? Icons.directions_bus_rounded
-                : Icons.pause_circle_filled_rounded,
-            color: scheme.onPrimary,
-            size: 16,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: scheme.onPrimary,
-              fontWeight: FontWeight.w900,
-              fontSize: 11,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StopDot extends StatelessWidget {
-  const _StopDot({required this.status});
-  final LivePointStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = switch (status) {
-      LivePointStatus.completed => AppStatusColors.onSuccessContainer,
-      LivePointStatus.current => AppStatusColors.onInfoContainer,
-      LivePointStatus.arrived => AppStatusColors.onSpecialContainer,
-      LivePointStatus.skipped => AppStatusColors.onNeutralContainer,
-      LivePointStatus.pending => AppStatusColors.onWarningContainer,
-    };
-    return Container(
-      width: 14,
-      height: 14,
-      decoration: BoxDecoration(
-        color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: Colors.white, width: 2),
-        boxShadow: [BoxShadow(color: color.withAlpha(100), blurRadius: 4)],
       ),
     );
   }
@@ -562,6 +431,16 @@ class _PointTile extends StatelessWidget {
   final ValueChanged<String> onCompleted;
   final ValueChanged<String> onSkipped;
 
+  String _formatEta(DateTime eta) {
+    final minutes = eta.difference(DateTime.now()).inMinutes;
+    final local = eta.toLocal();
+    final clock =
+        '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+    if (minutes <= 0) return 'الآن';
+    if (minutes > 90) return clock;
+    return 'خلال $minutes دقيقة ($clock)';
+  }
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
@@ -624,6 +503,18 @@ class _PointTile extends StatelessWidget {
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
+                if (point.estimatedArrival != null &&
+                    (point.status == LivePointStatus.pending ||
+                        point.status == LivePointStatus.current)) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    'الوصول المتوقع ${_formatEta(point.estimatedArrival!)}',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.primary,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
                 if (isCurrent && tripStatus == LiveTripStatus.inProgress) ...[
                   const SizedBox(height: AppSpacing.small),
                   Wrap(
