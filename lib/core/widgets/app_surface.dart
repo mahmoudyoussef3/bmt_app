@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/theme/app_surface_style.dart';
+
 /// AppSurface: lightweight, reusable surface with consistent radius, padding,
 /// border and soft elevation used throughout the app for cards and panels.
 class AppSurface extends StatelessWidget {
@@ -22,22 +24,19 @@ class AppSurface extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final bg = color ?? Theme.of(context).cardColor;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final style =
+        theme.extension<AppSurfaceStyle>() ?? AppSurfaceStyle.flat(cs);
+    final bg = color ?? theme.cardColor;
 
     final container = Container(
       padding: padding,
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(radius),
-        border: border ?? Border.all(color: cs.outline.withAlpha(100)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(20),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: border ?? Border.all(color: style.borderColor),
+        boxShadow: style.shadow,
       ),
       child: child,
     );
@@ -45,6 +44,7 @@ class AppSurface extends StatelessWidget {
     if (onTap != null) {
       return Material(
         color: Colors.transparent,
+        borderRadius: BorderRadius.circular(radius),
         child: InkWell(
           borderRadius: BorderRadius.circular(radius),
           onTap: onTap,

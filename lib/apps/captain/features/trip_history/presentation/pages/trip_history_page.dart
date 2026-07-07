@@ -2,7 +2,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_loading_state.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/core/widgets/widgets.dart' hide CaptainCard;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';

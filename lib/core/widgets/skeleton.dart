@@ -33,8 +33,28 @@ class _SkeletonBoxState extends State<SkeletonBox>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
-    )..repeat();
+    );
     _shimmer = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
+    _syncMotionPreference();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncMotionPreference();
+  }
+
+  void _syncMotionPreference() {
+    final reducedMotion = WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations;
+    if (reducedMotion) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
   }
 
   @override
@@ -46,9 +66,21 @@ class _SkeletonBoxState extends State<SkeletonBox>
   @override
   Widget build(BuildContext context) {
     final divider = Theme.of(context).dividerColor;
-    final base = divider.withAlpha(15);
-    final highlight = divider.withAlpha(35);
+    final base = divider.withAlpha(12);
+    final highlight = Theme.of(context).colorScheme.primary.withAlpha(24);
     final radius = widget.borderRadius ?? BorderRadius.circular(8);
+
+    if (WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations) {
+      return Container(
+        width: widget.width,
+        height: widget.height,
+        decoration: BoxDecoration(borderRadius: radius, color: base),
+      );
+    }
 
     return AnimatedBuilder(
       animation: _shimmer,

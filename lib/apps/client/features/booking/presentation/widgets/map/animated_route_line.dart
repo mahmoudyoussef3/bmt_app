@@ -51,7 +51,15 @@ class _AnimatedRouteLineState extends State<AnimatedRouteLine>
 
   void _restart() {
     _cumulative = RoutePathMath.cumulativeDistances(widget.coordinates);
-    _controller.forward(from: 0);
+    if (WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations) {
+      _controller.value = 1;
+    } else {
+      _controller.forward(from: 0);
+    }
   }
 
   bool _samePath(List<LatLng> a, List<LatLng> b) {
@@ -72,6 +80,16 @@ class _AnimatedRouteLineState extends State<AnimatedRouteLine>
   @override
   Widget build(BuildContext context) {
     if (widget.coordinates.length < 2) return const SizedBox.shrink();
+
+    if (WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations) {
+      return PolylineLayer(
+        polylines: buildRoutePolylines(context, widget.coordinates),
+      );
+    }
 
     return AnimatedBuilder(
       animation: _controller,

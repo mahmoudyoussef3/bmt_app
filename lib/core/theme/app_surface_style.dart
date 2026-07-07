@@ -22,12 +22,12 @@ class AppSurfaceStyle extends ThemeExtension<AppSurfaceStyle> {
   /// client and driver apps render exactly as before.
   factory AppSurfaceStyle.legacy(ColorScheme scheme) => AppSurfaceStyle(
     radius: 18,
-    borderColor: scheme.outline.withAlpha(120),
+    borderColor: scheme.outline.withAlpha(90),
     shadow: [
       BoxShadow(
-        color: Colors.black.withAlpha(28),
-        blurRadius: 22,
-        offset: const Offset(0, 10),
+        color: Colors.black.withAlpha(18),
+        blurRadius: 18,
+        offset: const Offset(0, 8),
       ),
     ],
   );
@@ -37,13 +37,13 @@ class AppSurfaceStyle extends ThemeExtension<AppSurfaceStyle> {
   factory AppSurfaceStyle.flat(ColorScheme scheme) {
     final dark = scheme.brightness == Brightness.dark;
     return AppSurfaceStyle(
-      radius: 14,
-      borderColor: scheme.outline.withAlpha(dark ? 90 : 60),
+      radius: 16,
+      borderColor: scheme.outline.withAlpha(dark ? 100 : 70),
       shadow: [
         BoxShadow(
-          color: Colors.black.withAlpha(dark ? 38 : 12),
-          blurRadius: 10,
-          offset: const Offset(0, 3),
+          color: Colors.black.withAlpha(dark ? 32 : 10),
+          blurRadius: 12,
+          offset: const Offset(0, 4),
         ),
       ],
     );

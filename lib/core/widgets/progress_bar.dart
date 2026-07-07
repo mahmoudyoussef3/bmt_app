@@ -14,17 +14,17 @@ class AppProgressBar extends StatelessWidget {
             : fallbackWidth;
 
         return ClipRRect(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(999),
           child: SizedBox(
             width: barWidth,
-            height: 8,
+            height: 10,
             child: Stack(
               children: [
                 Positioned.fill(
                   child: ColoredBox(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withAlpha(15),
+                    ).colorScheme.onSurface.withAlpha(12),
                   ),
                 ),
                 FractionallySizedBox(
@@ -35,7 +35,7 @@ class AppProgressBar extends StatelessWidget {
                       gradient: LinearGradient(
                         colors: [
                           Theme.of(context).colorScheme.primary,
-                          Theme.of(context).colorScheme.secondary,
+                          Theme.of(context).colorScheme.tertiary,
                         ],
                       ),
                     ),

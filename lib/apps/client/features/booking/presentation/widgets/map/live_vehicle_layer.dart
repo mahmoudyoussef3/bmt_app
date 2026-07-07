@@ -72,7 +72,15 @@ class _LiveVehicleLayerState extends State<LiveVehicleLayer>
     if (identical(next, _to)) return;
     _from = _current();
     _to = next;
-    _controller.forward(from: 0);
+    if (WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations) {
+      _controller.value = 1;
+    } else {
+      _controller.forward(from: 0);
+    }
   }
 
   /// The interpolated pose at this instant, so retargeting mid-flight never
@@ -80,6 +88,13 @@ class _LiveVehicleLayerState extends State<LiveVehicleLayer>
   LiveVehicleData _current() {
     final from = _from, to = _to;
     if (from == null || to == null) return to ?? from!;
+    if (WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations) {
+      return to;
+    }
     final t = Curves.easeInOut.transform(_controller.value);
     return LiveVehicleData(
       position: RoutePathMath.lerpPosition(from.position, to.position, t),

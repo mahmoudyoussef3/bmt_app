@@ -26,6 +26,7 @@ class DashboardAppTheme {
         }),
         AppSurfaceStyle.flat(scheme),
       ],
+      appBarTheme: base.appBarTheme.copyWith(centerTitle: false),
       textTheme: textTheme,
       primaryTextTheme: textTheme,
     );

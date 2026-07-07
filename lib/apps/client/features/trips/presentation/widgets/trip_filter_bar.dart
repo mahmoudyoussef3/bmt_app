@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+
+import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 
 class TripFilterBar extends StatelessWidget {
@@ -16,37 +17,35 @@ class TripFilterBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: TripFilter.values.map((filter) {
-          final active = selected == filter;
-          final count = counts?[filter] ?? 0;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: FilterChip(
-              label: Text(
-                count > 0 ? '${filter.label} ($count)' : filter.label,
+    final scheme = Theme.of(context).colorScheme;
+    return AppCard(
+      padding: const EdgeInsets.all(12),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: TripFilter.values.map((filter) {
+            final active = selected == filter;
+            final count = counts?[filter] ?? 0;
+            return Padding(
+              padding: const EdgeInsetsDirectional.only(end: 8),
+              child: ChoiceChip(
+                label: Text(
+                  count > 0 ? '${filter.label} ($count)' : filter.label,
+                ),
+                selected: active,
+                onSelected: (_) => onSelected(filter),
+                selectedColor: scheme.primary.withAlpha(24),
+                side: BorderSide(
+                  color: active ? scheme.primary : scheme.outline.withAlpha(90),
+                ),
+                labelStyle: TextStyle(
+                  color: active ? scheme.primary : scheme.onSurface,
+                  fontWeight: active ? FontWeight.w800 : FontWeight.w600,
+                ),
               ),
-              selected: active,
-              onSelected: (_) => onSelected(filter),
-              selectedColor: ClientColors.primary,
-              checkmarkColor: ClientColors.textInverse,
-              side: BorderSide(
-                color: active
-                    ? ClientColors.primary
-                    : ClientColors.borderFor(context),
-              ),
-              labelStyle: TextStyle(
-                color: active
-                    ? ClientColors.textInverse
-                    : ClientColors.textPrimaryFor(context),
-                fontWeight: active ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          );
-        }).toList(),
+            );
+          }).toList(),
+        ),
       ),
     );
   }

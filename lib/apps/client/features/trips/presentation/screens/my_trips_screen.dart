@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_stat
 import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_filter_bar.dart';
+import 'package:bmt_app/core/widgets/widgets.dart';
 
 /// My Trips hub with filter tabs for upcoming, active, completed, cancelled.
 class MyTripsScreen extends StatefulWidget {
@@ -149,70 +150,76 @@ class _TripsHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [ClientColors.primary, Color(0xFF1554C8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    final scheme = Theme.of(context).colorScheme;
+
+    return AppCard(
+      padding: const EdgeInsets.all(0),
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [scheme.primary, scheme.secondary],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(26),
         ),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'My Trips',
-                      style: ClientTypography.headingLarge(
-                        context,
-                      ).copyWith(color: ClientColors.textInverse),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      'Upcoming, active, and past commutes',
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textInverse.withAlpha(190),
+        padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'My Trips',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w800,
+                            ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 6),
+                      Text(
+                        'Upcoming, active, and past commutes',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Colors.white.withAlpha(205),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              IconButton.filled(
-                onPressed: onBookTrip,
-                icon: const Icon(Icons.add_rounded, color: Colors.white),
-                tooltip: 'Book new trip',
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _StatChip(
-                  label: 'Upcoming',
-                  value: '$upcomingCount',
-                  icon: Icons.upcoming_rounded,
+                IconButton.filled(
+                  onPressed: onBookTrip,
+                  icon: const Icon(Icons.add_rounded, color: Colors.white),
+                  tooltip: 'Book new trip',
                 ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: _StatChip(
-                  label: 'Active',
-                  value: '$activeCount',
-                  icon: Icons.directions_bus_rounded,
+              ],
+            ),
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: _StatChip(
+                    label: 'Upcoming',
+                    value: '$upcomingCount',
+                    icon: Icons.upcoming_rounded,
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+                const SizedBox(width: 8),
+                Expanded(
+                  child: _StatChip(
+                    label: 'Active',
+                    value: '$activeCount',
+                    icon: Icons.directions_bus_rounded,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

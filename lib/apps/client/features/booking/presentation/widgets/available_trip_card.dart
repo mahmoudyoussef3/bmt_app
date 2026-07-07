@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
-import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+
+import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 
 class AvailableTripCard extends StatelessWidget {
@@ -18,13 +17,8 @@ class AvailableTripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final lowSeats = trip.availableSeats <= 4;
 
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -34,12 +28,12 @@ class AvailableTripCard extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: ClientColors.primaryLight,
+                  color: Theme.of(context).colorScheme.primary.withAlpha(18),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Icon(
                   Icons.directions_bus_filled_rounded,
-                  color: ClientColors.primary,
+                  color: Colors.blue,
                 ),
               ),
               const SizedBox(width: 12),
@@ -49,25 +43,28 @@ class AvailableTripCard extends StatelessWidget {
                   children: [
                     Text(
                       trip.vehicleType,
-                      style: ClientTypography.bodyMedium(
-                        context,
-                      ).copyWith(fontWeight: FontWeight.w700),
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Vehicle ${trip.vehicleId}',
-                      style: ClientTypography.bodySmall(
-                        context,
-                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(170),
+                      ),
                     ),
                   ],
                 ),
               ),
               Text(
                 trip.startingPrice,
-                style: ClientTypography.priceMedium(
-                  context,
-                ).copyWith(color: ClientColors.primary, fontSize: 16),
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ],
           ),
@@ -76,14 +73,16 @@ class AvailableTripCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 18,
-                backgroundColor: ClientColors.primaryLight,
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.primary.withAlpha(18),
                 child: Text(
                   trip.driverName.isNotEmpty
                       ? trip.driverName.substring(0, 1).toUpperCase()
                       : '?',
                   style: const TextStyle(
-                    color: ClientColors.primary,
-                    fontWeight: FontWeight.w700,
+                    color: Colors.blue,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
@@ -94,44 +93,34 @@ class AvailableTripCard extends StatelessWidget {
                   children: [
                     Text(
                       trip.driverName,
-                      style: ClientTypography.bodyMedium(
-                        context,
-                      ).copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                     Text(
                       'Licensed captain',
-                      style: ClientTypography.bodySmall(
-                        context,
-                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withAlpha(170),
+                      ),
                     ),
                   ],
                 ),
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: lowSeats
-                      ? ClientColors.journeyAmberLight
-                      : ClientColors.journeyGreenLight,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  lowSeats ? '${trip.availableSeats} left' : 'Available',
-                  style: ClientTypography.labelSmall(context).copyWith(
-                    color: lowSeats
-                        ? ClientColors.onJourneyAmber
-                        : ClientColors.onJourneyGreen,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
+              StatusChip(
+                label: lowSeats ? '${trip.availableSeats} left' : 'Available',
+                color: lowSeats
+                    ? Theme.of(context).colorScheme.tertiary.withAlpha(24)
+                    : Theme.of(context).colorScheme.secondary.withAlpha(20),
+                textColor: lowSeats
+                    ? Theme.of(context).colorScheme.tertiary
+                    : Theme.of(context).colorScheme.secondary,
               ),
             ],
           ),
           const SizedBox(height: 14),
-          Divider(color: ClientColors.borderFor(context)),
+          Divider(color: Theme.of(context).colorScheme.outline),
           const SizedBox(height: 12),
           Wrap(
             spacing: 16,
@@ -155,7 +144,7 @@ class AvailableTripCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 14),
-          ClientButton(label: 'Book Now', expand: true, onPressed: onBook),
+          AppButton.primary(text: 'Book Now', onPressed: onBook),
         ],
       ),
     );
@@ -174,22 +163,22 @@ class _Info extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: ClientColors.primary),
+        Icon(icon, size: 16, color: Theme.of(context).colorScheme.primary),
         const SizedBox(width: 6),
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               label,
-              style: ClientTypography.labelSmall(
-                context,
-              ).copyWith(color: ClientColors.textTertiaryFor(context)),
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(170),
+              ),
             ),
             Text(
               value,
-              style: ClientTypography.bodySmall(
+              style: Theme.of(
                 context,
-              ).copyWith(fontWeight: FontWeight.w600),
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
             ),
           ],
         ),

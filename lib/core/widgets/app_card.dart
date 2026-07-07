@@ -19,7 +19,7 @@ class AppCard extends StatelessWidget {
     final theme = Theme.of(context);
     final style =
         theme.extension<AppSurfaceStyle>() ??
-        AppSurfaceStyle.legacy(theme.colorScheme);
+        AppSurfaceStyle.flat(theme.colorScheme);
     final radius = BorderRadius.circular(style.radius);
     final card = Container(
       padding: padding,

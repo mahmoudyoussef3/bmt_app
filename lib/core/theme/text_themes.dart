@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// AppTextThemes implements the typographic system described in
-/// docs/FLUTTER_TEXT_STYLES.dart and DESIGN_SYSTEM_OVERVIEW.md.
+/// Shared premium typography for the BMT system.
 class AppTextThemes {
   AppTextThemes._();
 
-  // Centralized scale and weights for consistent typography across the app.
-  static const double _scale = 1.0; // keep multiplier for easy tuning
-  static const FontWeight _b = FontWeight.w700;
-  static const FontWeight _sb = FontWeight.w600;
+  static const double _scale = 1.0;
+  static const FontWeight _b = FontWeight.w800;
+  static const FontWeight _sb = FontWeight.w700;
   static const FontWeight _m = FontWeight.w500;
   static const FontWeight _r = FontWeight.w400;
 
@@ -18,71 +16,76 @@ class AppTextThemes {
 
     final baseTextTheme =
         TextTheme(
-          // Page / Section titles
           displayLarge: TextStyle(
-            fontSize: 28 * _scale,
+            fontSize: 30 * _scale,
             fontWeight: _b,
-            height: 1.2,
-            letterSpacing: -0.4,
-          ), // H1
+            height: 1.12,
+            letterSpacing: -0.5,
+          ),
           displayMedium: TextStyle(
-            fontSize: 22 * _scale,
-            fontWeight: _sb,
-            height: 1.25,
-          ), // H2
+            fontSize: 24 * _scale,
+            fontWeight: _b,
+            height: 1.16,
+            letterSpacing: -0.2,
+          ),
           displaySmall: TextStyle(
+            fontSize: 20 * _scale,
+            fontWeight: _sb,
+            height: 1.22,
+            letterSpacing: -0.1,
+          ),
+          headlineSmall: TextStyle(
             fontSize: 18 * _scale,
             fontWeight: _sb,
-            height: 1.3,
-          ), // H3 / Card titles
-          // Body
+            height: 1.26,
+          ),
           bodyLarge: TextStyle(
             fontSize: 16 * _scale,
             fontWeight: _r,
-            height: 1.6,
-          ), // comfortable reading
+            height: 1.58,
+          ),
           bodyMedium: TextStyle(
             fontSize: 14 * _scale,
             fontWeight: _m,
             height: 1.5,
-            letterSpacing: 0.2,
+            letterSpacing: 0.1,
           ),
           bodySmall: TextStyle(
             fontSize: 13 * _scale,
             fontWeight: _r,
-            height: 1.45,
+            height: 1.42,
+            letterSpacing: 0.1,
+          ),
+          labelLarge: TextStyle(
+            fontSize: 14 * _scale,
+            fontWeight: _sb,
+            height: 1.3,
             letterSpacing: 0.2,
           ),
-
-          // Labels / badges
-          labelLarge: TextStyle(
-            fontSize: 13 * _scale,
-            fontWeight: _m,
-            height: 1.4,
-            letterSpacing: 0.4,
+          labelMedium: TextStyle(
+            fontSize: 12 * _scale,
+            fontWeight: _sb,
+            height: 1.25,
+            letterSpacing: 0.35,
           ),
           labelSmall: TextStyle(
-            fontSize: 12 * _scale,
-            fontWeight: _r,
-            height: 1.4,
-            letterSpacing: 0.4,
+            fontSize: 11 * _scale,
+            fontWeight: _m,
+            height: 1.2,
+            letterSpacing: 0.35,
           ),
-
-          // Buttons / action labels
           titleLarge: TextStyle(
+            fontSize: 18 * _scale,
+            fontWeight: _sb,
+            height: 1.28,
+          ),
+          titleMedium: TextStyle(
             fontSize: 16 * _scale,
             fontWeight: _sb,
             height: 1.3,
           ),
-
-          // Captions / small helper text
-          titleMedium: TextStyle(
-            fontSize: 12 * _scale,
-            fontWeight: _r,
-            height: 1.4,
-          ),
           titleSmall: TextStyle(
-            fontSize: 11 * _scale,
+            fontSize: 14 * _scale,
             fontWeight: _m,
             height: 1.3,
           ),
@@ -95,7 +98,6 @@ class AppTextThemes {
     return GoogleFonts.outfitTextTheme(baseTextTheme);
   }
 
-  // Semantic helpers for common patterns
   static TextStyle headlineStrong(ColorScheme cs) =>
       textThemeFor(cs).displayLarge!;
   static TextStyle subtitle(ColorScheme cs) => textThemeFor(cs).displaySmall!;
@@ -103,9 +105,9 @@ class AppTextThemes {
 
   static TextStyle badgeText(ColorScheme cs) => GoogleFonts.outfit(
     fontSize: 11 * _scale,
-    fontWeight: _m,
-    height: 1.4,
-    letterSpacing: 0.4,
+    fontWeight: _sb,
+    height: 1.2,
+    letterSpacing: 0.35,
     color: cs.onSurface,
   );
 
@@ -119,7 +121,7 @@ class AppTextThemes {
   static TextStyle smallNumeric(ColorScheme cs) => GoogleFonts.firaCode(
     fontSize: 14 * _scale,
     fontWeight: _m,
-    height: 1.4,
+    height: 1.3,
     color: cs.onSurface,
   );
 }

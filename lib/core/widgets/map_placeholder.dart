@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/widgets/app_card.dart';
+
 class MapPlaceholder extends StatelessWidget {
   final double height;
   const MapPlaceholder({super.key, this.height = 220});
@@ -7,73 +9,69 @@ class MapPlaceholder extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      height: height,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.outline.withAlpha(120)),
-        gradient: LinearGradient(
-          colors: [
-            scheme.primary.withAlpha(80),
-            scheme.secondary.withAlpha(55),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(32),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Container(
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            colors: [
+              scheme.primary.withAlpha(52),
+              scheme.secondary.withAlpha(38),
+              scheme.surfaceContainerHighest.withAlpha(70),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0.18,
-              child: CustomPaint(
-                painter: _MapGridPainter(color: scheme.onSurface),
+        ),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Opacity(
+                opacity: 0.14,
+                child: CustomPaint(
+                  painter: _MapGridPainter(color: scheme.onSurface),
+                ),
               ),
             ),
-          ),
-          Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: scheme.surface.withAlpha(88),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: scheme.onSurface.withAlpha(25)),
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(18),
+                    decoration: BoxDecoration(
+                      color: scheme.surface.withAlpha(110),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: scheme.outline.withAlpha(80)),
+                    ),
+                    child: Icon(
+                      Icons.map_rounded,
+                      size: 44,
+                      color: scheme.primary,
+                    ),
                   ),
-                  child: Icon(
-                    Icons.map_rounded,
-                    size: 44,
-                    color: scheme.onSurface,
+                  const SizedBox(height: 14),
+                  Text(
+                    'Live route preview',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'Live route preview',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Real-time vehicle position and route flow',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurface.withAlpha(180),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Real-time vehicle position and route flow',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(175),
+                    ),
+                    textAlign: TextAlign.center,
                   ),
-                  textAlign: TextAlign.center,
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

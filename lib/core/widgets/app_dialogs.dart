@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/app_typography.dart';
 import 'package:bmt_app/core/widgets/app_button.dart';
@@ -37,7 +38,7 @@ class AppDialogs {
                 borderRadius: BorderRadius.circular(AppLayout.radiusLg),
                 boxShadow: [
                   BoxShadow(
-                    color: scheme.shadow.withAlpha(25),
+                    color: Colors.black.withAlpha(18),
                     blurRadius: 24,
                     spreadRadius: 1,
                     offset: const Offset(0, 10),
@@ -60,9 +61,7 @@ class AppDialogs {
                       color: scheme.error,
                     ),
                   ),
-
                   const SizedBox(height: AppLayout.spaceLg),
-
                   Text(
                     displayTitle,
                     textAlign: TextAlign.center,
@@ -70,9 +69,7 @@ class AppDialogs {
                       scheme,
                     ).copyWith(fontWeight: FontWeight.w700),
                   ),
-
                   const SizedBox(height: AppLayout.spaceMd),
-
                   Text(
                     message,
                     textAlign: TextAlign.center,
@@ -80,9 +77,7 @@ class AppDialogs {
                       scheme,
                     ).copyWith(color: scheme.onSurface.withAlpha(180)),
                   ),
-
                   const SizedBox(height: AppLayout.spaceXl),
-
                   Row(
                     children: [
                       Expanded(
@@ -93,10 +88,8 @@ class AppDialogs {
                           },
                         ),
                       ),
-
                       if (onRetry != null) ...[
                         const SizedBox(width: AppLayout.spaceMd),
-
                         Expanded(
                           child: AppButton.primary(
                             text: l10n.common_retry,
@@ -148,25 +141,19 @@ class AppDialogs {
                   size: 42,
                   color: accent,
                 ),
-
                 const SizedBox(height: AppLayout.spaceLg),
-
                 Text(
                   title,
                   textAlign: TextAlign.center,
                   style: AppTypography.heading3(scheme),
                 ),
-
                 const SizedBox(height: AppLayout.spaceMd),
-
                 Text(
                   message,
                   textAlign: TextAlign.center,
                   style: AppTypography.body(scheme),
                 ),
-
                 const SizedBox(height: AppLayout.spaceXl),
-
                 Row(
                   children: [
                     Expanded(
@@ -177,9 +164,7 @@ class AppDialogs {
                         },
                       ),
                     ),
-
                     const SizedBox(width: AppLayout.spaceMd),
-
                     Expanded(
                       child: isDestructive
                           ? SizedBox(
@@ -189,7 +174,9 @@ class AppDialogs {
                                   backgroundColor: scheme.error,
                                   foregroundColor: scheme.onError,
                                   shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(16),
+                                    borderRadius: BorderRadius.circular(
+                                      AppLayout.radiusLg,
+                                    ),
                                   ),
                                 ),
                                 onPressed: () {

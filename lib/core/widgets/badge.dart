@@ -11,13 +11,13 @@ class AppBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final fg = color ?? scheme.primary;
-    final bg = fg.withAlpha(36);
+    final bg = fg.withAlpha(24);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: fg.withAlpha(70)),
+        border: Border.all(color: fg.withAlpha(90)),
       ),
       child: Text(
         text,

@@ -40,8 +40,9 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(14),
     );
 
     final child = isLoading
@@ -63,7 +64,11 @@ class AppButton extends StatelessWidget {
         height: height ?? 48,
         child: OutlinedButton(
           onPressed: isLoading ? null : onPressed,
-          style: OutlinedButton.styleFrom(shape: shape),
+          style: OutlinedButton.styleFrom(
+            shape: shape,
+            side: BorderSide(color: scheme.primary.withAlpha(180)),
+            foregroundColor: scheme.primary,
+          ),
           child: child,
         ),
       );
@@ -73,7 +78,11 @@ class AppButton extends StatelessWidget {
       height: height ?? 48,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(shape: shape),
+        style: ElevatedButton.styleFrom(
+          shape: shape,
+          backgroundColor: scheme.primary,
+          foregroundColor: scheme.onPrimary,
+        ),
         child: child,
       ),
     );

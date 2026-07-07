@@ -28,9 +28,14 @@ class AnimatedVehicleMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = sample.isStale ? staleColor : color;
+    final reducedMotion = WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations;
     final haloAlpha = sample.isStale
         ? 30
-        : pulseValue == null
+        : reducedMotion || pulseValue == null
         ? 55
         : (55 + 90 * math.sin(pulseValue! * math.pi)).round().clamp(0, 255);
     final showHeading = !sample.isStale && sample.isMoving;

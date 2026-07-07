@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/core/theme/text_themes.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 
 /// A single mapped stop: its coordinate and (optional) display name.
@@ -65,14 +65,15 @@ List<RouteMapStop> routeMapStopsFromPins(List<MapPinOption> pins) {
 class RouteMapStyle {
   const RouteMapStyle._();
 
-  static Color start(BuildContext context) => ClientColors.journeyGreen;
+  static Color start(BuildContext context) => AppColors.secondary;
 
   static Color end(BuildContext context) => Theme.of(context).colorScheme.error;
 
-  static Color stop(BuildContext context) => ClientColors.primaryFor(context);
+  static Color stop(BuildContext context) =>
+      Theme.of(context).colorScheme.primary;
 
   static Color routeLine(BuildContext context) =>
-      ClientColors.primaryFor(context);
+      Theme.of(context).colorScheme.primary;
 
   /// Marker fill color by position along the ordered route.
   static Color colorFor(BuildContext context, int index, int count) {
@@ -102,32 +103,32 @@ class RouteMapStyle {
   }
 
   static Color surface(BuildContext context) =>
-      ClientColors.surfaceFor(context);
+      Theme.of(context).colorScheme.surface;
 
-  static Color border(BuildContext context) => ClientColors.borderFor(context);
+  static Color border(BuildContext context) =>
+      Theme.of(context).colorScheme.outline;
 
   static Color onSurface(BuildContext context) =>
-      ClientColors.textPrimaryFor(context);
+      Theme.of(context).colorScheme.onSurface;
 
   static Color onSurfaceMuted(BuildContext context) =>
-      ClientColors.textSecondaryFor(context);
+      Theme.of(context).colorScheme.onSurface.withAlpha(170);
 
   /// Softer in dark mode: heavy shadows on a dark basemap read as smudges.
   static List<BoxShadow> shadow(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return [
       BoxShadow(
-        color: ClientColors.shadowFor(context).withAlpha(isDark ? 36 : 55),
-        blurRadius: isDark ? 12 : 16,
+        color: Colors.black.withAlpha(isDark ? 34 : 18),
+        blurRadius: isDark ? 14 : 18,
         offset: Offset(0, isDark ? 4 : 6),
       ),
     ];
   }
 
-  static BorderRadius get pill => BorderRadius.circular(ClientRadius.pill);
+  static BorderRadius get pill => BorderRadius.circular(AppTokens.radiusSheet);
 
-  static TextStyle pillLabel(BuildContext context) =>
-      ClientTypography.labelSmall(
-        context,
-      ).copyWith(fontWeight: FontWeight.w800);
+  static TextStyle pillLabel(BuildContext context) => AppTextThemes.caption(
+    Theme.of(context).colorScheme,
+  ).copyWith(fontWeight: FontWeight.w800);
 }

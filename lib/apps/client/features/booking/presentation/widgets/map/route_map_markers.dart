@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/theme/text_themes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_models.dart';
 
 /// Builds a tappable station pin whose pointer tip sits exactly on the
@@ -70,6 +70,13 @@ class _MarkerEntrance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations) {
+      return child;
+    }
     final delayMs = 60 * staggerIndex.clamp(0, 6);
     return TweenAnimationBuilder<double>(
       tween: Tween(begin: 0, end: 1),
@@ -188,7 +195,27 @@ class _PulseHaloState extends State<_PulseHalo>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1400),
-    )..repeat();
+    );
+    _syncMotionPreference();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _syncMotionPreference();
+  }
+
+  void _syncMotionPreference() {
+    final reducedMotion = WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations;
+    if (reducedMotion) {
+      _controller.stop();
+    } else if (!_controller.isAnimating) {
+      _controller.repeat();
+    }
   }
 
   @override
@@ -199,6 +226,21 @@ class _PulseHaloState extends State<_PulseHalo>
 
   @override
   Widget build(BuildContext context) {
+    final reducedMotion = WidgetsBinding
+        .instance
+        .platformDispatcher
+        .accessibilityFeatures
+        .disableAnimations;
+    if (reducedMotion) {
+      return Container(
+        width: widget.diameter * 1.12,
+        height: widget.diameter * 1.12,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: widget.color.withAlpha(42),
+        ),
+      );
+    }
     return AnimatedBuilder(
       animation: _controller,
       builder: (context, _) {
@@ -282,8 +324,8 @@ class _Callout extends StatelessWidget {
                   name.isEmpty ? 'Route stop' : name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
-                  style: ClientTypography.labelLarge(
-                    context,
+                  style: AppTextThemes.caption(
+                    Theme.of(context).colorScheme,
                   ).copyWith(fontWeight: FontWeight.w800),
                 ),
               ),

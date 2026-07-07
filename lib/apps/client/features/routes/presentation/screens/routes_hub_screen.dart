@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
-import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_section_header.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
@@ -11,6 +8,9 @@ import 'package:bmt_app/apps/client/features/routes/domain/entities/routes_hub_d
 import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_hub_cubit.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_hub_state.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
+import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 /// Routes tab — premium route discovery entry into the booking search flow.
 class RoutesHubScreen extends StatefulWidget {
@@ -113,8 +113,8 @@ class _LoadedBody extends StatelessWidget {
             isLast: step.step == data.flowSteps.length,
           ),
         const SizedBox(height: 28),
-        ClientButton.secondary(
-          label: 'Browse popular routes',
+        AppButton.secondary(
+          text: 'Browse popular routes',
           icon: const Icon(Icons.trending_up_rounded, size: 18),
           onPressed: () => onOpenAction(data.popularRoutesAction),
         ),
@@ -134,33 +134,76 @@ class _GradientHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final scheme = Theme.of(context).colorScheme;
+    return AppCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [ClientColors.primary, Color(0xFF1554C8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              scheme.primary.withAlpha(220),
+              scheme.secondary.withAlpha(210),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(22),
         ),
-        borderRadius: BorderRadius.circular(24),
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                color: Colors.white,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              subtitle,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: Colors.white.withAlpha(210),
+              ),
+            ),
+            const SizedBox(height: 14),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: const [
+                _HeroTag(label: 'Fast discovery'),
+                _HeroTag(label: 'Live availability'),
+                _HeroTag(label: 'Premium routes'),
+              ],
+            ),
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: ClientTypography.headingSmall(context).copyWith(
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: ClientTypography.bodySmall(context).copyWith(
-              color: Colors.white.withAlpha(200),
-            ),
-          ),
-        ],
+    );
+  }
+}
+
+class _HeroTag extends StatelessWidget {
+  const _HeroTag({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(24),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: Colors.white.withAlpha(38)),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Colors.white,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }
@@ -182,13 +225,8 @@ class _SearchCtaCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
+    return AppCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(50),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: scheme.outline.withAlpha(50)),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -198,13 +236,13 @@ class _SearchCtaCard extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: ClientColors.primary.withAlpha(20),
+                  color: scheme.primary.withAlpha(18),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.search_rounded,
                   size: 24,
-                  color: ClientColors.primary,
+                  color: scheme.primary,
                 ),
               ),
               const SizedBox(width: 16),
@@ -214,16 +252,15 @@ class _SearchCtaCard extends StatelessWidget {
                   children: [
                     Text(
                       searchTitle,
-                      style: ClientTypography.headingSmall(context).copyWith(
-                        color: ClientColors.textPrimaryFor(context),
-                        fontSize: 16,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       searchDescription,
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurface.withAlpha(170),
                         height: 1.3,
                       ),
                     ),
@@ -233,7 +270,7 @@ class _SearchCtaCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
-          ClientButton(label: 'Search trips', onPressed: onSearch),
+          AppButton.primary(text: 'Search trips', onPressed: onSearch),
         ],
       ),
     );
@@ -266,16 +303,17 @@ class _FlowStep extends StatelessWidget {
               Container(
                 width: 28,
                 height: 28,
-                decoration: const BoxDecoration(
-                  color: ClientColors.primary,
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary,
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Text(
                     '$step',
-                    style: ClientTypography.labelMedium(
-                      context,
-                    ).copyWith(color: ClientColors.textInverse),
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ),

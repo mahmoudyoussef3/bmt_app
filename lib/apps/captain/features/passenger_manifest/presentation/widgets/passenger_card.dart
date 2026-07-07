@@ -29,9 +29,9 @@ class PassengerCard extends StatelessWidget {
         onSelect: (status) {
           Navigator.pop(sheetCtx);
           context.read<PassengerManifestCubit>().updateStatus(
-                tripPassengerId: passenger.id,
-                status: status,
-              );
+            tripPassengerId: passenger.id,
+            status: status,
+          );
         },
       ),
     );
@@ -41,135 +41,143 @@ class PassengerCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final statusColor = _statusColor(passenger.status);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: CaptainColors.surfaceFor(context),
-        borderRadius: CaptainDesignTokens.br24,
-        boxShadow: CaptainDesignTokens.softShadow(context),
-      ),
-      child: ClipRRect(
-        borderRadius: CaptainDesignTokens.br24,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Status indicator strip
-              Container(width: 6, color: statusColor),
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                      CaptainDesignTokens.s16, CaptainDesignTokens.s16, CaptainDesignTokens.s12, CaptainDesignTokens.s16),
-                  child: Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      AppAvatar(initials: passenger.name.isNotEmpty ? passenger.name[0] : '?'),
-                      const SizedBox(width: CaptainDesignTokens.s16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
+    return AppCard(
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(width: 6, color: statusColor),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    AppAvatar(
+                      initials: passenger.name.isNotEmpty
+                          ? passenger.name[0]
+                          : '?',
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  passenger.name,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                              _StatusBadge(status: passenger.status),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'مقعد ${passenger.seat}  •  ${passenger.pickupPoint}',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withAlpha(170),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                          ),
+                          if (passenger.destination.isNotEmpty) ...[
+                            const SizedBox(height: 8),
                             Row(
                               children: [
-                                Expanded(
-                                  child: Text(
-                                    passenger.name,
-                                    style: CaptainTypography.titleMedium(context).copyWith(
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                  ),
+                                Icon(
+                                  Icons.arrow_forward_rounded,
+                                  size: 14,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withAlpha(170),
                                 ),
-                                _StatusBadge(status: passenger.status),
+                                const SizedBox(width: 8),
+                                Text(
+                                  passenger.destination,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Theme.of(
+                                          context,
+                                        ).colorScheme.onSurface.withAlpha(170),
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'مقعد ${passenger.seat}  •  ${passenger.pickupPoint}',
-                              style: CaptainTypography.labelSmall(context).copyWith(
-                                    color: CaptainColors.textSecondaryFor(context),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                            ),
-                            if (passenger.destination.isNotEmpty) ...[
-                              const SizedBox(height: CaptainDesignTokens.s8),
-                              Row(
-                                children: [
-                                  Icon(Icons.arrow_forward_rounded,
-                                      size: 14, color: CaptainColors.textSecondaryFor(context)),
-                                  const SizedBox(width: CaptainDesignTokens.s8),
-                                  Text(
-                                    passenger.destination,
-                                    style: CaptainTypography.labelSmall(context).copyWith(
-                                          color: CaptainColors.textSecondaryFor(context),
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                            if (passenger.pickupTime.isNotEmpty) ...[
-                              const SizedBox(height: CaptainDesignTokens.s8),
-                              Row(
-                                children: [
-                                  const Icon(Icons.schedule_rounded,
-                                      size: 14, color: CaptainColors.primary),
-                                  const SizedBox(width: CaptainDesignTokens.s8),
-                                  Text(
-                                    passenger.pickupTime,
-                                    style: CaptainTypography.labelSmall(context).copyWith(
-                                          color: CaptainColors.primary,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                  ),
-                                ],
-                              ),
-                            ],
                           ],
-                        ),
-                      ),
-                      const SizedBox(width: CaptainDesignTokens.s12),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          _ActionButton(
-                            icon: Icons.edit_rounded,
-                            tooltip: 'تغيير الحالة',
-                            color: CaptainColors.primary,
-                            onPressed: () => _showStatusSheet(context),
-                          ),
-                          const SizedBox(height: CaptainDesignTokens.s8),
-                          _ActionButton(
-                            icon: Icons.call_rounded,
-                            tooltip: 'اتصال',
-                            color: CaptainColors.success,
-                            onPressed: onCall,
-                          ),
-                          const SizedBox(height: CaptainDesignTokens.s8),
-                          _ActionButton(
-                            icon: Icons.chat_bubble_outline_rounded,
-                            tooltip: 'مراسلة',
-                            color: CaptainColors.primary,
-                            onPressed: onChat,
-                          ),
+                          if (passenger.pickupTime.isNotEmpty) ...[
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.schedule_rounded,
+                                  size: 14,
+                                  color: Colors.blue,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  passenger.pickupTime,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(
+                                        color: Colors.blue,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ],
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _ActionButton(
+                          icon: Icons.edit_rounded,
+                          tooltip: 'تغيير الحالة',
+                          color: Colors.blue,
+                          onPressed: () => _showStatusSheet(context),
+                        ),
+                        const SizedBox(height: 8),
+                        _ActionButton(
+                          icon: Icons.call_rounded,
+                          tooltip: 'اتصال',
+                          color: Colors.green,
+                          onPressed: onCall,
+                        ),
+                        const SizedBox(height: 8),
+                        _ActionButton(
+                          icon: Icons.chat_bubble_outline_rounded,
+                          tooltip: 'مراسلة',
+                          color: Colors.blue,
+                          onPressed: onChat,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Color _statusColor(PassengerBoardingStatus s) => switch (s) {
-        PassengerBoardingStatus.boarded => CaptainColors.success,
-        PassengerBoardingStatus.pending => CaptainColors.primary,
-        PassengerBoardingStatus.absent => CaptainColors.error,
-        PassengerBoardingStatus.late => CaptainColors.warning,
-        PassengerBoardingStatus.cancelled => CaptainColors.offline,
-      };
+    PassengerBoardingStatus.boarded => Colors.green,
+    PassengerBoardingStatus.pending => Colors.blue,
+    PassengerBoardingStatus.absent => Colors.red,
+    PassengerBoardingStatus.late => Colors.orange,
+    PassengerBoardingStatus.cancelled => Colors.grey,
+  };
 }
 
 class _StatusSheet extends StatelessWidget {
@@ -185,7 +193,12 @@ class _StatusSheet extends StatelessWidget {
         color: CaptainColors.surfaceFor(context),
         borderRadius: const BorderRadius.vertical(top: CaptainDesignTokens.r32),
       ),
-      padding: const EdgeInsets.fromLTRB(CaptainDesignTokens.s24, CaptainDesignTokens.s24, CaptainDesignTokens.s24, CaptainDesignTokens.s48),
+      padding: const EdgeInsets.fromLTRB(
+        CaptainDesignTokens.s24,
+        CaptainDesignTokens.s24,
+        CaptainDesignTokens.s24,
+        CaptainDesignTokens.s48,
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,21 +216,23 @@ class _StatusSheet extends StatelessWidget {
           const SizedBox(height: CaptainDesignTokens.s24),
           Text(
             passenger.name,
-            style: CaptainTypography.titleLarge(context).copyWith(fontWeight: FontWeight.w800),
+            style: CaptainTypography.titleLarge(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
           Text(
             'مقعد ${passenger.seat}',
-            style: CaptainTypography.labelMedium(context).copyWith(
-                  color: CaptainColors.textSecondaryFor(context),
-                ),
+            style: CaptainTypography.labelMedium(
+              context,
+            ).copyWith(color: CaptainColors.textSecondaryFor(context)),
           ),
           const SizedBox(height: CaptainDesignTokens.s24),
           Text(
             'تحديث الحالة',
             style: CaptainTypography.labelSmall(context).copyWith(
-                  color: CaptainColors.textSecondaryFor(context),
-                  fontWeight: FontWeight.w600,
-                ),
+              color: CaptainColors.textSecondaryFor(context),
+              fontWeight: FontWeight.w600,
+            ),
           ),
           const SizedBox(height: CaptainDesignTokens.s12),
           ..._statusOptions().map(
@@ -236,12 +251,37 @@ class _StatusSheet extends StatelessWidget {
   }
 
   List<(String, IconData, Color, PassengerBoardingStatus)> _statusOptions() => [
-        ('صعد', Icons.check_circle_rounded, CaptainColors.success, PassengerBoardingStatus.boarded),
-        ('بانتظار', Icons.hourglass_top_rounded, CaptainColors.primary, PassengerBoardingStatus.pending),
-        ('متأخر', Icons.timer_rounded, CaptainColors.warning, PassengerBoardingStatus.late),
-        ('غائب', Icons.person_off_rounded, CaptainColors.error, PassengerBoardingStatus.absent),
-        ('ملغي', Icons.cancel_rounded, CaptainColors.offline, PassengerBoardingStatus.cancelled),
-      ];
+    (
+      'صعد',
+      Icons.check_circle_rounded,
+      CaptainColors.success,
+      PassengerBoardingStatus.boarded,
+    ),
+    (
+      'بانتظار',
+      Icons.hourglass_top_rounded,
+      CaptainColors.primary,
+      PassengerBoardingStatus.pending,
+    ),
+    (
+      'متأخر',
+      Icons.timer_rounded,
+      CaptainColors.warning,
+      PassengerBoardingStatus.late,
+    ),
+    (
+      'غائب',
+      Icons.person_off_rounded,
+      CaptainColors.error,
+      PassengerBoardingStatus.absent,
+    ),
+    (
+      'ملغي',
+      Icons.cancel_rounded,
+      CaptainColors.offline,
+      PassengerBoardingStatus.cancelled,
+    ),
+  ];
 }
 
 class _StatusOption extends StatelessWidget {
@@ -271,9 +311,14 @@ class _StatusOption extends StatelessWidget {
           onTap: isActive ? null : onTap,
           borderRadius: CaptainDesignTokens.br16,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: CaptainDesignTokens.s16, vertical: CaptainDesignTokens.s16),
+            padding: const EdgeInsets.symmetric(
+              horizontal: CaptainDesignTokens.s16,
+              vertical: CaptainDesignTokens.s16,
+            ),
             decoration: BoxDecoration(
-              color: isActive ? color.withAlpha(20) : CaptainColors.surfaceFor(context),
+              color: isActive
+                  ? color.withAlpha(20)
+                  : CaptainColors.surfaceFor(context),
               borderRadius: CaptainDesignTokens.br16,
               border: Border.all(
                 color: isActive ? color : CaptainColors.dividerFor(context),
@@ -282,18 +327,25 @@ class _StatusOption extends StatelessWidget {
             ),
             child: Row(
               children: [
-                Icon(icon, color: isActive ? color : CaptainColors.textSecondaryFor(context), size: 24),
+                Icon(
+                  icon,
+                  color: isActive
+                      ? color
+                      : CaptainColors.textSecondaryFor(context),
+                  size: 24,
+                ),
                 const SizedBox(width: CaptainDesignTokens.s12),
                 Text(
                   label,
                   style: CaptainTypography.labelLarge(context).copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: isActive ? color : CaptainColors.textPrimaryFor(context),
-                      ),
+                    fontWeight: FontWeight.w800,
+                    color: isActive
+                        ? color
+                        : CaptainColors.textPrimaryFor(context),
+                  ),
                 ),
                 const Spacer(),
-                if (isActive)
-                  Icon(Icons.check_rounded, color: color, size: 20),
+                if (isActive) Icon(Icons.check_rounded, color: color, size: 20),
               ],
             ),
           ),
@@ -318,7 +370,10 @@ class _StatusBadge extends StatelessWidget {
       PassengerBoardingStatus.cancelled => ('ملغي', CaptainColors.offline),
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: CaptainDesignTokens.s12, vertical: CaptainDesignTokens.s4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CaptainDesignTokens.s12,
+        vertical: CaptainDesignTokens.s4,
+      ),
       decoration: BoxDecoration(
         color: color.withAlpha(30),
         borderRadius: CaptainDesignTokens.br8,
@@ -326,10 +381,9 @@ class _StatusBadge extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: CaptainTypography.labelSmall(context).copyWith(
-              color: color,
-              fontWeight: FontWeight.w800,
-            ),
+        style: CaptainTypography.labelSmall(
+          context,
+        ).copyWith(color: color, fontWeight: FontWeight.w800),
       ),
     );
   }

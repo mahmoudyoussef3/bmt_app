@@ -7,18 +7,18 @@ class AppLayout {
   AppLayout._();
 
   // Spacing scale
-  static const double spaceXs = 4;
-  static const double spaceSm = 8;
-  static const double spaceMd = 12;
-  static const double spaceLg = 16;
-  static const double spaceXl = 24;
-  static const double spaceXxl = 32;
+  static const double spaceXs = AppTokens.spaceXs;
+  static const double spaceSm = AppTokens.spaceSm;
+  static const double spaceMd = AppTokens.spaceMd;
+  static const double spaceLg = AppTokens.spaceLg;
+  static const double spaceXl = AppTokens.spaceXl;
+  static const double spaceXxl = AppTokens.spaceXxl;
 
   // Border radius
   static const double radiusSm = AppTokens.radiusSmall;
   static const double radiusMd = AppTokens.radius;
   static const double radiusLg = AppTokens.radiusLarge;
-  static const double radiusXl = 24;
+  static const double radiusXl = AppTokens.radiusSheet;
 
   static BorderRadius get borderRadiusCard => BorderRadius.circular(radiusLg);
   static BorderRadius get borderRadiusButton => BorderRadius.circular(radiusMd);

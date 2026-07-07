@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:bmt_app/core/theme/text_themes.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -112,26 +114,24 @@ class _KpiCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: color.withValues(
-                alpha: isDark ? 0.15 : 0.1,
-              ), // ~40/255 or 25/255
-              borderRadius: BorderRadius.circular(6),
+              color: color.withValues(alpha: isDark ? 0.18 : 0.12),
+              borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
               label,
-              style: TextStyle(
-                color: color,
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-              ),
+              style: AppTextThemes.badgeText(
+                Theme.of(context).colorScheme,
+              ).copyWith(color: color),
             ),
           ),
           const SizedBox(height: AppSpacing.medium),
           Text(
             value,
-            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
           ),
         ],
       ),

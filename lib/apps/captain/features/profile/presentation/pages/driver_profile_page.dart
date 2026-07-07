@@ -5,7 +5,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/core/widgets/widgets.dart' hide CaptainCard;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/core/theme/text_themes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_models.dart';
 
 /// Start/End legend pill so the marker colors are immediately understandable.
@@ -165,7 +164,9 @@ class RouteMapAttribution extends StatelessWidget {
         showRouting
             ? '© OpenStreetMap · CARTO · openrouteservice'
             : '© OpenStreetMap · CARTO',
-        style: ClientTypography.labelSmall(context).copyWith(fontSize: 9),
+        style: AppTextThemes.badgeText(
+          Theme.of(context).colorScheme,
+        ).copyWith(fontSize: 9),
       ),
     );
   }
@@ -178,7 +179,9 @@ class RouteMapEmptyPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ColoredBox(
-      color: ClientColors.surfaceMutedFor(context),
+      color: Theme.of(
+        context,
+      ).colorScheme.surfaceContainerHighest.withAlpha(70),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -189,27 +192,27 @@ class RouteMapEmptyPanel extends StatelessWidget {
                 width: 52,
                 height: 52,
                 decoration: BoxDecoration(
-                  color: ClientColors.surfaceFor(context),
-                  borderRadius: BorderRadius.circular(ClientRadius.lg),
+                  color: RouteMapStyle.surface(context),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
                 ),
                 child: Icon(
                   Icons.location_off_outlined,
-                  color: ClientColors.textTertiaryFor(context),
+                  color: RouteMapStyle.onSurfaceMuted(context),
                 ),
               ),
               const SizedBox(height: 12),
               Text(
                 'Map coordinates unavailable',
                 textAlign: TextAlign.center,
-                style: ClientTypography.labelLarge(context),
+                style: AppTextThemes.caption(Theme.of(context).colorScheme),
               ),
               const SizedBox(height: 4),
               Text(
                 'The route details are still available below.',
                 textAlign: TextAlign.center,
-                style: ClientTypography.bodySmall(
-                  context,
-                ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: RouteMapStyle.onSurfaceMuted(context),
+                ),
               ),
             ],
           ),
@@ -232,7 +235,7 @@ class _Pill extends StatelessWidget {
         color: RouteMapStyle.surface(context).withAlpha(240),
         borderRadius: RouteMapStyle.pill,
         border: Border.all(color: RouteMapStyle.border(context)),
-        boxShadow: ClientElevation.sm(context),
+        boxShadow: RouteMapStyle.shadow(context),
       ),
       child: child,
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_models.dart';
 
 /// "850 m" under a kilometre, otherwise "12.4 km".
@@ -32,17 +32,17 @@ class RouteMapInfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final headline = [
-      ?info.distance,
-      ?info.duration,
-    ].where((value) => value.trim().isNotEmpty).join('  ·  ');
+    final headline = <String>[
+      if ((info.distance ?? '').trim().isNotEmpty) info.distance!.trim(),
+      if ((info.duration ?? '').trim().isNotEmpty) info.duration!.trim(),
+    ].join('  ·  ');
 
     return Container(
       constraints: const BoxConstraints(maxWidth: 250),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: RouteMapStyle.surface(context).withAlpha(245),
-        borderRadius: BorderRadius.circular(ClientRadius.lg),
+        borderRadius: BorderRadius.circular(AppLayout.radiusLg),
         border: Border.all(color: RouteMapStyle.border(context)),
         boxShadow: RouteMapStyle.shadow(context),
       ),

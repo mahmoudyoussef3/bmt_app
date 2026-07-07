@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 
@@ -33,8 +34,7 @@ class AsyncStateView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (status) {
-      AsyncViewStatus.loading =>
-        loadingPlaceholder ?? const Center(child: CircularProgressIndicator()),
+      AsyncViewStatus.loading => loadingPlaceholder ?? const _LoadingView(),
       AsyncViewStatus.error => _ErrorView(
         message: errorMessage,
         onRetry: onRetry,
@@ -53,6 +53,40 @@ class AsyncStateView extends StatelessWidget {
       ),
       AsyncViewStatus.data => child,
     };
+  }
+}
+
+class _LoadingView extends StatelessWidget {
+  const _LoadingView();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Center(
+      child: AppCard(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SizedBox(
+              width: 28,
+              height: 28,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.6,
+                valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.medium),
+            Text(
+              'Loading data…',
+              style: Theme.of(
+                context,
+              ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
