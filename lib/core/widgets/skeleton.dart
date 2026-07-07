@@ -1,3 +1,4 @@
+import 'package:bmt_app/core/theme/motion_preference.dart';
 import 'package:flutter/material.dart';
 
 /// A single shimmering placeholder block used to build loading skeletons.
@@ -45,12 +46,7 @@ class _SkeletonBoxState extends State<SkeletonBox>
   }
 
   void _syncMotionPreference() {
-    final reducedMotion = WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations;
-    if (reducedMotion) {
+    if (AppMotion.reduceMotion) {
       _controller.stop();
     } else if (!_controller.isAnimating) {
       _controller.repeat();
@@ -70,11 +66,7 @@ class _SkeletonBoxState extends State<SkeletonBox>
     final highlight = Theme.of(context).colorScheme.primary.withAlpha(24);
     final radius = widget.borderRadius ?? BorderRadius.circular(8);
 
-    if (WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations) {
+    if (AppMotion.reduceMotion) {
       return Container(
         width: widget.width,
         height: widget.height,

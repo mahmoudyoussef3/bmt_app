@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/widgets/widgets.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_driver_row.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_route_marks.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 
+/// A trip list card: status (with a live-pulse dot when in progress — never
+/// color alone, spec FR-018), route, schedule, driver, and payment status.
 class TripCard extends StatelessWidget {
   const TripCard({super.key, required this.trip, required this.onTap});
 
@@ -15,18 +18,17 @@ class TripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return AppCard(
+    return ClientCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              StatusChip(
+              ClientStatusBadge(
+                status: journeyStatusFor(trip.status),
                 label: trip.statusLabel,
-                color: _journeyStatusColor(trip.status, scheme),
-                textColor: _journeyStatusColor(trip.status, scheme),
+                showDot: trip.status == TripStatus.inProgress,
               ),
               const Spacer(),
               Text(
@@ -42,7 +44,7 @@ class TripCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _RouteMarks(
+              TripRouteMarks(
                 pickupColor: scheme.tertiary,
                 dropoffColor: scheme.primary,
               ),
@@ -90,121 +92,8 @@ class TripCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              CircleAvatar(
-                radius: 14,
-                backgroundColor: scheme.primary.withAlpha(18),
-                child: Text(
-                  trip.driverInitials,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.primary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  trip.driverName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
-                ),
-              ),
-              _PaymentChip(
-                label: trip.paymentLabel,
-                status: trip.paymentStatus,
-              ),
-            ],
-          ),
+          TripDriverRow(trip: trip),
         ],
-      ),
-    );
-  }
-
-  static Color _journeyStatusColor(TripStatus status, ColorScheme scheme) {
-    return switch (status) {
-      TripStatus.upcoming => scheme.primary,
-      TripStatus.inProgress => scheme.tertiary,
-      TripStatus.completed => scheme.secondary,
-      TripStatus.cancelled => scheme.error,
-    };
-  }
-}
-
-class _RouteMarks extends StatelessWidget {
-  const _RouteMarks({required this.pickupColor, required this.dropoffColor});
-
-  final Color pickupColor;
-  final Color dropoffColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(color: pickupColor, shape: BoxShape.circle),
-        ),
-        Container(
-          width: 2,
-          height: 22,
-          margin: const EdgeInsets.symmetric(vertical: 3),
-          decoration: BoxDecoration(
-            color: pickupColor.withAlpha(90),
-            borderRadius: BorderRadius.circular(999),
-          ),
-        ),
-        Icon(Icons.location_on_rounded, size: 14, color: dropoffColor),
-      ],
-    );
-  }
-}
-
-class _PaymentChip extends StatelessWidget {
-  const _PaymentChip({required this.label, required this.status});
-
-  final String label;
-  final PaymentStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final (bg, fg) = switch (status) {
-      PaymentStatus.paid => (
-        ClientColors.journeyGreenLight,
-        ClientColors.onJourneyGreen,
-      ),
-      PaymentStatus.pending => (
-        ClientColors.journeyAmberLight,
-        ClientColors.onJourneyAmber,
-      ),
-      PaymentStatus.underReview => (
-        ClientColors.journeyAmberLight,
-        ClientColors.onJourneyAmber,
-      ),
-      PaymentStatus.failed => (
-        ClientColors.journeyRedLight,
-        ClientColors.onJourneyRed,
-      ),
-      PaymentStatus.refunded => (
-        ClientColors.journeySlateLight,
-        ClientColors.onJourneySlate,
-      ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        label,
-        style: ClientTypography.labelSmall(context).copyWith(color: fg),
       ),
     );
   }

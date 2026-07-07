@@ -4,6 +4,7 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_layers.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_path_math.dart';
+import 'package:bmt_app/core/theme/motion_preference.dart';
 
 /// Draws the route with a progressive reveal: the line traces from origin to
 /// destination while the glow, casing and main stroke fade in staggered — no
@@ -51,11 +52,7 @@ class _AnimatedRouteLineState extends State<AnimatedRouteLine>
 
   void _restart() {
     _cumulative = RoutePathMath.cumulativeDistances(widget.coordinates);
-    if (WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations) {
+    if (AppMotion.reduceMotion) {
       _controller.value = 1;
     } else {
       _controller.forward(from: 0);
@@ -81,11 +78,7 @@ class _AnimatedRouteLineState extends State<AnimatedRouteLine>
   Widget build(BuildContext context) {
     if (widget.coordinates.length < 2) return const SizedBox.shrink();
 
-    if (WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations) {
+    if (AppMotion.reduceMotion) {
       return PolylineLayer(
         polylines: buildRoutePolylines(context, widget.coordinates),
       );

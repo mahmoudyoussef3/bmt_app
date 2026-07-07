@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:bmt_app/core/theme/motion_preference.dart';
 import 'package:flutter/material.dart';
 
 import '../../tracking/vehicle_sample.dart';
@@ -28,11 +29,7 @@ class AnimatedVehicleMarker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = sample.isStale ? staleColor : color;
-    final reducedMotion = WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations;
+    final reducedMotion = AppMotion.reduceMotion;
     final haloAlpha = sample.isStale
         ? 30
         : reducedMotion || pulseValue == null

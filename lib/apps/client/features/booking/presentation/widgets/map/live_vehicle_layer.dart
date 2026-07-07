@@ -6,6 +6,7 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_models.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_path_math.dart';
+import 'package:bmt_app/core/theme/motion_preference.dart';
 
 /// A live captain/vehicle position on the route map.
 class LiveVehicleData {
@@ -72,11 +73,7 @@ class _LiveVehicleLayerState extends State<LiveVehicleLayer>
     if (identical(next, _to)) return;
     _from = _current();
     _to = next;
-    if (WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations) {
+    if (AppMotion.reduceMotion) {
       _controller.value = 1;
     } else {
       _controller.forward(from: 0);
@@ -88,11 +85,7 @@ class _LiveVehicleLayerState extends State<LiveVehicleLayer>
   LiveVehicleData _current() {
     final from = _from, to = _to;
     if (from == null || to == null) return to ?? from!;
-    if (WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations) {
+    if (AppMotion.reduceMotion) {
       return to;
     }
     final t = Curves.easeInOut.transform(_controller.value);

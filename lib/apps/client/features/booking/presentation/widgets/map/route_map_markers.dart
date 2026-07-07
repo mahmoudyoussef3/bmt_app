@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 
+import 'package:bmt_app/core/theme/motion_preference.dart';
 import 'package:bmt_app/core/theme/text_themes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_models.dart';
 
@@ -70,11 +71,7 @@ class _MarkerEntrance extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations) {
+    if (AppMotion.reduceMotion) {
       return child;
     }
     final delayMs = 60 * staggerIndex.clamp(0, 6);
@@ -206,12 +203,7 @@ class _PulseHaloState extends State<_PulseHalo>
   }
 
   void _syncMotionPreference() {
-    final reducedMotion = WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations;
-    if (reducedMotion) {
+    if (AppMotion.reduceMotion) {
       _controller.stop();
     } else if (!_controller.isAnimating) {
       _controller.repeat();
@@ -226,11 +218,7 @@ class _PulseHaloState extends State<_PulseHalo>
 
   @override
   Widget build(BuildContext context) {
-    final reducedMotion = WidgetsBinding
-        .instance
-        .platformDispatcher
-        .accessibilityFeatures
-        .disableAnimations;
+    final reducedMotion = AppMotion.reduceMotion;
     if (reducedMotion) {
       return Container(
         width: widget.diameter * 1.12,
