@@ -164,6 +164,13 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
       },
       child: BookingFlowScaffold(
         title: AppLocalizations.of(context)!.booking_searchTrip,
+        actions: [
+          IconButton(
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: _retryLoadOptions,
+          ),
+        ],
         body: ListView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
           children: [

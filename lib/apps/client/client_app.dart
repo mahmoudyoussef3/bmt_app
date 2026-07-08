@@ -551,8 +551,15 @@ class _ClientAppState extends State<ClientApp> {
   }
 
   Widget _buildProfileScope(Widget child) {
-    return BlocProvider<ProfileCubit>(
-      create: (_) => clientGetIt<ProfileCubit>(),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ProfileCubit>(
+          create: (_) => clientGetIt<ProfileCubit>(),
+        ),
+        BlocProvider<ClientAuthCubit>(
+          create: (_) => clientGetIt<ClientAuthCubit>(),
+        ),
+      ],
       child: child,
     );
   }

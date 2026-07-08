@@ -5,6 +5,6 @@ class SignInCaptainUseCase {
 
   final CaptainAuthRepository _repository;
 
-  Future<void> call({required String email, required String password}) =>
-      _repository.signIn(email: email, password: password);
+  Future<void> call({required String phone}) =>
+      _repository.signInWithPhone(phone);
 }

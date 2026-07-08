@@ -23,8 +23,9 @@ class CaptainWelcomeHomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final first =
-        session.name.trim().isEmpty ? '' : session.name.trim().split(' ').first;
+    final first = session.name.trim().isEmpty
+        ? ''
+        : session.name.trim().split(' ').first;
 
     return Directionality(
       textDirection: TextDirection.rtl,
@@ -67,24 +68,27 @@ class CaptainWelcomeHomeScreen extends StatelessWidget {
                         children: [
                           Text(
                             'أهلاً${first.isEmpty ? '' : '، $first'} 👋',
-                            style: CaptainTypography.titleLarge(context)
-                                .copyWith(fontWeight: FontWeight.w900),
+                            style: CaptainTypography.titleLarge(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w900),
                           ),
                           const SizedBox(height: 4),
                           Directionality(
                             textDirection: TextDirection.ltr,
                             child: Text(
                               session.phone,
-                              style: CaptainTypography.bodyMedium(context)
-                                  .copyWith(color: scheme.onSurfaceVariant),
+                              style: CaptainTypography.bodyMedium(
+                                context,
+                              ).copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ),
                           if (session.employeeCode.isNotEmpty) ...[
                             const SizedBox(height: 2),
                             Text(
                               'كود الكابتن: ${session.employeeCode}',
-                              style: CaptainTypography.labelSmall(context)
-                                  .copyWith(color: scheme.onSurfaceVariant),
+                              style: CaptainTypography.labelSmall(
+                                context,
+                              ).copyWith(color: scheme.onSurfaceVariant),
                             ),
                           ],
                         ],

@@ -98,7 +98,8 @@ class _SupportTicketDetailsScreenState
                 backgroundColor: scheme.error,
                 behavior: SnackBarBehavior.floating,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12)),
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             );
           }
@@ -113,7 +114,8 @@ class _SupportTicketDetailsScreenState
                 iconTheme: IconThemeData(color: scheme.onSurface),
               ),
               body: Center(
-                  child: CircularProgressIndicator(color: scheme.primary)),
+                child: CircularProgressIndicator(color: scheme.primary),
+              ),
             );
           }
 
@@ -134,13 +136,21 @@ class _SupportTicketDetailsScreenState
                       children: [
                         _buildStatusAlertBox(context, ticket, scheme),
                         _buildMainDetailsCard(
-                            context, ticket, scheme, statusColor, statusIcon),
+                          context,
+                          ticket,
+                          scheme,
+                          statusColor,
+                          statusIcon,
+                        ),
                         if (ticket.internalNote != null &&
                             ticket.internalNote!.isNotEmpty)
                           _buildCustomerServiceNote(context, ticket, scheme),
                         if (state.attachments.isNotEmpty)
                           _buildAttachmentsList(
-                              context, state.attachments, scheme),
+                            context,
+                            state.attachments,
+                            scheme,
+                          ),
                         const SizedBox(height: 40),
                       ],
                     ),
@@ -160,9 +170,9 @@ class _SupportTicketDetailsScreenState
             body: Center(
               child: Text(
                 'Failed to load ticket details',
-                style: ClientTypography.bodyLarge(context).copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+                style: ClientTypography.bodyLarge(
+                  context,
+                ).copyWith(color: scheme.onSurfaceVariant),
               ),
             ),
           );
@@ -172,21 +182,31 @@ class _SupportTicketDetailsScreenState
   }
 
   Widget _buildAppBar(
-      BuildContext context, SupportTicket ticket, ColorScheme scheme) {
+    BuildContext context,
+    SupportTicket ticket,
+    ColorScheme scheme,
+  ) {
     return SliverAppBar(
       expandedHeight: 180,
       pinned: true,
       backgroundColor: scheme.surface,
       surfaceTintColor: Colors.transparent,
       iconTheme: IconThemeData(color: scheme.onSurface),
+      actions: [
+        IconButton(
+          tooltip: 'Refresh',
+          icon: const Icon(Icons.refresh_rounded),
+          onPressed: () =>
+              context.read<SupportCubit>().openTicketDetails(ticket.id),
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         titlePadding: const EdgeInsets.only(left: 48, right: 24, bottom: 16),
         title: Text(
           'Ticket ${ticket.ticketNumber}',
-          style: ClientTypography.headingSmall(context).copyWith(
-            color: scheme.onSurface,
-            fontWeight: FontWeight.w900,
-          ),
+          style: ClientTypography.headingSmall(
+            context,
+          ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w900),
         ),
         background: Stack(
           fit: StackFit.expand,
@@ -196,10 +216,7 @@ class _SupportTicketDetailsScreenState
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: [
-                    scheme.primary.withAlpha(20),
-                    scheme.surface,
-                  ],
+                  colors: [scheme.primary.withAlpha(20), scheme.surface],
                 ),
               ),
             ),
@@ -219,7 +236,10 @@ class _SupportTicketDetailsScreenState
   }
 
   Widget _buildStatusAlertBox(
-      BuildContext context, SupportTicket ticket, ColorScheme scheme) {
+    BuildContext context,
+    SupportTicket ticket,
+    ColorScheme scheme,
+  ) {
     if (ticket.status != TicketStatus.submitted &&
         ticket.status != TicketStatus.underReview) {
       return const SizedBox.shrink();
@@ -241,10 +261,9 @@ class _SupportTicketDetailsScreenState
           Expanded(
             child: Text(
               'Our customer service team is reviewing your ticket and may contact you shortly.',
-              style: ClientTypography.bodyMedium(context).copyWith(
-                color: scheme.onSurface,
-                fontWeight: FontWeight.w600,
-              ),
+              style: ClientTypography.bodyMedium(
+                context,
+              ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -252,8 +271,13 @@ class _SupportTicketDetailsScreenState
     );
   }
 
-  Widget _buildMainDetailsCard(BuildContext context, SupportTicket ticket,
-      ColorScheme scheme, Color statusColor, IconData statusIcon) {
+  Widget _buildMainDetailsCard(
+    BuildContext context,
+    SupportTicket ticket,
+    ColorScheme scheme,
+    Color statusColor,
+    IconData statusIcon,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
@@ -291,7 +315,9 @@ class _SupportTicketDetailsScreenState
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 6),
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: scheme.secondaryContainer.withAlpha(100),
                         borderRadius: BorderRadius.circular(8),
@@ -299,16 +325,19 @@ class _SupportTicketDetailsScreenState
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.category_rounded,
-                              size: 14, color: scheme.onSecondaryContainer),
+                          Icon(
+                            Icons.category_rounded,
+                            size: 14,
+                            color: scheme.onSecondaryContainer,
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             ticket.category,
-                            style:
-                                ClientTypography.labelMedium(context).copyWith(
-                              color: scheme.onSecondaryContainer,
-                              fontWeight: FontWeight.w700,
-                            ),
+                            style: ClientTypography.labelMedium(context)
+                                .copyWith(
+                                  color: scheme.onSecondaryContainer,
+                                  fontWeight: FontWeight.w700,
+                                ),
                           ),
                         ],
                       ),
@@ -316,8 +345,11 @@ class _SupportTicketDetailsScreenState
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.access_time_rounded,
-                            size: 16, color: scheme.onSurfaceVariant),
+                        Icon(
+                          Icons.access_time_rounded,
+                          size: 16,
+                          color: scheme.onSurfaceVariant,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           DateFormat('MMM dd, yyyy').format(ticket.createdAt),
@@ -338,7 +370,9 @@ class _SupportTicketDetailsScreenState
             decoration: BoxDecoration(
               color: scheme.surfaceContainerHighest.withAlpha(80),
               border: Border.symmetric(
-                horizontal: BorderSide(color: scheme.outlineVariant.withAlpha(30)),
+                horizontal: BorderSide(
+                  color: scheme.outlineVariant.withAlpha(30),
+                ),
               ),
             ),
             child: Row(
@@ -376,13 +410,16 @@ class _SupportTicketDetailsScreenState
                 ),
                 if (ticket.assignedAgentName != null)
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                     decoration: BoxDecoration(
                       color: scheme.surface,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: scheme.outlineVariant.withAlpha(50)),
+                        color: scheme.outlineVariant.withAlpha(50),
+                      ),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -397,16 +434,19 @@ class _SupportTicketDetailsScreenState
                         const SizedBox(height: 2),
                         Row(
                           children: [
-                            Icon(Icons.person_rounded,
-                                size: 14, color: scheme.primary),
+                            Icon(
+                              Icons.person_rounded,
+                              size: 14,
+                              color: scheme.primary,
+                            ),
                             const SizedBox(width: 4),
                             Text(
                               ticket.assignedAgentName!,
                               style: ClientTypography.labelMedium(context)
                                   .copyWith(
-                                color: scheme.onSurface,
-                                fontWeight: FontWeight.w700,
-                              ),
+                                    color: scheme.onSurface,
+                                    fontWeight: FontWeight.w700,
+                                  ),
                             ),
                           ],
                         ),
@@ -445,7 +485,10 @@ class _SupportTicketDetailsScreenState
   }
 
   Widget _buildCustomerServiceNote(
-      BuildContext context, SupportTicket ticket, ColorScheme scheme) {
+    BuildContext context,
+    SupportTicket ticket,
+    ColorScheme scheme,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
@@ -484,27 +527,28 @@ class _SupportTicketDetailsScreenState
           const SizedBox(height: 16),
           Text(
             ticket.internalNote!,
-            style: ClientTypography.bodyMedium(context).copyWith(
-              color: Colors.orange.shade900,
-              height: 1.6,
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(color: Colors.orange.shade900, height: 1.6),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildAttachmentsList(BuildContext context,
-      List<SupportAttachment> attachments, ColorScheme scheme) {
+  Widget _buildAttachmentsList(
+    BuildContext context,
+    List<SupportAttachment> attachments,
+    ColorScheme scheme,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           'Attachments',
-          style: ClientTypography.headingSmall(context).copyWith(
-            color: scheme.onSurface,
-            fontWeight: FontWeight.w800,
-          ),
+          style: ClientTypography.headingSmall(
+            context,
+          ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w800),
         ),
         const SizedBox(height: 16),
         ...attachments.map(
@@ -531,8 +575,11 @@ class _SupportTicketDetailsScreenState
                     color: scheme.secondaryContainer.withAlpha(100),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Icon(Icons.insert_drive_file_rounded,
-                      color: scheme.secondary, size: 24),
+                  child: Icon(
+                    Icons.insert_drive_file_rounded,
+                    color: scheme.secondary,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -552,9 +599,9 @@ class _SupportTicketDetailsScreenState
                         const SizedBox(height: 4),
                         Text(
                           _formatFileSize(attachment.fileSize!),
-                          style: ClientTypography.labelSmall(context).copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
+                          style: ClientTypography.labelSmall(
+                            context,
+                          ).copyWith(color: scheme.onSurfaceVariant),
                         ),
                       ],
                     ],
@@ -566,8 +613,11 @@ class _SupportTicketDetailsScreenState
                     color: scheme.surfaceContainerHighest.withAlpha(100),
                     shape: BoxShape.circle,
                   ),
-                  child: Icon(Icons.file_download_rounded,
-                      color: scheme.onSurfaceVariant, size: 20),
+                  child: Icon(
+                    Icons.file_download_rounded,
+                    color: scheme.onSurfaceVariant,
+                    size: 20,
+                  ),
                 ),
               ],
             ),

@@ -71,6 +71,17 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
           return BookingFlowScaffold(
             title: 'Choose trip and vehicle',
             query: _query,
+            actions: [
+              IconButton(
+                tooltip: 'Refresh',
+                icon: const Icon(Icons.refresh_rounded),
+                onPressed: () => context.read<BookingCubit>().loadVehicles(
+                  sort: _sort,
+                  routeId: _query.routeId,
+                  force: true,
+                ),
+              ),
+            ],
             body: _VehicleListingBody(
               state: state,
               vehicles: vehicles,

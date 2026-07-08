@@ -21,9 +21,8 @@ class PassengerManifestRepositoryImpl implements PassengerManifestRepository {
   Future<void> updatePassengerStatus({
     required String tripPassengerId,
     required PassengerBoardingStatus status,
-  }) =>
-      _dataSource.updatePassengerStatus(
-        tripPassengerId: tripPassengerId,
-        status: status,
-      );
+  }) => _dataSource.updatePassengerStatus(
+    tripPassengerId: tripPassengerId,
+    status: status,
+  );
 }

@@ -4,6 +4,7 @@ import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/profile/domain/entities/client_profile.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_state.dart';
@@ -52,81 +53,94 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 message: message,
                 onRetry: () => context.read<ProfileCubit>().load(),
               ),
-              ProfileLoaded(:final data) => ListView(
-                padding: AppLayout.pagePaddingWithTop,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [ClientColors.primary, Color(0xFF1554C8)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      children: [
-                        Container(
-                          width: 60,
-                          height: 60,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withAlpha(40),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Center(
-                            child: Text(
-                              data.profile.initials,
-                              style: ClientTypography.headingMedium(
-                                context,
-                              ).copyWith(color: Colors.white),
-                            ),
-                          ),
+              ProfileLoaded(:final data) => RefreshIndicator(
+                onRefresh: () => context.read<ProfileCubit>().load(),
+                child: ListView(
+                  padding: AppLayout.pagePaddingWithTop,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [ClientColors.primary, Color(0xFF1554C8)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                data.profile.name,
-                                style: ClientTypography.headingSmall(
+                        borderRadius: BorderRadius.circular(24),
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 60,
+                            height: 60,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withAlpha(40),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                data.profile.initials,
+                                style: ClientTypography.headingMedium(
                                   context,
                                 ).copyWith(color: Colors.white),
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                data.profile.email,
-                                style: ClientTypography.bodySmall(
-                                  context,
-                                ).copyWith(color: Colors.white.withAlpha(200)),
-                              ),
-                            ],
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // ── Sections ────────────────────────────────────────────
-                  for (final section in data.sections) ...[
-                    const SizedBox(height: AppLayout.spaceXl),
-                    ClientSectionHeader(title: section.title),
-                    const SizedBox(height: AppLayout.spaceSm),
-                    for (final item in section.items) ...[
-                      ProfileHubTile(
-                        icon: _iconForMenuItem(item),
-                        title: item.title,
-                        subtitle: item.subtitle,
-                        onTap: () {
-                          if (item.route == null) return;
-                          widget.onOpenRoute(item.route!);
-                        },
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  data.profile.name,
+                                  style: ClientTypography.headingSmall(
+                                    context,
+                                  ).copyWith(color: Colors.white),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  data.profile.email,
+                                  style: ClientTypography.bodySmall(context)
+                                      .copyWith(
+                                        color: Colors.white.withAlpha(200),
+                                      ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    // ── Sections ────────────────────────────────────────────
+                    for (final section in data.sections) ...[
+                      const SizedBox(height: AppLayout.spaceXl),
+                      ClientSectionHeader(title: section.title),
                       const SizedBox(height: AppLayout.spaceSm),
+                      for (final item in section.items) ...[
+                        ProfileHubTile(
+                          icon: _iconForMenuItem(item),
+                          title: item.title,
+                          subtitle: item.subtitle,
+                          onTap: () {
+                            if (item.route == null) return;
+                            widget.onOpenRoute(item.route!);
+                          },
+                        ),
+                        const SizedBox(height: AppLayout.spaceSm),
+                      ],
                     ],
+                    const SizedBox(height: 24),
+                    ClientButton(
+                      label: 'Log Out',
+                      icon: const Icon(Icons.logout_rounded),
+                      //   style: ClientButtonStyle.danger,
+                      onPressed: () {
+                        context.read<ClientAuthCubit>().signOut();
+                      },
+                    ),
+                    const SizedBox(height: 120),
                   ],
-                  const SizedBox(height: 120),
-                ],
+                ),
               ),
             },
           ),
@@ -150,4 +164,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     };
   }
 }
-

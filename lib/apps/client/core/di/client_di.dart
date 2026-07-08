@@ -14,6 +14,7 @@ import '../../features/auth/data/datasources/supabase_client_auth_datasource.dar
 import '../../features/auth/data/repositories/client_auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/client_auth_repository.dart';
 import '../../features/auth/domain/usecases/sign_in_with_email_usecase.dart';
+import '../../features/auth/domain/usecases/sign_out_usecase.dart';
 import '../../features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import '../../features/auth/domain/usecases/send_password_reset_email_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
@@ -254,11 +255,18 @@ void _registerAuthDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<SignOutUseCase>()) {
+    clientGetIt.registerLazySingleton<SignOutUseCase>(
+      () => SignOutUseCase(clientGetIt<ClientAuthRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<ClientAuthCubit>()) {
     clientGetIt.registerFactory<ClientAuthCubit>(
       () => ClientAuthCubit(
         signInWithEmail: clientGetIt<SignInWithEmailUseCase>(),
         signUpWithEmail: clientGetIt<SignUpWithEmailUseCase>(),
+        signOut: clientGetIt<SignOutUseCase>(),
       ),
     );
   }

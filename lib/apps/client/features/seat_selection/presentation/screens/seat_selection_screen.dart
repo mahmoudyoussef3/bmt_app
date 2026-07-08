@@ -79,9 +79,7 @@ class _SeatSelectionContent extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          color: ClientColors.backgroundFor(context),
-        ),
+        decoration: BoxDecoration(color: ClientColors.backgroundFor(context)),
         child: SafeArea(
           child: Column(
             children: [
@@ -206,6 +204,16 @@ class _SeatSelectionContent extends StatelessWidget {
                           height: 1.1,
                         ),
                       ),
+                    ),
+                    IconButton(
+                      tooltip: 'Refresh',
+                      icon: Icon(
+                        Icons.refresh_rounded,
+                        color: ClientColors.primaryFor(context),
+                      ),
+                      onPressed: () => context
+                          .read<SeatSelectionCubit>()
+                          .loadSeatSelection(data.tripId),
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(

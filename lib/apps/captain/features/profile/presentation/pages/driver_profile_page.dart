@@ -24,12 +24,16 @@ class DriverProfilePage extends StatelessWidget {
         return Scaffold(
           backgroundColor: CaptainColors.backgroundFor(context),
           body: switch (state) {
-            DriverProfileLoading() => const Center(child: CircularProgressIndicator()),
+            DriverProfileLoading() => const Center(
+              child: CircularProgressIndicator(),
+            ),
             DriverProfileError(:final message) => _ErrorBody(
-                message: message,
-                onRetry: () => context.read<DriverProfileCubit>().load(),
-              ),
-            DriverProfileLoaded(:final profile) => _ProfileBody(profile: profile),
+              message: message,
+              onRetry: () => context.read<DriverProfileCubit>().load(),
+            ),
+            DriverProfileLoaded(:final profile) => _ProfileBody(
+              profile: profile,
+            ),
           },
         );
       },
@@ -50,7 +54,12 @@ class _ProfileBody extends StatelessWidget {
         slivers: [
           _ProfileSliverHeader(profile: profile),
           SliverPadding(
-            padding: const EdgeInsets.fromLTRB(CaptainDesignTokens.s24, 0, CaptainDesignTokens.s24, CaptainDesignTokens.s48),
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              CaptainDesignTokens.s24,
+              0,
+              CaptainDesignTokens.s24,
+              120,
+            ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 const SizedBox(height: CaptainDesignTokens.s24),
@@ -88,34 +97,15 @@ class _ProfileSliverHeader extends StatelessWidget {
       pinned: true,
       elevation: 0,
       backgroundColor: CaptainColors.backgroundFor(context),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.logout_rounded, color: CaptainColors.textPrimaryFor(context)),
-          tooltip: 'تسجيل الخروج',
-          onPressed: () async {
-            final confirmed = await showDialog<bool>(
-              context: context,
-              builder: (_) => AlertDialog(
-                title: const Text('تسجيل الخروج'),
-                content: const Text('هل أنت متأكد من تسجيل الخروج؟'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.pop(context, false),
-                    child: const Text('إلغاء'),
-                  ),
-                  FilledButton(
-                    onPressed: () => Navigator.pop(context, true),
-                    child: const Text('خروج'),
-                  ),
-                ],
-              ),
-            );
-            if (confirmed == true) {
-              await captainGetIt<CaptainAuthCubit>().signOut();
-            }
-          },
+      centerTitle: true,
+      title: Text(
+        'ملفي',
+        style: CaptainTypography.titleMedium(context).copyWith(
+          fontWeight: FontWeight.w800,
+          color: CaptainColors.textPrimaryFor(context),
         ),
-      ],
+      ),
+
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
@@ -132,7 +122,10 @@ class _ProfileSliverHeader extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: CaptainColors.primary.withValues(alpha: 0.1),
-                    border: Border.all(color: CaptainColors.surfaceFor(context), width: 3),
+                    border: Border.all(
+                      color: CaptainColors.surfaceFor(context),
+                      width: 3,
+                    ),
                     boxShadow: CaptainDesignTokens.floatingShadow(context),
                   ),
                   child: profile.photoUrl != null
@@ -140,8 +133,10 @@ class _ProfileSliverHeader extends StatelessWidget {
                           child: Image.network(
                             profile.photoUrl!,
                             fit: BoxFit.cover,
-                            errorBuilder: (ctx, err, stack) =>
-                                _InitialsAvatar(name: profile.name, large: true),
+                            errorBuilder: (ctx, err, stack) => _InitialsAvatar(
+                              name: profile.name,
+                              large: true,
+                            ),
                           ),
                         )
                       : _InitialsAvatar(name: profile.name, large: true),
@@ -150,9 +145,9 @@ class _ProfileSliverHeader extends StatelessWidget {
                 Text(
                   profile.name,
                   style: CaptainTypography.titleLarge(context).copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: CaptainColors.textPrimaryFor(context),
-                      ),
+                    fontWeight: FontWeight.w900,
+                    color: CaptainColors.textPrimaryFor(context),
+                  ),
                 ),
                 if (profile.hasRating) ...[
                   const SizedBox(height: CaptainDesignTokens.s8),
@@ -162,14 +157,6 @@ class _ProfileSliverHeader extends StatelessWidget {
             ),
           ),
         ),
-        title: Text(
-          'ملفي',
-          style: CaptainTypography.titleMedium(context).copyWith(
-                fontWeight: FontWeight.w800,
-                color: CaptainColors.textPrimaryFor(context),
-              ),
-        ),
-        titlePadding: const EdgeInsets.symmetric(horizontal: CaptainDesignTokens.s24, vertical: CaptainDesignTokens.s16),
       ),
     );
   }
@@ -190,8 +177,8 @@ class _StatsCard extends StatelessWidget {
             CaptainColors.primary,
             CaptainColors.primary.withValues(alpha: 0.8),
           ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
         ),
         boxShadow: CaptainDesignTokens.floatingShadow(context),
       ),
@@ -207,15 +194,18 @@ class _StatsCard extends StatelessWidget {
                   color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: CaptainDesignTokens.br12,
                 ),
-                child: const Icon(Icons.bar_chart_rounded, size: 20, color: Colors.white),
+                child: const Icon(
+                  Icons.bar_chart_rounded,
+                  size: 20,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: CaptainDesignTokens.s12),
               Text(
                 'إحصائياتي',
-                style: CaptainTypography.titleSmall(context).copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
+                style: CaptainTypography.titleSmall(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w800, color: Colors.white),
               ),
             ],
           ),
@@ -228,7 +218,11 @@ class _StatsCard extends StatelessWidget {
                 icon: Icons.route_rounded,
                 isLight: true,
               ),
-              Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.2)),
+              Container(
+                width: 1,
+                height: 40,
+                color: Colors.white.withValues(alpha: 0.2),
+              ),
               _StatTile(
                 label: 'ركاب',
                 value: '${profile.totalPassengers}',
@@ -236,7 +230,11 @@ class _StatsCard extends StatelessWidget {
                 isLight: true,
               ),
               if (profile.hasRating) ...[
-                Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.2)),
+                Container(
+                  width: 1,
+                  height: 40,
+                  color: Colors.white.withValues(alpha: 0.2),
+                ),
                 _StatTile(
                   label: 'تقييم',
                   value: profile.averageRating.toStringAsFixed(1),
@@ -288,21 +286,28 @@ class _VehicleCard extends StatelessWidget {
             ),
           const SizedBox(height: CaptainDesignTokens.s12),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: CaptainDesignTokens.s12, vertical: CaptainDesignTokens.s8),
+            padding: const EdgeInsets.symmetric(
+              horizontal: CaptainDesignTokens.s12,
+              vertical: CaptainDesignTokens.s8,
+            ),
             decoration: BoxDecoration(
               color: CaptainColors.primary.withValues(alpha: 0.1),
               borderRadius: CaptainDesignTokens.br12,
             ),
             child: Row(
               children: [
-                const Icon(Icons.verified_rounded, size: 16, color: CaptainColors.primary),
+                const Icon(
+                  Icons.verified_rounded,
+                  size: 16,
+                  color: CaptainColors.primary,
+                ),
                 const SizedBox(width: CaptainDesignTokens.s12),
                 Text(
                   'مركبة جاهزة للتشغيل',
                   style: CaptainTypography.labelMedium(context).copyWith(
-                        color: CaptainColors.primary,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    color: CaptainColors.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ],
             ),
@@ -329,10 +334,9 @@ class _RatingCard extends StatelessWidget {
             children: [
               Text(
                 rating.toStringAsFixed(1),
-                style: CaptainTypography.displaySmall(context).copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: Colors.amber,
-                    ),
+                style: CaptainTypography.displaySmall(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w900, color: Colors.amber),
               ),
               const SizedBox(width: CaptainDesignTokens.s24),
               Column(
@@ -343,9 +347,9 @@ class _RatingCard extends StatelessWidget {
                   Text(
                     _ratingLabel(rating),
                     style: CaptainTypography.bodyMedium(context).copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: CaptainColors.textPrimaryFor(context),
-                        ),
+                      fontWeight: FontWeight.w600,
+                      color: CaptainColors.textPrimaryFor(context),
+                    ),
                   ),
                 ],
               ),
@@ -407,7 +411,10 @@ class _SignOutButton extends StatelessWidget {
             title: const Text('تسجيل الخروج'),
             content: const Text('هل أنت متأكد من تسجيل الخروج؟'),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('إلغاء')),
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('إلغاء'),
+              ),
               FilledButton(
                 onPressed: () => Navigator.pop(ctx, true),
                 style: FilledButton.styleFrom(backgroundColor: Colors.red),
@@ -420,7 +427,7 @@ class _SignOutButton extends StatelessWidget {
           await Supabase.instance.client.auth.signOut();
         }
       },
-      variant: CaptainButtonVariant.secondary,
+      variant: CaptainButtonVariant.danger,
     );
   }
 }
@@ -428,7 +435,11 @@ class _SignOutButton extends StatelessWidget {
 // ── Shared sub-widgets ───────────────────────────────────────────────────────
 
 class _SectionCard extends StatelessWidget {
-  const _SectionCard({required this.title, required this.icon, required this.child});
+  const _SectionCard({
+    required this.title,
+    required this.icon,
+    required this.child,
+  });
 
   final String title;
   final IconData icon;
@@ -472,7 +483,12 @@ class _SectionCard extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile({required this.label, required this.value, required this.icon, this.isLight = false});
+  const _StatTile({
+    required this.label,
+    required this.value,
+    required this.icon,
+    this.isLight = false,
+  });
 
   final String label;
   final String value;
@@ -487,17 +503,25 @@ class _StatTile extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(CaptainDesignTokens.s12),
             decoration: BoxDecoration(
-              color: isLight ? Colors.white.withValues(alpha: 0.2) : CaptainColors.primary.withValues(alpha: 0.1),
+              color: isLight
+                  ? Colors.white.withValues(alpha: 0.2)
+                  : CaptainColors.primary.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: isLight ? Colors.white : CaptainColors.primary, size: 24),
+            child: Icon(
+              icon,
+              color: isLight ? Colors.white : CaptainColors.primary,
+              size: 24,
+            ),
           ),
           const SizedBox(height: CaptainDesignTokens.s12),
           Text(
             value,
             style: CaptainTypography.headlineSmall(context).copyWith(
               fontWeight: FontWeight.w900,
-              color: isLight ? Colors.white : CaptainColors.textPrimaryFor(context),
+              color: isLight
+                  ? Colors.white
+                  : CaptainColors.textPrimaryFor(context),
             ),
           ),
           const SizedBox(height: CaptainDesignTokens.s8),
@@ -505,7 +529,9 @@ class _StatTile extends StatelessWidget {
             label,
             textAlign: TextAlign.center,
             style: CaptainTypography.labelSmall(context).copyWith(
-              color: isLight ? Colors.white.withValues(alpha: 0.8) : CaptainColors.textSecondaryFor(context),
+              color: isLight
+                  ? Colors.white.withValues(alpha: 0.8)
+                  : CaptainColors.textSecondaryFor(context),
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -516,7 +542,11 @@ class _StatTile extends StatelessWidget {
 }
 
 class _DetailRow extends StatelessWidget {
-  const _DetailRow({required this.icon, required this.label, required this.value});
+  const _DetailRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
 
   final IconData icon;
   final String label;
@@ -525,7 +555,9 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: CaptainDesignTokens.s12),
+      padding: const EdgeInsetsDirectional.only(
+        bottom: CaptainDesignTokens.s12,
+      ),
       child: Row(
         children: [
           Icon(icon, size: 18, color: CaptainColors.textSecondaryFor(context)),
@@ -567,8 +599,8 @@ class _StarRating extends StatelessWidget {
           filled
               ? Icons.star_rounded
               : half
-                  ? Icons.star_half_rounded
-                  : Icons.star_outline_rounded,
+              ? Icons.star_half_rounded
+              : Icons.star_outline_rounded,
           color: Colors.amber,
           size: 20,
         );
@@ -585,7 +617,9 @@ class _InitialsAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final initials = name.trim().isNotEmpty ? name.trim()[0].toUpperCase() : '?';
+    final initials = name.trim().isNotEmpty
+        ? name.trim()[0].toUpperCase()
+        : '?';
     return Center(
       child: Text(
         initials,
@@ -608,12 +642,56 @@ class _ErrorBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: AsyncStateView(
-        status: AsyncViewStatus.error,
-        errorMessage: message,
-        onRetry: onRetry,
-        child: const SizedBox.shrink(),
+      child: Column(
+        children: [
+          Expanded(
+            child: AsyncStateView(
+              status: AsyncViewStatus.error,
+              errorMessage: message,
+              onRetry: onRetry,
+              child: const SizedBox.shrink(),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              CaptainDesignTokens.s24,
+              0,
+              CaptainDesignTokens.s24,
+              CaptainDesignTokens.s24,
+            ),
+            child: CaptainButton(
+              label: 'تسجيل الخروج',
+              icon: Icons.logout_rounded,
+              variant: CaptainButtonVariant.secondary,
+              onPressed: () => _confirmAndSignOut(context),
+            ),
+          ),
+        ],
       ),
     );
+  }
+}
+
+Future<void> _confirmAndSignOut(BuildContext context) async {
+  final confirmed = await showDialog<bool>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('تسجيل الخروج'),
+      content: const Text('هل أنت متأكد من تسجيل الخروج؟'),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(ctx, false),
+          child: const Text('إلغاء'),
+        ),
+        FilledButton(
+          onPressed: () => Navigator.pop(ctx, true),
+          style: FilledButton.styleFrom(backgroundColor: Colors.red),
+          child: const Text('خروج'),
+        ),
+      ],
+    ),
+  );
+  if (confirmed == true) {
+    await captainGetIt<CaptainAuthCubit>().signOut();
   }
 }

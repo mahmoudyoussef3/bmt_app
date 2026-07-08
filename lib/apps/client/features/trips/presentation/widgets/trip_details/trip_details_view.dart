@@ -13,9 +13,10 @@ import 'package:bmt_app/core/theme/app_layout.dart';
 
 /// The fully-loaded Trip Details screen body.
 class TripDetailsView extends StatelessWidget {
-  const TripDetailsView({super.key, required this.trip});
+  const TripDetailsView({super.key, required this.trip, this.onRefresh});
 
   final TripData trip;
+  final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +30,12 @@ class TripDetailsView extends StatelessWidget {
       backgroundColor: ClientColors.surfaceSubtleFor(context),
       appBar: TripBrandAppBar(
         actions: [
+          if (onRefresh != null)
+            IconButton(
+              tooltip: 'Refresh',
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: onRefresh,
+            ),
           if (canCancel)
             TextButton.icon(
               onPressed: () => showTripCancellationFlow(

@@ -470,6 +470,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               onPressed: _onBackPress,
               icon: const Icon(Icons.arrow_back_rounded),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'Refresh',
+                icon: const Icon(Icons.refresh_rounded),
+                onPressed: () => context.read<SeatReleaseCubit>().load(),
+              ),
+            ],
             elevation: 0,
           ),
           body: SafeArea(

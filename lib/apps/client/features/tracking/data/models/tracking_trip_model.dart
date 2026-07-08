@@ -49,6 +49,7 @@ class TrackingTripDataModel {
     required this.stops,
     required this.tripState,
     this.routeStops = const [],
+    this.arrivalEventCount = 0,
     this.passengerPickupName,
     this.passengerDropoffName,
     this.passengerStatus,
@@ -78,6 +79,7 @@ class TrackingTripDataModel {
   final List<String> stops;
   final TrackingTripState tripState;
   final List<RouteStop> routeStops;
+  final int arrivalEventCount;
   final String? passengerPickupName;
   final String? passengerDropoffName;
   final String? passengerStatus;
@@ -108,6 +110,7 @@ class TrackingTripDataModel {
       stops: stops,
       tripState: tripState,
       routeStops: routeStops,
+      arrivalEventCount: arrivalEventCount,
       passengerPickupName: passengerPickupName,
       passengerDropoffName: passengerDropoffName,
       passengerStatus: passengerStatus,

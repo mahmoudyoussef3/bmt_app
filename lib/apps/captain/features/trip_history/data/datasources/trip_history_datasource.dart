@@ -63,7 +63,8 @@ class TripHistoryDataSource {
 
     return TripHistoryItem(
       id: row['id']?.toString() ?? '',
-      route: route['name']?.toString() ??
+      route:
+          route['name']?.toString() ??
           '${route['start_city'] ?? ''} → ${route['end_city'] ?? ''}',
       tripDate: date,
       departureTime: _parseTime(date, row['departure_time']),

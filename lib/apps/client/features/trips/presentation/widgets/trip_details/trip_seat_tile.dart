@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
 
@@ -30,15 +31,7 @@ class TripSeatTile extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(size * 0.28),
         border: border == null ? null : Border.all(color: border, width: 1.4),
-        boxShadow: seat.isMine
-            ? [
-                BoxShadow(
-                  color: ClientColors.journeyGreen.withAlpha(70),
-                  blurRadius: 14,
-                  offset: const Offset(0, 6),
-                ),
-              ]
-            : null,
+        boxShadow: seat.isMine ? ClientElevation.sm(context) : null,
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -59,9 +52,9 @@ class TripSeatTile extends StatelessWidget {
   (Color, Color, Color?) _palette(BuildContext context) {
     return switch (seat.state) {
       TripSeatState.mine => (
-        ClientColors.journeyGreen,
-        ClientColors.textInverse,
-        null,
+        ClientColors.primary,
+        Colors.white,
+        ClientColors.primary,
       ),
       TripSeatState.occupied => (
         ClientColors.surfaceMutedFor(context),
@@ -69,9 +62,9 @@ class TripSeatTile extends StatelessWidget {
         ClientColors.borderFor(context),
       ),
       TripSeatState.available => (
-        ClientColors.primary.withAlpha(18),
-        ClientColors.primaryFor(context),
-        ClientColors.primary.withAlpha(70),
+        ClientColors.journeyGreenLight,
+        ClientColors.journeyGreen,
+        ClientColors.journeyGreen.withAlpha(70),
       ),
     };
   }

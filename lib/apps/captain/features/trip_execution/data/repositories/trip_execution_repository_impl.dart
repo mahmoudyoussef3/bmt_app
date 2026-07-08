@@ -25,4 +25,15 @@ class TripExecutionRepositoryImpl implements TripExecutionRepository {
   @override
   Stream<TripExecutionStatus> watchTripStatus(String tripId) =>
       _dataSource.watchTripStatus(tripId);
+
+  @override
+  Future<void> markStationArrived({
+    required String tripId,
+    required String pointId,
+    required String pointName,
+  }) => _dataSource.markStationArrived(
+    tripId: tripId,
+    pointId: pointId,
+    pointName: pointName,
+  );
 }

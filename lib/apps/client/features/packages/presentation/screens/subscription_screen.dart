@@ -13,7 +13,11 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 class SubscriptionScreen extends StatefulWidget {
-  const SubscriptionScreen({super.key, this.hasActiveSubscription = false, this.bookingData});
+  const SubscriptionScreen({
+    super.key,
+    this.hasActiveSubscription = false,
+    this.bookingData,
+  });
 
   final bool hasActiveSubscription;
   final Map<String, dynamic>? bookingData;
@@ -98,6 +102,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               onPressed: _onBackPress,
               icon: const Icon(Icons.arrow_back_rounded),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'Refresh',
+                icon: const Icon(Icons.refresh_rounded),
+                onPressed: () => context.read<PackagesCubit>().load(),
+              ),
+            ],
             elevation: 0,
           ),
           body: Stack(
@@ -286,7 +297,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           ),
           borderRadius: BorderRadius.circular(ClientRadius.xl),
           border: Border.all(
-            color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(80),
+            color: isDark
+                ? scheme.outline.withAlpha(40)
+                : scheme.outline.withAlpha(80),
           ),
           boxShadow: [
             BoxShadow(
@@ -331,98 +344,143 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   padding: const EdgeInsets.all(20),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Badges
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        package.name,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: scheme.primary.withAlpha(24),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          AppLocalizations.of(context)!.packages_savePercent(
-                            package.discountPercent.toInt(),
+                      // Badges
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            package.name,
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                            ),
                           ),
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: scheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  // Details Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildMiniDetailColumn(
-                        AppLocalizations.of(context)!.packages_duration,
-                        package.durationLabel,
-                      ),
-                      _buildMiniDetailColumn(
-                        AppLocalizations.of(context)!.packages_totalTrips,
-                        AppLocalizations.of(
-                          context,
-                        )!.packages_ridesCount(package.tripsCount),
-                      ),
-                      if (widget.bookingData != null)
-                        _buildMiniDetailColumn(
-                          AppLocalizations.of(context)!.packages_totalSavings,
-                          AppLocalizations.of(
-                            context,
-                          )!.packages_egpAmount(package.savingsAmount.toString()),
-                          isHighlight: true,
-                          color: scheme.secondary,
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  const Divider(height: 1),
-                  const SizedBox(height: 14),
-                  // Price / Discount Row
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      if (widget.bookingData != null && widget.hasActiveSubscription) ...[
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withAlpha(24),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
                               AppLocalizations.of(
                                 context,
-                              )!.packages_originalPrice(
-                                package.basePrice.toString(),
+                              )!.packages_savePercent(
+                                package.discountPercent.toInt(),
                               ),
-                              style: const TextStyle(
-                                fontSize: 10,
-                                decoration: TextDecoration.lineThrough,
-                                color: Colors.grey,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: scheme.primary,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // Details Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildMiniDetailColumn(
+                            AppLocalizations.of(context)!.packages_duration,
+                            package.durationLabel,
+                          ),
+                          _buildMiniDetailColumn(
+                            AppLocalizations.of(context)!.packages_totalTrips,
+                            AppLocalizations.of(
+                              context,
+                            )!.packages_ridesCount(package.tripsCount),
+                          ),
+                          if (widget.bookingData != null)
+                            _buildMiniDetailColumn(
+                              AppLocalizations.of(
+                                context,
+                              )!.packages_totalSavings,
+                              AppLocalizations.of(context)!.packages_egpAmount(
+                                package.savingsAmount.toString(),
+                              ),
+                              isHighlight: true,
+                              color: scheme.secondary,
+                            ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      const Divider(height: 1),
+                      const SizedBox(height: 14),
+                      // Price / Discount Row
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          if (widget.bookingData != null &&
+                              widget.hasActiveSubscription) ...[
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
                                   AppLocalizations.of(
                                     context,
-                                  )!.packages_egpAmount(
-                                    package.startingPrice.toString(),
+                                  )!.packages_originalPrice(
+                                    package.basePrice.toString(),
+                                  ),
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    decoration: TextDecoration.lineThrough,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Row(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.packages_egpAmount(
+                                        package.startingPrice.toString(),
+                                      ),
+                                      style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w900,
+                                        color: scheme.primary,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      AppLocalizations.of(
+                                        context,
+                                      )!.packages_startingPrice,
+                                      style: const TextStyle(
+                                        fontSize: 11,
+                                        color: Colors.grey,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ] else ...[
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.packages_packageDiscount,
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                                Text(
+                                  AppLocalizations.of(
+                                    context,
+                                  )!.packages_percentOff(
+                                    package.discountPercent.toInt(),
                                   ),
                                   style: TextStyle(
                                     fontSize: 20,
@@ -430,64 +488,27 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                     color: scheme.primary,
                                   ),
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.packages_startingPrice,
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    color: Colors.grey,
-                                  ),
-                                ),
                               ],
                             ),
                           ],
-                        ),
-                      ] else ...[
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppLocalizations.of(
-                                context,
-                              )!.packages_packageDiscount,
-                              style: const TextStyle(
-                                fontSize: 10,
-                                color: Colors.grey,
-                              ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: scheme.primary.withAlpha(20),
+                              shape: BoxShape.circle,
                             ),
-                            Text(
-                              AppLocalizations.of(context)!.packages_percentOff(
-                                package.discountPercent.toInt(),
-                              ),
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w900,
-                                color: scheme.primary,
-                              ),
+                            child: Icon(
+                              Icons.arrow_forward_rounded,
+                              size: 18,
+                              color: scheme.primary,
                             ),
-                          ],
-                        ),
-                      ],
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: scheme.primary.withAlpha(20),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.arrow_forward_rounded,
-                          size: 18,
-                          color: scheme.primary,
-                        ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
             ],
           ),
         ),
@@ -645,10 +666,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             combinedArgs['package'] = package.name;
             combinedArgs['baseFare'] = package.startingPrice.toInt();
 
-            Navigator.of(context).pushNamed(
-              '/payment-checkout',
-              arguments: combinedArgs,
-            );
+            Navigator.of(
+              context,
+            ).pushNamed('/payment-checkout', arguments: combinedArgs);
           },
           scheme: scheme,
         ),
@@ -1356,10 +1376,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     label: 'Continue to Summary',
                     expand: true,
                     onPressed: () {
-                            setState(() {
-                              _currentStep = 4;
-                            });
-                          },
+                      setState(() {
+                        _currentStep = 4;
+                      });
+                    },
                   ),
                 ),
               ],
@@ -1441,10 +1461,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       'Vehicle Category',
                       loaded.selectedVehicle.name,
                     ),
-                    _buildSummaryDetailRow(
-                      'Selected Seats',
-                      '1',
-                    ),
+                    _buildSummaryDetailRow('Selected Seats', '1'),
                     _buildSummaryDetailRow(
                       'Trips Allocated',
                       '${package.tripsCount} Rides',
@@ -1729,10 +1746,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   'Total Trips Scope',
                   '${package.tripsCount} Rides',
                 ),
-                _buildReceiptRow(
-                  'Selected Seats',
-                  '1',
-                ),
+                _buildReceiptRow('Selected Seats', '1'),
                 _buildReceiptRow('Travel Route', loaded.selectedRoute),
                 _buildReceiptRow('Pickup Stop', loaded.selectedPickup),
                 _buildReceiptRow(

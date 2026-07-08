@@ -1,13 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/captain_spacing.dart';
 
-enum CaptainStatusVariant {
-  info,
-  success,
-  warning,
-  error,
-  neutral,
-}
+enum CaptainStatusVariant { info, success, warning, error, neutral }
 
 class CaptainStatusChip extends StatelessWidget {
   const CaptainStatusChip({
@@ -66,9 +60,9 @@ class CaptainStatusChip extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: fgColor,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: fgColor,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

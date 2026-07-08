@@ -30,7 +30,8 @@ class AssignedTripCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
         borderRadius: CaptainDesignTokens.br24,
-        boxShadow: CaptainDesignTokens.softShadow(context),
+        boxShadow: CaptainDesignTokens.floatingShadow(context),
+        border: Border.all(color: CaptainColors.primary.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -84,7 +85,11 @@ class AssignedTripCard extends StatelessWidget {
             ),
           ),
 
-          Divider(height: 1, thickness: 1, color: CaptainColors.dividerFor(context)),
+          Divider(
+            height: 1,
+            thickness: 1,
+            color: CaptainColors.dividerFor(context),
+          ),
 
           // Body section with progress and actions
           Padding(
@@ -106,16 +111,19 @@ class AssignedTripCard extends StatelessWidget {
                     RichText(
                       text: TextSpan(
                         style: CaptainTypography.titleMedium(context).copyWith(
-                              fontWeight: FontWeight.w800,
-                              color: CaptainColors.primary,
-                            ),
+                          fontWeight: FontWeight.w800,
+                          color: CaptainColors.primary,
+                        ),
                         children: [
                           TextSpan(text: '${trip.boardedCount} '),
                           TextSpan(
                             text: 'صعدوا',
-                            style: CaptainTypography.bodySmall(context).copyWith(
+                            style: CaptainTypography.bodySmall(context)
+                                .copyWith(
                                   fontWeight: FontWeight.w600,
-                                  color: CaptainColors.textSecondaryFor(context),
+                                  color: CaptainColors.textSecondaryFor(
+                                    context,
+                                  ),
                                 ),
                           ),
                         ],
@@ -129,9 +137,13 @@ class AssignedTripCard extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: progress,
                     minHeight: 8,
-                    backgroundColor: CaptainColors.primary.withValues(alpha: 0.1),
+                    backgroundColor: CaptainColors.primary.withValues(
+                      alpha: 0.1,
+                    ),
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      progress == 1.0 ? CaptainColors.success : CaptainColors.primary,
+                      progress == 1.0
+                          ? CaptainColors.success
+                          : CaptainColors.primary,
                     ),
                   ),
                 ),

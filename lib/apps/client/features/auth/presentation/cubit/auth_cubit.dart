@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/usecases/sign_in_with_email_usecase.dart';
+import '../../domain/usecases/sign_out_usecase.dart';
 import '../../domain/usecases/sign_up_with_email_usecase.dart';
 import 'auth_state.dart';
 
@@ -8,12 +9,15 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
   ClientAuthCubit({
     required SignInWithEmailUseCase signInWithEmail,
     required SignUpWithEmailUseCase signUpWithEmail,
+    required SignOutUseCase signOut,
   }) : _signInWithEmail = signInWithEmail,
        _signUpWithEmail = signUpWithEmail,
+       _signOut = signOut,
        super(const ClientAuthState());
 
   final SignInWithEmailUseCase _signInWithEmail;
   final SignUpWithEmailUseCase _signUpWithEmail;
+  final SignOutUseCase _signOut;
 
   Future<void> signIn({required String email, required String password}) async {
     emit(
@@ -64,6 +68,14 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
           signUpError: _messageFor(error),
         ),
       );
+    }
+  }
+
+  Future<void> signOut() async {
+    try {
+      await _signOut();
+    } catch (error) {
+      // Typically sign out doesn't fail, but we could log it.
     }
   }
 

@@ -91,7 +91,7 @@ class _CheckInPageState extends State<CheckInPage> {
                     minHeight: 280,
                     maxHeight: 420,
                   ),
-                  margin: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                  margin: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 0),
                   clipBehavior: Clip.antiAlias,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(20),
@@ -130,9 +130,9 @@ class _CheckInPageState extends State<CheckInPage> {
                           ),
                         ),
                       ),
-                      Positioned(
-                        left: 16,
-                        right: 16,
+                      PositionedDirectional(
+                        start: 16,
+                        end: 16,
                         bottom: 16,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -182,7 +182,7 @@ class _ResultPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 16, 20),
       children: [
         if (state is CheckInLoading) ...[
           const AppCard(

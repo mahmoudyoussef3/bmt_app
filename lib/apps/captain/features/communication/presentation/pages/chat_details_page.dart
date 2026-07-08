@@ -81,12 +81,19 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                       }
                       return ListView.builder(
                         reverse: true,
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          16,
+                          16,
+                          16,
+                          8,
+                        ),
                         itemCount: messages.length,
                         itemBuilder: (context, index) {
                           final message = messages[messages.length - 1 - index];
                           return Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
+                            padding: const EdgeInsetsDirectional.only(
+                              bottom: 8,
+                            ),
                             child: _MessageBubble(message: message),
                           );
                         },
@@ -108,7 +115,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                         ]
                         .map(
                           (text) => Padding(
-                            padding: const EdgeInsets.only(right: 6),
+                            padding: const EdgeInsetsDirectional.only(end: 6),
                             child: ActionChip(
                               label: Text(
                                 text,
@@ -127,7 +134,7 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              padding: const EdgeInsetsDirectional.fromSTEB(12, 0, 12, 12),
               child: Row(
                 children: [
                   Expanded(
@@ -187,7 +194,9 @@ class _MessageBubble extends StatelessWidget {
         message.senderName.contains('Captain') ||
         message.senderName.contains('السائق');
     return Align(
-      alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: mine
+          ? AlignmentDirectional.centerEnd
+          : AlignmentDirectional.centerStart,
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: MediaQuery.sizeOf(context).width * 0.78,

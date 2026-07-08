@@ -13,7 +13,9 @@ class CaptainTypography {
 
   static TextTheme _buildTheme(bool isDark) {
     final color = isDark ? Colors.white : const Color(0xFF0F172A);
-    final mutedColor = isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final mutedColor = isDark
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
 
     final base = GoogleFonts.cairoTextTheme().apply(
       bodyColor: color,
@@ -115,19 +117,34 @@ class CaptainTypography {
   }
 
   // Helpers for quick access
-  static TextStyle displayLarge(BuildContext context) => textTheme(context).displayLarge!;
-  static TextStyle displayMedium(BuildContext context) => textTheme(context).displayMedium!;
-  static TextStyle displaySmall(BuildContext context) => textTheme(context).displaySmall!;
-  static TextStyle headlineLarge(BuildContext context) => textTheme(context).headlineLarge!;
-  static TextStyle headlineMedium(BuildContext context) => textTheme(context).headlineMedium!;
-  static TextStyle headlineSmall(BuildContext context) => textTheme(context).headlineSmall!;
-  static TextStyle titleLarge(BuildContext context) => textTheme(context).titleLarge!;
-  static TextStyle titleMedium(BuildContext context) => textTheme(context).titleMedium!;
-  static TextStyle titleSmall(BuildContext context) => textTheme(context).titleSmall!;
-  static TextStyle bodyLarge(BuildContext context) => textTheme(context).bodyLarge!;
-  static TextStyle bodyMedium(BuildContext context) => textTheme(context).bodyMedium!;
-  static TextStyle bodySmall(BuildContext context) => textTheme(context).bodySmall!;
-  static TextStyle labelLarge(BuildContext context) => textTheme(context).labelLarge!;
-  static TextStyle labelMedium(BuildContext context) => textTheme(context).labelMedium!;
-  static TextStyle labelSmall(BuildContext context) => textTheme(context).labelSmall!;
+  static TextStyle displayLarge(BuildContext context) =>
+      textTheme(context).displayLarge!;
+  static TextStyle displayMedium(BuildContext context) =>
+      textTheme(context).displayMedium!;
+  static TextStyle displaySmall(BuildContext context) =>
+      textTheme(context).displaySmall!;
+  static TextStyle headlineLarge(BuildContext context) =>
+      textTheme(context).headlineLarge!;
+  static TextStyle headlineMedium(BuildContext context) =>
+      textTheme(context).headlineMedium!;
+  static TextStyle headlineSmall(BuildContext context) =>
+      textTheme(context).headlineSmall!;
+  static TextStyle titleLarge(BuildContext context) =>
+      textTheme(context).titleLarge!;
+  static TextStyle titleMedium(BuildContext context) =>
+      textTheme(context).titleMedium!;
+  static TextStyle titleSmall(BuildContext context) =>
+      textTheme(context).titleSmall!;
+  static TextStyle bodyLarge(BuildContext context) =>
+      textTheme(context).bodyLarge!;
+  static TextStyle bodyMedium(BuildContext context) =>
+      textTheme(context).bodyMedium!;
+  static TextStyle bodySmall(BuildContext context) =>
+      textTheme(context).bodySmall!;
+  static TextStyle labelLarge(BuildContext context) =>
+      textTheme(context).labelLarge!;
+  static TextStyle labelMedium(BuildContext context) =>
+      textTheme(context).labelMedium!;
+  static TextStyle labelSmall(BuildContext context) =>
+      textTheme(context).labelSmall!;
 }

@@ -41,13 +41,15 @@ class SupabaseCaptainNotificationsDatasource
         .stream(primaryKey: ['id'])
         .eq('user_id', uid)
         .order('created_at', ascending: false)
-        .map((rows) => rows
-            .where((r) {
-              final app = r['target_app'] as String? ?? 'client';
-              return app == 'captain' || app == 'all';
-            })
-            .map(CaptainNotificationModel.fromMap)
-            .toList());
+        .map(
+          (rows) => rows
+              .where((r) {
+                final app = r['target_app'] as String? ?? 'client';
+                return app == 'captain' || app == 'all';
+              })
+              .map(CaptainNotificationModel.fromMap)
+              .toList(),
+        );
   }
 
   @override
@@ -58,11 +60,13 @@ class SupabaseCaptainNotificationsDatasource
         .from('notifications')
         .stream(primaryKey: ['id'])
         .eq('user_id', uid)
-        .map((rows) => rows.where((r) {
-              final app = r['target_app'] as String? ?? 'client';
-              final unread = !(r['is_read'] as bool? ?? false);
-              return unread && (app == 'captain' || app == 'all');
-            }).length);
+        .map(
+          (rows) => rows.where((r) {
+            final app = r['target_app'] as String? ?? 'client';
+            final unread = !(r['is_read'] as bool? ?? false);
+            return unread && (app == 'captain' || app == 'all');
+          }).length,
+        );
   }
 
   @override

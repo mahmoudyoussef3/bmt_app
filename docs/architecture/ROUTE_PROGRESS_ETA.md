@@ -14,8 +14,14 @@ monitoring panel, layered on top of the Live Vehicle Tracking Engine
 
 The Dashboard remains the source of truth for trips. The engine only *infers
 presentation state* from data the Dashboard already owns — it never mutates
-operational state. Operator-logged station arrivals (trip events) always act
-as a floor under GPS inference.
+operational state. Operator- **and captain**-logged station arrivals (trip
+events, title `'وصول محطة'`) always act as a floor under GPS inference. The
+counting/clamping logic for that floor lives in one place —
+`lib/core/tracking/progress/arrival_events.dart`
+(`countStationArrivalEvents` / `stationArrivalFloor`) — reused by the
+Dashboard live-trips datasource, the Client tracking datasource/cubit, and
+the Captain assigned-trips datasource + trip-execution flow, so all three
+apps agree on how many stations have actually been visited.
 
 ```
 trip_route_points (name, order, lat/lng, arrival_offset "HH:mm")
@@ -40,6 +46,7 @@ RouteProgressEngine (lib/core/tracking/progress/)
 
 | File | Responsibility |
 | --- | --- |
+| `arrival_events.dart` | Shared `trip_events` arrival-floor logic: `kStationArrivalEventTitle`, `countStationArrivalEvents`, `stationArrivalFloor`. The one place Dashboard, Client, and Captain count "how many stations arrived". |
 | `route_stop.dart` | Stop value object (coords, order, planned arrival/departure). |
 | `route_geometry.dart` | Polyline math: cumulative distances, projection of a GPS point onto the route (along-track + cross-track), forward-biased matching so loop routes can't snap the bus backwards. |
 | `eta_estimator.dart` | Distance → arrival time. Speed priority: live GPS (blended 70/30 with reference pace) → trip's observed average → schedule pace → 35 km/h fallback; clamped to [12, 90] km/h; +45 s dwell per intermediate stop. |
@@ -99,7 +106,12 @@ Before departure, the ETA to the origin uses straight-line distance × 1.3
   `confirmed` = boarded).
 * `TrackingCubit` owns one engine per trip (kept across silent refreshes so
   states stay monotonic), feeds Realtime fixes, maps trip states to phases,
-  and runs the 30 s ETA ticker.
+  and runs the 30 s ETA ticker. On every load/refresh it also seeds the
+  engine with `stationArrivalFloor(data.arrivalEventCount, routeStops.length)`
+  — the same captain-reported arrival count the Dashboard uses — so a
+  captain marking a station arrived shows up in the rider's stop timeline
+  immediately over the existing `trip_events` Realtime subscription, with no
+  GPS fix required.
 * **TrackingEtaPanel** — counts down to the *rider's pickup stop* until they
   board, then to the destination; shows the route progress bar (% / km left /
   stops ahead) and a confidence caption.
@@ -123,8 +135,24 @@ fills per-stop **passenger flow** (`waitingPassengersCount` /
 route timeline in `live_monitoring_panel.dart` already displays, plus an
 Arabic ETA line per pending/current stop.
 
+## Captain app (trip execution)
+
+The "تم الوصول للمحطة" (arrived at station) button in `TripExecutionPage`
+inserts the same `trip_events` arrival marker via
+`TripExecutionCubit.markStationArrived` → `MarkStationArrivedUseCase` →
+`TripExecutionRepository` → `TripExecutionDataSource`, matching the
+Dashboard's `markPointArrived` convention exactly (title `'وصول محطة'`,
+`done: true`). `CaptainTripRemoteDataSource` also computes each assigned
+trip's `arrivedStationsCount` via `stationArrivalFloor` so reopening the trip
+execution screen resumes at the correct next station instead of resetting to
+the first one. This action is deliberately independent of the
+board/start/complete trip-status state machine — it never touches
+`TripExecutionCubitState`.
+
 ## Tests
 
+* `test/core/tracking/progress/arrival_events_test.dart` — arrival-event
+  counting and floor clamping.
 * `test/core/tracking/progress/route_geometry_test.dart` — distances,
   projection, clamping, loop-route forward bias, untrackable routes.
 * `test/core/tracking/progress/eta_estimator_test.dart` — speed blending and

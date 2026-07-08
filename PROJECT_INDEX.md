@@ -39,6 +39,12 @@ The workspace is divided into several applications under `lib/apps/`:
 * **Ownership:** The Dashboard remains the source of truth — the driver record only exists once an operator completes it. `captain_requests` review is admin-gated (`DashboardPermission.captainRequests`).
 * **Migration:** `supabase/migrations/20260705120000_captain_access_requests.sql`.
 
+#### Captain Sign In (Returning Captains — Phone Only)
+* **Flow:** No password, no OTP. The captain enters only their phone number. `resolve_captain_login` (anon-callable RPC) normalizes the phone and checks it against `drivers` for an *active* match; if found it derives a stable email + secret from the phone (`hmac(phone, ...)`, same output every time for that phone). The app signs in with that pair — or signs up the first time, since this Supabase project auto-confirms email signups — then calls `link_current_captain_driver` to bind the resulting `auth.uid()` to `drivers.user_id`. Every subsequent app open with a live session reads the driver profile straight off `drivers.user_id`.
+* **Why derived credentials instead of anonymous auth:** anonymous sign-ins are disabled on this project, and this avoids needing a service-role edge function. The same phone always re-derives the same auth account, so the link is stable across reinstalls without an anon-auth UID churning each install.
+* **Trade-off:** no proof-of-possession of the phone number (no SMS/OTP) — same no-SMS trust model as the onboarding request above. Knowing a driver's phone is enough to sign in as them.
+* **Migration:** `supabase/migrations/20260708120000_captain_phone_login.sql`. Supersedes the earlier `link_current_driver_account()` (SMS-OTP design that was never actually wired up — `drivers.user_id` was NULL for every driver in production before this fix).
+
 ---
 
 ## 3. Core Business Flow

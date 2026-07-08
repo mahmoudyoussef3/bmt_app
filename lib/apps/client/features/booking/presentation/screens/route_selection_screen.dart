@@ -59,6 +59,14 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
         return BookingFlowScaffold(
           title: 'Route details',
           query: _query,
+          actions: [
+            IconButton(
+              tooltip: 'Refresh',
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: () =>
+                  context.read<BookingCubit>().loadRoutes(_query, force: true),
+            ),
+          ],
           bottomBar: RouteBookingAction(
             route: selectedRoute,
             onContinue: _continueToBooking,

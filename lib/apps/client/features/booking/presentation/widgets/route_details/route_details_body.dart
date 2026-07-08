@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_state.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/easyway_route_map_view.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/no_map_placeholder.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_sheet_content.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_sheet_surface.dart';
@@ -75,7 +75,7 @@ class RouteDetailsBody extends StatelessWidget {
             child: KeyedSubtree(
               key: ValueKey(route.id),
               child: mapPins.isNotEmpty
-                  ? GoogleStyleMapView(
+                  ? EasyWayRouteMapView(
                       waypoints: mapPins,
                       cameraPadding: const EdgeInsets.fromLTRB(44, 54, 44, 220),
                     )

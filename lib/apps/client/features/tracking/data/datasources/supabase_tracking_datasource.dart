@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bmt_app/core/tracking/progress/arrival_events.dart';
 import 'package:bmt_app/core/tracking/progress/route_stop.dart';
 import '../models/tracking_trip_model.dart';
 import '../../domain/entities/tracking_trip.dart';
@@ -138,15 +139,19 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
           .order('recorded_at', ascending: false)
           .limit(1)
           .maybeSingle(),
-      _getLatestTripEvent(resolvedTripId),
+      _getTripEvents(resolvedTripId),
       _getPassengerRow(resolvedTripId, userId),
     ]);
 
     final pointRows = (results[0] as List?) ?? [];
     final tripRow = results[1] as Map<String, dynamic>?;
     final locRow = results[2] as Map<String, dynamic>?;
-    final latestEvent = results[3] as Map<String, dynamic>?;
+    final tripEvents = (results[3] as List).cast<Map<String, dynamic>>();
+    final latestEvent = tripEvents.isEmpty ? null : tripEvents.first;
     final passengerRow = results[4] as Map<String, dynamic>?;
+    final arrivalEventCount = countStationArrivalEvents(
+      tripEvents.map((e) => e['title'] as String?),
+    );
 
     final routePoints = pointRows.map((r) {
       final m = r as Map<String, dynamic>;
@@ -187,6 +192,7 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
       stops: stops.isEmpty ? const ['Origin', 'Destination'] : stops,
       tripState: state,
       routeStops: routeStops,
+      arrivalEventCount: arrivalEventCount,
       passengerPickupName: passengerRow?['pickup_point_name']?.toString(),
       passengerDropoffName: passengerRow?['dropoff_point_name']?.toString(),
       passengerStatus: passengerRow?['status']?.toString(),
@@ -314,19 +320,21 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
         : parsed;
   }
 
-  Future<Map<String, dynamic>?> _getLatestTripEvent(String tripId) async {
+  /// All of the trip's events, newest first. Used both for the latest-event
+  /// title (trip state inference) and the per-station arrival count fed
+  /// into the client's route progress engine as its authoritative floor.
+  Future<List<Map<String, dynamic>>> _getTripEvents(String tripId) async {
     try {
-      return await _client
+      final rows = await _client
           .from('trip_events')
           .select('title, created_at')
           .eq('trip_id', tripId)
-          .order('created_at', ascending: false)
-          .limit(1)
-          .maybeSingle();
+          .order('created_at', ascending: false);
+      return (rows as List).cast<Map<String, dynamic>>();
     } on PostgrestException {
       // Some deployments may not expose operational event text to clients.
       // Trip status and location remain authoritative fallbacks.
-      return null;
+      return const [];
     }
   }
 

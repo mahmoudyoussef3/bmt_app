@@ -20,8 +20,9 @@ class CaptainNotificationsLoaded extends CaptainNotificationsState {
   int get unreadCount => notifications.where((n) => !n.isRead).length;
 
   CaptainNotificationsLoaded withReadToggled(String id) {
-    final updated =
-        notifications.map((n) => n.id == id ? n.copyWith(isRead: true) : n).toList();
+    final updated = notifications
+        .map((n) => n.id == id ? n.copyWith(isRead: true) : n)
+        .toList();
     return CaptainNotificationsLoaded(updated);
   }
 

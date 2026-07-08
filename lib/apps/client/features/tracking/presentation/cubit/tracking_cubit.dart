@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/core/tracking/progress/arrival_events.dart';
 import 'package:bmt_app/core/tracking/progress/route_progress_engine.dart';
 import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
 import 'package:bmt_app/core/tracking/progress/stop_progress.dart';
@@ -151,6 +152,14 @@ class TrackingCubit extends Cubit<TrackingState> {
     } else {
       _engine!.updatePhase(_phaseFor(state));
     }
+    // Seed the captain-reported arrival floor before layering GPS on top —
+    // same convention as the Dashboard, so per-stop state never regresses
+    // below what the captain has explicitly confirmed.
+    final arrivalFloor = stationArrivalFloor(
+      arrivalEventCount: data.arrivalEventCount,
+      routePointCount: data.routeStops.length,
+    );
+    if (arrivalFloor > 0) _engine!.seedVisited(arrivalFloor);
     final fix = data.vehicleFix;
     if (fix != null) {
       _engine!.addFix(

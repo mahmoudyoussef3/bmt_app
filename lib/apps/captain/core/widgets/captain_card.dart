@@ -25,9 +25,7 @@ class CaptainCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: color ?? scheme.surface,
         borderRadius: CaptainRadius.rXl,
-        border: Border.all(
-          color: borderColor ?? scheme.outline.withAlpha(20),
-        ),
+        border: Border.all(color: borderColor ?? scheme.outline.withAlpha(20)),
         boxShadow: [
           BoxShadow(
             color: scheme.shadow.withAlpha(10),
@@ -41,10 +39,7 @@ class CaptainCard extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: CaptainRadius.rXl,
-          child: Padding(
-            padding: padding,
-            child: child,
-          ),
+          child: Padding(padding: padding, child: child),
         ),
       ),
     );

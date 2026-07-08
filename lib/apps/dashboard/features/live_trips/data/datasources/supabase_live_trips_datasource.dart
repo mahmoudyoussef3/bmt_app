@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bmt_app/core/tracking/progress/arrival_events.dart';
 import 'package:bmt_app/core/tracking/progress/route_progress_engine.dart';
 import 'package:bmt_app/core/tracking/progress/route_stop.dart';
 import 'package:bmt_app/core/tracking/progress/stop_progress.dart';
@@ -164,7 +165,11 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
   Future<LiveTrip> markPointArrived(String tripId, String pointId) async {
     try {
       final point = await _pointName(tripId, pointId);
-      await _insertEvent(tripId, 'وصول محطة', 'وصلت الرحلة إلى محطة: $point');
+      await _insertEvent(
+        tripId,
+        kStationArrivalEventTitle,
+        'وصلت الرحلة إلى محطة: $point',
+      );
       return getLiveTripDetails(tripId);
     } catch (e) {
       throw _handleError(e);
@@ -486,9 +491,9 @@ class SupabaseLiveTripsDatasource implements LiveTripsDatasource {
         : DateTime.now();
 
     // Compute progress from completed arrival events
-    final arrivalEventCount = events
-        .where((e) => (e as Map<String, dynamic>)['title'] == 'وصول محطة')
-        .length;
+    final arrivalEventCount = countStationArrivalEvents(
+      events.map((e) => (e as Map<String, dynamic>)['title'] as String?),
+    );
     final totalPoints = includeDetails ? routePointsList.length : 0;
     final currentIdx = arrivalEventCount.clamp(
       0,

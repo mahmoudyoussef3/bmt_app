@@ -49,9 +49,13 @@ class TripExecutionPage extends StatelessWidget {
                   pinned: true,
                   elevation: 0,
                   backgroundColor: CaptainColors.backgroundFor(context),
-                  iconTheme: IconThemeData(color: CaptainColors.textPrimaryFor(context)),
+                  iconTheme: IconThemeData(
+                    color: CaptainColors.textPrimaryFor(context),
+                  ),
                   flexibleSpace: FlexibleSpaceBar(
-                    background: Container(color: CaptainColors.backgroundFor(context)),
+                    background: Container(
+                      color: CaptainColors.backgroundFor(context),
+                    ),
                     titlePadding: const EdgeInsets.symmetric(
                       horizontal: CaptainDesignTokens.s32,
                       vertical: CaptainDesignTokens.s16,
@@ -67,7 +71,7 @@ class TripExecutionPage extends StatelessWidget {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
                       CaptainDesignTokens.s24,
                       CaptainDesignTokens.s16,
                       CaptainDesignTokens.s24,
@@ -84,13 +88,18 @@ class TripExecutionPage extends StatelessWidget {
                         const SizedBox(height: CaptainDesignTokens.s24),
                         if (status == TripExecutionStatus.inProgress &&
                             trip.stops.isNotEmpty) ...[
-                          _NextStopBanner(stops: trip.stops),
+                          _NextStopBanner(
+                            tripId: trip.id,
+                            stops: trip.stops,
+                            initialArrivedCount: trip.arrivedStationsCount,
+                          ),
                           const SizedBox(height: CaptainDesignTokens.s24),
                         ],
                         Text(
                           'إجراءات الرحلة',
-                          style: CaptainTypography.titleLarge(context)
-                              .copyWith(fontWeight: FontWeight.w800),
+                          style: CaptainTypography.titleLarge(
+                            context,
+                          ).copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: CaptainDesignTokens.s16),
                         GridView.count(
@@ -359,15 +368,55 @@ class _StatusBadge extends StatelessWidget {
 }
 
 class _NextStopBanner extends StatefulWidget {
-  const _NextStopBanner({required this.stops});
-  final List<String> stops;
+  const _NextStopBanner({
+    required this.tripId,
+    required this.stops,
+    required this.initialArrivedCount,
+  });
+
+  final String tripId;
+  final List<AssignedTripStop> stops;
+
+  /// How many stations were already confirmed arrived (the shared
+  /// `trip_events` arrival floor) when this trip was loaded — lets the
+  /// banner resume at the correct next station instead of always starting
+  /// from the first one.
+  final int initialArrivedCount;
 
   @override
   State<_NextStopBanner> createState() => _NextStopBannerState();
 }
 
 class _NextStopBannerState extends State<_NextStopBanner> {
-  int _currentIndex = 0;
+  late int _currentIndex = widget.initialArrivedCount.clamp(
+    0,
+    widget.stops.length,
+  );
+  bool _isSubmitting = false;
+
+  Future<void> _markCurrentStopArrived() async {
+    if (_isSubmitting || _currentIndex >= widget.stops.length) return;
+    final stop = widget.stops[_currentIndex];
+    setState(() => _isSubmitting = true);
+    try {
+      await context.read<TripExecutionCubit>().markStationArrived(
+        tripId: widget.tripId,
+        pointId: stop.id,
+        pointName: stop.name,
+      );
+      if (!mounted) return;
+      setState(() {
+        _currentIndex++;
+        _isSubmitting = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _isSubmitting = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('تعذر تسجيل الوصول للمحطة، حاول مجدداً')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -386,7 +435,11 @@ class _NextStopBannerState extends State<_NextStopBanner> {
         children: [
           Row(
             children: [
-              const Icon(Icons.location_on_rounded, color: CaptainColors.primary, size: 20),
+              const Icon(
+                Icons.location_on_rounded,
+                color: CaptainColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: CaptainDesignTokens.s12),
               Text(
                 isLast ? 'تم الوصول للوجهة' : 'المحطة القادمة',
@@ -419,7 +472,7 @@ class _NextStopBannerState extends State<_NextStopBanner> {
           if (!isLast) ...[
             const SizedBox(height: CaptainDesignTokens.s16),
             Text(
-              widget.stops[_currentIndex],
+              widget.stops[_currentIndex].name,
               style: CaptainTypography.titleLarge(context).copyWith(
                 fontWeight: FontWeight.w800,
                 color: CaptainColors.textPrimaryFor(context),
@@ -429,7 +482,8 @@ class _NextStopBannerState extends State<_NextStopBanner> {
             CaptainButton(
               label: 'تم الوصول للمحطة',
               icon: Icons.check_rounded,
-              onPressed: () => setState(() => _currentIndex++),
+              isLoading: _isSubmitting,
+              onPressed: _isSubmitting ? null : _markCurrentStopArrived,
             ),
           ],
         ],
@@ -491,7 +545,9 @@ class _ActionTile extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: CaptainTypography.titleSmall(context).copyWith(
                   fontWeight: FontWeight.w800,
-                  color: destructive ? CaptainColors.error : CaptainColors.textPrimaryFor(context),
+                  color: destructive
+                      ? CaptainColors.error
+                      : CaptainColors.textPrimaryFor(context),
                 ),
               ),
             ],
@@ -706,17 +762,18 @@ class _PremiumActionButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: color,
           foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(vertical: CaptainDesignTokens.s20),
+          padding: const EdgeInsets.symmetric(
+            vertical: CaptainDesignTokens.s20,
+          ),
           shape: RoundedRectangleBorder(borderRadius: CaptainDesignTokens.br24),
           elevation: 0,
         ),
         icon: Icon(icon, size: 28),
         label: Text(
           label,
-          style: CaptainTypography.titleMedium(context).copyWith(
-            fontWeight: FontWeight.w900,
-            color: Colors.white,
-          ),
+          style: CaptainTypography.titleMedium(
+            context,
+          ).copyWith(fontWeight: FontWeight.w900, color: Colors.white),
         ),
       ),
     );

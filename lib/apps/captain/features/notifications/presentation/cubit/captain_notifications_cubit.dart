@@ -13,10 +13,10 @@ class CaptainNotificationsCubit extends Cubit<CaptainNotificationsState> {
     required WatchCaptainNotificationsUseCase watchNotifications,
     required MarkCaptainNotificationReadUseCase markAsRead,
     required MarkAllCaptainNotificationsReadUseCase markAllAsRead,
-  })  : _watch = watchNotifications,
-        _markAsRead = markAsRead,
-        _markAllAsRead = markAllAsRead,
-        super(const CaptainNotificationsInitial());
+  }) : _watch = watchNotifications,
+       _markAsRead = markAsRead,
+       _markAllAsRead = markAllAsRead,
+       super(const CaptainNotificationsInitial());
 
   final WatchCaptainNotificationsUseCase _watch;
   final MarkCaptainNotificationReadUseCase _markAsRead;

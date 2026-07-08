@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/theme/app_layout.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_map_models.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/booking_map_adapters.dart';
+import 'package:bmt_app/core/widgets/maps/map_style.dart';
+import 'package:bmt_app/core/widgets/maps/overlays/glass_info_card.dart';
 
 /// "850 m" under a kilometre, otherwise "12.4 km".
 String formatRouteDistance(double meters) => meters < 1000
@@ -37,15 +38,8 @@ class RouteMapInfoPanel extends StatelessWidget {
       if ((info.duration ?? '').trim().isNotEmpty) info.duration!.trim(),
     ].join('  ·  ');
 
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 250),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: RouteMapStyle.surface(context).withAlpha(245),
-        borderRadius: BorderRadius.circular(AppLayout.radiusLg),
-        border: Border.all(color: RouteMapStyle.border(context)),
-        boxShadow: RouteMapStyle.shadow(context),
-      ),
+    return GlassInfoCard(
+      maxWidth: 250,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -57,7 +51,7 @@ class RouteMapInfoPanel extends StatelessWidget {
                 Icon(
                   Icons.near_me_rounded,
                   size: 15,
-                  color: RouteMapStyle.routeLine(context),
+                  color: MapStyle.routeLine(context),
                 ),
                 const SizedBox(width: 6),
                 Flexible(
@@ -65,9 +59,7 @@ class RouteMapInfoPanel extends StatelessWidget {
                     headline,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: RouteMapStyle.pillLabel(
-                      context,
-                    ).copyWith(fontSize: 13),
+                    style: MapStyle.pillLabel(context).copyWith(fontSize: 13),
                   ),
                 ),
               ],
@@ -114,13 +106,13 @@ class _Fact extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: iconSize, color: RouteMapStyle.stop(context)),
+        Icon(icon, size: iconSize, color: MapStyle.stop(context)),
         const SizedBox(width: 4),
         Text(
           label,
-          style: RouteMapStyle.pillLabel(
+          style: MapStyle.pillLabel(
             context,
-          ).copyWith(color: RouteMapStyle.onSurfaceMuted(context)),
+          ).copyWith(color: MapStyle.onSurfaceMuted(context)),
         ),
       ],
     );
@@ -128,33 +120,58 @@ class _Fact extends StatelessWidget {
 }
 
 /// Subtle pill shown while road geometry is being fetched. Deliberately
-/// quiet — the straight-line route is already visible underneath.
-class RouteMapLoadingPill extends StatelessWidget {
+/// quiet — the straight-line route is already visible underneath. Uses a
+/// pulsing dot rather than a spinner, consistent with the rest of the map
+/// kit's "never a bare progress indicator" rule.
+class RouteMapLoadingPill extends StatefulWidget {
   const RouteMapLoadingPill({super.key});
+
+  @override
+  State<RouteMapLoadingPill> createState() => _RouteMapLoadingPillState();
+}
+
+class _RouteMapLoadingPillState extends State<RouteMapLoadingPill>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
       decoration: BoxDecoration(
-        color: RouteMapStyle.surface(context).withAlpha(235),
-        borderRadius: RouteMapStyle.pill,
-        border: Border.all(color: RouteMapStyle.border(context)),
-        boxShadow: RouteMapStyle.shadow(context),
+        color: MapStyle.surface(context).withAlpha(235),
+        borderRadius: MapStyle.pill,
+        border: Border.all(color: MapStyle.border(context)),
+        boxShadow: MapStyle.shadow(context),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          SizedBox(
-            width: 11,
-            height: 11,
-            child: CircularProgressIndicator(
-              strokeWidth: 1.8,
-              color: RouteMapStyle.routeLine(context),
+          FadeTransition(
+            opacity: _controller.drive(CurveTween(curve: Curves.easeInOut)),
+            child: Icon(
+              Icons.route_rounded,
+              size: 13,
+              color: MapStyle.routeLine(context),
             ),
           ),
           const SizedBox(width: 7),
-          Text('Tracing road…', style: RouteMapStyle.pillLabel(context)),
+          Text('Tracing road…', style: MapStyle.pillLabel(context)),
         ],
       ),
     );

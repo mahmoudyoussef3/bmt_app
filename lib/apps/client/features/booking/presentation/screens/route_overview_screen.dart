@@ -4,7 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/easyway_route_map_view.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/no_map_placeholder.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_overview_fare_action.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_overview_hero.dart';
@@ -60,7 +60,7 @@ class RouteOverviewScreen extends StatelessWidget {
             ),
             flexibleSpace: FlexibleSpaceBar(
               background: mapPins.isNotEmpty
-                  ? GoogleStyleMapView(
+                  ? EasyWayRouteMapView(
                       waypoints: mapPins,
                       cameraPadding: const EdgeInsets.fromLTRB(42, 72, 42, 36),
                       info: RouteMapInfoData(

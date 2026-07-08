@@ -33,12 +33,7 @@ class CaptainRequestPendingView extends StatelessWidget {
               color: scheme.primary.withAlpha(24),
               shape: BoxShape.circle,
             ),
-            child: Center(
-              child: SizedBox(
-                width: 44,
-                height: 44,
-              ),
-            ),
+            child: Center(child: SizedBox(width: 44, height: 44)),
           ),
         ),
         const SizedBox(height: 28),
@@ -54,10 +49,9 @@ class CaptainRequestPendingView extends StatelessWidget {
           'يقوم فريق العمليات بمراجعة بياناتك الآن. سيتم تفعيل حسابك فور '
           'الموافقة، وستنتقل تلقائياً إلى صفحتك الرئيسية.',
           textAlign: TextAlign.center,
-          style: CaptainTypography.bodyMedium(context).copyWith(
-            color: scheme.onSurfaceVariant,
-            height: 1.5,
-          ),
+          style: CaptainTypography.bodyMedium(
+            context,
+          ).copyWith(color: scheme.onSurfaceVariant, height: 1.5),
         ),
         const SizedBox(height: 8),
         Directionality(
@@ -65,9 +59,10 @@ class CaptainRequestPendingView extends StatelessWidget {
           child: Text(
             phone,
             textAlign: TextAlign.center,
-            style: CaptainTypography.bodyMedium(
-              context,
-            ).copyWith(color: CaptainColors.primary, fontWeight: FontWeight.w800),
+            style: CaptainTypography.bodyMedium(context).copyWith(
+              color: CaptainColors.primary,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
         const SizedBox(height: 28),

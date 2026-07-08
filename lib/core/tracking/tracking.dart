@@ -5,6 +5,7 @@ library;
 export 'fix_validator.dart';
 export 'geo_math.dart';
 export 'heading_resolver.dart';
+export 'progress/arrival_events.dart';
 export 'progress/eta_estimator.dart';
 export 'progress/route_geometry.dart';
 export 'progress/route_progress_config.dart';

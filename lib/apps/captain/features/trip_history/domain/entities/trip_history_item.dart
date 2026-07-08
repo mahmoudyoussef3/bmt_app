@@ -22,5 +22,6 @@ class TripHistoryItem {
   final String plateNumber;
 
   Duration get duration => arrivalTime.difference(departureTime);
-  double get boardingRate => passengerCount == 0 ? 0 : boardedCount / passengerCount;
+  double get boardingRate =>
+      passengerCount == 0 ? 0 : boardedCount / passengerCount;
 }

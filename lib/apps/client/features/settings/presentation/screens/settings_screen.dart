@@ -224,6 +224,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onPressed: _navigateBack,
                 icon: const Icon(Icons.arrow_back_rounded),
               ),
+              actions: [
+                IconButton(
+                  tooltip: 'Refresh',
+                  icon: const Icon(Icons.refresh_rounded),
+                  onPressed: () => context.read<SettingsCubit>().load(),
+                ),
+              ],
               elevation: 0,
             ),
             body: SafeArea(

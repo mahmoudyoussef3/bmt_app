@@ -11,7 +11,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/easyway_route_map_view.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Selects real pickup and destination stations and previews them on a map.
@@ -133,6 +133,12 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
           appBar: AppBar(
             title: Text(localizations.booking_selectOnMap),
             actions: [
+              IconButton(
+                tooltip: 'Refresh',
+                icon: const Icon(Icons.refresh_rounded),
+                onPressed: () =>
+                    context.read<BookingCubit>().loadMapPins(force: true),
+              ),
               ClientButton.text(
                 label: localizations.booking_popular,
                 onPressed: () => Navigator.pushNamed(
@@ -147,7 +153,7 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
           body: Stack(
             children: [
               Positioned.fill(
-                child: GoogleStyleMapView(
+                child: EasyWayRouteMapView(
                   pickup: _pickup,
                   destination: _destination,
                   cameraPadding: const EdgeInsets.fromLTRB(48, 64, 48, 290),

@@ -28,10 +28,8 @@ class PassengerManifestDataSource {
         .eq('trip_id', tripId);
     final pickupTimesByName = {
       for (final point in pointsResponse)
-        (point['point_name']?.toString() ?? ''): point['departure_offset']
-                    ?.toString()
-                    .isNotEmpty ==
-                true
+        (point['point_name']?.toString() ??
+            ''): point['departure_offset']?.toString().isNotEmpty == true
             ? point['departure_offset'].toString()
             : point['arrival_offset']?.toString() ?? '',
     };
@@ -81,10 +79,10 @@ class PassengerManifestDataSource {
   }
 
   String _statusToString(PassengerBoardingStatus status) => switch (status) {
-        PassengerBoardingStatus.boarded => 'confirmed',
-        PassengerBoardingStatus.absent => 'no_show',
-        PassengerBoardingStatus.late => 'reserved',
-        PassengerBoardingStatus.pending => 'reserved',
-        PassengerBoardingStatus.cancelled => 'cancelled',
-      };
+    PassengerBoardingStatus.boarded => 'confirmed',
+    PassengerBoardingStatus.absent => 'no_show',
+    PassengerBoardingStatus.late => 'reserved',
+    PassengerBoardingStatus.pending => 'reserved',
+    PassengerBoardingStatus.cancelled => 'cancelled',
+  };
 }

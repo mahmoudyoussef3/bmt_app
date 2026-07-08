@@ -9,9 +9,8 @@ class UpdatePassengerStatusUseCase {
   Future<void> call({
     required String tripPassengerId,
     required PassengerBoardingStatus status,
-  }) =>
-      _repository.updatePassengerStatus(
-        tripPassengerId: tripPassengerId,
-        status: status,
-      );
+  }) => _repository.updatePassengerStatus(
+    tripPassengerId: tripPassengerId,
+    status: status,
+  );
 }

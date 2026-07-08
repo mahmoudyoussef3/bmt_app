@@ -344,6 +344,11 @@ class _CommunicationScreenState extends State<CommunicationScreen>
         ),
         actions: [
           IconButton(
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () => context.read<CommunicationCubit>().load(),
+          ),
+          IconButton(
             icon: const Icon(
               Icons.ring_volume_rounded,
               color: Colors.greenAccent,

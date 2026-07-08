@@ -50,52 +50,55 @@ class _MyTripsScreenState extends State<MyTripsScreen> {
             return Center(
               child: ConstrainedBox(
                 constraints: BoxConstraints(maxWidth: maxWidth),
-                child: CustomScrollView(
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                        child: TripsHeader(
-                          upcomingCount: counts[TripFilter.upcoming] ?? 0,
-                          activeCount: counts[TripFilter.active] ?? 0,
-                          onBookTrip: () =>
-                              widget.onOpenRoute(ClientRoutes.bookingSearch),
+                child: RefreshIndicator(
+                  onRefresh: () => context.read<TripsCubit>().loadTrips(),
+                  child: CustomScrollView(
+                    slivers: [
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                          child: TripsHeader(
+                            upcomingCount: counts[TripFilter.upcoming] ?? 0,
+                            activeCount: counts[TripFilter.active] ?? 0,
+                            onBookTrip: () =>
+                                widget.onOpenRoute(ClientRoutes.bookingSearch),
+                          ),
                         ),
                       ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                        child: TripFilterBar(
-                          selected: _filter,
-                          counts: counts,
-                          onSelected: (filter) =>
-                              setState(() => _filter = filter),
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                          child: TripFilterBar(
+                            selected: _filter,
+                            counts: counts,
+                            onSelected: (filter) =>
+                                setState(() => _filter = filter),
+                          ),
                         ),
                       ),
-                    ),
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: TripsSectionTitle(
-                          filter: _filter,
-                          count: trips.length,
+                      SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: TripsSectionTitle(
+                            filter: _filter,
+                            count: trips.length,
+                          ),
                         ),
                       ),
-                    ),
-                    ...tripListContentSlivers(
-                      state: state,
-                      filter: _filter,
-                      trips: trips,
-                      onRetry: context.read<TripsCubit>().loadTrips,
-                      onBrowseRoutes: () =>
-                          widget.onOpenRoute(ClientRoutes.bookingSearch),
-                      onOpenTrip: (trip) => widget.onOpenRoute(
-                        TripsRoutes.tripDetails,
-                        {'tripId': trip.id},
+                      ...tripListContentSlivers(
+                        state: state,
+                        filter: _filter,
+                        trips: trips,
+                        onRetry: context.read<TripsCubit>().loadTrips,
+                        onBrowseRoutes: () =>
+                            widget.onOpenRoute(ClientRoutes.bookingSearch),
+                        onOpenTrip: (trip) => widget.onOpenRoute(
+                          TripsRoutes.tripDetails,
+                          {'tripId': trip.id},
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             );

@@ -48,25 +48,24 @@ class _CaptainNotificationsPageState extends State<CaptainNotificationsPage> {
       body: BlocBuilder<CaptainNotificationsCubit, CaptainNotificationsState>(
         builder: (context, state) => switch (state) {
           CaptainNotificationsLoading() => const Center(
-              child: CircularProgressIndicator(),
-            ),
+            child: CircularProgressIndicator(),
+          ),
           CaptainNotificationsError(:final message) => Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.error_outline_rounded, size: 48, color: cs.error),
-                  const SizedBox(height: 12),
-                  Text(message, textAlign: TextAlign.center),
-                  const SizedBox(height: 16),
-                  FilledButton(
-                    onPressed: () => context
-                        .read<CaptainNotificationsCubit>()
-                        .startWatching(),
-                    child: const Text('إعادة المحاولة'),
-                  ),
-                ],
-              ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.error_outline_rounded, size: 48, color: cs.error),
+                const SizedBox(height: 12),
+                Text(message, textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () =>
+                      context.read<CaptainNotificationsCubit>().startWatching(),
+                  child: const Text('إعادة المحاولة'),
+                ),
+              ],
             ),
+          ),
           CaptainNotificationsLoaded(:final notifications) =>
             notifications.isEmpty
                 ? const Center(
@@ -82,8 +81,7 @@ class _CaptainNotificationsPageState extends State<CaptainNotificationsPage> {
                 : ListView.separated(
                     padding: const EdgeInsets.all(16),
                     itemCount: notifications.length,
-                    separatorBuilder: (_, index) =>
-                        const SizedBox(height: 8),
+                    separatorBuilder: (_, index) => const SizedBox(height: 8),
                     itemBuilder: (_, i) => _CaptainNotifTile(
                       notification: notifications[i],
                       onMarkRead: () => context
@@ -129,25 +127,31 @@ class _CaptainNotifTile extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(_categoryIcon(notification.category),
-                color: cs.primary, size: 22),
+            Icon(
+              _categoryIcon(notification.category),
+              color: cs.primary,
+              size: 22,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(notification.title,
-                      style: tt.labelLarge?.copyWith(
-                        fontWeight: notification.isRead
-                            ? FontWeight.w500
-                            : FontWeight.w700,
-                      )),
+                  Text(
+                    notification.title,
+                    style: tt.labelLarge?.copyWith(
+                      fontWeight: notification.isRead
+                          ? FontWeight.w500
+                          : FontWeight.w700,
+                    ),
+                  ),
                   const SizedBox(height: 3),
-                  Text(notification.body,
-                      style: tt.bodySmall
-                          ?.copyWith(color: cs.onSurfaceVariant),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis),
+                  Text(
+                    notification.body,
+                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
@@ -155,7 +159,7 @@ class _CaptainNotifTile extends StatelessWidget {
               Container(
                 width: 8,
                 height: 8,
-                margin: const EdgeInsets.only(top: 4),
+                margin: const EdgeInsetsDirectional.only(top: 4),
                 decoration: BoxDecoration(
                   color: cs.primary,
                   shape: BoxShape.circle,
@@ -168,15 +172,11 @@ class _CaptainNotifTile extends StatelessWidget {
   }
 
   IconData _categoryIcon(CaptainNotificationCategory c) => switch (c) {
-        CaptainNotificationCategory.trip => Icons.directions_bus_outlined,
-        CaptainNotificationCategory.passenger =>
-          Icons.people_alt_outlined,
-        CaptainNotificationCategory.assignment =>
-          Icons.assignment_outlined,
-        CaptainNotificationCategory.emergency =>
-          Icons.warning_amber_rounded,
-        CaptainNotificationCategory.announcement =>
-          Icons.campaign_outlined,
-        _ => Icons.notifications_outlined,
-      };
+    CaptainNotificationCategory.trip => Icons.directions_bus_outlined,
+    CaptainNotificationCategory.passenger => Icons.people_alt_outlined,
+    CaptainNotificationCategory.assignment => Icons.assignment_outlined,
+    CaptainNotificationCategory.emergency => Icons.warning_amber_rounded,
+    CaptainNotificationCategory.announcement => Icons.campaign_outlined,
+    _ => Icons.notifications_outlined,
+  };
 }

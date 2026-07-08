@@ -28,9 +28,9 @@ class CaptainAuthScaffold extends StatelessWidget {
         backgroundColor: CaptainColors.backgroundFor(context),
         body: Stack(
           children: [
-            Positioned(
+            PositionedDirectional(
               top: -120,
-              right: -60,
+              end: -60,
               child: Container(
                 width: 320,
                 height: 320,
@@ -47,7 +47,7 @@ class CaptainAuthScaffold extends StatelessWidget {
                 children: [
                   if (showBack)
                     Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: AlignmentDirectional.centerStart,
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 4),
                         child: IconButton(
@@ -59,7 +59,7 @@ class CaptainAuthScaffold extends StatelessWidget {
                   Expanded(
                     child: SingleChildScrollView(
                       physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.fromLTRB(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
                         CaptainSpacing.xl,
                         CaptainSpacing.lg,
                         CaptainSpacing.xl,

@@ -13,10 +13,9 @@ class CaptainNotificationsRepositoryImpl
       (await _datasource.getNotifications()).map((m) => m.toEntity()).toList();
 
   @override
-  Stream<List<CaptainNotification>> watchNotifications() =>
-      _datasource.watchNotifications().map(
-            (rows) => rows.map((m) => m.toEntity()).toList(),
-          );
+  Stream<List<CaptainNotification>> watchNotifications() => _datasource
+      .watchNotifications()
+      .map((rows) => rows.map((m) => m.toEntity()).toList());
 
   @override
   Stream<int> watchUnreadCount() => _datasource.watchUnreadCount();

@@ -9,7 +9,7 @@ import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/ca
 import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_welcome_home_screen.dart';
 import 'package:bmt_app/core/flavors/app_bootstrap.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
-import 'package:bmt_app/core/localization/locale_cubit.dart';
+
 import 'package:bmt_app/core/notifications/fcm_service.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_theme.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
@@ -74,24 +74,18 @@ class _CaptainAppState extends State<CaptainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<LocaleCubit, Locale>(
-      builder: (context, locale) {
-        return MaterialApp(
-          navigatorKey: _navigatorKey,
-          debugShowCheckedModeBanner: false,
-          title: AppFlavorConfig.current.appName,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: locale,
-          theme: CaptainTheme.light(),
-          darkTheme: CaptainTheme.dark(),
-          themeMode: ThemeMode.system,
-          home: const _CaptainAuthGate(),
-          routes: {
-            '/captain/home': (_) => const CaptainAppShell(),
-          },
-        );
-      },
+    return MaterialApp(
+      navigatorKey: _navigatorKey,
+      debugShowCheckedModeBanner: false,
+      title: AppFlavorConfig.current.appName,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('ar'),
+      theme: CaptainTheme.light(),
+      darkTheme: CaptainTheme.dark(),
+      themeMode: ThemeMode.system,
+      home: const _CaptainAuthGate(),
+      routes: {'/captain/home': (_) => const CaptainAppShell()},
     );
   }
 }

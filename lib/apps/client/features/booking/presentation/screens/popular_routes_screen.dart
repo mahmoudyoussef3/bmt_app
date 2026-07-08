@@ -37,6 +37,14 @@ class _PopularRoutesScreenState extends State<PopularRoutesScreen> {
         return BookingFlowScaffold(
           title: 'Routes',
           query: _query.isComplete ? _query : null,
+          actions: [
+            IconButton(
+              tooltip: 'Refresh',
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: () =>
+                  context.read<BookingCubit>().loadPopularRoutes(force: true),
+            ),
+          ],
           body: PopularRoutesBody(
             state: state,
             onRetry: () =>

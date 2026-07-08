@@ -52,7 +52,10 @@ class _CaptainOnboardingFlowState extends State<CaptainOnboardingFlow> {
     return CaptainAuthScaffold(
       child: BlocBuilder<CaptainOnboardingCubit, CaptainOnboardingState>(
         builder: (context, state) => switch (state) {
-          OnboardingForm(:final error) => _form(submitting: false, error: error),
+          OnboardingForm(:final error) => _form(
+            submitting: false,
+            error: error,
+          ),
           OnboardingSubmitting() => _form(submitting: true),
           OnboardingPending(:final phone) => CaptainRequestPendingView(
             phone: phone,
@@ -105,8 +108,7 @@ class _CaptainOnboardingFlowState extends State<CaptainOnboardingFlow> {
         const CaptainAuthHeader(
           icon: Icons.verified_user_rounded,
           title: 'أنت مسجّل بالفعل',
-          subtitle:
-              'هذا الرقم مسجّل لكابتن نشط. سجّل الدخول للوصول إلى حسابك.',
+          subtitle: 'هذا الرقم مسجّل لكابتن نشط. سجّل الدخول للوصول إلى حسابك.',
         ),
         const SizedBox(height: 28),
         CaptainButton(label: 'تسجيل الدخول', onPressed: widget.onBackToLogin),

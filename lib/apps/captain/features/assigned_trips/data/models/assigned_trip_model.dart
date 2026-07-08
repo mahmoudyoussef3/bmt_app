@@ -12,6 +12,7 @@ class AssignedTripModel {
     required this.passengerCount,
     required this.boardedCount,
     required this.status,
+    this.arrivedStationsCount = 0,
   });
 
   final String id;
@@ -20,10 +21,11 @@ class AssignedTripModel {
   final String plateNumber;
   final DateTime departureTime;
   final DateTime expectedArrivalTime;
-  final List<String> stops;
+  final List<AssignedTripStop> stops;
   final int passengerCount;
   final int boardedCount;
   final AssignedTripStatus status;
+  final int arrivedStationsCount;
 
   AssignedTrip toEntity() {
     return AssignedTrip(
@@ -37,6 +39,7 @@ class AssignedTripModel {
       passengerCount: passengerCount,
       boardedCount: boardedCount,
       status: status,
+      arrivedStationsCount: arrivedStationsCount,
     );
   }
 }

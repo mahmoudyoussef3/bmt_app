@@ -4,6 +4,8 @@ import 'package:bmt_app/core/theme/motion_preference.dart';
 import 'package:flutter/material.dart';
 
 import '../../tracking/vehicle_sample.dart';
+import 'bus_silhouette.dart';
+import 'heading_wedge.dart';
 
 /// The vehicle map marker: a circular bus badge with a heading wedge that
 /// orbits the badge pointing in the direction of travel, an optional soft
@@ -56,7 +58,7 @@ class AnimatedVehicleMarker extends StatelessWidget {
               height: size,
               child: Align(
                 alignment: Alignment.topCenter,
-                child: _HeadingWedge(color: tone),
+                child: HeadingWedge(color: tone),
               ),
             ),
           ),
@@ -64,8 +66,12 @@ class AnimatedVehicleMarker extends StatelessWidget {
           width: size * 0.6,
           height: size * 0.6,
           decoration: BoxDecoration(
-            color: tone,
-            shape: BoxShape.circle,
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [tone, Color.lerp(tone, Colors.black, 0.2)!],
+            ),
+            borderRadius: BorderRadius.circular(size * 0.6 * 0.34),
             border: Border.all(color: Colors.white, width: 3),
             boxShadow: [
               BoxShadow(
@@ -75,51 +81,17 @@ class AnimatedVehicleMarker extends StatelessWidget {
               ),
             ],
           ),
-          child: Icon(
-            sample.isMoving || sample.isStale
-                ? Icons.directions_bus_rounded
-                : Icons.pause_circle_filled_rounded,
-            size: size * 0.33,
-            color: Colors.white,
-          ),
+          padding: EdgeInsets.all(size * 0.6 * 0.24),
+          child: sample.isMoving || sample.isStale
+              ? const BusSilhouette()
+              : Icon(
+                  Icons.pause_rounded,
+                  color: Colors.white,
+                  size: size * 0.26,
+                ),
         ),
       ],
     );
   }
 }
 
-class _HeadingWedge extends StatelessWidget {
-  const _HeadingWedge({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return CustomPaint(size: const Size(14, 10), painter: _WedgePainter(color));
-  }
-}
-
-class _WedgePainter extends CustomPainter {
-  const _WedgePainter(this.color);
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final path = Path()
-      ..moveTo(size.width / 2, 0)
-      ..lineTo(size.width, size.height)
-      ..lineTo(size.width / 2, size.height * 0.72)
-      ..lineTo(0, size.height)
-      ..close();
-    canvas.drawPath(
-      path,
-      Paint()
-        ..color = color
-        ..style = PaintingStyle.fill,
-    );
-  }
-
-  @override
-  bool shouldRepaint(_WedgePainter oldDelegate) => oldDelegate.color != color;
-}

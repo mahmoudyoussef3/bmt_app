@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/core/tracking/progress/arrival_events.dart';
+
 import '../../domain/entities/trip_execution_state.dart';
 import '../models/trip_execution_model.dart';
 
@@ -57,6 +59,22 @@ class TripExecutionDataSource {
         .subscribe();
     controller.onCancel = channel.unsubscribe;
     return controller.stream;
+  }
+
+  /// Inserts the canonical per-station arrival marker into `trip_events` —
+  /// the exact convention the Dashboard uses (`markPointArrived`), so
+  /// Dashboard, Client, and Captain all read the same source of truth.
+  Future<void> markStationArrived({
+    required String tripId,
+    required String pointId,
+    required String pointName,
+  }) async {
+    await _supabase.from('trip_events').insert({
+      'trip_id': tripId,
+      'title': kStationArrivalEventTitle,
+      'description': 'وصلت الرحلة إلى محطة: $pointName',
+      'done': true,
+    });
   }
 
   /// Calls the update_trip_status RPC which enforces the valid transition

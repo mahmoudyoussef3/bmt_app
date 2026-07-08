@@ -32,8 +32,11 @@ class CaptainRequestRejectedView extends StatelessWidget {
               color: scheme.error.withAlpha(24),
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.report_gmailerrorred_rounded,
-                color: scheme.error, size: 56),
+            child: Icon(
+              Icons.report_gmailerrorred_rounded,
+              color: scheme.error,
+              size: 56,
+            ),
           ),
         ),
         const SizedBox(height: 28),

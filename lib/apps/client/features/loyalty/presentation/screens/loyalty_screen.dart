@@ -390,6 +390,13 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
               onPressed: _onBackPress,
               icon: const Icon(Icons.arrow_back_rounded),
             ),
+            actions: [
+              IconButton(
+                tooltip: 'Refresh',
+                icon: const Icon(Icons.refresh_rounded),
+                onPressed: () => context.read<LoyaltyCubit>().load(),
+              ),
+            ],
             elevation: 0,
           ),
           body: SafeArea(
@@ -399,6 +406,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
               ),
               LoyaltyError(:final message) => ClientErrorCard.fullScreen(
                 message: message,
+                onRetry: () => context.read<LoyaltyCubit>().load(),
               ),
               LoyaltyLoaded() => Stack(
                 children: [

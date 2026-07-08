@@ -26,9 +26,21 @@ class _CaptainAppShellState extends State<CaptainAppShell> {
   int _currentIndex = 0;
 
   static const _tabs = [
-    _TabDef(label: 'اليوم', icon: Icons.home_rounded, activeIcon: Icons.home_rounded),
-    _TabDef(label: 'السجل', icon: Icons.history_rounded, activeIcon: Icons.history_rounded),
-    _TabDef(label: 'حسابي', icon: Icons.person_outline_rounded, activeIcon: Icons.person_rounded),
+    _TabDef(
+      label: 'اليوم',
+      icon: Icons.home_rounded,
+      activeIcon: Icons.home_rounded,
+    ),
+    _TabDef(
+      label: 'السجل',
+      icon: Icons.history_rounded,
+      activeIcon: Icons.history_rounded,
+    ),
+    _TabDef(
+      label: 'حسابي',
+      icon: Icons.person_outline_rounded,
+      activeIcon: Icons.person_rounded,
+    ),
   ];
 
   @override
@@ -59,10 +71,15 @@ class _CaptainAppShellState extends State<CaptainAppShell> {
               SnackBar(
                 content: Row(
                   children: [
-                    const Icon(Icons.notifications_active_rounded,
-                        color: Colors.white, size: 18),
+                    const Icon(
+                      Icons.notifications_active_rounded,
+                      color: Colors.white,
+                      size: 18,
+                    ),
                     const SizedBox(width: 8),
-                    Expanded(child: Text('رسالة من العمليات: ${state.message}')),
+                    Expanded(
+                      child: Text('رسالة من العمليات: ${state.message}'),
+                    ),
                   ],
                 ),
                 duration: const Duration(seconds: 5),
@@ -70,8 +87,9 @@ class _CaptainAppShellState extends State<CaptainAppShell> {
                 action: SnackBarAction(
                   label: 'إغلاق',
                   textColor: Colors.white,
-                  onPressed: () =>
-                      context.read<CaptainNotificationCubit>().clearNotification(),
+                  onPressed: () => context
+                      .read<CaptainNotificationCubit>()
+                      .clearNotification(),
                 ),
               ),
             );
@@ -113,7 +131,7 @@ class _ShellScaffold extends StatelessWidget {
       ),
       bottomNavigationBar: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(
+          padding: const EdgeInsetsDirectional.fromSTEB(
             CaptainDesignTokens.s16,
             0,
             CaptainDesignTokens.s16,
@@ -172,7 +190,9 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? CaptainColors.primary : CaptainColors.textSecondaryFor(context);
+    final color = isActive
+        ? CaptainColors.primary
+        : CaptainColors.textSecondaryFor(context);
 
     return GestureDetector(
       onTap: onTap,
@@ -185,7 +205,9 @@ class _NavItem extends StatelessWidget {
           vertical: CaptainDesignTokens.s8,
         ),
         decoration: BoxDecoration(
-          color: isActive ? CaptainColors.primary.withValues(alpha: 0.1) : Colors.transparent,
+          color: isActive
+              ? CaptainColors.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: CaptainDesignTokens.br24,
         ),
         child: Column(
@@ -215,7 +237,11 @@ class _NavItem extends StatelessWidget {
 }
 
 class _TabDef {
-  const _TabDef({required this.label, required this.icon, required this.activeIcon});
+  const _TabDef({
+    required this.label,
+    required this.icon,
+    required this.activeIcon,
+  });
   final String label;
   final IconData icon;
   final IconData activeIcon;

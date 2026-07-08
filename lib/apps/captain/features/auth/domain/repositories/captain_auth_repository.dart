@@ -1,5 +1,7 @@
 abstract class CaptainAuthRepository {
-  Future<void> signIn({required String email, required String password});
+  /// Throws [CaptainPhoneNotRegisteredException] when [phone] has no
+  /// matching active driver.
+  Future<void> signInWithPhone(String phone);
 
   Future<void> signOut();
 }

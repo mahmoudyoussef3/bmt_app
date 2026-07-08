@@ -13,10 +13,10 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
     required GetTripPassengersUseCase getTripPassengers,
     required WatchTripPassengersUseCase watchTripPassengers,
     required UpdatePassengerStatusUseCase updatePassengerStatus,
-  })  : _getTripPassengers = getTripPassengers,
-        _watchTripPassengers = watchTripPassengers,
-        _updatePassengerStatus = updatePassengerStatus,
-        super(const PassengerManifestLoading());
+  }) : _getTripPassengers = getTripPassengers,
+       _watchTripPassengers = watchTripPassengers,
+       _updatePassengerStatus = updatePassengerStatus,
+       super(const PassengerManifestLoading());
 
   final GetTripPassengersUseCase _getTripPassengers;
   final WatchTripPassengersUseCase _watchTripPassengers;

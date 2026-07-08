@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/trip_execution_state.dart';
 import '../../domain/usecases/complete_trip_usecase.dart';
+import '../../domain/usecases/mark_station_arrived_usecase.dart';
 import '../../domain/usecases/start_boarding_usecase.dart';
 import '../../domain/usecases/start_trip_usecase.dart';
 import '../../domain/usecases/watch_trip_execution_status_usecase.dart';
@@ -15,16 +16,19 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
     required StartTripUseCase startTrip,
     required CompleteTripUseCase completeTrip,
     required WatchTripExecutionStatusUseCase watchTripStatus,
+    required MarkStationArrivedUseCase markStationArrived,
   }) : _startBoarding = startBoarding,
        _startTrip = startTrip,
        _completeTrip = completeTrip,
        _watchTripStatus = watchTripStatus,
+       _markStationArrived = markStationArrived,
        super(const TripExecutionIdle(TripExecutionStatus.scheduled));
 
   final StartBoardingUseCase _startBoarding;
   final StartTripUseCase _startTrip;
   final CompleteTripUseCase _completeTrip;
   final WatchTripExecutionStatusUseCase _watchTripStatus;
+  final MarkStationArrivedUseCase _markStationArrived;
   StreamSubscription<TripExecutionStatus>? _statusSubscription;
   TripExecutionStatus _status = TripExecutionStatus.scheduled;
 
@@ -74,6 +78,24 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
     } catch (error) {
       emit(TripExecutionError(error.toString(), _status));
     }
+  }
+
+  /// Persists a station arrival. Deliberately does not touch [state]: this
+  /// is a per-stop side action independent from the board/start/complete
+  /// lifecycle, so it must not flash the main action button into a loading
+  /// state. Callers (the next-stop banner) track their own local
+  /// submitting/error UI and only advance their stop index once this
+  /// completes successfully.
+  Future<void> markStationArrived({
+    required String tripId,
+    required String pointId,
+    required String pointName,
+  }) {
+    return _markStationArrived(
+      tripId: tripId,
+      pointId: pointId,
+      pointName: pointName,
+    );
   }
 
   @override

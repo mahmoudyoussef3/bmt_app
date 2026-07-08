@@ -41,14 +41,14 @@ class CaptainNotificationModel {
       );
 
   CaptainNotification toEntity() => CaptainNotification(
-        id: id,
-        title: title,
-        body: body,
-        category: category,
-        isRead: isRead,
-        createdAt: createdAt,
-        actionUrl: actionUrl,
-        data: data,
-        priority: priority,
-      );
+    id: id,
+    title: title,
+    body: body,
+    category: category,
+    isRead: isRead,
+    createdAt: createdAt,
+    actionUrl: actionUrl,
+    data: data,
+    priority: priority,
+  );
 }

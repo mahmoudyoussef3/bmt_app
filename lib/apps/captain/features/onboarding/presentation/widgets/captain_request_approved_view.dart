@@ -44,8 +44,11 @@ class CaptainRequestApprovedView extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               child: const Center(
-                child: Icon(Icons.verified_rounded,
-                    color: CaptainColors.success, size: 56),
+                child: Icon(
+                  Icons.verified_rounded,
+                  color: CaptainColors.success,
+                  size: 56,
+                ),
               ),
             ),
           ),
@@ -63,10 +66,9 @@ class CaptainRequestApprovedView extends StatelessWidget {
           'أصبح حسابك مفعّلاً. تابع للدخول إلى صفحتك الرئيسية والبدء في '
           'استقبال الرحلات.',
           textAlign: TextAlign.center,
-          style: CaptainTypography.bodyMedium(context).copyWith(
-            color: scheme.onSurfaceVariant,
-            height: 1.5,
-          ),
+          style: CaptainTypography.bodyMedium(
+            context,
+          ).copyWith(color: scheme.onSurfaceVariant, height: 1.5),
         ),
         const SizedBox(height: 8),
         Directionality(

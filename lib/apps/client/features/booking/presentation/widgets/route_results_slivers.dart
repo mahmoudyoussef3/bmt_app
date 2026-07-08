@@ -51,7 +51,7 @@ List<Widget> routeResultsSlivers({
           crossAxisCount: isTablet ? 2 : 1,
           mainAxisSpacing: 12,
           crossAxisSpacing: 12,
-          mainAxisExtent: 304,
+          mainAxisExtent: 320,
         ),
         delegate: SliverChildBuilderDelegate((context, index) {
           final route = filteredRoutes[index];

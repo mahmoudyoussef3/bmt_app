@@ -61,7 +61,10 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
           return const TripEmptyView();
         }
 
-        return TripDetailsView(trip: trip);
+        return TripDetailsView(
+          trip: trip,
+          onRefresh: () => context.read<TripsCubit>().loadTripDetails(_tripId),
+        );
       },
     );
   }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_legend.dart';
@@ -26,13 +27,28 @@ class TripSeatCabin extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
       decoration: BoxDecoration(
-        color: ClientColors.surfaceMutedFor(context),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: ClientColors.borderFor(context)),
+        color: ClientColors.surfaceFor(context),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(54),
+          topRight: Radius.circular(54),
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+        border: Border.all(color: ClientColors.borderStrongFor(context)),
+        boxShadow: ClientElevation.md(context),
       ),
       child: Column(
         children: [
-          _CabinFront(),
+          Container(
+            width: 76,
+            height: 7,
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceMutedFor(context),
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const SizedBox(height: 14),
+          const _CabinFront(),
           const SizedBox(height: 18),
           TripSeatMap(seats: seats, seatSize: seatSize),
           if (showLegend) ...[
@@ -56,7 +72,7 @@ class _CabinFront extends StatelessWidget {
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: ClientColors.surfaceFor(context),
+            color: ClientColors.surfaceMutedFor(context),
             shape: BoxShape.circle,
             border: Border.all(color: ClientColors.borderFor(context)),
           ),

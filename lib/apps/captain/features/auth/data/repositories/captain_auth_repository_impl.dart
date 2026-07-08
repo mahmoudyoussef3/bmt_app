@@ -7,15 +7,8 @@ class CaptainAuthRepositoryImpl implements CaptainAuthRepository {
   final CaptainAuthDatasource _datasource;
 
   @override
-  Future<void> signIn({required String email, required String password}) async {
-    await _datasource.signIn(email: email, password: password);
-    if (!await _datasource.isActiveDriver()) {
-      await _datasource.signOut();
-      throw Exception(
-        'هذا الحساب غير مرتبط بسائق نشط. تواصل مع مسؤول التشغيل.',
-      );
-    }
-  }
+  Future<void> signInWithPhone(String phone) =>
+      _datasource.signInWithPhone(phone);
 
   @override
   Future<void> signOut() => _datasource.signOut();

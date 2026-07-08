@@ -39,6 +39,7 @@ class TrackingTripData {
     required this.stops,
     required this.tripState,
     this.routeStops = const [],
+    this.arrivalEventCount = 0,
     this.passengerPickupName,
     this.passengerDropoffName,
     this.passengerStatus,
@@ -71,6 +72,13 @@ class TrackingTripData {
   /// Ordered route stops with coordinates and planned times, ready for the
   /// route progress engine.
   final List<RouteStop> routeStops;
+
+  /// Count of `trip_events` rows with the canonical per-station arrival
+  /// title (`'وصول محطة'`) — the same authoritative "arrival floor" the
+  /// Dashboard seeds its progress engine with. Seeding the client's engine
+  /// with this keeps the per-stop timeline in sync with what the captain
+  /// has actually reported, not just inferred GPS position.
+  final int arrivalEventCount;
 
   /// The rider's own manifest row: where they board/alight and whether the
   /// captain confirmed them on board.
@@ -153,6 +161,7 @@ class TrackingTripData {
     List<String>? stops,
     TrackingTripState? tripState,
     List<RouteStop>? routeStops,
+    int? arrivalEventCount,
     String? passengerPickupName,
     String? passengerDropoffName,
     String? passengerStatus,
@@ -182,6 +191,7 @@ class TrackingTripData {
       stops: stops ?? this.stops,
       tripState: tripState ?? this.tripState,
       routeStops: routeStops ?? this.routeStops,
+      arrivalEventCount: arrivalEventCount ?? this.arrivalEventCount,
       passengerPickupName: passengerPickupName ?? this.passengerPickupName,
       passengerDropoffName: passengerDropoffName ?? this.passengerDropoffName,
       passengerStatus: passengerStatus ?? this.passengerStatus,

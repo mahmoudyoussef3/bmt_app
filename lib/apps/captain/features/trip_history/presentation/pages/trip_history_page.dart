@@ -36,13 +36,13 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
           body: switch (state) {
             TripHistoryLoading() => const _HistorySkeleton(),
             TripHistoryError(:final message) => SafeArea(
-                child: AsyncStateView(
-                  status: AsyncViewStatus.error,
-                  errorMessage: message,
-                  onRetry: () => context.read<TripHistoryCubit>().load(),
-                  child: const SizedBox.shrink(),
-                ),
+              child: AsyncStateView(
+                status: AsyncViewStatus.error,
+                errorMessage: message,
+                onRetry: () => context.read<TripHistoryCubit>().load(),
+                child: const SizedBox.shrink(),
               ),
+            ),
             TripHistoryLoaded(:final trips) => _HistoryList(trips: trips),
           },
         );
@@ -70,7 +70,10 @@ class _HistoryList extends StatelessWidget {
             expandedHeight: 110,
             backgroundColor: scheme.surface,
             flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              titlePadding: const EdgeInsets.symmetric(
+                horizontal: 20,
+                vertical: 14,
+              ),
               title: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -78,15 +81,15 @@ class _HistoryList extends StatelessWidget {
                   Text(
                     'سجل الرحلات',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: scheme.onSurface,
-                        ),
+                      fontWeight: FontWeight.w800,
+                      color: scheme.onSurface,
+                    ),
                   ),
                   Text(
                     '${trips.length} رحلة مكتملة',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ),
                 ],
               ),
@@ -111,12 +114,18 @@ class _HistoryList extends StatelessWidget {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(
-                  CaptainSpacing.xl, CaptainSpacing.md, CaptainSpacing.xl, CaptainSpacing.xxxl),
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                CaptainSpacing.xl,
+                CaptainSpacing.md,
+                CaptainSpacing.xl,
+                CaptainSpacing.xxxl,
+              ),
               sliver: SliverList.builder(
                 itemCount: trips.length,
                 itemBuilder: (context, i) => Padding(
-                  padding: const EdgeInsets.only(bottom: CaptainSpacing.lg),
+                  padding: const EdgeInsetsDirectional.only(
+                    bottom: CaptainSpacing.lg,
+                  ),
                   child: _TripHistoryCard(trip: trips[i]),
                 ),
               ),
@@ -138,8 +147,12 @@ class _SummaryRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          CaptainSpacing.xl, CaptainSpacing.lg, CaptainSpacing.xl, CaptainSpacing.md),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        CaptainSpacing.xl,
+        CaptainSpacing.lg,
+        CaptainSpacing.xl,
+        CaptainSpacing.md,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -182,23 +195,30 @@ class _SummaryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return CaptainCard(
       padding: const EdgeInsets.symmetric(
-          horizontal: CaptainSpacing.lg, vertical: CaptainSpacing.lg),
+        horizontal: CaptainSpacing.lg,
+        vertical: CaptainSpacing.lg,
+      ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(CaptainSpacing.md),
-            decoration: BoxDecoration(color: color.withAlpha(20), shape: BoxShape.circle),
+            decoration: BoxDecoration(
+              color: color.withAlpha(20),
+              shape: BoxShape.circle,
+            ),
             child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(width: CaptainSpacing.md),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(value,
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: color,
-                      )),
+              Text(
+                value,
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                ),
+              ),
               Text(label, style: Theme.of(context).textTheme.labelSmall),
             ],
           ),
@@ -231,11 +251,17 @@ class _TripHistoryCard extends StatelessWidget {
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.fromLTRB(
-                CaptainSpacing.lg, CaptainSpacing.lg, CaptainSpacing.lg, CaptainSpacing.lg),
+            padding: const EdgeInsetsDirectional.fromSTEB(
+              CaptainSpacing.lg,
+              CaptainSpacing.lg,
+              CaptainSpacing.lg,
+              CaptainSpacing.lg,
+            ),
             decoration: BoxDecoration(
               color: Colors.green.withAlpha(12),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(CaptainRadius.xl)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(CaptainRadius.xl),
+              ),
             ),
             child: Row(
               children: [
@@ -245,20 +271,26 @@ class _TripHistoryCard extends StatelessWidget {
                     color: Colors.green.withAlpha(20),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.check_circle_rounded, color: Colors.green, size: 18),
+                  child: const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.green,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: CaptainSpacing.md),
                 Expanded(
                   child: Text(
                     trip.route,
                     style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: CaptainSpacing.md, vertical: CaptainSpacing.sm),
+                    horizontal: CaptainSpacing.md,
+                    vertical: CaptainSpacing.sm,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.green.withAlpha(20),
                     borderRadius: CaptainRadius.rSm,
@@ -266,10 +298,10 @@ class _TripHistoryCard extends StatelessWidget {
                   ),
                   child: Text(
                     'مكتملة',
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelSmall
-                        ?.copyWith(color: Colors.green, fontWeight: FontWeight.w800),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: Colors.green,
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
                 ),
               ],
@@ -282,21 +314,25 @@ class _TripHistoryCard extends StatelessWidget {
                 // Date + time row
                 Row(
                   children: [
-                    Icon(Icons.calendar_today_rounded, size: 14, color: scheme.onSurfaceVariant),
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      size: 14,
+                      color: scheme.onSurfaceVariant,
+                    ),
                     const SizedBox(width: CaptainSpacing.sm),
                     Expanded(
                       child: Text(
                         dateLabel,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
+                          color: scheme.onSurfaceVariant,
+                        ),
                       ),
                     ),
                     Text(
                       '$departure → $arrival',
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -349,7 +385,10 @@ class _Chip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: CaptainSpacing.md, vertical: CaptainSpacing.sm),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CaptainSpacing.md,
+        vertical: CaptainSpacing.sm,
+      ),
       decoration: BoxDecoration(
         color: color.withAlpha(15),
         borderRadius: CaptainRadius.rSm,
@@ -362,9 +401,9 @@ class _Chip extends StatelessWidget {
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w700,
-                ),
+              color: color,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

@@ -28,7 +28,7 @@ class StatusUpdatePage extends StatelessWidget {
                 ? state.status
                 : null;
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 20),
               children: [
                 if (state is TripStatusUpdateError) ...[
                   AppCard(

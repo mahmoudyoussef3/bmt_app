@@ -52,7 +52,7 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
           },
           builder: (context, state) {
             return ListView(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+              padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 20),
               children: [
                 AppCard(
                   padding: const EdgeInsets.all(16),

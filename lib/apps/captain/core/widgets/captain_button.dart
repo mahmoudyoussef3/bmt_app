@@ -70,11 +70,17 @@ class CaptainButton extends StatelessWidget {
           Icon(icon, size: 20, color: fgColor),
           const SizedBox(width: CaptainSpacing.md),
         ],
-        Text(
-          label,
-          style: theme.textTheme.titleMedium?.copyWith(
-            color: fgColor,
-            fontWeight: FontWeight.w700,
+        Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              label,
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: fgColor,
+                fontWeight: FontWeight.w700,
+              ),
+              maxLines: 1,
+            ),
           ),
         ),
       ],
@@ -86,18 +92,19 @@ class CaptainButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: CaptainSpacing.xl),
+        padding: const EdgeInsets.symmetric(horizontal: CaptainSpacing.lg),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: CaptainRadius.rLg,
           border: borderColor != null ? Border.all(color: borderColor) : null,
-          boxShadow: variant == CaptainButtonVariant.primary && onPressed != null
+          boxShadow:
+              variant == CaptainButtonVariant.primary && onPressed != null
               ? [
                   BoxShadow(
                     color: scheme.primary.withAlpha(50),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
-                  )
+                  ),
                 ]
               : null,
         ),

@@ -163,6 +163,16 @@ class _VehicleGalleryAppBar extends StatelessWidget {
       pinned: true,
       stretch: true,
       title: Text(AppLocalizations.of(context)!.booking_vehicleDetails),
+      actions: [
+        IconButton(
+          tooltip: 'Refresh',
+          icon: const Icon(Icons.refresh_rounded),
+          onPressed: () => context.read<BookingCubit>().loadVehicleDetails(
+            vehicle.id,
+            force: true,
+          ),
+        ),
+      ],
       flexibleSpace: FlexibleSpaceBar(
         stretchModes: const [StretchMode.zoomBackground],
         background: Stack(

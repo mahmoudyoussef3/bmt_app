@@ -16,18 +16,19 @@ class TripSeatLegend extends StatelessWidget {
       alignment: WrapAlignment.center,
       children: [
         _LegendDot(
-          color: ClientColors.journeyGreen,
+          color: ClientColors.primary,
           label: 'Your seat',
+          outlined: false,
         ),
         _LegendDot(
-          color: ClientColors.primary.withAlpha(70),
-          outlined: true,
+          color: ClientColors.journeyGreenLight,
           label: 'Available',
+          outlined: false,
         ),
         _LegendDot(
           color: ClientColors.surfaceMutedFor(context),
-          outlined: true,
           label: 'Taken',
+          outlined: true,
         ),
       ],
     );
@@ -56,9 +57,7 @@ class _LegendDot extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(5),
-            border: outlined
-                ? Border.all(color: ClientColors.borderStrongFor(context))
-                : null,
+            border: Border.all(color: ClientColors.borderFor(context)),
           ),
         ),
         const SizedBox(width: 6),

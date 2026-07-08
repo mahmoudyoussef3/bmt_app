@@ -69,17 +69,17 @@ class CaptainOnboardingCubit extends Cubit<CaptainOnboardingState> {
     switch (data.status) {
       case RequestStatus.approved:
         _poll?.cancel();
-        emit(OnboardingApproved(
-          name: data.fullName,
-          phone: data.phone,
-          driverId: data.driverId ?? '',
-          employeeCode: data.employeeCode,
-        ));
+        emit(
+          OnboardingApproved(
+            name: data.fullName,
+            phone: data.phone,
+            driverId: data.driverId ?? '',
+            employeeCode: data.employeeCode,
+          ),
+        );
       case RequestStatus.rejected:
         _poll?.cancel();
-        emit(OnboardingRejected(
-          data.rejectionReason ?? 'لم يتم قبول طلبك.',
-        ));
+        emit(OnboardingRejected(data.rejectionReason ?? 'لم يتم قبول طلبك.'));
       case RequestStatus.pending:
         break;
     }

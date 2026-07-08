@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/exceptions/captain_auth_exceptions.dart';
 import '../../domain/usecases/sign_in_captain_usecase.dart';
 import '../../domain/usecases/sign_out_captain_usecase.dart';
 
@@ -36,11 +37,19 @@ class CaptainAuthCubit extends Cubit<CaptainAuthState> {
   final SignInCaptainUseCase _signIn;
   final SignOutCaptainUseCase _signOut;
 
-  Future<void> signIn({required String email, required String password}) async {
+  Future<void> signIn({required String phone}) async {
     emit(const CaptainAuthLoading());
     try {
-      await _signIn(email: email, password: password);
+      await _signIn(phone: phone);
       if (!isClosed) emit(const CaptainAuthSuccess());
+    } on CaptainPhoneNotRegisteredException {
+      if (!isClosed) {
+        emit(
+          const CaptainAuthError(
+            'هذا الرقم غير مسجّل كسائق نشط. تحقّق من الرقم أو اطلب الانضمام.',
+          ),
+        );
+      }
     } catch (error) {
       if (!isClosed) {
         emit(

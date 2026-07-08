@@ -49,7 +49,7 @@ class PassengerCard extends StatelessWidget {
             Container(width: 6, color: statusColor),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 12, 16),
+                padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 12, 16),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -193,7 +193,7 @@ class _StatusSheet extends StatelessWidget {
         color: CaptainColors.surfaceFor(context),
         borderRadius: const BorderRadius.vertical(top: CaptainDesignTokens.r32),
       ),
-      padding: const EdgeInsets.fromLTRB(
+      padding: const EdgeInsetsDirectional.fromSTEB(
         CaptainDesignTokens.s24,
         CaptainDesignTokens.s24,
         CaptainDesignTokens.s24,
@@ -304,7 +304,9 @@ class _StatusOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: CaptainDesignTokens.s12),
+      padding: const EdgeInsetsDirectional.only(
+        bottom: CaptainDesignTokens.s12,
+      ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(

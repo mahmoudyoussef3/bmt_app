@@ -51,13 +51,18 @@ class _PassengerListViewState extends State<_PassengerListView> {
 
   List<Passenger> _apply(List<Passenger> all) {
     var result = all;
-    if (_filter != null) result = result.where((p) => p.status == _filter).toList();
+    if (_filter != null)
+      result = result.where((p) => p.status == _filter).toList();
     if (_search.isNotEmpty) {
       final q = _search.toLowerCase();
-      result = result.where((p) =>
-          p.name.toLowerCase().contains(q) ||
-          p.seat.toLowerCase().contains(q) ||
-          p.pickupPoint.toLowerCase().contains(q)).toList();
+      result = result
+          .where(
+            (p) =>
+                p.name.toLowerCase().contains(q) ||
+                p.seat.toLowerCase().contains(q) ||
+                p.pickupPoint.toLowerCase().contains(q),
+          )
+          .toList();
     }
     return result;
   }
@@ -85,10 +90,18 @@ class _PassengerListViewState extends State<_PassengerListView> {
 
         final filtered = _apply(passengers);
 
-        final boarded = passengers.where((p) => p.status == PassengerBoardingStatus.boarded).length;
-        final pending = passengers.where((p) => p.status == PassengerBoardingStatus.pending).length;
-        final absent = passengers.where((p) => p.status == PassengerBoardingStatus.absent).length;
-        final late = passengers.where((p) => p.status == PassengerBoardingStatus.late).length;
+        final boarded = passengers
+            .where((p) => p.status == PassengerBoardingStatus.boarded)
+            .length;
+        final pending = passengers
+            .where((p) => p.status == PassengerBoardingStatus.pending)
+            .length;
+        final absent = passengers
+            .where((p) => p.status == PassengerBoardingStatus.absent)
+            .length;
+        final late = passengers
+            .where((p) => p.status == PassengerBoardingStatus.late)
+            .length;
 
         return Scaffold(
           backgroundColor: CaptainColors.backgroundFor(context),
@@ -100,13 +113,17 @@ class _PassengerListViewState extends State<_PassengerListView> {
                 boarded: boarded,
               ),
               if (state is PassengerManifestLoading)
-                const SliverFillRemaining(child: Center(child: CircularProgressIndicator()))
+                const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                )
               else if (state is PassengerManifestError)
                 SliverFillRemaining(
                   child: AsyncStateView(
                     status: AsyncViewStatus.error,
                     errorMessage: state.message,
-                    onRetry: () => context.read<PassengerManifestCubit>().load(widget.tripId),
+                    onRetry: () => context.read<PassengerManifestCubit>().load(
+                      widget.tripId,
+                    ),
                     child: const SizedBox.shrink(),
                   ),
                 )
@@ -122,8 +139,12 @@ class _PassengerListViewState extends State<_PassengerListView> {
                 ),
                 SliverToBoxAdapter(
                   child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                        CaptainDesignTokens.s24, CaptainDesignTokens.s16, CaptainDesignTokens.s24, CaptainDesignTokens.s16),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                      CaptainDesignTokens.s24,
+                      CaptainDesignTokens.s16,
+                      CaptainDesignTokens.s24,
+                      CaptainDesignTokens.s16,
+                    ),
                     child: TextField(
                       controller: _searchController,
                       onChanged: (v) => setState(() => _search = v),
@@ -146,7 +167,9 @@ class _PassengerListViewState extends State<_PassengerListView> {
                           borderSide: BorderSide.none,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
-                            vertical: CaptainDesignTokens.s16, horizontal: CaptainDesignTokens.s24),
+                          vertical: CaptainDesignTokens.s16,
+                          horizontal: CaptainDesignTokens.s24,
+                        ),
                       ),
                     ),
                   ),
@@ -154,7 +177,8 @@ class _PassengerListViewState extends State<_PassengerListView> {
                 SliverToBoxAdapter(
                   child: _FilterChips(
                     current: _filter,
-                    onSelect: (f) => setState(() => _filter = _filter == f ? null : f),
+                    onSelect: (f) =>
+                        setState(() => _filter = _filter == f ? null : f),
                   ),
                 ),
                 if (filtered.isEmpty)
@@ -174,17 +198,24 @@ class _PassengerListViewState extends State<_PassengerListView> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
-                        CaptainDesignTokens.s24, CaptainDesignTokens.s24, CaptainDesignTokens.s24, CaptainDesignTokens.s48),
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                      CaptainDesignTokens.s24,
+                      CaptainDesignTokens.s24,
+                      CaptainDesignTokens.s24,
+                      CaptainDesignTokens.s48,
+                    ),
                     sliver: SliverList.builder(
                       itemCount: filtered.length,
                       itemBuilder: (context, i) {
                         final p = filtered[i];
                         return Padding(
-                          padding: const EdgeInsets.only(bottom: CaptainDesignTokens.s24),
+                          padding: const EdgeInsetsDirectional.only(
+                            bottom: CaptainDesignTokens.s24,
+                          ),
                           child: PassengerCard(
                             passenger: p,
-                            onCall: () => launchUrl(Uri.parse('tel:${p.phone}')),
+                            onCall: () =>
+                                launchUrl(Uri.parse('tel:${p.phone}')),
                             onChat: () => Navigator.of(context).push(
                               MaterialPageRoute(
                                 builder: (_) => ChatDetailsPage(
@@ -209,7 +240,11 @@ class _PassengerListViewState extends State<_PassengerListView> {
 }
 
 class _AppBar extends StatelessWidget {
-  const _AppBar({required this.tripId, required this.total, required this.boarded});
+  const _AppBar({
+    required this.tripId,
+    required this.total,
+    required this.boarded,
+  });
 
   final String tripId;
   final int total;
@@ -230,13 +265,15 @@ class _AppBar extends StatelessWidget {
           children: [
             Text(
               'قائمة الركاب',
-              style: CaptainTypography.titleLarge(context).copyWith(fontWeight: FontWeight.w800),
+              style: CaptainTypography.titleLarge(
+                context,
+              ).copyWith(fontWeight: FontWeight.w800),
             ),
             Text(
               'صعد $boarded من أصل $total',
-              style: CaptainTypography.labelMedium(context).copyWith(
-                    color: CaptainColors.textSecondaryFor(context),
-                  ),
+              style: CaptainTypography.labelMedium(
+                context,
+              ).copyWith(color: CaptainColors.textSecondaryFor(context)),
             ),
           ],
         ),
@@ -260,8 +297,12 @@ class _StatsRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = total == 0 ? 0.0 : boarded / total;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-          CaptainDesignTokens.s24, CaptainDesignTokens.s16, CaptainDesignTokens.s24, CaptainDesignTokens.s16),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        CaptainDesignTokens.s24,
+        CaptainDesignTokens.s16,
+        CaptainDesignTokens.s24,
+        CaptainDesignTokens.s16,
+      ),
       child: Container(
         padding: const EdgeInsets.all(CaptainDesignTokens.s24),
         decoration: BoxDecoration(
@@ -273,9 +314,21 @@ class _StatsRow extends StatelessWidget {
           children: [
             Row(
               children: [
-                _Stat(label: 'صعد', value: boarded, color: CaptainColors.success),
-                _Stat(label: 'بانتظار', value: pending, color: CaptainColors.primary),
-                _Stat(label: 'متأخر', value: late, color: CaptainColors.warning),
+                _Stat(
+                  label: 'صعد',
+                  value: boarded,
+                  color: CaptainColors.success,
+                ),
+                _Stat(
+                  label: 'بانتظار',
+                  value: pending,
+                  color: CaptainColors.primary,
+                ),
+                _Stat(
+                  label: 'متأخر',
+                  value: late,
+                  color: CaptainColors.warning,
+                ),
                 _Stat(label: 'غائب', value: absent, color: CaptainColors.error),
               ],
             ),
@@ -287,7 +340,9 @@ class _StatsRow extends StatelessWidget {
                 minHeight: 8,
                 backgroundColor: CaptainColors.primary.withValues(alpha: 0.1),
                 valueColor: AlwaysStoppedAnimation<Color>(
-                  progress == 1.0 ? CaptainColors.success : CaptainColors.primary,
+                  progress == 1.0
+                      ? CaptainColors.success
+                      : CaptainColors.primary,
                 ),
               ),
             ),
@@ -312,13 +367,18 @@ class _Stat extends StatelessWidget {
         children: [
           Text(
             '$value',
-            style: CaptainTypography.headlineMedium(context).copyWith(
-                  color: color,
-                  fontWeight: FontWeight.w900,
-                ),
+            style: CaptainTypography.headlineMedium(
+              context,
+            ).copyWith(color: color, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 2),
-          Text(label, style: CaptainTypography.labelSmall(context).copyWith(color: CaptainColors.textSecondaryFor(context), fontWeight: FontWeight.w700)),
+          Text(
+            label,
+            style: CaptainTypography.labelSmall(context).copyWith(
+              color: CaptainColors.textSecondaryFor(context),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -348,7 +408,7 @@ class _FilterChips extends StatelessWidget {
         children: chips.map((c) {
           final isActive = current == c.$2;
           return Padding(
-            padding: const EdgeInsets.only(left: 8),
+            padding: const EdgeInsetsDirectional.only(start: 8),
             child: FilterChip(
               label: Text(c.$1),
               selected: isActive,
@@ -357,7 +417,9 @@ class _FilterChips extends StatelessWidget {
               checkmarkColor: c.$3,
               backgroundColor: CaptainColors.surfaceFor(context),
               labelStyle: CaptainTypography.labelMedium(context).copyWith(
-                color: isActive ? c.$3 : CaptainColors.textSecondaryFor(context),
+                color: isActive
+                    ? c.$3
+                    : CaptainColors.textSecondaryFor(context),
                 fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
               ),
               side: BorderSide(color: isActive ? c.$3 : Colors.transparent),

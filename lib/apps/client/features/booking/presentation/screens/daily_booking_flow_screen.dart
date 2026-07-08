@@ -288,6 +288,13 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
               ),
             ],
           ),
+          const Spacer(),
+          IconButton(
+            tooltip: 'Refresh',
+            icon: const Icon(Icons.refresh_rounded),
+            onPressed: () =>
+                context.read<BookingCubit>().loadDailyBookingData(force: true),
+          ),
         ],
       ),
     );

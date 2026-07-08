@@ -140,61 +140,94 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
-                  expandedHeight: 100,
+                  expandedHeight: 180,
                   pinned: true,
                   elevation: 0,
-                  backgroundColor: CaptainColors.backgroundFor(context),
+                  backgroundColor: CaptainColors.primary,
                   flexibleSpace: FlexibleSpaceBar(
-                    background: Container(color: CaptainColors.backgroundFor(context)),
-                    titlePadding: const EdgeInsets.symmetric(
-                      horizontal: CaptainDesignTokens.s24,
-                      vertical: CaptainDesignTokens.s16,
-                    ),
-                    title: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Column(
-                          mainAxisSize: MainAxisSize.min,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'لوحة القيادة',
-                              style: CaptainTypography.headlineSmall(context)
-                                  .copyWith(
-                                    fontWeight: FontWeight.w800,
-                                    color: CaptainColors.textPrimaryFor(context),
-                                  ),
-                            ),
+                    background: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            CaptainColors.primary,
+                            CaptainColors.primary.withValues(alpha: 0.8),
                           ],
+                          begin: AlignmentDirectional.topStart,
+                          end: AlignmentDirectional.bottomEnd,
                         ),
-                        GestureDetector(
-                          onTap: () => _showDevModeSwitcher(context),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: scheme.surfaceContainerHighest,
-                            ),
-                            child: const AppAvatar(initials: 'ك'),
+                      ),
+                      child: SafeArea(
+                        child: Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                            CaptainDesignTokens.s24,
+                            CaptainDesignTokens.s32,
+                            CaptainDesignTokens.s24,
+                            CaptainDesignTokens.s16,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'مرحباً كابتن 👋',
+                                    style: CaptainTypography.titleMedium(context)
+                                        .copyWith(
+                                      color: Colors.white.withValues(alpha: 0.9),
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  const SizedBox(height: CaptainDesignTokens.s4),
+                                  Text(
+                                    'لوحة القيادة',
+                                    style: CaptainTypography.headlineMedium(context)
+                                        .copyWith(
+                                      fontWeight: FontWeight.w900,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              GestureDetector(
+                                onTap: () => _showDevModeSwitcher(context),
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 2),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.black.withValues(alpha: 0.1),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 4),
+                                      )
+                                    ],
+                                  ),
+                                  child: const AppAvatar(initials: 'ك'),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
                 SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      CaptainDesignTokens.s24,
-                      CaptainDesignTokens.s16,
-                      CaptainDesignTokens.s24,
-                      CaptainDesignTokens.s24,
-                    ),
-                    child: _OverviewPanel(
-                      trips: trips.length,
-                      passengers: passengers,
-                      boarded: boarded,
-                      activeTrips: activeTrips,
+                  child: Transform.translate(
+                    offset: const Offset(0, -40),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: CaptainDesignTokens.s24,
+                      ),
+                      child: _OverviewPanel(
+                        trips: trips.length,
+                        passengers: passengers,
+                        boarded: boarded,
+                        activeTrips: activeTrips,
+                      ),
                     ),
                   ),
                 ),
@@ -203,35 +236,49 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                     horizontal: CaptainDesignTokens.s24,
                   ),
                   sliver: SliverToBoxAdapter(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'رحلات اليوم',
-                            style: CaptainTypography.titleLarge(context)
-                                .copyWith(fontWeight: FontWeight.w800),
+                    child: Transform.translate(
+                      offset: const Offset(0, -16),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(CaptainDesignTokens.s8),
+                            decoration: BoxDecoration(
+                              color: CaptainColors.primary.withValues(alpha: 0.1),
+                              borderRadius: CaptainDesignTokens.br12,
+                            ),
+                            child: const Icon(Icons.calendar_today_rounded, size: 20, color: CaptainColors.primary),
                           ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: CaptainDesignTokens.s12,
-                            vertical: CaptainDesignTokens.s8,
+                          const SizedBox(width: CaptainDesignTokens.s12),
+                          Expanded(
+                            child: Text(
+                              'رحلات اليوم',
+                              style: CaptainTypography.titleLarge(
+                                context,
+                              ).copyWith(fontWeight: FontWeight.w900),
+                            ),
                           ),
-                          decoration: BoxDecoration(
-                            color: CaptainColors.primary.withValues(alpha: 0.1),
-                            borderRadius: CaptainDesignTokens.br32,
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: CaptainDesignTokens.s16,
+                              vertical: CaptainDesignTokens.s8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: trips.isNotEmpty ? CaptainColors.primary : CaptainColors.surfaceFor(context),
+                              borderRadius: CaptainDesignTokens.br32,
+                              boxShadow: trips.isNotEmpty ? CaptainDesignTokens.floatingShadow(context) : null,
+                            ),
+                            child: Text(
+                              '${trips.length} رحلات',
+                              style: CaptainTypography.labelMedium(context)
+                                  .copyWith(
+                                    color: trips.isNotEmpty ? Colors.white : CaptainColors.textSecondaryFor(context),
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                            ),
                           ),
-                          child: Text(
-                            '${trips.length} رحلات',
-                            style: CaptainTypography.labelMedium(context)
-                                .copyWith(
-                                  color: CaptainColors.primary,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -249,7 +296,7 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                   )
                 else
                   SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
                       CaptainDesignTokens.s24,
                       CaptainDesignTokens.s16,
                       CaptainDesignTokens.s24,
@@ -259,7 +306,7 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
                       delegate: SliverChildBuilderDelegate((context, index) {
                         final trip = trips[index];
                         return Padding(
-                          padding: const EdgeInsets.only(
+                          padding: const EdgeInsetsDirectional.only(
                             bottom: CaptainDesignTokens.s24,
                           ),
                           child: AssignedTripCard(
@@ -310,7 +357,8 @@ class _OverviewPanel extends StatelessWidget {
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
         borderRadius: CaptainDesignTokens.br24,
-        boxShadow: CaptainDesignTokens.softShadow(context),
+        boxShadow: CaptainDesignTokens.floatingShadow(context),
+        border: Border.all(color: CaptainColors.primary.withValues(alpha: 0.05)),
       ),
       padding: const EdgeInsets.all(CaptainDesignTokens.s24),
       child: Column(
@@ -322,12 +370,14 @@ class _OverviewPanel extends StatelessWidget {
                 label: 'الرحلات',
                 value: trips.toString(),
                 icon: Icons.route_rounded,
+                color: CaptainColors.primary,
               ),
               const SizedBox(width: CaptainDesignTokens.s12),
               _Metric(
                 label: 'نشطة',
                 value: activeTrips.toString(),
                 icon: Icons.bolt_rounded,
+                color: Colors.orange,
                 isHighlight: activeTrips > 0,
               ),
               const SizedBox(width: CaptainDesignTokens.s12),
@@ -335,43 +385,73 @@ class _OverviewPanel extends StatelessWidget {
                 label: 'الركاب',
                 value: passengers.toString(),
                 icon: Icons.people_alt_rounded,
+                color: Colors.blue,
               ),
             ],
           ),
           const SizedBox(height: CaptainDesignTokens.s24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'تقدم الصعود',
-                style: CaptainTypography.labelLarge(context).copyWith(
-                  color: CaptainColors.textSecondaryFor(context),
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Text(
-                '${(progress * 100).round()}%',
-                style: CaptainTypography.titleMedium(context).copyWith(
-                  color: CaptainColors.primary,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: CaptainDesignTokens.s12),
-          ClipRRect(
-            borderRadius: CaptainDesignTokens.br8,
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: CaptainColors.primary.withValues(alpha: 0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(CaptainColors.primary),
+          Container(
+            padding: const EdgeInsets.all(CaptainDesignTokens.s16),
+            decoration: BoxDecoration(
+              color: CaptainColors.primary.withValues(alpha: 0.03),
+              borderRadius: CaptainDesignTokens.br16,
+              border: Border.all(color: CaptainColors.primary.withValues(alpha: 0.1)),
             ),
-          ),
-          const SizedBox(height: CaptainDesignTokens.s8),
-          Text(
-            'صعد $boarded من أصل $passengers راكب',
-            style: CaptainTypography.labelMedium(context).copyWith(color: CaptainColors.textSecondaryFor(context)),
+            child: Column(
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'تقدم الصعود',
+                      style: CaptainTypography.labelLarge(context).copyWith(
+                        color: CaptainColors.textPrimaryFor(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: CaptainColors.primary.withValues(alpha: 0.1),
+                        borderRadius: CaptainDesignTokens.br8,
+                      ),
+                      child: Text(
+                        '${(progress * 100).round()}%',
+                        style: CaptainTypography.titleSmall(context).copyWith(
+                          color: CaptainColors.primary,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: CaptainDesignTokens.s16),
+                ClipRRect(
+                  borderRadius: CaptainDesignTokens.br8,
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    minHeight: 10,
+                    backgroundColor: CaptainColors.primary.withValues(alpha: 0.15),
+                    valueColor: const AlwaysStoppedAnimation<Color>(CaptainColors.primary),
+                  ),
+                ),
+                const SizedBox(height: CaptainDesignTokens.s12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_rounded, size: 16, color: CaptainColors.textSecondaryFor(context)),
+                    const SizedBox(width: CaptainDesignTokens.s8),
+                    Text(
+                      'صعد $boarded من أصل $passengers راكب',
+                      style: CaptainTypography.labelMedium(context).copyWith(
+                        color: CaptainColors.textSecondaryFor(context),
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -384,47 +464,59 @@ class _Metric extends StatelessWidget {
     required this.label,
     required this.value,
     required this.icon,
+    required this.color,
     this.isHighlight = false,
   });
 
   final String label;
   final String value;
   final IconData icon;
+  final Color color;
   final bool isHighlight;
 
   @override
   Widget build(BuildContext context) {
-    final color = isHighlight ? Colors.orange : CaptainColors.primary;
-    final bgColor = isHighlight
-        ? Colors.orange.withValues(alpha: 0.1)
-        : CaptainColors.primary.withValues(alpha: 0.05);
-
     return Expanded(
       child: Container(
         padding: const EdgeInsets.symmetric(
           vertical: CaptainDesignTokens.s16,
-          horizontal: CaptainDesignTokens.s12,
+          horizontal: CaptainDesignTokens.s8,
         ),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: isHighlight ? color : CaptainColors.surfaceFor(context),
           borderRadius: CaptainDesignTokens.br16,
+          boxShadow: isHighlight ? CaptainDesignTokens.floatingShadow(context) : [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.03),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            )
+          ],
+          border: isHighlight ? null : Border.all(color: Colors.grey.withValues(alpha: 0.1)),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 24, color: color),
+            Container(
+              padding: const EdgeInsets.all(CaptainDesignTokens.s8),
+              decoration: BoxDecoration(
+                color: isHighlight ? Colors.white.withValues(alpha: 0.2) : color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, size: 22, color: isHighlight ? Colors.white : color),
+            ),
             const SizedBox(height: CaptainDesignTokens.s12),
             Text(
               value,
               style: CaptainTypography.headlineMedium(context).copyWith(
                 fontWeight: FontWeight.w900,
-                color: CaptainColors.textPrimaryFor(context),
+                color: isHighlight ? Colors.white : CaptainColors.textPrimaryFor(context),
               ),
             ),
-            const SizedBox(height: CaptainDesignTokens.s8),
+            const SizedBox(height: CaptainDesignTokens.s4),
             Text(
               label,
               style: CaptainTypography.labelSmall(context).copyWith(
-                color: CaptainColors.textSecondaryFor(context),
+                color: isHighlight ? Colors.white.withValues(alpha: 0.9) : CaptainColors.textSecondaryFor(context),
                 fontWeight: FontWeight.w700,
               ),
             ),

@@ -8,5 +8,6 @@ class TripHistoryRepositoryImpl implements TripHistoryRepository {
   final TripHistoryDataSource _dataSource;
 
   @override
-  Future<List<TripHistoryItem>> getTripHistory() => _dataSource.getTripHistory();
+  Future<List<TripHistoryItem>> getTripHistory() =>
+      _dataSource.getTripHistory();
 }

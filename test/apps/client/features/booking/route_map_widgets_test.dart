@@ -1,7 +1,7 @@
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_overview_screen.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/google_style_map_view.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/route_geometry_service.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/easyway_route_map_view.dart';
+import 'package:bmt_app/core/maps/route_geometry_service.dart';
 import 'package:bmt_app/core/geo/geo_models.dart';
 import 'package:bmt_app/core/geo/geo_service.dart';
 import 'package:flutter/material.dart';
@@ -31,12 +31,12 @@ void main() {
     RouteGeometryService.instance.debugGeoService = null;
   });
 
-  group('GoogleStyleMapView', () {
+  group('EasyWayRouteMapView', () {
     testWidgets('does not fabricate a marker when coordinates are missing', (
       tester,
     ) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: GoogleStyleMapView())),
+        const MaterialApp(home: Scaffold(body: EasyWayRouteMapView())),
       );
 
       expect(find.text('Map coordinates unavailable'), findsOneWidget);
@@ -58,7 +58,7 @@ void main() {
             body: SizedBox(
               width: 400,
               height: 500,
-              child: GoogleStyleMapView(waypoints: pins),
+              child: EasyWayRouteMapView(waypoints: pins),
             ),
           ),
         ),

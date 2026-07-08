@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/core/tracking/progress/arrival_events.dart';
+
 import '../../domain/entities/assigned_trip.dart';
 import '../models/assigned_trip_model.dart';
 
@@ -68,8 +70,9 @@ class CaptainTripRemoteDataSource {
           *,
           operation_routes(name, start_city, end_city),
           vehicles(vehicle_code, plate_number),
-          trip_route_points(point_name, point_order),
-          trip_passengers(id, status)
+          trip_route_points(id, point_name, point_order),
+          trip_passengers(id, status),
+          trip_events(title)
         ''')
         .eq('driver_id', driverId)
         .inFilter('status', [
@@ -112,6 +115,19 @@ class CaptainTripRemoteDataSource {
     }).length;
     final tripDate = json['trip_date']?.toString() ?? '';
 
+    final stops = points
+        .map(
+          (p) => AssignedTripStop(
+            id: p['id']?.toString() ?? '',
+            name: p['point_name']?.toString() ?? '',
+          ),
+        )
+        .toList();
+    final events = (json['trip_events'] as List?) ?? const [];
+    final arrivalEventCount = countStationArrivalEvents(
+      events.map((e) => (e as Map<String, dynamic>)['title'] as String?),
+    );
+
     return AssignedTripModel(
       id: json['id']?.toString() ?? '',
       route:
@@ -121,10 +137,14 @@ class CaptainTripRemoteDataSource {
       plateNumber: vehicle['plate_number']?.toString() ?? '',
       departureTime: _dateTime(tripDate, json['departure_time']),
       expectedArrivalTime: _dateTime(tripDate, json['arrival_time']),
-      stops: points.map((p) => p['point_name']?.toString() ?? '').toList(),
+      stops: stops,
       passengerCount: passengers.length,
       boardedCount: boarded,
       status: _status(json['status']?.toString()),
+      arrivedStationsCount: stationArrivalFloor(
+        arrivalEventCount: arrivalEventCount,
+        routePointCount: stops.length,
+      ),
     );
   }
 

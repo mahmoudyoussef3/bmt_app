@@ -12,7 +12,7 @@ class ChatsPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('تواصل الرحلة')),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 14, 16, 20),
+        padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 20),
         children: [
           AppCard(
             onTap: () => Navigator.of(context).push(

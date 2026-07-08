@@ -30,27 +30,23 @@ class CaptainEmptyState extends StatelessWidget {
               color: scheme.surfaceContainerHighest,
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              icon,
-              size: 48,
-              color: scheme.onSurfaceVariant,
-            ),
+            child: Icon(icon, size: 48, color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: CaptainSpacing.xl),
           Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: scheme.onSurface,
-                ),
+              fontWeight: FontWeight.w800,
+              color: scheme.onSurface,
+            ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: CaptainSpacing.md),
           Text(
             subtitle,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: scheme.onSurfaceVariant,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
             textAlign: TextAlign.center,
           ),
           if (action != null) ...[

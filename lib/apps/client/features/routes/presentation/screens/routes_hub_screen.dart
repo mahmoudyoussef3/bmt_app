@@ -73,28 +73,31 @@ class _LoadedBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: AppLayout.pagePaddingWithTop,
-      children: [
-        RoutesHubHero(title: data.title, subtitle: data.subtitle),
-        const SizedBox(height: 24),
-        RoutesHubSearchCard(
-          title: data.searchTitle,
-          description: data.searchDescription,
-          onSearch: () => onOpenAction(data.searchAction),
-        ),
-        const SizedBox(height: 32),
-        const ClientSectionHeader(title: 'How it works'),
-        const SizedBox(height: 16),
-        RoutesHubFlowSteps(steps: data.flowSteps),
-        const SizedBox(height: 28),
-        AppButton.secondary(
-          text: 'Browse popular routes',
-          icon: const Icon(Icons.trending_up_rounded, size: 18),
-          onPressed: () => onOpenAction(data.popularRoutesAction),
-        ),
-        const SizedBox(height: 120),
-      ],
+    return RefreshIndicator(
+      onRefresh: () => context.read<RoutesHubCubit>().load(),
+      child: ListView(
+        padding: AppLayout.pagePaddingWithTop,
+        children: [
+          RoutesHubHero(title: data.title, subtitle: data.subtitle),
+          const SizedBox(height: 24),
+          RoutesHubSearchCard(
+            title: data.searchTitle,
+            description: data.searchDescription,
+            onSearch: () => onOpenAction(data.searchAction),
+          ),
+          const SizedBox(height: 32),
+          const ClientSectionHeader(title: 'How it works'),
+          const SizedBox(height: 16),
+          RoutesHubFlowSteps(steps: data.flowSteps),
+          const SizedBox(height: 28),
+          AppButton.secondary(
+            text: 'Browse popular routes',
+            icon: const Icon(Icons.trending_up_rounded, size: 18),
+            onPressed: () => onOpenAction(data.popularRoutesAction),
+          ),
+          const SizedBox(height: 120),
+        ],
+      ),
     );
   }
 }

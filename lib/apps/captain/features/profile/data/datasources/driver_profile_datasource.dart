@@ -11,30 +11,20 @@ class DriverProfileDataSource {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('المستخدم غير مسجّل الدخول');
 
-    // Resolve driver record
+    // Sign-in links drivers.user_id to this session (see
+    // link_current_captain_driver), so a direct match is always expected.
     final driverRow = await _supabase
         .from('drivers')
         .select()
         .eq('user_id', user.id)
         .maybeSingle();
-
-    final String driverId;
-    Map<String, dynamic> driver;
-
-    if (driverRow != null) {
-      driver = Map<String, dynamic>.from(driverRow);
-      driverId = driver['id'] as String;
-    } else {
-      final phone = user.phone ?? '';
-      final byPhone = await _supabase
-          .from('drivers')
-          .select()
-          .eq('phone', phone)
-          .maybeSingle();
-      if (byPhone == null) throw Exception('لم يتم العثور على ملف السائق');
-      driver = Map<String, dynamic>.from(byPhone);
-      driverId = driver['id'] as String;
+    if (driverRow == null) {
+      throw Exception(
+        'لم يتم العثور على ملف السائق، حاول تسجيل الدخول مرة أخرى',
+      );
     }
+    final driver = Map<String, dynamic>.from(driverRow);
+    final driverId = driver['id'] as String;
 
     // Completed trips count + total passengers
     final completedTrips = await _supabase
@@ -78,21 +68,12 @@ class DriverProfileDataSource {
       }
     } catch (_) {}
 
-    final name =
-        driver['full_name'] as String? ??
-        driver['name'] as String? ??
-        user.userMetadata?['full_name'] as String? ??
-        user.userMetadata?['name'] as String? ??
-        'السائق';
-
     return DriverProfile(
       id: driverId,
-      name: name,
-      phone: driver['phone'] as String? ?? user.phone ?? '',
+      name: driver['full_name'] as String? ?? 'السائق',
+      phone: driver['phone'] as String? ?? '',
       licenseNumber: driver['license_number'] as String?,
-      photoUrl:
-          driver['photo_url'] as String? ??
-          user.userMetadata?['avatar_url'] as String?,
+      photoUrl: driver['photo_url'] as String?,
       averageRating: avgRating,
       totalTrips: totalTrips,
       totalPassengers: totalPassengers,

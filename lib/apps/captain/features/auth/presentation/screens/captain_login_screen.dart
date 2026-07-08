@@ -23,25 +23,18 @@ class CaptainLoginScreen extends StatefulWidget {
 
 class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
-  final _passwordCtrl = TextEditingController();
-  final _passwordFocus = FocusNode();
+  final _phoneCtrl = TextEditingController();
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
-    _passwordCtrl.dispose();
-    _passwordFocus.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
   }
 
   void _submit() {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    context.read<CaptainAuthCubit>().signIn(
-      email: _emailCtrl.text.trim().toLowerCase(),
-      password: _passwordCtrl.text,
-    );
+    context.read<CaptainAuthCubit>().signIn(phone: _phoneCtrl.text.trim());
   }
 
   void _openRequestAccess() {
@@ -52,15 +45,6 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
     }
     Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const CaptainRequestAccessScreen()),
-    );
-  }
-
-  void _forgotPassword() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Contact operations to reset your captain password.'),
-        behavior: SnackBarBehavior.floating,
-      ),
     );
   }
 
@@ -84,8 +68,9 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const CaptainAuthHeader(
-                      title: 'Captain Sign In',
-                      subtitle: 'Sign in to see your trips and start driving.',
+                      title: 'تسجيل دخول الكابتن',
+                      subtitle:
+                          'أدخل رقم هاتفك المسجّل لعرض رحلاتك والبدء بالقيادة.',
                     ),
                     const SizedBox(height: 40),
                     CaptainAuthErrorBanner(
@@ -93,44 +78,24 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
                       onDismiss: cubit.resetError,
                     ),
                     CaptainAuthField(
-                      controller: _emailCtrl,
-                      label: 'Email address',
-                      icon: Icons.email_outlined,
-                      keyboardType: TextInputType.emailAddress,
-                      textInputAction: TextInputAction.next,
-                      autofillHints: const [AutofillHints.email],
-                      onSubmitted: (_) => _passwordFocus.requestFocus(),
+                      controller: _phoneCtrl,
+                      label: 'رقم الهاتف',
+                      icon: Icons.phone_outlined,
+                      keyboardType: TextInputType.phone,
+                      textInputAction: TextInputAction.done,
+                      autofillHints: const [AutofillHints.telephoneNumber],
+                      onSubmitted: (_) => _submit(),
                       validator: (value) {
-                        final email = value?.trim() ?? '';
-                        return RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$')
-                                .hasMatch(email)
-                            ? null
-                            : 'Enter a valid email address';
+                        final digits = (value ?? '').replaceAll(
+                          RegExp(r'[^0-9]'),
+                          '',
+                        );
+                        return digits.length < 10 ? 'أدخل رقم هاتف صحيح' : null;
                       },
                     ),
-                    const SizedBox(height: 14),
-                    CaptainAuthField(
-                      controller: _passwordCtrl,
-                      focusNode: _passwordFocus,
-                      label: 'Password',
-                      icon: Icons.lock_outline_rounded,
-                      isPassword: true,
-                      textInputAction: TextInputAction.done,
-                      autofillHints: const [AutofillHints.password],
-                      onSubmitted: (_) => _submit(),
-                      validator: (value) =>
-                          (value?.isEmpty ?? true) ? 'Enter your password' : null,
-                    ),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: loading ? null : _forgotPassword,
-                        child: const Text('Forgot password?'),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 20),
                     CaptainButton(
-                      label: loading ? 'Signing in...' : 'Sign In',
+                      label: loading ? 'جارٍ تسجيل الدخول...' : 'تسجيل الدخول',
                       isLoading: loading,
                       onPressed: loading ? null : _submit,
                     ),
@@ -162,15 +127,15 @@ class _RequestAccessLink extends StatelessWidget {
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
-          'New to the fleet?',
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: scheme.onSurfaceVariant,
-          ),
+          'كابتن جديد؟',
+          style: Theme.of(
+            context,
+          ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
         ),
         TextButton(
           onPressed: onTap,
           child: const Text(
-            'Request access',
+            'اطلب الانضمام',
             style: TextStyle(fontWeight: FontWeight.w900),
           ),
         ),
