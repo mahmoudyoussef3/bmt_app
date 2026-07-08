@@ -1,105 +1,100 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_driver_seat_tile.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_extra_seats.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_tile.dart';
 
-/// Arranges real [TripSeat]s into a believable bus cabin — rows split by a
-/// centre aisle — from the live `trip_seats` layout. Falls back to fixed rows
-/// of four when the backend hasn't stored row/column coordinates yet.
+/// Lays real [TripSeat]s out in the same cabin shape the passenger picked
+/// from while booking: two driver seats up front, three-across rows split by
+/// a centre aisle, then a flush four-seat back row. Seats beyond the
+/// standard 14-seat layout spill into [TripExtraSeats] underneath.
 class TripSeatMap extends StatelessWidget {
-  const TripSeatMap({
-    super.key,
-    required this.seats,
-    this.seatSize = 44,
-    this.rowSpacing = 10,
-    this.seatSpacing = 8,
-    this.aisleWidth = 26,
-  });
+  const TripSeatMap({super.key, required this.seats, this.seatSize = 44});
 
   final List<TripSeat> seats;
   final double seatSize;
-  final double rowSpacing;
-  final double seatSpacing;
-  final double aisleWidth;
 
   @override
   Widget build(BuildContext context) {
-    final rows = _rows();
+    final ordered = [...seats]..sort((a, b) {
+      final rowCompare = a.row.compareTo(b.row);
+      return rowCompare != 0 ? rowCompare : a.column.compareTo(b.column);
+    });
+    TripSeat? seatAt(int index) => index < ordered.length ? ordered[index] : null;
+    final gap = seatSize * 0.13;
+    final aisle = seatSize * 0.55;
+
     return Column(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        for (var i = 0; i < rows.length; i++) ...[
-          if (i > 0) SizedBox(height: rowSpacing),
-          _SeatRow(
-            seats: rows[i],
-            seatSize: seatSize,
-            seatSpacing: seatSpacing,
-            aisleWidth: aisleWidth,
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            TripDriverSeatTile(size: seatSize, label: 'A1'),
+            SizedBox(width: gap),
+            TripDriverSeatTile(size: seatSize, label: 'A2'),
+            SizedBox(width: aisle),
+            _SeatSlot(seat: seatAt(0), size: seatSize),
+          ],
+        ),
+        SizedBox(height: seatSize * 0.13),
+        Text(
+          'DRIVER',
+          style: ClientTypography.labelSmall(context).copyWith(
+            color: ClientColors.textTertiaryFor(context),
+            letterSpacing: 1.2,
           ),
+        ),
+        SizedBox(height: seatSize * 0.23),
+        Divider(color: ClientColors.borderFor(context)),
+        SizedBox(height: seatSize * 0.1),
+        for (final start in [1, 4, 7])
+          Padding(
+            padding: EdgeInsets.only(top: seatSize * 0.16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _SeatSlot(seat: seatAt(start), size: seatSize),
+                SizedBox(width: gap),
+                _SeatSlot(seat: seatAt(start + 1), size: seatSize),
+                SizedBox(width: aisle),
+                _SeatSlot(seat: seatAt(start + 2), size: seatSize),
+              ],
+            ),
+          ),
+        Padding(
+          padding: EdgeInsets.only(top: seatSize * 0.16),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 10; i <= 13; i++) ...[
+                if (i > 10) SizedBox(width: gap),
+                _SeatSlot(seat: seatAt(i), size: seatSize),
+              ],
+            ],
+          ),
+        ),
+        if (ordered.length > 14) ...[
+          SizedBox(height: seatSize * 0.23),
+          TripExtraSeats(seats: ordered.skip(14).toList(), seatSize: seatSize),
         ],
       ],
     );
   }
-
-  List<List<TripSeat>> _rows() {
-    final hasCoordinates = seats.any((seat) => seat.row > 0);
-    if (hasCoordinates) {
-      final grouped = <int, List<TripSeat>>{};
-      for (final seat in seats) {
-        grouped.putIfAbsent(seat.row, () => []).add(seat);
-      }
-      final orderedRows = grouped.keys.toList()..sort();
-      return [
-        for (final key in orderedRows)
-          grouped[key]!..sort((a, b) => a.column.compareTo(b.column)),
-      ];
-    }
-
-    const perRow = 4;
-    return [
-      for (var i = 0; i < seats.length; i += perRow)
-        seats.sublist(i, math.min(i + perRow, seats.length)),
-    ];
-  }
 }
 
-class _SeatRow extends StatelessWidget {
-  const _SeatRow({
-    required this.seats,
-    required this.seatSize,
-    required this.seatSpacing,
-    required this.aisleWidth,
-  });
+class _SeatSlot extends StatelessWidget {
+  const _SeatSlot({required this.seat, required this.size});
 
-  final List<TripSeat> seats;
-  final double seatSize;
-  final double seatSpacing;
-  final double aisleWidth;
+  final TripSeat? seat;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
-    final mid = (seats.length / 2).ceil();
-    final left = seats.sublist(0, mid);
-    final right = seats.sublist(mid);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        ..._tiles(left),
-        SizedBox(width: aisleWidth),
-        ..._tiles(right),
-      ],
-    );
-  }
-
-  List<Widget> _tiles(List<TripSeat> group) {
-    final widgets = <Widget>[];
-    for (var i = 0; i < group.length; i++) {
-      if (i > 0) widgets.add(SizedBox(width: seatSpacing));
-      widgets.add(TripSeatTile(seat: group[i], size: seatSize));
-    }
-    return widgets;
+    final resolved = seat;
+    if (resolved == null) return SizedBox(width: size, height: size);
+    return TripSeatTile(seat: resolved, size: size);
   }
 }
