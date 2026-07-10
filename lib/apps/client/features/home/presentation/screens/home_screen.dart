@@ -15,7 +15,7 @@ import 'package:bmt_app/core/localization/failure_l10n_ext.dart';
 /// - loading: branded skeleton mirroring the real layout
 /// - error: full-screen retryable error
 /// - loaded: hero search canvas + operational sections ([HomeContent])
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({
     super.key,
     required this.onOpenRoute,
@@ -24,6 +24,32 @@ class HomeScreen extends StatelessWidget {
 
   final void Function(String route, [Object? arguments]) onOpenRoute;
   final VoidCallback onOpenNotifications;
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  /// Realtime keeps Home in sync while the app is active; this is the
+  /// fallback for a missed event or a reconnect after being offline.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<HomeCubit>().load();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,8 +75,8 @@ class HomeScreen extends StatelessWidget {
         return switch (state) {
           HomeLoaded(:final data) => HomeContent(
             data: data,
-            onOpenRoute: onOpenRoute,
-            onOpenNotifications: onOpenNotifications,
+            onOpenRoute: widget.onOpenRoute,
+            onOpenNotifications: widget.onOpenNotifications,
           ),
           HomeError(:final failure) => ColoredBox(
             color: ClientColors.backgroundFor(context),

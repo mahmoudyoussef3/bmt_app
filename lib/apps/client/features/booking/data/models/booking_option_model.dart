@@ -1,3 +1,5 @@
+import 'package:bmt_app/core/pricing/trip_stop_pair_price.dart';
+
 import '../../domain/entities/booking_option.dart';
 
 class RouteOptionModel {
@@ -59,6 +61,7 @@ class RouteTripOptionModel {
     required this.vehicleType,
     required this.price,
     this.tripDate = '',
+    this.stopPricing = const [],
   });
 
   final String id;
@@ -68,6 +71,7 @@ class RouteTripOptionModel {
   final int availableSeats;
   final String vehicleType;
   final String price;
+  final List<TripStopPairPrice> stopPricing;
 
   RouteTripOptionData toEntity() {
     return RouteTripOptionData(
@@ -78,6 +82,7 @@ class RouteTripOptionModel {
       availableSeats: availableSeats,
       vehicleType: vehicleType,
       price: price,
+      stopPricing: stopPricing,
     );
   }
 }

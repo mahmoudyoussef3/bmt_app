@@ -31,7 +31,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final maxW = AppLayout.maxContentWidth(width);
 
-    return BlocBuilder<ProfileCubit, ProfileState>(
+    return BlocConsumer<ProfileCubit, ProfileState>(
+      listenWhen: (previous, current) =>
+          current is ProfileLoaded && current.refreshFailure != null,
+      listener: (context, state) {
+        final message = (state as ProfileLoaded).refreshFailure!;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              content: Text(message),
+              action: SnackBarAction(
+                label: 'Retry',
+                onPressed: () => context.read<ProfileCubit>().load(),
+              ),
+            ),
+          );
+      },
       builder: (context, state) {
         return Center(
           child: ConstrainedBox(
@@ -56,6 +73,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ProfileLoaded(:final data) => RefreshIndicator(
                 onRefresh: () => context.read<ProfileCubit>().load(),
                 child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
                   padding: AppLayout.pagePaddingWithTop,
                   children: [
                     Container(

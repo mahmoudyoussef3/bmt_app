@@ -35,7 +35,24 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
     final width = MediaQuery.sizeOf(context).width;
     final maxW = AppLayout.maxContentWidth(width);
 
-    return BlocBuilder<RoutesHubCubit, RoutesHubState>(
+    return BlocConsumer<RoutesHubCubit, RoutesHubState>(
+      listenWhen: (previous, current) =>
+          current is RoutesHubLoaded && current.refreshFailure != null,
+      listener: (context, state) {
+        final message = (state as RoutesHubLoaded).refreshFailure!;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              behavior: SnackBarBehavior.floating,
+              content: Text(message),
+              action: SnackBarAction(
+                label: 'Retry',
+                onPressed: () => context.read<RoutesHubCubit>().load(),
+              ),
+            ),
+          );
+      },
       builder: (context, state) {
         return Center(
           child: ConstrainedBox(
@@ -76,6 +93,7 @@ class _LoadedBody extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: () => context.read<RoutesHubCubit>().load(),
       child: ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
         padding: AppLayout.pagePaddingWithTop,
         children: [
           RoutesHubHero(title: data.title, subtitle: data.subtitle),

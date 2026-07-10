@@ -1,5 +1,6 @@
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
+import 'package:bmt_app/core/pricing/trip_pricing_resolver.dart';
 
 class BookingWizardSession {
   const BookingWizardSession({
@@ -46,10 +47,37 @@ class BookingWizardSession {
   bool get paymentValid =>
       paymentMethod != null && (isCardPayment || receiptUrl != null);
 
-  double get tripPrice => double.tryParse(selectedTrip?.price ?? '0') ?? 0;
+  /// The regular one-time fare for the exact pickup -> dropoff pair the
+  /// rider selected, resolved from this trip's `trip_pricing` rows. Falls
+  /// back to the trip's display price only when that exact pair has no
+  /// dedicated pricing row (e.g. not yet configured on the Dashboard).
+  double get tripPrice {
+    final exact = TripPricingResolver.oneTimeFareFor(
+      selectedTrip?.stopPricing ?? const [],
+      pickupStop?.id,
+      dropoffStop?.id,
+    );
+    return exact ??
+        TripPricingResolver.parsePriceLabel(selectedTrip?.price ?? '0');
+  }
+
+  /// The package price for the exact pickup -> dropoff pair, resolved the
+  /// same way as [tripPrice]. Falls back to the package catalog's flat
+  /// price when the pair has no dedicated tier pricing configured.
+  double resolvedPackagePrice(PackagePlan package) {
+    final exact = TripPricingResolver.packageFareFor(
+      selectedTrip?.stopPricing ?? const [],
+      pickupStop?.id,
+      dropoffStop?.id,
+      package.durationDays,
+      package.rideCount,
+    );
+    return exact ?? package.price;
+  }
 
   double get totalPrice {
-    if (selectedPackage != null) return selectedPackage!.price;
+    final package = selectedPackage;
+    if (package != null) return resolvedPackagePrice(package);
     return tripPrice;
   }
 

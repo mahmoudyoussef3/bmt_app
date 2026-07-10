@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bmt_app/core/pricing/trip_stop_pair_price_mapper.dart';
 import '../../domain/entities/booking_option.dart';
 import '../../domain/entities/booking_search_query.dart';
 import '../../domain/entities/search_options.dart';
@@ -56,7 +57,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
             id, trip_date, departure_time, arrival_time, capacity, passenger_count, booked_seats,
             ticket_price, currency, status, route_id,
             vehicles(vehicle_type),
-            trip_pricing(one_time_price, currency, is_active),
+            trip_pricing(from_point_id, to_point_id, one_time_price, five_days_price, ten_days_price, monthly_price, three_months_price, currency, is_active),
             trip_seats(state)
           ''')
           .eq('route_id', data['id'])
@@ -79,6 +80,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           availableSeats: _remainingSeats(trip),
           vehicleType: vehicle['vehicle_type']?.toString() ?? 'Standard',
           price: _startingPriceLabel([trip]),
+          stopPricing: tripStopPairPricesFromJson(trip['trip_pricing']),
         );
       }).toList();
       final routePoints = _mapRoutePoints(

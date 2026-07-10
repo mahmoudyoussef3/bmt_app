@@ -8,13 +8,22 @@ class ProfileCubit extends Cubit<ProfileState> {
 
   final GetProfileDataUseCase _getProfileData;
 
+  /// Loads profile data. When content is already on screen
+  /// (pull-to-refresh), the loaded state is kept instead of flashing the
+  /// skeleton; a refresh failure also keeps the existing content rather than
+  /// replacing it with a full-screen error.
   Future<void> load() async {
-    emit(const ProfileLoading());
+    final previous = state;
+    if (previous is! ProfileLoaded) emit(const ProfileLoading());
     try {
       final data = await _getProfileData();
       emit(ProfileLoaded(data));
     } catch (error) {
-      emit(ProfileError(error.toString()));
+      if (previous is ProfileLoaded) {
+        emit(ProfileLoaded(previous.data, refreshFailure: error.toString()));
+      } else {
+        emit(ProfileError(error.toString()));
+      }
     }
   }
 }

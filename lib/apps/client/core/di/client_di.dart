@@ -58,6 +58,7 @@ import '../../features/home/data/datasources/supabase_home_datasource.dart';
 import '../../features/home/data/repositories/home_repository_impl.dart';
 import '../../features/home/domain/repositories/home_repository.dart';
 import '../../features/home/domain/usecases/get_home_data_usecase.dart';
+import '../../features/home/domain/usecases/watch_home_changes_usecase.dart';
 import '../../features/home/presentation/cubit/home_cubit.dart';
 import '../../features/loyalty/data/datasources/loyalty_datasource.dart';
 import '../../features/loyalty/data/datasources/supabase_loyalty_datasource.dart';
@@ -344,9 +345,18 @@ void _registerHomeDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<WatchHomeChangesUseCase>()) {
+    clientGetIt.registerLazySingleton<WatchHomeChangesUseCase>(
+      () => WatchHomeChangesUseCase(clientGetIt<HomeRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<HomeCubit>()) {
     clientGetIt.registerFactory<HomeCubit>(
-      () => HomeCubit(clientGetIt<GetHomeDataUseCase>()),
+      () => HomeCubit(
+        clientGetIt<GetHomeDataUseCase>(),
+        clientGetIt<WatchHomeChangesUseCase>(),
+      ),
     );
   }
 }

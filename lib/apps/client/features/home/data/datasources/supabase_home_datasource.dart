@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/home_data_model.dart';
 import 'home_datasource.dart';
@@ -6,6 +8,27 @@ class SupabaseHomeDatasource implements HomeDatasource {
   final SupabaseClient _supabase;
 
   const SupabaseHomeDatasource(this._supabase);
+
+  @override
+  Stream<void> watchHomeChanges() {
+    final controller = StreamController<void>.broadcast();
+    void notify(PostgresChangePayload _) {
+      if (!controller.isClosed) controller.add(null);
+    }
+
+    final channel = _supabase
+        .channel('client_home_trips')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'operation_trips',
+          callback: notify,
+        )
+        .subscribe();
+
+    controller.onCancel = channel.unsubscribe;
+    return controller.stream;
+  }
 
   @override
   Future<HomeDataModel> getHomeData() async {

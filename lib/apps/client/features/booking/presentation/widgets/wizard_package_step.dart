@@ -102,6 +102,9 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
                             isSelected:
                                 session.selectedPackage?.id == package.id,
                             tripPrice: session.tripPrice,
+                            resolvedPrice: session.resolvedPackagePrice(
+                              package,
+                            ),
                             onTap: () {
                               final date =
                                   _startDate ?? _nextWorkday(DateTime.now());
@@ -150,6 +153,7 @@ class _PackageCard extends StatelessWidget {
     required this.isFeatured,
     required this.isSelected,
     required this.tripPrice,
+    required this.resolvedPrice,
     required this.onTap,
   });
 
@@ -157,13 +161,18 @@ class _PackageCard extends StatelessWidget {
   final bool isFeatured;
   final bool isSelected;
   final double tripPrice;
+
+  /// The Dashboard-configured package price for the rider's selected
+  /// pickup -> dropoff pair (falls back to the catalog price when that
+  /// pair has no dedicated tier pricing). See [BookingWizardSession.resolvedPackagePrice].
+  final double resolvedPrice;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final regularTotal = tripPrice * plan.rideCount;
-    final hasComparison = regularTotal > plan.price && regularTotal > 0;
-    final savings = hasComparison ? regularTotal - plan.price : 0.0;
+    final hasComparison = regularTotal > resolvedPrice && regularTotal > 0;
+    final savings = hasComparison ? regularTotal - resolvedPrice : 0.0;
     final discount = hasComparison
         ? ((savings / regularTotal) * 100).round()
         : 0;
@@ -265,7 +274,7 @@ class _PackageCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        'EGP ${plan.price.toStringAsFixed(0)}',
+                        'EGP ${resolvedPrice.toStringAsFixed(0)}',
                         style: ClientTypography.priceMedium(
                           context,
                         ).copyWith(color: accent),
@@ -388,7 +397,7 @@ class _SelectedPackageSummary extends StatelessWidget {
           ),
         ),
         Text(
-          'EGP ${plan.price.toStringAsFixed(0)}',
+          'EGP ${session.totalPrice.toStringAsFixed(0)}',
           style: ClientTypography.priceSmall(
             context,
           ).copyWith(color: ClientColors.journeyPurple),

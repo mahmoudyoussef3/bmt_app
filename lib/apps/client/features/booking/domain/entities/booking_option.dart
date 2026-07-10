@@ -1,3 +1,5 @@
+import 'package:bmt_app/core/pricing/trip_stop_pair_price.dart';
+
 /// How closely a route matches the user's pickup/destination search.
 enum RouteMatchQuality {
   /// Route serves both the requested pickup and destination, in order.
@@ -73,6 +75,7 @@ class RouteTripOptionData {
     required this.vehicleType,
     required this.price,
     this.tripDate = '',
+    this.stopPricing = const [],
   });
 
   final String id;
@@ -82,6 +85,11 @@ class RouteTripOptionData {
   final int availableSeats;
   final String vehicleType;
   final String price;
+
+  /// This trip's `trip_pricing` rows, one per stop pair — the source of
+  /// truth for resolving the fare/package price for the rider's exact
+  /// pickup -> dropoff selection (see [TripPricingResolver]).
+  final List<TripStopPairPrice> stopPricing;
 }
 
 class PopularRouteListData {

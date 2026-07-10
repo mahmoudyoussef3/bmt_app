@@ -12,4 +12,7 @@ class HomeRepositoryImpl implements HomeRepository {
     final model = await _datasource.getHomeData();
     return model.toEntity();
   }
+
+  @override
+  Stream<void> watchHomeChanges() => _datasource.watchHomeChanges();
 }
