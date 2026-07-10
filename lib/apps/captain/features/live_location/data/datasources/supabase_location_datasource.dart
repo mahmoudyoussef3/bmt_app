@@ -13,6 +13,20 @@ class SupabaseLocationDatasource implements LocationDatasource {
   Future<LocationUpdateModel> sendLocation(String tripId) async {
     await _ensureLocationAvailable();
 
+    // trip_live_locations requires driver_id and vehicle_id (both NOT NULL).
+    // The trip is the source of truth for who/what is assigned to it.
+    final trip = await _supabase
+        .from('operation_trips')
+        .select('driver_id, vehicle_id')
+        .eq('id', tripId)
+        .maybeSingle();
+
+    final driverId = trip?['driver_id'] as String?;
+    final vehicleId = trip?['vehicle_id'] as String?;
+    if (driverId == null || vehicleId == null) {
+      throw Exception('لا يمكن إرسال الموقع: لم يتم تعيين سائق ومركبة لهذه الرحلة.');
+    }
+
     final position = await Geolocator.getCurrentPosition(
       locationSettings: const LocationSettings(
         accuracy: LocationAccuracy.high,
@@ -23,6 +37,8 @@ class SupabaseLocationDatasource implements LocationDatasource {
 
     await _supabase.from('trip_live_locations').insert({
       'trip_id': tripId,
+      'driver_id': driverId,
+      'vehicle_id': vehicleId,
       'latitude': position.latitude,
       'longitude': position.longitude,
       'accuracy': position.accuracy,
