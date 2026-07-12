@@ -491,7 +491,7 @@ class _PaymentsSection extends StatelessWidget {
             return Column(
               children: [
                 Align(
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
                     onPressed: () => cubit.selectPayment(null),
                     icon: const Icon(Icons.arrow_back),
@@ -1176,7 +1176,7 @@ class _ReviewQueueSectionState extends State<_ReviewQueueSection> {
             return Column(
               children: [
                 Align(
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
                     onPressed: () => cubit.selectReceipt(null),
                     icon: const Icon(Icons.arrow_back),
@@ -1676,7 +1676,7 @@ class _RefundsSection extends StatelessWidget {
                 const SizedBox(width: AppSpacing.small),
                 ...RefundStatus.values.map(
                   (s) => Padding(
-                    padding: const EdgeInsets.only(left: 4.0),
+                    padding: const EdgeInsetsDirectional.only(start: 4.0),
                     child: ChoiceChip(
                       label: Text(s.label),
                       selected: state.refundStatusFilter == s,
@@ -1755,7 +1755,7 @@ class _RefundsSection extends StatelessWidget {
             return Column(
               children: [
                 Align(
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
                     onPressed: () => cubit.selectRefund(null),
                     icon: const Icon(Icons.arrow_back),
@@ -1997,7 +1997,7 @@ class _SubscriptionsSection extends StatelessWidget {
             return Column(
               children: [
                 Align(
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerStart,
                   child: TextButton.icon(
                     onPressed: () => cubit.selectSubscription(null),
                     icon: const Icon(Icons.arrow_back),

@@ -319,7 +319,7 @@ class SubscriptionDetailsScreen extends StatelessWidget {
           children: [
             IconButton(
               onPressed: context.read<SubscriptionsCubit>().showList,
-              icon: const Icon(Icons.arrow_forward),
+              icon: const Icon(Icons.arrow_back),
               tooltip: 'رجوع',
             ),
             const SizedBox(width: AppSpacing.small),
@@ -744,7 +744,7 @@ String _money(UserSubscription subscription) {
 String _amount(double value) => '${_toArabicNumber(value)} ج.م';
 
 String _date(DateTime value) {
-  return _toArabicDigits(intl.DateFormat('yyyy/MM/dd').format(value));
+  return _toArabicDigits(intl.DateFormat('yyyy/MM/dd', 'en').format(value));
 }
 
 String _toArabicNumber(num value) {

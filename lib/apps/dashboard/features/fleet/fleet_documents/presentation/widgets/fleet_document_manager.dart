@@ -49,7 +49,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
     final result = await showDialog<bool>(
       context: context,
       builder: (_) => Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: TextDirection.rtl,
         child: AlertDialog(
           title: const Text('حذف الوثيقة'),
           content: Text(
@@ -310,7 +310,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
                     controller: expiryController,
                     decoration: const InputDecoration(
                       labelText: 'تاريخ الانتهاء',
-                      hintText: 'YYYY-MM-DD',
+                      hintText: 'سنة-شهر-يوم',
                       prefixIcon: Icon(Icons.calendar_today_rounded),
                       border: OutlineInputBorder(),
                     ),

@@ -56,7 +56,7 @@ class _NotificationComposerState extends State<NotificationComposer> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Send Notification', style: tt.titleMedium),
+            Text('إرسال إشعار', style: tt.titleMedium),
             const SizedBox(height: 16),
             _TargetRow(
               target: _target,
@@ -69,11 +69,11 @@ class _NotificationComposerState extends State<NotificationComposer> {
               TextFormField(
                 controller: _userIdCtrl,
                 decoration: const InputDecoration(
-                  labelText: 'User ID',
+                  labelText: 'معرّف المستخدم',
                   border: OutlineInputBorder(),
                 ),
                 validator: (v) =>
-                    v == null || v.trim().isEmpty ? 'Required' : null,
+                    v == null || v.trim().isEmpty ? 'هذا الحقل مطلوب' : null,
               ),
             ],
             const SizedBox(height: 12),
@@ -85,22 +85,22 @@ class _NotificationComposerState extends State<NotificationComposer> {
             TextFormField(
               controller: _titleCtrl,
               decoration: const InputDecoration(
-                labelText: 'Title',
+                labelText: 'العنوان',
                 border: OutlineInputBorder(),
               ),
               validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
+                  v == null || v.trim().isEmpty ? 'هذا الحقل مطلوب' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _bodyCtrl,
               decoration: const InputDecoration(
-                labelText: 'Message',
+                labelText: 'نص الرسالة',
                 border: OutlineInputBorder(),
               ),
               maxLines: 3,
               validator: (v) =>
-                  v == null || v.trim().isEmpty ? 'Required' : null,
+                  v == null || v.trim().isEmpty ? 'هذا الحقل مطلوب' : null,
             ),
             const SizedBox(height: 20),
             _SendButton(onTap: _submit),
@@ -126,7 +126,7 @@ class _NotificationComposerState extends State<NotificationComposer> {
     if (state is NotificationsDispatchSuccess) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Sent to ${state.recipientCount} recipient(s)'),
+          content: Text('تم الإرسال إلى ${state.recipientCount} مستلم'),
           backgroundColor: Colors.green,
         ),
       );
@@ -163,12 +163,12 @@ class _TargetRow extends StatelessWidget {
           child: DropdownButtonFormField<NotificationTargetApp>(
             initialValue: target,
             decoration: const InputDecoration(
-              labelText: 'Target App',
+              labelText: 'التطبيق المستهدف',
               border: OutlineInputBorder(),
               contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             items: NotificationTargetApp.values
-                .map((t) => DropdownMenuItem(value: t, child: Text(t.name)))
+                .map((t) => DropdownMenuItem(value: t, child: Text(t.label)))
                 .toList(),
             onChanged: (v) {
               if (v != null) onTargetChange(v);
@@ -178,7 +178,7 @@ class _TargetRow extends StatelessWidget {
         const SizedBox(width: 12),
         Column(
           children: [
-            const Text('Broadcast', style: TextStyle(fontSize: 12)),
+            const Text('إرسال جماعي', style: TextStyle(fontSize: 12)),
             Switch(value: broadcast, onChanged: onBroadcastChange),
           ],
         ),
@@ -198,7 +198,7 @@ class _CategoryDropdown extends StatelessWidget {
     return DropdownButtonFormField<DashboardNotificationCategory>(
       initialValue: value,
       decoration: const InputDecoration(
-        labelText: 'Category',
+        labelText: 'التصنيف',
         border: OutlineInputBorder(),
         contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       ),
@@ -235,7 +235,7 @@ class _SendButton extends StatelessWidget {
                     ),
                   )
                 : const Icon(Icons.send_rounded),
-            label: Text(sending ? 'Sending…' : 'Send Notification'),
+            label: Text(sending ? 'جارٍ الإرسال…' : 'إرسال إشعار'),
           ),
         );
       },

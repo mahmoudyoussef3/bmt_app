@@ -76,7 +76,7 @@ class _PlaceSearchFieldState extends State<PlaceSearchField> {
       optionsViewBuilder: (context, onSelected, options) {
         final scheme = Theme.of(context).colorScheme;
         return Align(
-          alignment: Alignment.topRight,
+          alignment: AlignmentDirectional.topStart,
           child: Material(
             elevation: 4,
             borderRadius: BorderRadius.circular(12),

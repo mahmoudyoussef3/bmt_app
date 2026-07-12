@@ -158,14 +158,14 @@ class FleetAssignmentsCardList extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: page == 0 ? null : () => onPageChanged(page - 1),
-                icon: const Icon(Icons.chevron_right_rounded),
+                icon: const Icon(Icons.chevron_left_rounded),
               ),
               Text('صفحة ${page + 1} من $pages'),
               IconButton(
                 onPressed: page >= pages - 1
                     ? null
                     : () => onPageChanged(page + 1),
-                icon: const Icon(Icons.chevron_left_rounded),
+                icon: const Icon(Icons.chevron_right_rounded),
               ),
             ],
           ),

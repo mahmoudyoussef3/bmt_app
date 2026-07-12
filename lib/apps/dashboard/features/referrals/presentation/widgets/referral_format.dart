@@ -23,7 +23,7 @@ String referralArPercent(num value) => '${referralArNum(value)}٪';
 
 String referralArDate(DateTime? value) {
   if (value == null) return '—';
-  return referralArDigits(intl.DateFormat('yyyy/MM/dd').format(value));
+  return referralArDigits(intl.DateFormat('yyyy/MM/dd', 'en').format(value));
 }
 
 String referralRewardTypeLabel(String type) => switch (type) {

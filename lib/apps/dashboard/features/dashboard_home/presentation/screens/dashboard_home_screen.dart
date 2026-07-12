@@ -493,7 +493,7 @@ class _KpiCard extends StatelessWidget {
                 child: Icon(spec.icon, color: spec.color, size: 21),
               ),
               const Spacer(),
-              Icon(Icons.chevron_left_rounded, color: scheme.onSurfaceVariant),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
             ],
           ),
           const Spacer(),
@@ -745,7 +745,7 @@ class _ActionCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Icon(Icons.chevron_left_rounded, color: scheme.onSurfaceVariant),
+              Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
             ],
           ),
         ],
@@ -1104,8 +1104,8 @@ class _ComplaintCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
-        border: Border(
-          right: BorderSide(
+        border: BorderDirectional(
+          start: BorderSide(
             color: _complaintColor(context, item.status),
             width: 4,
           ),
@@ -1315,7 +1315,7 @@ class _AlertRow extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(Icons.chevron_left_rounded, color: scheme.onSurfaceVariant),
+            Icon(Icons.chevron_right_rounded, color: scheme.onSurfaceVariant),
           ],
         ),
       ),

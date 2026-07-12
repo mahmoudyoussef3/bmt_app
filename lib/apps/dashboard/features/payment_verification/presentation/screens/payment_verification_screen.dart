@@ -899,7 +899,6 @@ class _ReviewDetails extends StatelessWidget {
             controller: notes,
             minLines: 3,
             maxLines: 4,
-            textDirection: TextDirection.ltr,
             decoration: const InputDecoration(
               labelText: 'ملاحظات التحقق',
               hintText: 'اكتب سبب القرار أو ملاحظة للمتابعة',

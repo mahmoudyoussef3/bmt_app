@@ -103,13 +103,13 @@ class FleetTableShell extends StatelessWidget {
                   onPressed: currentPage == 0
                       ? null
                       : () => onPageChanged(currentPage - 1),
-                  icon: const Icon(Icons.chevron_right_rounded),
+                  icon: const Icon(Icons.chevron_left_rounded),
                 ),
                 IconButton(
                   onPressed: currentPage >= pages - 1
                       ? null
                       : () => onPageChanged(currentPage + 1),
-                  icon: const Icon(Icons.chevron_left_rounded),
+                  icon: const Icon(Icons.chevron_right_rounded),
                 ),
               ],
             ),

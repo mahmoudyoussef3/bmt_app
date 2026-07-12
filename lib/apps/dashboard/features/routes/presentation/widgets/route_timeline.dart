@@ -20,7 +20,7 @@ class RouteTimeline extends StatelessWidget {
         children: [
           Text('معاينة الرحلة', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: AppSpacing.xSmall),
-          Text('${route.startCity} ← ${route.endCity} • ${route.distance}'),
+          Text('من ${route.startCity} إلى ${route.endCity} • ${route.distance}'),
           const SizedBox(height: AppSpacing.large),
           ...route.stations.indexed.map((entry) {
             final (index, station) = entry;

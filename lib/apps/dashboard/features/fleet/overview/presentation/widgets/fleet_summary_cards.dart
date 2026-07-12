@@ -140,8 +140,8 @@ class _PremiumKpiCard extends StatelessWidget {
           ),
           child: Stack(
             children: [
-              Positioned(
-                right: -20,
+              PositionedDirectional(
+                end: -20,
                 top: -20,
                 child: Container(
                   width: 100,
@@ -152,8 +152,8 @@ class _PremiumKpiCard extends StatelessWidget {
                   ),
                 ),
               ),
-              Positioned(
-                right: -20,
+              PositionedDirectional(
+                end: -20,
                 top: -20,
                 child: BackdropFilter(
                   filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),

@@ -80,7 +80,7 @@ class LiveTripCard extends StatelessWidget {
             _Fact(
               icon: Icons.place_outlined,
               label:
-                  '${trip.currentPoint?.name ?? '-'} → ${trip.nextPoint?.name ?? 'نهاية الرحلة'}',
+                  'من ${trip.currentPoint?.name ?? '-'} إلى ${trip.nextPoint?.name ?? 'نهاية الرحلة'}',
             ),
             const SizedBox(height: AppSpacing.small),
             Row(

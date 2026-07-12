@@ -57,7 +57,6 @@ class _StationFormDialogState extends State<StationFormDialog> {
             children: [
               TextFormField(
                 controller: _name,
-                textDirection: TextDirection.ltr,
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'اسم المحطة',
@@ -68,7 +67,6 @@ class _StationFormDialogState extends State<StationFormDialog> {
               const SizedBox(height: AppSpacing.medium),
               TextFormField(
                 controller: _area,
-                textDirection: TextDirection.ltr,
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'المنطقة',
@@ -79,7 +77,6 @@ class _StationFormDialogState extends State<StationFormDialog> {
               const SizedBox(height: AppSpacing.medium),
               TextFormField(
                 controller: _offset,
-                textDirection: TextDirection.ltr,
                 textInputAction: TextInputAction.next,
                 decoration: const InputDecoration(
                   labelText: 'وقت الوصول المتوقع',
@@ -91,7 +88,6 @@ class _StationFormDialogState extends State<StationFormDialog> {
               const SizedBox(height: AppSpacing.medium),
               TextFormField(
                 controller: _notes,
-                textDirection: TextDirection.ltr,
                 minLines: 2,
                 maxLines: 3,
                 decoration: const InputDecoration(

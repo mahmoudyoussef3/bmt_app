@@ -27,14 +27,14 @@ class PaymentCard extends StatelessWidget {
         onTap: onTap,
         child: Container(
           decoration: BoxDecoration(
-            border: Border(
-              right: BorderSide(
+            border: BorderDirectional(
+              start: BorderSide(
                 color: selected ? scheme.primary : scheme.outlineVariant,
                 width: 4,
               ),
             ),
           ),
-          padding: const EdgeInsets.only(right: AppSpacing.small),
+          padding: const EdgeInsetsDirectional.only(start: AppSpacing.small),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

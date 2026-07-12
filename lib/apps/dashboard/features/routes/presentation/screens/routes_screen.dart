@@ -482,7 +482,7 @@ class _RouteOpsCard extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.small),
           Text(
-            '${route.startCity} ← ${route.endCity}',
+            'من ${route.startCity} إلى ${route.endCity}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(
@@ -941,7 +941,7 @@ class _DetailsHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: AppSpacing.xSmall),
                     Text(
-                      '${route.startCity} ← ${route.endCity}',
+                      'من ${route.startCity} إلى ${route.endCity}',
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -2061,7 +2061,7 @@ void _confirmArchive(BuildContext context, OperationRoute route) {
   showDialog<void>(
     context: context,
     builder: (_) => Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: AlertDialog(
         title: const Text('تأكيد أرشفة المسار'),
         content: Text(
@@ -2122,7 +2122,7 @@ void _openStopDialog(
   showDialog<void>(
     context: context,
     builder: (_) => Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: _StopDialog(station: station, onSubmit: onSubmit),
     ),
   );

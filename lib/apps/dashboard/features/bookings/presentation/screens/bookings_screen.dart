@@ -25,7 +25,7 @@ class BookingsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: BlocBuilder<BookingsCubit, BookingsState>(
         builder: (context, state) => switch (state) {
           BookingsLoading() => const Center(child: CircularProgressIndicator()),

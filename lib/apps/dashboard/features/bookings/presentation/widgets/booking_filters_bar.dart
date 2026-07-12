@@ -86,7 +86,6 @@ class _FiltersBar extends StatelessWidget {
             SizedBox(
               width: compact ? full : 280,
               child: TextField(
-                textDirection: TextDirection.ltr,
                 decoration: const InputDecoration(
                   labelText: 'بحث سريع',
                   prefixIcon: Icon(Icons.search_rounded),
@@ -98,7 +97,6 @@ class _FiltersBar extends StatelessWidget {
             SizedBox(
               width: compact ? full : 220,
               child: TextField(
-                textDirection: TextDirection.ltr,
                 decoration: const InputDecoration(
                   labelText: 'المسار',
                   prefixIcon: Icon(Icons.route_rounded),
@@ -109,7 +107,6 @@ class _FiltersBar extends StatelessWidget {
             SizedBox(
               width: compact ? full : 170,
               child: TextField(
-                textDirection: TextDirection.ltr,
                 decoration: const InputDecoration(
                   labelText: 'التاريخ',
                   prefixIcon: Icon(Icons.calendar_today_rounded),

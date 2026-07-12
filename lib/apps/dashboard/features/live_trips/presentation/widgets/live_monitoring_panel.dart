@@ -37,7 +37,7 @@ class LiveMonitoringPanel extends StatelessWidget {
       builder: (_) => BlocProvider.value(
         value: context.read<LiveTripsCubit>(),
         child: Directionality(
-          textDirection: TextDirection.ltr,
+          textDirection: TextDirection.rtl,
           child: _ReportDelayDialog(trip: trip),
         ),
       ),
@@ -50,7 +50,7 @@ class LiveMonitoringPanel extends StatelessWidget {
       builder: (_) => BlocProvider.value(
         value: context.read<LiveTripsCubit>(),
         child: Directionality(
-          textDirection: TextDirection.ltr,
+          textDirection: TextDirection.rtl,
           child: _ReportEmergencyDialog(trip: trip),
         ),
       ),

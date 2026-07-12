@@ -128,7 +128,7 @@ class _FleetDocumentAddFormState extends State<FleetDocumentAddForm> {
             onTap: _pickExpiry,
             decoration: const InputDecoration(
               labelText: 'تاريخ الانتهاء',
-              hintText: 'YYYY-MM-DD',
+              hintText: 'سنة-شهر-يوم',
               prefixIcon: Icon(Icons.calendar_today_rounded),
               border: OutlineInputBorder(),
             ),

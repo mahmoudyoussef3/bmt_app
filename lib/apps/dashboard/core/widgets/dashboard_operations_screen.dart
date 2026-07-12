@@ -371,7 +371,6 @@ class _WorkflowToolbar extends StatelessWidget {
             children: [
               Expanded(
                 child: TextField(
-                  textDirection: TextDirection.ltr,
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.search),
                     labelText: 'بحث',
@@ -587,13 +586,13 @@ class _PaginationBar extends StatelessWidget {
         IconButton(
           tooltip: 'السابق',
           onPressed: page == 0 ? null : () => onPageChanged(page - 1),
-          icon: const Icon(Icons.chevron_right),
+          icon: const Icon(Icons.chevron_left),
         ),
         Text('${page + 1} / ${maxPage + 1}'),
         IconButton(
           tooltip: 'التالي',
           onPressed: page >= maxPage ? null : () => onPageChanged(page + 1),
-          icon: const Icon(Icons.chevron_left),
+          icon: const Icon(Icons.chevron_right),
         ),
       ],
     );
@@ -703,7 +702,6 @@ class _WorkspaceFormDialogState extends State<_WorkspaceFormDialog> {
                 padding: const EdgeInsets.only(bottom: AppSpacing.medium),
                 child: TextField(
                   controller: _controllers[index],
-                  textDirection: TextDirection.ltr,
                   decoration: InputDecoration(labelText: column),
                 ),
               );
@@ -1136,7 +1134,7 @@ void _openFormDialog(
     builder: (_) => BlocProvider.value(
       value: context.read<DashboardWorkspaceCubit>(),
       child: Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: TextDirection.rtl,
         child: _WorkspaceFormDialog(workspace: workspace, row: row),
       ),
     ),
@@ -1153,7 +1151,7 @@ void _openStatusDialog(
     builder: (_) => BlocProvider.value(
       value: context.read<DashboardWorkspaceCubit>(),
       child: Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: TextDirection.rtl,
         child: _StatusDialog(workspace: workspace, row: row),
       ),
     ),
@@ -1166,7 +1164,7 @@ void _openDeleteDialog(BuildContext context, DashboardWorkspaceRow row) {
     builder: (_) => BlocProvider.value(
       value: context.read<DashboardWorkspaceCubit>(),
       child: Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: TextDirection.rtl,
         child: AlertDialog(
           title: const Text('حذف العنصر'),
           content: const Text(
@@ -1201,7 +1199,7 @@ void _openDetailsSheet(
     isScrollControlled: true,
     showDragHandle: true,
     builder: (context) => Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: SizedBox(
         height: MediaQuery.sizeOf(context).height * 0.82,
         child: _DetailsSheet(workspace: workspace, row: row),
@@ -1214,7 +1212,7 @@ void _openExportDialog(BuildContext context, DashboardWorkspace workspace) {
   showDialog<void>(
     context: context,
     builder: (context) => Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: AlertDialog(
         title: Text('تصدير ${workspace.title}'),
         content: const Text('واجهة تصدير تجريبية للبيانات المحلية فقط.'),
@@ -1243,7 +1241,7 @@ void _handleBulkAction(
   showDialog<void>(
     context: context,
     builder: (context) => Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: AlertDialog(
         title: const Text('إجراء جماعي'),
         content: Text('سيتم تطبيق الإجراء على $selectedCount عناصر محددة.'),

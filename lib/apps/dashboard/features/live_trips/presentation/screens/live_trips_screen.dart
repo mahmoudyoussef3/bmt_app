@@ -30,7 +30,7 @@ class _LiveTripsScreenState extends State<LiveTripsScreen> {
   @override
   Widget build(BuildContext context) {
     return Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: BlocConsumer<LiveTripsCubit, LiveTripsState>(
         listenWhen: (previous, current) {
           return current is LiveTripsLoaded && current.actionMessage != null;

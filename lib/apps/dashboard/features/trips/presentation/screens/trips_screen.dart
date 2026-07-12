@@ -31,7 +31,7 @@ class TripsScreen extends StatelessWidget {
         BlocProvider(create: (_) => dashboardDi<TripPassengersCubit>()),
       ],
       child: const Directionality(
-        textDirection: TextDirection.ltr,
+        textDirection: TextDirection.rtl,
         child: _TripsView(),
       ),
     );
@@ -117,7 +117,7 @@ class _LoadedTrips extends StatelessWidget {
       builder: (_) => BlocProvider(
         create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
         child: const Directionality(
-          textDirection: TextDirection.ltr,
+          textDirection: TextDirection.rtl,
           child: TripCreationWizardDialog(),
         ),
       ),
@@ -499,7 +499,7 @@ class _TripRow extends StatelessWidget {
                 children: [
                   TextButton.icon(
                     onPressed: () => _openDetails(context),
-                    icon: const Icon(Icons.arrow_back_rounded, size: 18),
+                    icon: const Icon(Icons.arrow_forward_rounded, size: 18),
                     label: const Text('عرض التفاصيل'),
                   ),
                   PopupMenuButton<String>(
@@ -533,7 +533,7 @@ class _TripRow extends StatelessWidget {
                   children: [
                     content,
                     const SizedBox(height: 10),
-                    Align(alignment: Alignment.centerLeft, child: actions),
+                    Align(alignment: AlignmentDirectional.centerStart, child: actions),
                   ],
                 );
               }
@@ -564,7 +564,7 @@ class _TripRow extends StatelessWidget {
           BlocProvider.value(value: context.read<TripPricingCubit>()),
         ],
         child: const Directionality(
-          textDirection: TextDirection.ltr,
+          textDirection: TextDirection.rtl,
           child: _TripDetailsDialog(),
         ),
       ),
@@ -579,7 +579,7 @@ class _TripRow extends StatelessWidget {
       builder: (_) => BlocProvider(
         create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
         child: Directionality(
-          textDirection: TextDirection.ltr,
+          textDirection: TextDirection.rtl,
           child: TripCreationWizardDialog(prefillTrip: trip),
         ),
       ),
@@ -768,7 +768,7 @@ class _DetailsHeader extends StatelessWidget {
               children: [
                 identity,
                 const SizedBox(height: 12),
-                Align(alignment: Alignment.centerLeft, child: actions),
+                Align(alignment: AlignmentDirectional.centerStart, child: actions),
               ],
             );
           }
@@ -1051,7 +1051,7 @@ class _OverviewTab extends StatelessWidget {
                             ),
                             Expanded(child: Divider(color: scheme.primary)),
                             Icon(
-                              Icons.arrow_back_rounded,
+                              Icons.arrow_forward_rounded,
                               size: 18,
                               color: scheme.primary,
                             ),
@@ -1318,7 +1318,7 @@ class _PassengersTab extends StatelessWidget {
                   ),
                   subtitle: Text(
                     '${passenger.phone}\n'
-                    '${passenger.pickup} ← ${passenger.dropoff}',
+                    'من ${passenger.pickup} إلى ${passenger.dropoff}',
                   ),
                   isThreeLine: true,
                   trailing: Row(

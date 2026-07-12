@@ -226,37 +226,63 @@ class _DashboardShellState extends State<DashboardShell> {
   Widget build(BuildContext context) {
     final visibleItems = _visibleItems;
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final useCompactNavigation = constraints.maxWidth < 920;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useCompactNavigation = constraints.maxWidth < 920;
 
-          if (useCompactNavigation) {
-            return Scaffold(
-              drawer: Drawer(
-                child: SafeArea(
-                  child: _DashboardSidebar(
-                    items: visibleItems,
-                    role: _role,
-                    route: _route,
-                    onRoleChanged: _setRole,
-                    onRouteChanged: (route) {
-                      if (_openRoute(route)) {
-                        Navigator.of(context).maybePop();
-                      }
-                    },
-                  ),
+        if (useCompactNavigation) {
+          return Scaffold(
+            drawer: Drawer(
+              child: SafeArea(
+                child: _DashboardSidebar(
+                  items: visibleItems,
+                  role: _role,
+                  route: _route,
+                  onRoleChanged: _setRole,
+                  onRouteChanged: (route) {
+                    if (_openRoute(route)) {
+                      Navigator.of(context).maybePop();
+                    }
+                  },
                 ),
               ),
-              body: SafeArea(
-                child: Builder(
-                  builder: (context) => Column(
+            ),
+            body: SafeArea(
+              child: Builder(
+                builder: (context) => Column(
+                  children: [
+                    _DashboardTopBar(
+                      title: _activeTitle,
+                      role: _role,
+                      onOpenMenu: () => Scaffold.of(context).openDrawer(),
+                      onOpenNotifications: () =>
+                          _openRoute(DashboardRoutes.notifications),
+                    ),
+                    Expanded(child: _buildContent()),
+                  ],
+                ),
+              ),
+            ),
+          );
+        }
+
+        return Scaffold(
+          body: SafeArea(
+            child: Row(
+              children: [
+                _DashboardSidebar(
+                  items: visibleItems,
+                  role: _role,
+                  route: _route,
+                  onRoleChanged: _setRole,
+                  onRouteChanged: _openRoute,
+                ),
+                Expanded(
+                  child: Column(
                     children: [
                       _DashboardTopBar(
                         title: _activeTitle,
                         role: _role,
-                        onOpenMenu: () => Scaffold.of(context).openDrawer(),
                         onOpenNotifications: () =>
                             _openRoute(DashboardRoutes.notifications),
                       ),
@@ -264,40 +290,11 @@ class _DashboardShellState extends State<DashboardShell> {
                     ],
                   ),
                 ),
-              ),
-            );
-          }
-
-          return Scaffold(
-            body: SafeArea(
-              child: Row(
-                children: [
-                  _DashboardSidebar(
-                    items: visibleItems,
-                    role: _role,
-                    route: _route,
-                    onRoleChanged: _setRole,
-                    onRouteChanged: _openRoute,
-                  ),
-                  Expanded(
-                    child: Column(
-                      children: [
-                        _DashboardTopBar(
-                          title: _activeTitle,
-                          role: _role,
-                          onOpenNotifications: () =>
-                              _openRoute(DashboardRoutes.notifications),
-                        ),
-                        Expanded(child: _buildContent()),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              ],
             ),
-          );
-        },
-      ),
+          ),
+        );
+      },
     );
   }
 

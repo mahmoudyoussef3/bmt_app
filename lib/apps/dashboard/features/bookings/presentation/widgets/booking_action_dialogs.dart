@@ -261,7 +261,7 @@ class ActionDialogShell extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Directionality(
-      textDirection: TextDirection.ltr,
+      textDirection: TextDirection.rtl,
       child: AlertDialog(
         title: Text(title),
         content: SizedBox(

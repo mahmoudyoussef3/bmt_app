@@ -493,7 +493,7 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                   itemBuilder: (context, index) {
                     final isSelected = index == _selectedIndex;
                     return Padding(
-                      padding: const EdgeInsets.only(left: AppSpacing.small),
+                      padding: const EdgeInsetsDirectional.only(start: AppSpacing.small),
                       child: GestureDetector(
                         onTap: () => setState(() => _selectedIndex = index),
                         child: Container(

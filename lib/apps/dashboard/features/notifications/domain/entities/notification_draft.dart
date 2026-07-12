@@ -1,4 +1,14 @@
-enum NotificationTargetApp { client, captain, all }
+enum NotificationTargetApp {
+  client,
+  captain,
+  all;
+
+  String get label => switch (this) {
+    NotificationTargetApp.client => 'تطبيق العملاء',
+    NotificationTargetApp.captain => 'تطبيق الكباتن',
+    NotificationTargetApp.all => 'كل التطبيقات',
+  };
+}
 
 enum DashboardNotificationCategory {
   booking,
@@ -12,15 +22,15 @@ enum DashboardNotificationCategory {
   general;
 
   String get label => switch (this) {
-    DashboardNotificationCategory.booking => 'Booking',
-    DashboardNotificationCategory.payment => 'Payment',
-    DashboardNotificationCategory.trip => 'Trip',
-    DashboardNotificationCategory.announcement => 'Announcement',
-    DashboardNotificationCategory.promotion => 'Promotion',
-    DashboardNotificationCategory.emergency => 'Emergency',
-    DashboardNotificationCategory.subscription => 'Subscription',
-    DashboardNotificationCategory.system => 'System',
-    DashboardNotificationCategory.general => 'General',
+    DashboardNotificationCategory.booking => 'حجز',
+    DashboardNotificationCategory.payment => 'دفع',
+    DashboardNotificationCategory.trip => 'رحلة',
+    DashboardNotificationCategory.announcement => 'إعلان',
+    DashboardNotificationCategory.promotion => 'عرض ترويجي',
+    DashboardNotificationCategory.emergency => 'طوارئ',
+    DashboardNotificationCategory.subscription => 'اشتراك',
+    DashboardNotificationCategory.system => 'النظام',
+    DashboardNotificationCategory.general => 'عام',
   };
 }
 

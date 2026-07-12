@@ -42,7 +42,7 @@ class _TripPricingTabState extends State<TripPricingTab> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      '${widget.trip.routePoints.first.name} ← ${widget.trip.routePoints.last.name}',
+                      'من ${widget.trip.routePoints.first.name} إلى ${widget.trip.routePoints.last.name}',
                       style: Theme.of(context).textTheme.titleMedium,
                     ),
                     const SizedBox(height: AppSpacing.xSmall),
@@ -110,7 +110,7 @@ class _TripPricingTabState extends State<TripPricingTab> {
       builder: (_) => BlocProvider.value(
         value: context.read<TripPricingCubit>(),
         child: Directionality(
-          textDirection: TextDirection.ltr,
+          textDirection: TextDirection.rtl,
           child: TripPricingEditorDialog(trip: widget.trip, pricing: pricing),
         ),
       ),
@@ -170,7 +170,7 @@ class _RouteTimeline extends StatelessWidget {
                           horizontal: AppSpacing.small,
                         ),
                         child: Icon(
-                          Icons.arrow_back_rounded,
+                          Icons.arrow_forward_rounded,
                           color: scheme.onSurfaceVariant,
                         ),
                       ),
@@ -251,7 +251,7 @@ class _PricingCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  '${pricing.fromPointName} ← ${pricing.toPointName}',
+                  'من ${pricing.fromPointName} إلى ${pricing.toPointName}',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),

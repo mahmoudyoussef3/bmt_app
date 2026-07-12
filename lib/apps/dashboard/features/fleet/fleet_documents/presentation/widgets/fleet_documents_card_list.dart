@@ -101,7 +101,7 @@ class FleetDocumentsCardList extends StatelessWidget {
                   if (document.fileUrl.isNotEmpty) ...[
                     const SizedBox(height: AppSpacing.small),
                     Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: AlignmentDirectional.centerStart,
                       child: Wrap(
                         spacing: AppSpacing.small,
                         children: [
@@ -136,7 +136,7 @@ class FleetDocumentsCardList extends StatelessWidget {
                   ] else ...[
                     const SizedBox(height: AppSpacing.small),
                     Align(
-                      alignment: Alignment.centerLeft,
+                      alignment: AlignmentDirectional.centerStart,
                       child: TextButton.icon(
                         icon: Icon(
                           Icons.delete_outline_rounded,
@@ -165,14 +165,14 @@ class FleetDocumentsCardList extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: page == 0 ? null : () => onPageChanged(page - 1),
-                icon: const Icon(Icons.chevron_right_rounded),
+                icon: const Icon(Icons.chevron_left_rounded),
               ),
               Text('صفحة ${page + 1} من $pages'),
               IconButton(
                 onPressed: page >= pages - 1
                     ? null
                     : () => onPageChanged(page + 1),
-                icon: const Icon(Icons.chevron_left_rounded),
+                icon: const Icon(Icons.chevron_right_rounded),
               ),
             ],
           ),

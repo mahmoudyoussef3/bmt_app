@@ -7,9 +7,12 @@ import 'core/di/dashboard_di.dart';
 import 'core/routes/dashboard_shell.dart';
 import 'core/theme/dashboard_app_theme.dart';
 import 'core/theme/dashboard_theme_cubit.dart';
-import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
+
+/// The dashboard is an Arabic-only operational workspace: there is no language
+/// switcher, so the locale is pinned rather than read from storage or system.
+const String _dashboardLocale = 'ar';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -32,30 +35,29 @@ class DashboardWebApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocProvider(
-      providers: [
-        BlocProvider<DashboardThemeCubit>(
-          create: (_) => dashboardDi<DashboardThemeCubit>()..load(),
-        ),
-        BlocProvider<LocaleCubit>(create: (_) => LocaleCubit()..load()),
-      ],
+    return BlocProvider<DashboardThemeCubit>(
+      create: (_) => dashboardDi<DashboardThemeCubit>()..load(),
       child: BlocBuilder<DashboardThemeCubit, DashboardThemeState>(
         builder: (context, themeState) {
-          return BlocBuilder<LocaleCubit, Locale>(
-            builder: (context, locale) {
-              return MaterialApp(
-                debugShowCheckedModeBanner: false,
-                title: AppFlavorConfig.current.appName,
-                localizationsDelegates:
-                    AppLocalizations.localizationsDelegates,
-                supportedLocales: AppLocalizations.supportedLocales,
-                locale: locale,
-                theme: DashboardAppTheme.light(),
-                darkTheme: DashboardAppTheme.dark(),
-                themeMode: themeState.themeMode,
-                home: const DashboardShell(),
-              );
-            },
+          return MaterialApp(
+            debugShowCheckedModeBanner: false,
+            title: AppFlavorConfig.current.appName,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            // Pinned, not read from LocaleCubit: the shared flavor bootstrap
+            // provides that cubit with an English default, and the dashboard
+            // must stay Arabic regardless of it.
+            locale: const Locale(_dashboardLocale),
+            theme: DashboardAppTheme.light(),
+            darkTheme: DashboardAppTheme.dark(),
+            themeMode: themeState.themeMode,
+            // Also covers overlays that mount above the locale-derived
+            // Directionality — dialogs, menus, tooltips, snack bars.
+            builder: (context, child) => Directionality(
+              textDirection: TextDirection.rtl,
+              child: child ?? const SizedBox.shrink(),
+            ),
+            home: const DashboardShell(),
           );
         },
       ),

@@ -28,7 +28,7 @@ class AppProgressBar extends StatelessWidget {
                   ),
                 ),
                 FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
+                  alignment: AlignmentDirectional.centerStart,
                   widthFactor: progress.clamp(0.0, 1.0),
                   child: DecoratedBox(
                     decoration: BoxDecoration(

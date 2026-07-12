@@ -1,6 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/client_nav_destination.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/client_nav_item.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/client_nav_selection_pill.dart';
 
+/// Floating capsule navigation for the client shell.
+///
+/// A single gradient indicator slides between the four equal-width slots rather
+/// than each tab owning a background, so the selection reads as one continuous
+/// object moving across the bar. The island keeps its own height (it is not an
+/// overlay), so tab content never scrolls underneath it.
 class ClientBottomNavigation extends StatelessWidget {
   const ClientBottomNavigation({
     super.key,
@@ -11,80 +23,88 @@ class ClientBottomNavigation extends StatelessWidget {
   final String activeTab;
   final ValueChanged<String> onTabChange;
 
+  static const double _height = 64;
+  static const double _inset = 8;
+
+  void _select(ClientNavDestination destination) {
+    if (destination.id == activeTab) return;
+    HapticFeedback.selectionClick();
+    onTabChange(destination.id);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tabs = <({String id, String label, IconData icon})>[
-      (id: 'home', label: 'Home', icon: Icons.home_rounded),
-      (id: 'routes', label: 'Routes', icon: Icons.map_rounded),
-      (id: 'trips', label: 'Trips', icon: Icons.directions_bus_rounded),
-      (id: 'profile', label: 'Profile', icon: Icons.person_outline_rounded),
-    ];
+    const destinations = ClientNavDestination.all;
+    final activeIndex = destinations
+        .indexWhere((d) => d.id == activeTab)
+        .clamp(0, destinations.length - 1);
 
-    return Container(
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withAlpha(15),
-            blurRadius: 30,
-            offset: const Offset(0, -10),
-          ),
-        ],
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(32),
-          topRight: Radius.circular(32),
-        ),
-      ),
+    // The island needs a canvas to float on: the shell Scaffold is near-white,
+    // which would swallow a white bar. Painting the strip with the app canvas
+    // color also lines it up exactly with the home tab's background.
+    return ColoredBox(
+      color: ClientColors.backgroundFor(context),
       child: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: tabs.map((tab) {
-              final isActive = activeTab == tab.id;
-              return GestureDetector(
-                behavior: HitTestBehavior.opaque,
-                onTap: () => onTabChange(tab.id),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOutQuint,
-                  padding: EdgeInsets.symmetric(
-                    horizontal: isActive ? 20 : 16,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: isActive ? scheme.primary.withAlpha(25) : Colors.transparent,
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        tab.icon,
-                        size: 26,
-                        color: isActive ? scheme.primary : scheme.onSurfaceVariant.withAlpha(150),
-                      ),
-                      if (isActive) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          tab.label,
-                          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: scheme.primary,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.2,
+          padding: const EdgeInsets.fromLTRB(16, 6, 16, 10),
+          child: Container(
+            height: _height,
+            decoration: _islandDecoration(context),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final slot = constraints.maxWidth / destinations.length;
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    AnimatedPositionedDirectional(
+                      duration: ClientMotion.slow,
+                      curve: Curves.easeOutQuint,
+                      start: activeIndex * slot + _inset,
+                      top: _inset,
+                      bottom: _inset,
+                      width: slot - (_inset * 2),
+                      child: const ClientNavSelectionPill(),
+                    ),
+                    Row(
+                      children: [
+                        for (final destination in destinations)
+                          ClientNavItem(
+                            destination: destination,
+                            isActive: destination.id == activeTab,
+                            onTap: () => _select(destination),
                           ),
-                        ),
                       ],
-                    ],
-                  ),
-                ),
-              );
-            }).toList(),
+                    ),
+                  ],
+                );
+              },
+            ),
           ),
         ),
       ),
+    );
+  }
+
+  BoxDecoration _islandDecoration(BuildContext context) {
+    return BoxDecoration(
+      color: ClientColors.surfaceFor(context),
+      borderRadius: BorderRadius.circular(ClientRadius.pill),
+      border: Border.all(color: ClientColors.borderFor(context)),
+      boxShadow: [
+        BoxShadow(
+          color: ClientColors.shadowFor(context).withAlpha(28),
+          blurRadius: 32,
+          spreadRadius: -8,
+          offset: const Offset(0, 12),
+        ),
+        BoxShadow(
+          color: ClientColors.primaryFor(context).withAlpha(20),
+          blurRadius: 24,
+          spreadRadius: -10,
+          offset: const Offset(0, 8),
+        ),
+      ],
     );
   }
 }

@@ -55,7 +55,7 @@ class _ComposerTab extends StatelessWidget {
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
           child: Directionality(
-            textDirection: TextDirection.ltr,
+            textDirection: TextDirection.rtl,
             child: const NotificationComposer(),
           ),
         ),
