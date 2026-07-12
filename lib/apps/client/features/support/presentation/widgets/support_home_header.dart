@@ -10,7 +10,7 @@ class SupportHomeHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: ClientColors.primaryLight,
+        color: ClientColors.primaryContainerFor(context),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -18,17 +18,19 @@ class SupportHomeHeader extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.support_agent,
-                color: ClientColors.primary,
+                color: ClientColors.primaryFor(context),
                 size: 32,
               ),
               const SizedBox(width: 12),
-              Text(
-                'How can we help?',
-                style: ClientTypography.headingMedium(
-                  context,
-                ).copyWith(color: ClientColors.textPrimaryFor(context)),
+              Expanded(
+                child: Text(
+                  'How can we help?',
+                  style: ClientTypography.headingMedium(
+                    context,
+                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
+                ),
               ),
             ],
           ),

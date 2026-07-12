@@ -50,7 +50,6 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_opt
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/available_trips_screen.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_approval_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_wizard_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/daily_booking_flow_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/map_route_selection_screen.dart';
@@ -284,20 +283,6 @@ class _ClientAppState extends State<ClientApp> {
                   final route = ModalRoute.of(context)?.settings.arguments;
                   if (route is! RouteOptionData) return const SizedBox.shrink();
                   return RouteOverviewScreen(route: route);
-                },
-
-                BookingRoutes.approval: (context) {
-                  final args = ModalRoute.of(context)?.settings.arguments;
-                  final m = args is Map ? args : <String, dynamic>{};
-                  return BookingApprovalScreen(
-                    routeName: m['routeName']?.toString() ?? '',
-                    pickup: m['pickup']?.toString() ?? '',
-                    dropoff: m['dropoff']?.toString() ?? '',
-                    departure: m['departure']?.toString() ?? '',
-                    seat: m['seat']?.toString() ?? '',
-                    package: m['package']?.toString() ?? '',
-                    total: m['total']?.toString() ?? '0',
-                  );
                 },
 
                 '/daily-booking': (_) =>

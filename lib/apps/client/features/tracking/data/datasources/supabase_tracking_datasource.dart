@@ -232,6 +232,15 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
     );
   }
 
+  /// A booking is only trackable once its payment has actually been
+  /// approved (`status` moves to `confirmed`/`boarded`/`completed`) — never
+  /// while it's still `draft`/`reserved` (payment pending/under review) or
+  /// `cancelled` (payment rejected). This is enforced here, not just by
+  /// hiding the "Track Vehicle" button, so no entry point (explicit booking
+  /// id, explicit trip id, or the "current active trip" lookup) can ever
+  /// surface a live vehicle position before the payment is approved.
+  static const _trackableBookingStatuses = ['confirmed', 'boarded', 'completed'];
+
   Future<Map<String, dynamic>?> _findBooking({
     required String userId,
     String? bookingId,
@@ -243,21 +252,21 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
         .eq('client_id', userId);
 
     if (bookingId != null && bookingId.isNotEmpty) {
-      return query.eq('id', bookingId).maybeSingle();
+      final booking = await query.eq('id', bookingId).maybeSingle();
+      return _trackableBookingStatuses.contains(booking?['status']?.toString())
+          ? booking
+          : null;
     }
 
     if (tripId != null && tripId.isNotEmpty) {
-      return query.eq('trip_id', tripId).maybeSingle();
+      final booking = await query.eq('trip_id', tripId).maybeSingle();
+      return _trackableBookingStatuses.contains(booking?['status']?.toString())
+          ? booking
+          : null;
     }
 
     return query
-        .inFilter('status', [
-          'newRequest',
-          'paymentUploaded',
-          'underReview',
-          'approved',
-          'confirmed',
-        ])
+        .inFilter('status', _trackableBookingStatuses)
         .order('created_at', ascending: false)
         .limit(1)
         .maybeSingle();

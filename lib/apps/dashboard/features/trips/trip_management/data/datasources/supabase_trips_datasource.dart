@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
@@ -659,6 +660,80 @@ class SupabaseTripsDatasource implements TripsDatasource {
     } catch (e) {
       throw _handleError(e);
     }
+  }
+
+  // ============================================================
+  // Realtime
+  // ============================================================
+
+  @override
+  Stream<void> watchTripsChanges() {
+    final controller = StreamController<void>.broadcast();
+    void notify(PostgresChangePayload _) {
+      if (!controller.isClosed) controller.add(null);
+    }
+
+    var channel = _client
+        .channel('dashboard_trip_management')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'operation_trips',
+          callback: notify,
+        );
+
+    for (final table in const ['trip_seats', 'trip_passengers', 'trip_events']) {
+      channel = channel.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: table,
+        callback: notify,
+      );
+    }
+
+    final subscribedChannel = channel.subscribe();
+    controller.onCancel = subscribedChannel.unsubscribe;
+    return controller.stream;
+  }
+
+  @override
+  Stream<void> watchTripChanges(String tripId) {
+    final controller = StreamController<void>.broadcast();
+    void notify(PostgresChangePayload _) {
+      if (!controller.isClosed) controller.add(null);
+    }
+
+    var channel = _client
+        .channel('dashboard_trip_details_$tripId')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'operation_trips',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'id',
+            value: tripId,
+          ),
+          callback: notify,
+        );
+
+    for (final table in const ['trip_seats', 'trip_passengers', 'trip_events']) {
+      channel = channel.onPostgresChanges(
+        event: PostgresChangeEvent.all,
+        schema: 'public',
+        table: table,
+        filter: PostgresChangeFilter(
+          type: PostgresChangeFilterType.eq,
+          column: 'trip_id',
+          value: tripId,
+        ),
+        callback: notify,
+      );
+    }
+
+    final subscribedChannel = channel.subscribe();
+    controller.onCancel = subscribedChannel.unsubscribe;
+    return controller.stream;
   }
 
   Exception _handleError(dynamic error) {

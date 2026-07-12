@@ -51,4 +51,6 @@ abstract class TripsDatasource {
   Future<String> getDriverStatus(String driverId);
   Future<String> getVehicleStatus(String vehicleId);
   Future<String> getRouteStatus(String routeId);
+  Stream<void> watchTripsChanges();
+  Stream<void> watchTripChanges(String tripId);
 }

@@ -1,16 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/captain/core/session/captain_session_store.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
-import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_awaiting_trips_view.dart';
 
-/// Landing home for a freshly-approved captain (local session). They have no
-/// assignments yet, so this greets them and sets expectations until operations
-/// assign their first trip.
-class CaptainWelcomeHomeScreen extends StatelessWidget {
+import '../cubit/captain_activation_cubit.dart';
+import '../cubit/captain_activation_state.dart';
+import '../widgets/captain_activation_error.dart';
+import '../widgets/captain_identity_card.dart';
+
+/// Landing home for a freshly-approved captain. While operations finishes
+/// activating the driver record, this waits — polling in the background and on
+/// pull-to-refresh — and hands over to the operational shell the moment the
+/// captain can sign in, without any sign-out/sign-in round trip.
+class CaptainWelcomeHomeScreen extends StatefulWidget {
   final CaptainLocalSession session;
   final Future<void> Function() onSignOut;
 
@@ -21,12 +26,22 @@ class CaptainWelcomeHomeScreen extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final first = session.name.trim().isEmpty
-        ? ''
-        : session.name.trim().split(' ').first;
+  State<CaptainWelcomeHomeScreen> createState() =>
+      _CaptainWelcomeHomeScreenState();
+}
 
+class _CaptainWelcomeHomeScreenState extends State<CaptainWelcomeHomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    context.read<CaptainActivationCubit>().start(widget.session.phone);
+  }
+
+  Future<void> _refresh() =>
+      context.read<CaptainActivationCubit>().check(widget.session.phone);
+
+  @override
+  Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
       child: Scaffold(
@@ -37,75 +52,40 @@ class CaptainWelcomeHomeScreen extends StatelessWidget {
           actions: [
             IconButton(
               tooltip: 'تسجيل الخروج',
-              onPressed: onSignOut,
+              onPressed: widget.onSignOut,
               icon: const Icon(Icons.logout_rounded),
             ),
           ],
         ),
         body: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.all(CaptainSpacing.lg),
-            children: [
-              CaptainCard(
-                child: Row(
+          child: BlocBuilder<CaptainActivationCubit, CaptainActivationState>(
+            builder: (context, state) {
+              return RefreshIndicator(
+                onRefresh: _refresh,
+                child: ListView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(CaptainSpacing.lg),
                   children: [
-                    CircleAvatar(
-                      radius: 28,
-                      backgroundColor: scheme.primary.withAlpha(28),
-                      child: Text(
-                        first.isEmpty ? '؟' : first.characters.first,
-                        style: TextStyle(
-                          color: scheme.primary,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 20,
-                        ),
+                    CaptainIdentityCard(session: widget.session),
+                    if (state is CaptainActivationFailed) ...[
+                      const SizedBox(height: CaptainSpacing.lg),
+                      CaptainActivationError(
+                        message: state.message,
+                        onRetry: _refresh,
                       ),
-                    ),
-                    const SizedBox(width: CaptainSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'أهلاً${first.isEmpty ? '' : '، $first'} 👋',
-                            style: CaptainTypography.titleLarge(
-                              context,
-                            ).copyWith(fontWeight: FontWeight.w900),
-                          ),
-                          const SizedBox(height: 4),
-                          Directionality(
-                            textDirection: TextDirection.ltr,
-                            child: Text(
-                              session.phone,
-                              style: CaptainTypography.bodyMedium(
-                                context,
-                              ).copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                          ),
-                          if (session.employeeCode.isNotEmpty) ...[
-                            const SizedBox(height: 2),
-                            Text(
-                              'كود الكابتن: ${session.employeeCode}',
-                              style: CaptainTypography.labelSmall(
-                                context,
-                              ).copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                          ],
-                        ],
-                      ),
+                    ],
+                    const SizedBox(height: CaptainSpacing.xl),
+                    CaptainAwaitingTripsView(
+                      onRefresh: _refresh,
+                      isRefreshing: state is CaptainActivationChecking,
+                      title: 'حسابك جاهز — بانتظار أول رحلة',
+                      currentStepLabel:
+                          'بانتظار تفعيل العمليات وإسناد أول رحلة لك',
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: CaptainSpacing.xl),
-              const CaptainEmptyState(
-                icon: Icons.route_rounded,
-                title: 'لا توجد رحلات بعد',
-                subtitle:
-                    'تم تفعيل حسابك بنجاح. سيقوم فريق العمليات بإسناد رحلاتك '
-                    'قريباً وستظهر هنا فور توفرها.',
-              ),
-            ],
+              );
+            },
           ),
         ),
       ),

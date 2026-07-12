@@ -38,18 +38,22 @@ class SupportCubit extends Cubit<SupportState> {
         ),
       );
     } catch (e) {
-      emit(SupportError(e.toString()));
+      emit(SupportError(_friendlyMessage(e)));
     }
   }
 
+  /// Refreshes the ticket list without disturbing the currently displayed
+  /// data on failure. A transient network blip during pull-to-refresh should
+  /// surface as a toast, not replace the whole screen with a full error.
+  /// Callers (the [RefreshIndicator]) should catch and present the rethrown
+  /// error themselves.
   Future<void> refreshTickets() async {
-    if (state is SupportLoaded) {
-      try {
-        final tickets = await _getMySupportTickets();
-        emit((state as SupportLoaded).copyWith(tickets: tickets));
-      } catch (e) {
-        emit(SupportError(e.toString()));
-      }
+    if (state is! SupportLoaded) return;
+    try {
+      final tickets = await _getMySupportTickets();
+      emit((state as SupportLoaded).copyWith(tickets: tickets));
+    } catch (e) {
+      throw Exception(_friendlyMessage(e));
     }
   }
 
@@ -85,7 +89,7 @@ class SupportCubit extends Cubit<SupportState> {
       );
       loadWorkspace();
     } catch (e) {
-      emit(SupportError(e.toString()));
+      emit(SupportError(_friendlyMessage(e)));
       loadWorkspace();
     }
   }
@@ -103,7 +107,13 @@ class SupportCubit extends Cubit<SupportState> {
         SupportTicketDetailsLoaded(ticket: ticket, attachments: attachments),
       );
     } catch (e) {
-      emit(SupportError(e.toString()));
+      emit(SupportError(_friendlyMessage(e)));
     }
   }
+
+  /// Strips the `Exception: ` prefix Dart adds to thrown [Exception]s so the
+  /// UI shows a clean, user-facing message. Matches the convention used by
+  /// `auth_cubit.dart` and other client cubits.
+  String _friendlyMessage(Object error) =>
+      error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
 }

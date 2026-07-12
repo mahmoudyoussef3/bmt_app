@@ -5,6 +5,8 @@ import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../../shared/domain/entities/operation_trip.dart';
 import '../../shared/domain/entities/trip_pricing.dart';
+import '../../shared/presentation/widgets/trip_fare_controllers.dart';
+import '../../shared/presentation/widgets/trip_fare_fields.dart';
 import '../../trip_pricing/presentation/cubit/trip_pricing_cubit.dart';
 
 class TripPricingEditorDialog extends StatefulWidget {
@@ -22,11 +24,10 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
   late TripRoutePoint fromPoint = _initialFromPoint;
   late TripRoutePoint toPoint = _initialToPoint;
   late bool isActive = widget.pricing?.isActive ?? true;
-  final oneTime = TextEditingController();
-  final fiveDays = TextEditingController();
-  final tenDays = TextEditingController();
-  final monthly = TextEditingController();
-  final threeMonths = TextEditingController();
+
+  /// The same fare editor the trip planner uses: one ticket price that derives
+  /// the package tiers, each still overridable for this specific stop pair.
+  final _fare = TripFareControllers();
   final currency = TextEditingController(text: 'ج.م');
   String error = '';
   bool saving = false;
@@ -53,21 +54,13 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
   void initState() {
     super.initState();
     final pricing = widget.pricing;
-    oneTime.text = _initialValue(pricing?.oneTimePrice);
-    fiveDays.text = _initialValue(pricing?.fiveDaysPrice);
-    tenDays.text = _initialValue(pricing?.tenDaysPrice);
-    monthly.text = _initialValue(pricing?.monthlyPrice);
-    threeMonths.text = _initialValue(pricing?.threeMonthsPrice);
+    if (pricing != null) _fare.loadFrom(pricing);
     currency.text = pricing?.currency ?? 'ج.م';
   }
 
   @override
   void dispose() {
-    oneTime.dispose();
-    fiveDays.dispose();
-    tenDays.dispose();
-    monthly.dispose();
-    threeMonths.dispose();
+    _fare.dispose();
     currency.dispose();
     super.dispose();
   }
@@ -216,12 +209,9 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
                       },
                     ),
                     const SizedBox(height: AppSpacing.medium),
-                    _PriceFields(
-                      oneTime: oneTime,
-                      fiveDays: fiveDays,
-                      tenDays: tenDays,
-                      monthly: monthly,
-                      threeMonths: threeMonths,
+                    TripFareFields(
+                      controllers: _fare,
+                      onChanged: () => setState(() {}),
                     ),
                     const SizedBox(height: AppSpacing.medium),
                     LayoutBuilder(
@@ -293,15 +283,7 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
   }
 
   Future<void> _save() async {
-    final parsed = [
-      _parsePrice(oneTime.text),
-      _parsePrice(fiveDays.text),
-      _parsePrice(tenDays.text),
-      _parsePrice(monthly.text),
-      _parsePrice(threeMonths.text),
-    ];
-    if (parsed.any((value) => value == null || value <= 0) ||
-        currency.text.trim().isEmpty) {
+    if (!_fare.isValid || currency.text.trim().isEmpty) {
       setState(() => error = 'كل الأسعار والعملة مطلوبة ويجب أن تكون صحيحة');
       return;
     }
@@ -312,25 +294,29 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
     });
     final now = DateTime.now();
     final existing = widget.pricing;
+    // The stop pair + metadata live here; the five fares come from the shared
+    // fare editor, so create and edit always write the same shape.
     final result = await context.read<TripPricingCubit>().savePricing(
-      TripPricing(
-        id: existing?.id ?? '',
-        tripId: widget.trip.id,
-        fromPointId: fromPoint.id,
-        toPointId: toPoint.id,
-        fromPointName: fromPoint.name,
-        toPointName: toPoint.name,
-        fromPointOrder: fromPoint.order,
-        toPointOrder: toPoint.order,
-        oneTimePrice: parsed[0]!,
-        fiveDaysPrice: parsed[1]!,
-        tenDaysPrice: parsed[2]!,
-        monthlyPrice: parsed[3]!,
-        threeMonthsPrice: parsed[4]!,
-        currency: currency.text.trim(),
-        isActive: isActive,
-        createdAt: existing?.createdAt ?? now,
-        updatedAt: now,
+      _fare.applyTo(
+        TripPricing(
+          id: existing?.id ?? '',
+          tripId: widget.trip.id,
+          fromPointId: fromPoint.id,
+          toPointId: toPoint.id,
+          fromPointName: fromPoint.name,
+          toPointName: toPoint.name,
+          fromPointOrder: fromPoint.order,
+          toPointOrder: toPoint.order,
+          oneTimePrice: 0,
+          fiveDaysPrice: 0,
+          tenDaysPrice: 0,
+          monthlyPrice: 0,
+          threeMonthsPrice: 0,
+          currency: currency.text.trim(),
+          isActive: isActive,
+          createdAt: existing?.createdAt ?? now,
+          updatedAt: now,
+        ),
       ),
     );
     if (!mounted) return;
@@ -343,93 +329,4 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
       error = result;
     });
   }
-}
-
-class _PriceFields extends StatelessWidget {
-  final TextEditingController oneTime;
-  final TextEditingController fiveDays;
-  final TextEditingController tenDays;
-  final TextEditingController monthly;
-  final TextEditingController threeMonths;
-
-  const _PriceFields({
-    required this.oneTime,
-    required this.fiveDays,
-    required this.tenDays,
-    required this.monthly,
-    required this.threeMonths,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final width = constraints.maxWidth >= 560
-            ? (constraints.maxWidth - AppSpacing.small) / 2
-            : constraints.maxWidth;
-        return Wrap(
-          spacing: AppSpacing.small,
-          runSpacing: AppSpacing.small,
-          children: [
-            _PriceField(width: width, label: 'رحلة واحدة', controller: oneTime),
-            _PriceField(width: width, label: '٥ أيام', controller: fiveDays),
-            _PriceField(
-              width: width,
-              label: '١٠ أيام شهريًا',
-              controller: tenDays,
-            ),
-            _PriceField(width: width, label: 'شهري', controller: monthly),
-            _PriceField(width: width, label: '٣ شهور', controller: threeMonths),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _PriceField extends StatelessWidget {
-  final double width;
-  final String label;
-  final TextEditingController controller;
-
-  const _PriceField({
-    required this.width,
-    required this.label,
-    required this.controller,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: width,
-      child: TextField(
-        controller: controller,
-        keyboardType: TextInputType.number,
-        decoration: InputDecoration(labelText: label),
-      ),
-    );
-  }
-}
-
-double? _parsePrice(String value) {
-  final normalized = value
-      .replaceAll('٠', '0')
-      .replaceAll('١', '1')
-      .replaceAll('٢', '2')
-      .replaceAll('٣', '3')
-      .replaceAll('٤', '4')
-      .replaceAll('٥', '5')
-      .replaceAll('٦', '6')
-      .replaceAll('٧', '7')
-      .replaceAll('٨', '8')
-      .replaceAll('٩', '9')
-      .replaceAll(',', '.')
-      .trim();
-  return double.tryParse(normalized);
-}
-
-String _initialValue(double? value) {
-  if (value == null) return '';
-  final intValue = value.round();
-  return value == intValue ? '$intValue' : value.toStringAsFixed(2);
 }

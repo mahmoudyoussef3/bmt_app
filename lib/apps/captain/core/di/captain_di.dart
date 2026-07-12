@@ -7,6 +7,7 @@ import '../../features/onboarding/data/datasources/captain_onboarding_datasource
 import '../../features/onboarding/data/repositories/captain_onboarding_repository_impl.dart';
 import '../../features/onboarding/domain/repositories/captain_onboarding_repository.dart';
 import '../../features/onboarding/domain/usecases/onboarding_usecases.dart';
+import '../../features/onboarding/presentation/cubit/captain_activation_cubit.dart';
 import '../../features/onboarding/presentation/cubit/captain_onboarding_cubit.dart';
 
 import '../../features/auth/data/datasources/captain_auth_datasource.dart';
@@ -159,6 +160,11 @@ void _registerOnboardingDependencies() {
         getStatus: captainGetIt<GetCaptainRequestStatusUseCase>(),
         store: captainGetIt<CaptainSessionStore>(),
       ),
+    );
+  }
+  if (!captainGetIt.isRegistered<CaptainActivationCubit>()) {
+    captainGetIt.registerFactory<CaptainActivationCubit>(
+      () => CaptainActivationCubit(signIn: captainGetIt<SignInCaptainUseCase>()),
     );
   }
 }

@@ -50,3 +50,23 @@ class DeleteTripUseCase {
     return _repository.deleteTrip(tripId);
   }
 }
+
+/// Powers the trips list realtime refresh: emits whenever any trip's
+/// status, seats, passengers, or events change in the backend.
+class WatchOperationTripsUseCase {
+  final TripsRepository _repository;
+
+  const WatchOperationTripsUseCase(this._repository);
+
+  Stream<void> call() => _repository.watchTripsChanges();
+}
+
+/// Powers the trip details workspace realtime refresh: emits whenever the
+/// given trip's status, seats, passengers, or events change.
+class WatchTripDetailsUseCase {
+  final TripsRepository _repository;
+
+  const WatchTripDetailsUseCase(this._repository);
+
+  Stream<void> call(String tripId) => _repository.watchTripChanges(tripId);
+}

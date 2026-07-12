@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../domain/usecases/trip_management_usecases.dart';
@@ -173,15 +175,31 @@ class TripsListLoaded extends TripsListState {
 class TripsListCubit extends Cubit<TripsListState> {
   final GetOperationTripsUseCase _getTrips;
   final DeleteTripUseCase _deleteTrip;
+  final WatchOperationTripsUseCase _watchTrips;
 
-  TripsListCubit(this._getTrips, this._deleteTrip)
+  StreamSubscription<void>? _tripsSub;
+  Timer? _refreshTimer;
+  Timer? _realtimeRefreshDebounce;
+  bool _refreshingFromSource = false;
+
+  TripsListCubit(this._getTrips, this._deleteTrip, this._watchTrips)
     : super(const TripsListInitial());
+
+  @override
+  Future<void> close() {
+    _tripsSub?.cancel();
+    _refreshTimer?.cancel();
+    _realtimeRefreshDebounce?.cancel();
+    return super.close();
+  }
 
   Future<void> load() async {
     emit(const TripsListLoading());
     try {
       final trips = await _getTrips();
       emit(TripsListLoaded(trips: trips));
+      _subscribeToChanges();
+      _startPeriodicRefresh();
     } catch (e) {
       emit(TripsListError(e.toString()));
     }
@@ -267,6 +285,43 @@ class TripsListCubit extends Cubit<TripsListState> {
       );
     } catch (e) {
       emit(TripsListError(e.toString().replaceAll('Exception: ', '')));
+    }
+  }
+
+  // ── realtime sync ──────────────────────────────────────────────────────
+
+  void _subscribeToChanges() {
+    _tripsSub?.cancel();
+    _tripsSub = _watchTrips().listen((_) {
+      _realtimeRefreshDebounce?.cancel();
+      _realtimeRefreshDebounce = Timer(
+        const Duration(milliseconds: 250),
+        _refreshFromSource,
+      );
+    }, onError: (_) {});
+  }
+
+  // Refresh the full trips list every 30 s as a fallback in case a realtime
+  // event is missed (matches live_trips_cubit's periodic safety net).
+  void _startPeriodicRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
+      await _refreshFromSource();
+    });
+  }
+
+  Future<void> _refreshFromSource() async {
+    if (_refreshingFromSource || state is! TripsListLoaded) return;
+    _refreshingFromSource = true;
+    try {
+      final trips = await _getTrips();
+      final current = state;
+      if (current is! TripsListLoaded) return;
+      emit(current.copyWith(trips: trips));
+    } catch (_) {
+      // Preserve the last loaded list if a background refresh fails.
+    } finally {
+      _refreshingFromSource = false;
     }
   }
 }

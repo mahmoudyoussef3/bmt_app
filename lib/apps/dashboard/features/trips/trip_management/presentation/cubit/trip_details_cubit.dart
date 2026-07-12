@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../domain/usecases/trip_management_usecases.dart';
@@ -61,21 +63,38 @@ class TripDetailsCubit extends Cubit<TripDetailsState> {
   final GetTripDetailsUseCase _getTripDetails;
   final UpdateTripStatusUseCase _updateTripStatus;
   final UpdateTripInfoUseCase _updateTripInfo;
+  final WatchTripDetailsUseCase _watchTripDetails;
+
+  StreamSubscription<void>? _tripSub;
+  Timer? _refreshTimer;
+  Timer? _realtimeRefreshDebounce;
+  bool _refreshingFromSource = false;
 
   TripDetailsCubit({
     required GetTripDetailsUseCase getTripDetails,
     required UpdateTripStatusUseCase updateTripStatus,
     required UpdateTripInfoUseCase updateTripInfo,
+    required WatchTripDetailsUseCase watchTripDetails,
   }) : _getTripDetails = getTripDetails,
        _updateTripStatus = updateTripStatus,
        _updateTripInfo = updateTripInfo,
+       _watchTripDetails = watchTripDetails,
        super(const TripDetailsInitial());
+
+  @override
+  Future<void> close() {
+    _cancelRealtimeSync();
+    return super.close();
+  }
 
   Future<void> showDetails(OperationTrip trip) async {
     emit(TripDetailsLoaded(trip: trip));
+    _subscribeToChanges(trip.id);
+    _startPeriodicRefresh();
   }
 
   void closeDetails() {
+    _cancelRealtimeSync();
     emit(const TripDetailsInitial());
   }
 
@@ -132,5 +151,55 @@ class TripDetailsCubit extends Cubit<TripDetailsState> {
 
   String _cleanError(Object error) {
     return error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
+  }
+
+  // ── realtime sync ──────────────────────────────────────────────────────
+
+  void _subscribeToChanges(String tripId) {
+    _tripSub?.cancel();
+    _tripSub = _watchTripDetails(tripId).listen((_) {
+      _realtimeRefreshDebounce?.cancel();
+      _realtimeRefreshDebounce = Timer(
+        const Duration(milliseconds: 250),
+        _refreshFromSource,
+      );
+    }, onError: (_) {});
+  }
+
+  // Refresh the open trip every 30 s as a fallback in case a realtime event
+  // is missed (matches live_trips_cubit's periodic safety net).
+  void _startPeriodicRefresh() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
+      await _refreshFromSource();
+    });
+  }
+
+  void _cancelRealtimeSync() {
+    _tripSub?.cancel();
+    _tripSub = null;
+    _refreshTimer?.cancel();
+    _refreshTimer = null;
+    _realtimeRefreshDebounce?.cancel();
+    _realtimeRefreshDebounce = null;
+  }
+
+  // Silent background refresh triggered by realtime/periodic sync. Unlike
+  // refreshDetails(), it preserves the last loaded trip instead of surfacing
+  // an error state if a transient background refetch fails.
+  Future<void> _refreshFromSource() async {
+    if (_refreshingFromSource || state is! TripDetailsLoaded) return;
+    _refreshingFromSource = true;
+    try {
+      final current = state as TripDetailsLoaded;
+      final updated = await _getTripDetails(current.trip.id);
+      final latest = state;
+      if (latest is! TripDetailsLoaded) return;
+      emit(latest.copyWith(trip: updated));
+    } catch (_) {
+      // Preserve the last loaded trip if a background refresh fails.
+    } finally {
+      _refreshingFromSource = false;
+    }
   }
 }

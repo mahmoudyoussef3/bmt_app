@@ -31,4 +31,35 @@ void main() {
     expect(find.text('Booking Confirmed'), findsOneWidget);
     expect(find.text('BK-5AB25E7'), findsOneWidget);
   });
+
+  testWidgets(
+    'BookingConfirmationScreen hides Track Vehicle while payment is awaiting verification',
+    (tester) async {
+      await tester.binding.setSurfaceSize(const Size(360, 780));
+      addTearDown(() => tester.binding.setSurfaceSize(null));
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: BookingConfirmationScreen(
+            seat: '2',
+            vehicleId: '3300 ggg',
+            driver: 'mahmoud youssef',
+            departureTime: '04:00:00',
+            destination: 'New Cairo',
+            bookingReference: 'BK-5AB25E7',
+            requiresVerification: true,
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 950));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('Payment Receipt Submitted'), findsOneWidget);
+      // The vehicle must stay untrackable until payment is approved.
+      expect(find.text('Track Vehicle'), findsNothing);
+      expect(find.text('Back to Home'), findsOneWidget);
+    },
+  );
 }

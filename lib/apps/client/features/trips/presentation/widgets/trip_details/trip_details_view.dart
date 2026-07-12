@@ -22,7 +22,12 @@ class TripDetailsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final canCancel = trip.status == TripStatus.upcoming;
     final canReview = trip.status == TripStatus.completed;
-    final canTrack = trip.status == TripStatus.inProgress;
+    // The vehicle must stay untrackable until this booking's own payment is
+    // approved — a trip can be in progress for other passengers while this
+    // client's payment is still pending review.
+    final canTrack =
+        trip.status == TripStatus.inProgress &&
+        trip.paymentStatus == PaymentStatus.paid;
     final showBoarding = canCancel || canTrack;
 
     return Scaffold(

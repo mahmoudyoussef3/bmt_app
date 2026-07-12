@@ -30,4 +30,12 @@ abstract class TripsRepository {
   Future<List<Map<String, dynamic>>> getActiveDrivers();
   Future<List<Map<String, dynamic>>> getActiveVehicles();
   Future<List<Map<String, dynamic>>> getActiveRoutes();
+
+  /// Emits whenever any trip's status, seats, passengers, or events change
+  /// in the backend, so the trips list can refresh without a manual reload.
+  Stream<void> watchTripsChanges();
+
+  /// Emits whenever the given trip's status, seats, passengers, or events
+  /// change, so an open trip details workspace can stay in sync.
+  Stream<void> watchTripChanges(String tripId);
 }

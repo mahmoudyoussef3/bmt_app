@@ -2,9 +2,14 @@ import 'dart:async';
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/apps/client/features/payments/presentation/widgets/booking_verification_status_card.dart';
+import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
+import 'package:bmt_app/apps/client/features/trips/domain/usecases/get_trip_details_usecase.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
   final String seat;
@@ -39,6 +44,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
   late final String _bookingId;
   late final AnimationController _checkController;
 
+  Timer? _statusPollTimer;
+  PaymentStatus? _livePaymentStatus;
+  String? _rejectionReason;
+  bool _statusFetchInFlight = false;
+
+  bool get _isApproved => _livePaymentStatus == PaymentStatus.paid;
+  bool get _isRejected => _livePaymentStatus == PaymentStatus.failed;
+
   @override
   void initState() {
     super.initState();
@@ -51,6 +64,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
       if (!mounted) return;
       setState(() => _processing = false);
       _checkController.forward();
+      if (widget.requiresVerification) _startStatusPolling();
     });
   }
 
@@ -60,9 +74,45 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
     return List.generate(8, (_) => chars[rng.nextInt(chars.length)]).join();
   }
 
+  /// While the receipt is under manual review, the vehicle must stay
+  /// untrackable, so this keeps re-fetching the real booking/payment status
+  /// from Supabase (the source of truth) until it resolves to approved or
+  /// rejected instead of leaving the client on a stale "pending" screen.
+  void _startStatusPolling() {
+    final bookingId = widget.bookingId;
+    if (bookingId == null || bookingId.isEmpty) return;
+    _fetchStatus(bookingId);
+    _statusPollTimer = Timer.periodic(
+      const Duration(seconds: 8),
+      (_) => _fetchStatus(bookingId),
+    );
+  }
+
+  Future<void> _fetchStatus(String bookingId) async {
+    if (_statusFetchInFlight) return;
+    _statusFetchInFlight = true;
+    try {
+      final trip = await clientGetIt<GetTripDetailsUseCase>()(bookingId);
+      if (!mounted || trip == null) return;
+      setState(() {
+        _livePaymentStatus = trip.paymentStatus;
+        _rejectionReason = trip.cancellationReason;
+      });
+      if (trip.paymentStatus == PaymentStatus.paid ||
+          trip.paymentStatus == PaymentStatus.failed) {
+        _statusPollTimer?.cancel();
+      }
+    } catch (_) {
+      // Best-effort refresh — keep showing the last known status.
+    } finally {
+      _statusFetchInFlight = false;
+    }
+  }
+
   @override
   void dispose() {
     _checkController.dispose();
+    _statusPollTimer?.cancel();
     super.dispose();
   }
 
@@ -105,30 +155,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: ClientButton.secondary(
-                      label: 'Back to Home',
-                      onPressed: () =>
-                          Navigator.of(context).popUntil((r) => r.isFirst),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: ClientButton(
-                      label: 'Track Vehicle',
-                      onPressed: () => Navigator.of(context).pushNamed(
-                        '/tracking',
-                        arguments: {
-                          if (widget.bookingId != null)
-                            'bookingId': widget.bookingId,
-                        },
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              child: _buildFooterActions(context),
             ),
           ],
         ),
@@ -169,115 +196,26 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
 
   Widget _buildVerificationWaiting(BuildContext context) {
     final bookingReference = widget.bookingReference ?? _bookingId;
+    final bookingId = widget.bookingId;
     return SingleChildScrollView(
       key: const ValueKey('verification'),
       padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          ScaleTransition(
-            scale: Tween(begin: 0.0, end: 1.0).animate(
-              CurvedAnimation(
-                parent: _checkController,
-                curve: Curves.elasticOut,
-              ),
-            ),
-            child: Container(
-              width: 120,
-              height: 120,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [Colors.orangeAccent, Colors.deepOrange],
+      child: ScaleTransition(
+        scale: Tween(begin: 0.0, end: 1.0).animate(
+          CurvedAnimation(parent: _checkController, curve: Curves.elasticOut),
+        ),
+        child: BookingVerificationStatusCard(
+          bookingReference: bookingReference,
+          paymentStatus: _livePaymentStatus,
+          rejectionReason: _rejectionReason,
+          onViewBookingStatus: bookingId == null
+              ? null
+              : () => Navigator.of(context).pushNamed(
+                  TripsRoutes.tripDetails,
+                  arguments: {'tripId': bookingId},
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.orange.withAlpha(55),
-                    blurRadius: 24,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: const Center(
-                child: Icon(Icons.hourglass_top_rounded, size: 60, color: Colors.white),
-              ),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Payment Receipt Submitted',
-            textAlign: TextAlign.center,
-            style: ClientTypography.headingLarge(
-              context,
-            ).copyWith(color: ClientColors.textPrimaryFor(context)),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Your booking request has been received. Our finance team is reviewing your payment.',
-            textAlign: TextAlign.center,
-            style: ClientTypography.bodyMedium(
-              context,
-            ).copyWith(color: ClientColors.textSecondaryFor(context), height: 1.5),
-          ),
-          const SizedBox(height: 24),
-          Container(
-            padding: const EdgeInsets.all(18),
-            decoration: BoxDecoration(
-              color: ClientColors.surfaceFor(context),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: ClientColors.borderFor(context)),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInfoRow(context, 'Booking Reference', bookingReference),
-                const SizedBox(height: 14),
-                Divider(height: 1, color: ClientColors.borderFor(context)),
-                const SizedBox(height: 14),
-                _buildInfoRow(context, 'Booking Status', 'Pending Verification', valueColor: Colors.orange),
-                const SizedBox(height: 14),
-                _buildInfoRow(context, 'Estimated Review Time', '5–15 Minutes'),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'You will receive a notification once your payment has been approved.',
-            textAlign: TextAlign.center,
-            style: ClientTypography.bodySmall(
-              context,
-            ).copyWith(color: ClientColors.textSecondaryFor(context)),
-          ),
-        ],
+        ),
       ),
-    );
-  }
-
-  Widget _buildInfoRow(BuildContext context, String label, String value, {Color? valueColor}) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: ClientTypography.bodySmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Flexible(
-          child: Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.end,
-            style: ClientTypography.labelMedium(context).copyWith(
-              color: valueColor ?? ClientColors.primary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -486,6 +424,60 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
           const SizedBox(height: 18),
         ],
       ),
+    );
+  }
+
+  /// The vehicle must stay untrackable until the payment is actually
+  /// approved, so "Track Vehicle" only appears once [_livePaymentStatus] is
+  /// [PaymentStatus.paid] (or verification was never required, e.g. cash/card).
+  /// "Back to Home" is always available so the client is never stuck here.
+  Widget _buildFooterActions(BuildContext context) {
+    if (!widget.requiresVerification || _isApproved) {
+      return Row(
+        children: [
+          Expanded(
+            child: ClientButton.secondary(
+              label: 'Back to Home',
+              onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ClientButton(
+              label: 'Track Vehicle',
+              onPressed: () => Navigator.of(context).pushNamed(
+                '/tracking',
+                arguments: {
+                  if (widget.bookingId != null) 'bookingId': widget.bookingId,
+                },
+              ),
+            ),
+          ),
+        ],
+      );
+    }
+    if (_isRejected) {
+      return Row(
+        children: [
+          Expanded(
+            child: ClientButton.secondary(
+              label: 'Back to Home',
+              onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: ClientButton(
+              label: 'Contact Support',
+              onPressed: () => Navigator.of(context).pushNamed('/support'),
+            ),
+          ),
+        ],
+      );
+    }
+    return ClientButton.secondary(
+      label: 'Back to Home',
+      onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
     );
   }
 }

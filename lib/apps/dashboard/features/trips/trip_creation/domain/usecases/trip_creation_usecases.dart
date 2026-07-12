@@ -1,3 +1,5 @@
+import 'package:bmt_app/core/pricing/package_tier_pricing.dart';
+
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../trip_management/domain/repositories/trips_repository.dart';
@@ -12,21 +14,29 @@ class CreateTripUseCase {
     List<TripPricing> pricing,
   ) async {
     final trip = await _repository.createTrip(input);
+    // `trip_pricing` is keyed by trip_route_point ids, which only exist once
+    // the trip has snapshotted its route stations — so the fare configured in
+    // the planner is expanded across the pairs here, not in the widget.
     final pricingRows = pricing.isNotEmpty
         ? pricing
-        : _standardPricingFromTrip(trip, input.ticketPrice, input.currency);
+        : _standardPricingFromTrip(trip, input);
     for (final p in pricingRows) {
       await _repository.upsertTripPricing(p.copyWith(tripId: trip.id));
     }
     return _repository.getTripById(trip.id);
   }
 
+  /// Every boarding -> dropoff pair gets the operator's ticket price and the
+  /// package tiers they configured next to it. A tier left blank falls back to
+  /// the standard derivation rather than to the ticket price itself — copying
+  /// the flat ticket price into every tier (the old behaviour) made a monthly
+  /// subscription cost the same as a single ride in the Client app.
   List<TripPricing> _standardPricingFromTrip(
     OperationTrip trip,
-    double ticketPrice,
-    String currency,
+    CreateTripInput input,
   ) {
     final points = trip.routePoints;
+    final fare = input.ticketPrice;
     final now = DateTime.now();
     final rows = <TripPricing>[];
     for (var i = 0; i < points.length; i++) {
@@ -41,12 +51,12 @@ class CreateTripUseCase {
             toPointName: points[j].name,
             fromPointOrder: points[i].order,
             toPointOrder: points[j].order,
-            oneTimePrice: ticketPrice,
-            fiveDaysPrice: ticketPrice,
-            tenDaysPrice: ticketPrice,
-            monthlyPrice: ticketPrice,
-            threeMonthsPrice: ticketPrice,
-            currency: currency,
+            oneTimePrice: fare,
+            fiveDaysPrice: _tierPrice(input, PackageTierPricing.fiveDays),
+            tenDaysPrice: _tierPrice(input, PackageTierPricing.tenDays),
+            monthlyPrice: _tierPrice(input, PackageTierPricing.monthly),
+            threeMonthsPrice: _tierPrice(input, PackageTierPricing.threeMonths),
+            currency: input.currency,
             isActive: true,
             createdAt: now,
             updatedAt: now,
@@ -55,6 +65,12 @@ class CreateTripUseCase {
       }
     }
     return rows;
+  }
+
+  double _tierPrice(CreateTripInput input, PackageTier tier) {
+    final configured = input.packageTierPrices[tier.key] ?? 0;
+    if (configured > 0) return configured;
+    return PackageTierPricing.priceFor(tier, input.ticketPrice);
   }
 }
 

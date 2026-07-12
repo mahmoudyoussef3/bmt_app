@@ -6,7 +6,7 @@ import 'package:bmt_app/apps/captain/core/session/captain_session_store.dart';
 
 import '../../../onboarding/presentation/cubit/captain_onboarding_cubit.dart';
 import '../../../onboarding/presentation/screens/captain_onboarding_flow.dart';
-import '../../../onboarding/presentation/screens/captain_welcome_home_screen.dart';
+import '../../../onboarding/presentation/screens/captain_welcome_home.dart';
 
 /// Captain "sign up" — a self-service access request reviewed by operations.
 ///
@@ -26,7 +26,7 @@ class CaptainRequestAccessScreen extends StatelessWidget {
         onEnterHome: (CaptainLocalSession session) {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
-              builder: (_) => CaptainWelcomeHomeScreen(
+              builder: (_) => CaptainWelcomeHome(
                 session: session,
                 onSignOut: () async {
                   await captainGetIt<CaptainSessionStore>().clearSession();

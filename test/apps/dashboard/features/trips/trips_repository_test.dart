@@ -653,6 +653,12 @@ class _MockTripsDatasource implements TripsDatasource {
     if (routeId == 'route-archived') return 'archived';
     return 'active';
   }
+
+  @override
+  Stream<void> watchTripsChanges() => const Stream.empty();
+
+  @override
+  Stream<void> watchTripChanges(String tripId) => const Stream.empty();
 }
 
 class _FailingTripsDatasource implements TripsDatasource {
@@ -791,6 +797,16 @@ class _FailingTripsDatasource implements TripsDatasource {
 
   @override
   Future<OperationTripModel> fetchTripById(String tripId) {
+    throw StateError('failure');
+  }
+
+  @override
+  Stream<void> watchTripsChanges() {
+    throw StateError('failure');
+  }
+
+  @override
+  Stream<void> watchTripChanges(String tripId) {
     throw StateError('failure');
   }
 }

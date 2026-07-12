@@ -15,10 +15,10 @@ class SupportTicketCard extends StatelessWidget {
   final SupportTicket ticket;
   final VoidCallback onTap;
 
-  Color _getStatusColor(TicketStatus status) {
+  Color _getStatusColor(BuildContext context, TicketStatus status) {
     switch (status) {
       case TicketStatus.submitted:
-        return ClientColors.primary;
+        return ClientColors.primaryFor(context);
       case TicketStatus.underReview:
         return ClientColors.journeyAmber;
       case TicketStatus.contacted:
@@ -26,9 +26,9 @@ class SupportTicketCard extends StatelessWidget {
       case TicketStatus.resolved:
         return ClientColors.journeyGreen;
       case TicketStatus.closed:
-        return Colors.grey.shade600;
+        return ClientColors.textTertiaryFor(context);
       case TicketStatus.rejected:
-        return Colors.red.shade600;
+        return ClientColors.journeyRed;
     }
   }
 
@@ -52,7 +52,9 @@ class SupportTicketCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final statusColor = _getStatusColor(ticket.status);
+    final statusColor = _getStatusColor(context, ticket.status);
+    final isUrgent = ticket.priority == TicketPriority.urgent ||
+        ticket.priority == TicketPriority.high;
 
     return PressableScale(
       onTap: onTap,
@@ -94,13 +96,26 @@ class SupportTicketCard extends StatelessWidget {
                     ),
                   ),
                 ),
-                Text(
-                  ticket.ticketNumber,
-                  style: ClientTypography.labelMedium(context).copyWith(
-                    color: scheme.onSurfaceVariant.withAlpha(200),
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 1,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    if (isUrgent) ...[
+                      Icon(
+                        Icons.priority_high_rounded,
+                        size: 16,
+                        color: ClientColors.journeyRed,
+                      ),
+                      const SizedBox(width: 4),
+                    ],
+                    Text(
+                      ticket.ticketNumber,
+                      style: ClientTypography.labelMedium(context).copyWith(
+                        color: scheme.onSurfaceVariant.withAlpha(200),
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

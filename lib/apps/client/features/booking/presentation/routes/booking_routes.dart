@@ -12,6 +12,5 @@ class BookingRoutes {
 
   // New flow
   static const wizard = '/booking/wizard';
-  static const approval = '/booking/approval';
   static const routeOverview = '/booking/route-overview';
 }

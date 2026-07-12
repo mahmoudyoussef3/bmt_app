@@ -1,0 +1,152 @@
+import 'package:flutter/material.dart';
+
+import '../theme/captain_colors.dart';
+import '../theme/captain_spacing.dart';
+import '../theme/captain_typography.dart';
+import 'captain_awaiting_step.dart';
+import 'captain_button.dart';
+import 'captain_pulse_badge.dart';
+
+/// Shown whenever operations has not assigned the captain a trip yet — on the
+/// day view and on the post-approval home. It places the captain inside the
+/// assignment workflow, promises automatic arrival (no re-login), and still
+/// offers an explicit refresh.
+class CaptainAwaitingTripsView extends StatelessWidget {
+  const CaptainAwaitingTripsView({
+    super.key,
+    required this.onRefresh,
+    this.isRefreshing = false,
+    this.title = 'لا توجد رحلات مسندة بعد',
+    this.message =
+        'فريق العمليات يجهّز جدولك. فور إسناد رحلة لك ستظهر هنا تلقائياً — '
+        'لا حاجة لتسجيل الخروج والدخول مرة أخرى.',
+    this.currentStepLabel = 'بانتظار إسناد رحلة من العمليات',
+  });
+
+  final Future<void> Function() onRefresh;
+  final bool isRefreshing;
+  final String title;
+  final String message;
+  final String currentStepLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(CaptainSpacing.xl),
+      decoration: BoxDecoration(
+        color: CaptainColors.surfaceFor(context),
+        borderRadius: CaptainRadius.rXl,
+        border: Border.all(color: CaptainColors.primary.withValues(alpha: 0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.03),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const CaptainPulseBadge(icon: Icons.route_rounded),
+          const SizedBox(height: CaptainSpacing.lg),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: CaptainTypography.titleLarge(
+              context,
+            ).copyWith(fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: CaptainSpacing.md),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: CaptainTypography.bodyMedium(context).copyWith(
+              color: CaptainColors.textSecondaryFor(context),
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: CaptainSpacing.xl),
+          Container(
+            padding: const EdgeInsets.all(CaptainSpacing.lg),
+            decoration: BoxDecoration(
+              color: CaptainColors.primary.withValues(alpha: 0.04),
+              borderRadius: CaptainRadius.rLg,
+              border: Border.all(
+                color: CaptainColors.primary.withValues(alpha: 0.08),
+              ),
+            ),
+            child: Column(
+              children: [
+                const CaptainAwaitingStep(
+                  label: 'تم تفعيل حسابك كسائق',
+                  state: CaptainStepState.done,
+                ),
+                CaptainAwaitingStep(
+                  label: currentStepLabel,
+                  state: CaptainStepState.current,
+                ),
+                const CaptainAwaitingStep(
+                  label: 'تبدأ رحلتك من هذه الشاشة',
+                  state: CaptainStepState.upcoming,
+                  isLast: true,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: CaptainSpacing.lg),
+          _LiveSyncChip(isRefreshing: isRefreshing),
+          const SizedBox(height: CaptainSpacing.lg),
+          CaptainButton(
+            label: 'تحديث الآن',
+            icon: Icons.refresh_rounded,
+            isLoading: isRefreshing,
+            variant: CaptainButtonVariant.secondary,
+            onPressed: onRefresh,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _LiveSyncChip extends StatelessWidget {
+  const _LiveSyncChip({required this.isRefreshing});
+
+  final bool isRefreshing;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = isRefreshing ? CaptainColors.primary : CaptainColors.success;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: CaptainSpacing.lg,
+        vertical: CaptainSpacing.md,
+      ),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.10),
+        borderRadius: CaptainRadius.rPill,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isRefreshing
+                ? Icons.sync_rounded
+                : Icons.wifi_tethering_rounded,
+            size: 16,
+            color: color,
+          ),
+          const SizedBox(width: CaptainSpacing.md),
+          Text(
+            isRefreshing ? 'جاري التحديث…' : 'متصل بالعمليات — التحديث تلقائي',
+            style: CaptainTypography.labelMedium(
+              context,
+            ).copyWith(color: color, fontWeight: FontWeight.w800),
+          ),
+        ],
+      ),
+    );
+  }
+}

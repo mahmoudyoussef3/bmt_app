@@ -302,6 +302,13 @@ class TripsRepositoryImpl implements TripsRepository {
   Future<List<Map<String, dynamic>>> getActiveRoutes() {
     return _datasource.fetchActiveRoutes();
   }
+
+  @override
+  Stream<void> watchTripsChanges() => _datasource.watchTripsChanges();
+
+  @override
+  Stream<void> watchTripChanges(String tripId) =>
+      _datasource.watchTripChanges(tripId);
 }
 
 bool _canTransitionTripStatus(

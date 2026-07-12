@@ -6,7 +6,7 @@ import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_au
 import 'package:bmt_app/apps/captain/features/auth/presentation/screens/captain_login_screen.dart';
 import 'package:bmt_app/apps/captain/features/onboarding/presentation/cubit/captain_onboarding_cubit.dart';
 import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_onboarding_flow.dart';
-import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_welcome_home_screen.dart';
+import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_welcome_home.dart';
 import 'package:bmt_app/core/flavors/app_bootstrap.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
 
@@ -92,7 +92,8 @@ class _CaptainAppState extends State<CaptainApp> {
 
 /// Routes the captain to the right root:
 /// 1. Supabase auth session  → operational shell (existing captains)
-/// 2. Local approved session → welcome home (self-service onboarding)
+/// 2. Local approved session → welcome home, which keeps trying to establish an
+///    operational session and lands on the shell as soon as it can (1)
 /// 3. A submitted request     → onboarding flow resumed at pending
 /// 4. Otherwise               → sign in (with a request-access entry)
 class _CaptainAuthGate extends StatefulWidget {
@@ -109,11 +110,26 @@ class _CaptainAuthGateState extends State<_CaptainAuthGate> {
   CaptainLocalSession? _session;
   String? _pendingPhone;
   bool _requesting = false;
+  StreamSubscription<AuthState>? _signOutSub;
 
   @override
   void initState() {
     super.initState();
     _reloadLocal();
+    // The welcome home upgrades a local session into an operational one on
+    // sight, so a local session that outlives a sign-out would immediately
+    // sign the captain back in. Drop it with the operational session.
+    _signOutSub = Supabase.instance.client.auth.onAuthStateChange.listen((
+      event,
+    ) {
+      if (event.event == AuthChangeEvent.signedOut) _forgetLocalSession();
+    });
+  }
+
+  @override
+  void dispose() {
+    _signOutSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _reloadLocal() async {
@@ -156,18 +172,17 @@ class _CaptainAuthGateState extends State<_CaptainAuthGate> {
   }
 
   Widget _welcomeHome(CaptainLocalSession session) {
-    return CaptainWelcomeHomeScreen(
-      session: session,
-      onSignOut: () async {
-        await _store.clearSession();
-        if (!mounted) return;
-        setState(() {
-          _session = null;
-          _pendingPhone = null;
-          _requesting = false;
-        });
-      },
-    );
+    return CaptainWelcomeHome(session: session, onSignOut: _forgetLocalSession);
+  }
+
+  Future<void> _forgetLocalSession() async {
+    await _store.clearSession();
+    if (!mounted) return;
+    setState(() {
+      _session = null;
+      _pendingPhone = null;
+      _requesting = false;
+    });
   }
 
   Widget _onboarding() {
