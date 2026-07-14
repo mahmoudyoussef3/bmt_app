@@ -22,13 +22,15 @@ Marker buildStationMarker(
   final prominent = index == 0 || index == count - 1;
   final color = MapStyle.colorFor(context, index, count);
   final label = MapStyle.labelFor(index, count);
+  final box = MapStyle.pinBox(prominent);
 
   return Marker(
     point: stop.coordinate,
-    width: prominent ? 74 : 60,
-    height: prominent ? 66 : 54,
-    // Anchor the pointer tip exactly on the coordinate.
-    alignment: Alignment.bottomCenter,
+    width: box.width,
+    height: box.height,
+    // Puts the box above the coordinate, so the tail tip lands on the stop.
+    // See MapStyle.pinAnchor — flutter_map inverts this alignment.
+    alignment: MapStyle.pinAnchor,
     child: GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,

@@ -218,9 +218,7 @@ class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
           children: [
             const EasyWayTileLayer(),
             if (_stopCoordinates.length > 1)
-              AnimatedRouteLine(
-                coordinates: _road?.points ?? _stopCoordinates,
-              ),
+              AnimatedRouteLine(coordinates: _road?.points ?? _stopCoordinates),
             SimpleVehicleLayer(vehicle: widget.liveVehicle),
             MarkerLayer(
               markers: [
@@ -237,7 +235,14 @@ class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
             ),
             if (active != null)
               MarkerLayer(
-                markers: [buildCalloutMarker(context, stop: active)],
+                markers: [
+                  buildCalloutMarker(
+                    context,
+                    stop: active,
+                    index: _activeIndex!,
+                    count: stops.length,
+                  ),
+                ],
               ),
           ],
         ),

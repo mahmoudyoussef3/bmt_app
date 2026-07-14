@@ -4,6 +4,18 @@ import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AppInterceptors extends Interceptor {
+  /// Every Supabase call flows through this interceptor (see
+  /// `DioHttpClientAdapter`), so a response body is dumped for each query a
+  /// screen runs. `debugPrint` throttles output to ~12KB/s and the pretty
+  /// encode runs on the UI isolate, so dumping a large payload keeps the app
+  /// busy long after the data has arrived — the screen sits on its loading
+  /// skeleton while the body scrolls past in the console. Bodies above this
+  /// size are summarised instead.
+  static const int _maxLoggedBodyBytes = 4 * 1024;
+
+  /// Set to true locally when a large body really has to be inspected.
+  static bool logFullBodies = false;
+
   static const Set<String> _sensitiveKeys = {
     'access_token',
     'refresh_token',
@@ -37,14 +49,34 @@ class AppInterceptors extends Interceptor {
   @override
   void onResponse(Response response, ResponseInterceptorHandler handler) {
     if (kDebugMode) {
+      final size = _byteLength(response.data);
       debugPrint(
-        '✅ [API Response] [${response.statusCode}] ${response.requestOptions.uri}',
+        '✅ [API Response] [${response.statusCode}] ${response.requestOptions.uri} (${_readableSize(size)})',
       );
-      debugPrint('📦 [Response Data]\n${_formatData(response.data)}');
+      if (logFullBodies || size < 0 || size <= _maxLoggedBodyBytes) {
+        debugPrint('📦 [Response Data]\n${_formatData(response.data)}');
+      } else {
+        debugPrint(
+          '📦 [Response Data] omitted — ${_readableSize(size)} body. '
+          'Set AppInterceptors.logFullBodies = true to dump it.',
+        );
+      }
     }
 
     // Continue processing the response
     super.onResponse(response, handler);
+  }
+
+  int _byteLength(dynamic data) {
+    if (data is List<int>) return data.length;
+    if (data is String) return data.length;
+    return -1;
+  }
+
+  String _readableSize(int bytes) {
+    if (bytes < 0) return 'unknown size';
+    if (bytes < 1024) return '$bytes B';
+    return '${(bytes / 1024).toStringAsFixed(1)} KB';
   }
 
   @override

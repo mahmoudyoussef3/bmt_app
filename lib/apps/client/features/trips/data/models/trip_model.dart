@@ -14,6 +14,7 @@ class TripModel {
     required this.driverPhone,
     required this.driverInitials,
     required this.driverRating,
+    this.driverRatingCount = 0,
     required this.vehicleName,
     required this.vehicleType,
     required this.vehicleId,
@@ -39,6 +40,7 @@ class TripModel {
   final String driverPhone;
   final String driverInitials;
   final double driverRating;
+  final int driverRatingCount;
   final String vehicleName;
   final String vehicleType;
   final String vehicleId;
@@ -63,6 +65,7 @@ class TripModel {
       driverPhone: driverPhone,
       driverInitials: driverInitials,
       driverRating: driverRating,
+      driverRatingCount: driverRatingCount,
       vehicleName: vehicleName,
       vehicleType: vehicleType,
       vehicleId: vehicleId,

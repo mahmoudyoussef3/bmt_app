@@ -203,6 +203,12 @@ import '../../features/reports/domain/usecases/get_available_routes_usecase.dart
 import '../../features/reports/domain/usecases/get_available_vehicles_usecase.dart';
 import '../../features/reports/domain/usecases/get_report_data_usecase.dart';
 import '../../features/reports/presentation/cubit/reports_cubit.dart';
+import '../../features/reviews/data/datasources/reviews_datasource.dart';
+import '../../features/reviews/data/datasources/supabase_reviews_datasource.dart';
+import '../../features/reviews/data/repositories/reviews_repository_impl.dart';
+import '../../features/reviews/domain/repositories/reviews_repository.dart';
+import '../../features/reviews/domain/usecases/reviews_usecases.dart';
+import '../../features/reviews/presentation/cubit/reviews_cubit.dart';
 import '../theme/dashboard_theme_cubit.dart';
 import '../theme/dashboard_theme_repository.dart';
 
@@ -1411,6 +1417,38 @@ void registerDashboardDependencies() {
 
   _registerNotificationsDispatchDependencies();
   _registerCaptainRequestsDependencies();
+  _registerReviewsDependencies();
+}
+
+void _registerReviewsDependencies() {
+  if (!dashboardDi.isRegistered<ReviewsDatasource>()) {
+    dashboardDi.registerLazySingleton<ReviewsDatasource>(
+      () => SupabaseReviewsDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<ReviewsRepository>()) {
+    dashboardDi.registerLazySingleton<ReviewsRepository>(
+      () => ReviewsRepositoryImpl(dashboardDi<ReviewsDatasource>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetReviewsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetReviewsUseCase(dashboardDi<ReviewsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<WatchReviewsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => WatchReviewsUseCase(dashboardDi<ReviewsRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<ReviewsCubit>()) {
+    dashboardDi.registerFactory<ReviewsCubit>(
+      () => ReviewsCubit(
+        getReviews: dashboardDi<GetReviewsUseCase>(),
+        watchReviews: dashboardDi<WatchReviewsUseCase>(),
+      ),
+    );
+  }
 }
 
 void _registerCaptainRequestsDependencies() {

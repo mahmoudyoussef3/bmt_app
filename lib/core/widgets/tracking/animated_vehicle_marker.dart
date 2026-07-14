@@ -5,19 +5,24 @@ import 'package:flutter/material.dart';
 
 import '../../tracking/vehicle_sample.dart';
 import 'bus_silhouette.dart';
-import 'heading_wedge.dart';
+import 'heading_cone.dart';
 
-/// The vehicle map marker: a circular bus badge with a heading wedge that
-/// orbits the badge pointing in the direction of travel, an optional soft
-/// pulse halo while live, and greyed-out styling once the fix goes stale.
+/// The live vehicle puck: a white-ringed circular bus badge, a direction cone
+/// fanning out ahead of it while it moves, and a soft breathing halo while the
+/// fix is fresh.
+///
+/// Round on purpose — stations are squircle pins, so shape alone tells the
+/// rider which mark is the bus. The bus glyph stays put in every state (a
+/// pause icon in its place made the vehicle stop looking like a vehicle);
+/// motion is carried by the cone, and a lost signal by the grey tone.
 class AnimatedVehicleMarker extends StatelessWidget {
   const AnimatedVehicleMarker({
     super.key,
     required this.sample,
     required this.color,
-    this.staleColor = const Color(0xFF9E9E9E),
+    this.staleColor = const Color(0xFF94A3B8),
     this.pulseValue,
-    this.size = 58,
+    this.size = 48,
   });
 
   final VehicleSample sample;
@@ -30,68 +35,69 @@ class AnimatedVehicleMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final tone = sample.isStale ? staleColor : color;
-    final reducedMotion = AppMotion.reduceMotion;
-    final haloAlpha = sample.isStale
-        ? 30
-        : reducedMotion || pulseValue == null
-        ? 55
-        : (55 + 90 * math.sin(pulseValue! * math.pi)).round().clamp(0, 255);
-    final showHeading = !sample.isStale && sample.isMoving;
+    final live = !sample.isStale;
+    final tone = live ? color : staleColor;
+    final haloAlpha = _haloAlpha(live, tone);
 
     return Stack(
       alignment: Alignment.center,
       children: [
-        Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: tone.withAlpha(haloAlpha),
-          ),
-        ),
-        if (showHeading)
-          Transform.rotate(
-            angle: sample.headingDegrees * math.pi / 180,
-            child: SizedBox(
-              width: size,
-              height: size,
-              child: Align(
-                alignment: Alignment.topCenter,
-                child: HeadingWedge(color: tone),
-              ),
+        if (haloAlpha > 0)
+          Container(
+            width: size,
+            height: size,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: tone.withAlpha(haloAlpha),
             ),
+
+
+
+            
           ),
-        Container(
-          width: size * 0.6,
-          height: size * 0.6,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [tone, Color.lerp(tone, Colors.black, 0.2)!],
-            ),
-            borderRadius: BorderRadius.circular(size * 0.6 * 0.34),
-            border: Border.all(color: Colors.white, width: 3),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withAlpha(60),
-                blurRadius: 8,
-                offset: const Offset(0, 3),
-              ),
-            ],
+        if (live && sample.isMoving)
+          HeadingCone(
+            color: tone,
+            size: size,
+            headingDegrees: sample.headingDegrees,
           ),
-          padding: EdgeInsets.all(size * 0.6 * 0.24),
-          child: sample.isMoving || sample.isStale
-              ? const BusSilhouette()
-              : Icon(
-                  Icons.pause_rounded,
-                  color: Colors.white,
-                  size: size * 0.26,
-                ),
-        ),
+        _VehicleBadge(tone: tone, diameter: size * 0.58),
       ],
     );
   }
+
+  int _haloAlpha(bool live, Color tone) {
+    if (!live) return 0;
+    if (AppMotion.reduceMotion || pulseValue == null) return 40;
+    return (26 + 34 * math.sin(pulseValue! * math.pi)).round().clamp(0, 255);
+  }
 }
 
+class _VehicleBadge extends StatelessWidget {
+  const _VehicleBadge({required this.tone, required this.diameter});
+
+  final Color tone;
+  final double diameter;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: diameter,
+      height: diameter,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: tone,
+        border: Border.all(color: Colors.white, width: 2.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(46),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: EdgeInsets.all(diameter * 0.26),
+      child: const BusSilhouette(),
+    );
+  }
+}

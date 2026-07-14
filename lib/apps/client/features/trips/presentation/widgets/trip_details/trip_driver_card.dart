@@ -26,6 +26,7 @@ class TripDriverCard extends StatelessWidget {
                 child: DriverIdentity(
                   name: trip.driverName,
                   rating: trip.driverRating,
+                  ratingCount: trip.driverRatingCount,
                 ),
               ),
               TripInlineBadge(

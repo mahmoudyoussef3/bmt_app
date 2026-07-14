@@ -82,7 +82,7 @@ void main() {
       expect(markers.markers, hasLength(2));
     });
 
-    testWidgets('shows the captain card with driver identity when trip data is present', (
+    testWidgets('leads the status card with the trip, not the GPS pipeline', (
       tester,
     ) async {
       const routePoints = [
@@ -117,8 +117,12 @@ void main() {
       );
       await tester.pump();
 
-      expect(find.text('Ahmed Samir'), findsOneWidget);
-      expect(find.text('ABC 123'), findsOneWidget);
+      // The headline answers the rider's question. With no progress snapshot
+      // yet, that is an honest "we don't know where it is" — never a blank.
+      expect(find.text('Next stop'), findsOneWidget);
+      expect(find.text('Waiting for the bus'), findsOneWidget);
+      // Driver identity stays on the card, as the quiet second line.
+      expect(find.text('Ahmed Samir · ABC 123'), findsOneWidget);
     });
   });
 }

@@ -41,13 +41,7 @@ class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
             'id, trip_date, trip_time, route, seat, status, assigned_trip',
           )
           .eq('client_id', userId)
-          .inFilter('status', [
-            'confirmed',
-            'approved',
-            'newRequest',
-            'paymentUploaded',
-            'underReview',
-          ])
+          .inFilter('status', const ['reserved', 'confirmed', 'boarded'])
           .gte('trip_date', todayStr)
           .order('trip_date')
           .limit(10),

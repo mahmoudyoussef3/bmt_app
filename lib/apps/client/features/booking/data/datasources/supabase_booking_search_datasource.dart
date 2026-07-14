@@ -9,6 +9,8 @@ import 'booking_search_datasource.dart';
 class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
   final SupabaseClient _supabase;
 
+  static const int _maxTripsPerRoute = 100;
+
   const SupabaseBookingSearchDatasource(this._supabase);
 
   @override
@@ -42,6 +44,8 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       stationsByRouteId.putIfAbsent(routeId, () => []).add(station);
     }
 
+    final tripsByRouteId = await _tripsByRouteId(routeIds);
+
     final matchesRequestedRoute =
         query.routeId != null && query.routeId!.isNotEmpty;
     final List<_ScoredRoute> scored = [];
@@ -51,17 +55,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       final stations = stationsByRouteId[routeId] ?? const <dynamic>[];
       final startCity = data['start_city']?.toString() ?? '';
       final endCity = data['end_city']?.toString() ?? '';
-      final pricingTrips = await _supabase
-          .from('operation_trips')
-          .select('''
-            id, trip_date, departure_time, arrival_time, capacity, passenger_count, booked_seats,
-            ticket_price, currency, status, route_id,
-            vehicles(vehicle_type),
-            trip_pricing(from_point_id, to_point_id, one_time_price, five_days_price, ten_days_price, monthly_price, three_months_price, currency, is_active),
-            trip_seats(state)
-          ''')
-          .eq('route_id', data['id'])
-          .limit(100);
+      final pricingTrips = tripsByRouteId[routeId] ?? const <dynamic>[];
       final trips = pricingTrips.where(_isBookableTrip).toList();
       if (trips.isEmpty) continue;
       final availableSeats = trips.fold<int>(0, (sum, trip) {
@@ -80,7 +74,10 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           availableSeats: _remainingSeats(trip),
           vehicleType: vehicle['vehicle_type']?.toString() ?? 'Standard',
           price: _startingPriceLabel([trip]),
-          stopPricing: tripStopPairPricesFromJson(trip['trip_pricing']),
+          stopPricing: tripStopPairPricesFromJson(
+            trip['trip_pricing'],
+            stationIds: routeStationIdsFromJson(trip['trip_route_points']),
+          ),
         );
       }).toList();
       final routePoints = _mapRoutePoints(
@@ -163,6 +160,35 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     });
 
     return scored.take(8).map((entry) => entry.model).toList();
+  }
+
+  /// Loads the bookable trips for every route in one round-trip, keyed by route.
+  /// Querying per route made Route Details wait on one sequential request per
+  /// active route before it could leave its loading state.
+  Future<Map<String, List<dynamic>>> _tripsByRouteId(
+    List<String> routeIds,
+  ) async {
+    if (routeIds.isEmpty) return const {};
+    final response = await _supabase
+        .from('operation_trips')
+        .select('''
+          id, trip_date, departure_time, arrival_time, capacity, passenger_count, booked_seats,
+          ticket_price, currency, status, route_id,
+          vehicles(vehicle_type),
+          trip_pricing(from_point_id, to_point_id, one_time_price, five_days_price, ten_days_price, monthly_price, three_months_price, currency, is_active),
+          trip_route_points(id, route_point_id),
+          trip_seats(state)
+        ''')
+        .inFilter('route_id', routeIds);
+
+    final grouped = <String, List<dynamic>>{};
+    for (final trip in response) {
+      final routeId = trip['route_id']?.toString();
+      if (routeId == null || routeId.isEmpty) continue;
+      final trips = grouped.putIfAbsent(routeId, () => []);
+      if (trips.length < _maxTripsPerRoute) trips.add(trip);
+    }
+    return grouped;
   }
 
   /// Scores how well a route serves [query] and returns the closest stop.

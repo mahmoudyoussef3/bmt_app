@@ -65,7 +65,11 @@ class TimelineStopTile extends StatelessWidget {
 }
 
 class _Dot extends StatelessWidget {
-  const _Dot({required this.color, required this.isFirst, required this.isLast});
+  const _Dot({
+    required this.color,
+    required this.isFirst,
+    required this.isLast,
+  });
 
   final Color color;
   final bool isFirst;

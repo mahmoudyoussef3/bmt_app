@@ -21,18 +21,15 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
 
     final user = _supabase.auth.currentUser;
     List<dynamic> upcomingBookings = [];
-    int reservedSeats = 0;
     if (user != null) {
       upcomingBookings = await _supabase
           .from('operation_bookings')
-          .select('id, seats_count')
+          .select('id')
           .eq('client_id', user.id)
-          .inFilter('status', ['newRequest', 'approved', 'active']);
-      reservedSeats = upcomingBookings.fold<int>(
-        0,
-        (sum, b) => sum + ((b['seats_count'] as int?) ?? 1),
-      );
+          .inFilter('status', const ['reserved', 'confirmed', 'boarded']);
     }
+    // A booking holds exactly one seat, so the seats held is the booking count.
+    final reservedSeats = upcomingBookings.length;
 
     return BookingHubData(
       todayRoutes: '${routesResponse.length} routes',

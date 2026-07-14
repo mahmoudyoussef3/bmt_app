@@ -39,6 +39,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
         return PaymentStatus.paid;
       case 'refunded':
         return PaymentStatus.refunded;
+      case 'cancelled':
+        return PaymentStatus.cancelled;
       case 'rejected':
       case 'failed':
         return PaymentStatus.failed;
@@ -103,9 +105,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
       driverName: driverObj?['full_name']?.toString() ?? 'Driver Pending',
       driverPhone: driverObj?['phone']?.toString() ?? 'Not available',
       driverInitials: _initials(driverObj?['full_name']?.toString()),
-      driverRating: driverObj?['rating'] != null
-          ? (driverObj!['rating'] as num).toDouble()
-          : 0.0,
+      driverRating: (driverObj?['rating'] as num?)?.toDouble() ?? 0.0,
+      driverRatingCount: (driverObj?['rating_count'] as num?)?.toInt() ?? 0,
       vehicleName: vehicleObj?['brand']?.toString() ?? 'Vehicle Pending',
       vehicleType: vehicleObj?['vehicle_type']?.toString() ?? 'Vehicle',
       vehicleId: vehicleObj?['id']?.toString() ?? '',
@@ -113,6 +114,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       paymentStatus: _mapPayment(dbPaymentStatus),
       fare: 'EGP $fare',
       cancellationReason:
+          data['cancellation_reason']?.toString() ??
           data['payment_rejection_reason']?.toString() ??
           data['rejection_reason']?.toString(),
     );
@@ -171,6 +173,35 @@ class SupabaseTripsDatasource implements TripsDatasource {
     );
 
     return _mapBookingToTripModel(response, seatMap: seatMap);
+  }
+
+  /// Cancels the booking and hands its seat back to the trip. The RPC — not
+  /// this call — decides whether cancelling is still allowed: it refuses once
+  /// the dashboard has approved the payment.
+  @override
+  Future<void> cancelBooking(String bookingId, String reason) async {
+    try {
+      await _supabase.rpc(
+        'cancel_booking_by_client',
+        params: {'p_booking_id': bookingId, 'p_reason': reason},
+      );
+    } on PostgrestException catch (error) {
+      throw Exception(_cancelErrorMessage(error.message));
+    }
+  }
+
+  String _cancelErrorMessage(String raw) {
+    if (raw.contains('booking_already_confirmed')) {
+      return 'This booking is already paid and confirmed, so it can no longer '
+          'be cancelled from the app. Please contact support.';
+    }
+    if (raw.contains('not_authorized')) {
+      return 'You can only cancel your own bookings.';
+    }
+    if (raw.contains('booking_not_found')) {
+      return 'This booking no longer exists.';
+    }
+    return 'Could not cancel the booking. Please try again.';
   }
 
   /// Loads the trip's real seat layout from `trip_seats` and flags the

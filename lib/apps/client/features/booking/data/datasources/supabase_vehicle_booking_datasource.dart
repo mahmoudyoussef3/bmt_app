@@ -121,6 +121,10 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
       routeDuration: route['duration']?.toString() ?? 'N/A',
       departureTime: data['departure_time']?.toString() ?? 'N/A',
       driverInitials: initials,
+      driverRating: (driver['rating'] as num?)?.toDouble() ?? 0,
+      driverRatingCount: (driver['rating_count'] as num?)?.toInt() ?? 0,
+      vehicleRating: (vehicle['rating'] as num?)?.toDouble() ?? 0,
+      vehicleRatingCount: (vehicle['rating_count'] as num?)?.toInt() ?? 0,
     );
   }
 }

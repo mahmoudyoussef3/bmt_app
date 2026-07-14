@@ -24,7 +24,7 @@ extension TripFilterLabel on TripFilter {
   }
 }
 
-enum PaymentStatus { paid, pending, underReview, refunded, failed }
+enum PaymentStatus { paid, pending, underReview, refunded, failed, cancelled }
 
 class TripData {
   const TripData({
@@ -39,6 +39,7 @@ class TripData {
     required this.driverPhone,
     required this.driverInitials,
     required this.driverRating,
+    this.driverRatingCount = 0,
     required this.vehicleName,
     required this.vehicleType,
     required this.vehicleId,
@@ -70,7 +71,16 @@ class TripData {
   final String driverName;
   final String driverPhone;
   final String driverInitials;
+
+  /// The captain's public average, aggregated from every passenger review.
   final double driverRating;
+
+  /// How many reviews that average is built from. Zero means "not rated yet" —
+  /// a brand-new captain must not be shown as a 0.0-star one.
+  final int driverRatingCount;
+
+  bool get hasDriverRating => driverRatingCount > 0 && driverRating > 0;
+
   final String vehicleName;
   final String vehicleType;
   final String vehicleId;
@@ -106,7 +116,19 @@ class TripData {
       PaymentStatus.underReview => 'Under Review',
       PaymentStatus.refunded => 'Refunded',
       PaymentStatus.failed => 'Failed',
+      PaymentStatus.cancelled => 'Cancelled',
     };
+  }
+
+  /// A booking may only be cancelled by the client while its payment is still
+  /// waiting on the dashboard. Once the dashboard approves the payment the seat
+  /// is paid for and final — cancelling then goes through support, not a
+  /// self-service button. Mirrors `cancel_booking_by_client`, which enforces
+  /// the same rule on the seat and the money.
+  bool get canBeCancelled {
+    if (status != TripStatus.upcoming) return false;
+    return paymentStatus == PaymentStatus.pending ||
+        paymentStatus == PaymentStatus.underReview;
   }
 
   String get statusLabel {

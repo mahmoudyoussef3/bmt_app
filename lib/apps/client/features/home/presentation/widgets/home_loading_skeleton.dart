@@ -100,18 +100,13 @@ class HomeLoadingSkeleton extends StatelessWidget {
                     ),
                     const SizedBox(height: ClientSpacing.lg),
                     const ClientSkeleton(
-                      height: 168,
+                      height: 264,
                       borderRadius: ClientRadius.lg,
                     ),
-                    const SizedBox(height: ClientSpacing.lg),
+                    const SizedBox(height: ClientSpacing.sm),
                     const ClientSkeleton(
-                      height: 204,
+                      height: 264,
                       borderRadius: ClientRadius.lg,
-                    ),
-                    const SizedBox(height: ClientSpacing.lg),
-                    const ClientSkeleton(
-                      height: 96,
-                      borderRadius: ClientRadius.xl,
                     ),
                   ],
                 ),

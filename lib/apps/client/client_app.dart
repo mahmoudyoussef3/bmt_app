@@ -65,7 +65,7 @@ import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/sea
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
-import 'package:bmt_app/apps/client/features/home/presentation/screens/client_splash_screen.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/screens/client_splash_gate.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -170,36 +170,12 @@ class _ClientAppState extends State<ClientApp> {
 
               home: BlocBuilder<OnboardingCubit, OnboardingState>(
                 builder: (context, onboardingState) {
-                  if (onboardingState is OnboardingLoading ||
-                      onboardingState is OnboardingInitial) {
-                    return const ClientSplashScreen();
-                  }
-
-                  if (onboardingState is OnboardingLoaded &&
-                      !onboardingState.hasSeenOnboarding) {
-                    return const OnboardingScreen();
-                  }
-
-                  return BlocBuilder<PhoneAuthCubit, PhoneAuthState>(
-                    builder: (context, phoneAuthState) {
-                      if (phoneAuthState is AuthAuthenticated) {
-                        return _buildClientShell();
-                      }
-                      
-                      return StreamBuilder<AuthState>(
-                        stream: Supabase.instance.client.auth.onAuthStateChange,
-                    builder: (context, snapshot) {
-                      // Also check currentSession as initial state might not emit immediately
-                      final session =
-                          snapshot.data?.session ??
-                          Supabase.instance.client.auth.currentSession;
-                      if (session != null) {
-                        return _buildClientShell();
-                      }
-                        return _buildAuthScope(const WelcomeScreen());
-                      },
-                    );
-                  });
+                  return ClientSplashGate(
+                    isReady:
+                        onboardingState is OnboardingLoaded ||
+                        onboardingState is OnboardingError,
+                    builder: (_) => _buildLandingScreen(onboardingState),
+                  );
                 },
               ),
 
@@ -415,6 +391,37 @@ class _ClientAppState extends State<ClientApp> {
           );
         },
       ),
+    );
+  }
+
+  /// Screen shown once the splash is dismissed: onboarding for first-time
+  /// users, the shell for an authenticated session, welcome otherwise.
+  Widget _buildLandingScreen(OnboardingState onboardingState) {
+    if (onboardingState is OnboardingLoaded &&
+        !onboardingState.hasSeenOnboarding) {
+      return const OnboardingScreen();
+    }
+
+    return BlocBuilder<PhoneAuthCubit, PhoneAuthState>(
+      builder: (context, phoneAuthState) {
+        if (phoneAuthState is AuthAuthenticated) {
+          return _buildClientShell();
+        }
+
+        return StreamBuilder<AuthState>(
+          stream: Supabase.instance.client.auth.onAuthStateChange,
+          builder: (context, snapshot) {
+            // currentSession covers the case where the stream has not emitted yet.
+            final session =
+                snapshot.data?.session ??
+                Supabase.instance.client.auth.currentSession;
+            if (session != null) {
+              return _buildClientShell();
+            }
+            return _buildAuthScope(const WelcomeScreen());
+          },
+        );
+      },
     );
   }
 

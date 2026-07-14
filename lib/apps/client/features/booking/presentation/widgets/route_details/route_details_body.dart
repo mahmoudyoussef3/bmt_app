@@ -76,8 +76,16 @@ class RouteDetailsBody extends StatelessWidget {
               key: ValueKey(route.id),
               child: mapPins.isNotEmpty
                   ? EasyWayRouteMapView(
+                      // Top clears the facts card + legend pill, bottom the
+                      // details sheet, so no pin fits the camera underneath an
+                      // overlay it can never be tapped through.
                       waypoints: mapPins,
-                      cameraPadding: const EdgeInsets.fromLTRB(44, 54, 44, 220),
+                      cameraPadding: const EdgeInsets.fromLTRB(
+                        44,
+                        132,
+                        44,
+                        220,
+                      ),
                     )
                   : const NoMapPlaceholder(),
             ),

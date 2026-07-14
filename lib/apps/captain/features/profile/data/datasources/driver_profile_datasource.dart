@@ -52,21 +52,10 @@ class DriverProfileDataSource {
         ? recentTrip['vehicles'] as Map<String, dynamic>?
         : null;
 
-    // Average rating (graceful — table may not exist)
-    double avgRating = 0;
-    try {
-      final ratings = await _supabase
-          .from('driver_ratings')
-          .select('rating')
-          .eq('driver_id', driverId);
-      if ((ratings as List).isNotEmpty) {
-        final sum = ratings.fold<double>(
-          0,
-          (acc, r) => acc + ((r['rating'] as num?)?.toDouble() ?? 0),
-        );
-        avgRating = sum / ratings.length;
-      }
-    } catch (_) {}
+    // The captain's public average, maintained on `drivers` by the trip_reviews
+    // trigger. They see the number, never the individual reviews behind it —
+    // those belong to operations.
+    final avgRating = (driver['rating'] as num?)?.toDouble() ?? 0;
 
     return DriverProfile(
       id: driverId,

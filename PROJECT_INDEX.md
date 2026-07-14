@@ -237,3 +237,47 @@ Prefer a DB trigger calling `push_notification` (per-user) or `push_operational_
 (dashboard). Categories must match the app enums (client: `booking/payment/trip/
 subscription/chat/system`; captain: `trip/passenger/assignment`). FCM/APNs push is not yet
 wired (tables are FCM-ready); in-app Realtime is the delivery mechanism today.
+
+---
+
+## Trip Reviews (التقييمات)
+
+After a **completed** trip the passenger rates three things separately — the captain, the
+vehicle, and the route — plus optional written feedback. One review per booking.
+
+### Visibility model (the whole point of the feature)
+| Data | Who sees it |
+| --- | --- |
+| Individual review + written feedback | **Dashboard owner only** (`DashboardPermission.reviews` — deliberately *not* granted to `supportAgent`) |
+| Driver average + review count | **Everyone** (`drivers.rating` / `drivers.rating_count`) |
+| Vehicle average + review count | **Everyone** (`vehicles.rating` / `vehicles.rating_count`) |
+| Route rating | Dashboard only — passengers do not shop for a route on quality |
+| Own review | The passenger who wrote it (re-opening the sheet shows it read-only) |
+
+### Backbone
+* **Migrations:** `20260714120000_trip_reviews.sql` (table, RLS, aggregate columns +
+  trigger, `submit_trip_review` RPC, low-rating `push_operational_alert`, realtime
+  publication) and `20260714121000_trip_reviews_revoke_anon.sql` (revokes the RPC + writes
+  from `anon`; Supabase default privileges grant EXECUTE to anon, so `revoke from public`
+  alone is not enough).
+* **Writes:** only through `submit_trip_review(p_booking_id, …)` — SECURITY DEFINER,
+  enforces ownership (`client_id = auth.uid()`), trip `completed`, booking not cancelled,
+  ratings 1–5, and upserts on `booking_id` so a re-submit amends rather than duplicates.
+* **Aggregates:** an AFTER trigger recomputes `drivers.rating` / `vehicles.rating`. Every
+  screen already selecting `drivers (*)` picks the average up with no new query.
+* **RLS:** `anon` (the Dashboard, which has no login) reads all; `authenticated` reads only
+  its own rows. No insert/update/delete policy exists — the RPC is the only door.
+
+### Where it lives
+* Client: `lib/apps/client/features/trips/` — `trip_review_flow.dart` +
+  `widgets/trip_review/`, `TripReviewCubit`, `submit_trip_review_usecase.dart`.
+* Dashboard: `lib/apps/dashboard/features/reviews/` — route `DashboardRoutes.reviews`,
+  `ReviewsCubit` (filters: all / تحتاج متابعة / بها تعليقات), captain standings panel.
+* A rating ≤ 2 on **any** dimension flags the review as `needsAttention` and fires a
+  high-priority operational alert — a 5-star captain in a 1-star vehicle averages "fine"
+  and must not be silently averaged away.
+
+### Rules
+A captain or vehicle with **zero** reviews renders as "New captain" / no chip — never as
+0.0 stars. `VehicleSortOption.rating` ranks on the combined captain+vehicle average and
+sorts unrated trips **last**; an absent rating is not a perfect one.

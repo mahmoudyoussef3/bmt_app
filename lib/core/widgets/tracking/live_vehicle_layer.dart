@@ -18,7 +18,7 @@ class LiveVehicleLayer extends StatelessWidget {
     required this.color,
     this.label,
     this.pulseValue,
-    this.markerSize = 58,
+    this.markerSize = 48,
     this.minAccuracyToShowMeters = 15,
   });
 

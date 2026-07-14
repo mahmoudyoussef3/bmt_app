@@ -6,193 +6,56 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_edit_strip.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_fare_card.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_ticket_card.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_total_row.dart';
 
+/// The last stop before payment. It answers three questions in order: is this
+/// the right ride, can I still change it, and what will I pay.
 class WizardSummaryStep extends StatelessWidget {
-  const WizardSummaryStep({super.key, required this.onNext});
+  const WizardSummaryStep({
+    super.key,
+    required this.onNext,
+    required this.onEditStep,
+  });
+
   final VoidCallback onNext;
+  final ValueChanged<int> onEditStep;
 
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<BookingWizardCubit, BookingWizardSession>(
-      builder: (context, session) {
-        final d = session.packageStartDate;
-        final dateLabel = d == null ? '—' : '${d.day}/${d.month}/${d.year}';
-        return Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.all(24),
-                physics: const BouncingScrollPhysics(),
-                children: [
-                  _SectionCard(
-                    title: 'Route',
-                    icon: Icons.route_rounded,
-                    rows: [
-                      _Row('Route', session.route.routeName),
-                      _Row('From', session.pickupStop?.name ?? '—'),
-                      _Row('To', session.dropoffStop?.name ?? '—'),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  _SectionCard(
-                    title: 'Trip',
-                    icon: Icons.directions_bus_rounded,
-                    rows: [
-                      _Row(
-                        'Departure',
-                        session.selectedTrip?.departureTime ?? '—',
-                      ),
-                      _Row('Arrival', session.selectedTrip?.arrivalTime ?? '—'),
-                      _Row(
-                        'Vehicle type',
-                        session.selectedTrip?.vehicleType ?? '—',
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(
-                        child: _SectionCard(
-                          title: 'Seat',
-                          icon: Icons.event_seat_rounded,
-                          rows: [
-                            _Row('Seat', session.selectedSeatLabel ?? '—'),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: _SectionCard(
-                          title: 'Package',
-                          icon: Icons.card_membership_rounded,
-                          rows: [
-                            _Row('Plan', session.selectedPackage?.name ?? '—'),
-                            _Row(
-                              'Rides',
-                              '${session.selectedPackage?.tripsCount ?? 1}',
-                            ),
-                            _Row('Starts', dateLabel),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  _PriceSummaryCard(session: session),
-                ],
-              ),
-            ),
-            SafeArea(
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(24, 16, 24, 16),
-                decoration: BoxDecoration(
-                  color: ClientColors.surfaceFor(context),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 20,
-                      offset: const Offset(0, -5),
-                    ),
-                  ],
-                ),
-                child: ClientButton(
-                  label: 'Proceed to Payment',
-                  onPressed: onNext,
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _SectionCard extends StatelessWidget {
-  const _SectionCard({
-    required this.title,
-    required this.icon,
-    required this.rows,
-  });
-  final String title;
-  final IconData icon;
-  final List<_Row> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: ClientColors.primary.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-        border: Border.all(color: ClientColors.primary.withValues(alpha: 0.08)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      builder: (context, session) => Column(
         children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: ClientColors.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+              physics: const BouncingScrollPhysics(),
+              children: [
+                const BookingStepIntro(
+                  icon: Icons.fact_check_rounded,
+                  title: 'Review your booking',
+                  subtitle: 'Nothing is charged until you pay on the next step.',
                 ),
-                child: Icon(icon, size: 22, color: ClientColors.primary),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  title,
-                  style: ClientTypography.headingSmall(context).copyWith(
-                    color: ClientColors.textPrimaryFor(context),
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-            ],
+                const SizedBox(height: 18),
+                SummaryTicketCard(session: session),
+                const SizedBox(height: 18),
+                SummaryEditStrip(onEditStep: onEditStep),
+                const SizedBox(height: 18),
+                SummaryFareCard(session: session),
+                const SizedBox(height: 14),
+                const _AssuranceNote(),
+              ],
+            ),
           ),
-          const SizedBox(height: 20),
-          ...rows.map(
-            (r) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: Text(
-                      r.label,
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    flex: 3,
-                    child: Text(
-                      r.value,
-                      textAlign: TextAlign.right,
-                      style: ClientTypography.bodyMedium(context).copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: ClientColors.textPrimaryFor(context),
-                        height: 1.3,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          BookingBottomAction(
+            summary: SummaryTotalRow(session: session),
+            child: ClientButton(
+              label: 'Proceed to payment',
+              icon: const Icon(Icons.arrow_forward_rounded),
+              onPressed: onNext,
             ),
           ),
         ],
@@ -201,106 +64,30 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
-class _Row {
-  const _Row(this.label, this.value);
-  final String label;
-  final String value;
-}
-
-class _PriceSummaryCard extends StatelessWidget {
-  const _PriceSummaryCard({required this.session});
-  final BookingWizardSession session;
+/// Riders hesitate at checkout when they cannot tell whether the seat is
+/// actually theirs yet. It is: the seat is held while they pay.
+class _AssuranceNote extends StatelessWidget {
+  const _AssuranceNote();
 
   @override
   Widget build(BuildContext context) {
-    final rides = session.selectedPackage?.tripsCount ?? 1;
-    final subtotal = session.tripPrice * rides;
-    final saved = (subtotal - session.totalPrice).clamp(0, subtotal);
-    final discount = subtotal <= 0 ? 0 : ((saved / subtotal) * 100).round();
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            ClientColors.primary.withValues(alpha: 0.12),
-            ClientColors.primary.withValues(alpha: 0.04),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return Row(
+      children: [
+        Icon(
+          Icons.verified_user_rounded,
+          size: 15,
+          color: ClientColors.textTertiaryFor(context),
         ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: ClientColors.primary.withValues(alpha: 0.2)),
-        boxShadow: [
-          BoxShadow(
-            color: ClientColors.primary.withValues(alpha: 0.05),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _priceRow(
-            context,
-            'Subtotal ($rides rides)',
-            'EGP ${subtotal.toStringAsFixed(0)}',
-            false,
-          ),
-          if (discount > 0) ...[
-            const SizedBox(height: 12),
-            _priceRow(
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            'Your seat is held while you complete payment.',
+            style: ClientTypography.bodySmall(
               context,
-              'Discount ($discount%)',
-              '− EGP ${saved.toStringAsFixed(0)}',
-              false,
-              color: ClientColors.journeyGreen,
-            ),
-          ],
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Divider(height: 1, thickness: 1),
+            ).copyWith(color: ClientColors.textTertiaryFor(context)),
           ),
-          _priceRow(
-            context,
-            'Total',
-            'EGP ${session.totalPrice.toStringAsFixed(0)}',
-            true,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
-
-  Widget _priceRow(
-    BuildContext ctx,
-    String label,
-    String value,
-    bool bold, {
-    Color? color,
-  }) => Row(
-    children: [
-      Expanded(
-        child: Text(
-          label,
-          style: ClientTypography.bodyMedium(ctx).copyWith(
-            fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
-            color:
-                color ??
-                (bold
-                    ? ClientColors.textPrimaryFor(ctx)
-                    : ClientColors.textSecondaryFor(ctx)),
-          ),
-        ),
-      ),
-      Text(
-        value,
-        style: ClientTypography.headingSmall(ctx).copyWith(
-          fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
-          color:
-              color ??
-              (bold ? ClientColors.primary : ClientColors.textPrimaryFor(ctx)),
-        ),
-      ),
-    ],
-  );
 }

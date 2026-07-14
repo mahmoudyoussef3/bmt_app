@@ -8,16 +8,7 @@ import 'package:bmt_app/core/maps/route_path_math.dart';
 import 'package:bmt_app/core/theme/motion_preference.dart';
 import 'package:bmt_app/core/widgets/maps/map_style.dart';
 
-/// A vehicle position rendered on a map that only receives occasional,
-/// standalone position updates (e.g. a captain's last-known spot on a Route
-/// Overview map) rather than a continuous GPS fix stream.
-///
-/// For screens driven by the full live-tracking engine (interpolation,
-/// heading/speed estimation, staleness), use
-/// `core/widgets/tracking/live_vehicle_layer.dart` instead — that one reads
-/// from a [VehicleTrackController]. This lighter layer animates directly
-/// between two known poses and has no engine dependency, so screens that
-/// never see a fix stream pay no engine cost.
+
 class SimpleVehicleData {
   const SimpleVehicleData({
     required this.position,
@@ -34,10 +25,7 @@ class SimpleVehicleData {
   final double? accuracyMeters;
 }
 
-/// Renders [SimpleVehicleData] with smooth motion: each new update glides
-/// from the previous position along the shortest heading arc instead of
-/// teleporting. Renders nothing when [vehicle] is null, so screens without a
-/// vehicle to show pay zero cost.
+
 class SimpleVehicleLayer extends StatefulWidget {
   const SimpleVehicleLayer({super.key, required this.vehicle});
 
@@ -49,9 +37,7 @@ class SimpleVehicleLayer extends StatefulWidget {
 
 class _SimpleVehicleLayerState extends State<SimpleVehicleLayer>
     with SingleTickerProviderStateMixin {
-  // Created in initState: a lazy `late final` ticker would otherwise be
-  // instantiated during dispose() when [vehicle] stayed null for the
-  // widget's whole life.
+
   late final AnimationController _controller;
 
   SimpleVehicleData? _from;

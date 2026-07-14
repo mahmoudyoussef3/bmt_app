@@ -3,17 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
-import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_departing_soon_list.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_active_package_card.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_bookings_list.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_entrance.dart';
-import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_live_trip_card.dart';
-import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_package_banner.dart';
-import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_packages_section.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_section_header.dart';
-import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_support_tile.dart';
-import 'package:bmt_app/apps/client/features/home/presentation/widgets/popular_routes_preview.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_upcoming_trips_list.dart';
 
-/// Everything below the hero: current journey, departing soon, popular
-/// routes, packages and support — each revealed with a staggered entrance.
+/// Everything below the hero: the seats the rider already holds, the departures
+/// feed, and their package when they hold one — each revealed with a staggered
+/// entrance. Support lives in the quick actions, not here.
 class HomeSections extends StatelessWidget {
   const HomeSections({
     super.key,
@@ -30,48 +28,40 @@ class HomeSections extends StatelessWidget {
     'hasActiveSubscription': data.activePackage != null,
   });
 
+  void _trackBooking(HomeBookingData booking) =>
+      onOpenRoute(ClientRoutes.tracking, {'bookingId': booking.id});
+
+  /// Carries the exact departure the rider tapped into the booking flow, so
+  /// the route/date/time are already chosen when they land there.
+  void _bookTrip(UpcomingTripData trip) =>
+      onOpenRoute(ClientRoutes.bookingRouteSelection, {
+        'routeId': trip.routeId,
+        'pickup': trip.pickup,
+        'destination': trip.destination,
+        'date': trip.tripDate,
+        'time': trip.departureTime,
+      });
+
   @override
   Widget build(BuildContext context) {
     var order = 2;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        if (data.currentTrip != null) ...[
+        if (data.bookings.isNotEmpty) ...[
           HomeEntrance(
             order: order++,
             child: _Section(
-              header: const HomeSectionHeader(
+              header: HomeSectionHeader(
                 eyebrow: 'Your journey',
-                title: 'Ready when you are',
+                title: data.bookings.length == 1
+                    ? 'Your booking'
+                    : 'Your bookings',
+                subtitle: 'Seats you hold, and where each one stands.',
               ),
-              child: HomeLiveTripCard(
-                trip: data.currentTrip!,
-                onTap: () => onOpenRoute(ClientRoutes.tracking, {
-                  'bookingId': data.currentTrip!.id,
-                }),
-              ),
-            ),
-          ),
-          const SizedBox(height: ClientSpacing.xl),
-        ],
-        if (data.nearbyTrips.isNotEmpty) ...[
-          HomeEntrance(
-            order: order++,
-            child: _Section(
-              header: const HomeSectionHeader(
-                eyebrow: 'Leaving soon',
-                title: 'Departing today',
-                subtitle: 'Live trips you can still hop on.',
-              ),
-              child: HomeDepartingSoonList(
-                trips: data.nearbyTrips,
-                onSelect: (trip) =>
-                    onOpenRoute(ClientRoutes.bookingRouteSelection, {
-                      'pickup': trip.pickup,
-                      'destination': trip.destination,
-                      'date': DateTime.now().toIso8601String().split('T').first,
-                      'time': trip.departureTime,
-                    }),
+              child: HomeBookingsList(
+                bookings: data.bookings,
+                onTrack: _trackBooking,
               ),
             ),
           ),
@@ -81,42 +71,39 @@ class HomeSections extends StatelessWidget {
           order: order++,
           child: _Section(
             header: HomeSectionHeader(
-              eyebrow: 'Discover',
-              title: 'Popular routes',
-              actionLabel: 'View all',
+              eyebrow: 'Book a seat',
+              title: 'Next departures',
+              subtitle: 'Trips open for booking, soonest first.',
+              actionLabel: 'All routes',
               onAction: () => onOpenRoute(ClientRoutes.bookingPopularRoutes),
             ),
-            child: PopularRoutesPreview(
-              routes: data.popularRoutes,
+            child: HomeUpcomingTripsList(
+              trips: data.upcomingTrips,
               previewCount: isTablet ? 4 : 3,
-              onOpenRoute: onOpenRoute,
+              onBook: _bookTrip,
+              onBrowseRoutes: () =>
+                  onOpenRoute(ClientRoutes.bookingPopularRoutes),
             ),
           ),
         ),
-        if (data.activePackage == null) ...[
+        if (data.activePackage != null) ...[
           const SizedBox(height: ClientSpacing.xl),
           HomeEntrance(
             order: order++,
-            child: HomePackageBanner(onTap: _openSubscription),
+            child: _Section(
+              header: HomeSectionHeader(
+                eyebrow: 'Your package',
+                title: 'Active subscription',
+                actionLabel: 'Manage',
+                onAction: _openSubscription,
+              ),
+              child: HomeActivePackageCard(
+                package: data.activePackage!,
+                onTap: _openSubscription,
+              ),
+            ),
           ),
         ],
-        const SizedBox(height: ClientSpacing.xl),
-        HomeEntrance(
-          order: order++,
-          child: HomePackagesSection(
-            plans: data.packagePlans,
-            activePackage: data.activePackage,
-            previewCount: isTablet ? 4 : 3,
-            onOpenSubscription: _openSubscription,
-          ),
-        ),
-        const SizedBox(height: ClientSpacing.xl),
-        HomeEntrance(
-          order: order++,
-          child: HomeSupportTile(
-            onTap: () => onOpenRoute(ClientRoutes.support),
-          ),
-        ),
       ],
     );
   }

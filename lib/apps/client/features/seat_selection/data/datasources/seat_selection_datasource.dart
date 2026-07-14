@@ -10,6 +10,13 @@ abstract class SeatSelectionDatasource {
     required String seatId,
   });
 
+  /// Hands back a lock taken by [lockTripSeat] when the booking it was taken
+  /// for never happened. A seat that already carries a booking is untouched.
+  Future<void> releaseTripSeatLock({
+    required String tripId,
+    required String seatId,
+  });
+
   /// Step 2: Confirm booking after payment method is selected.
   /// Returns {booking_id, booking_number, seat_label, payment_amount}.
   Future<Map<String, dynamic>> confirmSeatBooking(Map<String, dynamic> params);

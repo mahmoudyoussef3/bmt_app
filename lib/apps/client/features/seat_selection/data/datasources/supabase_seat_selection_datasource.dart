@@ -130,7 +130,34 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
       if (e.message.contains('seat_unavailable')) {
         throw Exception('seat_unavailable');
       }
+      if (e.message.contains('duplicate_active_booking')) {
+        throw Exception('duplicate_active_booking');
+      }
       rethrow;
+    }
+  }
+
+  @override
+  Future<void> releaseTripSeatLock({
+    required String tripId,
+    required String seatId,
+  }) async {
+    final user = _supabase.auth.currentUser;
+    if (user == null) return;
+
+    // Best-effort compensation: the caller is already handling a failure, and
+    // an expired lock is reclaimed by lock_trip_seat's self-heal anyway.
+    try {
+      await _supabase.rpc(
+        'release_trip_seat_lock',
+        params: {
+          'p_trip_id': tripId,
+          'p_seat_id': seatId,
+          'p_client_id': user.id,
+        },
+      );
+    } on PostgrestException {
+      return;
     }
   }
 

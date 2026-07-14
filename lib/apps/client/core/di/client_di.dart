@@ -120,6 +120,7 @@ import '../../features/seat_selection/domain/usecases/get_seat_selection_data_us
 import '../../features/seat_selection/domain/usecases/select_seat_usecase.dart';
 import '../../features/seat_selection/domain/usecases/book_trip_seat_usecase.dart';
 import '../../features/seat_selection/domain/usecases/lock_trip_seat_usecase.dart';
+import '../../features/seat_selection/domain/usecases/release_trip_seat_lock_usecase.dart';
 import '../../features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
 import '../../features/seat_selection/domain/usecases/update_existing_booking_payment_usecase.dart';
 import '../../features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
@@ -142,13 +143,21 @@ import '../../features/support/domain/usecases/get_my_support_tickets_usecase.da
 import '../../features/support/domain/usecases/get_ticket_details_usecase.dart';
 
 import '../../features/support/presentation/cubit/support_cubit.dart';
+import '../../features/trips/data/datasources/supabase_trip_reviews_datasource.dart';
 import '../../features/trips/data/datasources/supabase_trips_datasource.dart';
+import '../../features/trips/data/datasources/trip_reviews_datasource.dart';
 import '../../features/trips/data/datasources/trips_datasource.dart';
+import '../../features/trips/data/repositories/trip_reviews_repository_impl.dart';
 import '../../features/trips/data/repositories/trips_repository_impl.dart';
+import '../../features/trips/domain/repositories/trip_reviews_repository.dart';
 import '../../features/trips/domain/repositories/trips_repository.dart';
+import '../../features/trips/domain/usecases/cancel_booking_usecase.dart';
 import '../../features/trips/domain/usecases/get_trip_details_usecase.dart';
+import '../../features/trips/domain/usecases/get_trip_review_usecase.dart';
 import '../../features/trips/domain/usecases/get_trips_usecase.dart';
+import '../../features/trips/domain/usecases/submit_trip_review_usecase.dart';
 import '../../features/trips/domain/usecases/watch_trips_usecase.dart';
+import '../../features/trips/presentation/cubit/trip_review_cubit.dart';
 import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/tracking/data/datasources/supabase_tracking_datasource.dart';
 import '../../features/tracking/data/repositories/tracking_repository_impl.dart';
@@ -392,12 +401,56 @@ void _registerTripsDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<CancelBookingUseCase>()) {
+    clientGetIt.registerLazySingleton<CancelBookingUseCase>(
+      () => CancelBookingUseCase(clientGetIt<TripsRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<TripsCubit>()) {
     clientGetIt.registerFactory<TripsCubit>(
       () => TripsCubit(
         getTrips: clientGetIt<GetTripsUseCase>(),
         getTripDetails: clientGetIt<GetTripDetailsUseCase>(),
         watchTrips: clientGetIt<WatchTripsUseCase>(),
+        cancelBooking: clientGetIt<CancelBookingUseCase>(),
+      ),
+    );
+  }
+
+  _registerTripReviewDependencies();
+}
+
+void _registerTripReviewDependencies() {
+  if (!clientGetIt.isRegistered<TripReviewsDatasource>()) {
+    clientGetIt.registerLazySingleton<TripReviewsDatasource>(
+      () => SupabaseTripReviewsDatasource(Supabase.instance.client),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<TripReviewsRepository>()) {
+    clientGetIt.registerLazySingleton<TripReviewsRepository>(
+      () => TripReviewsRepositoryImpl(clientGetIt<TripReviewsDatasource>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<GetTripReviewUseCase>()) {
+    clientGetIt.registerLazySingleton<GetTripReviewUseCase>(
+      () => GetTripReviewUseCase(clientGetIt<TripReviewsRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<SubmitTripReviewUseCase>()) {
+    clientGetIt.registerLazySingleton<SubmitTripReviewUseCase>(
+      () => SubmitTripReviewUseCase(clientGetIt<TripReviewsRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<TripReviewCubit>()) {
+    clientGetIt.registerFactory<TripReviewCubit>(
+      () => TripReviewCubit(
+        getReview: clientGetIt<GetTripReviewUseCase>(),
+        submitReview: clientGetIt<SubmitTripReviewUseCase>(),
       ),
     );
   }
@@ -543,6 +596,12 @@ void _registerSeatSelectionDependencies() {
   if (!clientGetIt.isRegistered<LockTripSeatUseCase>()) {
     clientGetIt.registerLazySingleton<LockTripSeatUseCase>(
       () => LockTripSeatUseCase(clientGetIt<SeatSelectionRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<ReleaseTripSeatLockUseCase>()) {
+    clientGetIt.registerLazySingleton<ReleaseTripSeatLockUseCase>(
+      () => ReleaseTripSeatLockUseCase(clientGetIt<SeatSelectionRepository>()),
     );
   }
 

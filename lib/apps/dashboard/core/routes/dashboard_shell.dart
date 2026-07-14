@@ -35,6 +35,8 @@ import '../../features/payment_verification/presentation/screens/payment_verific
 import '../../features/permissions/presentation/screens/permissions_screen.dart';
 import '../../features/reports/presentation/cubit/reports_cubit.dart';
 import '../../features/reports/presentation/screens/reports_screen.dart';
+import '../../features/reviews/presentation/cubit/reviews_cubit.dart';
+import '../../features/reviews/presentation/screens/reviews_screen.dart';
 import '../../features/routes/presentation/cubit/routes_cubit.dart';
 import '../../features/routes/presentation/screens/routes_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
@@ -194,6 +196,14 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.support_agent_outlined,
       selectedIcon: Icons.support_agent_rounded,
       permission: DashboardPermission.tickets,
+      group: _navSupport,
+    ),
+    _DashboardNavItem(
+      label: 'التقييمات',
+      route: DashboardRoutes.reviews,
+      icon: Icons.star_border_rounded,
+      selectedIcon: Icons.star_rate_rounded,
+      permission: DashboardPermission.reviews,
       group: _navSupport,
     ),
     _DashboardNavItem(
@@ -408,6 +418,10 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.tickets => BlocProvider(
         create: (_) => dashboardDi<TicketsCubit>()..load(),
         child: const TicketsScreen(),
+      ),
+      DashboardRoutes.reviews => BlocProvider(
+        create: (_) => dashboardDi<ReviewsCubit>()..load(),
+        child: const ReviewsScreen(),
       ),
       DashboardRoutes.reports => BlocProvider(
         create: (_) => dashboardDi<ReportsCubit>()..load(),

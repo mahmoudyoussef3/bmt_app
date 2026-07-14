@@ -17,6 +17,10 @@ class VehicleDetailModel extends VehicleDetailData {
     required super.routeDuration,
     required super.departureTime,
     super.driverInitials = 'AM',
+    super.driverRating = 0,
+    super.driverRatingCount = 0,
+    super.vehicleRating = 0,
+    super.vehicleRatingCount = 0,
   });
 
   factory VehicleDetailModel.fromJson(Map<String, dynamic> json) {
@@ -36,6 +40,10 @@ class VehicleDetailModel extends VehicleDetailData {
       routeDuration: json['route_duration'] as String,
       departureTime: json['departure_time'] as String,
       driverInitials: json['driver_initials'] as String? ?? 'AM',
+      driverRating: (json['driver_rating'] as num?)?.toDouble() ?? 0,
+      driverRatingCount: (json['driver_rating_count'] as num?)?.toInt() ?? 0,
+      vehicleRating: (json['vehicle_rating'] as num?)?.toDouble() ?? 0,
+      vehicleRatingCount: (json['vehicle_rating_count'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -56,6 +64,10 @@ class VehicleDetailModel extends VehicleDetailData {
       'route_duration': routeDuration,
       'departure_time': departureTime,
       'driver_initials': driverInitials,
+      'driver_rating': driverRating,
+      'driver_rating_count': driverRatingCount,
+      'vehicle_rating': vehicleRating,
+      'vehicle_rating_count': vehicleRatingCount,
     };
   }
 }

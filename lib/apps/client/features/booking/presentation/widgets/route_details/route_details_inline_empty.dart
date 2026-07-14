@@ -42,9 +42,9 @@ class RouteDetailsInlineEmpty extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: scheme.onSurface.withAlpha(145)),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurface.withAlpha(145),
+                  ),
                 ),
               ],
             ),

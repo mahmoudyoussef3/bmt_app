@@ -16,6 +16,9 @@ enum DashboardPermission {
   payments,
   paymentVerification,
   tickets,
+  // Individual passenger reviews (with their written feedback) are for the
+  // owner only — deliberately absent from the support-agent set below.
+  reviews,
   reports,
   ownerOverview,
   notifications,

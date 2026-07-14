@@ -24,7 +24,9 @@ class BookingFlowScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       extendBodyBehindAppBar: extendBodyBehindAppBar,
-      backgroundColor: extendBodyBehindAppBar ? Theme.of(context).colorScheme.surface : null,
+      backgroundColor: extendBodyBehindAppBar
+          ? Theme.of(context).colorScheme.surface
+          : null,
       appBar: AppBar(
         title: Text(title),
         actions: actions,

@@ -17,6 +17,7 @@ class DashboardRoutes {
   static const payments = '/payments';
   static const paymentVerification = '/payment-verification';
   static const tickets = '/tickets';
+  static const reviews = '/reviews';
   static const reports = '/reports';
   static const ownerOverview = '/owner-overview';
   static const settings = '/settings';

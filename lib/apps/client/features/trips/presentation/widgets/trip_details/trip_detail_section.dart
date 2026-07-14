@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
-/// A titled section wrapper (Route/Driver/Vehicle/Seats/Payment) inside
-/// Trip Details.
+/// A titled section wrapper (Driver/Vehicle/Seats/Payment) inside Trip Details.
 class TripDetailSection extends StatelessWidget {
   const TripDetailSection({
     super.key,
@@ -28,27 +27,32 @@ class TripDetailSection extends StatelessWidget {
         border: Border.all(color: ClientColors.borderFor(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(4),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: ClientColors.shadowFor(context).withAlpha(10),
+            blurRadius: 20,
+            offset: const Offset(0, 6),
           ),
         ],
       ),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.all(10),
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: ClientColors.primary.withAlpha(24),
-                  borderRadius: BorderRadius.circular(12),
+                  color: ClientColors.primaryFor(context).withAlpha(24),
+                  borderRadius: BorderRadius.circular(13),
                 ),
-                child: Icon(icon, color: ClientColors.primary, size: 20),
+                child: Icon(
+                  icon,
+                  color: ClientColors.primaryFor(context),
+                  size: 20,
+                ),
               ),
-              const SizedBox(width: 16),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -64,16 +68,20 @@ class TripDetailSection extends StatelessWidget {
                       subtitle,
                       style: ClientTypography.bodySmall(
                         context,
-                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                      ).copyWith(color: ClientColors.textTertiaryFor(context)),
                     ),
                   ],
                 ),
               ),
             ],
           ),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 20),
-            child: Divider(height: 1),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            child: Divider(
+              height: 1,
+              thickness: 1,
+              color: ClientColors.borderFor(context),
+            ),
           ),
           child,
         ],

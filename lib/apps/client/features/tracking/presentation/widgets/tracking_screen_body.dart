@@ -59,6 +59,7 @@ class TrackingScreenBody extends StatelessWidget {
       sheetController: sheetController,
       onRefresh: () => context.read<TrackingCubit>().refresh(),
       captainCardTopInset: captainCardTopInset,
+      borderRadius: isTablet ? 18 : 0,
     );
     final cubit = context.read<TrackingCubit>();
     void onContactDriver() => showTrackingContactDialog(context, 'Driver', _trip?.driverPhone);

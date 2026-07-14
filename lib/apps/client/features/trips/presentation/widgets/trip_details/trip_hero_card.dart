@@ -4,9 +4,16 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/hero_chips.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/hero_fact_strip.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/hero_journey.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_schedule_labels.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 
-/// Trip Details' hero: status, reference, route line, and quick facts
-/// (date, time, seats).
+/// Trip Details' hero: status, reference, the pickup → drop-off rail, and the
+/// date/departure/seat strip.
+///
+/// It carries the whole journey, so the screen no longer repeats pickup and
+/// destination again in a separate Route section further down.
 class TripHeroCard extends StatelessWidget {
   const TripHeroCard({super.key, required this.trip});
 
@@ -14,106 +21,121 @@ class TripHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final badge = ClientColors.journeyBadgeFor(
+      context,
+      journeyStatusFor(trip.status),
+    );
+
     return Container(
-      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topRight,
-          end: Alignment.bottomLeft,
-          colors: [ClientColors.primary, Color(0xFF0D4FC4)],
-        ),
+        gradient: ClientColors.heroGradientFor(context),
         borderRadius: BorderRadius.circular(28),
         boxShadow: [
           BoxShadow(
-            color: ClientColors.primary.withAlpha(55),
-            blurRadius: 28,
-            offset: const Offset(0, 16),
+            color: ClientColors.heroTopFor(context).withAlpha(60),
+            blurRadius: 30,
+            offset: const Offset(0, 14),
           ),
         ],
       ),
-      child: Stack(
-        children: [
-          PositionedDirectional(
-            top: -36,
-            end: -26,
-            child: Icon(
-              Icons.directions_bus_filled_rounded,
-              size: 150,
-              color: Colors.white.withAlpha(30),
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: Stack(
+          children: [
+            const PositionedDirectional(top: -70, end: -50, child: _HeroGlow()),
+            Padding(
+              padding: const EdgeInsets.all(22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  HeroStatusChip(
-                    label: trip.statusLabel,
-                    color: _statusColor(trip.status),
+                  Row(
+                    children: [
+                      HeroStatusChip(
+                        label: trip.statusLabel,
+                        color: badge.label,
+                      ),
+                      const SizedBox(width: 12),
+                      // Expanded + Align, not Spacer + Flexible: a Spacer would
+                      // claim half the free space and ellipsize a reference
+                      // that had room to fit.
+                      Expanded(
+                        child: Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: HeroReferenceChip(reference: trip.reference),
+                        ),
+                      ),
+                    ],
                   ),
-                  const Spacer(),
-                  Text(
-                    trip.reference,
-                    style: ClientTypography.bodySmall(context).copyWith(
-                      color: Colors.white.withAlpha(220),
-                      letterSpacing: 0.6,
-                      fontWeight: FontWeight.w800,
+                  const SizedBox(height: 22),
+                  HeroJourney(
+                    pickup: trip.pickup,
+                    destination: trip.destination,
+                    departureLabel: tripTimeLabel(context, trip),
+                  ),
+                  const SizedBox(height: 22),
+                  HeroFactStrip(
+                    facts: [
+                      HeroFact(
+                        icon: Icons.calendar_today_rounded,
+                        label: 'DATE',
+                        value: tripDayLabel(context, trip),
+                      ),
+                      HeroFact(
+                        icon: Icons.schedule_rounded,
+                        label: 'DEPARTS',
+                        value: tripTimeLabel(context, trip),
+                      ),
+                      HeroFact(
+                        icon: Icons.event_seat_rounded,
+                        label: _seatsLabel(trip),
+                        value: _seatsValue(trip),
+                      ),
+                    ],
+                  ),
+                  if (trip.completedAt != null) ...[
+                    const SizedBox(height: 14),
+                    Text(
+                      'Completed ${trip.completedAt}',
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: Colors.white.withAlpha(200)),
                     ),
-                  ),
+                  ],
                 ],
               ),
-              const SizedBox(height: 18),
-              Text(
-                trip.routeLine,
-                style: ClientTypography.headingLarge(
-                  context,
-                ).copyWith(color: Colors.white, height: 1.25),
-              ),
-              const SizedBox(height: 12),
-              Wrap(
-                spacing: 10,
-                runSpacing: 10,
-                children: [
-                  HeroMetaChip(
-                    icon: Icons.calendar_today_rounded,
-                    label: trip.dateLabel,
-                  ),
-                  HeroMetaChip(
-                    icon: Icons.access_time_rounded,
-                    label: trip.timeLabel,
-                  ),
-                  HeroMetaChip(
-                    icon: Icons.event_seat_rounded,
-                    label: _seatsLabel(trip),
-                  ),
-                ],
-              ),
-              if (trip.completedAt != null) ...[
-                const SizedBox(height: 14),
-                HeroMetaChip(
-                  icon: Icons.check_circle_rounded,
-                  label: 'Completed ${trip.completedAt}',
-                ),
-              ],
-            ],
-          ),
-        ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Color _statusColor(TripStatus status) {
-    return switch (status) {
-      TripStatus.upcoming => ClientColors.primaryLight,
-      TripStatus.inProgress => ClientColors.journeyGreenLight,
-      TripStatus.completed => ClientColors.journeySlateLight,
-      TripStatus.cancelled => ClientColors.journeyRedLight,
-    };
-  }
+  String _seatsLabel(TripData trip) =>
+      trip.mySeatLabels.length > 1 ? 'SEATS' : 'SEAT';
 
-  String _seatsLabel(TripData trip) {
-    if (trip.seats.isEmpty) return 'No seat selected';
-    if (trip.seats.length == 1) return 'Seat ${trip.seats.first}';
-    return '${trip.seats.length} seats';
+  String _seatsValue(TripData trip) {
+    final seats = trip.mySeatLabels;
+    if (seats.isEmpty) return 'Not assigned';
+    return seats.join(', ');
+  }
+}
+
+/// A soft off-canvas light source — calmer than the oversized bus glyph the
+/// hero used to stamp across its corner.
+class _HeroGlow extends StatelessWidget {
+  const _HeroGlow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 200,
+      height: 200,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [Colors.white.withAlpha(46), Colors.white.withAlpha(0)],
+        ),
+      ),
+    );
   }
 }

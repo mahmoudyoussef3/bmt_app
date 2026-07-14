@@ -16,7 +16,12 @@ class PinTailPainter extends CustomPainter {
       ..style = PaintingStyle.fill;
     final path = Path()
       ..moveTo(0, 0)
-      ..quadraticBezierTo(size.width * 0.12, size.height * 0.55, size.width / 2, size.height)
+      ..quadraticBezierTo(
+        size.width * 0.12,
+        size.height * 0.55,
+        size.width / 2,
+        size.height,
+      )
       ..quadraticBezierTo(size.width * 0.88, size.height * 0.55, size.width, 0)
       ..close();
     canvas.drawPath(path, paint);

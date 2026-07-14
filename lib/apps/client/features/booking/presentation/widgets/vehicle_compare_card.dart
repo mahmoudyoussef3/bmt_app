@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/vehicle_detail.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_rating_row.dart';
 
 /// Focused trip + vehicle choice card.
 class VehicleCompareCard extends StatelessWidget {
@@ -130,6 +131,8 @@ class VehicleCompareCard extends StatelessWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
+              VehicleRatingRow(vehicle: vehicle),
               const SizedBox(height: 14),
               FilledButton.icon(
                 onPressed: onSelect,

@@ -5,22 +5,48 @@ import 'package:bmt_app/core/maps/map_route_stop.dart';
 import 'package:bmt_app/core/theme/text_themes.dart';
 import 'package:bmt_app/core/widgets/maps/map_style.dart';
 
-/// A floating card anchored above a pin, revealed when the stop is tapped.
-Marker buildCalloutMarker(BuildContext context, {required MapRouteStop stop}) {
+/// A floating card for the tapped stop, parked directly above its pin: it
+/// clears the pin's own box (plus the ~14% the pin grows while selected) so it
+/// never covers the badge the passenger just tapped.
+Marker buildCalloutMarker(
+  BuildContext context, {
+  required MapRouteStop stop,
+  required int index,
+  required int count,
+}) {
+  final prominent = index == 0 || index == count - 1;
+  final clearance = MapStyle.pinBox(prominent).height * 1.14 + 6;
+
   return Marker(
     point: stop.coordinate,
-    width: 210,
-    height: 120,
-    // Anchor at the coordinate; the card floats above the pin.
-    alignment: Alignment.bottomCenter,
-    child: _Callout(name: stop.name),
+    width: 232,
+    height: clearance + 82,
+    // Above the coordinate; the pin occupies the [clearance] below the card.
+    alignment: MapStyle.pinAnchor,
+    child: Padding(
+      padding: EdgeInsets.only(bottom: clearance),
+      child: _Callout(
+        name: stop.name,
+        role: MapStyle.roleFor(index, count),
+        color: MapStyle.colorFor(context, index, count),
+        icon: MapStyle.iconFor(index, count),
+      ),
+    ),
   );
 }
 
 class _Callout extends StatelessWidget {
-  const _Callout({required this.name});
+  const _Callout({
+    required this.name,
+    required this.role,
+    required this.color,
+    required this.icon,
+  });
 
   final String name;
+  final String role;
+  final Color color;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
@@ -35,39 +61,60 @@ class _Callout extends StatelessWidget {
           child: child,
         ),
       ),
-      child: Align(
-        alignment: Alignment.topCenter,
-        child: Container(
-          constraints: const BoxConstraints(maxWidth: 210),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: MapStyle.surface(context),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: MapStyle.border(context)),
-            boxShadow: MapStyle.shadow(context),
+      child: Align(alignment: Alignment.bottomCenter, child: _card(context)),
+    );
+  }
+
+  Widget _card(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: MapStyle.surface(context),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: MapStyle.border(context)),
+        boxShadow: MapStyle.shadow(context),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 26,
+            height: 26,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: color.withAlpha(30),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            child: Icon(icon, size: 14, color: color),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(
-                Icons.place_rounded,
-                size: 16,
-                color: MapStyle.stop(context),
-              ),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
+          const SizedBox(width: 9),
+          Flexible(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  role,
+                  style: AppTextThemes.caption(scheme).copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    height: 1.2,
+                  ),
+                ),
+                Text(
                   name.isEmpty ? 'Route stop' : name,
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: AppTextThemes.caption(
-                    Theme.of(context).colorScheme,
-                  ).copyWith(fontWeight: FontWeight.w800),
+                    scheme,
+                  ).copyWith(fontWeight: FontWeight.w800, height: 1.25),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

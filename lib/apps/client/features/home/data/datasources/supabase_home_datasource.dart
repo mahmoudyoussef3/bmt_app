@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../domain/entities/home_data.dart';
 import '../models/home_data_model.dart';
 import 'home_datasource.dart';
 
@@ -8,6 +10,10 @@ class SupabaseHomeDatasource implements HomeDatasource {
   final SupabaseClient _supabase;
 
   const SupabaseHomeDatasource(this._supabase);
+
+  static const _bookingColumns =
+      'id, trip_id, booking_number, status, seat, trip_date, '
+      'trip_time, route, payment_amount, pickup_point_name, dropoff_point_name';
 
   @override
   Stream<void> watchHomeChanges() {
@@ -24,6 +30,14 @@ class SupabaseHomeDatasource implements HomeDatasource {
           table: 'operation_trips',
           callback: notify,
         )
+        // A booking changing state — approved, rejected, boarded — changes what
+        // Home must show about it, so it has to refetch on that too.
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'operation_bookings',
+          callback: notify,
+        )
         .subscribe();
 
     controller.onCancel = channel.unsubscribe;
@@ -33,243 +47,120 @@ class SupabaseHomeDatasource implements HomeDatasource {
   @override
   Future<HomeDataModel> getHomeData() async {
     final today = DateTime.now().toIso8601String().split('T').first;
-    final routesFuture = _supabase
-        .from('operation_routes')
-        .select('id, name, start_city, end_city, duration, status')
-        .eq('status', 'active');
-
-    final tripsFuture = _supabase
-        .from('operation_trips')
-        .select('*, route:operation_routes(start_city, end_city)')
-        .gte('trip_date', today)
-        .inFilter('status', ['open_for_booking', 'boarding'])
-        .order('trip_date')
-        .order('departure_time')
-        .limit(50);
-
-    final packagesFuture = _supabase
-        .from('transport_packages')
-        .select()
-        .eq('active', true)
-        .order('display_order', ascending: true)
-        .limit(4);
-
     final user = _supabase.auth.currentUser;
-    Future<List<Map<String, dynamic>>>? currentTripFuture;
-    if (user != null) {
-      currentTripFuture = _supabase
-          .from('operation_bookings')
-          .select()
-          .eq('client_id', user.id)
-          .inFilter('status', ['newRequest', 'approved', 'active'])
-          .limit(1);
-    }
 
-    final responses = await Future.wait([
-      routesFuture,
-      tripsFuture,
-      packagesFuture,
-      if (currentTripFuture != null) currentTripFuture else Future.value([]),
+    final responses = await Future.wait<dynamic>([
+      _supabase
+          .from('operation_routes')
+          .select('id, name, start_city, end_city, duration, status')
+          .eq('status', 'active'),
+      _supabase
+          .from('operation_trips')
+          .select('''
+            *,
+            route:operation_routes(id, name, start_city, end_city, duration),
+            trip_pricing(one_time_price, currency, is_active)
+          ''')
+          .gte('trip_date', today)
+          .inFilter('status', ['open_for_booking', 'boarding'])
+          .order('trip_date')
+          .order('departure_time')
+          .limit(50),
+      if (user != null) _bookingsOf(user.id, today) else Future.value(const []),
+      if (user != null) _activePackageOf(user.id) else Future.value(null),
     ]);
 
-    final routesData = responses[0];
-    final tripsData = responses[1];
-    final packagesData = responses[2];
-    final currentTripData = responses[3];
+    final routesData = responses[0] as List<dynamic>;
+    final tripsData = responses[1] as List<dynamic>;
 
-    final routeIds = routesData
-        .map((route) => route['id']?.toString() ?? '')
-        .where((id) => id.isNotEmpty)
+    final bookings = (responses[2] as List<dynamic>)
+        .whereType<Map<String, dynamic>>()
+        .map(HomeBookingMapper.fromRow)
+        .nonNulls
         .toList();
-    final pricingTripsData = routeIds.isEmpty
-        ? const <dynamic>[]
-        : await _supabase
-              .from('operation_trips')
-              .select('''
-                route_id, ticket_price, currency, status, trip_date,
-                trip_pricing(one_time_price, currency, is_active)
-              ''')
-              .inFilter('route_id', routeIds)
-              .neq('status', 'cancelled')
-              .limit(500);
-
-    final tripsByRoute = <String, List<dynamic>>{};
-    for (final trip in tripsData) {
-      final routeId = trip['route_id']?.toString();
-      if (routeId == null || routeId.isEmpty) continue;
-      tripsByRoute.putIfAbsent(routeId, () => []).add(trip);
-    }
-    final pricingTripsByRoute = <String, List<dynamic>>{};
-    for (final trip in pricingTripsData) {
-      final routeId = trip['route_id']?.toString();
-      if (routeId == null || routeId.isEmpty) continue;
-      pricingTripsByRoute.putIfAbsent(routeId, () => []).add(trip);
-    }
-
-    final sortedRoutesData =
-        routesData.where((route) {
-          final routeId = route['id']?.toString();
-          return routeId != null &&
-              (tripsByRoute[routeId]?.isNotEmpty ?? false);
-        }).toList()..sort((a, b) {
-          final aTrips = tripsByRoute[a['id']?.toString()]?.length ?? 0;
-          final bTrips = tripsByRoute[b['id']?.toString()]?.length ?? 0;
-          return bTrips.compareTo(aTrips);
-        });
-
-    final popularRoutesData = sortedRoutesData.take(8).toList();
-    final nearbyTripsData = tripsData.take(3).toList();
-
-    final popularRoutes = popularRoutesData.map((e) {
-      final routeId = e['id']?.toString() ?? '';
-      final routeTrips = tripsByRoute[routeId] ?? const <dynamic>[];
-      final pricingTrips = pricingTripsByRoute[routeId] ?? routeTrips;
-      final startingPrice = _startingPriceLabel(pricingTrips);
-      final startCity = e['start_city'] as String? ?? '';
-      final endCity = e['end_city'] as String? ?? '';
-
-      return PopularRouteModel(
-        id: routeId,
-        routeName: e['name']?.toString().trim().isNotEmpty == true
-            ? e['name'].toString()
-            : '$startCity to $endCity',
-        pickup: e['start_city'] as String? ?? '',
-        destination: e['end_city'] as String? ?? '',
-        duration: e['duration']?.toString() ?? '',
-        startingPrice: startingPrice,
-        tripsAvailable: routeTrips.length,
-      );
-    }).toList();
-
-    final nearbyTrips = nearbyTripsData.map((e) {
-      final route = e['route'] as Map<String, dynamic>? ?? {};
-      final capacity = e['capacity'] as int? ?? 0;
-      final passengerCount = e['passenger_count'] as int? ?? 0;
-      final departureTime =
-          e['departure_time']?.toString() ?? e['trip_date']?.toString() ?? '';
-
-      return NearbyTripModel(
-        pickup: route['start_city'] as String? ?? '',
-        destination: route['end_city'] as String? ?? '',
-        departureTime: departureTime,
-        seatsLeft: capacity - passengerCount,
-        isLive: e['status'] == 'in_progress' || e['status'] == 'boarding',
-      );
-    }).toList();
-
-    final packagePlans = packagesData
-        .map(
-          (e) => PackagePlanModel(
-            title: e['name_ar'] as String? ?? '',
-            subtitle: '${e['duration_days'] ?? 1} أيام',
-            price: e['price']?.toString() ?? '',
-            badge: '',
-            iconKey: 'dateRange',
-          ),
-        )
-        .toList();
-
-    HomeCurrentTripModel? currentTrip;
-    if (currentTripData.isNotEmpty) {
-      final trip = currentTripData.first;
-      currentTrip = HomeCurrentTripModel(
-        id: trip['id']?.toString() ?? '',
-        pickup: trip['route']?.toString().split(' ').first ?? '',
-        destination: trip['route']?.toString().split(' ').last ?? '',
-        schedule: '${trip['trip_date']} · ${trip['trip_time']}',
-        statusLabel: trip['assigned_trip']?.toString() ?? 'Processing',
-        driverLine: trip['status'] == 'active'
-            ? 'Driver assigned'
-            : 'Waiting for assignment',
-      );
-    }
-
-    final pickupSet = <String>{};
-    final destinationSet = <String>{};
-    for (var r in routesData) {
-      if (r['start_city'] != null && r['start_city'].toString().isNotEmpty) {
-        pickupSet.add(r['start_city'].toString());
-      }
-      if (r['end_city'] != null && r['end_city'].toString().isNotEmpty) {
-        destinationSet.add(r['end_city'].toString());
-      }
-    }
-
-    final timeSet = <String>{};
-    for (var t in tripsData) {
-      if (t['departure_time'] != null &&
-          t['departure_time'].toString().isNotEmpty) {
-        timeSet.add(t['departure_time'].toString());
-      }
-    }
-
-    final userName =
-        user?.userMetadata?['full_name']?.toString() ??
-        user?.userMetadata?['name']?.toString() ??
-        'User';
 
     return HomeDataModel(
-      popularRoutes: popularRoutes,
-      nearbyTrips: nearbyTrips,
-      packagePlans: packagePlans,
-      pickupSuggestions: pickupSet.toList(),
-      destinationSuggestions: destinationSet.toList(),
-      timeSuggestions: timeSet.toList(),
-      userName: userName,
-      currentTrip: currentTrip,
+      upcomingTrips: _upcomingTrips(tripsData, bookings),
+      bookings: bookings,
+      pickupSuggestions: _distinct(routesData, 'start_city'),
+      destinationSuggestions: _distinct(routesData, 'end_city'),
+      timeSuggestions: _distinct(tripsData, 'departure_time'),
+      userName:
+          user?.userMetadata?['full_name']?.toString() ??
+          user?.userMetadata?['name']?.toString() ??
+          'User',
+      activePackage: HomeActivePackageMapper.fromRow(
+        responses[3] as Map<String, dynamic>?,
+      ),
     );
   }
 
-  String _startingPriceLabel(List<dynamic> trips) {
-    final candidates = <_PriceCandidate>[];
-    for (final trip in trips) {
-      candidates.addAll(_priceCandidatesFromTrip(trip));
-    }
-    if (candidates.isEmpty) return 'Price pending';
-    candidates.sort((a, b) => a.amount.compareTo(b.amount));
-    final cheapest = candidates.first;
-    return '${cheapest.currency} ${_formatPrice(cheapest.amount)}';
+  /// The seats this rider still holds. `reserved | confirmed | boarded` is the
+  /// live-commitment vocabulary of `operation_bookings.status`; a booking under
+  /// payment review is `reserved`, and it must reach Home so the rider can see
+  /// it rather than wonder whether it went through.
+  Future<List<Map<String, dynamic>>> _bookingsOf(String userId, String today) {
+    return _supabase
+        .from('operation_bookings')
+        .select(_bookingColumns)
+        .eq('client_id', userId)
+        .inFilter('status', HomeBookingStatus.liveStatuses)
+        .gte('trip_date', today)
+        .order('trip_date')
+        .order('trip_time')
+        .limit(10);
   }
 
-  List<_PriceCandidate> _priceCandidatesFromTrip(dynamic trip) {
-    if (trip is! Map<String, dynamic>) return const [];
-
-    final currency = trip['currency']?.toString() ?? 'EGP';
-    final candidates = <_PriceCandidate>[];
-    final pricingRows = trip['trip_pricing'];
-    if (pricingRows is List) {
-      for (final row in pricingRows) {
-        if (row is! Map<String, dynamic>) continue;
-        final isActive = row['is_active'] as bool? ?? true;
-        final amount = (row['one_time_price'] as num?)?.toDouble();
-        if (!isActive || amount == null || amount <= 0) continue;
-        candidates.add(
-          _PriceCandidate(
-            amount: amount,
-            currency: row['currency']?.toString() ?? currency,
-          ),
-        );
-      }
-    }
-
-    final ticketPrice = (trip['ticket_price'] as num?)?.toDouble();
-    if (ticketPrice != null && ticketPrice > 0) {
-      candidates.add(_PriceCandidate(amount: ticketPrice, currency: currency));
-    }
-
-    return candidates;
+  /// Home only surfaces a package the rider already pays for, so the
+  /// subscription they own is all we need — never the plan catalogue.
+  Future<Map<String, dynamic>?> _activePackageOf(String userId) {
+    return _supabase
+        .from('subscriptions')
+        .select('package_name, route_name, start_date, end_date')
+        .eq('client_id', userId)
+        .eq('status', 'active')
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
   }
 
-  String _formatPrice(double value) {
-    return value == value.roundToDouble()
-        ? value.round().toString()
-        : value.toStringAsFixed(2);
+  /// Trips arrive ordered by date then departure time, so the first few are the
+  /// next seats a rider can actually take. Each is tagged with the rider's own
+  /// booking on it, when they have one.
+  List<UpcomingTripData> _upcomingTrips(
+    List<dynamic> tripsData,
+    List<HomeBookingData> bookings,
+  ) {
+    // A booking holds exactly one seat, so the seats a rider has on a departure
+    // is the number of bookings they hold on it.
+    final booked = <String, HomeBookingData>{};
+    final bookedSeats = <String, int>{};
+    for (final booking in bookings) {
+      if (booking.tripId.isEmpty) continue;
+      booked.putIfAbsent(booking.tripId, () => booking);
+      bookedSeats.update(
+        booking.tripId,
+        (seats) => seats + 1,
+        ifAbsent: () => 1,
+      );
+    }
+
+    return tripsData.whereType<Map<String, dynamic>>().take(4).map((trip) {
+      final tripId = trip['id']?.toString() ?? '';
+      return UpcomingTripMapper.fromRow(
+        trip,
+        bookedStatus: booked[tripId]?.status,
+        bookedSeats: bookedSeats[tripId] ?? 0,
+      );
+    }).toList();
   }
-}
 
-class _PriceCandidate {
-  const _PriceCandidate({required this.amount, required this.currency});
-
-  final double amount;
-  final String currency;
+  List<String> _distinct(List<dynamic> rows, String column) {
+    final values = <String>{};
+    for (final row in rows.whereType<Map<String, dynamic>>()) {
+      final value = row[column]?.toString().trim() ?? '';
+      if (value.isNotEmpty) values.add(value);
+    }
+    return values.toList();
+  }
 }

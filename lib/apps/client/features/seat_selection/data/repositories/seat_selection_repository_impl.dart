@@ -22,6 +22,14 @@ class SeatSelectionRepositoryImpl implements SeatSelectionRepository {
   }
 
   @override
+  Future<void> releaseTripSeatLock({
+    required String tripId,
+    required String seatId,
+  }) {
+    return _datasource.releaseTripSeatLock(tripId: tripId, seatId: seatId);
+  }
+
+  @override
   Future<Map<String, dynamic>> confirmSeatBooking(Map<String, dynamic> params) {
     return _datasource.confirmSeatBooking(params);
   }

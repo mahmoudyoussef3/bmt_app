@@ -5,5 +5,8 @@ abstract class TripsRepository {
 
   Future<TripData?> getTripById(String id);
 
+  /// Cancels an unapproved booking and releases its seat.
+  Future<void> cancelBooking(String bookingId, String reason);
+
   Stream<void> watchTripChanges();
 }

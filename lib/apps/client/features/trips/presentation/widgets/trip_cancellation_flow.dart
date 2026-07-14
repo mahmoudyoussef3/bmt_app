@@ -4,8 +4,10 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_support_data.dart';
 
-/// Cancellation reason picker + confirmation dialog (UI only).
-Future<bool> showTripCancellationFlow(
+/// Cancellation reason picker + confirmation dialog. Returns the chosen reason
+/// once the client confirms, or null if they backed out — the caller is what
+/// actually cancels the booking.
+Future<String?> showTripCancellationFlow(
   BuildContext context, {
   required String tripReference,
 }) async {
@@ -117,7 +119,7 @@ Future<bool> showTripCancellationFlow(
     },
   );
 
-  if (reason == null || !context.mounted) return false;
+  if (reason == null || !context.mounted) return null;
 
   final confirmed = await showDialog<bool>(
     context: context,
@@ -129,8 +131,9 @@ Future<bool> showTripCancellationFlow(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your booking will be cancelled and a refund will be processed '
-            'according to the active cancellation and refund policy.',
+            'Your booking will be cancelled, your seat released back to the '
+            'trip, and your payment will no longer be reviewed. This cannot '
+            'be undone — you would have to book again.',
             style: ClientTypography.bodySmall(ctx),
           ),
           const SizedBox(height: 12),
@@ -175,11 +178,5 @@ Future<bool> showTripCancellationFlow(
     ),
   );
 
-  if (confirmed == true && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Cancellation request saved.')),
-    );
-    return true;
-  }
-  return false;
+  return confirmed == true ? reason : null;
 }

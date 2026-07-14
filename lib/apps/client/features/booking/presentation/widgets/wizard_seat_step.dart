@@ -112,7 +112,6 @@ class _SeatBody extends StatelessWidget {
                 subtitle: 'Front seats are nearest to the driver.',
                 trailing: BookingCountPill(
                   label: '${state.data.availableCount} free',
-                  color: ClientColors.journeyGreen,
                 ),
               ),
               const SizedBox(height: 16),
@@ -361,12 +360,12 @@ class _SeatCell extends StatelessWidget {
     final background = isSelected
         ? ClientColors.primary
         : available
-        ? ClientColors.journeyGreenLight
+        ? ClientColors.seatAvailableFor(context)
         : ClientColors.surfaceMutedFor(context);
     final foreground = isSelected
         ? Colors.white
         : available
-        ? ClientColors.journeyGreen
+        ? ClientColors.onSeatAvailableFor(context)
         : ClientColors.textTertiaryFor(context);
 
     return GestureDetector(
@@ -381,7 +380,7 @@ class _SeatCell extends StatelessWidget {
             color: isSelected
                 ? ClientColors.primary
                 : available
-                ? ClientColors.journeyGreen.withAlpha(70)
+                ? ClientColors.seatAvailableBorderFor(context)
                 : ClientColors.borderFor(context),
           ),
           boxShadow: isSelected ? ClientElevation.sm(context) : null,
@@ -460,7 +459,12 @@ class _SeatLegend extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        _item(context, ClientColors.journeyGreenLight, 'Available'),
+        _item(
+          context,
+          ClientColors.seatAvailableFor(context),
+          'Available',
+          border: ClientColors.seatAvailableBorderFor(context),
+        ),
         const SizedBox(width: 16),
         _item(context, ClientColors.primary, 'Selected'),
         const SizedBox(width: 16),
@@ -469,7 +473,12 @@ class _SeatLegend extends StatelessWidget {
     );
   }
 
-  Widget _item(BuildContext context, Color color, String label) => Row(
+  Widget _item(
+    BuildContext context,
+    Color color,
+    String label, {
+    Color? border,
+  }) => Row(
     children: [
       Container(
         width: 12,
@@ -477,7 +486,7 @@ class _SeatLegend extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: ClientColors.borderFor(context)),
+          border: Border.all(color: border ?? ClientColors.borderFor(context)),
         ),
       ),
       const SizedBox(width: 5),

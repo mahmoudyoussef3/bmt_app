@@ -17,6 +17,10 @@ class PackagePlan {
   final int rideCount;
   final double price;
 
+  /// The name to show riders: English when the Dashboard has set one, and the
+  /// Arabic name otherwise — never a blank plan on a checkout screen.
+  String get displayName => nameEn.trim().isEmpty ? nameAr : nameEn;
+
   // Helper getters for compatibility
   String get name => nameAr;
   String get durationLabel => '$durationDays يوم';

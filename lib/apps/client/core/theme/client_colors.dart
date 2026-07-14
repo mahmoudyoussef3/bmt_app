@@ -91,6 +91,18 @@ abstract final class ClientColors {
   static const Color journeyPurpleLight = Color(0xFFF5F3FF);
   static const Color onJourneyPurple = Color(0xFF3B0764);
 
+  // ── Seat map ───────────────────────────────────────────────────────────────
+  // Selectable seats stay in the brand blue family so a picked seat (solid
+  // [primary]) reads as the same object in a stronger state, and grey is left
+  // to mean "not selectable".
+  static const Color seatAvailable = Color(0xFFEFF6FF);
+  static const Color seatAvailableBorder = Color(0xFFBFDBFE);
+  static const Color onSeatAvailable = Color(0xFF1D4ED8);
+
+  static const Color _darkSeatAvailable = Color(0xFF17233F);
+  static const Color _darkSeatAvailableBorder = Color(0xFF1E3A8A);
+  static const Color _darkOnSeatAvailable = Color(0xFF93C5FD);
+
   // ── Text ───────────────────────────────────────────────────────────────────
   static const Color textPrimary = Color(0xFF111827);
   static const Color textSecondary = Color(0xFF4B5563);
@@ -166,6 +178,15 @@ abstract final class ClientColors {
 
   static Color primaryContainerFor(BuildContext context) =>
       _isDark(context) ? darkPrimaryLight : primaryLight;
+
+  static Color seatAvailableFor(BuildContext context) =>
+      _isDark(context) ? _darkSeatAvailable : seatAvailable;
+
+  static Color seatAvailableBorderFor(BuildContext context) =>
+      _isDark(context) ? _darkSeatAvailableBorder : seatAvailableBorder;
+
+  static Color onSeatAvailableFor(BuildContext context) =>
+      _isDark(context) ? _darkOnSeatAvailable : onSeatAvailable;
 
   static Color shadowFor(BuildContext context) =>
       _isDark(context) ? const Color(0xFF020617) : const Color(0xFF1E293B);

@@ -14,8 +14,9 @@ class SortVehiclesUseCase {
           (a, b) => _priceValue(a.price).compareTo(_priceValue(b.price)),
         );
       case VehicleSortOption.rating:
-        // Rating is not part of the verified vehicle payload; sort by available seats.
-        list.sort((a, b) => b.availableSeats.compareTo(a.availableSeats));
+        // Best-reviewed captain + vehicle first. Unrated trips sort last rather
+        // than first — an absent rating is not a perfect one.
+        list.sort((a, b) => b.combinedRating.compareTo(a.combinedRating));
       case VehicleSortOption.seats:
         list.sort((a, b) => b.availableSeats.compareTo(a.availableSeats));
       case VehicleSortOption.recommended:

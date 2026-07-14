@@ -3,6 +3,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:bmt_app/core/widgets/maps/map_style.dart';
+import 'package:bmt_app/core/widgets/maps/route_line_style.dart';
 
 /// Builds the layered "premium navigation" stroke — soft glow, casing, then a
 /// vivid rounded line — with independent per-layer opacity so the route can
@@ -12,7 +13,9 @@ import 'package:bmt_app/core/widgets/maps/map_style.dart';
 /// Pass [color] to override the brand route color (used to draw a muted
 /// "remaining" segment next to a full-color "traveled" one); set [glow] to
 /// `false` for secondary/muted segments so the glow doesn't stack visually
-/// on top of the primary segment's.
+/// on top of the primary segment's. [style] picks the stroke weights: the
+/// heavy [RouteLineStyle.hero] where the route is the content, the slimmer
+/// [RouteLineStyle.navigation] where it sits behind a live vehicle.
 List<Polyline> buildRoutePolylines(
   BuildContext context,
   List<LatLng> points, {
@@ -21,6 +24,7 @@ List<Polyline> buildRoutePolylines(
   double lineOpacity = 1,
   Color? color,
   bool glow = true,
+  RouteLineStyle style = RouteLineStyle.hero,
 }) {
   if (points.length < 2) return const [];
   final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -37,10 +41,12 @@ List<Polyline> buildRoutePolylines(
   );
 
   return [
-    if (glow && glowOpacity > 0)
-      stroke(line, (glowAlpha * glowOpacity).round(), 15),
-    if (casingOpacity > 0) stroke(casing, (255 * casingOpacity).round(), 11),
-    if (lineOpacity > 0) stroke(line, (255 * lineOpacity).round(), 6),
+    if (glow && glowOpacity > 0 && style.glowWidth > 0)
+      stroke(line, (glowAlpha * glowOpacity).round(), style.glowWidth),
+    if (casingOpacity > 0 && style.casingWidth > 0)
+      stroke(casing, (255 * casingOpacity).round(), style.casingWidth),
+    if (lineOpacity > 0 && style.coreWidth > 0)
+      stroke(line, (255 * lineOpacity).round(), style.coreWidth),
   ];
 }
 

@@ -20,6 +20,7 @@ import 'package:bmt_app/apps/client/features/payments/domain/usecases/get_paymen
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/paymob_checkout_webview_screen.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/lock_trip_seat_usecase.dart';
+import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/release_trip_seat_lock_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/update_existing_booking_payment_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -49,6 +50,13 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
     }
   }
 
+  /// Jump straight to the step that owns a choice the rider wants to revise.
+  /// Every other answer in the session survives, so a wrong seat costs one tap
+  /// instead of a restart.
+  void _editStep(int step) {
+    if (step >= 0 && step < _stepCount) setState(() => _step = step);
+  }
+
   Future<void> _confirmBooking() async {
     final session = context.read<BookingWizardCubit>().state;
     final tripId = session.selectedTrip?.id ?? '';
@@ -57,6 +65,10 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
     if (tripId.isEmpty || seatId.isEmpty) return;
 
     setState(() => _confirming = true);
+
+    // The lock lives in its own transaction, so a confirm that throws leaves
+    // the seat reserved-but-unbooked unless we hand it back ourselves.
+    var seatLocked = false;
 
     try {
       late final Map<String, dynamic> booking;
@@ -72,6 +84,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
       } else {
         // 1. Lock the seat for 5 minutes.
         await clientGetIt<LockTripSeatUseCase>()(tripId: tripId, seatId: seatId);
+        seatLocked = true;
 
         // 2. Confirm the booking and persist to Supabase.
         booking = await clientGetIt<ConfirmSeatBookingUseCase>()({
@@ -200,6 +213,16 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
         ),
       );
     } catch (e) {
+      // Runs before the mounted check: the seat must be freed even if the user
+      // has already walked away from the wizard. Once the booking row exists
+      // the RPC no-ops, so a failed card payment keeps its held seat.
+      if (seatLocked) {
+        await clientGetIt<ReleaseTripSeatLockUseCase>()(
+          tripId: tripId,
+          seatId: seatId,
+        );
+      }
+
       if (!mounted) return;
       final reason = e.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
       showDialog<void>(
@@ -264,7 +287,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
       create: (_) => clientGetIt<PackagesCubit>(),
       child: WizardPackageStep(onNext: _next),
     ),
-    4 => WizardSummaryStep(onNext: _next),
+    4 => WizardSummaryStep(onNext: _next, onEditStep: _editStep),
     _ => WizardPaymentStep(onConfirm: _confirming ? null : _confirmBooking),
   };
 

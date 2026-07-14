@@ -20,5 +20,10 @@ class TripsRepositoryImpl implements TripsRepository {
   }
 
   @override
+  Future<void> cancelBooking(String bookingId, String reason) {
+    return _datasource.cancelBooking(bookingId, reason);
+  }
+
+  @override
   Stream<void> watchTripChanges() => _datasource.watchTripChanges();
 }

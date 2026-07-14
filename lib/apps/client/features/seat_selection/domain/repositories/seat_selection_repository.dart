@@ -9,6 +9,12 @@ abstract class SeatSelectionRepository {
     required String seatId,
   });
 
+  /// Releases a lock taken by [lockTripSeat] when the booking never happened.
+  Future<void> releaseTripSeatLock({
+    required String tripId,
+    required String seatId,
+  });
+
   /// Step 2: confirms booking after payment details are collected.
   Future<Map<String, dynamic>> confirmSeatBooking(Map<String, dynamic> params);
 

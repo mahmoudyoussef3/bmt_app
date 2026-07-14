@@ -1,235 +1,40 @@
-import 'package:json_annotation/json_annotation.dart';
-import '../../domain/entities/home_data.dart';
+import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 
-part 'home_data_model.g.dart';
+export 'package:bmt_app/apps/client/features/home/data/models/home_active_package_model.dart';
+export 'package:bmt_app/apps/client/features/home/data/models/home_booking_model.dart';
+export 'package:bmt_app/apps/client/features/home/data/models/upcoming_trip_model.dart';
 
-@JsonSerializable()
+/// Assembles the Home payload from rows already mapped by the row mappers.
+/// Home is read-only and never round-trips through JSON, so these models map
+/// Supabase rows straight to entities rather than carrying serialization.
 class HomeDataModel {
   const HomeDataModel({
-    required this.popularRoutes,
-    required this.nearbyTrips,
-    required this.packagePlans,
+    required this.upcomingTrips,
+    required this.bookings,
     required this.pickupSuggestions,
     required this.destinationSuggestions,
     required this.timeSuggestions,
     this.userName,
-    this.currentTrip,
     this.activePackage,
   });
 
-  factory HomeDataModel.fromJson(Map<String, dynamic> json) =>
-      _$HomeDataModelFromJson(json);
-  Map<String, dynamic> toJson() => _$HomeDataModelToJson(this);
-
-  @JsonKey(name: 'popular_routes')
-  final List<PopularRouteModel> popularRoutes;
-
-  @JsonKey(name: 'nearby_trips')
-  final List<NearbyTripModel> nearbyTrips;
-
-  @JsonKey(name: 'package_plans')
-  final List<PackagePlanModel> packagePlans;
-
-  @JsonKey(name: 'pickup_suggestions')
+  final List<UpcomingTripData> upcomingTrips;
+  final List<HomeBookingData> bookings;
   final List<String> pickupSuggestions;
-
-  @JsonKey(name: 'destination_suggestions')
   final List<String> destinationSuggestions;
-
-  @JsonKey(name: 'time_suggestions')
   final List<String> timeSuggestions;
-
-  @JsonKey(name: 'user_name')
   final String? userName;
-
-  @JsonKey(name: 'current_trip')
-  final HomeCurrentTripModel? currentTrip;
-
-  @JsonKey(name: 'active_package')
-  final HomeActivePackageModel? activePackage;
+  final HomeActivePackageData? activePackage;
 
   HomeData toEntity() {
     return HomeData(
-      popularRoutes: popularRoutes.map((route) => route.toEntity()).toList(),
-      nearbyTrips: nearbyTrips.map((trip) => trip.toEntity()).toList(),
-      packagePlans: packagePlans.map((plan) => plan.toEntity()).toList(),
+      upcomingTrips: upcomingTrips,
+      bookings: bookings,
       pickupSuggestions: pickupSuggestions,
       destinationSuggestions: destinationSuggestions,
       timeSuggestions: timeSuggestions,
       userName: userName,
-      currentTrip: currentTrip?.toEntity(),
-      activePackage: activePackage?.toEntity(),
-    );
-  }
-}
-
-@JsonSerializable()
-class PopularRouteModel {
-  const PopularRouteModel({
-    required this.id,
-    required this.routeName,
-    required this.pickup,
-    required this.destination,
-    required this.duration,
-    required this.startingPrice,
-    required this.tripsAvailable,
-  });
-
-  factory PopularRouteModel.fromJson(Map<String, dynamic> json) =>
-      _$PopularRouteModelFromJson(json);
-  Map<String, dynamic> toJson() => _$PopularRouteModelToJson(this);
-
-  final String id;
-  @JsonKey(name: 'route_name')
-  final String routeName;
-  final String pickup;
-  final String destination;
-  final String duration;
-  @JsonKey(name: 'starting_price')
-  final String startingPrice;
-  @JsonKey(name: 'trips_available')
-  final int tripsAvailable;
-
-  PopularRouteData toEntity() {
-    return PopularRouteData(
-      id: id,
-      routeName: routeName,
-      pickup: pickup,
-      destination: destination,
-      duration: duration,
-      startingPrice: startingPrice,
-      tripsAvailable: tripsAvailable,
-    );
-  }
-}
-
-@JsonSerializable()
-class NearbyTripModel {
-  const NearbyTripModel({
-    required this.pickup,
-    required this.destination,
-    required this.departureTime,
-    required this.seatsLeft,
-    required this.isLive,
-  });
-
-  factory NearbyTripModel.fromJson(Map<String, dynamic> json) =>
-      _$NearbyTripModelFromJson(json);
-  Map<String, dynamic> toJson() => _$NearbyTripModelToJson(this);
-
-  final String pickup;
-  final String destination;
-  @JsonKey(name: 'departure_time')
-  final String departureTime;
-  @JsonKey(name: 'seats_left')
-  final int seatsLeft;
-  @JsonKey(name: 'is_live')
-  final bool isLive;
-
-  NearbyTripData toEntity() {
-    return NearbyTripData(
-      pickup: pickup,
-      destination: destination,
-      departureTime: departureTime,
-      seatsLeft: seatsLeft,
-      isLive: isLive,
-    );
-  }
-}
-
-@JsonSerializable()
-class PackagePlanModel {
-  const PackagePlanModel({
-    required this.title,
-    required this.subtitle,
-    required this.price,
-    required this.badge,
-    required this.iconKey,
-  });
-
-  factory PackagePlanModel.fromJson(Map<String, dynamic> json) =>
-      _$PackagePlanModelFromJson(json);
-  Map<String, dynamic> toJson() => _$PackagePlanModelToJson(this);
-
-  final String title;
-  final String subtitle;
-  final String price;
-  final String badge;
-  @JsonKey(name: 'icon_key')
-  final String iconKey;
-
-  PackagePlanData toEntity() {
-    return PackagePlanData(
-      title: title,
-      subtitle: subtitle,
-      price: price,
-      badge: badge,
-      iconKey: iconKey,
-    );
-  }
-}
-
-@JsonSerializable()
-class HomeCurrentTripModel {
-  const HomeCurrentTripModel({
-    required this.id,
-    required this.pickup,
-    required this.destination,
-    required this.schedule,
-    required this.statusLabel,
-    this.driverLine,
-  });
-
-  factory HomeCurrentTripModel.fromJson(Map<String, dynamic> json) =>
-      _$HomeCurrentTripModelFromJson(json);
-  Map<String, dynamic> toJson() => _$HomeCurrentTripModelToJson(this);
-
-  final String id;
-  final String pickup;
-  final String destination;
-  final String schedule;
-  @JsonKey(name: 'status_label')
-  final String statusLabel;
-  @JsonKey(name: 'driver_line')
-  final String? driverLine;
-
-  HomeCurrentTripData toEntity() {
-    return HomeCurrentTripData(
-      id: id,
-      pickup: pickup,
-      destination: destination,
-      schedule: schedule,
-      statusLabel: statusLabel,
-      driverLine: driverLine,
-    );
-  }
-}
-
-@JsonSerializable()
-class HomeActivePackageModel {
-  const HomeActivePackageModel({
-    required this.title,
-    required this.expiryText,
-    required this.remainingTrips,
-    required this.totalTrips,
-  });
-
-  factory HomeActivePackageModel.fromJson(Map<String, dynamic> json) =>
-      _$HomeActivePackageModelFromJson(json);
-
-  final String title;
-  final String expiryText;
-  final int remainingTrips;
-  final int totalTrips;
-
-  Map<String, dynamic> toJson() => _$HomeActivePackageModelToJson(this);
-
-  HomeActivePackageData toEntity() {
-    return HomeActivePackageData(
-      title: title,
-      expiryText: expiryText,
-      remainingTrips: remainingTrips,
-      totalTrips: totalTrips,
+      activePackage: activePackage,
     );
   }
 }

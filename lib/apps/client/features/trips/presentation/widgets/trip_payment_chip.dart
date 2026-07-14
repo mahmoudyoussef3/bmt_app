@@ -35,6 +35,10 @@ class TripPaymentChip extends StatelessWidget {
         ClientColors.journeySlateLight,
         ClientColors.onJourneySlate,
       ),
+      PaymentStatus.cancelled => (
+        ClientColors.journeySlateLight,
+        ClientColors.onJourneySlate,
+      ),
     };
 
     return Container(

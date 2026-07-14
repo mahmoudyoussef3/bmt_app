@@ -30,9 +30,7 @@ class _FakeHomeRepository implements HomeRepository {
 }
 
 const _homeData = HomeData(
-  popularRoutes: [],
-  nearbyTrips: [],
-  packagePlans: [],
+  upcomingTrips: [],
   pickupSuggestions: [],
   destinationSuggestions: ['Downtown'],
   timeSuggestions: [],
@@ -40,9 +38,7 @@ const _homeData = HomeData(
 );
 
 const _homeDataAfterTripCompleted = HomeData(
-  popularRoutes: [],
-  nearbyTrips: [],
-  packagePlans: [],
+  upcomingTrips: [],
   pickupSuggestions: [],
   destinationSuggestions: ['Downtown'],
   timeSuggestions: [],

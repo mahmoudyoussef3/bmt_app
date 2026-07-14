@@ -7,18 +7,18 @@ import 'package:bmt_app/core/maps/route_geometry_cache.dart';
 import 'package:bmt_app/core/maps/route_geometry_service.dart';
 import 'package:bmt_app/core/maps/route_path_math.dart';
 import 'package:bmt_app/core/tracking/tracking.dart';
-import 'package:bmt_app/core/widgets/maps/controls/map_control_cluster.dart';
 import 'package:bmt_app/core/widgets/maps/easyway_tile_layer.dart';
 import 'package:bmt_app/core/widgets/maps/map_camera_animator.dart';
-import 'package:bmt_app/core/widgets/maps/overlays/map_attribution.dart';
 import 'package:bmt_app/core/widgets/maps/overlays/map_empty_panel.dart';
+import 'package:bmt_app/core/widgets/maps/route_line_style.dart';
 import 'package:bmt_app/core/widgets/maps/route_polyline_layers.dart';
 import 'package:bmt_app/core/widgets/tracking/live_vehicle_layer.dart';
 import 'package:bmt_app/core/widgets/tracking/vehicle_track_controller.dart';
 
 import '../../domain/entities/tracking_trip.dart';
-import 'captain_card.dart';
+import 'tracking_map_chrome.dart';
 import 'tracking_map_overlays.dart';
+import 'tracking_map_status_card.dart';
 
 /// Live tracking map, built on the same EasyWay map kit as Route Discovery
 /// and Route Details: the shared basemap, a layered traveled/remaining
@@ -39,6 +39,7 @@ class TrackingLiveMap extends StatefulWidget {
     this.trip,
     this.sheetController,
     this.captainCardTopInset = 12,
+    this.borderRadius = 18,
   });
 
   final List<TrackingPoint> routePoints;
@@ -51,6 +52,10 @@ class TrackingLiveMap extends StatefulWidget {
   /// callers whose map sits full-bleed behind a transparent, floating app
   /// bar must pass enough inset to clear it.
   final double captainCardTopInset;
+
+  /// Corner radius of the map surface. 0 for a full-bleed map (phones), where
+  /// rounding would carve the tiles away from the screen edges.
+  final double borderRadius;
 
   /// Route progress snapshot: drives the traveled/remaining polyline split
   /// and the per-stop visit-state markers.
@@ -82,6 +87,7 @@ class _TrackingLiveMapState extends State<TrackingLiveMap>
   bool _loadingRoad = false;
   bool _mapReady = false;
   bool _follow = true;
+  double _zoom = 13;
 
   @override
   void initState() {
@@ -237,97 +243,108 @@ class _TrackingLiveMapState extends State<TrackingLiveMap>
     final (traveledPath, remainingPath) = _splitRoute(route);
     final trip = widget.trip;
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(18),
-      child: Stack(
-        children: [
-          FlutterMap(
-            mapController: _mapController,
-            options: MapOptions(
-              initialCenter: center,
-              initialZoom: 13,
-              initialCameraFit: _cameraFit(),
-              onMapReady: _onMapReady,
-              onMapEvent: _handleMapEvent,
-              interactionOptions: const InteractionOptions(
-                flags:
-                    InteractiveFlag.drag |
-                    InteractiveFlag.pinchZoom |
-                    InteractiveFlag.doubleTapZoom,
-              ),
+    final map = Stack(
+      children: [
+        FlutterMap(
+          mapController: _mapController,
+          options: MapOptions(
+            initialCenter: center,
+            initialZoom: _zoom,
+            initialCameraFit: _cameraFit(),
+            onMapReady: _onMapReady,
+            onMapEvent: _handleMapEvent,
+            onPositionChanged: _handlePositionChanged,
+            interactionOptions: const InteractionOptions(
+              flags:
+                  InteractiveFlag.drag |
+                  InteractiveFlag.pinchZoom |
+                  InteractiveFlag.doubleTapZoom,
             ),
-            children: [
-              const EasyWayTileLayer(),
-              if (route.length > 1)
-                PolylineLayer(
-                  polylines: [
-                    // Covered part of the route reads as done…
-                    ...buildRoutePolylines(
-                      context,
-                      traveledPath,
-                      color: ClientColors.journeyGreen,
-                      glow: false,
-                    ),
-                    // …while the part ahead keeps the brand color and glow.
-                    ...buildRoutePolylines(context, remainingPath),
-                  ],
-                ),
-              MarkerLayer(
-                markers: buildTrackingStopMarkers(
-                  context,
-                  route: route,
-                  stops: widget.progress?.stops ?? const <StopProgress>[],
-                ),
-              ),
-              AnimatedBuilder(
-                animation: _pulse,
-                builder: (context, _) => LiveVehicleLayer(
-                  controller: _track,
-                  color: ClientColors.primary,
-                  pulseValue: _pulse.value,
-                ),
-              ),
-            ],
           ),
-          if (trip != null)
-            PositionedDirectional(
-              top: widget.captainCardTopInset,
-              start: 12,
-              child: CaptainCard(
-                driverInitials: trip.driverInitials,
-                driverName: trip.displayDriverName,
-                vehiclePlate: trip.displayVehiclePlate,
-                currentState: widget.currentState,
-                driverRating: trip.driverRating,
-                sample: _track.sample,
+          children: [
+            const EasyWayTileLayer(),
+            if (route.length > 1)
+              PolylineLayer(
+                polylines: [
+                  // Road already covered: a thin slate trail that recedes.
+                  ...buildRoutePolylines(
+                    context,
+                    traveledPath,
+                    color: ClientColors.journeySlate,
+                    glow: false,
+                    style: RouteLineStyle.trail,
+                  ),
+                  // Road ahead: the brand line, slim enough to leave the stops
+                  // and the vehicle puck legible on top of it.
+                  ...buildRoutePolylines(
+                    context,
+                    remainingPath,
+                    style: RouteLineStyle.navigation,
+                  ),
+                ],
+              ),
+            MarkerLayer(
+              markers: buildTrackingStopMarkers(
+                route: route,
+                stops: widget.progress?.stops ?? const <StopProgress>[],
+                zoom: _zoom,
               ),
             ),
+            AnimatedBuilder(
+              animation: _pulse,
+              builder: (context, _) => LiveVehicleLayer(
+                controller: _track,
+                color: ClientColors.primary,
+                pulseValue: _pulse.value,
+              ),
+            ),
+          ],
+        ),
+        TrackingMapTopScrim(height: widget.captainCardTopInset + 96),
+        if (trip != null)
           PositionedDirectional(
-            top: 0,
-            bottom: 0,
-            end: 12,
-            child: Align(
-              alignment: const Alignment(0, -0.15),
-              child: MapControlCluster(
-                onRecenter: _fitRoute,
-                onZoomIn: () => _camera.animateZoomBy(1),
-                onZoomOut: () => _camera.animateZoomBy(-1),
-                onToggleFollow: () {
-                  setState(() => _follow = true);
-                  _followVehicle();
-                },
-                followActive: _follow,
-              ),
+            top: widget.captainCardTopInset,
+            start: 12,
+            child: TrackingMapStatusCard(
+              driverInitials: trip.driverInitials,
+              driverName: trip.displayDriverName,
+              vehiclePlate: trip.displayVehiclePlate,
+              currentState: widget.currentState,
+              progress: widget.progress,
+              sample: _track.sample,
             ),
           ),
-          PositionedDirectional(
-            end: 6,
-            bottom: 6,
-            child: MapAttribution(showRouting: _road != null),
-          ),
-        ],
-      ),
+        TrackingMapChrome(
+          sheetController: widget.sheetController,
+          onRecenter: _fitRoute,
+          onZoomIn: () => _camera.animateZoomBy(1),
+          onZoomOut: () => _camera.animateZoomBy(-1),
+          onToggleFollow: () {
+            setState(() => _follow = true);
+            _followVehicle();
+          },
+          followActive: _follow,
+          showRouting: _road != null,
+        ),
+      ],
     );
+
+    // Rounded only where the map is a bounded panel (tablet). Full-bleed
+    // behind the app bar, a corner radius just clips the tiles away from the
+    // screen edge.
+    if (widget.borderRadius == 0) return map;
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(widget.borderRadius),
+      child: map,
+    );
+  }
+
+  /// Stop markers thin out and gain labels by zoom, so the camera has to feed
+  /// its zoom back into the build. Ignore sub-step jitter — this rebuilds the
+  /// marker layer.
+  void _handlePositionChanged(MapCamera camera, bool hasGesture) {
+    if ((camera.zoom - _zoom).abs() < 0.25) return;
+    setState(() => _zoom = camera.zoom);
   }
 
   void _handleMapEvent(MapEvent event) {

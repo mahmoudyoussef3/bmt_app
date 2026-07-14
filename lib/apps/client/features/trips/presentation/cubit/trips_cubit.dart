@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/trip.dart';
+import '../../domain/usecases/cancel_booking_usecase.dart';
 import '../../domain/usecases/get_trip_details_usecase.dart';
 import '../../domain/usecases/get_trips_usecase.dart';
 import '../../domain/usecases/watch_trips_usecase.dart';
@@ -13,14 +14,17 @@ class TripsCubit extends Cubit<TripsState> {
     required GetTripsUseCase getTrips,
     required GetTripDetailsUseCase getTripDetails,
     required WatchTripsUseCase watchTrips,
+    required CancelBookingUseCase cancelBooking,
   }) : _getTrips = getTrips,
        _getTripDetails = getTripDetails,
        _watchTrips = watchTrips,
+       _cancelBooking = cancelBooking,
        super(const TripsLoading());
 
   final GetTripsUseCase _getTrips;
   final GetTripDetailsUseCase _getTripDetails;
   final WatchTripsUseCase _watchTrips;
+  final CancelBookingUseCase _cancelBooking;
   StreamSubscription<void>? _tripChangesSubscription;
   Timer? _refreshDebounce;
   bool _refreshing = false;
@@ -52,6 +56,35 @@ class TripsCubit extends Cubit<TripsState> {
       if (isClosed) return;
       emit(TripsError(error.toString()));
     }
+  }
+
+  /// Cancels an unapproved booking, then reloads so the trip moves to
+  /// "Cancelled" and its seat shows as free — the realtime refresh would do it
+  /// too, but the client must not have to wait on it to see the outcome.
+  Future<void> cancelTrip(TripData trip, String reason) async {
+    final current = state;
+    if (current is! TripsLoaded || current.cancelInFlight) return;
+
+    emit(current.copyWith(cancelInFlight: true));
+    try {
+      await _cancelBooking(trip, reason);
+      final trips = await _getTrips();
+      if (isClosed) return;
+      emit(
+        TripsLoaded(
+          trips: trips,
+          selectedTrip: trips.where((t) => t.id == trip.id).firstOrNull,
+          cancelledReference: trip.reference,
+        ),
+      );
+    } catch (error) {
+      if (isClosed) return;
+      emit(current.copyWith(cancelFailure: _readableError(error)));
+    }
+  }
+
+  String _readableError(Object error) {
+    return error.toString().replaceFirst('Exception: ', '');
   }
 
   List<TripData> tripsForFilter(TripFilter filter, List<TripData> trips) {
