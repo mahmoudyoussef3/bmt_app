@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/stop_role_chips.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/stop_meta_labels.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/timeline_stop_dot.dart';
 
-/// One stop row in [RouteStopTimeline]: a colored dot/connector plus the
-/// stop's name and pickup/drop-off capability chips.
+/// One stop row in `RouteStopTimeline`: rail marker, stop name, and a muted
+/// caption saying what the passenger may do there.
+///
+/// The row is flat — no tinted card — so the eye scans the column of names
+/// first and only then the supporting detail.
 class TimelineStopTile extends StatelessWidget {
   const TimelineStopTile({
     super.key,
@@ -20,179 +24,85 @@ class TimelineStopTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final color = isFirst
-        ? ClientColors.journeyGreen
+    final kind = isFirst
+        ? TimelineStopKind.origin
         : isLast
-        ? ClientColors.primaryFor(context)
-        : ClientColors.accent;
-    final bgColor = isFirst
-        ? ClientColors.journeyGreenLight
-        : isLast
-        ? ClientColors.primaryContainerFor(context)
-        : ClientColors.journeyAmberLight;
-    final roleLabel = isFirst
-        ? 'Start'
-        : isLast
-        ? 'End'
-        : 'Stop ${point.order}';
+        ? TimelineStopKind.destination
+        : TimelineStopKind.waypoint;
+    final isEndpoint = kind != TimelineStopKind.waypoint;
 
-    return Padding(
-      padding: EdgeInsets.fromLTRB(18, 0, 18, isLast ? 18 : 0),
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _Dot(color: color, isFirst: isFirst, isLast: isLast),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Padding(
-                padding: EdgeInsets.only(bottom: isLast ? 0 : 14),
-                child: _StopCard(
-                  point: point,
-                  roleLabel: roleLabel,
-                  color: color,
-                  bgColor: bgColor,
-                  scheme: scheme,
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Dot extends StatelessWidget {
-  const _Dot({
-    required this.color,
-    required this.isFirst,
-    required this.isLast,
-  });
-
-  final Color color;
-  final bool isFirst;
-  final bool isLast;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        Container(
-          width: 26,
-          height: 26,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            border: Border.all(color: scheme.surface, width: 4),
-            boxShadow: [
-              BoxShadow(
-                color: color.withAlpha(65),
-                blurRadius: 12,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Icon(
-            isFirst
-                ? Icons.trip_origin_rounded
-                : isLast
-                ? Icons.flag_rounded
-                : Icons.place_rounded,
-            size: 13,
-            color: Colors.white,
-          ),
-        ),
-        if (!isLast)
-          Expanded(
-            child: Container(
-              width: 3,
-              margin: const EdgeInsets.symmetric(vertical: 5),
-              decoration: BoxDecoration(
-                color: color.withAlpha(95),
-                borderRadius: BorderRadius.circular(999),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _StopCard extends StatelessWidget {
-  const _StopCard({
-    required this.point,
-    required this.roleLabel,
-    required this.color,
-    required this.bgColor,
-    required this.scheme,
-  });
-
-  final RoutePointData point;
-  final String roleLabel;
-  final Color color;
-  final Color bgColor;
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: bgColor.withAlpha(isDark ? 34 : 120),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: color.withAlpha(70)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  point.name,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
-                ),
-              ),
-              const SizedBox(width: 8),
-              StopRoleChip(label: roleLabel, color: color),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              if (point.pickupAllowed)
-                CapabilityChip(
-                  label: 'Pickup',
-                  icon: Icons.login_rounded,
-                  color: ClientColors.journeyGreen,
-                ),
-              if (point.dropoffAllowed)
-                CapabilityChip(
-                  label: 'Drop-off',
-                  icon: Icons.logout_rounded,
-                  color: ClientColors.primary,
-                ),
-              if (!point.pickupAllowed && !point.dropoffAllowed)
-                CapabilityChip(
-                  label: 'Pass-through',
-                  icon: Icons.route_rounded,
-                  color: scheme.outline,
-                ),
-            ],
+          TimelineStopDot(kind: kind, order: point.order, isLast: isLast),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(top: 1, bottom: isLast ? 0 : 22),
+              child: _StopDetails(point: point, kind: kind, bold: isEndpoint),
+            ),
           ),
         ],
       ),
+    );
+  }
+}
+
+class _StopDetails extends StatelessWidget {
+  const _StopDetails({
+    required this.point,
+    required this.kind,
+    required this.bold,
+  });
+
+  final RoutePointData point;
+  final TimelineStopKind kind;
+  final bool bold;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final accent = TimelineStopDot.accentFor(context, kind);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                point.name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.bodyLarge?.copyWith(
+                  fontWeight: bold ? FontWeight.w800 : FontWeight.w600,
+                  color: bold
+                      ? ClientColors.textPrimaryFor(context)
+                      : ClientColors.textPrimaryFor(context).withAlpha(215),
+                  letterSpacing: -0.2,
+                  height: 1.25,
+                ),
+              ),
+            ),
+            if (kind != TimelineStopKind.waypoint) ...[
+              const SizedBox(width: 10),
+              StopRoleChip(
+                label: kind == TimelineStopKind.origin ? 'Start' : 'End',
+                color: accent,
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 5),
+        StopCapabilityLabel(
+          capability: StopCapability.of(
+            pickupAllowed: point.pickupAllowed,
+            dropoffAllowed: point.dropoffAllowed,
+          ),
+        ),
+      ],
     );
   }
 }

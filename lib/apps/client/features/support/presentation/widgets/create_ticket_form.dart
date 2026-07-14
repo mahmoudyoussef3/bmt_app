@@ -1,0 +1,119 @@
+import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:file_picker/file_picker.dart';
+
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/apps/client/features/support/domain/entities/support_category.dart';
+import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
+
+import 'support_attachment_picker.dart';
+import 'support_category_dropdown.dart';
+import 'support_field_label.dart';
+import 'support_text_field.dart';
+
+/// The create-ticket form: topic, subject, details, optional attachment.
+/// Clients don't set a priority — support triages that on the dashboard.
+class CreateTicketForm extends StatefulWidget {
+  const CreateTicketForm({super.key, required this.isSubmitting});
+
+  final bool isSubmitting;
+
+  @override
+  State<CreateTicketForm> createState() => _CreateTicketFormState();
+}
+
+class _CreateTicketFormState extends State<CreateTicketForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _titleController = TextEditingController();
+  final _descController = TextEditingController();
+
+  String _category = defaultSupportCategory;
+  File? _attachment;
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _descController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickAttachment() async {
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
+    );
+
+    final path = result?.files.single.path;
+    if (path == null || !mounted) return;
+    setState(() => _attachment = File(path));
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+
+    context.read<SupportCubit>().createTicket(
+      category: _category,
+      title: _titleController.text.trim(),
+      description: _descController.text.trim(),
+      attachment: _attachment,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: ListView(
+        padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+        children: [
+          const SupportFieldLabel(
+            label: 'What is this about?',
+            hint: 'Pick the topic closest to your issue.',
+          ),
+          SupportCategoryDropdown(
+            value: _category,
+            onChanged: (value) => setState(() => _category = value),
+          ),
+          const SizedBox(height: 24),
+          SupportTextField(
+            label: 'Subject',
+            labelHint: 'A short summary of the problem.',
+            controller: _titleController,
+            hint: 'e.g. Charged twice for one booking',
+            emptyMessage: 'Subject is required',
+            minLength: 5,
+          ),
+          const SizedBox(height: 24),
+          SupportTextField(
+            label: 'Details',
+            labelHint:
+                'What happened, and when? Add your trip or booking '
+                'reference if you have it.',
+            controller: _descController,
+            hint: 'Describe the issue…',
+            emptyMessage: 'Details are required',
+            minLength: 10,
+            maxLines: 6,
+          ),
+          const SizedBox(height: 24),
+          const SupportFieldLabel(
+            label: 'Attachment',
+            hint: 'Optional — a screenshot or receipt helps us a lot.',
+          ),
+          SupportAttachmentPicker(
+            attachment: _attachment,
+            onPick: _pickAttachment,
+            onClear: () => setState(() => _attachment = null),
+          ),
+          const SizedBox(height: 40),
+          ClientButton(
+            label: widget.isSubmitting ? 'Submitting…' : 'Submit ticket',
+            isLoading: widget.isSubmitting,
+            onPressed: _submit,
+          ),
+        ],
+      ),
+    );
+  }
+}

@@ -64,7 +64,7 @@ class SupabaseDashboardHomeDatasource implements DashboardHomeDatasource {
             count: _arabicNumber(pendingStarts.lateTrips),
             description:
                 'رحلات اليوم تجاوزت وقت الانطلاق ولم تبدأ من تطبيق السائق',
-            targetModule: DashboardRoutes.liveTrips,
+            targetModule: DashboardRoutes.trips,
             priority: OperationsPriority.urgent,
           ),
         if (pendingStarts.dueSoonTrips > 0)
@@ -100,7 +100,7 @@ class SupabaseDashboardHomeDatasource implements DashboardHomeDatasource {
             title: 'رحلات اليوم متأخرة عن الانطلاق',
             details:
                 '${_arabicNumber(pendingStarts.lateTrips)} رحلة لم تتحول إلى جارية بعد وقت الانطلاق',
-            targetModule: DashboardRoutes.liveTrips,
+            targetModule: DashboardRoutes.trips,
             priority: OperationsPriority.urgent,
           ),
         if (documentAlerts.expiredVehicles > 0)

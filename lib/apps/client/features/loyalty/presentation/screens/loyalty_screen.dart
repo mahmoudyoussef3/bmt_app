@@ -354,7 +354,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Voucher code copied to clipboard!'),
-                      backgroundColor: Colors.green,
+                      backgroundColor: ClientColors.journeyCyan,
                     ),
                   );
                 },
@@ -483,7 +483,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                 icon: Icons.receipt_long_rounded,
                 title: 'Points History',
                 subtitle: 'Ledger Logs',
-                color: Colors.teal,
+                color: ClientColors.journeyCyan,
                 onTap: () => setState(() => _currentView = 2),
                 scheme: scheme,
               ),
@@ -753,7 +753,11 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.check_circle_rounded, color: Colors.green, size: 16),
+          const Icon(
+            Icons.check_circle_rounded,
+            color: ClientColors.journeyCyan,
+            size: 16,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -858,7 +862,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
                     color: tx.isEarned
-                        ? Colors.green.withAlpha(20)
+                        ? ClientColors.journeyCyan.withAlpha(20)
                         : Colors.red.withAlpha(20),
                     shape: BoxShape.circle,
                   ),
@@ -866,7 +870,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                     tx.isEarned
                         ? Icons.add_circle_outline
                         : Icons.remove_circle_outline,
-                    color: tx.isEarned ? Colors.green : Colors.redAccent,
+                    color: tx.isEarned
+                        ? ClientColors.journeyCyan
+                        : Colors.redAccent,
                     size: 16,
                   ),
                 ),
@@ -916,7 +922,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    color: tx.isEarned ? Colors.green : Colors.redAccent,
+                    color: tx.isEarned
+                        ? ClientColors.journeyCyan
+                        : Colors.redAccent,
                   ),
                 ),
               ],
@@ -1136,9 +1144,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
   Color _getRewardCategoryColor(String cat, ColorScheme scheme) {
     return switch (cat) {
       'Discount' => scheme.primary,
-      'FreeRide' => Colors.green,
+      'FreeRide' => ClientColors.journeyCyan,
       'Cashback' => Colors.amber,
-      'Package' => Colors.teal,
+      'Package' => ClientColors.journeyCyan,
       _ => Colors.grey,
     };
   }

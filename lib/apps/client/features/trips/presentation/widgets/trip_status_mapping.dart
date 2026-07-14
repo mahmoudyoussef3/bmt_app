@@ -29,7 +29,7 @@ String driverBadgeLabelFor(TripStatus status) {
 Color driverBadgeColorFor(TripStatus status) {
   return switch (status) {
     TripStatus.upcoming => ClientColors.primary,
-    TripStatus.inProgress => ClientColors.journeyGreen,
+    TripStatus.inProgress => ClientColors.journeyCyan,
     TripStatus.completed => ClientColors.journeySlate,
     TripStatus.cancelled => ClientColors.journeyRed,
   };

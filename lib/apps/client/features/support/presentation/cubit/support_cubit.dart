@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../domain/usecases/get_support_workspace_usecase.dart';
 import '../../domain/usecases/get_my_support_tickets_usecase.dart';
 import '../../domain/usecases/create_support_ticket_usecase.dart';
 import '../../domain/usecases/get_ticket_details_usecase.dart';
@@ -8,35 +7,27 @@ import '../../domain/repositories/support_repository.dart';
 import 'support_state.dart';
 
 class SupportCubit extends Cubit<SupportState> {
-  final GetSupportWorkspaceUseCase _getSupportWorkspace;
   final GetMySupportTicketsUseCase _getMySupportTickets;
   final CreateSupportTicketUseCase _createSupportTicket;
   final GetTicketDetailsUseCase _getTicketDetails;
   final SupportRepository _supportRepository; // To get attachments
 
   SupportCubit({
-    required GetSupportWorkspaceUseCase getSupportWorkspace,
     required GetMySupportTicketsUseCase getMySupportTickets,
     required CreateSupportTicketUseCase createSupportTicket,
     required GetTicketDetailsUseCase getTicketDetails,
     required SupportRepository supportRepository,
-  }) : _getSupportWorkspace = getSupportWorkspace,
-       _getMySupportTickets = getMySupportTickets,
+  }) : _getMySupportTickets = getMySupportTickets,
        _createSupportTicket = createSupportTicket,
        _getTicketDetails = getTicketDetails,
        _supportRepository = supportRepository,
        super(SupportInitial());
 
-  Future<void> loadWorkspace() async {
+  Future<void> loadTickets() async {
     emit(SupportLoading());
     try {
-      final workspace = await _getSupportWorkspace();
-      emit(
-        SupportLoaded(
-          categories: workspace.categories,
-          tickets: workspace.tickets,
-        ),
-      );
+      final tickets = await _getMySupportTickets();
+      emit(SupportLoaded(tickets: tickets));
     } catch (e) {
       emit(SupportError(_friendlyMessage(e)));
     }
@@ -57,11 +48,14 @@ class SupportCubit extends Cubit<SupportState> {
     }
   }
 
+  /// Files a new ticket. Note this runs on the create screen's own cubit
+  /// instance, which is disposed the moment that screen pops — so it must not
+  /// reload the list here. The Support Center refreshes itself when the create
+  /// screen returns.
   Future<void> createTicket({
     required String category,
     required String title,
     required String description,
-    required String priority,
     String? relatedBookingId,
     String? relatedTripId,
     File? attachment,
@@ -72,7 +66,6 @@ class SupportCubit extends Cubit<SupportState> {
         category: category,
         title: title,
         description: description,
-        priority: priority,
         relatedBookingId: relatedBookingId,
         relatedTripId: relatedTripId,
       );
@@ -87,10 +80,8 @@ class SupportCubit extends Cubit<SupportState> {
       emit(
         SupportSuccess(message: 'Ticket created successfully', ticket: ticket),
       );
-      loadWorkspace();
     } catch (e) {
       emit(SupportError(_friendlyMessage(e)));
-      loadWorkspace();
     }
   }
 

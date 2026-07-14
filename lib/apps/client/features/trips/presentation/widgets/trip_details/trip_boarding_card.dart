@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/ticket_tear_line.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/boarding_pass_parts.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/ticket_tear_line.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_badge.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_schedule_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_soft_icon.dart';
@@ -48,7 +48,7 @@ class TripBoardingCard extends StatelessWidget {
               ),
               TripInlineBadge(
                 label: onBoard ? 'On board' : 'Ready',
-                color: ClientColors.journeyGreen,
+                color: ClientColors.journeyCyan,
               ),
             ],
           ),

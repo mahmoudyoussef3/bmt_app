@@ -744,9 +744,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get dashboard_trips => 'الرحلات';
 
   @override
-  String get dashboard_liveTrips => 'الرحلات المباشرة';
-
-  @override
   String get dashboard_fleet => 'إدارة الأسطول';
 
   @override

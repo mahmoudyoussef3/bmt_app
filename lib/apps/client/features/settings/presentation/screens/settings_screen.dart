@@ -133,7 +133,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: [
             const Icon(
               Icons.check_circle_rounded,
-              color: Colors.greenAccent,
+              color: ClientColors.journeyCyanStrong,
               size: 20,
             ),
             const SizedBox(width: 10),
@@ -524,7 +524,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [ClientColors.primary, ClientColors.journeyGreen],
+          colors: [ClientColors.primary, ClientColors.journeyCyan],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -617,7 +617,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           child: _buildQuickActionCard(
             icon: Icons.edit_note_rounded,
             label: 'Edit Profile',
-            color: Colors.teal,
+            color: ClientColors.journeyCyan,
             onTap: () => _showEditProfileBottomSheet(context),
             context: context,
           ),
@@ -1071,7 +1071,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   children: [
                     Icon(
                       Icons.directions_bus_rounded,
-                      color: ClientColors.journeyGreen,
+                      color: ClientColors.journeyCyan,
                       size: 18,
                     ),
                     const SizedBox(width: 10),
@@ -1517,7 +1517,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     strokeWidth: 8,
                     backgroundColor: ClientColors.borderFor(context),
                     valueColor: const AlwaysStoppedAnimation(
-                      Colors.greenAccent,
+                      ClientColors.journeyCyan,
                     ),
                   ),
                 ),
@@ -1773,7 +1773,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.greenAccent.withAlpha(30),
+                      color: ClientColors.journeyCyan.withAlpha(30),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -1781,7 +1781,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       style: TextStyle(
                         fontSize: 8,
                         fontWeight: FontWeight.bold,
-                        color: Colors.greenAccent,
+                        color: ClientColors.journeyCyan,
                       ),
                     ),
                   )
@@ -2366,7 +2366,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: ClientColors.journeyGreen.withAlpha(
+                                    color: ClientColors.journeyCyan.withAlpha(
                                       24,
                                     ),
                                     borderRadius: BorderRadius.circular(6),
@@ -2375,7 +2375,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     faq['category']!,
                                     style: TextStyle(
                                       fontSize: 8,
-                                      color: ClientColors.journeyGreen,
+                                      color: ClientColors.journeyCyan,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -2797,7 +2797,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               const CircleAvatar(
                 radius: 30,
-                backgroundColor: Colors.teal,
+                backgroundColor: ClientColors.journeyCyan,
                 child: Icon(
                   Icons.phone_in_talk_rounded,
                   color: Colors.white,
@@ -2842,7 +2842,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 height: 80,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [ClientColors.primary, ClientColors.journeyGreen],
+                    colors: [ClientColors.primary, ClientColors.journeyCyan],
                   ),
                   borderRadius: BorderRadius.circular(22),
                 ),
@@ -2983,15 +2983,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.greenAccent.withAlpha(20),
+            color: ClientColors.journeyCyan.withAlpha(20),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.greenAccent.withAlpha(60)),
+            border: Border.all(color: ClientColors.journeyCyan.withAlpha(60)),
           ),
           child: const Row(
             children: [
               Icon(
                 Icons.check_circle_rounded,
-                color: Colors.greenAccent,
+                color: ClientColors.journeyCyan,
                 size: 30,
               ),
               SizedBox(width: 16),
@@ -3003,7 +3003,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      color: Colors.greenAccent,
+                      color: ClientColors.journeyCyan,
                     ),
                   ),
                   SizedBox(height: 2),

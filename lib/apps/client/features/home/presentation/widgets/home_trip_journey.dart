@@ -82,7 +82,7 @@ class _JourneyTrack extends StatelessWidget {
       padding: const EdgeInsets.only(top: 14),
       child: Column(
         children: [
-          const _TrackDot(color: ClientColors.journeyGreen),
+          const _TrackDot(color: ClientColors.journeyCyan),
           Container(
             width: 2,
             height: 30,

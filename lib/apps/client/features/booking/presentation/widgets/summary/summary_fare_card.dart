@@ -35,10 +35,7 @@ class SummaryFareCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Fare breakdown',
-            style: ClientTypography.headingSmall(context),
-          ),
+          Text('Fare breakdown', style: ClientTypography.headingSmall(context)),
           const SizedBox(height: 8),
           if (plan != null)
             SummaryFareRow(
@@ -59,14 +56,11 @@ class SummaryFareCard extends StatelessWidget {
               label: 'You save',
               note: 'vs. $rides single tickets',
               value: '− ${_egp(saved)}',
-              color: ClientColors.journeyGreen,
+              color: ClientColors.journeyCyan,
             ),
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Divider(
-              height: 1,
-              color: ClientColors.borderFor(context),
-            ),
+            child: Divider(height: 1, color: ClientColors.borderFor(context)),
           ),
           SummaryFareRow(
             label: 'Total due',

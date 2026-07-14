@@ -356,7 +356,6 @@
   "dashboard_home": "Home",
   "dashboard_bookings": "Bookings",
   "dashboard_trips": "Trips",
-  "dashboard_liveTrips": "Live Trips",
   "dashboard_fleet": "Fleet Management",
   "dashboard_routes": "Routes",
   "dashboard_subscriptions": "Subscriptions",

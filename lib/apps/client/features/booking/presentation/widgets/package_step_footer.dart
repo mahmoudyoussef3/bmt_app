@@ -3,75 +3,60 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
 
-/// When the rider's package starts running. Only shown once a plan is picked —
-/// an empty date on an unpicked plan is a dead control.
-class PackageStartDateField extends StatelessWidget {
-  const PackageStartDateField({
-    super.key,
-    required this.date,
-    required this.onTap,
-  });
+/// When the rider's plan starts running: the date of the trip they already
+/// picked. This is a fact, not a control — a plan that starts on any other day
+/// than the ride it was bought for would leave the first ride uncovered.
+class PackageStartNote extends StatelessWidget {
+  const PackageStartNote({super.key, required this.date});
 
   final DateTime? date;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final accent = ClientColors.primaryFor(context);
     final label = date == null
-        ? 'Select start date'
-        : '${date!.day}/${date!.month}/${date!.year}';
+        ? 'Your selected trip'
+        : formatCalendarDay(context, date!);
 
-    return GestureDetector(
-      onTap: onTap,
-      child: BookingSurfaceCard(
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: accent.withAlpha(20),
-                borderRadius: BorderRadius.circular(ClientRadius.sm),
-              ),
-              child: Icon(
-                Icons.calendar_month_rounded,
-                size: 20,
-                color: accent,
-              ),
+    return BookingSurfaceCard(
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: accent.withAlpha(20),
+              borderRadius: BorderRadius.circular(ClientRadius.sm),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Package starts',
-                    style: ClientTypography.labelSmall(
-                      context,
-                    ).copyWith(color: ClientColors.textSecondaryFor(context)),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    label,
-                    style: ClientTypography.bodyMedium(
-                      context,
-                    ).copyWith(fontWeight: FontWeight.w800),
-                  ),
-                ],
-              ),
+            child: Icon(Icons.calendar_month_rounded, size: 20, color: accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Starts with your trip',
+                  style: ClientTypography.labelSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: ClientTypography.bodyMedium(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w800),
+                ),
+              ],
             ),
-            Icon(
-              Icons.edit_calendar_rounded,
-              size: 20,
-              color: ClientColors.textTertiaryFor(context),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

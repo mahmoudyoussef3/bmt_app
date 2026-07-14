@@ -215,11 +215,6 @@ class _HeroTitle extends StatelessWidget {
           runSpacing: AppSpacing.small,
           children: [
             FilledButton.icon(
-              onPressed: () => onOpenModule?.call(DashboardRoutes.liveTrips),
-              icon: const Icon(Icons.radar_outlined),
-              label: const Text('المراقبة الحية'),
-            ),
-            OutlinedButton.icon(
               onPressed: () => onOpenModule?.call(DashboardRoutes.trips),
               icon: const Icon(Icons.route_outlined),
               label: const Text('إدارة الرحلات'),
@@ -402,7 +397,7 @@ class _HomeKpiBand extends StatelessWidget {
         subtitle: '$availableSeats مقعد متاح الآن',
         icon: Icons.event_seat_outlined,
         color: const Color(0xFF0F766E),
-        onTap: () => onOpenModule?.call(DashboardRoutes.liveTrips),
+        onTap: () => onOpenModule?.call(DashboardRoutes.bookings),
       ),
       _KpiSpec(
         title: 'مدفوعات قيد المراجعة',
@@ -418,7 +413,7 @@ class _HomeKpiBand extends StatelessWidget {
         subtitle: '${data.alerts.length} تنبيه تشغيلي',
         icon: Icons.notifications_active_outlined,
         color: urgentActions > 0 ? scheme.error : scheme.primary,
-        onTap: () => onOpenModule?.call(DashboardRoutes.liveTrips),
+        onTap: () => onOpenModule?.call(DashboardRoutes.notifications),
       ),
     ];
 
@@ -790,7 +785,7 @@ class _TodayTripsSection extends StatelessWidget {
             ),
             itemBuilder: (context, index) => _TripCard(
               trip: trips[index],
-              onTap: () => onOpenModule?.call(_tripTargetRoute(trips[index])),
+              onTap: () => onOpenModule?.call(DashboardRoutes.trips),
             ),
           );
         },
@@ -1625,7 +1620,6 @@ String _priorityLabel(OperationsPriority priority) {
 IconData _moduleIcon(String route) {
   return switch (route) {
     DashboardRoutes.paymentVerification => Icons.fact_check_outlined,
-    DashboardRoutes.liveTrips => Icons.near_me_outlined,
     DashboardRoutes.tickets => Icons.support_agent_outlined,
     DashboardRoutes.subscriptions => Icons.workspace_premium_outlined,
     DashboardRoutes.trips => Icons.route_outlined,
@@ -1633,16 +1627,6 @@ IconData _moduleIcon(String route) {
     DashboardRoutes.drivers => Icons.badge_outlined,
     _ => Icons.open_in_new_rounded,
   };
-}
-
-String _tripTargetRoute(TodayTripSummary trip) {
-  if (trip.status == 'متأخرة' ||
-      trip.status == 'في الطريق' ||
-      trip.status == 'وصلت أول نقطة') {
-    return DashboardRoutes.liveTrips;
-  }
-
-  return DashboardRoutes.trips;
 }
 
 Color _complaintColor(BuildContext context, String status) {

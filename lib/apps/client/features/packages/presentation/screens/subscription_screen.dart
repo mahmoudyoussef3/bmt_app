@@ -1951,7 +1951,7 @@ class _SuccessConfettiPainter extends CustomPainter {
       case 0:
         return Colors.blue;
       case 1:
-        return Colors.teal;
+        return ClientColors.journeyCyan;
       case 2:
         return Colors.amber;
       default:

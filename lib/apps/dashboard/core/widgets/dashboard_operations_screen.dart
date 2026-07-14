@@ -319,10 +319,6 @@ class _ModuleSpecialPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return switch (workspace.id) {
-      'liveTrips' => const Padding(
-        padding: EdgeInsets.only(bottom: AppSpacing.large),
-        child: _LiveTripsPanel(),
-      ),
       'routes' => const Padding(
         padding: EdgeInsets.only(bottom: AppSpacing.large),
         child: _RouteTimelinePanel(),
@@ -932,114 +928,6 @@ class _SectionList extends StatelessWidget {
   }
 }
 
-class _LiveTripsPanel extends StatelessWidget {
-  const _LiveTripsPanel();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 900;
-        final map = AppCard(
-          child: Container(
-            height: 260,
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-            ),
-            child: Stack(
-              children: [
-                Positioned.fill(
-                  child: Center(
-                    child: Icon(
-                      Icons.map_outlined,
-                      size: 72,
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ),
-                const Positioned(
-                  top: 24,
-                  right: 28,
-                  child: _MapMarker(label: '٢٢١'),
-                ),
-                const Positioned(
-                  bottom: 44,
-                  left: 72,
-                  child: _MapMarker(label: '٢٢٦'),
-                ),
-              ],
-            ),
-          ),
-        );
-        final alerts = AppCard(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
-              Text('تنبيهات مباشرة'),
-              SizedBox(height: AppSpacing.medium),
-              _ChecklistRow('رحلة ٢٢٦ متأخرة ٩ دقائق عند محور شبرا.'),
-              _ChecklistRow('السائق كريم حسن أكد الوصول للنقطة الثالثة.'),
-              _ChecklistRow('راكبان لم يسجلا الحضور في رحلة ٢٢١.'),
-            ],
-          ),
-        );
-
-        if (!isWide) {
-          return Column(
-            children: [
-              map,
-              const SizedBox(height: AppSpacing.medium),
-              alerts,
-            ],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: 2, child: map),
-            const SizedBox(width: AppSpacing.medium),
-            Expanded(child: alerts),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _MapMarker extends StatelessWidget {
-  final String label;
-
-  const _MapMarker({required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.primary,
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.small,
-          vertical: AppSpacing.xSmall,
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: scheme.onPrimary,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class _RouteTimelinePanel extends StatelessWidget {
   const _RouteTimelinePanel();
 
@@ -1270,7 +1158,7 @@ List<String> _statusOptions(
   if (workspace.statusOptions.isNotEmpty) return workspace.statusOptions;
   final moduleOptions = switch (workspace.id) {
     'bookings' => ['جديد', 'مؤكد', 'قيد المراجعة', 'ملغي', 'مكتمل'],
-    'trips' || 'liveTrips' => [
+    'trips' => [
       'مجدولة',
       'قيد التحضير',
       'جاهزة للانطلاق',
@@ -1329,7 +1217,7 @@ List<DashboardWorkspaceField> _detailFields(
       DashboardWorkspaceField(label: 'عدد النقاط', value: '—'),
       DashboardWorkspaceField(label: 'إدارة النقاط', value: '—'),
     ],
-    'trips' || 'liveTrips' => const [
+    'trips' => const [
       DashboardWorkspaceField(label: 'المركبة', value: '—'),
       DashboardWorkspaceField(label: 'عدد الركاب', value: '—'),
       DashboardWorkspaceField(label: 'الوقت', value: '—'),
@@ -1407,7 +1295,7 @@ IconData _moduleIcon(String workspaceId) {
     'drivers' => Icons.badge_outlined,
     'vehicles' => Icons.directions_bus_outlined,
     'routes' => Icons.alt_route_outlined,
-    'trips' || 'liveTrips' => Icons.route_outlined,
+    'trips' => Icons.route_outlined,
     'payments' => Icons.payments_outlined,
     'tickets' => Icons.support_agent_outlined,
     'users' => Icons.person_outline,

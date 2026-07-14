@@ -26,7 +26,7 @@ class TrackingCountdownCard extends StatelessWidget {
         gradient: LinearGradient(
           colors: [
             ClientColors.primary.withAlpha(45),
-            ClientColors.journeyGreen.withAlpha(25),
+            ClientColors.journeyCyan.withAlpha(25),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -94,7 +94,7 @@ class TrackingCountdownCard extends StatelessWidget {
                 Icon(
                   Icons.access_time_filled_rounded,
                   size: 16,
-                  color: ClientColors.journeyGreen,
+                  color: ClientColors.journeyCyan,
                 ),
                 const SizedBox(width: 6),
                 Text(
@@ -104,7 +104,7 @@ class TrackingCountdownCard extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
-                    color: ClientColors.journeyGreen,
+                    color: ClientColors.journeyCyan,
                   ),
                 ),
               ],

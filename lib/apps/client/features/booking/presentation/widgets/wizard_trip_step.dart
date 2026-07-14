@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
@@ -34,7 +35,7 @@ class WizardTripStep extends StatelessWidget {
                         '${session.pickupStop?.name ?? ''} to ${session.dropoffStop?.name ?? ''}',
                     trailing: BookingCountPill(
                       label: '${trips.length} available',
-                      color: ClientColors.journeyGreen,
+                      color: ClientColors.journeyCyan,
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -67,7 +68,7 @@ class WizardTripStep extends StatelessWidget {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Departs ${session.selectedTrip!.departureTime}',
+                            _departureSummary(context, session.selectedTrip!),
                             style: ClientTypography.bodySmall(
                               context,
                             ).copyWith(fontWeight: FontWeight.w700),
@@ -94,6 +95,15 @@ class WizardTripStep extends StatelessWidget {
   }
 }
 
+/// "Departs Tomorrow · 8:00 AM" — the day is part of the commitment, not just
+/// the clock, so it travels with the summary the rider confirms on.
+String _departureSummary(BuildContext context, RouteTripOptionData trip) {
+  final day = formatTripDay(context, trip.tripDate);
+  final time = formatTripTime(context, trip.departureTime);
+  if (day.isEmpty) return 'Departs $time';
+  return 'Departs $day · $time';
+}
+
 class _TripCard extends StatelessWidget {
   const _TripCard({
     required this.trip,
@@ -115,6 +125,28 @@ class _TripCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
+            // The day the rider travels. It is also the day any package they
+            // buy starts running, so it must never be a hidden detail.
+            if (trip.tripDate.isNotEmpty) ...[
+              Row(
+                children: [
+                  Icon(
+                    Icons.event_rounded,
+                    size: 15,
+                    color: ClientColors.textSecondaryFor(context),
+                  ),
+                  const SizedBox(width: 6),
+                  Text(
+                    formatTripDay(context, trip.tripDate),
+                    style: ClientTypography.labelSmall(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+            ],
             Row(
               children: [
                 Container(
@@ -138,7 +170,7 @@ class _TripCard extends StatelessWidget {
                   child: Row(
                     children: [
                       Text(
-                        trip.departureTime,
+                        formatTripTime(context, trip.departureTime),
                         style: ClientTypography.headingMedium(
                           context,
                         ).copyWith(fontWeight: FontWeight.w900),
@@ -163,7 +195,7 @@ class _TripCard extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        trip.arrivalTime,
+                        formatTripTime(context, trip.arrivalTime),
                         style: ClientTypography.bodyMedium(context).copyWith(
                           color: ClientColors.textSecondaryFor(context),
                           fontWeight: FontWeight.w700,
@@ -201,7 +233,7 @@ class _TripCard extends StatelessWidget {
                     '${trip.availableSeats} seats left',
                     color: trip.availableSeats <= 3
                         ? ClientColors.journeyAmber
-                        : ClientColors.journeyGreen,
+                        : ClientColors.journeyCyan,
                   ),
                 ),
                 Column(

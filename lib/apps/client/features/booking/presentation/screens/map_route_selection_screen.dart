@@ -243,7 +243,7 @@ class _SelectionPanel extends StatelessWidget {
           const SizedBox(height: 12),
           _LocationSelector(
             icon: Icons.trip_origin_rounded,
-            color: ClientColors.journeyGreen,
+            color: ClientColors.journeyCyan,
             label: localizations.booking_pickupPoint,
             value: pickup?.label ?? localizations.booking_notSet,
             subtitle: pickupEnabled

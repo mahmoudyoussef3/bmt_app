@@ -36,7 +36,7 @@ class HomeQuickActions extends StatelessWidget {
       (
         icon: Icons.confirmation_number_outlined,
         label: 'My trips',
-        color: ClientColors.journeyGreen,
+        color: ClientColors.journeyCyan,
         onTap: onTrips,
       ),
       (
@@ -122,10 +122,9 @@ class _QuickActionTile extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: ClientTypography.labelSmall(context).copyWith(
-                fontWeight: FontWeight.w800,
-                fontSize: 11,
-              ),
+              style: ClientTypography.labelSmall(
+                context,
+              ).copyWith(fontWeight: FontWeight.w800, fontSize: 11),
             ),
           ],
         ),

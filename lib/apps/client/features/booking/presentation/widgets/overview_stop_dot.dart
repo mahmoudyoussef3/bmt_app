@@ -32,7 +32,7 @@ class OverviewStopDot extends StatelessWidget {
               color: isFirst
                   ? ClientColors.primary
                   : isLast
-                  ? ClientColors.journeyGreen
+                  ? ClientColors.journeyCyan
                   : ClientColors.primaryLight,
               border: Border.all(
                 color: isEndpoint ? Colors.transparent : ClientColors.primary,

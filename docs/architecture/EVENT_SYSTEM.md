@@ -29,7 +29,7 @@ All cross-app synchronization happens via Supabase Realtime channels. Apps subsc
 * **Side Effects:** 
   - Updates `trip_seats.state` to `reserved` or `paid`.
   - Creates a `booking` record with a secure `qr_code_token`.
-* **Real-time Updates:** Dashboard "Live Trips" instantly decrements "Available Seats". Driver App passenger manifest updates instantly.
+* **Real-time Updates:** Dashboard Trips module instantly decrements "Available Seats". Driver App passenger manifest updates instantly.
 
 ### 4. `BookingCancelled`
 * **Trigger Source:** Client App or Dashboard (Update `operation_bookings.status = 'cancelled'`)

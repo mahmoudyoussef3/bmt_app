@@ -111,7 +111,7 @@ class _StopModeHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: session.stopsValid
-            ? ClientColors.journeyGreenLight
+            ? ClientColors.journeyCyanLight
             : ClientColors.primaryLight,
         borderRadius: BorderRadius.circular(14),
       ),
@@ -123,7 +123,7 @@ class _StopModeHeader extends StatelessWidget {
                 : Icons.touch_app_rounded,
             size: 18,
             color: session.stopsValid
-                ? ClientColors.journeyGreen
+                ? ClientColors.journeyCyan
                 : ClientColors.primary,
           ),
           const SizedBox(width: 9),
@@ -131,7 +131,7 @@ class _StopModeHeader extends StatelessWidget {
             label,
             style: ClientTypography.bodySmall(context).copyWith(
               color: session.stopsValid
-                  ? ClientColors.journeyGreen
+                  ? ClientColors.journeyCyan
                   : ClientColors.primary,
               fontWeight: FontWeight.w700,
             ),
@@ -191,7 +191,7 @@ class _StopTile extends StatelessWidget {
     final color = isPickup
         ? ClientColors.primary
         : isDropoff
-        ? ClientColors.journeyGreen
+        ? ClientColors.journeyCyan
         : null;
 
     return GestureDetector(
@@ -269,7 +269,7 @@ class _StopTile extends StatelessWidget {
               ),
             ),
             if (isPickup) _badge('Pickup', ClientColors.primary),
-            if (isDropoff) _badge('Dropoff', ClientColors.journeyGreen),
+            if (isDropoff) _badge('Dropoff', ClientColors.journeyCyan),
           ],
         ),
       ),
@@ -317,7 +317,7 @@ class _StopContinueBar extends StatelessWidget {
                     context,
                     'DROP-OFF',
                     session.dropoffStop!.name,
-                    ClientColors.journeyGreen,
+                    ClientColors.journeyCyan,
                   ),
                 ),
               ],

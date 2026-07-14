@@ -36,7 +36,7 @@ class TrackingSheetStatusIndicator extends StatelessWidget {
         subtitle = hasLiveVehicleLocation
             ? '$driverName is heading towards $pickupName'
             : 'Waiting for the captain to send a location';
-        toneColor = ClientColors.journeyGreen;
+        toneColor = ClientColors.journeyCyan;
       case TrackingTripState.boarding:
         title = 'Boarding Started';
         subtitle = 'Vehicle is at $pickupName. Board when instructed.';
@@ -48,7 +48,7 @@ class TrackingSheetStatusIndicator extends StatelessWidget {
       case TrackingTripState.completed:
         title = 'Arrived Safely';
         subtitle = 'Trip completed at $arrivalTimeLabel';
-        toneColor = ClientColors.journeyGreen;
+        toneColor = ClientColors.journeyCyan;
       case TrackingTripState.notStarted:
         break;
     }

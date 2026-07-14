@@ -15,18 +15,6 @@ class SupabaseSupportDatasource {
     return user.id;
   }
 
-  Future<List<String>> getCategories() async {
-    return [
-      'Booking Issue',
-      'Payment Issue',
-      'Trip Delay',
-      'Driver or Vehicle Issue',
-      'Subscription Issue',
-      'Lost Item',
-      'Other',
-    ];
-  }
-
   Future<List<SupportTicketModel>> getMyTickets() async {
     final response = await _supabase
         .from('support_tickets')
@@ -37,11 +25,15 @@ class SupabaseSupportDatasource {
     return response.map((e) => SupportTicketModel.fromJson(e)).toList();
   }
 
+  /// Clients no longer choose a priority — triage is the support team's job,
+  /// so every client-filed ticket lands as `medium` and the dashboard raises
+  /// it from there.
+  static const String _defaultPriority = 'medium';
+
   Future<SupportTicketModel> createTicket({
     required String category,
     required String title,
     required String description,
-    required String priority,
     String? relatedBookingId,
     String? relatedTripId,
   }) async {
@@ -54,7 +46,7 @@ class SupabaseSupportDatasource {
       'category': category,
       'title': title,
       'description': description,
-      'priority': priority.toLowerCase(),
+      'priority': _defaultPriority,
       'status': 'submitted',
       'related_booking_id': relatedBookingId,
       'related_trip_id': relatedTripId,

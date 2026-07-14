@@ -65,10 +65,10 @@ class TrackingSignalChip extends StatelessWidget {
       null => (ClientColors.journeySlate, 'No signal'),
       _ when current.isStale => (ClientColors.journeyRed, 'No signal'),
       _ when current.isMoving => (
-        ClientColors.journeyGreen,
+        ClientColors.journeyCyan,
         '${current.speedKmh.round()} km/h',
       ),
-      _ => (ClientColors.journeyGreen, 'Stopped'),
+      _ => (ClientColors.journeyCyan, 'Stopped'),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),

@@ -425,9 +425,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
             decoration: BoxDecoration(
               color: ClientColors.surfaceFor(context),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: ClientColors.journeyGreen.withAlpha(60),
-              ),
+              border: Border.all(color: ClientColors.journeyCyan.withAlpha(60)),
             ),
             child: Column(
               children: [
@@ -448,13 +446,13 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                           shape: BoxShape.circle,
                           gradient: const LinearGradient(
                             colors: [
-                              ClientColors.journeyGreen,
-                              Color(0xFF14B8A6),
+                              ClientColors.journeyCyan,
+                              ClientColors.journeyCyanStrong,
                             ],
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: ClientColors.journeyGreen.withAlpha(45),
+                              color: ClientColors.journeyCyan.withAlpha(45),
                               blurRadius: 18,
                               spreadRadius: 2,
                             ),
@@ -482,7 +480,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                       : 'Payment Submitted',
                   style: ClientTypography.headingMedium(
                     context,
-                  ).copyWith(color: ClientColors.journeyGreen),
+                  ).copyWith(color: ClientColors.journeyCyan),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -538,7 +536,8 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
           ClientButton(
             label: 'View Ticket',
             onPressed: () {
-              final isManualTransfer = widget.paymentMethod.type == PaymentMethodType.instapay ||
+              final isManualTransfer =
+                  widget.paymentMethod.type == PaymentMethodType.instapay ||
                   widget.paymentMethod.type == PaymentMethodType.vodafoneCash ||
                   widget.paymentMethod.type == PaymentMethodType.bankTransfer;
               Navigator.of(context).pushReplacement(
@@ -831,7 +830,7 @@ class ConfettiPainter extends CustomPainter {
       case 0:
         return ClientColors.primary;
       case 1:
-        return ClientColors.journeyGreen;
+        return ClientColors.journeyCyan;
       case 2:
         return ClientColors.journeyAmber;
       default:

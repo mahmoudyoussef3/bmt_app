@@ -9,7 +9,6 @@ enum DashboardPermission {
   vehicles,
   routes,
   trips,
-  liveTrips,
   bookings,
   subscriptions,
   referrals,

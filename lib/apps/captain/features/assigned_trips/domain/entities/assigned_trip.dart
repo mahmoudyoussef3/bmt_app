@@ -1,5 +1,13 @@
 enum AssignedTripStatus { scheduled, boarding, inProgress, completed }
 
+extension AssignedTripStatusX on AssignedTripStatus {
+  /// The captain is on this trip right now: passengers are boarding, or it has
+  /// already departed. Either way there is something to drive.
+  bool get isRunning =>
+      this == AssignedTripStatus.boarding ||
+      this == AssignedTripStatus.inProgress;
+}
+
 /// A route station as scheduled for one trip, carrying the `trip_route_points`
 /// row id so the captain app can report an arrival against the exact point
 /// (see `trip_events` title `'وصول محطة'` convention).

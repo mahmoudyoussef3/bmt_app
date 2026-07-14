@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/payment/wizard_payment_mapping.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/wizard_package_step.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/wizard_payment_step.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/wizard_progress_bar.dart';
@@ -83,7 +84,10 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
         });
       } else {
         // 1. Lock the seat for 5 minutes.
-        await clientGetIt<LockTripSeatUseCase>()(tripId: tripId, seatId: seatId);
+        await clientGetIt<LockTripSeatUseCase>()(
+          tripId: tripId,
+          seatId: seatId,
+        );
         seatLocked = true;
 
         // 2. Confirm the booking and persist to Supabase.
@@ -120,9 +124,9 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
           'p_pickup_point_name': session.pickupStop?.name ?? '',
           'p_dropoff_point_name': session.dropoffStop?.name ?? '',
           'p_package_id': session.selectedPackage?.id,
-          'p_plan_start_date': session.packageStartDate?.toIso8601String().split(
-            'T',
-          )[0],
+          'p_plan_start_date': session.packageStartDate
+              ?.toIso8601String()
+              .split('T')[0],
           'p_receipt_url': session.receiptUrl,
           'p_payment_reference': session.paymentReference,
           'p_payer_phone': session.payerPhone,
@@ -138,7 +142,9 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
               ? bookingId.substring(0, 8).toUpperCase()
               : null);
 
-      if (session.bookingId == null && bookingId != null && bookingRef != null) {
+      if (session.bookingId == null &&
+          bookingId != null &&
+          bookingRef != null) {
         context.read<BookingWizardCubit>().setBookingId(
           bookingId: bookingId,
           bookingRef: bookingRef,
@@ -156,20 +162,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
         if (cardMethod == null) {
           throw Exception('Card payment is not available right now.');
         }
-        final trip = session.selectedTrip!;
-        final checkout = PaymentCheckoutData(
-          tripId: trip.id,
-          pickupPoint: session.pickupStop?.name ?? '',
-          destination: session.dropoffStop?.name ?? '',
-          vehicleNumber: trip.vehicleType,
-          tripDate: trip.tripDate,
-          departureTime: trip.departureTime,
-          arrivalTime: trip.arrivalTime,
-          selectedSeatId: seatId,
-          selectedSeat: session.selectedSeatLabel ?? '',
-          driverName: '',
-          baseFare: session.totalPrice.round(),
-        );
+        final checkout = wizardCheckoutData(session);
         final cardSession =
             await clientGetIt<CreateCardPaymentSessionUseCase>()(
               checkoutData: checkout,
@@ -193,9 +186,9 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
         }
       }
 
-      final isManualTransfer = session.paymentMethod == 'instapay' ||
-          session.paymentMethod == 'vodafone_cash' ||
-          session.paymentMethod == 'bank_transfer';
+      final isManualTransfer = wizardMethodRequiresReceipt(
+        session.paymentMethod,
+      );
 
       if (!mounted) return;
       Navigator.of(context).pushReplacement(
@@ -253,7 +246,9 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
               TextButton(
                 onPressed: () {
                   Navigator.of(context).pop(); // Close dialog
-                  Navigator.of(context).popUntil((route) => route.isFirst); // Close wizard
+                  Navigator.of(
+                    context,
+                  ).popUntil((route) => route.isFirst); // Close wizard
                 },
                 child: const Text(
                   'Open My Bookings',
@@ -288,7 +283,10 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
       child: WizardPackageStep(onNext: _next),
     ),
     4 => WizardSummaryStep(onNext: _next, onEditStep: _editStep),
-    _ => WizardPaymentStep(onConfirm: _confirming ? null : _confirmBooking),
+    _ => WizardPaymentStep(
+      onConfirm: _confirming ? null : _confirmBooking,
+      onFix: () => _editStep(0),
+    ),
   };
 
   @override

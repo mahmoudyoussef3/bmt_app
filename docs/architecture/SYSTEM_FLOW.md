@@ -252,7 +252,6 @@ Complete end-to-end operational flows for the Transportation Management Platform
    └─ Background service (Android foreground service) runs every 5 seconds:
       Geolocator.getPositionStream → broadcast on live_location:{trip_id}
    └─ Every 30 seconds: INSERT trip_live_locations (lat, lng, speed, timestamp)
-   └─ Dashboard Live Trips panel: map marker moves in real time
    └─ Client App tracking screen: map shows vehicle position
 
 6. End Trip
@@ -370,7 +369,7 @@ blocked ──(ops_unblock)─→ available
 
 | Channel | Type | Producer | Consumer | Payload |
 |---------|------|----------|----------|---------|
-| `live_location:{trip_id}` | Broadcast | Captain background service | Dashboard Live Trips · Client tracking | `{lat, lng, speed, timestamp}` |
+| `live_location:{trip_id}` | Broadcast | Captain background service | Client tracking | `{lat, lng, speed, timestamp}` |
 | `operation_trips` stream | postgres_changes | DB trigger | Captain App (assigned trips) | Full row |
 | `trip_passengers` stream | postgres_changes | DB (scan RPC) | Captain manifest | Full row |
 | `captain_messages` stream | postgres_changes | DB insert | Captain chat | Full row |

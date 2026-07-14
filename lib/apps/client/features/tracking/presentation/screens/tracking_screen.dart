@@ -108,7 +108,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
                 bottom: -50,
                 left: -100,
                 child: TrackingBackgroundGlow(
-                  color: ClientColors.journeyGreen.withAlpha(15),
+                  color: ClientColors.journeyCyan.withAlpha(15),
                   size: 250,
                 ),
               ),

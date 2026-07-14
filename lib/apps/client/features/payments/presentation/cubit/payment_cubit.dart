@@ -34,27 +34,55 @@ class PaymentCubit extends Cubit<PaymentState> {
   void selectMethod(PaymentMethodType method) {
     final current = state;
     if (current is! PaymentCheckoutLoaded) return;
-    emit(current.copyWith(selectedMethod: method));
+    emit(current.withMethod(method));
   }
 
   Future<void> applyPromo(String code) async {
     final current = state;
     if (current is! PaymentCheckoutLoaded) return;
+
     final normalized = code.trim().toUpperCase();
     if (normalized.isEmpty) {
-      emit(current.copyWith(appliedPromoCode: '', promoDiscount: 0));
+      clearPromo();
       return;
     }
-    final discount = await _applyPromoCode(normalized);
-    // Re-read state after the async gap in case it changed.
-    final latest = state;
-    if (latest is! PaymentCheckoutLoaded) return;
+
     emit(
-      latest.copyWith(
-        appliedPromoCode: discount > 0 ? normalized : null,
-        promoDiscount: discount,
+      current.withPromo(
+        code: normalized,
+        status: PromoStatus.checking,
+        discount: 0,
       ),
     );
+
+    // A code that fails to validate is a rejected code, not a broken checkout:
+    // the rider can still pay full fare, so this never surfaces as an error
+    // state that would take the pay button away.
+    var discount = 0;
+    try {
+      discount = await _applyPromoCode(normalized);
+    } catch (_) {
+      discount = 0;
+    }
+
+    // Re-read after the async gap in case the rider moved on.
+    final latest = state;
+    if (latest is! PaymentCheckoutLoaded) return;
+    if (latest.promoCode != normalized) return;
+
+    emit(
+      latest.withPromo(
+        code: normalized,
+        status: discount > 0 ? PromoStatus.applied : PromoStatus.invalid,
+        discount: discount,
+      ),
+    );
+  }
+
+  void clearPromo() {
+    final current = state;
+    if (current is! PaymentCheckoutLoaded) return;
+    emit(current.withPromo(code: null, status: PromoStatus.none, discount: 0));
   }
 
   PaymentMethodType? _initialMethod(List<PaymentMethodData> methods) {

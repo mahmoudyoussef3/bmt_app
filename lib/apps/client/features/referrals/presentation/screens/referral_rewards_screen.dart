@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/referrals/domain/entities/referral_rewards.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_cubit.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_state.dart';
@@ -136,7 +137,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Referral code copied to clipboard!'),
-        backgroundColor: Colors.green,
+        backgroundColor: ClientColors.journeyCyan,
       ),
     );
   }
@@ -210,7 +211,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
             children: [
               const Icon(
                 Icons.check_circle_outline_rounded,
-                color: Colors.green,
+                color: ClientColors.journeyCyan,
                 size: 60,
               ),
               const SizedBox(height: 16),
@@ -774,7 +775,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
           'Successful',
           '$_successfulReferrals',
           Icons.check_circle_outline_rounded,
-          Colors.green,
+          ClientColors.journeyCyan,
         ),
         _buildStatCard(
           'Pending',
@@ -937,7 +938,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
           icon: Icons.history_rounded,
           title: 'Referral Logs & History',
           subtitle: 'Track status of invites and code claims',
-          color: Colors.teal,
+          color: ClientColors.journeyCyan,
           onTap: () => setState(() => _currentView = 3),
           scheme: scheme,
         ),
@@ -1227,7 +1228,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                 title: 'You both earn',
                 subtitle:
                     'You receive a referral reward credited to your wallet.',
-                color: Colors.green,
+                color: ClientColors.journeyCyan,
               ),
             ],
           ),
@@ -1388,7 +1389,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
         ..._history.map((item) {
           Color statusColor = Colors.grey;
           if (item.status == 'Completed') {
-            statusColor = Colors.green;
+            statusColor = ClientColors.journeyCyan;
           } else if (item.status == 'Pending') {
             statusColor = Colors.amber;
           }
@@ -1657,7 +1658,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                           style: TextStyle(
                             fontSize: 10,
                             color: voucher.isRevealed
-                                ? Colors.green
+                                ? ClientColors.journeyCyan
                                 : Colors.grey,
                             fontWeight: voucher.isRevealed
                                 ? FontWeight.bold

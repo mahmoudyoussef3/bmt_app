@@ -76,32 +76,6 @@ class DashboardOperationsRepositoryImpl
         ),
       ],
     ),
-    'liveTrips': DashboardWorkspace(
-      id: 'liveTrips',
-      title: 'الرحلات المباشرة',
-      subtitle: 'الرحلات الجارية الآن والتواصل السريع مع السائقين.',
-      actions: [
-        DashboardWorkspaceAction(label: 'عرض مباشر', message: ''),
-        DashboardWorkspaceAction(label: 'التواصل مع السائق', message: ''),
-      ],
-      metrics: [
-        DashboardWorkspaceMetric(label: 'جارية الآن', value: '—', note: ''),
-        DashboardWorkspaceMetric(label: 'متأخرة', value: '—', note: ''),
-        DashboardWorkspaceMetric(label: 'مكتملة اليوم', value: '—', note: ''),
-      ],
-      tabs: _defaultTabs,
-      columns: ['رقم الرحلة', 'السائق', 'المركبة', 'الحالة'],
-      rows: [],
-      sections: [
-        DashboardWorkspaceSection(
-          title: 'متابعة مباشرة',
-          items: [
-            'اتصل بالسائقين المتأخرين فقط.',
-            'أرسل تحديثاً للركاب عند تغير وقت الوصول.',
-          ],
-        ),
-      ],
-    ),
     'drivers': DashboardWorkspace(
       id: 'drivers',
       title: 'السائقين',

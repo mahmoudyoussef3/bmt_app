@@ -16,8 +16,6 @@ import '../../features/dashboard_operations/presentation/cubit/dashboard_workspa
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import '../../features/fleet/overview/presentation/screens/fleet_overview_screen.dart';
 import '../../features/fleet/shared/domain/entities/fleet_common.dart';
-import '../../features/live_trips/presentation/screens/live_trips_screen.dart';
-import '../../features/live_trips/presentation/cubit/live_trips_cubit.dart';
 import '../../features/notifications/presentation/cubit/notifications_dispatch_cubit.dart';
 import '../../features/notifications/presentation/cubit/operational_alerts_badge_cubit.dart';
 import '../../features/notifications/presentation/cubit/operational_alerts_cubit.dart';
@@ -116,14 +114,6 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: Icons.directions_bus_outlined,
       selectedIcon: Icons.directions_bus_rounded,
       permission: DashboardPermission.trips,
-      group: _navOperations,
-    ),
-    _DashboardNavItem(
-      label: 'الرحلات المباشرة',
-      route: DashboardRoutes.liveTrips,
-      icon: Icons.near_me_outlined,
-      selectedIcon: Icons.near_me_rounded,
-      permission: DashboardPermission.liveTrips,
       group: _navOperations,
     ),
     _DashboardNavItem(
@@ -366,10 +356,6 @@ class _DashboardShellState extends State<DashboardShell> {
         child: const BookingsScreen(),
       ),
       DashboardRoutes.trips => const TripsScreen(),
-      DashboardRoutes.liveTrips => BlocProvider(
-        create: (_) => dashboardDi<LiveTripsCubit>()..loadLiveTrips(),
-        child: const LiveTripsScreen(),
-      ),
       DashboardRoutes.fleet => BlocProvider(
         create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
         child: const FleetOverviewScreen(),
@@ -429,9 +415,7 @@ class _DashboardShellState extends State<DashboardShell> {
       ),
       DashboardRoutes.notifications => MultiBlocProvider(
         providers: [
-          BlocProvider(
-            create: (_) => dashboardDi<OperationalAlertsCubit>(),
-          ),
+          BlocProvider(create: (_) => dashboardDi<OperationalAlertsCubit>()),
           BlocProvider(
             create: (_) => dashboardDi<NotificationsDispatchCubit>(),
           ),

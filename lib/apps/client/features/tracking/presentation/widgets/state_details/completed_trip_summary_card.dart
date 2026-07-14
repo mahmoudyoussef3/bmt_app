@@ -27,13 +27,17 @@ class CompletedTripSummaryCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.green.withAlpha(20),
+            color: ClientColors.journeyCyan.withAlpha(20),
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.green.withAlpha(70)),
+            border: Border.all(color: ClientColors.journeyCyan.withAlpha(70)),
           ),
           child: const Row(
             children: [
-              Icon(Icons.check_circle_rounded, color: Colors.green, size: 28),
+              Icon(
+                Icons.check_circle_rounded,
+                color: ClientColors.journeyCyan,
+                size: 28,
+              ),
               SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -41,7 +45,11 @@ class CompletedTripSummaryCard extends StatelessWidget {
                   children: [
                     Text(
                       'You Have Arrived!',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.green),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: ClientColors.journeyCyan,
+                      ),
                     ),
                     Text(
                       'Thank you for riding with Mega Transportation.',
@@ -64,12 +72,18 @@ class CompletedTripSummaryCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Trip Summary', style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+              const Text(
+                'Trip Summary',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+              ),
               const Divider(height: 20),
               TrackingSummaryRow(label: 'Route', value: routeName),
               TrackingSummaryRow(label: 'Pickup', value: pickupName),
               TrackingSummaryRow(label: 'Destination', value: destinationName),
-              TrackingSummaryRow(label: 'Arrival Time', value: arrivalTimeLabel),
+              TrackingSummaryRow(
+                label: 'Arrival Time',
+                value: arrivalTimeLabel,
+              ),
             ],
           ),
         ),

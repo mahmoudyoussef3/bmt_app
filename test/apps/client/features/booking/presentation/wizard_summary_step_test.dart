@@ -61,7 +61,6 @@ BookingWizardCubit _sessionCubit() {
         rideCount: 2,
         price: 70,
       ),
-      DateTime(2030, 1, 8),
     );
   return cubit;
 }

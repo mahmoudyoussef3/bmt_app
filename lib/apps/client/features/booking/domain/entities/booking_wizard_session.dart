@@ -11,7 +11,6 @@ class BookingWizardSession {
     this.selectedSeatId,
     this.selectedSeatLabel,
     this.selectedPackage,
-    this.packageStartDate,
     this.paymentMethod,
     this.receiptUrl,
     this.paymentReference,
@@ -27,7 +26,6 @@ class BookingWizardSession {
   final String? selectedSeatId;
   final String? selectedSeatLabel;
   final PackagePlan? selectedPackage;
-  final DateTime? packageStartDate;
   final String? paymentMethod;
   final String? receiptUrl;
   final String? paymentReference;
@@ -42,7 +40,13 @@ class BookingWizardSession {
 
   bool get tripValid => selectedTrip != null;
   bool get seatValid => selectedSeatId != null;
-  bool get packageValid => selectedPackage != null && packageStartDate != null;
+  bool get packageValid => selectedPackage != null;
+
+  /// A fare always starts on the day the rider actually travels — the trip they
+  /// picked in the trip step. A package is never scheduled independently of it,
+  /// so the rider is never asked for a start date.
+  DateTime? get packageStartDate =>
+      DateTime.tryParse(selectedTrip?.tripDate ?? '');
   bool get isCardPayment => paymentMethod == 'credit_card';
   bool get paymentValid =>
       paymentMethod != null && (isCardPayment || receiptUrl != null);
@@ -94,7 +98,6 @@ class BookingWizardSession {
     String? selectedSeatId,
     String? selectedSeatLabel,
     PackagePlan? selectedPackage,
-    DateTime? packageStartDate,
     String? paymentMethod,
     String? receiptUrl,
     String? paymentReference,
@@ -110,7 +113,6 @@ class BookingWizardSession {
       selectedSeatId: selectedSeatId ?? this.selectedSeatId,
       selectedSeatLabel: selectedSeatLabel ?? this.selectedSeatLabel,
       selectedPackage: selectedPackage ?? this.selectedPackage,
-      packageStartDate: packageStartDate ?? this.packageStartDate,
       paymentMethod: paymentMethod ?? this.paymentMethod,
       receiptUrl: receiptUrl ?? this.receiptUrl,
       paymentReference: paymentReference ?? this.paymentReference,

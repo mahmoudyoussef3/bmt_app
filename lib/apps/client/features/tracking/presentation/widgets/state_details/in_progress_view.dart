@@ -67,7 +67,7 @@ class InProgressView extends StatelessWidget {
                 icon: Icons.location_on_rounded,
                 label: 'GPS',
                 value: gpsLabel,
-                color: ClientColors.journeyGreen,
+                color: ClientColors.journeyCyan,
               ),
               TrackingMetricItem(
                 icon: Icons.update_rounded,

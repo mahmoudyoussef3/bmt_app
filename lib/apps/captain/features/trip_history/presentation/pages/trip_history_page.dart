@@ -1,4 +1,5 @@
 import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_loading_state.dart';
@@ -114,11 +115,12 @@ class _HistoryList extends StatelessWidget {
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsetsDirectional.fromSTEB(
+              padding: EdgeInsetsDirectional.fromSTEB(
                 CaptainSpacing.xl,
                 CaptainSpacing.md,
                 CaptainSpacing.xl,
-                CaptainSpacing.xxxl,
+                // Cleared for the shell's floating nav bar.
+                CaptainBottomNav.reservedSpace(context),
               ),
               sliver: SliverList.builder(
                 itemCount: trips.length,

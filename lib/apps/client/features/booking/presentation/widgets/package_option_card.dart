@@ -74,7 +74,7 @@ class PackageOptionCard extends StatelessWidget {
                       if (discount > 0)
                         BookingCountPill(
                           label: 'Save $discount%',
-                          color: ClientColors.journeyGreen,
+                          color: ClientColors.journeyCyan,
                         ),
                     ],
                   ),

@@ -54,5 +54,5 @@ The ecosystem consists of three primary applications that interact with the unif
 ## 6. Cross-App Interaction
 * **Dashboard -> Supabase -> Driver App:** Dispatcher schedules a trip -> Driver receives push notification and sees it in "Upcoming Trips".
 * **Dashboard -> Supabase -> Client App:** Dispatcher updates a route's pricing -> Client app instantly reflects new prices on search.
-* **Client App -> Supabase -> Dashboard:** Client books a seat -> Dashboard "Live Trips" view updates seat occupancy in real-time.
+* **Client App -> Supabase -> Dashboard:** Client books a seat -> Dashboard Trips module updates seat occupancy in real-time.
 * **Driver App -> Supabase -> Client App:** Driver starts moving -> Supabase Realtime broadcasts GPS coordinates -> Client App map markers move smoothly.

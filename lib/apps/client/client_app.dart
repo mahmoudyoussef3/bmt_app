@@ -195,15 +195,15 @@ class _ClientAppState extends State<ClientApp> {
                     _buildPhoneAuthScope(const PhoneLoginScreen()),
                 '/otp': (context) {
                   final args = ModalRoute.of(context)?.settings.arguments;
-                  return _buildPhoneAuthScope(OtpVerificationScreen(
-                    phoneNumber: args as String? ?? '',
-                  ));
+                  return _buildPhoneAuthScope(
+                    OtpVerificationScreen(phoneNumber: args as String? ?? ''),
+                  );
                 },
                 '/complete-profile': (context) {
                   final args = ModalRoute.of(context)?.settings.arguments;
-                  return _buildPhoneAuthScope(CompleteProfileScreen(
-                    phoneNumber: args as String? ?? '',
-                  ));
+                  return _buildPhoneAuthScope(
+                    CompleteProfileScreen(phoneNumber: args as String? ?? ''),
+                  );
                 },
 
                 AuthRoutes.success: (context) {
@@ -353,13 +353,8 @@ class _ClientAppState extends State<ClientApp> {
                 },
                 '/support': (_) =>
                     _buildSupportScope(const SupportCenterScreen()),
-                '/create_ticket': (context) {
-                  final args =
-                      ModalRoute.of(context)?.settings.arguments as String?;
-                  return _buildSupportScope(
-                    CreateSupportTicketScreen(initialCategory: args),
-                  );
-                },
+                '/create_ticket': (_) =>
+                    _buildSupportScope(const CreateSupportTicketScreen()),
                 '/ticket_details': (context) {
                   final args =
                       ModalRoute.of(context)?.settings.arguments as String;
@@ -545,9 +540,7 @@ class _ClientAppState extends State<ClientApp> {
   Widget _buildProfileScope(Widget child) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<ProfileCubit>(
-          create: (_) => clientGetIt<ProfileCubit>(),
-        ),
+        BlocProvider<ProfileCubit>(create: (_) => clientGetIt<ProfileCubit>()),
         BlocProvider<ClientAuthCubit>(
           create: (_) => clientGetIt<ClientAuthCubit>(),
         ),

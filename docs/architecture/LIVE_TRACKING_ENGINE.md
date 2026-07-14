@@ -5,21 +5,19 @@
 Turn the sparse, noisy GPS fixes that captains send into a smooth, trustworthy
 vehicle presentation on every map in the platform: interpolated movement,
 heading rotation, estimated speed, GPS accuracy circle, and staleness
-signaling. One engine, shared by the Client tracking screen and the Dashboard
-live monitoring panel.
+signaling. One engine, consumed by the Client tracking screen.
 
 ## Ownership & data flow
 
-The Captain App is the producer; the Dashboard and Client App are consumers.
-The Dashboard remains the source of truth for trips — the engine only affects
-presentation of location data, never operational state.
+The Captain App is the producer; the Client App is the consumer. The Dashboard
+remains the source of truth for trips — the engine only affects presentation of
+location data, never operational state.
 
 ```
 Captain App (Geolocator one-shot send)
   → trip_live_locations (lat, lng, heading, speed m/s, accuracy m, recorded_at)
     → Supabase Realtime INSERT events
-      ├── Client   tracking feature   (TrackingPoint fix → cubit state)
-      └── Dashboard live_trips feature (VehiclePosition fix → cubit state)
+      └── Client tracking feature (TrackingPoint fix → cubit state)
             → VehicleTrackController.addFix(VehicleFix)
               → VehicleTrackingEngine (validate → estimate → interpolate)
                 → VehicleSample (per frame) → LiveVehicleLayer (FlutterMap)
@@ -55,9 +53,9 @@ Captain App (Geolocator one-shot send)
   disengages on user pan and re-engages via button, live status strip).
   The realtime datasource now parses heading/speed/accuracy
   (`TrackingPointModel.fromLiveLocationRow`) instead of dropping them.
-* **Dashboard** — `apps/dashboard/features/live_trips/presentation/widgets/live_trip_map.dart`
-  (stop-status dots + live vehicle layer with plate label). `VehiclePosition`
-  gained `accuracy`; all `trip_live_locations` reads select it.
+
+The Dashboard has no live-monitoring consumer: the `live_trips` module was
+removed — trip state is followed in the Trips module (`الرحلات`) instead.
 
 ## Engine behaviors
 

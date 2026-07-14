@@ -1169,8 +1169,7 @@ Any violation of the above is a **data integrity bug** that must be resolved by 
 
 | App | Listens To | Why |
 |-----|-----------|-----|
-| Dashboard Live Trips | `live_location:{trip_id}` | Show vehicle on map |
-| Dashboard Live Trips | `postgres_changes` on `operation_trips` where `status = 'in_progress'` | Trip health indicators |
+| Dashboard Trips module | `postgres_changes` on `operation_trips` where `status = 'in_progress'` | Trip health indicators |
 | Dashboard Bookings | `postgres_changes` on `operation_bookings` | Real-time queue updates |
 | Dashboard Manifest | `postgres_changes` on `trip_passengers` for trip_id | Boarding count updates |
 | Client App (tracking) | `live_location:{trip_id}` | Passenger map tracking |

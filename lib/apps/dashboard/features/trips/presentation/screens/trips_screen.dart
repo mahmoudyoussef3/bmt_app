@@ -180,6 +180,17 @@ class _SummaryStrip extends StatelessWidget {
               onTap: () =>
                   context.read<TripsListCubit>().filterQuick('completed'),
             ),
+            if (state.staleTrips > 0)
+              _SummaryItem(
+                width: width,
+                icon: Icons.report_problem_rounded,
+                label: 'فات موعدها',
+                value: state.staleTrips,
+                selected: state.quickFilter == 'stale',
+                alert: true,
+                onTap: () =>
+                    context.read<TripsListCubit>().filterQuick('stale'),
+              ),
           ],
         );
       },
@@ -195,6 +206,7 @@ class _SummaryItem extends StatelessWidget {
     required this.value,
     required this.selected,
     required this.onTap,
+    this.alert = false,
   });
 
   final double width;
@@ -204,14 +216,20 @@ class _SummaryItem extends StatelessWidget {
   final bool selected;
   final VoidCallback onTap;
 
+  /// Renders the tile as an operational warning rather than a neutral stat.
+  final bool alert;
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final accent = alert ? scheme.error : scheme.primary;
     return SizedBox(
       width: width,
       child: Material(
         color: selected
-            ? scheme.primaryContainer.withAlpha(120)
+            ? accent.withAlpha(30)
+            : alert
+            ? scheme.errorContainer.withAlpha(60)
             : scheme.surfaceContainerLowest,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
@@ -222,7 +240,7 @@ class _SummaryItem extends StatelessWidget {
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: selected ? scheme.primary : scheme.outlineVariant,
+                color: selected || alert ? accent : scheme.outlineVariant,
               ),
             ),
             child: Row(
@@ -230,7 +248,7 @@ class _SummaryItem extends StatelessWidget {
                 Icon(
                   icon,
                   size: 20,
-                  color: selected ? scheme.primary : scheme.onSurfaceVariant,
+                  color: selected || alert ? accent : scheme.onSurfaceVariant,
                 ),
                 const SizedBox(width: 10),
                 Expanded(
@@ -242,7 +260,7 @@ class _SummaryItem extends StatelessWidget {
                 Text(
                   '$value',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: selected ? scheme.primary : null,
+                    color: selected || alert ? accent : null,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -263,12 +281,13 @@ class _SimpleToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TripsListCubit>();
-    const filters = [
+    final filters = [
       ('all', 'الكل'),
       ('today', 'اليوم'),
       ('active', 'قيد التشغيل'),
       ('upcoming', 'قادمة'),
       ('completed', 'مكتملة'),
+      if (state.staleTrips > 0) ('stale', 'فات موعدها'),
     ];
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
@@ -389,6 +408,7 @@ class _TripRow extends StatelessWidget {
     final occupancy = trip.capacity == 0
         ? 0.0
         : (trip.bookedSeats / trip.capacity).clamp(0.0, 1.0);
+    final isStale = trip.isStaleBooking();
     return Material(
       color: scheme.surfaceContainerLowest,
       borderRadius: BorderRadius.circular(16),
@@ -445,11 +465,19 @@ class _TripRow extends StatelessWidget {
                       const SizedBox(width: 8),
                       StatusChip(
                         label: trip.status.label,
-                        color: _statusColor(context, trip.status).withAlpha(28),
-                        textColor: _statusColor(context, trip.status),
+                        color: isStale
+                            ? scheme.error.withAlpha(28)
+                            : _statusColor(context, trip.status).withAlpha(28),
+                        textColor: isStale
+                            ? scheme.error
+                            : _statusColor(context, trip.status),
                       ),
                     ],
                   ),
+                  if (isStale) ...[
+                    const SizedBox(height: 12),
+                    const _StaleTripNotice(),
+                  ],
                   const SizedBox(height: 14),
                   Row(
                     children: [
@@ -533,7 +561,10 @@ class _TripRow extends StatelessWidget {
                   children: [
                     content,
                     const SizedBox(height: 10),
-                    Align(alignment: AlignmentDirectional.centerStart, child: actions),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: actions,
+                    ),
                   ],
                 );
               }
@@ -675,7 +706,11 @@ class _DetailsHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final trip = state.trip;
-    final next = _nextStatus(trip.status);
+    final isStale = trip.isStaleBooking();
+    // Advancing a trip that already departed to "boarding" would contradict the
+    // notice below, so the forward action is withheld until the operator
+    // resolves the trip.
+    final next = isStale ? null : _nextStatus(trip.status);
     final scheme = Theme.of(context).colorScheme;
     return Container(
       color: scheme.surface,
@@ -762,21 +797,59 @@ class _DetailsHeader extends StatelessWidget {
               ),
             ],
           );
-          if (constraints.maxWidth < 720) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                identity,
-                const SizedBox(height: 12),
-                Align(alignment: AlignmentDirectional.centerStart, child: actions),
-              ],
-            );
-          }
-          return Row(
+          final header = constraints.maxWidth < 720
+              ? Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    identity,
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: actions,
+                    ),
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(child: identity),
+                    const SizedBox(width: 16),
+                    actions,
+                  ],
+                );
+          if (!isStale) return header;
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(child: identity),
-              const SizedBox(width: 16),
-              actions,
+              header,
+              const SizedBox(height: 12),
+              _StaleTripNotice(
+                actions: Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    FilledButton.tonalIcon(
+                      onPressed: state.isSaving
+                          ? null
+                          : () => _changeStatus(
+                              context,
+                              OperationTripStatus.completed,
+                            ),
+                      icon: const Icon(Icons.task_alt_rounded, size: 18),
+                      label: const Text('إنهاء الرحلة'),
+                    ),
+                    TextButton.icon(
+                      onPressed: state.isSaving
+                          ? null
+                          : () => _changeStatus(
+                              context,
+                              OperationTripStatus.cancelled,
+                            ),
+                      icon: const Icon(Icons.cancel_outlined, size: 18),
+                      label: const Text('إلغاء الرحلة'),
+                    ),
+                  ],
+                ),
+              ),
             ],
           );
         },
@@ -1608,6 +1681,55 @@ class _SeatLegend extends StatelessWidget {
   }
 }
 
+/// Explains why an open trip is missing from the client app: its departure day
+/// has passed, so the booking search filters it out no matter what status the
+/// dashboard shows. [actions] lets the details dialog offer a way to resolve it.
+class _StaleTripNotice extends StatelessWidget {
+  const _StaleTripNotice({this.actions});
+
+  final Widget? actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: scheme.errorContainer.withAlpha(70),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: scheme.error.withAlpha(60)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.visibility_off_rounded, size: 18, color: scheme.error),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'فات موعد هذه الرحلة وما زالت مفتوحة للحجز، لذلك لا تظهر '
+                  'للعملاء في التطبيق. أنهِها أو ألغِها لتصحيح الحالة.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onErrorContainer,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (actions != null) ...[
+            const SizedBox(height: 10),
+            Align(alignment: AlignmentDirectional.centerStart, child: actions!),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _Fact extends StatelessWidget {
   const _Fact({required this.icon, required this.text});
 
@@ -1703,6 +1825,7 @@ String _listTitle(String filter) {
     'active' => 'الرحلات قيد التشغيل',
     'upcoming' => 'الرحلات القادمة',
     'completed' => 'الرحلات المكتملة',
+    'stale' => 'رحلات فات موعدها وما زالت مفتوحة',
     _ => 'كل الرحلات',
   };
 }

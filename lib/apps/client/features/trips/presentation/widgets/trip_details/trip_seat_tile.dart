@@ -62,9 +62,9 @@ class TripSeatTile extends StatelessWidget {
         ClientColors.borderFor(context),
       ),
       TripSeatState.available => (
-        ClientColors.journeyGreenLight,
-        ClientColors.journeyGreen,
-        ClientColors.journeyGreen.withAlpha(70),
+        ClientColors.seatAvailableFor(context),
+        ClientColors.onSeatAvailableFor(context),
+        ClientColors.seatAvailableBorderFor(context),
       ),
     };
   }

@@ -21,46 +21,14 @@ class WizardPackageStep extends StatefulWidget {
 }
 
 class _WizardPackageStepState extends State<WizardPackageStep> {
-  DateTime? _startDate;
-
   @override
   void initState() {
     super.initState();
     context.read<PackagesCubit>().load();
-    _startDate = _nextWorkday(DateTime.now());
-  }
-
-  DateTime _nextWorkday(DateTime from) {
-    var date = from.add(const Duration(days: 1));
-    while (date.weekday == DateTime.saturday ||
-        date.weekday == DateTime.sunday) {
-      date = date.add(const Duration(days: 1));
-    }
-    return date;
-  }
-
-  Future<void> _pickDate() async {
-    final picked = await showDatePicker(
-      context: context,
-      initialDate: _startDate ?? DateTime.now(),
-      firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 60)),
-      selectableDayPredicate: (date) =>
-          date.weekday != DateTime.saturday && date.weekday != DateTime.sunday,
-    );
-    if (picked == null || !mounted) return;
-    setState(() => _startDate = picked);
-    final selected = context.read<BookingWizardCubit>().state.selectedPackage;
-    if (selected != null) {
-      context.read<BookingWizardCubit>().selectPackage(selected, picked);
-    }
   }
 
   void _select(PackagePlan plan) {
-    context.read<BookingWizardCubit>().selectPackage(
-      plan,
-      _startDate ?? _nextWorkday(DateTime.now()),
-    );
+    context.read<BookingWizardCubit>().selectPackage(plan);
   }
 
   /// The plan we badge as best value: the first multi-ride plan, which is the
@@ -119,7 +87,7 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
                       ),
                     if (session.selectedPackage != null) ...[
                       const SizedBox(height: 6),
-                      PackageStartDateField(date: _startDate, onTap: _pickDate),
+                      PackageStartNote(date: session.packageStartDate),
                     ],
                   ],
                 ),

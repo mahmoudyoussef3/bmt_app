@@ -69,7 +69,7 @@ class _StopRow extends StatelessWidget {
                     'Final stop',
                     style: ClientTypography.labelSmall(
                       context,
-                    ).copyWith(color: ClientColors.journeyGreen),
+                    ).copyWith(color: ClientColors.journeyCyan),
                   ),
               ],
             ),

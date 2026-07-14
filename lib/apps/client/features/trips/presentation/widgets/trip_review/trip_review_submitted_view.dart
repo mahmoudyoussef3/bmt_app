@@ -30,7 +30,7 @@ class TripReviewSubmittedView extends StatelessWidget {
           children: [
             const Icon(
               Icons.verified_rounded,
-              color: ClientColors.journeyGreen,
+              color: ClientColors.journeyCyan,
               size: 26,
             ),
             const SizedBox(width: 8),

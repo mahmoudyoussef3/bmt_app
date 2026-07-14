@@ -33,7 +33,11 @@ class TrackingStopsTimeline extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.route_rounded, size: 18, color: ClientColors.primary),
+                Icon(
+                  Icons.route_rounded,
+                  size: 18,
+                  color: ClientColors.primary,
+                ),
                 const SizedBox(width: 6),
                 Text(
                   '$remaining ${remaining == 1 ? 'Stop' : 'Stops'} Remaining',
@@ -52,7 +56,7 @@ class TrackingStopsTimeline extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     fontSize: 12,
-                    color: ClientColors.journeyGreen,
+                    color: ClientColors.journeyCyan,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -122,9 +126,8 @@ class _StopRow extends StatelessWidget {
   final bool riderBoarded;
 
   Color _tone(BuildContext context) => switch (stop.status) {
-    StopVisitStatus.departed => ClientColors.journeyGreen,
-    StopVisitStatus.arrived ||
-    StopVisitStatus.next => ClientColors.primary,
+    StopVisitStatus.departed => ClientColors.journeyCyan,
+    StopVisitStatus.arrived || StopVisitStatus.next => ClientColors.primary,
     StopVisitStatus.upcoming => ClientColors.borderFor(context),
   };
 
@@ -145,7 +148,7 @@ class _StopRow extends StatelessWidget {
                     duration: const Duration(milliseconds: 400),
                     width: 2,
                     color: passed
-                        ? ClientColors.journeyGreen
+                        ? ClientColors.journeyCyan
                         : ClientColors.borderFor(context),
                   ),
                 ),
@@ -213,7 +216,13 @@ class _StopDot extends StatelessWidget {
           width: status == StopVisitStatus.next ? 4 : 2,
         ),
         boxShadow: status == StopVisitStatus.arrived
-            ? [BoxShadow(color: tone.withAlpha(110), blurRadius: 8, spreadRadius: 2)]
+            ? [
+                BoxShadow(
+                  color: tone.withAlpha(110),
+                  blurRadius: 8,
+                  spreadRadius: 2,
+                ),
+              ]
             : const [],
       ),
       child: AnimatedSwitcher(
@@ -250,7 +259,7 @@ class _RiderChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final missed = passed && !boarded;
     final tone = boarded
-        ? ClientColors.journeyGreen
+        ? ClientColors.journeyCyan
         : missed
         ? Theme.of(context).colorScheme.error
         : ClientColors.primary;

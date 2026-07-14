@@ -38,7 +38,7 @@ class TrackingQuickActions extends StatelessWidget {
           _QuickActionItem(
             icon: Icons.chat_bubble_outline_rounded,
             label: 'Contact Driver',
-            color: ClientColors.journeyGreen,
+            color: ClientColors.journeyCyan,
             onTap: onContactDriver,
           ),
           _QuickActionItem(

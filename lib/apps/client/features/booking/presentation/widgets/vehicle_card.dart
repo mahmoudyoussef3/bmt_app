@@ -62,7 +62,7 @@ class VehicleCard extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: isFull
                       ? ClientColors.journeyRedLight
-                      : ClientColors.journeyGreenLight,
+                      : ClientColors.journeyCyanLight,
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -70,7 +70,7 @@ class VehicleCard extends StatelessWidget {
                   style: ClientTypography.labelSmall(context).copyWith(
                     color: isFull
                         ? ClientColors.onJourneyRed
-                        : ClientColors.onJourneyGreen,
+                        : ClientColors.onJourneyCyan,
                     fontWeight: FontWeight.w700,
                   ),
                 ),

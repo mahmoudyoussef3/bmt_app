@@ -27,12 +27,12 @@ class TripSeatSummary extends StatelessWidget {
           width: 46,
           height: 46,
           decoration: BoxDecoration(
-            color: ClientColors.journeyGreen.withAlpha(28),
+            color: ClientColors.journeyCyan.withAlpha(28),
             borderRadius: BorderRadius.circular(15),
           ),
           child: const Icon(
             Icons.event_seat_rounded,
-            color: ClientColors.journeyGreen,
+            color: ClientColors.journeyCyan,
             size: 24,
           ),
         ),
@@ -73,9 +73,9 @@ class TripSeatSummary extends StatelessWidget {
               ),
               Text(
                 'seats free',
-                style: ClientTypography.bodySmall(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                ),
+                style: ClientTypography.bodySmall(
+                  context,
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
             ],
           ),

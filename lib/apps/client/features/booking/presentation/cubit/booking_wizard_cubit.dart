@@ -34,7 +34,6 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
         dropoffStop: state.dropoffStop,
         selectedTrip: state.selectedTrip,
         selectedPackage: state.selectedPackage,
-        packageStartDate: state.packageStartDate,
         paymentMethod: state.paymentMethod,
         receiptUrl: state.receiptUrl,
         paymentReference: state.paymentReference,
@@ -55,7 +54,6 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
         selectedSeatId: state.selectedSeatId,
         selectedSeatLabel: state.selectedSeatLabel,
         selectedPackage: null,
-        packageStartDate: null,
         paymentMethod: state.paymentMethod,
         receiptUrl: state.receiptUrl,
         paymentReference: state.paymentReference,
@@ -66,8 +64,9 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
     );
   }
 
-  void selectPackage(PackagePlan plan, DateTime startDate) {
-    emit(state.copyWith(selectedPackage: plan, packageStartDate: startDate));
+  /// No start date: a plan runs from the date of the trip already selected.
+  void selectPackage(PackagePlan plan) {
+    emit(state.copyWith(selectedPackage: plan));
   }
 
   void selectPaymentMethod(String method) {

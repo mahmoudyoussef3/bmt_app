@@ -2,6 +2,7 @@ import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
@@ -54,11 +55,12 @@ class _ProfileBody extends StatelessWidget {
         slivers: [
           _ProfileSliverHeader(profile: profile),
           SliverPadding(
-            padding: const EdgeInsetsDirectional.fromSTEB(
+            padding: EdgeInsetsDirectional.fromSTEB(
               CaptainDesignTokens.s24,
               0,
               CaptainDesignTokens.s24,
-              120,
+              // Cleared for the shell's floating nav bar.
+              CaptainBottomNav.reservedSpace(context),
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([

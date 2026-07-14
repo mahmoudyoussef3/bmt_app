@@ -16,8 +16,8 @@ class TripPaymentChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final (bg, fg) = switch (status) {
       PaymentStatus.paid => (
-        ClientColors.journeyGreenLight,
-        ClientColors.onJourneyGreen,
+        ClientColors.journeyCyanLight,
+        ClientColors.onJourneyCyan,
       ),
       PaymentStatus.pending => (
         ClientColors.journeyAmberLight,

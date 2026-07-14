@@ -138,7 +138,6 @@ import '../../features/support/data/datasources/supabase_support_datasource.dart
 import '../../features/support/data/repositories/support_repository_impl.dart';
 import '../../features/support/domain/repositories/support_repository.dart';
 import '../../features/support/domain/usecases/create_support_ticket_usecase.dart';
-import '../../features/support/domain/usecases/get_support_workspace_usecase.dart';
 import '../../features/support/domain/usecases/get_my_support_tickets_usecase.dart';
 import '../../features/support/domain/usecases/get_ticket_details_usecase.dart';
 
@@ -299,7 +298,7 @@ void _registerAuthDependencies() {
       () => MockAuthDatasource(),
     );
   }
-  
+
   if (!clientGetIt.isRegistered<AuthRepository>()) {
     clientGetIt.registerLazySingleton<AuthRepository>(
       () => AuthRepositoryImpl(clientGetIt<MockAuthDatasource>()),
@@ -311,7 +310,7 @@ void _registerAuthDependencies() {
       () => VerifyPhoneUseCase(clientGetIt<AuthRepository>()),
     );
   }
-  
+
   if (!clientGetIt.isRegistered<VerifyOtpUseCase>()) {
     clientGetIt.registerLazySingleton<VerifyOtpUseCase>(
       () => VerifyOtpUseCase(clientGetIt<AuthRepository>()),
@@ -613,7 +612,9 @@ void _registerSeatSelectionDependencies() {
 
   if (!clientGetIt.isRegistered<UpdateExistingBookingPaymentUseCase>()) {
     clientGetIt.registerLazySingleton<UpdateExistingBookingPaymentUseCase>(
-      () => UpdateExistingBookingPaymentUseCase(clientGetIt<SeatSelectionRepository>()),
+      () => UpdateExistingBookingPaymentUseCase(
+        clientGetIt<SeatSelectionRepository>(),
+      ),
     );
   }
 
@@ -840,12 +841,6 @@ void _registerSupportDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<GetSupportWorkspaceUseCase>()) {
-    clientGetIt.registerLazySingleton<GetSupportWorkspaceUseCase>(
-      () => GetSupportWorkspaceUseCase(clientGetIt<SupportRepository>()),
-    );
-  }
-
   if (!clientGetIt.isRegistered<GetMySupportTicketsUseCase>()) {
     clientGetIt.registerLazySingleton<GetMySupportTicketsUseCase>(
       () => GetMySupportTicketsUseCase(clientGetIt<SupportRepository>()),
@@ -867,7 +862,6 @@ void _registerSupportDependencies() {
   if (!clientGetIt.isRegistered<SupportCubit>()) {
     clientGetIt.registerFactory<SupportCubit>(
       () => SupportCubit(
-        getSupportWorkspace: clientGetIt<GetSupportWorkspaceUseCase>(),
         getMySupportTickets: clientGetIt<GetMySupportTicketsUseCase>(),
         createSupportTicket: clientGetIt<CreateSupportTicketUseCase>(),
         getTicketDetails: clientGetIt<GetTicketDetailsUseCase>(),

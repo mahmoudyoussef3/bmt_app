@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/communication/domain/entities/conversation.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/communication_cubit.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/communication_state.dart';
@@ -351,7 +352,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
           IconButton(
             icon: const Icon(
               Icons.ring_volume_rounded,
-              color: Colors.greenAccent,
+              color: ClientColors.journeyCyan,
             ),
             tooltip: 'Simulate Incoming Call',
             onPressed: _triggerIncomingCallSimulation,
@@ -387,7 +388,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                     width: 10,
                     height: 10,
                     decoration: BoxDecoration(
-                      color: Colors.green,
+                      color: ClientColors.journeyCyan,
                       shape: BoxShape.circle,
                       border: Border.all(color: scheme.surface, width: 2),
                     ),
@@ -413,7 +414,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                   isOnline ? 'Online' : 'Offline',
                   style: TextStyle(
                     fontSize: 10,
-                    color: isOnline ? Colors.green : Colors.grey,
+                    color: isOnline ? ClientColors.journeyCyan : Colors.grey,
                   ),
                 ),
               ],
@@ -620,7 +621,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                             width: 12,
                             height: 12,
                             decoration: BoxDecoration(
-                              color: Colors.green,
+                              color: ClientColors.journeyCyan,
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: scheme.surface,
@@ -751,7 +752,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
     return switch (cat) {
       'Driver' => scheme.secondary,
       'Support' => scheme.error,
-      'Group' => Colors.teal,
+      'Group' => ClientColors.journeyCyan,
       _ => Colors.grey,
     };
   }
@@ -1032,7 +1033,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
               const Icon(
                 Icons.people_alt_rounded,
                 size: 20,
-                color: Colors.teal,
+                color: ClientColors.journeyCyan,
               ),
             ],
           ),
@@ -1509,7 +1510,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                     style: TextStyle(
                       fontSize: 14,
                       color: _currentView == 6
-                          ? Colors.greenAccent
+                          ? ClientColors.journeyCyanStrong
                           : Colors.white.withAlpha(180),
                       fontWeight: FontWeight.bold,
                     ),
@@ -1530,7 +1531,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
 
   Widget _buildCallControlPanel(ColorScheme scheme) {
     if (_currentView == 6) {
-      // Incoming call: Decline (Red) or Accept (Green)
+      // Incoming call: Decline (Red) or Accept (Cyan)
       return Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
@@ -1542,7 +1543,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
           ),
           _buildCallActionButton(
             icon: Icons.call_rounded,
-            color: Colors.greenAccent,
+            color: ClientColors.journeyCyanStrong,
             label: 'Accept',
             onTap: _acceptIncomingCall,
           ),

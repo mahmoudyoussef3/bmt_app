@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_upcoming_trip_card.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_upcoming_trips_list.dart';
 
 UpcomingTripData _trip({
@@ -35,9 +36,11 @@ Future<void> _pumpList(
   WidgetTester tester,
   List<UpcomingTripData> trips, {
   ValueChanged<UpcomingTripData>? onBook,
+  Brightness brightness = Brightness.light,
 }) {
   return tester.pumpWidget(
     MaterialApp(
+      theme: ThemeData(brightness: brightness),
       home: Scaffold(
         body: SingleChildScrollView(
           child: HomeUpcomingTripsList(
@@ -50,6 +53,19 @@ Future<void> _pumpList(
       ),
     ),
   );
+}
+
+/// Renders at the width of the smallest phone the client app ships to, so a
+/// layout that only fits on a tablet fails here rather than in a rider's hand.
+Future<void> _pumpOnNarrowPhone(
+  WidgetTester tester,
+  List<UpcomingTripData> trips, {
+  Brightness brightness = Brightness.light,
+}) async {
+  tester.view.physicalSize = const Size(320, 900);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await _pumpList(tester, trips, brightness: brightness);
 }
 
 void main() {
@@ -115,7 +131,7 @@ void main() {
       expect(find.text('8:30 AM'), findsOneWidget);
       expect(find.text('El-Marg, QH, Egypt'), findsOneWidget);
       expect(find.text('American University in Cairo (AUC)'), findsOneWidget);
-      expect(find.text('14 seats left'), findsOneWidget);
+      expect(find.text('14 available'), findsOneWidget);
       expect(find.text('EGP 100'), findsOneWidget);
     });
 
@@ -131,11 +147,9 @@ void main() {
 
     testWidgets('a sold-out trip cannot be booked', (tester) async {
       UpcomingTripData? booked;
-      await _pumpList(
-        tester,
-        [_trip(seatsLeft: 0)],
-        onBook: (trip) => booked = trip,
-      );
+      await _pumpList(tester, [
+        _trip(seatsLeft: 0),
+      ], onBook: (trip) => booked = trip);
 
       expect(find.text('Sold out'), findsNWidgets(2));
       await tester.tap(find.text('Sold out').last);
@@ -147,7 +161,7 @@ void main() {
     testWidgets('scarce seats are called out', (tester) async {
       await _pumpList(tester, [_trip(seatsLeft: 3)]);
 
-      expect(find.text('Only 3 seats left'), findsOneWidget);
+      expect(find.text('Only 3 left'), findsOneWidget);
     });
 
     testWidgets('an unpriced trip says so instead of showing a fake fare', (
@@ -193,11 +207,9 @@ void main() {
 
     testWidgets('can still be booked again, and says so', (tester) async {
       UpcomingTripData? booked;
-      await _pumpList(
-        tester,
-        [_trip(bookedStatus: HomeBookingStatus.underReview, bookedSeats: 1)],
-        onBook: (trip) => booked = trip,
-      );
+      await _pumpList(tester, [
+        _trip(bookedStatus: HomeBookingStatus.underReview, bookedSeats: 1),
+      ], onBook: (trip) => booked = trip);
 
       expect(find.text('Book seat'), findsNothing);
       await tester.tap(find.text('Book another seat'));
@@ -212,6 +224,47 @@ void main() {
       expect(find.text('Under review'), findsNothing);
       expect(find.text('You booked this'), findsNothing);
       expect(find.text('Book seat'), findsOneWidget);
+    });
+  });
+
+  // The card is a boarding pass: a tinted departure band, the journey, a facts
+  // panel, then the fare and the action below a tear line. Each zone carries
+  // text that can grow — a long route name, a two-line status, a booked note —
+  // so every state has to survive the narrowest phone the app ships to. An
+  // overflow here fails the test rather than shipping a striped card.
+  group('the ticket layout', () {
+    testWidgets('fits a narrow phone', (tester) async {
+      await _pumpOnNarrowPhone(tester, [_trip()]);
+
+      expect(find.byType(HomeUpcomingTripCard), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('fits a narrow phone with a booking on it', (tester) async {
+      await _pumpOnNarrowPhone(tester, [
+        _trip(bookedStatus: HomeBookingStatus.underReview, bookedSeats: 2),
+      ]);
+
+      expect(find.text('You booked 2 seats'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('fits a narrow phone when boarding and sold out', (
+      tester,
+    ) async {
+      await _pumpOnNarrowPhone(tester, [_trip(seatsLeft: 0, isLive: true)]);
+
+      expect(find.text('Boarding'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('renders in dark mode', (tester) async {
+      await _pumpOnNarrowPhone(tester, [
+        _trip(bookedStatus: HomeBookingStatus.onBoard, bookedSeats: 1),
+      ], brightness: Brightness.dark);
+
+      expect(find.byType(HomeUpcomingTripCard), findsOneWidget);
+      expect(tester.takeException(), isNull);
     });
   });
 }

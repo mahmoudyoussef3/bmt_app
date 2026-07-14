@@ -38,14 +38,18 @@ class SearchTripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scheme = Theme.of(context).colorScheme;
-    
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDark ? scheme.surfaceContainerHighest : scheme.surfaceContainerLow,
+        color: isDark
+            ? scheme.surfaceContainerHighest
+            : scheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(ClientRadius.xl),
         border: Border.all(
-          color: isDark ? scheme.outline.withAlpha(40) : scheme.outline.withAlpha(60),
+          color: isDark
+              ? scheme.outline.withAlpha(40)
+              : scheme.outline.withAlpha(60),
         ),
         boxShadow: ClientElevation.md(context),
       ),
@@ -95,7 +99,7 @@ class SearchTripCard extends StatelessWidget {
                 children: [
                   SearchFieldRow(
                     icon: Icons.trip_origin_rounded,
-                    iconColor: ClientColors.journeyGreen,
+                    iconColor: ClientColors.journeyCyan,
                     label: 'Pickup Location',
                     value: pickup,
                     placeholder: 'Select pickup point',

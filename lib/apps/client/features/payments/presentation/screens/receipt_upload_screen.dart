@@ -391,15 +391,15 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
   Widget _buildReceiptReadyBox(BuildContext context) {
     return ClientCard(
       padding: const EdgeInsets.all(16),
-      backgroundColor: ClientColors.journeyGreenLight,
-      borderColor: ClientColors.journeyGreen.withAlpha(80),
+      backgroundColor: ClientColors.journeyCyanLight,
+      borderColor: ClientColors.journeyCyan.withAlpha(80),
       useShadow: false,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Icon(
             Icons.check_circle_rounded,
-            color: ClientColors.journeyGreen,
+            color: ClientColors.journeyCyan,
             size: 22,
           ),
           const SizedBox(width: 12),
@@ -411,7 +411,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                   'Receipt Attached',
                   style: ClientTypography.bodySmall(context).copyWith(
                     fontWeight: FontWeight.w700,
-                    color: ClientColors.onJourneyGreen,
+                    color: ClientColors.onJourneyCyan,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -419,7 +419,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                   'Submit payment to reserve your selected seat and send the receipt for verification.',
                   style: ClientTypography.bodySmall(
                     context,
-                  ).copyWith(color: ClientColors.onJourneyGreen, height: 1.35),
+                  ).copyWith(color: ClientColors.onJourneyCyan, height: 1.35),
                 ),
               ],
             ),

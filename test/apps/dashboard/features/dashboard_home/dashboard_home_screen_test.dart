@@ -49,7 +49,7 @@ void main() {
     await cubit.close();
   });
 
-  testWidgets('DashboardHomeScreen opens payment and live-trip action cards', (
+  testWidgets('DashboardHomeScreen opens payment and late-trip action cards', (
     tester,
   ) async {
     final openedRoutes = <String>[];
@@ -79,13 +79,13 @@ void main() {
 
     expect(openedRoutes, [
       DashboardRoutes.paymentVerification,
-      DashboardRoutes.liveTrips,
+      DashboardRoutes.trips,
     ]);
 
     await cubit.close();
   });
 
-  testWidgets('DashboardHomeScreen opens delayed trips in live monitoring', (
+  testWidgets('DashboardHomeScreen opens delayed trips in the trips module', (
     tester,
   ) async {
     final openedRoutes = <String>[];
@@ -116,7 +116,7 @@ void main() {
     await tester.tap(find.text('رحلة عودة ٤٠٧'));
     await tester.pump();
 
-    expect(openedRoutes.single, DashboardRoutes.liveTrips);
+    expect(openedRoutes.single, DashboardRoutes.trips);
 
     await cubit.close();
   });
@@ -135,7 +135,7 @@ const _interactiveHomeData = DashboardHomeData(
       title: 'رحلة متأخرة',
       count: '٢',
       description: 'تأخير فعلي يحتاج متابعة مباشرة',
-      targetModule: DashboardRoutes.liveTrips,
+      targetModule: DashboardRoutes.trips,
       priority: OperationsPriority.urgent,
     ),
   ],

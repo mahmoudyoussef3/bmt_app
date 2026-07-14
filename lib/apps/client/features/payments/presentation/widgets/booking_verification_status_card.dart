@@ -113,7 +113,12 @@ class BookingVerificationStatusCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           if (_isRejected && reason != null && reason.isNotEmpty)
-            _infoRow(context, 'Reason', reason, valueColor: ClientColors.journeyRed)
+            _infoRow(
+              context,
+              'Reason',
+              reason,
+              valueColor: ClientColors.journeyRed,
+            )
           else if (!_isApproved)
             _infoRow(context, 'Estimated Review Time', '5–15 Minutes'),
         ],
@@ -124,13 +129,16 @@ class BookingVerificationStatusCard extends StatelessWidget {
   _StatusPhase _phaseContent() {
     if (_isApproved) {
       return _StatusPhase(
-        gradient: const [ClientColors.journeyGreen, Color(0xFF14B8A6)],
+        gradient: const [
+          ClientColors.journeyCyan,
+          ClientColors.journeyCyanStrong,
+        ],
         icon: Icons.check_circle_rounded,
         title: 'Payment Approved',
         subtitle:
             'Your payment was verified. Your seat is confirmed and ready to track.',
         statusLabel: 'Approved',
-        statusColor: ClientColors.journeyGreen,
+        statusColor: ClientColors.journeyCyan,
       );
     }
     if (_isRejected) {

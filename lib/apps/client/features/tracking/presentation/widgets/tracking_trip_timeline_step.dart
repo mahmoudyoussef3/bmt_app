@@ -25,7 +25,7 @@ class TrackingTripTimelineStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stepColor = isCompleted
-        ? ClientColors.journeyGreen
+        ? ClientColors.journeyCyan
         : isActive
         ? ClientColors.primary
         : ClientColors.borderFor(context);
@@ -49,14 +49,18 @@ class TrackingTripTimelineStep extends StatelessWidget {
                   border: Border.all(color: stepColor, width: isActive ? 5 : 2),
                 ),
                 child: isCompleted
-                    ? const Center(child: Icon(Icons.check, size: 10, color: Colors.white))
+                    ? const Center(
+                        child: Icon(Icons.check, size: 10, color: Colors.white),
+                      )
                     : null,
               ),
               if (!isLast)
                 Expanded(
                   child: Container(
                     width: 2,
-                    color: isCompleted ? ClientColors.journeyGreen : ClientColors.borderFor(context),
+                    color: isCompleted
+                        ? ClientColors.journeyCyan
+                        : ClientColors.borderFor(context),
                   ),
                 ),
             ],
@@ -72,7 +76,9 @@ class TrackingTripTimelineStep extends StatelessWidget {
                     label,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isActive
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       color: isActive
                           ? ClientColors.primary
                           : isRemaining
@@ -84,7 +90,10 @@ class TrackingTripTimelineStep extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       description,
-                      style: TextStyle(fontSize: 11, color: ClientColors.textSecondaryFor(context)),
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: ClientColors.textSecondaryFor(context),
+                      ),
                     ),
                   ],
                 ],

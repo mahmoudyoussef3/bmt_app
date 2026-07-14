@@ -48,7 +48,7 @@ class TrackingMapStatusCard extends StatelessWidget {
           if (_completed)
             const TrackingHeadlineRow(
               icon: Icons.flag_rounded,
-              tone: ClientColors.journeyGreen,
+              tone: ClientColors.journeyCyan,
               caption: 'Trip',
               title: 'Completed',
             )
@@ -74,10 +74,7 @@ class TrackingMapStatusCard extends StatelessWidget {
             initials: driverInitials,
             name: driverName,
             plate: vehiclePlate,
-            trailing: TrackingSignalChip(
-              sample: sample,
-              completed: _completed,
-            ),
+            trailing: TrackingSignalChip(sample: sample, completed: _completed),
           ),
         ],
       ),

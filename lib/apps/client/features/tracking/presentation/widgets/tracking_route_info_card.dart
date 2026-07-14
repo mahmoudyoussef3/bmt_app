@@ -36,7 +36,11 @@ class TrackingRouteInfoCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(Icons.directions_bus_rounded, color: ClientColors.primary, size: 20),
+              Icon(
+                Icons.directions_bus_rounded,
+                color: ClientColors.primary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -53,14 +57,18 @@ class TrackingRouteInfoCard extends StatelessWidget {
           const Divider(height: 24),
           TrackingRouteTimelineRow(
             icon: Icons.trip_origin_rounded,
-            color: ClientColors.journeyGreen,
+            color: ClientColors.journeyCyan,
             type: 'Pickup Location',
             location: pickupName,
             timeInfo: 'Scheduled departure: $departureTimeLabel',
           ),
           Padding(
             padding: const EdgeInsets.only(left: 8.0),
-            child: Container(width: 2, height: 24, color: ClientColors.borderFor(context)),
+            child: Container(
+              width: 2,
+              height: 24,
+              color: ClientColors.borderFor(context),
+            ),
           ),
           TrackingRouteTimelineRow(
             icon: Icons.location_on_rounded,

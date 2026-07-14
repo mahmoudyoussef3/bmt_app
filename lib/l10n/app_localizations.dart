@@ -1466,12 +1466,6 @@ abstract class AppLocalizations {
   /// **'Trips'**
   String get dashboard_trips;
 
-  /// No description provided for @dashboard_liveTrips.
-  ///
-  /// In en, this message translates to:
-  /// **'Live Trips'**
-  String get dashboard_liveTrips;
-
   /// No description provided for @dashboard_fleet.
   ///
   /// In en, this message translates to:

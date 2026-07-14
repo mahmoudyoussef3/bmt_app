@@ -5,18 +5,23 @@ import 'package:bmt_app/core/widgets/widgets.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_awaiting_trips_view.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_dev_mode_sheet.dart';
+import 'package:bmt_app/apps/captain/features/notifications/presentation/pages/captain_notifications_page.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/pages/passenger_list_page.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/pages/trip_execution_page.dart';
 
 import '../../domain/entities/assigned_trip.dart';
+import '../../domain/entities/captain_day_summary.dart';
 import '../cubit/assigned_trips_cubit.dart';
 import '../cubit/assigned_trips_state.dart';
 import '../widgets/assigned_trip_card.dart';
-import '../widgets/assigned_trips_app_bar.dart';
-import '../widgets/assigned_trips_overview_panel.dart';
+import '../widgets/assigned_trips_header.dart';
 import '../widgets/assigned_trips_section_title.dart';
 import '../widgets/assigned_trips_skeleton.dart';
+import '../widgets/assigned_trips_stats_strip.dart';
+import '../widgets/captain_day_complete_card.dart';
+import '../widgets/captain_focus_card.dart';
 
 class AssignedTripsPage extends StatefulWidget {
   const AssignedTripsPage({super.key});
@@ -26,13 +31,13 @@ class AssignedTripsPage extends StatefulWidget {
 }
 
 class _AssignedTripsPageState extends State<AssignedTripsPage> {
+  bool _refreshing = false;
+
   @override
   void initState() {
     super.initState();
     context.read<AssignedTripsCubit>().load();
   }
-
-  bool _refreshing = false;
 
   Future<void> _refresh() async {
     setState(() => _refreshing = true);
@@ -43,17 +48,24 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
     }
   }
 
+  void _openTrip(AssignedTrip trip) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => TripExecutionPage(trip: trip)));
+
+  void _openManifest(AssignedTrip trip) => Navigator.of(
+    context,
+  ).push(MaterialPageRoute(builder: (_) => PassengerListPage(tripId: trip.id)));
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Scaffold(
-      backgroundColor: scheme.surfaceContainerLowest,
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: BlocBuilder<AssignedTripsCubit, AssignedTripsState>(
         builder: (context, state) {
           if (state is AssignedTripsLoading) {
             return const AssignedTripsSkeleton();
           }
+
           if (state is AssignedTripsError) {
             return SafeArea(
               child: AsyncStateView(
@@ -71,110 +83,100 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
 
           return RefreshIndicator(
             onRefresh: _refresh,
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              slivers: [
-                AssignedTripsAppBar(
-                  onAvatarTap: () => showCaptainDevModeSheet(context),
-                ),
-                if (trips.isNotEmpty) _overview(trips),
-                SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: CaptainDesignTokens.s24,
+            child: _Content(
+              summary: CaptainDaySummary.fromTrips(trips),
+              trips: trips,
+              isRefreshing: _refreshing,
+              onRefresh: _refresh,
+              onOpenTrip: _openTrip,
+              onOpenManifest: _openManifest,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _Content extends StatelessWidget {
+  const _Content({
+    required this.summary,
+    required this.trips,
+    required this.isRefreshing,
+    required this.onRefresh,
+    required this.onOpenTrip,
+    required this.onOpenManifest,
+  });
+
+  final CaptainDaySummary summary;
+  final List<AssignedTrip> trips;
+  final bool isRefreshing;
+  final Future<void> Function() onRefresh;
+  final ValueChanged<AssignedTrip> onOpenTrip;
+  final ValueChanged<AssignedTrip> onOpenManifest;
+
+  @override
+  Widget build(BuildContext context) {
+    final focus = summary.focusTrip;
+    // The focus trip is already shown as the hero above, so the list carries
+    // the rest of the day.
+    final rest = trips.where((t) => t.id != focus?.id).toList();
+
+    return CustomScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        AssignedTripsHeader(
+          onAvatarTap: () => showCaptainDevModeSheet(context),
+          onNotificationsTap: () =>
+              Navigator.of(context).push(CaptainNotificationsPage.route()),
+        ),
+        SliverPadding(
+          padding: EdgeInsetsDirectional.fromSTEB(
+            CaptainDesignTokens.s20,
+            CaptainDesignTokens.s20,
+            CaptainDesignTokens.s20,
+            // The shell paints this page under its floating nav bar.
+            CaptainBottomNav.reservedSpace(context),
+          ),
+          sliver: SliverList.list(
+            children: [
+              if (summary.isEmpty)
+                CaptainAwaitingTripsView(
+                  onRefresh: onRefresh,
+                  isRefreshing: isRefreshing,
+                  title: 'لا توجد رحلات اليوم',
+                  message:
+                      'لم تُسند إليك أي رحلة حتى الآن. فور إسناد رحلة من قِبل '
+                      'العمليات ستظهر هنا تلقائياً — لا حاجة لإعادة تسجيل الدخول.',
+                )
+              else ...[
+                if (focus != null)
+                  CaptainFocusCard(trip: focus, onOpen: () => onOpenTrip(focus))
+                else
+                  CaptainDayCompleteCard(tripCount: summary.totalTrips),
+                const SizedBox(height: CaptainDesignTokens.s16),
+                AssignedTripsStatsStrip(summary: summary),
+                if (rest.isNotEmpty) ...[
+                  const SizedBox(height: CaptainDesignTokens.s24),
+                  AssignedTripsSectionTitle(
+                    title: focus == null ? 'رحلات اليوم' : 'بقية رحلات اليوم',
+                    count: rest.length,
                   ),
-                  sliver: SliverToBoxAdapter(
-                    child: Transform.translate(
-                      offset: Offset(0, trips.isEmpty ? -24 : -16),
-                      child: AssignedTripsSectionTitle(tripCount: trips.length),
+                  const SizedBox(height: CaptainDesignTokens.s12),
+                  for (final trip in rest) ...[
+                    AssignedTripCard(
+                      trip: trip,
+                      onOpen: () => onOpenTrip(trip),
+                      onManifest: () => onOpenManifest(trip),
                     ),
-                  ),
-                ),
-                if (trips.isEmpty) _awaitingTrips() else _tripList(trips),
+                    const SizedBox(height: CaptainDesignTokens.s12),
+                  ],
+                ],
               ],
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _overview(List<AssignedTrip> trips) {
-    final passengers = trips.fold<int>(0, (sum, t) => sum + t.passengerCount);
-    final boarded = trips.fold<int>(0, (sum, t) => sum + t.boardedCount);
-    final active = trips
-        .where(
-          (t) =>
-              t.status == AssignedTripStatus.boarding ||
-              t.status == AssignedTripStatus.inProgress,
-        )
-        .length;
-
-    return SliverToBoxAdapter(
-      child: Transform.translate(
-        offset: const Offset(0, -40),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: CaptainDesignTokens.s24,
-          ),
-          child: AssignedTripsOverviewPanel(
-            trips: trips.length,
-            passengers: passengers,
-            boarded: boarded,
-            activeTrips: active,
+            ],
           ),
         ),
-      ),
-    );
-  }
-
-  Widget _awaitingTrips() {
-    return SliverPadding(
-      padding: const EdgeInsetsDirectional.fromSTEB(
-        CaptainDesignTokens.s24,
-        CaptainDesignTokens.s8,
-        CaptainDesignTokens.s24,
-        CaptainDesignTokens.s48,
-      ),
-      sliver: SliverToBoxAdapter(
-        child: CaptainAwaitingTripsView(
-          onRefresh: _refresh,
-          isRefreshing: _refreshing,
-          title: 'لا توجد رحلات اليوم',
-          message:
-              'لم تُسند إليك أي رحلة حتى الآن. فور إسناد رحلة من قِبل العمليات '
-              'ستظهر هنا تلقائياً — لا حاجة لإعادة تسجيل الدخول.',
-        ),
-      ),
-    );
-  }
-
-  Widget _tripList(List<AssignedTrip> trips) {
-    return SliverPadding(
-      padding: const EdgeInsetsDirectional.fromSTEB(
-        CaptainDesignTokens.s24,
-        CaptainDesignTokens.s16,
-        CaptainDesignTokens.s24,
-        CaptainDesignTokens.s48,
-      ),
-      sliver: SliverList.separated(
-        itemCount: trips.length,
-        separatorBuilder: (_, _) =>
-            const SizedBox(height: CaptainDesignTokens.s24),
-        itemBuilder: (context, index) {
-          final trip = trips[index];
-          return AssignedTripCard(
-            trip: trip,
-            onOpen: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => TripExecutionPage(trip: trip)),
-            ),
-            onManifest: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) => PassengerListPage(tripId: trip.id),
-              ),
-            ),
-          );
-        },
-      ),
+      ],
     );
   }
 }

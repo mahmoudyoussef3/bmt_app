@@ -4,7 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 
 /// How each booking status looks. Amber reads as "waiting on us", blue as
-/// "settled", green as "happening now" — the same language the rest of the
+/// "settled", cyan as "happening now" — the same language the rest of the
 /// journey UI already speaks.
 extension HomeBookingStatusStyle on HomeBookingStatus {
   ClientJourneyStatus get badge => switch (this) {
@@ -16,7 +16,7 @@ extension HomeBookingStatusStyle on HomeBookingStatus {
   Color get accent => switch (this) {
     HomeBookingStatus.underReview => ClientColors.journeyAmber,
     HomeBookingStatus.confirmed => ClientColors.primary,
-    HomeBookingStatus.onBoard => ClientColors.journeyGreen,
+    HomeBookingStatus.onBoard => ClientColors.journeyCyan,
   };
 
   IconData get icon => switch (this) {

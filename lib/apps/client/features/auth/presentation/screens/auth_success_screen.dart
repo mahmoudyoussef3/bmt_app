@@ -181,7 +181,7 @@ class _SuccessBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = created ? ClientColors.journeyGreen : ClientColors.primary;
+    final color = created ? ClientColors.journeyCyan : ClientColors.primary;
     return Container(
       height: 116,
       width: 116,

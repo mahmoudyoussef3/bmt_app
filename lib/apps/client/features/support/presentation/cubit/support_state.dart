@@ -14,22 +14,15 @@ class SupportInitial extends SupportState {}
 class SupportLoading extends SupportState {}
 
 class SupportLoaded extends SupportState {
-  final List<String> categories;
   final List<SupportTicket> tickets;
 
-  const SupportLoaded({required this.categories, required this.tickets});
+  const SupportLoaded({required this.tickets});
 
   @override
-  List<Object?> get props => [categories, tickets];
+  List<Object?> get props => [tickets];
 
-  SupportLoaded copyWith({
-    List<String>? categories,
-    List<SupportTicket>? tickets,
-  }) {
-    return SupportLoaded(
-      categories: categories ?? this.categories,
-      tickets: tickets ?? this.tickets,
-    );
+  SupportLoaded copyWith({List<SupportTicket>? tickets}) {
+    return SupportLoaded(tickets: tickets ?? this.tickets);
   }
 }
 

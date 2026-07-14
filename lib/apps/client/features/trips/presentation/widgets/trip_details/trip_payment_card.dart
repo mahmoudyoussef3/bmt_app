@@ -62,10 +62,9 @@ class TripPaymentCard extends StatelessWidget {
             ),
             Text(
               trip.fare,
-              style: ClientTypography.priceHero(context).copyWith(
-                fontSize: 22,
-                color: ClientColors.primaryFor(context),
-              ),
+              style: ClientTypography.priceHero(
+                context,
+              ).copyWith(fontSize: 22, color: ClientColors.primaryFor(context)),
             ),
           ],
         ),
@@ -97,7 +96,7 @@ class TripPaymentCard extends StatelessWidget {
 
   Color _paymentColor(BuildContext context, PaymentStatus status) {
     return switch (status) {
-      PaymentStatus.paid => ClientColors.journeyGreen,
+      PaymentStatus.paid => ClientColors.journeyCyan,
       PaymentStatus.pending => ClientColors.journeyAmber,
       PaymentStatus.underReview => ClientColors.journeyAmber,
       PaymentStatus.refunded => ClientColors.primary,

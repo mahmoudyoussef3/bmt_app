@@ -134,7 +134,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             'Your released seat on Jun 2 was rebooked. EGP 50 cashback credited to your wallet!',
         time: 'Yesterday',
         icon: Icons.payments_outlined,
-        color: Colors.green,
+        color: ClientColors.journeyCyan,
       ),
       const NotificationItem(
         title: 'Seat Rebooked Successfully',
@@ -602,14 +602,14 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.greenAccent.withAlpha(50),
+                  color: ClientColors.journeyCyanStrong.withAlpha(50),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
                     const CircleAvatar(
                       radius: 3,
-                      backgroundColor: Colors.greenAccent,
+                      backgroundColor: ClientColors.journeyCyanStrong,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -617,7 +617,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                       style: const TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
-                        color: Colors.greenAccent,
+                        color: ClientColors.journeyCyanStrong,
                       ),
                     ),
                   ],
@@ -719,7 +719,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           'Rebooked Seats',
           '$_successfullyRebookedSeats',
           Icons.check_circle_outline_rounded,
-          Colors.green,
+          ClientColors.journeyCyan,
         ),
         _buildStatCard(
           'Earned Reward',
@@ -775,7 +775,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           child: _buildQuickLinkButton(
             icon: Icons.history_rounded,
             label: 'Release Logs',
-            color: Colors.teal,
+            color: ClientColors.journeyCyan,
             onTap: () => setState(() => _currentView = 7),
             scheme: scheme,
           ),
@@ -901,7 +901,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                         Container(width: 1, height: 12, color: Colors.grey),
                         const CircleAvatar(
                           radius: 4,
-                          backgroundColor: Colors.green,
+                          backgroundColor: ClientColors.journeyCyan,
                         ),
                       ],
                     ),
@@ -1385,7 +1385,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           // Elastic checkmark animation simulation
           const CircleAvatar(
             radius: 36,
-            backgroundColor: Colors.green,
+            backgroundColor: ClientColors.journeyCyan,
             child: Icon(Icons.check_rounded, color: Colors.white, size: 38),
           ),
           const SizedBox(height: 24),
@@ -1618,7 +1618,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           final isFuture = idx > activeIdx;
 
           Color stepColor = Colors.grey;
-          if (isDone) stepColor = Colors.green;
+          if (isDone) stepColor = ClientColors.journeyCyan;
           if (isCurrent) stepColor = scheme.primary;
 
           return IntrinsicHeight(
@@ -1657,7 +1657,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                         child: Container(
                           width: 2,
                           color: isDone
-                              ? Colors.green
+                              ? ClientColors.journeyCyan
                               : scheme.outline.withAlpha(80),
                         ),
                       ),
@@ -1896,7 +1896,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               children: [
                 Icon(
                   Icons.verified_user_outlined,
-                  color: Colors.greenAccent,
+                  color: ClientColors.journeyCyanStrong,
                   size: 14,
                 ),
                 SizedBox(width: 6),
@@ -1905,7 +1905,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
-                    color: Colors.greenAccent,
+                    color: ClientColors.journeyCyanStrong,
                   ),
                 ),
               ],
@@ -2263,7 +2263,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           progress: _releasedSeatsThisMonth / 5,
           progressText: '$_releasedSeatsThisMonth/5 Released',
           icon: Icons.eco_outlined,
-          color: Colors.green,
+          color: ClientColors.journeyCyan,
           scheme: scheme,
         ),
         const SizedBox(height: 12),
@@ -2357,7 +2357,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                     if (isDone)
                       const Icon(
                         Icons.verified_rounded,
-                        color: Colors.green,
+                        color: ClientColors.journeyCyan,
                         size: 14,
                       ),
                   ],

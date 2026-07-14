@@ -157,6 +157,28 @@ class OperationTrip {
   int get blockedSeats {
     return seats.where((seat) => seat.state == TripSeatState.blocked).length;
   }
+
+  /// A trip whose departure day has passed while it is still advertised as
+  /// bookable.
+  ///
+  /// The client app only offers trips with `trip_date >= today`, so these are
+  /// invisible to passengers no matter what the dashboard says. Nothing in the
+  /// system retires them, so they linger as phantom inventory — the dashboard
+  /// keeps reporting them as open until an operator completes or cancels them.
+  bool isStaleBooking({DateTime? now}) {
+    if (status != OperationTripStatus.openForBooking &&
+        status != OperationTripStatus.scheduled) {
+      return false;
+    }
+    final departure = DateTime.tryParse(date);
+    if (departure == null) return false;
+    final today = now ?? DateTime.now();
+    return DateTime(
+      departure.year,
+      departure.month,
+      departure.day,
+    ).isBefore(DateTime(today.year, today.month, today.day));
+  }
 }
 
 class TripRoutePoint {

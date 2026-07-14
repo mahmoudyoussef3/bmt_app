@@ -21,9 +21,9 @@ class TripSeatLegend extends StatelessWidget {
           outlined: false,
         ),
         _LegendDot(
-          color: ClientColors.journeyGreenLight,
+          color: ClientColors.seatAvailableFor(context),
           label: 'Available',
-          outlined: false,
+          outlined: true,
         ),
         _LegendDot(
           color: ClientColors.surfaceMutedFor(context),

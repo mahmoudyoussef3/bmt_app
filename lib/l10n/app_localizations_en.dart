@@ -748,9 +748,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get dashboard_trips => 'Trips';
 
   @override
-  String get dashboard_liveTrips => 'Live Trips';
-
-  @override
   String get dashboard_fleet => 'Fleet Management';
 
   @override

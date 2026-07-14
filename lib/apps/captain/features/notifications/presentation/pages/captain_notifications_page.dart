@@ -1,24 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+
 import '../../domain/entities/captain_notification.dart';
 import '../cubit/captain_notifications_cubit.dart';
 import '../cubit/captain_notifications_state.dart';
 
-class CaptainNotificationsPage extends StatefulWidget {
+class CaptainNotificationsPage extends StatelessWidget {
   const CaptainNotificationsPage({super.key});
 
+  static Route<void> route() =>
+      MaterialPageRoute(builder: (_) => const CaptainNotificationsPage());
+
   @override
-  State<CaptainNotificationsPage> createState() =>
-      _CaptainNotificationsPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider<CaptainNotificationsCubit>(
+      create: (_) => captainGetIt<CaptainNotificationsCubit>()..startWatching(),
+      child: const _CaptainNotificationsView(),
+    );
+  }
 }
 
-class _CaptainNotificationsPageState extends State<CaptainNotificationsPage> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<CaptainNotificationsCubit>().startWatching();
-  }
+class _CaptainNotificationsView extends StatelessWidget {
+  const _CaptainNotificationsView();
 
   @override
   Widget build(BuildContext context) {

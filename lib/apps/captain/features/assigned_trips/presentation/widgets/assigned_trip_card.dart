@@ -4,9 +4,9 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_status_chip.dart';
 
 import '../../domain/entities/assigned_trip.dart';
+import 'assigned_trip_card_parts.dart';
 
 class AssignedTripCard extends StatelessWidget {
   const AssignedTripCard({
@@ -22,168 +22,65 @@ class AssignedTripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = trip.passengerCount == 0
-        ? 0.0
-        : trip.boardedCount / trip.passengerCount;
+    final isDone = trip.status == AssignedTripStatus.completed;
 
     return Container(
+      padding: const EdgeInsets.all(CaptainDesignTokens.s16),
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
         borderRadius: CaptainDesignTokens.br24,
-        boxShadow: CaptainDesignTokens.floatingShadow(context),
-        border: Border.all(color: CaptainColors.primary.withValues(alpha: 0.05)),
+        border: Border.all(color: CaptainColors.dividerFor(context)),
+        boxShadow: CaptainDesignTokens.softShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Header section
-          Container(
-            padding: const EdgeInsets.all(CaptainDesignTokens.s24),
-            decoration: BoxDecoration(
-              color: CaptainColors.primary.withValues(alpha: 0.03),
-              borderRadius: const BorderRadius.vertical(
-                top: CaptainDesignTokens.r24,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  trip.route,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: CaptainTypography.titleSmall(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w800, height: 1.3),
+                ),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        trip.route,
-                        style: CaptainTypography.titleLarge(context).copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: CaptainColors.textPrimaryFor(context),
-                          height: 1.2,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: CaptainDesignTokens.s12),
-                    _StatusBadge(status: trip.status),
-                  ],
-                ),
-                const SizedBox(height: CaptainDesignTokens.s16),
-                Row(
-                  children: [
-                    _IconDetail(
-                      icon: Icons.directions_bus_rounded,
-                      text: trip.vehicleNumber.isEmpty
-                          ? 'مركبة غير محددة'
-                          : trip.vehicleNumber,
-                    ),
-                    const SizedBox(width: CaptainDesignTokens.s16),
-                    _IconDetail(
-                      icon: Icons.schedule_rounded,
-                      text: _timeRange(trip),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              const SizedBox(width: CaptainDesignTokens.s8),
+              TripStatusBadge(status: trip.status),
+            ],
           ),
-
-          Divider(
-            height: 1,
-            thickness: 1,
-            color: CaptainColors.dividerFor(context),
+          const SizedBox(height: CaptainDesignTokens.s12),
+          Row(
+            children: [
+              TripFact(icon: Icons.schedule_rounded, text: _timeRange()),
+              const SizedBox(width: CaptainDesignTokens.s12),
+              TripFact(
+                icon: Icons.directions_bus_rounded,
+                text: trip.vehicleNumber.isEmpty
+                    ? 'مركبة غير محددة'
+                    : trip.vehicleNumber,
+              ),
+            ],
           ),
-
-          // Body section with progress and actions
-          Padding(
-            padding: const EdgeInsets.all(CaptainDesignTokens.s24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Boarding Progress
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'الركاب (${trip.passengerCount})',
-                      style: CaptainTypography.titleSmall(context).copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: CaptainColors.textSecondaryFor(context),
-                      ),
-                    ),
-                    RichText(
-                      text: TextSpan(
-                        style: CaptainTypography.titleMedium(context).copyWith(
-                          fontWeight: FontWeight.w800,
-                          color: CaptainColors.primary,
-                        ),
-                        children: [
-                          TextSpan(text: '${trip.boardedCount} '),
-                          TextSpan(
-                            text: 'صعدوا',
-                            style: CaptainTypography.bodySmall(context)
-                                .copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: CaptainColors.textSecondaryFor(
-                                    context,
-                                  ),
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: CaptainDesignTokens.s12),
-                ClipRRect(
-                  borderRadius: CaptainDesignTokens.br8,
-                  child: LinearProgressIndicator(
-                    value: progress,
-                    minHeight: 8,
-                    backgroundColor: CaptainColors.primary.withValues(
-                      alpha: 0.1,
-                    ),
-                    valueColor: AlwaysStoppedAnimation<Color>(
-                      progress == 1.0
-                          ? CaptainColors.success
-                          : CaptainColors.primary,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: CaptainDesignTokens.s32),
-
-                // Action Buttons
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 2,
-                      child: CaptainButton(
-                        label: 'بدء / متابعة',
-                        icon: Icons.navigation_rounded,
-                        onPressed: onOpen,
-                        variant: CaptainButtonVariant.primary,
-                      ),
-                    ),
-                    const SizedBox(width: CaptainDesignTokens.s12),
-                    Expanded(
-                      flex: 1,
-                      child: CaptainButton(
-                        label: 'القائمة',
-                        icon: Icons.group_rounded,
-                        onPressed: onManifest,
-                        variant: CaptainButtonVariant.outline,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          const SizedBox(height: CaptainDesignTokens.s12),
+          _BoardingBar(trip: trip),
+          const SizedBox(height: CaptainDesignTokens.s16),
+          _Actions(
+            isDone: isDone,
+            isRunning: trip.status.isRunning,
+            onOpen: onOpen,
+            onManifest: onManifest,
           ),
         ],
       ),
     );
   }
 
-  String _timeRange(AssignedTrip trip) {
-    return '${_time(trip.departureTime)} - ${_time(trip.expectedArrivalTime)}';
-  }
+  String _timeRange() =>
+      '${_time(trip.departureTime)} - ${_time(trip.expectedArrivalTime)}';
 
   String _time(DateTime value) {
     final hour = value.hour.toString().padLeft(2, '0');
@@ -192,58 +89,89 @@ class AssignedTripCard extends StatelessWidget {
   }
 }
 
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({required this.status});
+class _BoardingBar extends StatelessWidget {
+  const _BoardingBar({required this.trip});
 
-  final AssignedTripStatus status;
+  final AssignedTrip trip;
 
   @override
   Widget build(BuildContext context) {
-    final (label, variant, icon) = switch (status) {
-      AssignedTripStatus.scheduled => (
-        'مجدولة',
-        CaptainStatusVariant.info,
-        Icons.event_rounded,
-      ),
-      AssignedTripStatus.boarding => (
-        'صعود',
-        CaptainStatusVariant.warning,
-        Icons.people_rounded,
-      ),
-      AssignedTripStatus.inProgress => (
-        'جارية',
-        CaptainStatusVariant.success,
-        Icons.electric_car_rounded,
-      ),
-      AssignedTripStatus.completed => (
-        'مكتملة',
-        CaptainStatusVariant.neutral,
-        Icons.check_circle_rounded,
-      ),
-    };
+    final progress = trip.passengerCount == 0
+        ? 0.0
+        : trip.boardedCount / trip.passengerCount;
 
-    return CaptainStatusChip(label: label, variant: variant, icon: icon);
+    return Row(
+      children: [
+        Expanded(
+          child: ClipRRect(
+            borderRadius: CaptainDesignTokens.br8,
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: CaptainColors.primary.withValues(alpha: 0.12),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                progress >= 1 ? CaptainColors.success : CaptainColors.primary,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: CaptainDesignTokens.s12),
+        Text(
+          '${trip.boardedCount}/${trip.passengerCount} صعدوا',
+          style: CaptainTypography.labelMedium(context).copyWith(
+            color: CaptainColors.textSecondaryFor(context),
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ],
+    );
   }
 }
 
-class _IconDetail extends StatelessWidget {
-  const _IconDetail({required this.icon, required this.text});
+class _Actions extends StatelessWidget {
+  const _Actions({
+    required this.isDone,
+    required this.isRunning,
+    required this.onOpen,
+    required this.onManifest,
+  });
 
-  final IconData icon;
-  final String text;
+  final bool isDone;
+  final bool isRunning;
+  final VoidCallback onOpen;
+  final VoidCallback onManifest;
 
   @override
   Widget build(BuildContext context) {
+    // A completed trip has nothing left to drive — only its manifest is useful.
+    if (isDone) {
+      return CaptainButton(
+        label: 'كشف الركاب',
+        icon: Icons.group_rounded,
+        onPressed: onManifest,
+        variant: CaptainButtonVariant.outline,
+      );
+    }
+
     return Row(
-      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: CaptainColors.textSecondaryFor(context)),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: CaptainTypography.labelLarge(context).copyWith(
-            color: CaptainColors.textSecondaryFor(context),
-            fontWeight: FontWeight.w600,
+        Expanded(
+          flex: 2,
+          child: CaptainButton(
+            label: isRunning ? 'متابعة' : 'بدء الرحلة',
+            icon: isRunning
+                ? Icons.play_arrow_rounded
+                : Icons.navigation_rounded,
+            onPressed: onOpen,
+          ),
+        ),
+        const SizedBox(width: CaptainDesignTokens.s12),
+        Expanded(
+          child: CaptainButton(
+            label: 'الركاب',
+            icon: Icons.group_rounded,
+            onPressed: onManifest,
+            variant: CaptainButtonVariant.outline,
           ),
         ),
       ],

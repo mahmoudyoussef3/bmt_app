@@ -3,9 +3,13 @@ import 'package:flutter/material.dart';
 /// Client-app semantic color tokens.
 ///
 /// These are fixed palette values intentionally decoupled from the Material 3
-/// [ColorScheme] seed so that journey-state colors (green = confirmed,
+/// [ColorScheme] seed so that journey-state colors (cyan = confirmed,
 /// amber = attention, red = cancelled) stay consistent across both light and
 /// dark themes without being overridden by tonal palettes.
+///
+/// The palette carries no green: the "confirmed / on-time / active" role is a
+/// cyan that sits in the same blue family as [primary], so success reads as
+/// part of the brand rather than as a foreign accent.
 ///
 /// Use [ClientColors.of] to access theme-aware surface/text values.
 /// Use the static journey constants directly for status colors.
@@ -18,7 +22,9 @@ abstract final class ClientColors {
   static const Color secondary = Color(0xFF0EA5E9); // Sky Blue
   static const Color accent = Color(0xFF6366F1); // Indigo
 
-  static const Color darkPrimary = Color(0xFF3B82F6); // Lighter Blue for Dark Mode
+  static const Color darkPrimary = Color(
+    0xFF3B82F6,
+  ); // Lighter Blue for Dark Mode
   static const Color darkPrimaryStrong = Color(0xFF60A5FA);
   static const Color darkPrimaryLight = Color(0xFF1E3A8A);
   static const Color darkSecondary = Color(0xFF38BDF8);
@@ -26,19 +32,13 @@ abstract final class ClientColors {
 
   // ── Gradients ──────────────────────────────────────────────────────────────
   static const Gradient primaryGradient = LinearGradient(
-    colors: [
-      Color(0xFF2563EB),
-      Color(0xFF1D4ED8),
-    ],
+    colors: [Color(0xFF2563EB), Color(0xFF1D4ED8)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const Gradient darkPrimaryGradient = LinearGradient(
-    colors: [
-      Color(0xFF3B82F6),
-      Color(0xFF2563EB),
-    ],
+    colors: [Color(0xFF3B82F6), Color(0xFF2563EB)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
@@ -46,30 +46,27 @@ abstract final class ClientColors {
   // Deep three-stop sweep used by the home hero canvas. Kept darker than
   // [primaryGradient] so white text and the search pill hold AAA contrast.
   static const Gradient heroGradient = LinearGradient(
-    colors: [
-      Color(0xFF1E3A8A),
-      Color(0xFF1D4ED8),
-      Color(0xFF2563EB),
-    ],
+    colors: [Color(0xFF1E3A8A), Color(0xFF1D4ED8), Color(0xFF2563EB)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   static const Gradient darkHeroGradient = LinearGradient(
-    colors: [
-      Color(0xFF0F172A),
-      Color(0xFF1E3A8A),
-      Color(0xFF1D4ED8),
-    ],
+    colors: [Color(0xFF0F172A), Color(0xFF1E3A8A), Color(0xFF1D4ED8)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );
 
   // ── Journey status ─────────────────────────────────────────────────────────
-  // Green — confirmed booking, on-time, boarded, active trip
-  static const Color journeyGreen = Color(0xFF16A34A);
-  static const Color journeyGreenLight = Color(0xFFDCFCE7);
-  static const Color onJourneyGreen = Color(0xFF14532D);
+  // Cyan — confirmed booking, on-time, boarded, active trip. Deliberately in
+  // the blue family so it harmonizes with [primary]; it stays readable against
+  // it because it is far lighter and far less violet.
+  static const Color journeyCyan = Color(0xFF0891B2);
+  static const Color journeyCyanLight = Color(0xFFCFFAFE);
+  static const Color onJourneyCyan = Color(0xFF164E63);
+
+  /// Stronger cyan for gradient tails and filled success surfaces.
+  static const Color journeyCyanStrong = Color(0xFF06B6D4);
 
   // Amber — departing soon, seat scarcity, attention needed
   static const Color journeyAmber = Color(0xFFD97706);
@@ -204,9 +201,9 @@ abstract final class ClientColors {
   ) {
     return switch (status) {
       ClientJourneyStatus.active => (
-        bg: journeyGreenLight,
-        fg: onJourneyGreen,
-        label: journeyGreen,
+        bg: journeyCyanLight,
+        fg: onJourneyCyan,
+        label: journeyCyan,
       ),
       ClientJourneyStatus.upcoming => (
         bg: primaryLight,
@@ -238,9 +235,9 @@ abstract final class ClientColors {
     if (!_isDark(context)) return journeyBadge(status);
     return switch (status) {
       ClientJourneyStatus.active => (
-        bg: const Color(0xFF0F3324),
-        fg: const Color(0xFFB9F8D0),
-        label: const Color(0xFF4ADE80),
+        bg: const Color(0xFF0C3946),
+        fg: const Color(0xFFA5F3FC),
+        label: const Color(0xFF22D3EE),
       ),
       ClientJourneyStatus.upcoming => (
         bg: darkPrimaryLight,

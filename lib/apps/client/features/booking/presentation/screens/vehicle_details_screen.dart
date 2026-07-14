@@ -428,7 +428,7 @@ class _ComfortTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = positive
-        ? ClientColors.journeyGreen
+        ? ClientColors.journeyCyan
         : ClientColors.textTertiaryFor(context);
 
     return Padding(
@@ -552,7 +552,7 @@ class _PricingAvailabilityCard extends StatelessWidget {
               value:
                   '${vehicle.availableSeats} ${AppLocalizations.of(context)!.booking_remaining}',
               icon: Icons.event_seat_rounded,
-              color: ClientColors.journeyGreen,
+              color: ClientColors.journeyCyan,
             ),
           ),
         ],

@@ -64,7 +64,7 @@ class PasswordStrengthMeter extends StatelessWidget {
         ClientColors.primary,
         l10n.auth_passwordGood,
       ),
-      _ => (4, ClientColors.journeyGreen, l10n.auth_passwordStrong),
+      _ => (4, ClientColors.journeyCyan, l10n.auth_passwordStrong),
     };
 
     return Padding(

@@ -59,8 +59,10 @@ class TripsListLoaded extends TripsListState {
       final matchesQuick = switch (quickFilter) {
         'today' => trip.date == todayStr,
         'upcoming' =>
-          trip.status == OperationTripStatus.scheduled ||
-              trip.status == OperationTripStatus.openForBooking,
+          (trip.status == OperationTripStatus.scheduled ||
+                  trip.status == OperationTripStatus.openForBooking) &&
+              !trip.isStaleBooking(now: now),
+        'stale' => trip.isStaleBooking(now: now),
         'active' =>
           trip.status == OperationTripStatus.boarding ||
               trip.status == OperationTripStatus.inProgress,
@@ -126,13 +128,21 @@ class TripsListLoaded extends TripsListState {
     return trips.where((trip) => trip.date == todayStr).length;
   }
 
+  /// Trips still ahead of us. Past-dated trips are excluded even while they sit
+  /// on an open status: passengers cannot see them, so counting them here
+  /// overstated the bookable inventory. They are surfaced by [staleTrips].
   int get upcomingTrips => trips
       .where(
         (trip) =>
-            trip.status == OperationTripStatus.scheduled ||
-            trip.status == OperationTripStatus.openForBooking,
+            (trip.status == OperationTripStatus.scheduled ||
+                trip.status == OperationTripStatus.openForBooking) &&
+            !trip.isStaleBooking(),
       )
       .length;
+
+  /// Open trips whose departure day has already passed — invisible to clients
+  /// and awaiting an operator decision.
+  int get staleTrips => trips.where((trip) => trip.isStaleBooking()).length;
   int get runningTrips => trips
       .where(
         (trip) =>

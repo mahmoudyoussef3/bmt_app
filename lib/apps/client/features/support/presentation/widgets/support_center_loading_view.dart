@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
 
-/// Shimmer skeleton shown while the Support Center's first load (categories
-/// + tickets) is in flight. Mirrors the shape of the loaded content so the
+/// Shimmer skeleton shown while the client's tickets are loading. Mirrors the
+/// shape of the loaded content — hero, section title, ticket cards — so the
 /// layout doesn't jump once real data arrives.
 class SupportCenterLoadingView extends StatelessWidget {
   const SupportCenterLoadingView({super.key});
@@ -10,24 +10,12 @@ class SupportCenterLoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
+      padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
       physics: const NeverScrollableScrollPhysics(),
       children: [
-        const ClientSkeleton(height: 14, width: 180, borderRadius: 6),
-        const SizedBox(height: 12),
-        SizedBox(
-          height: 96,
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: 4,
-            separatorBuilder: (_, _) => const SizedBox(width: 10),
-            itemBuilder: (_, _) =>
-                const ClientSkeleton(height: 96, width: 92, borderRadius: 12),
-          ),
-        ),
+        const ClientSkeleton(height: 196, borderRadius: 24),
         const SizedBox(height: 28),
-        const ClientSkeleton(height: 14, width: 100, borderRadius: 6),
+        const ClientSkeleton(height: 18, width: 120, borderRadius: 6),
         const SizedBox(height: 16),
         for (int i = 0; i < 3; i++) ...[
           _SkeletonTicketCard(),
@@ -65,7 +53,11 @@ class _SkeletonTicketCard extends StatelessWidget {
           const SizedBox(height: 16),
           const ClientSkeleton(height: 18, width: 200, borderRadius: 6),
           const SizedBox(height: 8),
-          const ClientSkeleton(height: 13, width: double.infinity, borderRadius: 6),
+          const ClientSkeleton(
+            height: 13,
+            width: double.infinity,
+            borderRadius: 6,
+          ),
           const SizedBox(height: 6),
           const ClientSkeleton(height: 13, width: 160, borderRadius: 6),
         ],

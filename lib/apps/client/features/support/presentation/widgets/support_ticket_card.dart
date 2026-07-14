@@ -24,7 +24,7 @@ class SupportTicketCard extends StatelessWidget {
       case TicketStatus.contacted:
         return ClientColors.secondary;
       case TicketStatus.resolved:
-        return ClientColors.journeyGreen;
+        return ClientColors.journeyCyan;
       case TicketStatus.closed:
         return ClientColors.textTertiaryFor(context);
       case TicketStatus.rejected:

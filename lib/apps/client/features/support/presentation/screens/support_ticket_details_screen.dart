@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_attachment.dart';
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 class SupportTicketDetailsScreen extends StatefulWidget {
@@ -35,7 +36,7 @@ class _SupportTicketDetailsScreenState
       case TicketStatus.contacted:
         return scheme.secondary;
       case TicketStatus.resolved:
-        return Colors.green;
+        return ClientColors.journeyCyan;
       case TicketStatus.closed:
         return scheme.outline;
       case TicketStatus.rejected:

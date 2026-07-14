@@ -38,6 +38,7 @@ void main() {
   const stopC = RoutePointData(id: 'stop-c', name: 'C', order: 3);
   const tripWithPairPricing = RouteTripOptionData(
     id: 'trip-1',
+    tripDate: '2026-07-20',
     departureTime: '08:00',
     arrivalTime: '11:00',
     availableSeats: 5,
@@ -85,23 +86,36 @@ void main() {
     expect(session.isCardPayment, isTrue);
   });
 
-  test('a server package and start date are required', () {
+  test('a server package is all the fare step requires', () {
     final empty = BookingWizardSession(route: route);
-    final withoutDate = empty.copyWith(selectedPackage: package);
+    final withPackage = empty.copyWith(selectedPackage: package);
 
     expect(empty.packageValid, isFalse);
-    expect(withoutDate.packageValid, isFalse);
-    expect(
-      withoutDate.copyWith(packageStartDate: DateTime(2026, 7, 5)).packageValid,
-      isTrue,
-    );
+    expect(withPackage.packageValid, isTrue);
+  });
+
+  test('the plan starts on the selected trip\'s date — the rider never picks '
+      'a start date (regression: a separate picker could start a package on a '
+      'day the booked ride is not on)', () {
+    final session = BookingWizardSession(
+      route: route,
+    ).copyWith(selectedTrip: tripWithPairPricing, selectedPackage: package);
+
+    expect(session.packageStartDate, DateTime(2026, 7, 20));
+  });
+
+  test('a package with no trip yet has no start date to show', () {
+    final session = BookingWizardSession(
+      route: route,
+    ).copyWith(selectedPackage: package);
+
+    expect(session.packageStartDate, isNull);
   });
 
   test('package price is the server-facing total shown to the client', () {
-    final session = BookingWizardSession(route: route).copyWith(
-      selectedPackage: package,
-      packageStartDate: DateTime(2026, 7, 4),
-    );
+    final session = BookingWizardSession(
+      route: route,
+    ).copyWith(selectedPackage: package);
 
     expect(session.packageValid, isTrue);
     expect(session.totalPrice, 100);
@@ -123,50 +137,43 @@ void main() {
     },
   );
 
-  test(
-    'trip fare falls back to the trip label when the exact pair has no '
-    'dedicated trip_pricing row (graceful degradation, not a crash)',
-    () {
-      final session = BookingWizardSession(route: route).copyWith(
-        selectedTrip: tripWithPairPricing,
-        pickupStop: stopB,
-        dropoffStop: stopC,
-      );
+  test('trip fare falls back to the trip label when the exact pair has no '
+      'dedicated trip_pricing row (graceful degradation, not a crash)', () {
+    final session = BookingWizardSession(route: route).copyWith(
+      selectedTrip: tripWithPairPricing,
+      pickupStop: stopB,
+      dropoffStop: stopC,
+    );
 
-      expect(session.tripPrice, 20);
-    },
-  );
+    expect(session.tripPrice, 20);
+  });
 
-  test(
-    'package price resolves the tier for the exact stop pair instead of '
-    'the generic catalog price (regression for package price mismatch)',
-    () {
-      // durationDays=5 matches transport_packages' real "work_week" shape
-      // (seeded as duration_days=5, ride_count=10) — package_type text is
-      // NOT what tier resolution keys on (see next two tests).
-      const fiveDayPackage = PackagePlan(
-        id: 'package-5d',
-        nameAr: 'أسبوع عمل',
-        nameEn: 'Work Week',
-        packageType: 'work_week',
-        durationDays: 5,
-        rideCount: 10,
-        price: 999, // generic catalog price — must be overridden
-      );
-      final session = BookingWizardSession(route: route).copyWith(
-        selectedTrip: tripWithPairPricing,
-        pickupStop: stopA,
-        dropoffStop: stopC,
-        selectedPackage: fiveDayPackage,
-        packageStartDate: DateTime(2026, 7, 4),
-      );
+  test('package price resolves the tier for the exact stop pair instead of '
+      'the generic catalog price (regression for package price mismatch)', () {
+    // durationDays=5 matches transport_packages' real "work_week" shape
+    // (seeded as duration_days=5, ride_count=10) — package_type text is
+    // NOT what tier resolution keys on (see next two tests).
+    const fiveDayPackage = PackagePlan(
+      id: 'package-5d',
+      nameAr: 'أسبوع عمل',
+      nameEn: 'Work Week',
+      packageType: 'work_week',
+      durationDays: 5,
+      rideCount: 10,
+      price: 999, // generic catalog price — must be overridden
+    );
+    final session = BookingWizardSession(route: route).copyWith(
+      selectedTrip: tripWithPairPricing,
+      pickupStop: stopA,
+      dropoffStop: stopC,
+      selectedPackage: fiveDayPackage,
+    );
 
-      // Dashboard configured A->C's five-day tier at 220, not the
-      // catalog's flat 999.
-      expect(session.resolvedPackagePrice(fiveDayPackage), 220);
-      expect(session.totalPrice, 220);
-    },
-  );
+    // Dashboard configured A->C's five-day tier at 220, not the
+    // catalog's flat 999.
+    expect(session.resolvedPackagePrice(fiveDayPackage), 220);
+    expect(session.totalPrice, 220);
+  });
 
   test(
     'a single-ride ("just_go") package resolves to the pair\'s one-time '
@@ -191,29 +198,26 @@ void main() {
     },
   );
 
-  test(
-    'a package shape with no trip_pricing equivalent (e.g. a same-day '
-    'round trip: durationDays=1 but rideCount>1) falls back to the '
-    'catalog price instead of guessing',
-    () {
-      const goAndReturn = PackagePlan(
-        id: 'package-go-return',
-        nameAr: 'رحلة ذهاب وعودة',
-        nameEn: 'Go & Return',
-        packageType: 'go_and_return',
-        durationDays: 1,
-        rideCount: 2,
-        price: 160,
-      );
-      final session = BookingWizardSession(route: route).copyWith(
-        selectedTrip: tripWithPairPricing,
-        pickupStop: stopA,
-        dropoffStop: stopC,
-      );
+  test('a package shape with no trip_pricing equivalent (e.g. a same-day '
+      'round trip: durationDays=1 but rideCount>1) falls back to the '
+      'catalog price instead of guessing', () {
+    const goAndReturn = PackagePlan(
+      id: 'package-go-return',
+      nameAr: 'رحلة ذهاب وعودة',
+      nameEn: 'Go & Return',
+      packageType: 'go_and_return',
+      durationDays: 1,
+      rideCount: 2,
+      price: 160,
+    );
+    final session = BookingWizardSession(route: route).copyWith(
+      selectedTrip: tripWithPairPricing,
+      pickupStop: stopA,
+      dropoffStop: stopC,
+    );
 
-      expect(session.resolvedPackagePrice(goAndReturn), 160);
-    },
-  );
+    expect(session.resolvedPackagePrice(goAndReturn), 160);
+  });
 
   test('payment metadata survives seat reset', () async {
     final cubit = BookingWizardCubit(route)

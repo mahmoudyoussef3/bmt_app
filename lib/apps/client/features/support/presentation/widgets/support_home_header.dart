@@ -1,48 +1,110 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 
+/// Support Center hero. It carries the screen's single call to action: the
+/// Support Center is a ticket workflow, not a category browser, so the client
+/// always arrives at the same "Create a ticket" door and picks the topic
+/// inside the form.
 class SupportHomeHeader extends StatelessWidget {
-  const SupportHomeHeader({super.key});
+  const SupportHomeHeader({super.key, required this.onCreateTicket});
+
+  final VoidCallback onCreateTicket;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: ClientColors.primaryContainerFor(context),
-        borderRadius: BorderRadius.circular(16),
+        gradient: ClientColors.heroGradientFor(context),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: ClientColors.primaryFor(context).withAlpha(50),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                Icons.support_agent,
-                color: ClientColors.primaryFor(context),
-                size: 32,
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(38),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Icon(
+                  Icons.support_agent_rounded,
+                  color: Colors.white,
+                  size: 26,
+                ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: 14),
               Expanded(
                 child: Text(
                   'How can we help?',
                   style: ClientTypography.headingMedium(
                     context,
-                  ).copyWith(color: ClientColors.textPrimaryFor(context)),
+                  ).copyWith(color: Colors.white, fontWeight: FontWeight.w800),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
           Text(
-            'Our support team is available 24/7 to assist you with any issues related to your bookings, trips, or account.',
-            style: ClientTypography.bodySmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-              height: 1.5,
-            ),
+            'Tell us what went wrong and our team will follow up on your '
+            'ticket. We usually reply within a few hours.',
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: Colors.white.withAlpha(220), height: 1.5),
           ),
+          const SizedBox(height: 20),
+          _CreateTicketButton(onTap: onCreateTicket),
         ],
+      ),
+    );
+  }
+}
+
+/// Light-on-gradient CTA. Deliberately not [ClientButton] — the primary
+/// variant's blue fill would disappear into the hero's blue gradient.
+class _CreateTicketButton extends StatelessWidget {
+  const _CreateTicketButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final primary = ClientColors.primary;
+
+    return PressableScale(
+      onTap: onTap,
+      scale: 0.97,
+      child: Container(
+        height: 52,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.add_rounded, size: 20, color: primary),
+            const SizedBox(width: 8),
+            Text(
+              'Create a ticket',
+              style: ClientTypography.labelLarge(
+                context,
+              ).copyWith(color: primary, fontWeight: FontWeight.w800),
+            ),
+          ],
+        ),
       ),
     );
   }

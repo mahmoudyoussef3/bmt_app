@@ -85,9 +85,9 @@ The following channels are **documented in ENTITY_LIFECYCLE.md but NOT implement
 
 | Channel | Missing From |
 |---------|-------------|
-| `trip.published` / `trip.boarding_started` / `trip.started` / `trip.completed` | Dashboard Live Trips + Client App |
+| `trip.published` / `trip.boarding_started` / `trip.started` / `trip.completed` | Dashboard Trips module + Client App |
 | `booking.approved` / `booking.rejected` push to client | Client booking status |
-| `passenger.boarded` to Dashboard manifest panel | Dashboard Live Trips |
+| `passenger.boarded` to Dashboard manifest panel | Dashboard Trips module |
 | `route.*` events | Dashboard Routes |
 | `assignment.created` / `assignment.ended` | Dashboard Fleet |
 | `subscription.activated` / `subscription.expired` | Client App |
