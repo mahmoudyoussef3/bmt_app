@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
+import 'package:bmt_app/apps/client/features/trips/domain/entities/reviewable_trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_cubit.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_sheet.dart';
 
@@ -11,7 +11,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_rev
 /// the route of a trip they actually took.
 Future<void> showTripReviewFlow(
   BuildContext context, {
-  required TripData trip,
+  required ReviewableTrip trip,
 }) {
   return showModalBottomSheet<void>(
     context: context,

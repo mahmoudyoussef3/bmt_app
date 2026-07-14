@@ -59,6 +59,16 @@ class SupabaseTripsDatasource implements TripsDatasource {
     return 'BMT-${take.toUpperCase()}';
   }
 
+  /// Whether the passenger already reviewed this booking. RLS shows them only
+  /// their own review rows, so an embedded row existing at all means "rated".
+  /// `booking_id` is unique, so PostgREST embeds it as an object — a list is
+  /// tolerated in case an older schema cache still reports it as to-many.
+  bool _hasReview(Object? embedded) {
+    if (embedded is Map) return embedded.isNotEmpty;
+    if (embedded is List) return embedded.isNotEmpty;
+    return false;
+  }
+
   String _initials(String? name) {
     final trimmed = (name ?? '').trim();
     if (trimmed.length >= 2) return trimmed.substring(0, 2).toUpperCase();
@@ -113,6 +123,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       seats: [data['seat']?.toString() ?? 'Seat Pending'],
       paymentStatus: _mapPayment(dbPaymentStatus),
       fare: 'EGP $fare',
+      isReviewed: _hasReview(data['trip_reviews']),
       cancellationReason:
           data['cancellation_reason']?.toString() ??
           data['payment_rejection_reason']?.toString() ??
@@ -133,7 +144,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
             *,
             vehicles (*),
             drivers (*)
-          )
+          ),
+          trip_reviews ( booking_id )
         ''')
         .eq('client_id', user.id)
         .order('created_at', ascending: false);
@@ -154,7 +166,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
             *,
             vehicles (*),
             drivers (*)
-          )
+          ),
+          trip_reviews ( booking_id )
         ''')
         .eq('client_id', user.id)
         .eq('id', id)

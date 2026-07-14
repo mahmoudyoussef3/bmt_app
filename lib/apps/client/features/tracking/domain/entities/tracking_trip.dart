@@ -1,235 +1,119 @@
 import 'package:bmt_app/core/tracking/progress/route_stop.dart';
 
-enum TrackingTripState {
-  notStarted,
-  driverOnWay,
-  boarding,
-  inProgress,
-  completed,
-}
+import 'tracking_crew.dart';
+import 'tracking_point.dart';
+import 'tracking_rider.dart';
+import 'tracking_trip_state.dart';
 
-class TrackingPoint {
-  const TrackingPoint({
-    required this.latitude,
-    required this.longitude,
-    this.recordedAt,
-    this.heading,
-    this.speed,
-    this.accuracy,
-  });
+export 'tracking_crew.dart';
+export 'tracking_point.dart';
+export 'tracking_rider.dart';
+export 'tracking_trip_state.dart';
 
-  final double latitude;
-  final double longitude;
-  final DateTime? recordedAt;
-
-  /// Degrees clockwise from north; negative means the device had no heading.
-  final double? heading;
-
-  /// Ground speed in m/s as reported by the captain device.
-  final double? speed;
-
-  /// Horizontal GPS accuracy radius in meters.
-  final double? accuracy;
-}
-
+/// Everything the tracking screen knows about one trip, all of it read from
+/// Supabase. There are no placeholder defaults here on purpose: a field we do
+/// not have is null, and the UI is responsible for saying so honestly instead
+/// of rendering an invented "Driver assigned" / "Plate pending".
 class TrackingTripData {
   const TrackingTripData({
-    required this.routePoints,
-    required this.timelineSteps,
     required this.stops,
     required this.tripState,
-    this.routeStops = const [],
-    this.arrivalEventCount = 0,
-    this.passengerPickupName,
-    this.passengerDropoffName,
-    this.passengerStatus,
     this.tripId,
     this.bookingId,
+    this.tripCode,
     this.routeName,
-    this.pickupName,
-    this.destinationName,
     this.departureAt,
     this.arrivalAt,
-    this.driverName,
-    this.driverPhone,
-    this.driverRating,
-    this.vehicleName,
-    this.vehicleType,
-    this.vehiclePlate,
-    this.vehicleLatitude,
-    this.vehicleLongitude,
-    this.vehicleHeading,
-    this.vehicleSpeed,
-    this.vehicleAccuracy,
-    this.vehicleLocationAt,
+    this.arrivalEventCount = 0,
+    this.captain = const TrackingCaptain(),
+    this.vehicle = const TrackingVehicle(),
+    this.rider = const TrackingRider(),
+    this.vehicleFix,
+    this.hasReview = false,
   });
 
-  final List<TrackingPoint> routePoints;
-  final List<String> timelineSteps;
-  final List<String> stops;
+  /// The empty result: the rider has no trackable booking at all.
+  const TrackingTripData.none()
+    : stops = const [],
+      tripState = TrackingTripState.notStarted,
+      tripId = null,
+      bookingId = null,
+      tripCode = null,
+      routeName = null,
+      departureAt = null,
+      arrivalAt = null,
+      arrivalEventCount = 0,
+      captain = const TrackingCaptain(),
+      vehicle = const TrackingVehicle(),
+      rider = const TrackingRider(),
+      vehicleFix = null,
+      hasReview = false;
+
+  /// The trip's stops in route order (`trip_route_points.point_order`), each
+  /// with its real coordinates and planned times.
+  final List<RouteStop> stops;
+
   final TrackingTripState tripState;
-
-  /// Ordered route stops with coordinates and planned times, ready for the
-  /// route progress engine.
-  final List<RouteStop> routeStops;
-
-  /// Count of `trip_events` rows with the canonical per-station arrival
-  /// title (`'وصول محطة'`) — the same authoritative "arrival floor" the
-  /// Dashboard seeds its progress engine with. Seeding the client's engine
-  /// with this keeps the per-stop timeline in sync with what the captain
-  /// has actually reported, not just inferred GPS position.
-  final int arrivalEventCount;
-
-  /// The rider's own manifest row: where they board/alight and whether the
-  /// captain confirmed them on board.
-  final String? passengerPickupName;
-  final String? passengerDropoffName;
-  final String? passengerStatus;
   final String? tripId;
   final String? bookingId;
+  final String? tripCode;
   final String? routeName;
-  final String? pickupName;
-  final String? destinationName;
   final DateTime? departureAt;
   final DateTime? arrivalAt;
-  final String? driverName;
-  final String? driverPhone;
-  final double? driverRating;
-  final String? vehicleName;
-  final String? vehicleType;
-  final String? vehiclePlate;
-  final double? vehicleLatitude;
-  final double? vehicleLongitude;
-  final double? vehicleHeading;
 
-  /// Ground speed in m/s (Geolocator convention); see [vehicleSpeedKmh].
-  final double? vehicleSpeed;
-  final double? vehicleAccuracy;
-  final DateTime? vehicleLocationAt;
+  /// How many per-station arrivals the captain has confirmed. Seeds the
+  /// progress engine as an authoritative floor under GPS inference.
+  final int arrivalEventCount;
 
-  bool get hasLiveVehicleLocation =>
-      vehicleLatitude != null && vehicleLongitude != null;
+  final TrackingCaptain captain;
+  final TrackingVehicle vehicle;
+  final TrackingRider rider;
 
-  /// The captain marks passengers `confirmed` when they board.
-  bool get passengerBoarded => passengerStatus == 'confirmed';
+  /// The captain's latest reported position; null until one arrives.
+  final TrackingPoint? vehicleFix;
 
-  double? get vehicleSpeedKmh =>
-      vehicleSpeed == null || vehicleSpeed! < 0 ? null : vehicleSpeed! * 3.6;
+  /// Whether this booking has already been reviewed, so a completed trip
+  /// offers the review flow only when there is still a review to leave.
+  final bool hasReview;
 
-  TrackingPoint? get vehicleFix => hasLiveVehicleLocation
-      ? TrackingPoint(
-          latitude: vehicleLatitude!,
-          longitude: vehicleLongitude!,
-          recordedAt: vehicleLocationAt,
-          heading: vehicleHeading,
-          speed: vehicleSpeed,
-          accuracy: vehicleAccuracy,
-        )
-      : null;
+  /// No booking to track. Distinct from "a trip whose data has not loaded".
+  bool get isEmpty => tripId == null;
 
-  String get displayDriverName =>
-      driverName == null || driverName!.trim().isEmpty
-      ? 'Driver assigned'
-      : driverName!.trim();
+  bool get hasLiveVehicleLocation => vehicleFix != null;
 
-  String get driverInitials {
-    final parts = displayDriverName
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .take(2)
-        .toList();
-    if (parts.isEmpty) return 'DR';
-    return parts.map((part) => part[0]).join().toUpperCase();
-  }
+  bool get hasRoute => stops.length > 1;
 
-  String get displayVehicleName {
-    final pieces = [
-      vehicleName,
-      vehicleType,
-    ].where((part) => part != null && part.trim().isNotEmpty).toList();
-    return pieces.isEmpty ? 'Assigned vehicle' : pieces.join(' ');
-  }
+  double? get vehicleSpeedKmh => vehicleFix?.speedKmh;
 
-  String get displayVehiclePlate =>
-      vehiclePlate == null || vehiclePlate!.trim().isEmpty
-      ? 'Plate pending'
-      : vehiclePlate!.trim();
+  /// The stop coordinates the map draws its route line through.
+  List<TrackingPoint> get routePoints => stops
+      .map((s) => TrackingPoint(latitude: s.latitude, longitude: s.longitude))
+      .toList(growable: false);
+
+  String? get originName => stops.isEmpty ? null : stops.first.name;
+
+  String? get destinationName => stops.isEmpty ? null : stops.last.name;
 
   TrackingTripData copyWith({
-    List<TrackingPoint>? routePoints,
-    List<String>? timelineSteps,
-    List<String>? stops,
     TrackingTripState? tripState,
-    List<RouteStop>? routeStops,
-    int? arrivalEventCount,
-    String? passengerPickupName,
-    String? passengerDropoffName,
-    String? passengerStatus,
-    String? tripId,
-    String? bookingId,
-    String? routeName,
-    String? pickupName,
-    String? destinationName,
-    DateTime? departureAt,
-    DateTime? arrivalAt,
-    String? driverName,
-    String? driverPhone,
-    double? driverRating,
-    String? vehicleName,
-    String? vehicleType,
-    String? vehiclePlate,
-    double? vehicleLatitude,
-    double? vehicleLongitude,
-    double? vehicleHeading,
-    double? vehicleSpeed,
-    double? vehicleAccuracy,
-    DateTime? vehicleLocationAt,
+    TrackingPoint? vehicleFix,
+    bool? hasReview,
   }) {
     return TrackingTripData(
-      routePoints: routePoints ?? this.routePoints,
-      timelineSteps: timelineSteps ?? this.timelineSteps,
-      stops: stops ?? this.stops,
+      stops: stops,
       tripState: tripState ?? this.tripState,
-      routeStops: routeStops ?? this.routeStops,
-      arrivalEventCount: arrivalEventCount ?? this.arrivalEventCount,
-      passengerPickupName: passengerPickupName ?? this.passengerPickupName,
-      passengerDropoffName: passengerDropoffName ?? this.passengerDropoffName,
-      passengerStatus: passengerStatus ?? this.passengerStatus,
-      tripId: tripId ?? this.tripId,
-      bookingId: bookingId ?? this.bookingId,
-      routeName: routeName ?? this.routeName,
-      pickupName: pickupName ?? this.pickupName,
-      destinationName: destinationName ?? this.destinationName,
-      departureAt: departureAt ?? this.departureAt,
-      arrivalAt: arrivalAt ?? this.arrivalAt,
-      driverName: driverName ?? this.driverName,
-      driverPhone: driverPhone ?? this.driverPhone,
-      driverRating: driverRating ?? this.driverRating,
-      vehicleName: vehicleName ?? this.vehicleName,
-      vehicleType: vehicleType ?? this.vehicleType,
-      vehiclePlate: vehiclePlate ?? this.vehiclePlate,
-      vehicleLatitude: vehicleLatitude ?? this.vehicleLatitude,
-      vehicleLongitude: vehicleLongitude ?? this.vehicleLongitude,
-      vehicleHeading: vehicleHeading ?? this.vehicleHeading,
-      vehicleSpeed: vehicleSpeed ?? this.vehicleSpeed,
-      vehicleAccuracy: vehicleAccuracy ?? this.vehicleAccuracy,
-      vehicleLocationAt: vehicleLocationAt ?? this.vehicleLocationAt,
-    );
-  }
-}
-
-class TrackingRatings {
-  const TrackingRatings({this.driver = 0, this.vehicle = 0, this.route = 0});
-
-  final int driver;
-  final int vehicle;
-  final int route;
-
-  TrackingRatings copyWith({int? driver, int? vehicle, int? route}) {
-    return TrackingRatings(
-      driver: driver ?? this.driver,
-      vehicle: vehicle ?? this.vehicle,
-      route: route ?? this.route,
+      tripId: tripId,
+      bookingId: bookingId,
+      tripCode: tripCode,
+      routeName: routeName,
+      departureAt: departureAt,
+      arrivalAt: arrivalAt,
+      arrivalEventCount: arrivalEventCount,
+      captain: captain,
+      vehicle: vehicle,
+      rider: rider,
+      vehicleFix: vehicleFix ?? this.vehicleFix,
+      hasReview: hasReview ?? this.hasReview,
     );
   }
 }

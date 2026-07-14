@@ -100,6 +100,7 @@ import '../../features/profile/data/datasources/supabase_profile_datasource.dart
 import '../../features/profile/data/repositories/profile_repository_impl.dart';
 import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/get_profile_data_usecase.dart';
+import '../../features/profile/domain/usecases/update_profile_usecase.dart';
 import '../../features/profile/presentation/cubit/profile_cubit.dart';
 import '../../features/routes/data/datasources/supabase_routes_hub_datasource.dart';
 import '../../features/routes/data/repositories/routes_hub_repository_impl.dart';
@@ -129,11 +130,6 @@ import '../../features/seat_release/data/repositories/seat_release_repository_im
 import '../../features/seat_release/domain/repositories/seat_release_repository.dart';
 import '../../features/seat_release/domain/usecases/get_seat_release_data_usecase.dart';
 import '../../features/seat_release/presentation/cubit/seat_release_cubit.dart';
-import '../../features/settings/data/datasources/supabase_settings_datasource.dart';
-import '../../features/settings/data/repositories/settings_repository_impl.dart';
-import '../../features/settings/domain/repositories/settings_repository.dart';
-import '../../features/settings/domain/usecases/get_settings_data_usecase.dart';
-import '../../features/settings/presentation/cubit/settings_cubit.dart';
 import '../../features/support/data/datasources/supabase_support_datasource.dart';
 import '../../features/support/data/repositories/support_repository_impl.dart';
 import '../../features/support/domain/repositories/support_repository.dart';
@@ -161,7 +157,6 @@ import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/tracking/data/datasources/supabase_tracking_datasource.dart';
 import '../../features/tracking/data/repositories/tracking_repository_impl.dart';
 import '../../features/tracking/domain/repositories/tracking_repository.dart';
-import '../../features/tracking/domain/usecases/get_tracking_title_usecase.dart';
 import '../../features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
 import '../../features/tracking/domain/usecases/watch_tracking_trip_usecase.dart';
 import '../../features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
@@ -193,7 +188,6 @@ void registerClientDependencies() {
   _registerCommunicationDependencies();
   _registerReferralRewardsDependencies();
   _registerLoyaltyDependencies();
-  _registerSettingsDependencies();
 }
 
 void _registerCoreDependencies() {
@@ -704,32 +698,6 @@ void _registerPaymentDependencies() {
   }
 }
 
-void _registerSettingsDependencies() {
-  if (!clientGetIt.isRegistered<SupabaseSettingsDatasource>()) {
-    clientGetIt.registerLazySingleton<SupabaseSettingsDatasource>(
-      () => SupabaseSettingsDatasource(Supabase.instance.client),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<SettingsRepository>()) {
-    clientGetIt.registerLazySingleton<SettingsRepository>(
-      () => SettingsRepositoryImpl(clientGetIt<SupabaseSettingsDatasource>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<GetSettingsDataUseCase>()) {
-    clientGetIt.registerLazySingleton<GetSettingsDataUseCase>(
-      () => GetSettingsDataUseCase(clientGetIt<SettingsRepository>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<SettingsCubit>()) {
-    clientGetIt.registerFactory<SettingsCubit>(
-      () => SettingsCubit(clientGetIt<GetSettingsDataUseCase>()),
-    );
-  }
-}
-
 void _registerPackagesDependencies() {
   if (!clientGetIt.isRegistered<PackagesDatasource>()) {
     clientGetIt.registerLazySingleton<PackagesDatasource>(
@@ -798,12 +766,6 @@ void _registerTrackingDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<GetTrackingTitleUseCase>()) {
-    clientGetIt.registerLazySingleton<GetTrackingTitleUseCase>(
-      () => const GetTrackingTitleUseCase(),
-    );
-  }
-
   if (!clientGetIt.isRegistered<WatchVehiclePositionUseCase>()) {
     clientGetIt.registerLazySingleton<WatchVehiclePositionUseCase>(
       () => WatchVehiclePositionUseCase(clientGetIt<TrackingRepository>()),
@@ -820,7 +782,6 @@ void _registerTrackingDependencies() {
     clientGetIt.registerFactory<TrackingCubit>(
       () => TrackingCubit(
         getTrackingTrip: clientGetIt<GetTrackingTripUseCase>(),
-        getTrackingTitle: clientGetIt<GetTrackingTitleUseCase>(),
         watchVehiclePosition: clientGetIt<WatchVehiclePositionUseCase>(),
         watchTrackingTrip: clientGetIt<WatchTrackingTripUseCase>(),
       ),
@@ -953,9 +914,18 @@ void _registerProfileDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<UpdateProfileUseCase>()) {
+    clientGetIt.registerLazySingleton<UpdateProfileUseCase>(
+      () => UpdateProfileUseCase(clientGetIt<ProfileRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<ProfileCubit>()) {
     clientGetIt.registerFactory<ProfileCubit>(
-      () => ProfileCubit(clientGetIt<GetProfileDataUseCase>()),
+      () => ProfileCubit(
+        clientGetIt<GetProfileDataUseCase>(),
+        clientGetIt<UpdateProfileUseCase>(),
+      ),
     );
   }
 }

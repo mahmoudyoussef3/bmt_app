@@ -1,4 +1,5 @@
 import '../../domain/entities/client_profile.dart';
+import '../../domain/usecases/update_profile_usecase.dart';
 
 sealed class ProfileState {
   const ProfileState();
@@ -9,14 +10,52 @@ class ProfileLoading extends ProfileState {
 }
 
 class ProfileLoaded extends ProfileState {
-  const ProfileLoaded(this.data, {this.refreshFailure});
+  const ProfileLoaded(
+    this.profile, {
+    this.refreshFailed = false,
+    this.editStatus = ProfileEditStatus.idle,
+    this.fieldErrors = const {},
+    this.saveError,
+  });
 
-  final ClientProfileData data;
+  final ClientProfile profile;
 
-  /// Set when a pull-to-refresh failed while this data was on screen —
-  /// the UI keeps the content and surfaces the failure non-destructively.
-  final String? refreshFailure;
+  /// A pull-to-refresh failed while this profile was on screen. The content
+  /// stays put and the failure is surfaced non-destructively — replacing a
+  /// working screen with a full-page error would be a downgrade.
+  final bool refreshFailed;
+
+  final ProfileEditStatus editStatus;
+
+  /// Per-field rejections from [UpdateProfileUseCase]. Rendered next to the
+  /// offending input, in the rider's language.
+  final Map<ProfileField, ProfileFieldError> fieldErrors;
+
+  /// A save that failed for a reason that is not about one field (offline, a
+  /// phone number already taken by another account).
+  final String? saveError;
+
+  bool get isSaving => editStatus == ProfileEditStatus.saving;
+
+  ProfileLoaded copyWith({
+    ClientProfile? profile,
+    bool? refreshFailed,
+    ProfileEditStatus? editStatus,
+    Map<ProfileField, ProfileFieldError>? fieldErrors,
+    String? saveError,
+    bool clearSaveError = false,
+  }) {
+    return ProfileLoaded(
+      profile ?? this.profile,
+      refreshFailed: refreshFailed ?? this.refreshFailed,
+      editStatus: editStatus ?? this.editStatus,
+      fieldErrors: fieldErrors ?? this.fieldErrors,
+      saveError: clearSaveError ? null : saveError ?? this.saveError,
+    );
+  }
 }
+
+enum ProfileEditStatus { idle, saving, success, failure }
 
 class ProfileError extends ProfileState {
   const ProfileError(this.message);

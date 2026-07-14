@@ -929,4 +929,381 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get referral_you => 'أنت';
+
+  @override
+  String get tracking_title => 'تتبع رحلتك';
+
+  @override
+  String get tracking_loading => 'جاري تحميل رحلتك…';
+
+  @override
+  String get tracking_refresh => 'تحديث';
+
+  @override
+  String get tracking_errorTitle => 'تعذّر تحميل بيانات التتبع';
+
+  @override
+  String get tracking_emptyTitle => 'لا توجد رحلة لتتبعها';
+
+  @override
+  String get tracking_emptyBody =>
+      'يظهر التتبع المباشر هنا بمجرد تأكيد أحد حجوزاتك.';
+
+  @override
+  String get tracking_emptyAction => 'تصفّح الرحلات';
+
+  @override
+  String get tracking_stateNotStarted => 'لم تبدأ رحلتك بعد';
+
+  @override
+  String get tracking_stateDriverOnWay => 'الكابتن في الطريق';
+
+  @override
+  String get tracking_stateBoarding => 'جاري صعود الركاب';
+
+  @override
+  String get tracking_stateInProgress => 'الرحلة جارية';
+
+  @override
+  String get tracking_stateCompleted => 'اكتملت الرحلة';
+
+  @override
+  String get tracking_signalLive => 'مباشر';
+
+  @override
+  String get tracking_signalStale => 'الإشارة متأخرة';
+
+  @override
+  String get tracking_signalNone => 'في انتظار إشارة الكابتن';
+
+  @override
+  String get tracking_signalOffRoute => 'خارج المسار';
+
+  @override
+  String get tracking_updatedJustNow => 'الآن';
+
+  @override
+  String tracking_updatedMinutesAgo(int minutes) {
+    return 'منذ $minutes دقيقة';
+  }
+
+  @override
+  String get tracking_etaToYourStop => 'يصل إلى محطتك';
+
+  @override
+  String get tracking_etaToDestination => 'تصل إلى وجهتك';
+
+  @override
+  String get tracking_etaNow => 'الآن';
+
+  @override
+  String get tracking_etaUnavailable => 'غير متاح بعد';
+
+  @override
+  String tracking_etaMinutes(int minutes) {
+    return '$minutes دقيقة';
+  }
+
+  @override
+  String tracking_etaHoursMinutes(int hours, int minutes) {
+    return '$hours س $minutes د';
+  }
+
+  @override
+  String get tracking_sourceLive => 'من الموقع المباشر';
+
+  @override
+  String get tracking_sourceEstimated => 'تقدير';
+
+  @override
+  String get tracking_sourceScheduled => 'حسب الجدول';
+
+  @override
+  String tracking_departsAt(String time) {
+    return 'الانطلاق $time';
+  }
+
+  @override
+  String tracking_stopsRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count محطات متبقية',
+      two: 'محطتان متبقيتان',
+      one: 'محطة واحدة متبقية',
+      zero: 'لا محطات متبقية',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tracking_yourBooking => 'حجزك';
+
+  @override
+  String tracking_seat(String label) {
+    return 'مقعد $label';
+  }
+
+  @override
+  String get tracking_boarded => 'تم صعودك';
+
+  @override
+  String get tracking_notBoarded => 'لم يتم صعودك بعد';
+
+  @override
+  String get tracking_boardAt => 'تصعد من';
+
+  @override
+  String get tracking_alightAt => 'تنزل في';
+
+  @override
+  String get tracking_stopsTitle => 'محطات الرحلة';
+
+  @override
+  String get tracking_yourStopBadge => 'محطتك';
+
+  @override
+  String get tracking_yourDropoffBadge => 'محطة نزولك';
+
+  @override
+  String get tracking_stopDeparted => 'غادرت';
+
+  @override
+  String get tracking_stopArrived => 'عند المحطة';
+
+  @override
+  String get tracking_stopNext => 'التالية';
+
+  @override
+  String get tracking_captain => 'الكابتن';
+
+  @override
+  String get tracking_vehicle => 'المركبة';
+
+  @override
+  String get tracking_call => 'اتصال';
+
+  @override
+  String get tracking_noRating => 'لا توجد تقييمات بعد';
+
+  @override
+  String tracking_ratingWithCount(String rating, int count) {
+    return '$rating ($count)';
+  }
+
+  @override
+  String get tracking_noPhone => 'رقم الكابتن غير متاح';
+
+  @override
+  String get tracking_completedTitle => 'وصلت بأمان';
+
+  @override
+  String get tracking_completedBody => 'نتمنى أن تكون رحلتك كانت مريحة.';
+
+  @override
+  String get tracking_rateTrip => 'قيّم هذه الرحلة';
+
+  @override
+  String get tracking_alreadyReviewed =>
+      'شكراً لك — لقد قيّمت هذه الرحلة بالفعل.';
+
+  @override
+  String get tracking_bookAgain => 'احجز رحلة أخرى';
+
+  @override
+  String get tracking_mapUnavailableTitle => 'لا تتوفر بيانات الخريطة';
+
+  @override
+  String get tracking_mapUnavailableBody =>
+      'لم يتم العثور على إحداثيات لمسار هذه الرحلة.';
+
+  @override
+  String get tracking_recenter => 'توسيط المسار';
+
+  @override
+  String get tracking_followVehicle => 'تتبع المركبة';
+
+  @override
+  String get profile_title => 'حسابي';
+
+  @override
+  String profile_memberSince(String date) {
+    return 'عضو منذ $date';
+  }
+
+  @override
+  String get profile_guestName => 'حسابك';
+
+  @override
+  String get profile_noEmail => 'لم يتم إضافة بريد إلكتروني';
+
+  @override
+  String get profile_completeTitle => 'أكمل بيانات حسابك';
+
+  @override
+  String get profile_completeBody =>
+      'أضف بياناتك الناقصة حتى يتمكن الكابتن وخدمة العملاء من التواصل معك.';
+
+  @override
+  String get profile_completeAction => 'أكمل الآن';
+
+  @override
+  String get profile_statTrips => 'رحلات تمت';
+
+  @override
+  String get profile_statUpcoming => 'رحلات قادمة';
+
+  @override
+  String get profile_statPackage => 'الاشتراك';
+
+  @override
+  String get profile_packageNone => 'لا يوجد';
+
+  @override
+  String get profile_packageActive => 'نشط';
+
+  @override
+  String profile_packageExpiringSoon(String name, String route, int days) {
+    return 'اشتراك $name على خط $route ينتهي خلال $days أيام.';
+  }
+
+  @override
+  String get profile_packageRenew => 'تجديد';
+
+  @override
+  String get profile_sectionAccount => 'الحساب';
+
+  @override
+  String get profile_sectionPreferences => 'التفضيلات';
+
+  @override
+  String get profile_sectionSupport => 'الدعم';
+
+  @override
+  String get profile_sectionLegal => 'القانونية';
+
+  @override
+  String get profile_editProfile => 'البيانات الشخصية';
+
+  @override
+  String get profile_editProfileSubtitle =>
+      'الاسم ورقم الهاتف والبريد الإلكتروني';
+
+  @override
+  String get profile_subscription => 'اشتراكي';
+
+  @override
+  String get profile_subscriptionSubtitle => 'الباقات والتجديد والفواتير';
+
+  @override
+  String get profile_myTrips => 'رحلاتي';
+
+  @override
+  String get profile_myTripsSubtitle => 'الرحلات القادمة والحالية والسابقة';
+
+  @override
+  String get profile_language => 'اللغة';
+
+  @override
+  String get profile_languageEnglish => 'English';
+
+  @override
+  String get profile_languageArabic => 'العربية';
+
+  @override
+  String get profile_selectLanguage => 'اختر اللغة';
+
+  @override
+  String get profile_selectLanguageBody =>
+      'يتم تغيير لغة التطبيق واتجاه الواجهة فوراً.';
+
+  @override
+  String get profile_theme => 'المظهر';
+
+  @override
+  String get profile_themeSystem => 'حسب النظام';
+
+  @override
+  String get profile_themeLight => 'فاتح';
+
+  @override
+  String get profile_themeDark => 'داكن';
+
+  @override
+  String get profile_selectTheme => 'اختر المظهر';
+
+  @override
+  String get profile_selectThemeBody => 'خيار النظام يتبع إعدادات جهازك.';
+
+  @override
+  String get profile_themeLightBody => 'الأنسب في ضوء النهار';
+
+  @override
+  String get profile_themeDarkBody => 'أراح للعين ليلاً';
+
+  @override
+  String get profile_helpCenter => 'مركز المساعدة';
+
+  @override
+  String get profile_helpCenterSubtitle =>
+      'الأسئلة الشائعة والتذاكر والاسترداد';
+
+  @override
+  String get profile_terms => 'الشروط والأحكام';
+
+  @override
+  String get profile_privacy => 'سياسة الخصوصية';
+
+  @override
+  String profile_lastUpdated(String date) {
+    return 'آخر تحديث $date';
+  }
+
+  @override
+  String get profile_editTitle => 'البيانات الشخصية';
+
+  @override
+  String get profile_editBody =>
+      'يستخدم الكابتن هذه البيانات للتواصل معك بخصوص رحلتك.';
+
+  @override
+  String get profile_fieldName => 'الاسم بالكامل';
+
+  @override
+  String get profile_fieldPhone => 'رقم الهاتف';
+
+  @override
+  String get profile_fieldEmail => 'البريد الإلكتروني';
+
+  @override
+  String get profile_errorRequired => 'هذا الحقل مطلوب';
+
+  @override
+  String get profile_errorNameTooShort => 'أدخل اسمك بالكامل';
+
+  @override
+  String get profile_errorInvalidPhone => 'أدخل رقم موبايل مصري صحيح';
+
+  @override
+  String get profile_errorInvalidEmail => 'أدخل بريداً إلكترونياً صحيحاً';
+
+  @override
+  String get profile_saved => 'تم حفظ بياناتك';
+
+  @override
+  String get profile_logout => 'تسجيل الخروج';
+
+  @override
+  String get profile_logoutTitle => 'تسجيل الخروج؟';
+
+  @override
+  String get profile_logoutBody =>
+      'ستحتاج إلى تسجيل الدخول مرة أخرى لحجز أو تتبع أي رحلة.';
+
+  @override
+  String get profile_logoutFailed =>
+      'تعذر تسجيل الخروج. من فضلك حاول مرة أخرى.';
+
+  @override
+  String get profile_refreshFailed => 'تعذر تحديث بيانات حسابك.';
 }

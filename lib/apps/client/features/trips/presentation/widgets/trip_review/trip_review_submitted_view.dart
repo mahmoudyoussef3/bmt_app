@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
-import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
+import 'package:bmt_app/apps/client/features/trips/domain/entities/reviewable_trip.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_review.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_rating_card.dart';
 
@@ -17,7 +17,7 @@ class TripReviewSubmittedView extends StatelessWidget {
     required this.review,
   });
 
-  final TripData trip;
+  final ReviewableTrip trip;
   final TripReview review;
 
   @override

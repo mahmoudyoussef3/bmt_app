@@ -58,6 +58,22 @@ class TripsCubit extends Cubit<TripsState> {
     }
   }
 
+  /// Re-reads the open trip in place — used after a review is submitted, so the
+  /// "Rate Trip" call to action disappears without throwing the whole screen
+  /// back through its loading skeleton. Best-effort: a failure keeps the last
+  /// usable state, and the passenger's review is already stored either way.
+  Future<void> refreshSelectedTrip(String id) async {
+    final current = state;
+    if (current is! TripsLoaded || id.isEmpty) return;
+    try {
+      final trip = await _getTripDetails(id);
+      if (isClosed || trip == null) return;
+      emit(TripsLoaded(trips: current.trips, selectedTrip: trip));
+    } catch (_) {
+      // Keep the trip on screen; the next refresh will pick the review up.
+    }
+  }
+
   /// Cancels an unapproved booking, then reloads so the trip moves to
   /// "Cancelled" and its seat shows as free — the realtime refresh would do it
   /// too, but the client must not have to wait on it to see the outcome.

@@ -1819,6 +1819,684 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You'**
   String get referral_you;
+
+  /// No description provided for @tracking_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Track your trip'**
+  String get tracking_title;
+
+  /// No description provided for @tracking_loading.
+  ///
+  /// In en, this message translates to:
+  /// **'Loading your trip…'**
+  String get tracking_loading;
+
+  /// No description provided for @tracking_refresh.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh'**
+  String get tracking_refresh;
+
+  /// No description provided for @tracking_errorTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t load your tracking'**
+  String get tracking_errorTitle;
+
+  /// No description provided for @tracking_emptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No trip to track'**
+  String get tracking_emptyTitle;
+
+  /// No description provided for @tracking_emptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Live tracking appears here once a booking of yours is confirmed.'**
+  String get tracking_emptyBody;
+
+  /// No description provided for @tracking_emptyAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse trips'**
+  String get tracking_emptyAction;
+
+  /// No description provided for @tracking_stateNotStarted.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trip hasn\'t started yet'**
+  String get tracking_stateNotStarted;
+
+  /// No description provided for @tracking_stateDriverOnWay.
+  ///
+  /// In en, this message translates to:
+  /// **'The captain is on the way'**
+  String get tracking_stateDriverOnWay;
+
+  /// No description provided for @tracking_stateBoarding.
+  ///
+  /// In en, this message translates to:
+  /// **'Boarding now'**
+  String get tracking_stateBoarding;
+
+  /// No description provided for @tracking_stateInProgress.
+  ///
+  /// In en, this message translates to:
+  /// **'On the road'**
+  String get tracking_stateInProgress;
+
+  /// No description provided for @tracking_stateCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip completed'**
+  String get tracking_stateCompleted;
+
+  /// No description provided for @tracking_signalLive.
+  ///
+  /// In en, this message translates to:
+  /// **'Live'**
+  String get tracking_signalLive;
+
+  /// No description provided for @tracking_signalStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Signal delayed'**
+  String get tracking_signalStale;
+
+  /// No description provided for @tracking_signalNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the captain\'s signal'**
+  String get tracking_signalNone;
+
+  /// No description provided for @tracking_signalOffRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Off route'**
+  String get tracking_signalOffRoute;
+
+  /// No description provided for @tracking_updatedJustNow.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get tracking_updatedJustNow;
+
+  /// No description provided for @tracking_updatedMinutesAgo.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min ago'**
+  String tracking_updatedMinutesAgo(int minutes);
+
+  /// No description provided for @tracking_etaToYourStop.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrives at your stop'**
+  String get tracking_etaToYourStop;
+
+  /// No description provided for @tracking_etaToDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'You arrive at'**
+  String get tracking_etaToDestination;
+
+  /// No description provided for @tracking_etaNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Now'**
+  String get tracking_etaNow;
+
+  /// No description provided for @tracking_etaUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available yet'**
+  String get tracking_etaUnavailable;
+
+  /// No description provided for @tracking_etaMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{minutes} min'**
+  String tracking_etaMinutes(int minutes);
+
+  /// No description provided for @tracking_etaHoursMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h {minutes} min'**
+  String tracking_etaHoursMinutes(int hours, int minutes);
+
+  /// No description provided for @tracking_sourceLive.
+  ///
+  /// In en, this message translates to:
+  /// **'From live GPS'**
+  String get tracking_sourceLive;
+
+  /// No description provided for @tracking_sourceEstimated.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated'**
+  String get tracking_sourceEstimated;
+
+  /// No description provided for @tracking_sourceScheduled.
+  ///
+  /// In en, this message translates to:
+  /// **'From the schedule'**
+  String get tracking_sourceScheduled;
+
+  /// No description provided for @tracking_departsAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Departs at {time}'**
+  String tracking_departsAt(String time);
+
+  /// No description provided for @tracking_stopsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{No stops left} =1{1 stop left} other{{count} stops left}}'**
+  String tracking_stopsRemaining(int count);
+
+  /// No description provided for @tracking_yourBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Your booking'**
+  String get tracking_yourBooking;
+
+  /// No description provided for @tracking_seat.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat {label}'**
+  String tracking_seat(String label);
+
+  /// No description provided for @tracking_boarded.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re on board'**
+  String get tracking_boarded;
+
+  /// No description provided for @tracking_notBoarded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not boarded yet'**
+  String get tracking_notBoarded;
+
+  /// No description provided for @tracking_boardAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Board at'**
+  String get tracking_boardAt;
+
+  /// No description provided for @tracking_alightAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Get off at'**
+  String get tracking_alightAt;
+
+  /// No description provided for @tracking_stopsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Trip stops'**
+  String get tracking_stopsTitle;
+
+  /// No description provided for @tracking_yourStopBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Your stop'**
+  String get tracking_yourStopBadge;
+
+  /// No description provided for @tracking_yourDropoffBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Your drop-off'**
+  String get tracking_yourDropoffBadge;
+
+  /// No description provided for @tracking_stopDeparted.
+  ///
+  /// In en, this message translates to:
+  /// **'Departed'**
+  String get tracking_stopDeparted;
+
+  /// No description provided for @tracking_stopArrived.
+  ///
+  /// In en, this message translates to:
+  /// **'At the stop'**
+  String get tracking_stopArrived;
+
+  /// No description provided for @tracking_stopNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get tracking_stopNext;
+
+  /// No description provided for @tracking_captain.
+  ///
+  /// In en, this message translates to:
+  /// **'Captain'**
+  String get tracking_captain;
+
+  /// No description provided for @tracking_vehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle'**
+  String get tracking_vehicle;
+
+  /// No description provided for @tracking_call.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get tracking_call;
+
+  /// No description provided for @tracking_noRating.
+  ///
+  /// In en, this message translates to:
+  /// **'No ratings yet'**
+  String get tracking_noRating;
+
+  /// No description provided for @tracking_ratingWithCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{rating} ({count})'**
+  String tracking_ratingWithCount(String rating, int count);
+
+  /// No description provided for @tracking_noPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'The captain\'s number isn\'t available'**
+  String get tracking_noPhone;
+
+  /// No description provided for @tracking_completedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'You arrived safely'**
+  String get tracking_completedTitle;
+
+  /// No description provided for @tracking_completedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'We hope the ride was comfortable.'**
+  String get tracking_completedBody;
+
+  /// No description provided for @tracking_rateTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate this trip'**
+  String get tracking_rateTrip;
+
+  /// No description provided for @tracking_alreadyReviewed.
+  ///
+  /// In en, this message translates to:
+  /// **'Thanks — you\'ve already rated this trip.'**
+  String get tracking_alreadyReviewed;
+
+  /// No description provided for @tracking_bookAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Book another trip'**
+  String get tracking_bookAgain;
+
+  /// No description provided for @tracking_mapUnavailableTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Map data unavailable'**
+  String get tracking_mapUnavailableTitle;
+
+  /// No description provided for @tracking_mapUnavailableBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No route coordinates were found for this trip.'**
+  String get tracking_mapUnavailableBody;
+
+  /// No description provided for @tracking_recenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Recenter'**
+  String get tracking_recenter;
+
+  /// No description provided for @tracking_followVehicle.
+  ///
+  /// In en, this message translates to:
+  /// **'Follow the vehicle'**
+  String get tracking_followVehicle;
+
+  /// No description provided for @profile_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile'**
+  String get profile_title;
+
+  /// No description provided for @profile_memberSince.
+  ///
+  /// In en, this message translates to:
+  /// **'Member since {date}'**
+  String profile_memberSince(String date);
+
+  /// No description provided for @profile_guestName.
+  ///
+  /// In en, this message translates to:
+  /// **'Your account'**
+  String get profile_guestName;
+
+  /// No description provided for @profile_noEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'No email added'**
+  String get profile_noEmail;
+
+  /// No description provided for @profile_completeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finish setting up your account'**
+  String get profile_completeTitle;
+
+  /// No description provided for @profile_completeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Add your missing details so your captain and support can reach you.'**
+  String get profile_completeBody;
+
+  /// No description provided for @profile_completeAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete now'**
+  String get profile_completeAction;
+
+  /// No description provided for @profile_statTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Trips taken'**
+  String get profile_statTrips;
+
+  /// No description provided for @profile_statUpcoming.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming'**
+  String get profile_statUpcoming;
+
+  /// No description provided for @profile_statPackage.
+  ///
+  /// In en, this message translates to:
+  /// **'Package'**
+  String get profile_statPackage;
+
+  /// No description provided for @profile_packageNone.
+  ///
+  /// In en, this message translates to:
+  /// **'None'**
+  String get profile_packageNone;
+
+  /// No description provided for @profile_packageActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get profile_packageActive;
+
+  /// No description provided for @profile_packageExpiringSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Your {name} package on {route} ends in {days} days.'**
+  String profile_packageExpiringSoon(String name, String route, int days);
+
+  /// No description provided for @profile_packageRenew.
+  ///
+  /// In en, this message translates to:
+  /// **'Renew'**
+  String get profile_packageRenew;
+
+  /// No description provided for @profile_sectionAccount.
+  ///
+  /// In en, this message translates to:
+  /// **'Account'**
+  String get profile_sectionAccount;
+
+  /// No description provided for @profile_sectionPreferences.
+  ///
+  /// In en, this message translates to:
+  /// **'Preferences'**
+  String get profile_sectionPreferences;
+
+  /// No description provided for @profile_sectionSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Support'**
+  String get profile_sectionSupport;
+
+  /// No description provided for @profile_sectionLegal.
+  ///
+  /// In en, this message translates to:
+  /// **'Legal'**
+  String get profile_sectionLegal;
+
+  /// No description provided for @profile_editProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal details'**
+  String get profile_editProfile;
+
+  /// No description provided for @profile_editProfileSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Name, phone and email'**
+  String get profile_editProfileSubtitle;
+
+  /// No description provided for @profile_subscription.
+  ///
+  /// In en, this message translates to:
+  /// **'My package'**
+  String get profile_subscription;
+
+  /// No description provided for @profile_subscriptionSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Plans, renewals and billing'**
+  String get profile_subscriptionSubtitle;
+
+  /// No description provided for @profile_myTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'My trips'**
+  String get profile_myTrips;
+
+  /// No description provided for @profile_myTripsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Upcoming, active and past trips'**
+  String get profile_myTripsSubtitle;
+
+  /// No description provided for @profile_language.
+  ///
+  /// In en, this message translates to:
+  /// **'Language'**
+  String get profile_language;
+
+  /// No description provided for @profile_languageEnglish.
+  ///
+  /// In en, this message translates to:
+  /// **'English'**
+  String get profile_languageEnglish;
+
+  /// No description provided for @profile_languageArabic.
+  ///
+  /// In en, this message translates to:
+  /// **'العربية'**
+  String get profile_languageArabic;
+
+  /// No description provided for @profile_selectLanguage.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a language'**
+  String get profile_selectLanguage;
+
+  /// No description provided for @profile_selectLanguageBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The app switches immediately, including the layout direction.'**
+  String get profile_selectLanguageBody;
+
+  /// No description provided for @profile_theme.
+  ///
+  /// In en, this message translates to:
+  /// **'Appearance'**
+  String get profile_theme;
+
+  /// No description provided for @profile_themeSystem.
+  ///
+  /// In en, this message translates to:
+  /// **'System'**
+  String get profile_themeSystem;
+
+  /// No description provided for @profile_themeLight.
+  ///
+  /// In en, this message translates to:
+  /// **'Light'**
+  String get profile_themeLight;
+
+  /// No description provided for @profile_themeDark.
+  ///
+  /// In en, this message translates to:
+  /// **'Dark'**
+  String get profile_themeDark;
+
+  /// No description provided for @profile_selectTheme.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose an appearance'**
+  String get profile_selectTheme;
+
+  /// No description provided for @profile_selectThemeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'System follows your device setting.'**
+  String get profile_selectThemeBody;
+
+  /// No description provided for @profile_themeLightBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Best in daylight'**
+  String get profile_themeLightBody;
+
+  /// No description provided for @profile_themeDarkBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Easier on the eyes at night'**
+  String get profile_themeDarkBody;
+
+  /// No description provided for @profile_helpCenter.
+  ///
+  /// In en, this message translates to:
+  /// **'Help centre'**
+  String get profile_helpCenter;
+
+  /// No description provided for @profile_helpCenterSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'FAQs, tickets and refunds'**
+  String get profile_helpCenterSubtitle;
+
+  /// No description provided for @profile_terms.
+  ///
+  /// In en, this message translates to:
+  /// **'Terms & conditions'**
+  String get profile_terms;
+
+  /// No description provided for @profile_privacy.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy policy'**
+  String get profile_privacy;
+
+  /// No description provided for @profile_lastUpdated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated {date}'**
+  String profile_lastUpdated(String date);
+
+  /// No description provided for @profile_editTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Personal details'**
+  String get profile_editTitle;
+
+  /// No description provided for @profile_editBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your captain uses these details to reach you about a trip.'**
+  String get profile_editBody;
+
+  /// No description provided for @profile_fieldName.
+  ///
+  /// In en, this message translates to:
+  /// **'Full name'**
+  String get profile_fieldName;
+
+  /// No description provided for @profile_fieldPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone number'**
+  String get profile_fieldPhone;
+
+  /// No description provided for @profile_fieldEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Email address'**
+  String get profile_fieldEmail;
+
+  /// No description provided for @profile_errorRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'This field is required'**
+  String get profile_errorRequired;
+
+  /// No description provided for @profile_errorNameTooShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your full name'**
+  String get profile_errorNameTooShort;
+
+  /// No description provided for @profile_errorInvalidPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid Egyptian mobile number'**
+  String get profile_errorInvalidPhone;
+
+  /// No description provided for @profile_errorInvalidEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a valid email address'**
+  String get profile_errorInvalidEmail;
+
+  /// No description provided for @profile_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Your details were saved'**
+  String get profile_saved;
+
+  /// No description provided for @profile_logout.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out'**
+  String get profile_logout;
+
+  /// No description provided for @profile_logoutTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Log out?'**
+  String get profile_logoutTitle;
+
+  /// No description provided for @profile_logoutBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll need to sign in again to book or track a trip.'**
+  String get profile_logoutBody;
+
+  /// No description provided for @profile_logoutFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t log you out. Please try again.'**
+  String get profile_logoutFailed;
+
+  /// No description provided for @profile_refreshFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t refresh your profile.'**
+  String get profile_refreshFailed;
 }
 
 class _AppLocalizationsDelegate

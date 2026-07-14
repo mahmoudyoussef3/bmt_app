@@ -22,13 +22,13 @@ class TripDetailSections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final canReview = trip.status == TripStatus.completed;
+    final isCompleted = trip.status == TripStatus.completed;
 
     return Column(
       children: [
         TripDetailSection(
           title: 'Captain',
-          subtitle: 'Who is driving you',
+          subtitle: trip.isFinished ? 'Who drove you' : 'Who is driving you',
           icon: Icons.person_pin_circle_rounded,
           child: TripDriverCard(trip: trip),
         ),
@@ -57,7 +57,7 @@ class TripDetailSections extends StatelessWidget {
           const SizedBox(height: 14),
           TripCancellationReasonCard(reason: trip.cancellationReason!),
         ],
-        if (canReview) ...[
+        if (isCompleted) ...[
           const SizedBox(height: 14),
           TripCompletedCard(trip: trip),
         ],

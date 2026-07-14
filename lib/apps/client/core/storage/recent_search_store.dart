@@ -8,6 +8,14 @@ class RecentSearchStore {
 
   static const _maxEntries = 5;
 
+  /// The keys this store owns. They live here rather than in the search screen
+  /// because sign-out has to wipe them: the next rider on this device must not
+  /// inherit the previous rider's commute.
+  static const pickupsKey = 'booking_recent_pickups';
+  static const destinationsKey = 'booking_recent_destinations';
+
+  static const _allKeys = <String>[pickupsKey, destinationsKey];
+
   Future<List<String>> get(String key) async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getStringList(key) ?? const [];
@@ -23,5 +31,13 @@ class RecentSearchStore {
       current.removeRange(_maxEntries, current.length);
     }
     await prefs.setStringList(key, current);
+  }
+
+  /// Drops every remembered search. Called on sign-out.
+  Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    for (final key in _allKeys) {
+      await prefs.remove(key);
+    }
   }
 }

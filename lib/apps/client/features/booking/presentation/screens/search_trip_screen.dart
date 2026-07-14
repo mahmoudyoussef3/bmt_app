@@ -16,8 +16,8 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/search
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/search_option_tile.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
-const _recentPickupsKey = 'booking_recent_pickups';
-const _recentDestinationsKey = 'booking_recent_destinations';
+const _recentPickupsKey = RecentSearchStore.pickupsKey;
+const _recentDestinationsKey = RecentSearchStore.destinationsKey;
 
 class SearchTripScreen extends StatefulWidget {
   const SearchTripScreen({super.key, this.initialQuery});

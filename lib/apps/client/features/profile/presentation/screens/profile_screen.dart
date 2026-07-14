@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/core/theme/app_layout.dart';
+
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
-import 'package:bmt_app/apps/client/features/profile/domain/entities/client_profile.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_state.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_state.dart';
-import 'package:bmt_app/apps/client/features/profile/presentation/widgets/profile_hub_tile.dart';
+import 'package:bmt_app/apps/client/features/profile/presentation/widgets/logout_confirm_dialog.dart';
+import 'package:bmt_app/apps/client/features/profile/presentation/widgets/profile_hub_body.dart';
+import 'package:bmt_app/apps/client/features/profile/presentation/widgets/profile_sheets.dart';
+import 'package:bmt_app/apps/client/features/profile/presentation/widgets/profile_skeleton.dart';
+import 'package:bmt_app/core/theme/app_layout.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
+/// The rider's account hub: identity, their own numbers, everything they can
+/// change about the app, the legal documents, and the way out.
+///
+/// This screen absorbed what used to be a separate Settings screen. A rider
+/// does not think of "my details" and "my language" as living in different
+/// places, and the split cost them a tap to reach either.
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key, required this.onOpenRoute});
 
@@ -28,157 +39,100 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final width = MediaQuery.sizeOf(context).width;
-    final maxW = AppLayout.maxContentWidth(width);
+    final l10n = AppLocalizations.of(context)!;
+    final maxW = AppLayout.maxContentWidth(MediaQuery.sizeOf(context).width);
 
-    return BlocConsumer<ProfileCubit, ProfileState>(
-      listenWhen: (previous, current) =>
-          current is ProfileLoaded && current.refreshFailure != null,
-      listener: (context, state) {
-        final message = (state as ProfileLoaded).refreshFailure!;
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              behavior: SnackBarBehavior.floating,
-              content: Text(message),
-              action: SnackBarAction(
-                label: 'Retry',
-                onPressed: () => context.read<ProfileCubit>().load(),
-              ),
-            ),
-          );
-      },
-      builder: (context, state) {
-        return Center(
+    return Scaffold(
+      backgroundColor: ClientColors.backgroundFor(context),
+      body: MultiBlocListener(
+        listeners: [
+          BlocListener<ClientAuthCubit, ClientAuthState>(
+            listenWhen: (previous, current) =>
+                previous.signOutStatus != current.signOutStatus,
+            listener: _onSignOutStateChanged,
+          ),
+          BlocListener<ProfileCubit, ProfileState>(
+            listenWhen: (previous, current) =>
+                current is ProfileLoaded &&
+                (current.editStatus == ProfileEditStatus.success ||
+                    current.refreshFailed),
+            listener: _onProfileFeedback,
+          ),
+        ],
+        child: Center(
           child: ConstrainedBox(
             constraints: BoxConstraints(maxWidth: maxW),
-            child: switch (state) {
-              ProfileLoading() => ListView(
-                padding: const EdgeInsets.all(20),
-                children: [
-                  ClientSkeleton(height: 100, borderRadius: 24),
-                  const SizedBox(height: 24),
-                  ClientSkeleton(height: 56, borderRadius: 14),
-                  const SizedBox(height: 8),
-                  ClientSkeleton(height: 56, borderRadius: 14),
-                  const SizedBox(height: 8),
-                  ClientSkeleton(height: 56, borderRadius: 14),
-                ],
-              ),
-              ProfileError(:final message) => ClientErrorCard.fullScreen(
-                message: message,
-                onRetry: () => context.read<ProfileCubit>().load(),
-              ),
-              ProfileLoaded(:final data) => RefreshIndicator(
-                onRefresh: () => context.read<ProfileCubit>().load(),
-                child: ListView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: AppLayout.pagePaddingWithTop,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [ClientColors.primary, Color(0xFF1554C8)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ),
-                        borderRadius: BorderRadius.circular(24),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withAlpha(40),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Center(
-                              child: Text(
-                                data.profile.initials,
-                                style: ClientTypography.headingMedium(
-                                  context,
-                                ).copyWith(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  data.profile.name,
-                                  style: ClientTypography.headingSmall(
-                                    context,
-                                  ).copyWith(color: Colors.white),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  data.profile.email,
-                                  style: ClientTypography.bodySmall(context)
-                                      .copyWith(
-                                        color: Colors.white.withAlpha(200),
-                                      ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    // ── Sections ────────────────────────────────────────────
-                    for (final section in data.sections) ...[
-                      const SizedBox(height: AppLayout.spaceXl),
-                      ClientSectionHeader(title: section.title),
-                      const SizedBox(height: AppLayout.spaceSm),
-                      for (final item in section.items) ...[
-                        ProfileHubTile(
-                          icon: _iconForMenuItem(item),
-                          title: item.title,
-                          subtitle: item.subtitle,
-                          onTap: () {
-                            if (item.route == null) return;
-                            widget.onOpenRoute(item.route!);
-                          },
-                        ),
-                        const SizedBox(height: AppLayout.spaceSm),
-                      ],
-                    ],
-                    const SizedBox(height: 24),
-                    ClientButton(
-                      label: 'Log Out',
-                      icon: const Icon(Icons.logout_rounded),
-                      //   style: ClientButtonStyle.danger,
-                      onPressed: () {
-                        context.read<ClientAuthCubit>().signOut();
-                      },
-                    ),
-                    const SizedBox(height: 120),
-                  ],
+            child: BlocBuilder<ProfileCubit, ProfileState>(
+              builder: (context, state) => switch (state) {
+                ProfileLoading() => const ProfileSkeleton(),
+                ProfileError(:final message) => ClientErrorCard.fullScreen(
+                  message: message,
+                  retryLabel: l10n.common_tryAgain,
+                  onRetry: () => context.read<ProfileCubit>().load(),
                 ),
-              ),
-            },
+                ProfileLoaded(:final profile) => RefreshIndicator(
+                  onRefresh: () => context.read<ProfileCubit>().load(),
+                  child: ProfileHubBody(
+                    profile: profile,
+                    onOpenRoute: widget.onOpenRoute,
+                    onEdit: () => ProfileSheets.edit(context, profile),
+                    onLanguage: () => ProfileSheets.language(context),
+                    onAppearance: () => ProfileSheets.appearance(context),
+                    onLogout: _confirmLogout,
+                  ),
+                ),
+              },
+            ),
           ),
-        );
-      },
+        ),
+      ),
     );
   }
 
-  IconData _iconForMenuItem(ProfileMenuItem item) {
-    return switch (item.iconKey) {
-      'person' => Icons.person_outline_rounded,
-      'packages' => Icons.card_membership_outlined,
-      'search' => Icons.search_rounded,
-      'wallet' => Icons.account_balance_wallet_outlined,
-      'rewards' => Icons.emoji_events_outlined,
-      'loyalty' => Icons.stars_outlined,
-      'support' => Icons.support_agent_outlined,
-      'messages' => Icons.chat_bubble_outline_rounded,
-      'settings' => Icons.settings_outlined,
-      'terms' || _ => Icons.description_outlined,
-    };
+  /// The session is gone, so the rider must leave every authenticated screen
+  /// with it. Signing in makes the shell the root of the navigation stack, so
+  /// clearing the Supabase session alone would leave the rider sitting on a
+  /// signed-out profile — the stack has to be reset explicitly.
+  void _onSignOutStateChanged(BuildContext context, ClientAuthState state) {
+    if (state.signOutStatus == AuthSubmissionStatus.success) {
+      Navigator.of(
+        context,
+        rootNavigator: true,
+      ).pushNamedAndRemoveUntil(AuthRoutes.welcome, (_) => false);
+      return;
+    }
+
+    if (state.signOutStatus == AuthSubmissionStatus.failure) {
+      final l10n = AppLocalizations.of(context)!;
+      _showSnack(state.signOutError ?? l10n.profile_logoutFailed);
+    }
+  }
+
+  void _onProfileFeedback(BuildContext context, ProfileState state) {
+    final l10n = AppLocalizations.of(context)!;
+    final cubit = context.read<ProfileCubit>();
+    final loaded = state as ProfileLoaded;
+
+    if (loaded.editStatus == ProfileEditStatus.success) {
+      cubit.resetEditStatus();
+      _showSnack(l10n.profile_saved);
+    } else if (loaded.refreshFailed) {
+      cubit.dismissRefreshFailure();
+      _showSnack(l10n.profile_refreshFailed);
+    }
+  }
+
+  void _showSnack(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
+      );
+  }
+
+  Future<void> _confirmLogout() async {
+    final confirmed = await LogoutConfirmDialog.show(context);
+    if (!confirmed || !mounted) return;
+    context.read<ClientAuthCubit>().signOut();
   }
 }

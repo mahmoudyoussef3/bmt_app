@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
-import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
+import 'package:bmt_app/apps/client/features/trips/domain/entities/reviewable_trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_cubit.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_state.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_rating_card.dart';
@@ -12,7 +12,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_rev
 class TripReviewForm extends StatefulWidget {
   const TripReviewForm({super.key, required this.trip, required this.state});
 
-  final TripData trip;
+  final ReviewableTrip trip;
   final TripReviewEditing state;
 
   @override

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/client/features/auth/data/datasources/client_auth_datasource.dart';
 import 'package:bmt_app/apps/client/features/auth/data/repositories/client_auth_repository_impl.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_in_with_email_usecase.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_state.dart';
@@ -48,6 +49,7 @@ ClientAuthCubit buildCubit(ClientAuthDatasource ds) {
   return ClientAuthCubit(
     signInWithEmail: SignInWithEmailUseCase(repo),
     signUpWithEmail: SignUpWithEmailUseCase(repo),
+    signOut: SignOutUseCase(repo),
   );
 }
 

@@ -1,10 +1,16 @@
+import 'package:bmt_app/apps/client/core/storage/recent_search_store.dart';
+
 import '../../domain/repositories/client_auth_repository.dart';
 import '../datasources/client_auth_datasource.dart';
 
 class ClientAuthRepositoryImpl implements ClientAuthRepository {
-  const ClientAuthRepositoryImpl(this._datasource);
+  const ClientAuthRepositoryImpl(
+    this._datasource, {
+    RecentSearchStore recentSearches = const RecentSearchStore(),
+  }) : _recentSearches = recentSearches;
 
   final ClientAuthDatasource _datasource;
+  final RecentSearchStore _recentSearches;
 
   @override
   Future<void> signInWithEmail({
@@ -54,6 +60,14 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
   @override
   Future<void> signOut() async {
     await _datasource.signOut();
+
+    // Session hygiene: the next rider to use this device must not inherit the
+    // previous one's remembered pickups and destinations. The session is
+    // already gone by this point, so a cache-clear failure must not turn a
+    // successful sign-out into a failed one.
+    try {
+      await _recentSearches.clearAll();
+    } catch (_) {}
   }
 
   @override

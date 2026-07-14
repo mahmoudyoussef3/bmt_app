@@ -11,6 +11,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_detail_sections.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_hero_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_live_tracking_card.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review_flow.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
 /// The fully-loaded Trip Details screen body.
@@ -38,18 +39,19 @@ class TripDetailsView extends StatelessWidget {
     await cubit.cancelTrip(trip, reason);
   }
 
+  /// Opens the review sheet, then re-reads the booking so a trip that has just
+  /// been rated stops offering to be rated.
+  Future<void> _rateTrip(BuildContext context) async {
+    final cubit = context.read<TripsCubit>();
+    await showTripReviewFlow(context, trip: trip.reviewable);
+    await cubit.refreshSelectedTrip(trip.id);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Cancelling is only offered while the dashboard has not approved the
-    // payment yet; an approved seat is paid for and final.
     final canCancel = trip.canBeCancelled;
-    final canReview = trip.status == TripStatus.completed;
-    // The vehicle must stay untrackable until this booking's own payment is
-    // approved — a trip can be in progress for other passengers while this
-    // client's payment is still pending review.
-    final canTrack =
-        trip.status == TripStatus.inProgress &&
-        trip.paymentStatus == PaymentStatus.paid;
+    final canReview = trip.canBeReviewed;
+    final canTrack = trip.canBeTracked;
     final showBoarding = canCancel || canTrack;
 
     return Scaffold(
@@ -99,6 +101,7 @@ class TripDetailsView extends StatelessWidget {
         canTrack: canTrack,
         cancelInFlight: cancelInFlight,
         onCancel: () => _confirmCancel(context),
+        onReview: () => _rateTrip(context),
       ),
     );
   }

@@ -4,7 +4,6 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_danger_button.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review_flow.dart';
 
 /// Trip Details' sticky bottom action bar — exactly one primary action set
 /// per trip status, never a stray duplicate action (a previous version
@@ -21,6 +20,7 @@ class TripActionsBar extends StatelessWidget {
     required this.canReview,
     required this.canTrack,
     required this.onCancel,
+    required this.onReview,
     this.cancelInFlight = false,
   });
 
@@ -29,11 +29,16 @@ class TripActionsBar extends StatelessWidget {
   final bool canReview;
   final bool canTrack;
   final VoidCallback onCancel;
+  final VoidCallback onReview;
   final bool cancelInFlight;
+
+  /// Rating is a one-time act, so once the passenger has rated the trip the
+  /// only thing left to offer them is booking the same journey again.
+  bool get _isCompleted => trip.status == TripStatus.completed;
 
   @override
   Widget build(BuildContext context) {
-    if (!canCancel && !canReview && !canTrack) {
+    if (!canCancel && !canReview && !canTrack && !_isCompleted) {
       return const SizedBox.shrink();
     }
 
@@ -73,17 +78,18 @@ class TripActionsBar extends StatelessWidget {
                   isLoading: cancelInFlight,
                   onPressed: onCancel,
                 ),
-              if (canReview)
+              if (_isCompleted)
                 Row(
                   children: [
-                    Expanded(
-                      child: ClientButton(
-                        label: 'Rate Trip',
-                        onPressed: () =>
-                            showTripReviewFlow(context, trip: trip),
+                    if (canReview) ...[
+                      Expanded(
+                        child: ClientButton(
+                          label: 'Rate Trip',
+                          onPressed: onReview,
+                        ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
+                      const SizedBox(width: 10),
+                    ],
                     Expanded(
                       child: ClientButton.secondary(
                         label: 'Book Again',

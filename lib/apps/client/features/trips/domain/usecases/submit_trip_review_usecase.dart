@@ -1,4 +1,4 @@
-import '../entities/trip.dart';
+import '../entities/reviewable_trip.dart';
 import '../entities/trip_review.dart';
 import '../repositories/trip_reviews_repository.dart';
 
@@ -13,8 +13,8 @@ class SubmitTripReviewUseCase {
 
   final TripReviewsRepository _repository;
 
-  Future<void> call(TripData trip, TripReview review) {
-    if (trip.status != TripStatus.completed) {
+  Future<void> call(ReviewableTrip trip, TripReview review) {
+    if (!trip.isCompleted) {
       throw Exception('You can only review a trip once it has been completed.');
     }
     if (!review.isValid) {

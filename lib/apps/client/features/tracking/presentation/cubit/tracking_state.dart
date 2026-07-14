@@ -10,40 +10,38 @@ class TrackingLoading extends TrackingState {
   const TrackingLoading();
 }
 
+/// The rider has no confirmed booking to track. A real, explainable state —
+/// not an error, and not a trip rendered out of placeholders.
+class TrackingEmpty extends TrackingState {
+  const TrackingEmpty();
+}
+
 class TrackingLoaded extends TrackingState {
   const TrackingLoaded({
     required this.data,
-    required this.currentState,
-    required this.title,
     this.progress,
-    this.ratings = const TrackingRatings(),
     this.isRefreshing = false,
   });
 
   final TrackingTripData data;
-  final TrackingTripState currentState;
-  final String title;
 
-  /// Live route progress & ETAs from the shared progress engine; null until
-  /// the trip has trackable stops.
+  /// Live route progress and ETAs from the shared progress engine.
   final RouteProgressSnapshot? progress;
-  final TrackingRatings ratings;
+
+  /// A background refetch is in flight; the screen keeps showing the real data
+  /// underneath instead of flashing a spinner over it.
   final bool isRefreshing;
+
+  TrackingTripState get tripState => data.tripState;
 
   TrackingLoaded copyWith({
     TrackingTripData? data,
-    TrackingTripState? currentState,
-    String? title,
     RouteProgressSnapshot? progress,
-    TrackingRatings? ratings,
     bool? isRefreshing,
   }) {
     return TrackingLoaded(
       data: data ?? this.data,
-      currentState: currentState ?? this.currentState,
-      title: title ?? this.title,
       progress: progress ?? this.progress,
-      ratings: ratings ?? this.ratings,
       isRefreshing: isRefreshing ?? this.isRefreshing,
     );
   }

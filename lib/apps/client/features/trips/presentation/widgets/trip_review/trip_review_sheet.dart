@@ -4,7 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
-import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
+import 'package:bmt_app/apps/client/features/trips/domain/entities/reviewable_trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_cubit.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_state.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_form.dart';
@@ -13,7 +13,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_rev
 class TripReviewSheet extends StatelessWidget {
   const TripReviewSheet({super.key, required this.trip});
 
-  final TripData trip;
+  final ReviewableTrip trip;
 
   @override
   Widget build(BuildContext context) {

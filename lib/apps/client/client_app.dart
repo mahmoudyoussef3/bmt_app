@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
+import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/core/notifications/fcm_service.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_cubit.dart';
@@ -36,8 +37,8 @@ import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referr
 import 'package:bmt_app/apps/client/features/referrals/presentation/screens/referral_rewards_screen.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/screens/loyalty_screen.dart';
-import 'package:bmt_app/apps/client/features/settings/presentation/cubit/settings_cubit.dart';
-import 'package:bmt_app/apps/client/features/settings/presentation/screens/settings_screen.dart';
+import 'package:bmt_app/apps/client/features/profile/domain/entities/legal_document_data.dart';
+import 'package:bmt_app/apps/client/features/profile/presentation/screens/legal_document_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_up_screen.dart';
@@ -65,6 +66,7 @@ import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/sea
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
+import 'package:bmt_app/apps/client/core/theme/client_theme_store.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/screens/client_splash_gate.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_state.dart';
@@ -86,15 +88,27 @@ class ClientApp extends StatefulWidget {
 class _ClientAppState extends State<ClientApp> {
   ThemeMode _themeMode = ThemeMode.system;
   final _navigatorKey = GlobalKey<NavigatorState>();
+  final _themeStore = ClientThemeStore();
   StreamSubscription<AuthState>? _authSub;
 
-  void _setThemeMode(ThemeMode mode) => setState(() => _themeMode = mode);
+  void _setThemeMode(ThemeMode mode) {
+    if (mode == _themeMode) return;
+    setState(() => _themeMode = mode);
+    _themeStore.write(mode);
+  }
 
   @override
   void initState() {
     super.initState();
     registerClientDependencies();
+    _restoreThemeMode();
     _listenAuth();
+  }
+
+  Future<void> _restoreThemeMode() async {
+    final stored = await _themeStore.read();
+    if (!mounted || stored == _themeMode) return;
+    setState(() => _themeMode = stored);
   }
 
   void _listenAuth() {
@@ -368,7 +382,13 @@ class _ClientAppState extends State<ClientApp> {
                 '/rewards': (_) =>
                     _buildReferralRewardsScope(const ReferralRewardsScreen()),
                 '/loyalty': (_) => _buildLoyaltyScope(const LoyaltyScreen()),
-                '/settings': (_) => _buildSettingsScope(const SettingsScreen()),
+
+                // Legal. Reachable from the profile hub; both documents share
+                // one screen and differ only by which document they render.
+                ClientRoutes.terms: (_) =>
+                    const LegalDocumentScreen(document: LegalDocument.terms),
+                ClientRoutes.privacy: (_) =>
+                    const LegalDocumentScreen(document: LegalDocument.privacy),
 
                 '/profile': (context) => _buildProfileScope(
                   ProfileScreen(
@@ -573,13 +593,6 @@ class _ClientAppState extends State<ClientApp> {
   Widget _buildLoyaltyScope(Widget child) {
     return BlocProvider<LoyaltyCubit>(
       create: (_) => clientGetIt<LoyaltyCubit>(),
-      child: child,
-    );
-  }
-
-  Widget _buildSettingsScope(Widget child) {
-    return BlocProvider<SettingsCubit>(
-      create: (_) => clientGetIt<SettingsCubit>(),
       child: child,
     );
   }

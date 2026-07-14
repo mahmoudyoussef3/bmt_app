@@ -1,4 +1,7 @@
+import 'reviewable_trip.dart';
 import 'trip_seat.dart';
+
+export 'reviewable_trip.dart';
 
 enum TripStatus { upcoming, inProgress, completed, cancelled }
 
@@ -50,6 +53,7 @@ class TripData {
     this.seatMap = const [],
     this.cancellationReason,
     this.completedAt,
+    this.isReviewed = false,
   });
 
   final String id;
@@ -90,7 +94,21 @@ class TripData {
   final String? cancellationReason;
   final String? completedAt;
 
+  /// True once this booking carries a stored review. A passenger rates a trip
+  /// once, so a rated trip must stop asking to be rated.
+  final bool isReviewed;
+
   String get routeLine => '$pickup → $destination';
+
+  /// The slice of this trip the review flow actually needs.
+  ReviewableTrip get reviewable => ReviewableTrip(
+    bookingId: id,
+    isCompleted: status == TripStatus.completed,
+    reference: reference,
+    driverName: driverName,
+    vehicleName: vehicleName,
+    routeLine: routeLine,
+  );
 
   bool get hasSeatMap => seatMap.isNotEmpty;
 
@@ -130,6 +148,25 @@ class TripData {
     return paymentStatus == PaymentStatus.pending ||
         paymentStatus == PaymentStatus.underReview;
   }
+
+  /// A completed or cancelled trip is a record of a journey, not a journey.
+  bool get isFinished =>
+      status == TripStatus.completed || status == TripStatus.cancelled;
+
+  /// Calling or messaging the captain only makes sense while the journey is
+  /// still ahead of the passenger or under way. Once it is finished there is no
+  /// captain on duty for this booking to reach.
+  bool get canContactDriver => !isFinished;
+
+  /// The vehicle must stay untrackable until this booking's own payment is
+  /// approved — a trip can be in progress for other passengers while this
+  /// client's payment is still under review — and there is nothing left to
+  /// follow on a map once the trip has ended.
+  bool get canBeTracked =>
+      status == TripStatus.inProgress && paymentStatus == PaymentStatus.paid;
+
+  /// Rating is offered on a completed trip the passenger has not rated yet.
+  bool get canBeReviewed => status == TripStatus.completed && !isReviewed;
 
   String get statusLabel {
     return switch (status) {

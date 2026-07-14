@@ -1,134 +1,93 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/client_profile_model.dart';
 import 'profile_datasource.dart';
+import 'profile_queries.dart';
 
 class SupabaseProfileDatasource implements ProfileDatasource {
+  SupabaseProfileDatasource(this._supabase)
+    : _queries = ProfileQueries(_supabase);
+
   final SupabaseClient _supabase;
+  final ProfileQueries _queries;
 
-  const SupabaseProfileDatasource(this._supabase);
+  @override
+  Future<ClientProfileModel> getProfile() async {
+    final user = _requireUser();
+    final today = DateTime.now().toIso8601String().split('T').first;
 
-  String _getInitials(String name) {
-    if (name.isEmpty) return 'U';
-    final parts = name.trim().split(RegExp(r'\s+'));
-    if (parts.length > 1) {
-      return '${parts[0][0]}${parts[1][0]}'.toUpperCase();
-    }
-    return parts[0][0].toUpperCase();
+    // The four reads are independent, so they go out together rather than
+    // stacking four round-trips on a screen the rider is already looking at.
+    final results = await Future.wait([
+      _queries.clientRow(user.id),
+      _queries.activePackageRow(user.id),
+      _queries.bookingCount(
+        user.id,
+        statuses: ProfileQueries.completedStatuses,
+      ),
+      _queries.bookingCount(
+        user.id,
+        statuses: ProfileQueries.liveStatuses,
+        fromDate: today,
+      ),
+    ]);
+
+    return ClientProfileModel.fromRow(
+      results[0] as Map<String, dynamic>?,
+      userId: user.id,
+      fallbackEmail: user.email,
+      packageRow: results[1] as Map<String, dynamic>?,
+      completedTrips: results[2] as int,
+      upcomingTrips: results[3] as int,
+    );
   }
 
   @override
-  Future<ClientProfileDataModel> getProfileData() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) throw Exception('User is not authenticated');
+  Future<ClientProfileModel> updateProfile({
+    required String name,
+    required String email,
+    required String phone,
+  }) async {
+    final user = _requireUser();
 
-    // Fetch profile and loyalty account in parallel.
-    final profileFuture = _supabase
-        .from('clients')
-        .select()
-        .eq('id', user.id)
-        .limit(1)
-        .maybeSingle();
-    final accountFuture = _supabase
-        .from('loyalty_accounts')
-        .select()
-        .eq('client_id', user.id)
-        .maybeSingle();
-
-    final profileResponse = await profileFuture;
-    final accountResponse = await accountFuture;
-
-    final name = profileResponse?['full_name']?.toString() ?? 'Unknown User';
-    final email =
-        profileResponse?['email']?.toString() ?? user.email ?? 'No email';
-    final initials = _getInitials(name);
-
-    final points = accountResponse?['points'] as int? ?? 0;
-    final walletBalance = accountResponse?['wallet_balance'] as int? ?? 0;
-
-    final walletSubtitle = walletBalance > 0
-        ? 'EGP $walletBalance.00 available'
-        : 'View wallet & balance';
-
-    final rewardsSubtitle = points > 0
-        ? '$points points · Refer friends'
-        : 'Earn points & refer friends';
-
-    return ClientProfileDataModel(
-      profile: ClientProfileModel(
-        initials: initials,
+    try {
+      await _queries.updateClientRow(
+        user.id,
         name: name,
         email: email,
-        badge: 'Premium',
-      ),
-      sections: [
-        const ProfileMenuSectionModel(
-          title: 'Travel',
-          items: [
-            ProfileMenuItemModel(
-              iconKey: 'trips',
-              title: 'My trips',
-              subtitle: 'Upcoming, active & history',
-              route: '/trips',
-            ),
-          ],
-        ),
-        ProfileMenuSectionModel(
-          title: 'Wallet & rewards',
-          items: [
-            ProfileMenuItemModel(
-              iconKey: 'wallet',
-              title: 'Wallet',
-              subtitle: walletSubtitle,
-              route: '/loyalty',
-            ),
-            ProfileMenuItemModel(
-              iconKey: 'rewards',
-              title: 'Rewards',
-              subtitle: rewardsSubtitle,
-              route: '/rewards',
-            ),
-            const ProfileMenuItemModel(
-              iconKey: 'loyalty',
-              title: 'Loyalty',
-              subtitle: 'Tier benefits & perks',
-              route: '/loyalty',
-            ),
-          ],
-        ),
-        const ProfileMenuSectionModel(
-          title: 'Support',
-          items: [
-            ProfileMenuItemModel(
-              iconKey: 'support',
-              title: 'Help center',
-              subtitle: 'FAQs, chat & tickets',
-              route: '/support',
-            ),
-            ProfileMenuItemModel(
-              iconKey: 'messages',
-              title: 'Messages',
-              subtitle: 'Driver & support chat',
-              route: '/communication',
-            ),
-          ],
-        ),
-        const ProfileMenuSectionModel(
-          title: 'Settings & legal',
-          items: [
-            ProfileMenuItemModel(
-              iconKey: 'settings',
-              title: 'Settings',
-              subtitle: 'Preferences & security',
-              route: '/settings',
-            ),
-            ProfileMenuItemModel(
-              iconKey: 'terms',
-              title: 'Terms & privacy',
-              subtitle: 'Legal information',
-            ),
-          ],
-        ),
-      ],
-    );
+        phone: phone,
+      );
+    } on PostgrestException catch (error) {
+      // 23505 is a unique-constraint violation: this phone or email already
+      // belongs to another rider. That is theirs to fix, so it must reach them
+      // as such rather than as a generic failure.
+      if (error.code == '23505') {
+        throw Exception(
+          'That phone number or email is already used by another account.',
+        );
+      }
+      throw Exception('We could not save your details. Please try again.');
+    }
+
+    // Keep the auth identity in step with the profile row: the session's
+    // metadata is what greets the rider before the row is fetched.
+    try {
+      await _supabase.auth.updateUser(
+        UserAttributes(data: {'full_name': name, 'phone': phone}),
+      );
+    } catch (_) {
+      // Best-effort. The clients row — the hub's source of truth — is already
+      // saved, so a metadata hiccup must not fail the edit.
+    }
+
+    return getProfile();
+  }
+
+  User _requireUser() {
+    final user = _supabase.auth.currentUser;
+    if (user == null) {
+      throw Exception('Please sign in to view your profile.');
+    }
+    return user;
   }
 }

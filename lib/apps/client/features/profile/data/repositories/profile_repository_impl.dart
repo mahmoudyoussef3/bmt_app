@@ -8,8 +8,22 @@ class ProfileRepositoryImpl implements ProfileRepository {
   final ProfileDatasource _datasource;
 
   @override
-  Future<ClientProfileData> getProfileData() async {
-    final data = await _datasource.getProfileData();
-    return data.toEntity();
+  Future<ClientProfile> getProfile() async {
+    final model = await _datasource.getProfile();
+    return model.toEntity();
+  }
+
+  @override
+  Future<ClientProfile> updateProfile({
+    required String name,
+    required String email,
+    required String phone,
+  }) async {
+    final model = await _datasource.updateProfile(
+      name: name,
+      email: email,
+      phone: phone,
+    );
+    return model.toEntity();
   }
 }

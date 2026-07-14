@@ -302,5 +302,190 @@
   "referral_pending": "قيد الانتظار",
   "referral_leaderboardTitle": "أفضل المُحيلين",
   "referral_leaderboardEmpty": "كن أول من يتصدّر القائمة.",
-  "referral_you": "أنت"
+  "referral_you": "أنت",
+
+  "tracking_title": "تتبع رحلتك",
+  "tracking_loading": "جاري تحميل رحلتك…",
+  "tracking_refresh": "تحديث",
+  "tracking_errorTitle": "تعذّر تحميل بيانات التتبع",
+  "tracking_emptyTitle": "لا توجد رحلة لتتبعها",
+  "tracking_emptyBody": "يظهر التتبع المباشر هنا بمجرد تأكيد أحد حجوزاتك.",
+  "tracking_emptyAction": "تصفّح الرحلات",
+
+  "tracking_stateNotStarted": "لم تبدأ رحلتك بعد",
+  "tracking_stateDriverOnWay": "الكابتن في الطريق",
+  "tracking_stateBoarding": "جاري صعود الركاب",
+  "tracking_stateInProgress": "الرحلة جارية",
+  "tracking_stateCompleted": "اكتملت الرحلة",
+
+  "tracking_signalLive": "مباشر",
+  "tracking_signalStale": "الإشارة متأخرة",
+  "tracking_signalNone": "في انتظار إشارة الكابتن",
+  "tracking_signalOffRoute": "خارج المسار",
+  "tracking_updatedJustNow": "الآن",
+  "tracking_updatedMinutesAgo": "منذ {minutes} دقيقة",
+  "@tracking_updatedMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "tracking_etaToYourStop": "يصل إلى محطتك",
+  "tracking_etaToDestination": "تصل إلى وجهتك",
+  "tracking_etaNow": "الآن",
+  "tracking_etaUnavailable": "غير متاح بعد",
+  "tracking_etaMinutes": "{minutes} دقيقة",
+  "@tracking_etaMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "tracking_etaHoursMinutes": "{hours} س {minutes} د",
+  "@tracking_etaHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "tracking_sourceLive": "من الموقع المباشر",
+  "tracking_sourceEstimated": "تقدير",
+  "tracking_sourceScheduled": "حسب الجدول",
+  "tracking_departsAt": "الانطلاق {time}",
+  "@tracking_departsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tracking_stopsRemaining": "{count, plural, =0{لا محطات متبقية} =1{محطة واحدة متبقية} =2{محطتان متبقيتان} other{{count} محطات متبقية}}",
+  "@tracking_stopsRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "tracking_yourBooking": "حجزك",
+  "tracking_seat": "مقعد {label}",
+  "@tracking_seat": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tracking_boarded": "تم صعودك",
+  "tracking_notBoarded": "لم يتم صعودك بعد",
+  "tracking_boardAt": "تصعد من",
+  "tracking_alightAt": "تنزل في",
+
+  "tracking_stopsTitle": "محطات الرحلة",
+  "tracking_yourStopBadge": "محطتك",
+  "tracking_yourDropoffBadge": "محطة نزولك",
+  "tracking_stopDeparted": "غادرت",
+  "tracking_stopArrived": "عند المحطة",
+  "tracking_stopNext": "التالية",
+
+  "tracking_captain": "الكابتن",
+  "tracking_vehicle": "المركبة",
+  "tracking_call": "اتصال",
+  "tracking_noRating": "لا توجد تقييمات بعد",
+  "tracking_ratingWithCount": "{rating} ({count})",
+  "@tracking_ratingWithCount": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tracking_noPhone": "رقم الكابتن غير متاح",
+
+  "tracking_completedTitle": "وصلت بأمان",
+  "tracking_completedBody": "نتمنى أن تكون رحلتك كانت مريحة.",
+  "tracking_rateTrip": "قيّم هذه الرحلة",
+  "tracking_alreadyReviewed": "شكراً لك — لقد قيّمت هذه الرحلة بالفعل.",
+  "tracking_bookAgain": "احجز رحلة أخرى",
+
+  "tracking_mapUnavailableTitle": "لا تتوفر بيانات الخريطة",
+  "tracking_mapUnavailableBody": "لم يتم العثور على إحداثيات لمسار هذه الرحلة.",
+  "tracking_recenter": "توسيط المسار",
+  "tracking_followVehicle": "تتبع المركبة",
+
+  "profile_title": "حسابي",
+  "profile_memberSince": "عضو منذ {date}",
+  "profile_guestName": "حسابك",
+  "profile_noEmail": "لم يتم إضافة بريد إلكتروني",
+  "profile_completeTitle": "أكمل بيانات حسابك",
+  "profile_completeBody": "أضف بياناتك الناقصة حتى يتمكن الكابتن وخدمة العملاء من التواصل معك.",
+  "profile_completeAction": "أكمل الآن",
+
+  "profile_statTrips": "رحلات تمت",
+  "profile_statUpcoming": "رحلات قادمة",
+  "profile_statPackage": "الاشتراك",
+  "profile_packageNone": "لا يوجد",
+  "profile_packageActive": "نشط",
+  "profile_packageExpiringSoon": "اشتراك {name} على خط {route} ينتهي خلال {days} أيام.",
+  "profile_packageRenew": "تجديد",
+
+  "profile_sectionAccount": "الحساب",
+  "profile_sectionPreferences": "التفضيلات",
+  "profile_sectionSupport": "الدعم",
+  "profile_sectionLegal": "القانونية",
+
+  "profile_editProfile": "البيانات الشخصية",
+  "profile_editProfileSubtitle": "الاسم ورقم الهاتف والبريد الإلكتروني",
+  "profile_subscription": "اشتراكي",
+  "profile_subscriptionSubtitle": "الباقات والتجديد والفواتير",
+  "profile_myTrips": "رحلاتي",
+  "profile_myTripsSubtitle": "الرحلات القادمة والحالية والسابقة",
+
+  "profile_language": "اللغة",
+  "profile_languageEnglish": "English",
+  "profile_languageArabic": "العربية",
+  "profile_selectLanguage": "اختر اللغة",
+  "profile_selectLanguageBody": "يتم تغيير لغة التطبيق واتجاه الواجهة فوراً.",
+
+  "profile_theme": "المظهر",
+  "profile_themeSystem": "حسب النظام",
+  "profile_themeLight": "فاتح",
+  "profile_themeDark": "داكن",
+  "profile_selectTheme": "اختر المظهر",
+  "profile_selectThemeBody": "خيار النظام يتبع إعدادات جهازك.",
+  "profile_themeLightBody": "الأنسب في ضوء النهار",
+  "profile_themeDarkBody": "أراح للعين ليلاً",
+
+  "profile_helpCenter": "مركز المساعدة",
+  "profile_helpCenterSubtitle": "الأسئلة الشائعة والتذاكر والاسترداد",
+  "profile_terms": "الشروط والأحكام",
+  "profile_privacy": "سياسة الخصوصية",
+  "profile_lastUpdated": "آخر تحديث {date}",
+  "profile_editTitle": "البيانات الشخصية",
+  "profile_editBody": "يستخدم الكابتن هذه البيانات للتواصل معك بخصوص رحلتك.",
+  "profile_fieldName": "الاسم بالكامل",
+  "profile_fieldPhone": "رقم الهاتف",
+  "profile_fieldEmail": "البريد الإلكتروني",
+  "profile_errorRequired": "هذا الحقل مطلوب",
+  "profile_errorNameTooShort": "أدخل اسمك بالكامل",
+  "profile_errorInvalidPhone": "أدخل رقم موبايل مصري صحيح",
+  "profile_errorInvalidEmail": "أدخل بريداً إلكترونياً صحيحاً",
+  "profile_saved": "تم حفظ بياناتك",
+
+  "profile_logout": "تسجيل الخروج",
+  "profile_logoutTitle": "تسجيل الخروج؟",
+  "profile_logoutBody": "ستحتاج إلى تسجيل الدخول مرة أخرى لحجز أو تتبع أي رحلة.",
+  "profile_logoutFailed": "تعذر تسجيل الخروج. من فضلك حاول مرة أخرى.",
+  "profile_refreshFailed": "تعذر تحديث بيانات حسابك."
 }

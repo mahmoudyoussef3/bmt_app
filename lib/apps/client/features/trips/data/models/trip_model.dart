@@ -25,6 +25,7 @@ class TripModel {
     this.seatMap = const [],
     this.cancellationReason,
     this.completedAt,
+    this.isReviewed = false,
   });
 
   final String id;
@@ -49,6 +50,7 @@ class TripModel {
   final String fare;
   final String? cancellationReason;
   final String? completedAt;
+  final bool isReviewed;
 
   TripData toEntity() {
     return TripData(
@@ -74,6 +76,7 @@ class TripModel {
       fare: fare,
       cancellationReason: cancellationReason,
       completedAt: completedAt,
+      isReviewed: isReviewed,
     );
   }
 }

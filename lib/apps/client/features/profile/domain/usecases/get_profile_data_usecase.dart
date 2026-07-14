@@ -6,7 +6,5 @@ class GetProfileDataUseCase {
 
   final ProfileRepository _repository;
 
-  Future<ClientProfileData> call() {
-    return _repository.getProfileData();
-  }
+  Future<ClientProfile> call() => _repository.getProfile();
 }

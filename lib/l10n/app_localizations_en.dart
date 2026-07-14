@@ -936,4 +936,379 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get referral_you => 'You';
+
+  @override
+  String get tracking_title => 'Track your trip';
+
+  @override
+  String get tracking_loading => 'Loading your trip…';
+
+  @override
+  String get tracking_refresh => 'Refresh';
+
+  @override
+  String get tracking_errorTitle => 'We couldn\'t load your tracking';
+
+  @override
+  String get tracking_emptyTitle => 'No trip to track';
+
+  @override
+  String get tracking_emptyBody =>
+      'Live tracking appears here once a booking of yours is confirmed.';
+
+  @override
+  String get tracking_emptyAction => 'Browse trips';
+
+  @override
+  String get tracking_stateNotStarted => 'Your trip hasn\'t started yet';
+
+  @override
+  String get tracking_stateDriverOnWay => 'The captain is on the way';
+
+  @override
+  String get tracking_stateBoarding => 'Boarding now';
+
+  @override
+  String get tracking_stateInProgress => 'On the road';
+
+  @override
+  String get tracking_stateCompleted => 'Trip completed';
+
+  @override
+  String get tracking_signalLive => 'Live';
+
+  @override
+  String get tracking_signalStale => 'Signal delayed';
+
+  @override
+  String get tracking_signalNone => 'Waiting for the captain\'s signal';
+
+  @override
+  String get tracking_signalOffRoute => 'Off route';
+
+  @override
+  String get tracking_updatedJustNow => 'just now';
+
+  @override
+  String tracking_updatedMinutesAgo(int minutes) {
+    return '$minutes min ago';
+  }
+
+  @override
+  String get tracking_etaToYourStop => 'Arrives at your stop';
+
+  @override
+  String get tracking_etaToDestination => 'You arrive at';
+
+  @override
+  String get tracking_etaNow => 'Now';
+
+  @override
+  String get tracking_etaUnavailable => 'Not available yet';
+
+  @override
+  String tracking_etaMinutes(int minutes) {
+    return '$minutes min';
+  }
+
+  @override
+  String tracking_etaHoursMinutes(int hours, int minutes) {
+    return '$hours h $minutes min';
+  }
+
+  @override
+  String get tracking_sourceLive => 'From live GPS';
+
+  @override
+  String get tracking_sourceEstimated => 'Estimated';
+
+  @override
+  String get tracking_sourceScheduled => 'From the schedule';
+
+  @override
+  String tracking_departsAt(String time) {
+    return 'Departs at $time';
+  }
+
+  @override
+  String tracking_stopsRemaining(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stops left',
+      one: '1 stop left',
+      zero: 'No stops left',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tracking_yourBooking => 'Your booking';
+
+  @override
+  String tracking_seat(String label) {
+    return 'Seat $label';
+  }
+
+  @override
+  String get tracking_boarded => 'You\'re on board';
+
+  @override
+  String get tracking_notBoarded => 'Not boarded yet';
+
+  @override
+  String get tracking_boardAt => 'Board at';
+
+  @override
+  String get tracking_alightAt => 'Get off at';
+
+  @override
+  String get tracking_stopsTitle => 'Trip stops';
+
+  @override
+  String get tracking_yourStopBadge => 'Your stop';
+
+  @override
+  String get tracking_yourDropoffBadge => 'Your drop-off';
+
+  @override
+  String get tracking_stopDeparted => 'Departed';
+
+  @override
+  String get tracking_stopArrived => 'At the stop';
+
+  @override
+  String get tracking_stopNext => 'Next';
+
+  @override
+  String get tracking_captain => 'Captain';
+
+  @override
+  String get tracking_vehicle => 'Vehicle';
+
+  @override
+  String get tracking_call => 'Call';
+
+  @override
+  String get tracking_noRating => 'No ratings yet';
+
+  @override
+  String tracking_ratingWithCount(String rating, int count) {
+    return '$rating ($count)';
+  }
+
+  @override
+  String get tracking_noPhone => 'The captain\'s number isn\'t available';
+
+  @override
+  String get tracking_completedTitle => 'You arrived safely';
+
+  @override
+  String get tracking_completedBody => 'We hope the ride was comfortable.';
+
+  @override
+  String get tracking_rateTrip => 'Rate this trip';
+
+  @override
+  String get tracking_alreadyReviewed =>
+      'Thanks — you\'ve already rated this trip.';
+
+  @override
+  String get tracking_bookAgain => 'Book another trip';
+
+  @override
+  String get tracking_mapUnavailableTitle => 'Map data unavailable';
+
+  @override
+  String get tracking_mapUnavailableBody =>
+      'No route coordinates were found for this trip.';
+
+  @override
+  String get tracking_recenter => 'Recenter';
+
+  @override
+  String get tracking_followVehicle => 'Follow the vehicle';
+
+  @override
+  String get profile_title => 'Profile';
+
+  @override
+  String profile_memberSince(String date) {
+    return 'Member since $date';
+  }
+
+  @override
+  String get profile_guestName => 'Your account';
+
+  @override
+  String get profile_noEmail => 'No email added';
+
+  @override
+  String get profile_completeTitle => 'Finish setting up your account';
+
+  @override
+  String get profile_completeBody =>
+      'Add your missing details so your captain and support can reach you.';
+
+  @override
+  String get profile_completeAction => 'Complete now';
+
+  @override
+  String get profile_statTrips => 'Trips taken';
+
+  @override
+  String get profile_statUpcoming => 'Upcoming';
+
+  @override
+  String get profile_statPackage => 'Package';
+
+  @override
+  String get profile_packageNone => 'None';
+
+  @override
+  String get profile_packageActive => 'Active';
+
+  @override
+  String profile_packageExpiringSoon(String name, String route, int days) {
+    return 'Your $name package on $route ends in $days days.';
+  }
+
+  @override
+  String get profile_packageRenew => 'Renew';
+
+  @override
+  String get profile_sectionAccount => 'Account';
+
+  @override
+  String get profile_sectionPreferences => 'Preferences';
+
+  @override
+  String get profile_sectionSupport => 'Support';
+
+  @override
+  String get profile_sectionLegal => 'Legal';
+
+  @override
+  String get profile_editProfile => 'Personal details';
+
+  @override
+  String get profile_editProfileSubtitle => 'Name, phone and email';
+
+  @override
+  String get profile_subscription => 'My package';
+
+  @override
+  String get profile_subscriptionSubtitle => 'Plans, renewals and billing';
+
+  @override
+  String get profile_myTrips => 'My trips';
+
+  @override
+  String get profile_myTripsSubtitle => 'Upcoming, active and past trips';
+
+  @override
+  String get profile_language => 'Language';
+
+  @override
+  String get profile_languageEnglish => 'English';
+
+  @override
+  String get profile_languageArabic => 'العربية';
+
+  @override
+  String get profile_selectLanguage => 'Choose a language';
+
+  @override
+  String get profile_selectLanguageBody =>
+      'The app switches immediately, including the layout direction.';
+
+  @override
+  String get profile_theme => 'Appearance';
+
+  @override
+  String get profile_themeSystem => 'System';
+
+  @override
+  String get profile_themeLight => 'Light';
+
+  @override
+  String get profile_themeDark => 'Dark';
+
+  @override
+  String get profile_selectTheme => 'Choose an appearance';
+
+  @override
+  String get profile_selectThemeBody => 'System follows your device setting.';
+
+  @override
+  String get profile_themeLightBody => 'Best in daylight';
+
+  @override
+  String get profile_themeDarkBody => 'Easier on the eyes at night';
+
+  @override
+  String get profile_helpCenter => 'Help centre';
+
+  @override
+  String get profile_helpCenterSubtitle => 'FAQs, tickets and refunds';
+
+  @override
+  String get profile_terms => 'Terms & conditions';
+
+  @override
+  String get profile_privacy => 'Privacy policy';
+
+  @override
+  String profile_lastUpdated(String date) {
+    return 'Last updated $date';
+  }
+
+  @override
+  String get profile_editTitle => 'Personal details';
+
+  @override
+  String get profile_editBody =>
+      'Your captain uses these details to reach you about a trip.';
+
+  @override
+  String get profile_fieldName => 'Full name';
+
+  @override
+  String get profile_fieldPhone => 'Phone number';
+
+  @override
+  String get profile_fieldEmail => 'Email address';
+
+  @override
+  String get profile_errorRequired => 'This field is required';
+
+  @override
+  String get profile_errorNameTooShort => 'Enter your full name';
+
+  @override
+  String get profile_errorInvalidPhone =>
+      'Enter a valid Egyptian mobile number';
+
+  @override
+  String get profile_errorInvalidEmail => 'Enter a valid email address';
+
+  @override
+  String get profile_saved => 'Your details were saved';
+
+  @override
+  String get profile_logout => 'Log out';
+
+  @override
+  String get profile_logoutTitle => 'Log out?';
+
+  @override
+  String get profile_logoutBody =>
+      'You\'ll need to sign in again to book or track a trip.';
+
+  @override
+  String get profile_logoutFailed =>
+      'We couldn\'t log you out. Please try again.';
+
+  @override
+  String get profile_refreshFailed => 'We couldn\'t refresh your profile.';
 }

@@ -56,7 +56,7 @@ void main() {
     test('opens an empty form when the trip has not been reviewed', () async {
       final cubit = _cubit(_FakeTripReviewsRepository());
 
-      await cubit.load(_trip());
+      await cubit.load(_trip().reviewable);
 
       final state = cubit.state as TripReviewEditing;
       expect(state.draft.driverRating, 0);
@@ -77,7 +77,7 @@ void main() {
       );
       final cubit = _cubit(_FakeTripReviewsRepository(existing: existing));
 
-      await cubit.load(_trip());
+      await cubit.load(_trip().reviewable);
 
       final state = cubit.state as TripReviewSubmitted;
       expect(state.review.driverRating, 5);
@@ -89,7 +89,7 @@ void main() {
     test('is refused until all three ratings are set', () async {
       final repo = _FakeTripReviewsRepository();
       final cubit = _cubit(repo);
-      await cubit.load(_trip());
+      await cubit.load(_trip().reviewable);
 
       cubit.rateDriver(5);
       cubit.rateVehicle(4);
@@ -105,7 +105,7 @@ void main() {
     test('stores the review once every rating is given', () async {
       final repo = _FakeTripReviewsRepository();
       final cubit = _cubit(repo);
-      await cubit.load(_trip());
+      await cubit.load(_trip().reviewable);
 
       cubit.rateDriver(5);
       cubit.rateVehicle(4);
@@ -123,7 +123,7 @@ void main() {
     test('keeps the ratings on screen when the submit fails', () async {
       final repo = _FakeTripReviewsRepository(submitFails: true);
       final cubit = _cubit(repo);
-      await cubit.load(_trip());
+      await cubit.load(_trip().reviewable);
 
       cubit.rateDriver(5);
       cubit.rateVehicle(5);
@@ -141,7 +141,7 @@ void main() {
     test('refuses to review a trip that has not been completed', () async {
       final repo = _FakeTripReviewsRepository();
       final cubit = _cubit(repo);
-      await cubit.load(_trip(status: TripStatus.upcoming));
+      await cubit.load(_trip(status: TripStatus.upcoming).reviewable);
 
       cubit.rateDriver(5);
       cubit.rateVehicle(5);

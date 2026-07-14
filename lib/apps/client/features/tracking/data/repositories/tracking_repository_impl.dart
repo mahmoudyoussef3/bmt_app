@@ -2,7 +2,7 @@ import 'dart:async';
 
 import '../../domain/entities/tracking_trip.dart';
 import '../../domain/repositories/tracking_repository.dart';
-import '../datasources/supabase_tracking_datasource.dart';
+import '../datasources/tracking_datasource.dart';
 
 class TrackingRepositoryImpl implements TrackingRepository {
   const TrackingRepositoryImpl(this._datasource);
@@ -13,20 +13,13 @@ class TrackingRepositoryImpl implements TrackingRepository {
   Future<TrackingTripData> getTrackingTrip({
     String? bookingId,
     String? tripId,
-  }) async {
-    final model = await _datasource.getTrackingTrip(
-      bookingId: bookingId,
-      tripId: tripId,
-    );
-    return model.toEntity();
+  }) {
+    return _datasource.getTrackingTrip(bookingId: bookingId, tripId: tripId);
   }
 
   @override
-  Stream<TrackingPoint> watchVehiclePosition(String tripId) {
-    return _datasource
-        .watchVehiclePosition(tripId)
-        .map((model) => model.toEntity());
-  }
+  Stream<TrackingPoint> watchVehiclePosition(String tripId) =>
+      _datasource.watchVehiclePosition(tripId);
 
   @override
   Stream<void> watchTripChanges(String tripId) =>

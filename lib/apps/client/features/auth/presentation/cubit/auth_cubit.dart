@@ -71,11 +71,28 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
     }
   }
 
+  /// Ends the session. The UI waits on [ClientAuthState.signOutStatus] before
+  /// it resets the navigation stack, so the rider is never dropped on the
+  /// welcome screen while they are in fact still signed in.
   Future<void> signOut() async {
+    if (state.signOutStatus == AuthSubmissionStatus.loading) return;
+
+    emit(
+      state.copyWith(
+        signOutStatus: AuthSubmissionStatus.loading,
+        clearSignOutError: true,
+      ),
+    );
     try {
       await _signOut();
+      emit(state.copyWith(signOutStatus: AuthSubmissionStatus.success));
     } catch (error) {
-      // Typically sign out doesn't fail, but we could log it.
+      emit(
+        state.copyWith(
+          signOutStatus: AuthSubmissionStatus.failure,
+          signOutError: _messageFor(error),
+        ),
+      );
     }
   }
 

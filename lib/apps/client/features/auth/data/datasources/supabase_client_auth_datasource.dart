@@ -113,7 +113,15 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
 
   @override
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
+    try {
+      await _supabase.auth.signOut();
+    } catch (_) {
+      // A global sign-out needs the network to revoke the refresh token. When
+      // that call fails the rider is still holding a valid local session, so
+      // fall back to a local sign-out: leaving them signed in on a device they
+      // asked to sign out of is the worse outcome.
+      await _supabase.auth.signOut(scope: SignOutScope.local);
+    }
   }
 
   @override

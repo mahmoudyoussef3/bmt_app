@@ -424,5 +424,217 @@
   "referral_pending": "Pending",
   "referral_leaderboardTitle": "Top referrers",
   "referral_leaderboardEmpty": "Be the first to climb the leaderboard.",
-  "referral_you": "You"
+  "referral_you": "You",
+
+  "tracking_title": "Track your trip",
+  "tracking_loading": "Loading your trip…",
+  "tracking_refresh": "Refresh",
+  "tracking_errorTitle": "We couldn't load your tracking",
+  "tracking_emptyTitle": "No trip to track",
+  "tracking_emptyBody": "Live tracking appears here once a booking of yours is confirmed.",
+  "tracking_emptyAction": "Browse trips",
+
+  "tracking_stateNotStarted": "Your trip hasn't started yet",
+  "tracking_stateDriverOnWay": "The captain is on the way",
+  "tracking_stateBoarding": "Boarding now",
+  "tracking_stateInProgress": "On the road",
+  "tracking_stateCompleted": "Trip completed",
+
+  "tracking_signalLive": "Live",
+  "tracking_signalStale": "Signal delayed",
+  "tracking_signalNone": "Waiting for the captain's signal",
+  "tracking_signalOffRoute": "Off route",
+  "tracking_updatedJustNow": "just now",
+  "tracking_updatedMinutesAgo": "{minutes} min ago",
+  "@tracking_updatedMinutesAgo": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+
+  "tracking_etaToYourStop": "Arrives at your stop",
+  "tracking_etaToDestination": "You arrive at",
+  "tracking_etaNow": "Now",
+  "tracking_etaUnavailable": "Not available yet",
+  "tracking_etaMinutes": "{minutes} min",
+  "@tracking_etaMinutes": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "tracking_etaHoursMinutes": "{hours} h {minutes} min",
+  "@tracking_etaHoursMinutes": {
+    "placeholders": {
+      "hours": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      }
+    }
+  },
+  "tracking_sourceLive": "From live GPS",
+  "tracking_sourceEstimated": "Estimated",
+  "tracking_sourceScheduled": "From the schedule",
+  "tracking_departsAt": "Departs at {time}",
+  "@tracking_departsAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "tracking_stopsRemaining": "{count, plural, =0{No stops left} =1{1 stop left} other{{count} stops left}}",
+  "@tracking_stopsRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+
+  "tracking_yourBooking": "Your booking",
+  "tracking_seat": "Seat {label}",
+  "@tracking_seat": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "tracking_boarded": "You're on board",
+  "tracking_notBoarded": "Not boarded yet",
+  "tracking_boardAt": "Board at",
+  "tracking_alightAt": "Get off at",
+
+  "tracking_stopsTitle": "Trip stops",
+  "tracking_yourStopBadge": "Your stop",
+  "tracking_yourDropoffBadge": "Your drop-off",
+  "tracking_stopDeparted": "Departed",
+  "tracking_stopArrived": "At the stop",
+  "tracking_stopNext": "Next",
+
+  "tracking_captain": "Captain",
+  "tracking_vehicle": "Vehicle",
+  "tracking_call": "Call",
+  "tracking_noRating": "No ratings yet",
+  "tracking_ratingWithCount": "{rating} ({count})",
+  "@tracking_ratingWithCount": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "tracking_noPhone": "The captain's number isn't available",
+
+  "tracking_completedTitle": "You arrived safely",
+  "tracking_completedBody": "We hope the ride was comfortable.",
+  "tracking_rateTrip": "Rate this trip",
+  "tracking_alreadyReviewed": "Thanks — you've already rated this trip.",
+  "tracking_bookAgain": "Book another trip",
+
+  "tracking_mapUnavailableTitle": "Map data unavailable",
+  "tracking_mapUnavailableBody": "No route coordinates were found for this trip.",
+  "tracking_recenter": "Recenter",
+  "tracking_followVehicle": "Follow the vehicle",
+
+  "profile_title": "Profile",
+  "profile_memberSince": "Member since {date}",
+  "@profile_memberSince": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_guestName": "Your account",
+  "profile_noEmail": "No email added",
+  "profile_completeTitle": "Finish setting up your account",
+  "profile_completeBody": "Add your missing details so your captain and support can reach you.",
+  "profile_completeAction": "Complete now",
+
+  "profile_statTrips": "Trips taken",
+  "profile_statUpcoming": "Upcoming",
+  "profile_statPackage": "Package",
+  "profile_packageNone": "None",
+  "profile_packageActive": "Active",
+  "profile_packageExpiringSoon": "Your {name} package on {route} ends in {days} days.",
+  "@profile_packageExpiringSoon": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "route": {
+        "type": "String"
+      },
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "profile_packageRenew": "Renew",
+
+  "profile_sectionAccount": "Account",
+  "profile_sectionPreferences": "Preferences",
+  "profile_sectionSupport": "Support",
+  "profile_sectionLegal": "Legal",
+
+  "profile_editProfile": "Personal details",
+  "profile_editProfileSubtitle": "Name, phone and email",
+  "profile_subscription": "My package",
+  "profile_subscriptionSubtitle": "Plans, renewals and billing",
+  "profile_myTrips": "My trips",
+  "profile_myTripsSubtitle": "Upcoming, active and past trips",
+
+  "profile_language": "Language",
+  "profile_languageEnglish": "English",
+  "profile_languageArabic": "العربية",
+  "profile_selectLanguage": "Choose a language",
+  "profile_selectLanguageBody": "The app switches immediately, including the layout direction.",
+
+  "profile_theme": "Appearance",
+  "profile_themeSystem": "System",
+  "profile_themeLight": "Light",
+  "profile_themeDark": "Dark",
+  "profile_selectTheme": "Choose an appearance",
+  "profile_selectThemeBody": "System follows your device setting.",
+  "profile_themeLightBody": "Best in daylight",
+  "profile_themeDarkBody": "Easier on the eyes at night",
+
+  "profile_helpCenter": "Help centre",
+  "profile_helpCenterSubtitle": "FAQs, tickets and refunds",
+  "profile_terms": "Terms & conditions",
+  "profile_privacy": "Privacy policy",
+  "profile_lastUpdated": "Last updated {date}",
+  "@profile_lastUpdated": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "profile_editTitle": "Personal details",
+  "profile_editBody": "Your captain uses these details to reach you about a trip.",
+  "profile_fieldName": "Full name",
+  "profile_fieldPhone": "Phone number",
+  "profile_fieldEmail": "Email address",
+  "profile_errorRequired": "This field is required",
+  "profile_errorNameTooShort": "Enter your full name",
+  "profile_errorInvalidPhone": "Enter a valid Egyptian mobile number",
+  "profile_errorInvalidEmail": "Enter a valid email address",
+  "profile_saved": "Your details were saved",
+
+  "profile_logout": "Log out",
+  "profile_logoutTitle": "Log out?",
+  "profile_logoutBody": "You'll need to sign in again to book or track a trip.",
+  "profile_logoutFailed": "We couldn't log you out. Please try again.",
+  "profile_refreshFailed": "We couldn't refresh your profile."
 }

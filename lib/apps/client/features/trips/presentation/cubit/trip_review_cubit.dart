@@ -1,6 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/entities/trip.dart';
+import '../../domain/entities/reviewable_trip.dart';
 import '../../domain/entities/trip_review.dart';
 import '../../domain/usecases/get_trip_review_usecase.dart';
 import '../../domain/usecases/submit_trip_review_usecase.dart';
@@ -17,21 +17,21 @@ class TripReviewCubit extends Cubit<TripReviewState> {
   final GetTripReviewUseCase _getReview;
   final SubmitTripReviewUseCase _submitReview;
 
-  TripData? _trip;
+  ReviewableTrip? _trip;
 
   /// Opens the sheet on the right state: the passenger's existing review if
   /// they already left one, otherwise an empty form.
-  Future<void> load(TripData trip) async {
+  Future<void> load(ReviewableTrip trip) async {
     _trip = trip;
     emit(const TripReviewLoading());
     try {
-      final existing = await _getReview(trip.id);
+      final existing = await _getReview(trip.bookingId);
       if (isClosed) return;
       if (existing != null) {
         emit(TripReviewSubmitted(existing));
         return;
       }
-      emit(TripReviewEditing(draft: _emptyDraft(trip.id)));
+      emit(TripReviewEditing(draft: _emptyDraft(trip.bookingId)));
     } catch (error) {
       if (isClosed) return;
       emit(TripReviewLoadFailure(_message(error)));
