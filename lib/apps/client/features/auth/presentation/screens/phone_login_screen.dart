@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 import '../../../../../../core/theme/colors.dart';
 import '../../../../../../core/theme/tokens.dart';
 import '../cubit/phone_auth_cubit.dart';
@@ -34,10 +36,11 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const DirectionalIcon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
@@ -45,7 +48,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
             onPressed: () {
               // Help sheet
             },
-            child: const Text('مساعدة؟'),
+            child: Text(l10n.auth_help),
           ),
         ],
       ),
@@ -72,14 +75,14 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     Text(
-                      'أدخل رقم هاتفك',
+                      l10n.auth_enterPhoneTitle,
                       style: Theme.of(context).textTheme.displayMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'سنقوم بإرسال رمز تحقق للرقم المدخل.',
+                      l10n.auth_enterPhoneSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
@@ -127,10 +130,10 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
-                                return 'مطلوب';
+                                return l10n.auth_required;
                               }
                               if (value.length < 9) {
-                                return 'رقم غير صحيح';
+                                return l10n.auth_invalidPhoneShort;
                               }
                               return null;
                             },
@@ -147,7 +150,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
-                            'أو',
+                            l10n.auth_or,
                             style: TextStyle(
                               color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
                             ),
@@ -192,7 +195,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                          : const Text('متابعة'),
+                          : Text(l10n.auth_continue),
                     ),
                   ],
                 ),

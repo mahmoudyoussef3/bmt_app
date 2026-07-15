@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_card_chips.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The top row of [PopularRouteListCard]: route icon, name, trip-availability
 /// badge, and starting price.
@@ -57,8 +58,8 @@ class RouteCardHeader extends StatelessWidget {
               const SizedBox(height: 6),
               RouteAvailabilityBadge(
                 label: hasTrips
-                    ? '$dailyTrips ${dailyTrips == 1 ? 'trip' : 'trips'} today'
-                    : 'No trips today',
+                    ? context.l10n.booking_tripsCountToday(dailyTrips)
+                    : context.l10n.booking_noTripsToday,
                 active: hasTrips,
               ),
             ],

@@ -1,28 +1,31 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// Standard section header for scrollable home-screen sections.
 ///
-/// Shows a bold [title] left-aligned and an optional "See all →" link
-/// right-aligned. Tapping [onSeeAll] fires the callback; the link is hidden
-/// when [onSeeAll] is null.
+/// Shows a bold [title] leading and an optional "See all →" link trailing.
+/// Tapping [onSeeAll] fires the callback; the link is hidden when [onSeeAll]
+/// is null. Pass [seeAllLabel] to override the default localized label.
 class ClientSectionHeader extends StatelessWidget {
   const ClientSectionHeader({
     super.key,
     required this.title,
     this.subtitle,
-    this.seeAllLabel = 'See all',
+    this.seeAllLabel,
     this.onSeeAll,
   });
 
   final String title;
   final String? subtitle;
-  final String seeAllLabel;
+  final String? seeAllLabel;
   final VoidCallback? onSeeAll;
 
   @override
   Widget build(BuildContext context) {
+    final resolvedLabel = seeAllLabel ?? context.l10n.home_seeAll;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -55,9 +58,9 @@ class ClientSectionHeader extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(seeAllLabel),
+                Text(resolvedLabel),
                 const SizedBox(width: 2),
-                const Icon(Icons.arrow_forward_rounded, size: 14),
+                const DirectionalIcon(Icons.arrow_forward_rounded, size: 14),
               ],
             ),
           ),

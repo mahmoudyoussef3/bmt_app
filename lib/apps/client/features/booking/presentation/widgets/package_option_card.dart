@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/package_option_parts.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// One fare option in the booking wizard's package step.
 ///
@@ -73,7 +74,9 @@ class PackageOptionCard extends StatelessWidget {
                       ),
                       if (discount > 0)
                         BookingCountPill(
-                          label: 'Save $discount%',
+                          label: context.l10n.booking_saveDiscountPercent(
+                            discount,
+                          ),
                           color: ClientColors.journeyCyan,
                         ),
                     ],
@@ -104,7 +107,7 @@ class _FeaturedRibbon extends StatelessWidget {
         ),
       ),
       child: Text(
-        'BEST VALUE',
+        context.l10n.booking_bestValue,
         textAlign: TextAlign.center,
         style: ClientTypography.labelSmall(context).copyWith(
           color: accent,

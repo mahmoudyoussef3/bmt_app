@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
 
+import 'package:bmt_app/core/localization/l10n_context.dart';
+
 /// Terms & Privacy footer links.
 class TermsFooter extends StatelessWidget {
   const TermsFooter({super.key});
@@ -8,6 +10,7 @@ class TermsFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
     final linkStyle = Theme.of(context).textTheme.bodySmall?.copyWith(
       color: scheme.primary,
       fontWeight: FontWeight.w600,
@@ -20,7 +23,7 @@ class TermsFooter extends StatelessWidget {
 
     void showPolicyNotice(String title) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$title will open when published.')),
+        SnackBar(content: Text(l10n.auth_policyComingSoon(title))),
       );
     }
 
@@ -28,19 +31,19 @@ class TermsFooter extends StatelessWidget {
       TextSpan(
         style: baseStyle,
         children: [
-          const TextSpan(text: 'By continuing, you agree to our '),
+          TextSpan(text: l10n.auth_termsPrefix),
           TextSpan(
-            text: 'Terms & Conditions',
+            text: l10n.auth_termsAndConditions,
             style: linkStyle,
             recognizer: TapGestureRecognizer()
-              ..onTap = () => showPolicyNotice('Terms & Conditions'),
+              ..onTap = () => showPolicyNotice(l10n.auth_termsAndConditions),
           ),
-          const TextSpan(text: ' and '),
+          TextSpan(text: l10n.auth_termsAnd),
           TextSpan(
-            text: 'Privacy Policy',
+            text: l10n.auth_privacyPolicy,
             style: linkStyle,
             recognizer: TapGestureRecognizer()
-              ..onTap = () => showPolicyNotice('Privacy Policy'),
+              ..onTap = () => showPolicyNotice(l10n.auth_privacyPolicy),
           ),
           const TextSpan(text: '.'),
         ],

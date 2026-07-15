@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
@@ -46,7 +47,7 @@ class HomeTripCardHeader extends StatelessWidget {
           if (trip.isBooked)
             ClientStatusBadge(
               status: trip.bookedStatus!.badge,
-              label: trip.bookedStatus!.label,
+              label: trip.bookedStatus!.labelFor(context.l10n),
               showDot: trip.bookedStatus!.isPulsing,
             )
           else if (trip.isLive)
@@ -100,7 +101,7 @@ class _Schedule extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                time.isEmpty ? 'Departure time to be set' : time,
+                time.isEmpty ? context.l10n.home_departureToBeSet : time,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: ClientTypography.headingMedium(
@@ -151,7 +152,7 @@ class _BoardingBadge extends StatelessWidget {
           const PulseDot(color: ClientColors.journeyCyan, size: 7),
           const SizedBox(width: 6),
           Text(
-            'Boarding',
+            context.l10n.home_boarding,
             style: ClientTypography.labelSmall(context).copyWith(
               color: ClientColors.journeyCyan,
               fontWeight: FontWeight.w900,

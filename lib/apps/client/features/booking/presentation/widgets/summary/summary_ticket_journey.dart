@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/apps/client/core/widgets/dashed_divider.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The ride itself: when the rider is picked up, when they arrive, and how
 /// long they are on board — laid out the way a boarding pass reads.
@@ -19,6 +20,7 @@ class SummaryTicketJourney extends StatelessWidget {
     final departure = formatTripTime(context, trip?.departureTime ?? '');
     final arrival = formatTripTime(context, trip?.arrivalTime ?? '');
     final duration = formatTripDuration(
+      context,
       trip?.departureTime ?? '',
       trip?.arrivalTime ?? '',
     );
@@ -30,7 +32,7 @@ class SummaryTicketJourney extends StatelessWidget {
           child: _Endpoint(
             time: departure,
             stop: session.pickupStop?.name,
-            caption: 'Pick-up',
+            caption: context.l10n.common_pickup,
             align: CrossAxisAlignment.start,
           ),
         ),
@@ -39,7 +41,7 @@ class SummaryTicketJourney extends StatelessWidget {
           child: _Endpoint(
             time: arrival,
             stop: session.dropoffStop?.name,
-            caption: 'Drop-off',
+            caption: context.l10n.common_dropOff,
             align: CrossAxisAlignment.end,
           ),
         ),
@@ -130,7 +132,7 @@ class _Connector extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            duration.isEmpty ? 'Direct' : duration,
+            duration.isEmpty ? context.l10n.booking_routeTypeDirect : duration,
             style: ClientTypography.labelSmall(
               context,
             ).copyWith(color: ClientColors.textSecondaryFor(context)),

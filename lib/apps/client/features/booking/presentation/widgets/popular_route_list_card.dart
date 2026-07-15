@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_card_endpoint_line.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_card_header.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_fact_chip.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// A premium route-discovery result card: surfaces origin, destination,
 /// distance, duration, trip availability, and starting price at a glance.
@@ -58,7 +59,9 @@ class PopularRouteListCard extends StatelessWidget {
               ),
               RouteFactChip(
                 icon: Icons.directions_bus_rounded,
-                label: hasTrips ? 'Seats available' : 'Check later',
+                label: hasTrips
+                    ? context.l10n.booking_seatsAvailableShort
+                    : context.l10n.booking_checkLater,
               ),
             ],
           ),

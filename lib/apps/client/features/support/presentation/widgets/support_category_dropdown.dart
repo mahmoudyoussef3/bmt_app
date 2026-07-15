@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_category.dart';
 import 'support_input_decoration.dart';
+import 'support_ticket_labels.dart';
 
 /// "What is this about?" — the topic picker. This is the only place a client
 /// classifies a ticket now that the Support Center no longer browses by
@@ -33,7 +34,7 @@ class SupportCategoryDropdown extends StatelessWidget {
         return DropdownMenuItem(
           value: category,
           child: Text(
-            category,
+            supportCategoryLabel(context, category),
             style: ClientTypography.bodyMedium(
               context,
             ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w600),

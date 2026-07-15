@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Elevated service tiles that overlap the hero's lower edge —
 /// the fastest paths into the app's four main journeys.
@@ -26,28 +27,29 @@ class HomeQuickActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final actions = [
       (
         icon: Icons.route_rounded,
-        label: 'Routes',
+        label: l10n.nav_routes,
         color: ClientColors.primaryFor(context),
         onTap: onRoutes,
       ),
       (
         icon: Icons.confirmation_number_outlined,
-        label: 'My trips',
+        label: l10n.home_myTrips,
         color: ClientColors.journeyCyan,
         onTap: onTrips,
       ),
       (
         icon: Icons.card_membership_rounded,
-        label: 'Packages',
+        label: l10n.home_packagesTitle,
         color: ClientColors.journeyPurple,
         onTap: onPackages,
       ),
       (
         icon: Icons.support_agent_rounded,
-        label: 'Support',
+        label: l10n.common_support,
         color: ClientColors.journeyAmber,
         onTap: onSupport,
       ),

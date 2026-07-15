@@ -2,18 +2,18 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// What a passenger may do at a stop. Derived from the route point's
 /// pickup/drop-off permissions.
 enum StopCapability {
-  boardAndAlight('Pickup & drop-off', Icons.swap_vert_rounded),
-  boardOnly('Pickup only', Icons.login_rounded),
-  alightOnly('Drop-off only', Icons.logout_rounded),
-  passThrough('Pass-through', Icons.do_not_disturb_alt_rounded);
+  boardAndAlight(Icons.swap_vert_rounded),
+  boardOnly(Icons.login_rounded),
+  alightOnly(Icons.logout_rounded),
+  passThrough(Icons.do_not_disturb_alt_rounded);
 
-  const StopCapability(this.label, this.icon);
+  const StopCapability(this.icon);
 
-  final String label;
   final IconData icon;
 
   static StopCapability of({
@@ -25,6 +25,17 @@ enum StopCapability {
     if (dropoffAllowed) return StopCapability.alightOnly;
     return StopCapability.passThrough;
   }
+}
+
+/// Localized caption for a [StopCapability].
+String stopCapabilityLabel(BuildContext context, StopCapability capability) {
+  final l10n = context.l10n;
+  return switch (capability) {
+    StopCapability.boardAndAlight => l10n.booking_stopCapabilityBoardAlight,
+    StopCapability.boardOnly => l10n.booking_stopCapabilityBoardOnly,
+    StopCapability.alightOnly => l10n.booking_stopCapabilityAlightOnly,
+    StopCapability.passThrough => l10n.booking_stopCapabilityPassThrough,
+  };
 }
 
 /// The quiet caption under a stop's name. Rendered as muted text rather than a
@@ -48,7 +59,7 @@ class StopCapabilityLabel extends StatelessWidget {
         Icon(capability.icon, size: 14, color: color),
         const SizedBox(width: 6),
         Text(
-          capability.label,
+          stopCapabilityLabel(context, capability),
           style: Theme.of(context).textTheme.labelMedium?.copyWith(
             color: color,
             fontWeight: FontWeight.w600,

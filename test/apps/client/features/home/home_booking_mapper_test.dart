@@ -9,6 +9,7 @@ Map<String, dynamic> _row({
   String? dropoffPoint = 'AUC',
   String route = 'El-Marg → AUC',
   num? amount = 100,
+  String? tripStatus = 'boarding',
 }) {
   // Mirrors the columns `operation_bookings` actually has. The table stores one
   // seat per booking — there is no seats_count — so nothing here may invent one.
@@ -24,6 +25,7 @@ Map<String, dynamic> _row({
     'payment_amount': amount,
     'pickup_point_name': pickupPoint,
     'dropoff_point_name': dropoffPoint,
+    if (tripStatus != null) 'operation_trips': {'status': tripStatus},
   };
 }
 
@@ -75,6 +77,46 @@ void main() {
           reason: '$status is not a seat the rider still holds',
         );
       }
+    });
+
+    // Regression: a trip finishing stamps `operation_trips.status`, not the
+    // booking's own `status`, so the booking stayed `confirmed`/`boarded`. Home
+    // read only the booking status and kept showing the finished seat as
+    // "Confirmed" — refreshing changed nothing — while Trips already showed it
+    // completed. Home must drop a booking once its trip has ended.
+    test('a booking on a finished or cancelled trip is dropped even when the '
+        'booking still reads confirmed', () {
+      for (final liveStatus in const ['confirmed', 'boarded']) {
+        for (final endedTrip in const ['completed', 'cancelled']) {
+          expect(
+            HomeBookingMapper.fromRow(
+              _row(status: liveStatus, tripStatus: endedTrip),
+            ),
+            isNull,
+            reason: '$liveStatus booking on a $endedTrip trip is history',
+          );
+        }
+      }
+    });
+
+    test('a live booking on a running trip is still shown', () {
+      for (final tripStatus in const ['open_for_booking', 'boarding']) {
+        expect(
+          HomeBookingMapper.fromRow(
+            _row(status: 'confirmed', tripStatus: tripStatus),
+          ),
+          isNotNull,
+        );
+      }
+    });
+
+    test('a missing trip embed never hides an otherwise live booking', () {
+      final booking = HomeBookingMapper.fromRow(
+        _row(status: 'confirmed', tripStatus: null),
+      );
+
+      expect(booking, isNotNull);
+      expect(booking!.status, HomeBookingStatus.confirmed);
     });
 
     test('falls back to the route label when point names are missing', () {

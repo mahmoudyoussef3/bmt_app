@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import '../../../../../../core/theme/colors.dart';
 import '../../../../../../core/theme/tokens.dart';
 import '../cubit/phone_auth_cubit.dart';
@@ -33,7 +34,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     if (_formKey.currentState?.validate() ?? false) {
       if (!_acceptTerms) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('يجب الموافقة على الشروط والأحكام'), backgroundColor: AppColors.destructive),
+          SnackBar(
+            content: Text(context.l10n.auth_mustAcceptTerms),
+            backgroundColor: AppColors.destructive,
+          ),
         );
         return;
       }
@@ -49,9 +53,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('إكمال الملف الشخصي'),
+        title: Text(l10n.auth_completeProfileTitle),
         automaticallyImplyLeading: false,
       ),
       body: BlocConsumer<PhoneAuthCubit, PhoneAuthState>(
@@ -77,44 +82,44 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'أهلاً بك في BMT',
+                      l10n.auth_welcomeToApp,
                       style: Theme.of(context).textTheme.displayLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'نحتاج لبعض المعلومات لنقدم لك أفضل خدمة.',
+                      l10n.auth_completeProfileSubtitle,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       ),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Name Field
                     Text(
-                      'الاسم الكامل',
+                      l10n.auth_fullName,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(
-                        hintText: 'أحمد حسن',
-                        prefixIcon: Icon(Icons.person_outline),
+                      decoration: InputDecoration(
+                        hintText: l10n.auth_nameHint,
+                        prefixIcon: const Icon(Icons.person_outline),
                       ),
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'الاسم مطلوب';
+                          return l10n.auth_nameRequired;
                         }
                         return null;
                       },
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Email Field
                     Text(
-                      'البريد الإلكتروني (اختياري)',
+                      l10n.auth_emailOptional,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
@@ -131,7 +136,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     
                     // Gender Selection
                     Text(
-                      'الجنس',
+                      l10n.auth_gender,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 12),
@@ -139,7 +144,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       children: [
                         Expanded(
                           child: _GenderCard(
-                            label: 'ذكر',
+                            label: l10n.auth_genderMale,
                             icon: Icons.male,
                             isSelected: _selectedGender == 'Male',
                             onTap: () => setState(() => _selectedGender = 'Male'),
@@ -148,7 +153,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                         const SizedBox(width: 16),
                         Expanded(
                           child: _GenderCard(
-                            label: 'أنثى',
+                            label: l10n.auth_genderFemale,
                             icon: Icons.female,
                             isSelected: _selectedGender == 'Female',
                             onTap: () => setState(() => _selectedGender = 'Female'),
@@ -162,7 +167,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     CheckboxListTile(
                       value: _acceptTerms,
                       onChanged: (val) => setState(() => _acceptTerms = val ?? false),
-                      title: const Text('أوافق على شروط الخدمة وسياسة الخصوصية'),
+                      title: Text(l10n.auth_acceptTermsCheckbox),
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
                       activeColor: Theme.of(context).colorScheme.primary,
@@ -184,7 +189,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                               ),
                             )
-                          : const Text('إنشاء الحساب وبدء الاستخدام'),
+                          : Text(l10n.auth_createAccountAndStart),
                     ),
                   ],
                 ),

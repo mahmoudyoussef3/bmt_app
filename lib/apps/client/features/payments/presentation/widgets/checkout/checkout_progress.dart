@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Where the rider is in the booking, drawn as three steps.
 ///
@@ -10,22 +11,25 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 class CheckoutProgress extends StatelessWidget {
   const CheckoutProgress({super.key, this.currentStep = 1});
 
-  static const _steps = ['Seat', 'Payment', 'Ticket'];
-
   /// Zero-based index of the step the rider is on.
   final int currentStep;
 
   @override
   Widget build(BuildContext context) {
+    final steps = [
+      context.l10n.payments_stepSeat,
+      context.l10n.payments_stepPayment,
+      context.l10n.payments_stepTicket,
+    ];
     return Row(
       children: [
-        for (var i = 0; i < _steps.length; i++) ...[
+        for (var i = 0; i < steps.length; i++) ...[
           _Step(
-            label: _steps[i],
+            label: steps[i],
             done: i < currentStep,
             active: i == currentStep,
           ),
-          if (i != _steps.length - 1)
+          if (i != steps.length - 1)
             Expanded(
               child: Container(
                 height: 2,

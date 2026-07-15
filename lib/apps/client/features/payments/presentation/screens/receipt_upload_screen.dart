@@ -9,6 +9,9 @@ import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/upload_payment_receipt_usecase.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_processing_screen.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class ReceiptUploadScreen extends StatefulWidget {
   final PaymentCheckoutData checkoutData;
@@ -89,7 +92,9 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Unable to upload receipt: ${error.toString()}'),
+          content: Text(
+            context.l10n.payments_uploadReceiptError(error.toString()),
+          ),
         ),
       );
     } finally {
@@ -107,14 +112,14 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
       appBar: AppBar(
         backgroundColor: ClientColors.surfaceFor(context),
         title: Text(
-          'Attach Receipt',
+          context.l10n.payments_attachReceiptTitle,
           style: ClientTypography.headingSmall(
             context,
           ).copyWith(color: ClientColors.textPrimaryFor(context)),
         ),
         leading: IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const DirectionalIcon(Icons.arrow_back_rounded),
         ),
         elevation: 0,
       ),
@@ -162,7 +167,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
               ),
               const SizedBox(width: 8),
               Text(
-                'Transfer Instructions',
+                context.l10n.payments_transferInstructionsTitle,
                 style: ClientTypography.headingSmall(
                   context,
                 ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -173,41 +178,51 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
           Divider(height: 1, color: ClientColors.borderFor(context)),
           const SizedBox(height: 12),
           Text(
-            'Transfer the exact booking amount to the address below and upload the transaction screenshot.',
+            context.l10n.payments_transferInstructionsBody,
             style: ClientTypography.bodySmall(context).copyWith(
               color: ClientColors.textSecondaryFor(context),
               height: 1.4,
             ),
           ),
           const SizedBox(height: 14),
-          _buildInfoRow(context, 'Amount to send:', '$total EGP', isBold: true),
+          _buildInfoRow(
+            context,
+            context.l10n.payments_amountToSendLabel,
+            FormatUtil.currency(context, total),
+            isBold: true,
+          ),
           const SizedBox(height: 10),
           if (isInstaPay) ...[
             _buildInfoRow(
               context,
-              'InstaPay IPA:',
-              widget.paymentMethod.transferAccount ?? 'Not configured',
+              context.l10n.payments_instapayIpaLabel,
+              widget.paymentMethod.transferAccount ??
+                  context.l10n.payments_notConfigured,
               showCopy: true,
+              forceLtr: true,
             ),
             const SizedBox(height: 10),
             _buildInfoRow(
               context,
-              'Account Holder:',
-              widget.paymentMethod.accountHolder ?? 'Not configured',
+              context.l10n.payments_accountHolderLabel,
+              widget.paymentMethod.accountHolder ??
+                  context.l10n.payments_notConfigured,
             ),
           ] else ...[
             _buildInfoRow(
               context,
-              'Mobile Wallet No:',
-              widget.paymentMethod.transferAccount ?? 'Not configured',
+              context.l10n.payments_mobileWalletNoLabel,
+              widget.paymentMethod.transferAccount ??
+                  context.l10n.payments_notConfigured,
               showCopy: true,
+              forceLtr: true,
             ),
             const SizedBox(height: 10),
             _buildInfoRow(
               context,
-              'Wallet Type:',
+              context.l10n.payments_walletTypeLabel,
               widget.paymentMethod.supportedChannels.isEmpty
-                  ? 'Vodafone / Orange / Etisalat / WE'
+                  ? context.l10n.payments_defaultWalletChannels
                   : widget.paymentMethod.supportedChannels.join(' / '),
             ),
           ],
@@ -232,7 +247,15 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
     String value, {
     bool isBold = false,
     bool showCopy = false,
+    bool forceLtr = false,
   }) {
+    final valueText = Text(
+      value,
+      style: ClientTypography.bodySmall(context).copyWith(
+        fontWeight: isBold || showCopy ? FontWeight.w900 : FontWeight.w700,
+        color: isBold ? ClientColors.primary : ClientColors.textPrimaryFor(context),
+      ),
+    );
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -244,17 +267,12 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
         ),
         Row(
           children: [
-            Text(
-              value,
-              style: ClientTypography.bodySmall(context).copyWith(
-                fontWeight: isBold || showCopy
-                    ? FontWeight.w900
-                    : FontWeight.w700,
-                color: isBold
-                    ? ClientColors.primary
-                    : ClientColors.textPrimaryFor(context),
-              ),
-            ),
+            forceLtr
+                ? Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: valueText,
+                  )
+                : valueText,
             if (showCopy) ...[
               const SizedBox(width: 6),
               GestureDetector(
@@ -262,7 +280,9 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                   Clipboard.setData(ClipboardData(text: value));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('$value copied to clipboard'),
+                      content: Text(
+                        context.l10n.payments_copiedToClipboard(value),
+                      ),
                       duration: const Duration(seconds: 1),
                     ),
                   );
@@ -368,7 +388,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
               ),
               const SizedBox(height: 12),
               Text(
-                'Upload Receipt Screenshot',
+                context.l10n.payments_uploadReceiptScreenshot,
                 style: ClientTypography.bodyMedium(context).copyWith(
                   fontWeight: FontWeight.w700,
                   color: ClientColors.textPrimaryFor(context),
@@ -376,7 +396,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
               ),
               const SizedBox(height: 4),
               Text(
-                'Tap to select a file (PNG, JPG)',
+                context.l10n.payments_tapToSelectFile,
                 style: ClientTypography.bodySmall(
                   context,
                 ).copyWith(color: ClientColors.textTertiaryFor(context)),
@@ -408,7 +428,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Receipt Attached',
+                  context.l10n.payments_receiptAttachedTitle,
                   style: ClientTypography.bodySmall(context).copyWith(
                     fontWeight: FontWeight.w700,
                     color: ClientColors.onJourneyCyan,
@@ -416,7 +436,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Submit payment to reserve your selected seat and send the receipt for verification.',
+                  context.l10n.payments_receiptAttachedBody,
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.onJourneyCyan, height: 1.35),
@@ -449,10 +469,10 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
         top: false,
         child: ClientButton(
           label: _submitting
-              ? 'Uploading...'
+              ? context.l10n.payments_uploading
               : hasReceipt
-              ? 'Submit Payment'
-              : 'Attach Receipt',
+              ? context.l10n.payments_submitPayment
+              : context.l10n.payments_attachReceiptTitle,
           expand: true,
           isLoading: _submitting,
           onPressed: _submitting

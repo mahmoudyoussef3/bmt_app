@@ -12,10 +12,16 @@ import '../../features/onboarding/presentation/cubit/captain_onboarding_cubit.da
 
 import '../../features/auth/data/datasources/captain_auth_datasource.dart';
 import '../../features/auth/data/repositories/captain_auth_repository_impl.dart';
+import '../../features/auth/data/repositories/captain_remember_me_repository_impl.dart';
 import '../../features/auth/domain/repositories/captain_auth_repository.dart';
+import '../../features/auth/domain/repositories/captain_remember_me_repository.dart';
+import '../../features/auth/domain/usecases/clear_remembered_phone_usecase.dart';
+import '../../features/auth/domain/usecases/get_remembered_phone_usecase.dart';
+import '../../features/auth/domain/usecases/save_remembered_phone_usecase.dart';
 import '../../features/auth/domain/usecases/sign_in_captain_usecase.dart';
 import '../../features/auth/domain/usecases/sign_out_captain_usecase.dart';
 import '../../features/auth/presentation/cubit/captain_auth_cubit.dart';
+import '../storage/remember_me_store.dart';
 
 import '../../features/profile/data/datasources/driver_profile_datasource.dart';
 import '../../features/profile/data/repositories/driver_profile_repository_impl.dart';
@@ -190,11 +196,47 @@ void _registerAuthDependencies() {
       () => SignOutCaptainUseCase(captainGetIt<CaptainAuthRepository>()),
     );
   }
+  if (!captainGetIt.isRegistered<CaptainRememberMeStore>()) {
+    captainGetIt.registerLazySingleton<CaptainRememberMeStore>(
+      () => const CaptainRememberMeStore(),
+    );
+  }
+  if (!captainGetIt.isRegistered<CaptainRememberMeRepository>()) {
+    captainGetIt.registerLazySingleton<CaptainRememberMeRepository>(
+      () => CaptainRememberMeRepositoryImpl(
+        captainGetIt<CaptainRememberMeStore>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<SaveRememberedPhoneUseCase>()) {
+    captainGetIt.registerLazySingleton<SaveRememberedPhoneUseCase>(
+      () => SaveRememberedPhoneUseCase(
+        captainGetIt<CaptainRememberMeRepository>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<GetRememberedPhoneUseCase>()) {
+    captainGetIt.registerLazySingleton<GetRememberedPhoneUseCase>(
+      () => GetRememberedPhoneUseCase(
+        captainGetIt<CaptainRememberMeRepository>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<ClearRememberedPhoneUseCase>()) {
+    captainGetIt.registerLazySingleton<ClearRememberedPhoneUseCase>(
+      () => ClearRememberedPhoneUseCase(
+        captainGetIt<CaptainRememberMeRepository>(),
+      ),
+    );
+  }
   if (!captainGetIt.isRegistered<CaptainAuthCubit>()) {
     captainGetIt.registerFactory<CaptainAuthCubit>(
       () => CaptainAuthCubit(
         signIn: captainGetIt<SignInCaptainUseCase>(),
         signOut: captainGetIt<SignOutCaptainUseCase>(),
+        saveRememberedPhone: captainGetIt<SaveRememberedPhoneUseCase>(),
+        getRememberedPhone: captainGetIt<GetRememberedPhoneUseCase>(),
+        clearRememberedPhone: captainGetIt<ClearRememberedPhoneUseCase>(),
       ),
     );
   }

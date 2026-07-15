@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// One thing being rated (the captain, the vehicle, or the route).
 ///
@@ -55,7 +56,10 @@ class TripReviewRatingCard extends StatelessWidget {
               for (var star = 1; star <= 5; star++)
                 _Star(
                   filled: star <= value,
-                  semanticLabel: '$star of 5 for $title',
+                  semanticLabel: context.l10n.trips_starRatingSemantic(
+                    star,
+                    title,
+                  ),
                   onTap: isReadOnly ? null : () => onChanged!(star),
                 ),
             ],
@@ -87,7 +91,10 @@ class _Star extends StatelessWidget {
     );
 
     if (onTap == null) {
-      return Padding(padding: const EdgeInsets.only(right: 4), child: icon);
+      return Padding(
+        padding: const EdgeInsetsDirectional.only(end: 4),
+        child: icon,
+      );
     }
 
     return IconButton(

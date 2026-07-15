@@ -11,7 +11,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_compare_card.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Trip and vehicle selection screen.
 class VehicleListingScreen extends StatefulWidget {
@@ -60,44 +60,41 @@ class _VehicleListingScreenState extends State<VehicleListingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: BlocBuilder<BookingCubit, BookingState>(
-        builder: (context, state) {
-          final vehicles = state is VehiclesLoaded
-              ? state.vehicles
-              : <VehicleDetailData>[];
+    return BlocBuilder<BookingCubit, BookingState>(
+      builder: (context, state) {
+        final vehicles = state is VehiclesLoaded
+            ? state.vehicles
+            : <VehicleDetailData>[];
 
-          return BookingFlowScaffold(
-            title: 'Choose trip and vehicle',
-            query: _query,
-            actions: [
-              IconButton(
-                tooltip: 'Refresh',
-                icon: const Icon(Icons.refresh_rounded),
-                onPressed: () => context.read<BookingCubit>().loadVehicles(
-                  sort: _sort,
-                  routeId: _query.routeId,
-                  force: true,
-                ),
-              ),
-            ],
-            body: _VehicleListingBody(
-              state: state,
-              vehicles: vehicles,
-              sort: _sort,
-              selectedVehicleId: _selectedVehicleId,
-              onRetry: () => context.read<BookingCubit>().loadVehicles(
+        return BookingFlowScaffold(
+          title: context.l10n.booking_chooseTripAndVehicle,
+          query: _query,
+          actions: [
+            IconButton(
+              tooltip: context.l10n.tracking_refresh,
+              icon: const Icon(Icons.refresh_rounded),
+              onPressed: () => context.read<BookingCubit>().loadVehicles(
                 sort: _sort,
                 routeId: _query.routeId,
                 force: true,
               ),
-              onSort: _selectSort,
-              onSelect: _selectVehicle,
             ),
-          );
-        },
-      ),
+          ],
+          body: _VehicleListingBody(
+            state: state,
+            vehicles: vehicles,
+            sort: _sort,
+            selectedVehicleId: _selectedVehicleId,
+            onRetry: () => context.read<BookingCubit>().loadVehicles(
+              sort: _sort,
+              routeId: _query.routeId,
+              force: true,
+            ),
+            onSort: _selectSort,
+            onSelect: _selectVehicle,
+          ),
+        );
+      },
     );
   }
 }
@@ -206,14 +203,14 @@ class _CompactHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Available trips',
+                  context.l10n.booking_availableTripsLabel,
                   style: ClientTypography.headingSmall(
                     context,
                   ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  '$vehiclesCount trip options with assigned vehicles',
+                  context.l10n.booking_tripOptionsWithVehicles(vehiclesCount),
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -235,10 +232,11 @@ class _SortBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final options = [
-      (VehicleSortOption.recommended, 'Earliest', Icons.schedule_rounded),
-      (VehicleSortOption.priceLow, 'Lowest price', Icons.payments_rounded),
-      (VehicleSortOption.seats, 'Most seats', Icons.event_seat_rounded),
+      (VehicleSortOption.recommended, l10n.booking_sortEarliest, Icons.schedule_rounded),
+      (VehicleSortOption.priceLow, l10n.booking_sortLowestPrice, Icons.payments_rounded),
+      (VehicleSortOption.seats, l10n.booking_sortMostSeats, Icons.event_seat_rounded),
     ];
 
     return SingleChildScrollView(
@@ -357,7 +355,7 @@ class _BookingLoadingState extends StatelessWidget {
             const CircularProgressIndicator(color: ClientColors.primary),
             const SizedBox(height: 14),
             Text(
-              AppLocalizations.of(context)!.booking_searchingBestOptions,
+              context.l10n.booking_searchingBestOptions,
               textAlign: TextAlign.center,
               style: ClientTypography.bodyMedium(context).copyWith(
                 fontWeight: FontWeight.w700,
@@ -399,7 +397,7 @@ class _BookingErrorState extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                AppLocalizations.of(context)!.booking_errorLoadingVehicles,
+                context.l10n.booking_errorLoadingVehicles,
                 style: ClientTypography.headingSmall(context),
                 textAlign: TextAlign.center,
               ),
@@ -413,7 +411,7 @@ class _BookingErrorState extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               ClientButton(
-                label: AppLocalizations.of(context)!.common_tryAgain,
+                label: context.l10n.common_tryAgain,
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded, size: 18),
               ),
@@ -452,13 +450,13 @@ class _BookingEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                AppLocalizations.of(context)!.booking_noVehiclesAvailable,
+                context.l10n.booking_noVehiclesAvailable,
                 style: ClientTypography.headingSmall(context),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
-                AppLocalizations.of(context)!.booking_noVehiclesDesc,
+                context.l10n.booking_noVehiclesDesc,
                 textAlign: TextAlign.center,
                 style: ClientTypography.bodyMedium(
                   context,
@@ -466,7 +464,7 @@ class _BookingEmptyState extends StatelessWidget {
               ),
               const SizedBox(height: 14),
               ClientButton(
-                label: AppLocalizations.of(context)!.booking_searchAgain,
+                label: context.l10n.booking_searchAgain,
                 onPressed: () => Navigator.of(context).pop(),
                 icon: const Icon(Icons.search_rounded, size: 18),
               ),

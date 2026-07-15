@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Shown when the booking reached checkout with pieces missing — no seat, no
 /// fare, no trip. It names what is missing and sends the rider back to fix it,
@@ -40,14 +41,14 @@ class CheckoutNotice extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'This booking is missing ${_list(missing)}',
+                  context.l10n.payments_bookingMissingItems(_list(missing)),
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: tone.fg, fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'Go back and complete it before paying.',
+                  context.l10n.payments_completeBeforePaying,
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: tone.fg),
@@ -55,7 +56,10 @@ class CheckoutNotice extends StatelessWidget {
               ],
             ),
           ),
-          TextButton(onPressed: onFix, child: const Text('Go back')),
+          TextButton(
+            onPressed: onFix,
+            child: Text(context.l10n.payments_goBack),
+          ),
         ],
       ),
     );

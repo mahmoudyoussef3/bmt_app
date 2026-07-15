@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 
 /// The stub below the ticket's tear line: what the seat costs, and the single
@@ -17,18 +19,19 @@ class HomeTripCta extends StatelessWidget {
   final UpcomingTripData trip;
   final VoidCallback onBook;
 
-  String get _label {
-    if (trip.isSoldOut) return 'Sold out';
-    return trip.isBooked ? 'Book another seat' : 'Book seat';
-  }
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final label = trip.isSoldOut
+        ? l10n.common_soldOut
+        : trip.isBooked
+        ? l10n.home_bookAnotherSeat
+        : l10n.home_bookSeat;
     return Row(
       children: [
         Expanded(child: _Fare(price: trip.price)),
         const SizedBox(width: ClientSpacing.sm),
-        _BookButton(trip: trip, label: _label, onBook: onBook),
+        _BookButton(trip: trip, label: label, onBook: onBook),
       ],
     );
   }
@@ -77,7 +80,7 @@ class _BookButton extends StatelessWidget {
           Text(label),
           if (!trip.isSoldOut) ...[
             const SizedBox(width: 6),
-            const Icon(Icons.arrow_forward_rounded, size: 16),
+            const DirectionalIcon(Icons.arrow_forward_rounded, size: 16),
           ],
         ],
       ),
@@ -94,7 +97,7 @@ class _Fare extends StatelessWidget {
   Widget build(BuildContext context) {
     if (price.isEmpty) {
       return Text(
-        'Fare not published yet',
+        context.l10n.home_fareNotPublished,
         style: ClientTypography.bodySmall(
           context,
         ).copyWith(color: ClientColors.textTertiaryFor(context)),
@@ -105,7 +108,7 @@ class _Fare extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'FARE FROM',
+          context.l10n.home_fareFrom,
           style: ClientTypography.labelSmall(context).copyWith(
             color: ClientColors.textTertiaryFor(context),
             fontWeight: FontWeight.w700,

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+
+import 'package:bmt_app/core/localization/l10n_context.dart';
+
 import 'support_field_label.dart';
 import 'support_input_decoration.dart';
 
@@ -40,7 +43,7 @@ class SupportTextField extends StatelessWidget {
           validator: (value) {
             final text = value?.trim() ?? '';
             if (text.isEmpty) return emptyMessage;
-            if (text.length < minLength) return 'Please add a bit more detail';
+            if (text.length < minLength) return context.l10n.support_minLengthHint;
             return null;
           },
         ),

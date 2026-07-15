@@ -40,11 +40,13 @@ class SeatSelectionModel {
     required this.vehicleName,
     required this.vehicleType,
     required this.vehicleModel,
+    required this.vehicleImageUrl,
     required this.tripDate,
     required this.departureTime,
     required this.arrivalTime,
     required this.driverName,
     required this.driverRating,
+    required this.driverImageUrl,
   });
 
   final String tripId;
@@ -56,11 +58,13 @@ class SeatSelectionModel {
   final String vehicleName;
   final String vehicleType;
   final String vehicleModel;
+  final String vehicleImageUrl;
   final String tripDate;
   final String departureTime;
   final String arrivalTime;
   final String driverName;
   final double driverRating;
+  final String driverImageUrl;
 
   SeatSelectionData toEntity() {
     return SeatSelectionData(
@@ -73,11 +77,13 @@ class SeatSelectionModel {
       vehicleName: vehicleName,
       vehicleType: vehicleType,
       vehicleModel: vehicleModel,
+      vehicleImageUrl: vehicleImageUrl,
       tripDate: tripDate,
       departureTime: departureTime,
       arrivalTime: arrivalTime,
       driverName: driverName,
       driverRating: driverRating,
+      driverImageUrl: driverImageUrl,
     );
   }
 }

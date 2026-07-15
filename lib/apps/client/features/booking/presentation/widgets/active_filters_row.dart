@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/models/route_filter_criteria.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Lists every active filter as an individually removable chip, plus a
 /// single reset-all action (spec FR-004). Renders nothing when no filter is
@@ -59,7 +60,7 @@ class ActiveFiltersRow extends StatelessWidget {
           ...chips,
           ActionChip(
             label: Text(
-              'Reset all',
+              context.l10n.booking_resetAllFilters,
               style: ClientTypography.labelMedium(
                 context,
               ).copyWith(fontWeight: FontWeight.w800),

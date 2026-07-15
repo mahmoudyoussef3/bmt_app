@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../routes/auth_routes.dart';
 
@@ -27,6 +28,7 @@ class _ComingSoonBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return ClientBottomSheet(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -48,7 +50,7 @@ class _ComingSoonBody extends StatelessWidget {
           ),
           const SizedBox(height: ClientSpacing.lg),
           Text(
-            '$provider sign-in is coming soon',
+            l10n.welcome_comingSoonTitle(provider),
             textAlign: TextAlign.center,
             style: ClientTypography.headingMedium(
               context,
@@ -56,8 +58,7 @@ class _ComingSoonBody extends StatelessWidget {
           ),
           const SizedBox(height: ClientSpacing.xs),
           Text(
-            'We\'re still putting the finishing touches on it. For now, continue '
-            'with your email to book trips and track buses right away.',
+            l10n.welcome_comingSoonBody,
             textAlign: TextAlign.center,
             style: ClientTypography.bodyMedium(context).copyWith(
               color: ClientColors.textSecondaryFor(context),
@@ -65,7 +66,7 @@ class _ComingSoonBody extends StatelessWidget {
           ),
           const SizedBox(height: ClientSpacing.lg),
           ClientButton(
-            label: 'Continue with Email',
+            label: l10n.welcome_continueWithEmail,
             onPressed: () {
               final navigator = Navigator.of(context);
               navigator.pop();
@@ -79,7 +80,7 @@ class _ComingSoonBody extends StatelessWidget {
           ),
           const SizedBox(height: ClientSpacing.xs),
           ClientButton.text(
-            label: 'Maybe later',
+            label: l10n.welcome_maybeLater,
             onPressed: () => Navigator.of(context).pop(),
           ),
         ],

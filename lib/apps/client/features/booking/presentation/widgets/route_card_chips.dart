@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Small chips/badges used inside [PopularRouteListCard]: trip-availability
 /// badge, starting-price block, and route fact chips (distance/duration/seats).
@@ -73,7 +74,7 @@ class RoutePriceBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Text(
-            pending ? 'Price' : 'From',
+            pending ? context.l10n.booking_price : context.l10n.booking_from,
             style: ClientTypography.labelSmall(context).copyWith(
               color: ClientColors.textTertiaryFor(context),
               fontWeight: FontWeight.w700,

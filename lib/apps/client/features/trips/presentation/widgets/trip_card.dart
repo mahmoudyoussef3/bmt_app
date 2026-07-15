@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_driver_row.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_route_marks.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// A trip list card: status (with a live-pulse dot when in progress — never
 /// color alone, spec FR-018), route, schedule, driver, and payment status.
@@ -27,7 +28,7 @@ class TripCard extends StatelessWidget {
             children: [
               ClientStatusBadge(
                 status: journeyStatusFor(trip.status),
-                label: trip.statusLabel,
+                label: statusLabelFor(context, trip.status),
                 showDot: trip.status == TripStatus.inProgress,
               ),
               const Spacer(),
@@ -70,7 +71,7 @@ class TripCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              Icon(Icons.chevron_right_rounded, color: scheme.outline),
+              DirectionalIcon(Icons.chevron_right_rounded, color: scheme.outline),
             ],
           ),
           const SizedBox(height: 14),

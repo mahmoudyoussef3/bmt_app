@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_overview_header.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_pricing_card.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_stop_timeline.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
 /// The scrollable content inside Route Details' draggable sheet: banner,
@@ -46,13 +47,14 @@ class RouteDetailsSheetContent extends StatelessWidget {
   }
 
   Widget _content(BuildContext context) {
+    final l10n = context.l10n;
     return ListView(
       controller: scrollController,
       padding: const EdgeInsets.fromLTRB(16, 24, 16, 110),
       children: [
         Center(
           child: Semantics(
-            label: 'Drag to expand route details',
+            label: l10n.booking_dragToExpandDetails,
             child: Container(
               width: 44,
               height: 5,
@@ -73,8 +75,8 @@ class RouteDetailsSheetContent extends StatelessWidget {
             Expanded(
               child: Text(
                 route.isExactMatch
-                    ? 'Is this route suitable?'
-                    : 'Closest routes for your search',
+                    ? l10n.booking_isThisRouteSuitable
+                    : l10n.booking_closestRoutesForSearch,
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   height: 1.05,
@@ -84,7 +86,7 @@ class RouteDetailsSheetContent extends StatelessWidget {
             TextButton.icon(
               onPressed: onMap,
               icon: const Icon(Icons.edit_location_alt_rounded, size: 18),
-              label: const Text('Edit stops'),
+              label: Text(l10n.booking_editStops),
             ),
           ],
         ),

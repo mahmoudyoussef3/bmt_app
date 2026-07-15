@@ -4,6 +4,8 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// The "Where to?" search bar — the primary entry point into the booking
 /// flow, styled as a bold elevated pill sitting on the hero gradient.
@@ -45,14 +47,14 @@ class HomeSearchPill extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Where to?',
+                    context.l10n.home_whereTo,
                     style: ClientTypography.headingSmall(
                       context,
                     ).copyWith(fontWeight: FontWeight.w900),
                   ),
                   const SizedBox(height: 1),
                   Text(
-                    'Search routes, times and seats',
+                    context.l10n.home_searchRoutesTimesSeats,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: ClientTypography.bodySmall(
@@ -70,7 +72,7 @@ class HomeSearchPill extends StatelessWidget {
                 color: ClientColors.primaryFor(context),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: const DirectionalIcon(
                 Icons.arrow_forward_rounded,
                 color: Colors.white,
                 size: 19,

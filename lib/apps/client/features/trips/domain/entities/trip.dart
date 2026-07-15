@@ -8,15 +8,6 @@ enum TripStatus { upcoming, inProgress, completed, cancelled }
 enum TripFilter { upcoming, active, completed, cancelled }
 
 extension TripFilterLabel on TripFilter {
-  String get label {
-    return switch (this) {
-      TripFilter.upcoming => 'Upcoming',
-      TripFilter.active => 'Active',
-      TripFilter.completed => 'Completed',
-      TripFilter.cancelled => 'Cancelled',
-    };
-  }
-
   TripStatus get statusMatch {
     return switch (this) {
       TripFilter.upcoming => TripStatus.upcoming,
@@ -127,17 +118,6 @@ class TripData {
     return seats.where((seat) => seat.trim().isNotEmpty).toList();
   }
 
-  String get paymentLabel {
-    return switch (paymentStatus) {
-      PaymentStatus.paid => 'Paid',
-      PaymentStatus.pending => 'Pending',
-      PaymentStatus.underReview => 'Under Review',
-      PaymentStatus.refunded => 'Refunded',
-      PaymentStatus.failed => 'Failed',
-      PaymentStatus.cancelled => 'Cancelled',
-    };
-  }
-
   /// A booking may only be cancelled by the client while its payment is still
   /// waiting on the dashboard. Once the dashboard approves the payment the seat
   /// is paid for and final — cancelling then goes through support, not a
@@ -167,13 +147,4 @@ class TripData {
 
   /// Rating is offered on a completed trip the passenger has not rated yet.
   bool get canBeReviewed => status == TripStatus.completed && !isReviewed;
-
-  String get statusLabel {
-    return switch (status) {
-      TripStatus.upcoming => 'Upcoming',
-      TripStatus.inProgress => 'In progress',
-      TripStatus.completed => 'Completed',
-      TripStatus.cancelled => 'Cancelled',
-    };
-  }
 }

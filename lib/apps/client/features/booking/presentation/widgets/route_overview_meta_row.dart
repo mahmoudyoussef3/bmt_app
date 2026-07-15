@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// [RouteOverviewScreen]'s compact duration/distance/seats fact row.
 class RouteOverviewMetaRow extends StatelessWidget {
@@ -21,7 +22,7 @@ class RouteOverviewMetaRow extends StatelessWidget {
         _chip(
           context,
           Icons.event_seat_rounded,
-          '${route.availableSeats} seats',
+          context.l10n.booking_seatsCountLabel(route.availableSeats),
         ),
       ],
     );

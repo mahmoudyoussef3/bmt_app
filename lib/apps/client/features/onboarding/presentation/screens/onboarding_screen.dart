@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 class OnboardingScreen extends StatefulWidget {
@@ -318,7 +319,7 @@ class _PageDots extends StatelessWidget {
         return AnimatedContainer(
           duration: const Duration(milliseconds: 320),
           curve: Curves.easeOutCubic,
-          margin: const EdgeInsets.only(right: 6),
+          margin: const EdgeInsetsDirectional.only(end: 6),
           height: 6,
           width: active ? 26 : 6,
           decoration: BoxDecoration(
@@ -369,7 +370,7 @@ class _BottomActions extends StatelessWidget {
           label: isLastPage ? l10n.onboarding_getStarted : l10n.onboarding_next,
           isLoading: isCompleting,
           onPressed: isCompleting ? () {} : onNext,
-          icon: const Icon(
+          icon: const DirectionalIcon(
             Icons.arrow_forward_rounded,
             color: Colors.white,
             size: 21,

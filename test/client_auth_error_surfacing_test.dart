@@ -2,11 +2,27 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/auth/data/datasources/client_auth_datasource.dart';
 import 'package:bmt_app/apps/client/features/auth/data/repositories/client_auth_repository_impl.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/entities/remembered_credentials.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/repositories/remember_me_repository.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/clear_remembered_credentials_usecase.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/get_remembered_credentials_usecase.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/save_remembered_credentials_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_in_with_email_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_state.dart';
+
+class _FakeRememberMeRepository implements RememberMeRepository {
+  @override
+  Future<void> save({required String email, required String password}) async {}
+
+  @override
+  Future<RememberedCredentials?> read() async => null;
+
+  @override
+  Future<void> clear() async {}
+}
 
 /// Fake datasource that throws whatever it is configured to throw, so we can
 /// assert the exact message the user ends up seeing.
@@ -46,10 +62,16 @@ class _FakeDatasource implements ClientAuthDatasource {
 
 ClientAuthCubit buildCubit(ClientAuthDatasource ds) {
   final repo = ClientAuthRepositoryImpl(ds);
+  final rememberMeRepo = _FakeRememberMeRepository();
   return ClientAuthCubit(
     signInWithEmail: SignInWithEmailUseCase(repo),
     signUpWithEmail: SignUpWithEmailUseCase(repo),
     signOut: SignOutUseCase(repo),
+    saveRememberedCredentials: SaveRememberedCredentialsUseCase(rememberMeRepo),
+    getRememberedCredentials: GetRememberedCredentialsUseCase(rememberMeRepo),
+    clearRememberedCredentials: ClearRememberedCredentialsUseCase(
+      rememberMeRepo,
+    ),
   );
 }
 
@@ -84,7 +106,11 @@ void main() {
         _FakeDatasource(onSignIn: () => Exception('Invalid login credentials')),
       );
 
-      await cubit.signIn(email: 'jane@example.com', password: 'wrong');
+      await cubit.signIn(
+        email: 'jane@example.com',
+        password: 'wrong',
+        rememberMe: false,
+      );
 
       expect(cubit.state.signInStatus, AuthSubmissionStatus.failure);
       expect(cubit.state.signInError, 'Invalid login credentials');

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Multi-passenger presentation placeholder (UI only, no booking logic).
 class SeatPassengerPreviewCard extends StatelessWidget {
@@ -18,6 +19,7 @@ class SeatPassengerPreviewCard extends StatelessWidget {
     if (selectedSeat == null) {
       return const SizedBox.shrink();
     }
+    final l10n = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -38,7 +40,7 @@ class SeatPassengerPreviewCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                'Passengers',
+                l10n.seatSelection_passengersTitle,
                 style: ClientTypography.bodyMedium(
                   context,
                 ).copyWith(fontWeight: FontWeight.w800),
@@ -51,7 +53,7 @@ class SeatPassengerPreviewCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  '1 seat',
+                  l10n.seatSelection_oneSeatBadge,
                   style: ClientTypography.labelSmall(context).copyWith(
                     color: ClientColors.primary,
                     fontWeight: FontWeight.w700,
@@ -76,7 +78,7 @@ class SeatPassengerPreviewCard extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Select another seat to add a passenger (UI preview)',
+              l10n.seatSelection_addPassengerHint,
               style: ClientTypography.bodySmall(context).copyWith(
                 color: ClientColors.textTertiaryFor(context),
                 fontStyle: FontStyle.italic,

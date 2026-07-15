@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// A single selectable departure in Route Details' available-trips list.
 class TripOptionTile extends StatelessWidget {
@@ -55,7 +56,7 @@ class TripOptionTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    '${trip.vehicleType} · ${trip.availableSeats} seats',
+                    '${trip.vehicleType} · ${context.l10n.booking_seatsCountLabel(trip.availableSeats)}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: scheme.onSurface.withAlpha(150),
                       fontWeight: FontWeight.w600,

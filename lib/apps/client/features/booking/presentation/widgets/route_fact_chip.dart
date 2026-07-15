@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// An icon + label pill for a quick route fact (distance, duration, seats).
 class RouteFactChip extends StatelessWidget {
@@ -25,7 +26,7 @@ class RouteFactChip extends StatelessWidget {
           Icon(icon, size: 15, color: ClientColors.primary),
           const SizedBox(width: 6),
           Text(
-            label.isEmpty ? 'Not set' : label,
+            label.isEmpty ? context.l10n.common_notSet : label,
             style: ClientTypography.labelMedium(
               context,
             ).copyWith(fontWeight: FontWeight.w800),

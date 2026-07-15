@@ -12,6 +12,8 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/bookin
 import 'package:bmt_app/apps/client/features/seat_selection/domain/entities/seat_option.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_state.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class WizardSeatStep extends StatefulWidget {
   const WizardSeatStep({super.key, required this.onNext});
@@ -88,6 +90,7 @@ class _SeatBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final seats = [...state.data.seats]
       ..sort((a, b) {
         final rowCompare = a.row.compareTo(b.row);
@@ -108,10 +111,10 @@ class _SeatBody extends StatelessWidget {
             children: [
               BookingStepIntro(
                 icon: Icons.event_seat_rounded,
-                title: 'Pick your seat',
-                subtitle: 'Front seats are nearest to the driver.',
+                title: l10n.booking_pickYourSeat,
+                subtitle: l10n.booking_frontSeatsNote,
                 trailing: BookingCountPill(
-                  label: '${state.data.availableCount} free',
+                  label: l10n.booking_freeCount(state.data.availableCount),
                 ),
               ),
               const SizedBox(height: 16),
@@ -161,14 +164,16 @@ class _SeatBody extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'Your selected seat',
+                        l10n.booking_yourSelectedSeat,
                         style: ClientTypography.bodySmall(context).copyWith(
                           color: ClientColors.textSecondaryFor(context),
                         ),
                       ),
                     ),
                     Text(
-                      'EGP ${session.tripPrice.toStringAsFixed(0)}',
+                      l10n.packages_egpAmount(
+                        session.tripPrice.toStringAsFixed(0),
+                      ),
                       style: ClientTypography.priceSmall(
                         context,
                       ).copyWith(color: ClientColors.primary),
@@ -176,8 +181,8 @@ class _SeatBody extends StatelessWidget {
                   ],
                 ),
           child: ClientButton(
-            label: 'Continue to packages',
-            icon: const Icon(Icons.arrow_forward_rounded),
+            label: l10n.booking_continueToPackages,
+            icon: const DirectionalIcon(Icons.arrow_forward_rounded),
             onPressed: session.seatValid ? onNext : null,
           ),
         ),
@@ -245,7 +250,7 @@ class _VehicleCabin extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'DRIVER',
+            context.l10n.booking_driver.toUpperCase(),
             style: ClientTypography.labelSmall(context).copyWith(
               color: ClientColors.textTertiaryFor(context),
               letterSpacing: 1.2,
@@ -264,7 +269,7 @@ class _VehicleCabin extends StatelessWidget {
                 if (offset > 0) {
                   return Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 8),
+                      padding: const EdgeInsetsDirectional.only(start: 8),
                       child: _seat(context, seatAt(10 + offset), 10 + offset),
                     ),
                   );
@@ -421,7 +426,7 @@ class _ExtraSeats extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Additional vehicle seats',
+            context.l10n.booking_additionalVehicleSeats,
             style: ClientTypography.labelMedium(context),
           ),
           const SizedBox(height: 12),
@@ -456,19 +461,24 @@ class _SeatLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         _item(
           context,
           ClientColors.seatAvailableFor(context),
-          'Available',
+          l10n.booking_available,
           border: ClientColors.seatAvailableBorderFor(context),
         ),
         const SizedBox(width: 16),
-        _item(context, ClientColors.primary, 'Selected'),
+        _item(context, ClientColors.primary, l10n.seatSelection_seatStatusSelected),
         const SizedBox(width: 16),
-        _item(context, ClientColors.surfaceMutedFor(context), 'Unavailable'),
+        _item(
+          context,
+          ClientColors.surfaceMutedFor(context),
+          l10n.booking_unavailable,
+        ),
       ],
     );
   }
@@ -537,7 +547,7 @@ class _SeatErrorBody extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Could not load seats',
+              context.l10n.booking_couldNotLoadSeats,
               style: ClientTypography.headingSmall(context),
             ),
             const SizedBox(height: 8),
@@ -549,7 +559,10 @@ class _SeatErrorBody extends StatelessWidget {
               ).copyWith(color: ClientColors.textSecondaryFor(context)),
             ),
             const SizedBox(height: 20),
-            ClientButton(label: 'Try again', onPressed: onRetry),
+            ClientButton(
+              label: context.l10n.common_tryAgain,
+              onPressed: onRetry,
+            ),
           ],
         ),
       ),

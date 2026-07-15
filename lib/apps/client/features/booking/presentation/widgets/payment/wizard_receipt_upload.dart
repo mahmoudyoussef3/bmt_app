@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The proof an operator will read before this booking is confirmed.
 ///
@@ -24,6 +25,7 @@ class WizardReceiptUpload extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final failed = error != null;
     final done = uploaded && !uploading;
 
@@ -44,7 +46,7 @@ class WizardReceiptUpload extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Proof of transfer',
+            l10n.booking_proofOfTransfer,
             style: ClientTypography.bodyMedium(context).copyWith(
               fontWeight: FontWeight.w800,
               color: ClientColors.textPrimaryFor(context),
@@ -53,8 +55,8 @@ class WizardReceiptUpload extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             done
-                ? 'Attached. Our team will check it against your transfer.'
-                : 'A screenshot or PDF of the transfer — up to 8 MB.',
+                ? l10n.booking_receiptAttachedNote
+                : l10n.booking_receiptHintUpTo8mb,
             style: ClientTypography.bodySmall(
               context,
             ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -86,10 +88,10 @@ class WizardReceiptUpload extends StatelessWidget {
                     ),
               label: Text(
                 uploading
-                    ? 'Uploading…'
+                    ? l10n.booking_uploadingEllipsis
                     : done
-                    ? 'Replace receipt'
-                    : 'Attach receipt',
+                    ? l10n.booking_replaceReceipt
+                    : l10n.booking_attachReceipt,
               ),
             ),
           ),

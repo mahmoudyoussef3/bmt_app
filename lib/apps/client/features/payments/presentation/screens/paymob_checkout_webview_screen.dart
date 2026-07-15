@@ -3,6 +3,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class PaymobCheckoutWebViewScreen extends StatefulWidget {
   const PaymobCheckoutWebViewScreen({
@@ -80,7 +81,7 @@ class _PaymobCheckoutWebViewScreenState
         foregroundColor: ClientColors.textPrimaryFor(context),
         elevation: 0,
         leading: IconButton(
-          tooltip: 'Close checkout',
+          tooltip: context.l10n.payments_closeCheckoutTooltip,
           icon: const Icon(Icons.close_rounded),
           onPressed: () => Navigator.of(context).pop(false),
         ),
@@ -88,7 +89,7 @@ class _PaymobCheckoutWebViewScreenState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Paymob Checkout',
+              context.l10n.payments_paymobCheckoutTitle,
               style: ClientTypography.bodyMedium(
                 context,
               ).copyWith(fontWeight: FontWeight.w900),
@@ -103,7 +104,7 @@ class _PaymobCheckoutWebViewScreenState
         ),
         actions: [
           IconButton(
-            tooltip: 'Reload',
+            tooltip: context.l10n.payments_reloadTooltip,
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () => _controller.reload(),
           ),
@@ -161,7 +162,7 @@ class _CheckoutErrorOverlay extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                'Unable to load checkout',
+                context.l10n.payments_unableToLoadCheckout,
                 style: ClientTypography.headingSmall(
                   context,
                 ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -178,7 +179,7 @@ class _CheckoutErrorOverlay extends StatelessWidget {
               FilledButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Retry'),
+                label: Text(context.l10n.common_retry),
               ),
             ],
           ),

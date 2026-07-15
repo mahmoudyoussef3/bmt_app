@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// `RouteStopTimeline`'s header: title, one-line explainer, and a neutral
 /// stop-count pill so the length of the route is legible before scrolling it.
@@ -36,7 +37,7 @@ class RouteTimelineHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Route timeline',
+                context.l10n.booking_routeTimeline,
                 style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w800,
                   letterSpacing: -0.3,
@@ -44,7 +45,7 @@ class RouteTimelineHeader extends StatelessWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                'Where you can get on and off',
+                context.l10n.booking_whereGetOnOffShort,
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: ClientColors.textSecondaryFor(context),
                   fontWeight: FontWeight.w500,
@@ -76,7 +77,9 @@ class _StopCountPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(ClientRadius.pill),
       ),
       child: Text(
-        stopCount == 1 ? '1 stop' : '$stopCount stops',
+        stopCount == 1
+            ? context.l10n.booking_oneStop
+            : context.l10n.booking_stopsCountLabel(stopCount),
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
           color: ClientColors.textSecondaryFor(context),
           fontWeight: FontWeight.w700,

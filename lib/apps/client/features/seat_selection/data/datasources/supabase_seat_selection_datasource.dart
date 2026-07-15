@@ -94,11 +94,13 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
         vehicleName: vehicle['brand']?.toString() ?? '',
         vehicleType: vehicle['vehicle_type']?.toString() ?? '',
         vehicleModel: vehicle['model']?.toString() ?? '',
+        vehicleImageUrl: vehicle['image_url']?.toString() ?? '',
         tripDate: tripResponse['trip_date']?.toString() ?? '',
         departureTime: tripResponse['departure_time']?.toString() ?? '',
         arrivalTime: tripResponse['arrival_time']?.toString() ?? '',
         driverName: driver['full_name']?.toString() ?? '',
         driverRating: driverRating is num ? driverRating.toDouble() : 0.0,
+        driverImageUrl: driver['profile_image_url']?.toString() ?? '',
       );
     } catch (error) {
       if (error is PostgrestException) {

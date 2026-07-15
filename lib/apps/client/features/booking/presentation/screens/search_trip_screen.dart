@@ -14,7 +14,7 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/search_opti
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/search_date_options.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/search_option_tile.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 const _recentPickupsKey = RecentSearchStore.pickupsKey;
 const _recentDestinationsKey = RecentSearchStore.destinationsKey;
@@ -44,7 +44,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
     _query = (widget.initialQuery ?? const BookingSearchQuery()).copyWith(
       date: widget.initialQuery?.date.isNotEmpty == true
           ? widget.initialQuery!.date
-          : todaySearchDateLabel(),
+          : todaySearchDateLabel(context),
     );
     final cubit = context.read<BookingCubit>();
     final currentState = cubit.state;
@@ -65,7 +65,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
   List<String> get _pickupOptions => _options?.pickupPoints ?? [];
   List<String> get _destinationOptions => _options?.destinations ?? [];
   List<String> get _timeOptions => _options?.departureTimes ?? [];
-  List<String> get _dateOptions => buildSearchDateOptions();
+  List<String> get _dateOptions => buildSearchDateOptions(context);
 
   void _retryLoadOptions() {
     setState(() {
@@ -92,7 +92,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
       selected: current.isEmpty ? null : current,
       recent: recent,
       enableSearch: true,
-      searchHint: 'Search $title',
+      searchHint: context.l10n.booking_searchHint(title),
       isLoading: _optionsLoading,
       errorMessage: _optionsError,
       onRetry: _retryLoadOptions,
@@ -129,7 +129,7 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            AppLocalizations.of(context)!.booking_selectPickupDestination,
+            context.l10n.booking_selectPickupDestination,
           ),
         ),
       );
@@ -163,10 +163,10 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
         }
       },
       child: BookingFlowScaffold(
-        title: AppLocalizations.of(context)!.booking_searchTrip,
+        title: context.l10n.booking_searchTrip,
         actions: [
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: context.l10n.tracking_refresh,
             icon: const Icon(Icons.refresh_rounded),
             onPressed: _retryLoadOptions,
           ),
@@ -181,22 +181,21 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
               time: _query.time,
               onSwap: _swapPickupAndDestination,
               onPickupTap: () => _pickLocation(
-                title: AppLocalizations.of(context)!.booking_pickupLocation,
+                title: context.l10n.booking_pickupLocation,
                 options: _pickupOptions,
                 field: 'pickup',
-                emptyMessage:
-                    'No pickup points available yet. Please check back soon.',
+                emptyMessage: context.l10n.booking_noPickupPointsAvailable,
               ),
               onDestinationTap: () => _pickLocation(
-                title: AppLocalizations.of(context)!.booking_destination,
+                title: context.l10n.booking_destination,
                 options: _destinationOptions,
                 field: 'destination',
-                emptyMessage: 'No destinations available yet.',
+                emptyMessage: context.l10n.booking_noDestinationsAvailable,
               ),
               onDateTap: () async {
                 final value = await SelectionPickerSheet.show(
                   context: context,
-                  title: AppLocalizations.of(context)!.booking_selectDate,
+                  title: context.l10n.booking_selectDate,
                   options: _dateOptions,
                   selected: _query.date,
                 );
@@ -207,14 +206,13 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
               onTimeTap: () async {
                 final value = await SelectionPickerSheet.show(
                   context: context,
-                  title: AppLocalizations.of(context)!.booking_selectTime,
+                  title: context.l10n.booking_selectTime,
                   options: _timeOptions,
                   selected: _query.time.isEmpty ? null : _query.time,
                   isLoading: _optionsLoading,
                   errorMessage: _optionsError,
                   onRetry: _retryLoadOptions,
-                  emptyMessage:
-                      'No departure times available for this route yet.',
+                  emptyMessage: context.l10n.booking_noDepartureTimesAvailable,
                 );
                 if (value != null) {
                   setState(() => _query = _query.copyWith(time: value));
@@ -224,17 +222,15 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             ),
             const SizedBox(height: 20),
             ClientSectionHeader(
-              title: AppLocalizations.of(context)!.booking_otherWaysToSearch,
-              subtitle: AppLocalizations.of(context)!.booking_browseOrPickMap,
+              title: context.l10n.booking_otherWaysToSearch,
+              subtitle: context.l10n.booking_browseOrPickMap,
             ),
             const SizedBox(height: 12),
             SearchOptionTile(
               icon: Icons.trending_up_rounded,
               iconColor: ClientColors.primary,
-              title: AppLocalizations.of(context)!.booking_popularRoutes,
-              subtitle: AppLocalizations.of(
-                context,
-              )!.booking_popularRoutesSubtitle,
+              title: context.l10n.booking_popularRoutes,
+              subtitle: context.l10n.booking_popularRoutesSubtitle,
               onTap: () => Navigator.pushNamed(
                 context,
                 BookingRoutes.popularRoutes,
@@ -245,9 +241,9 @@ class _SearchTripScreenState extends State<SearchTripScreen> {
             /*    _SearchOptionTile(
               icon: Icons.map_rounded,
               iconColor: ClientColors.journeySlate,
-              title: AppLocalizations.of(context)!.booking_selectOnMap,
+              title: context.l10n.booking_selectOnMap,
               subtitle:
-                  AppLocalizations.of(context)!.booking_selectOnMapSubtitle,
+                  context.l10n.booking_selectOnMapSubtitle,
               onTap: () => Navigator.pushNamed(
                 context,
                 BookingRoutes.mapSelection,

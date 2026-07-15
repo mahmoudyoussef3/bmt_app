@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/hero_journey.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_schedule_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Trip Details' hero: status, reference, the pickup → drop-off rail, and the
 /// date/departure/seat strip.
@@ -51,7 +52,7 @@ class TripHeroCard extends StatelessWidget {
                   Row(
                     children: [
                       HeroStatusChip(
-                        label: trip.statusLabel,
+                        label: statusLabelFor(context, trip.status),
                         color: badge.label,
                       ),
                       const SizedBox(width: 12),
@@ -77,25 +78,25 @@ class TripHeroCard extends StatelessWidget {
                     facts: [
                       HeroFact(
                         icon: Icons.calendar_today_rounded,
-                        label: 'DATE',
+                        label: context.l10n.common_date.toUpperCase(),
                         value: tripDayLabel(context, trip),
                       ),
                       HeroFact(
                         icon: Icons.schedule_rounded,
-                        label: 'DEPARTS',
+                        label: context.l10n.trips_factDeparts.toUpperCase(),
                         value: tripTimeLabel(context, trip),
                       ),
                       HeroFact(
                         icon: Icons.event_seat_rounded,
-                        label: _seatsLabel(trip),
-                        value: _seatsValue(trip),
+                        label: _seatsLabel(context, trip),
+                        value: _seatsValue(context, trip),
                       ),
                     ],
                   ),
                   if (trip.completedAt != null) ...[
                     const SizedBox(height: 14),
                     Text(
-                      'Completed ${trip.completedAt}',
+                      context.l10n.trips_completedAt(trip.completedAt!),
                       style: ClientTypography.bodySmall(
                         context,
                       ).copyWith(color: Colors.white.withAlpha(200)),
@@ -110,12 +111,15 @@ class TripHeroCard extends StatelessWidget {
     );
   }
 
-  String _seatsLabel(TripData trip) =>
-      trip.mySeatLabels.length > 1 ? 'SEATS' : 'SEAT';
+  String _seatsLabel(BuildContext context, TripData trip) =>
+      (trip.mySeatLabels.length > 1
+              ? context.l10n.common_seats
+              : context.l10n.trips_factSeat)
+          .toUpperCase();
 
-  String _seatsValue(TripData trip) {
+  String _seatsValue(BuildContext context, TripData trip) {
     final seats = trip.mySeatLabels;
-    if (seats.isEmpty) return 'Not assigned';
+    if (seats.isEmpty) return context.l10n.trips_seatNotAssigned;
     return seats.join(', ');
   }
 }

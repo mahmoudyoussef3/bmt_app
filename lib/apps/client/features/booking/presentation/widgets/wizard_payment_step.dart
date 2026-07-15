@@ -11,6 +11,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/paymen
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/get_payment_methods_usecase.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_skeleton.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Pays for the seat the wizard has been assembling.
 ///
@@ -64,6 +65,12 @@ class _WizardPaymentStepState extends State<WizardPaymentStep> {
       final url = await pickAndUploadReceipt(bookingOrTripId: tripId);
       if (!mounted || url == null) return;
       context.read<BookingWizardCubit>().setReceiptUrl(url);
+    } on ReceiptTooLargeException {
+      if (!mounted) return;
+      setState(() => _uploadError = context.l10n.booking_receiptTooLarge);
+    } on ReceiptUnreadableException {
+      if (!mounted) return;
+      setState(() => _uploadError = context.l10n.booking_receiptUnreadable);
     } catch (error) {
       if (!mounted) return;
       setState(() {
@@ -89,9 +96,7 @@ class _WizardPaymentStepState extends State<WizardPaymentStep> {
           return Padding(
             padding: const EdgeInsets.all(20),
             child: ClientErrorCard.fullScreen(
-              message:
-                  'We could not load the ways to pay. Your seat is still '
-                  'yours — try again.',
+              message: context.l10n.booking_couldNotLoadPaymentMethods,
               onRetry: () => setState(() => _methods = _loadMethods()),
             ),
           );

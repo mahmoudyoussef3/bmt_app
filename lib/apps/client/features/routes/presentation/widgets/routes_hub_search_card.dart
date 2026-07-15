@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The primary "search trips" call to action on the Routes tab.
 class RoutesHubSearchCard extends StatelessWidget {
@@ -62,7 +63,7 @@ class RoutesHubSearchCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: ClientSpacing.lg),
-          ClientButton(label: 'Search trips', onPressed: onSearch),
+          ClientButton(label: context.l10n.routes_searchTripsButton, onPressed: onSearch),
         ],
       ),
     );

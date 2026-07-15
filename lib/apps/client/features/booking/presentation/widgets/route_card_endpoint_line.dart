@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_line_dots.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The vertical "from → to" line with origin/destination dots, used inside
 /// [PopularRouteListCard] to visualize a route's endpoints at a glance.
@@ -36,9 +37,9 @@ class RouteEndpointLine extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _Endpoint(label: 'From', value: pickup),
+                _Endpoint(label: context.l10n.booking_from, value: pickup),
                 const SizedBox(height: 12),
-                _Endpoint(label: 'To', value: destination),
+                _Endpoint(label: context.l10n.booking_to, value: destination),
               ],
             ),
           ),
@@ -68,7 +69,7 @@ class _Endpoint extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          value.isEmpty ? 'Not set' : value,
+          value.isEmpty ? context.l10n.common_notSet : value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: ClientTypography.headingSmall(context),

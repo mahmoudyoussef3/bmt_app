@@ -3,6 +3,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'support_home_header.dart';
 import 'support_ticket_card.dart';
 
@@ -57,7 +58,7 @@ class _SectionTitle extends StatelessWidget {
     return Row(
       children: [
         Text(
-          'My tickets',
+          context.l10n.support_myTickets,
           style: ClientTypography.headingSmall(context).copyWith(
             color: ClientColors.textPrimaryFor(context),
             fontWeight: FontWeight.w800,

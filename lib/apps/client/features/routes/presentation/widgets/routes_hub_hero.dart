@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The Routes tab's gradient hero: title, subtitle, and premium hero tags.
 ///
@@ -57,13 +58,13 @@ class RoutesHubHero extends StatelessWidget {
                 ).copyWith(color: Colors.white.withAlpha(210)),
               ),
               const SizedBox(height: ClientSpacing.md),
-              const Wrap(
+              Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: [
-                  _HeroTag(label: 'Fast discovery'),
-                  _HeroTag(label: 'Live availability'),
-                  _HeroTag(label: 'Premium routes'),
+                  _HeroTag(label: context.l10n.routes_tagFastDiscovery),
+                  _HeroTag(label: context.l10n.routes_tagLiveAvailability),
+                  _HeroTag(label: context.l10n.routes_tagPremiumRoutes),
                 ],
               ),
             ],

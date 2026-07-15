@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_booking_status_style.dart';
 
@@ -20,6 +22,7 @@ class HomeTripFacts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final border = ClientColors.borderFor(context);
+    final l10n = context.l10n;
 
     return Container(
       decoration: BoxDecoration(
@@ -35,8 +38,10 @@ class HomeTripFacts extends StatelessWidget {
                 Expanded(
                   child: _Fact(
                     icon: Icons.schedule_rounded,
-                    caption: 'Ride time',
-                    value: trip.duration.isEmpty ? 'Not set' : trip.duration,
+                    caption: l10n.home_rideTime,
+                    value: trip.duration.isEmpty
+                        ? l10n.common_notSet
+                        : trip.duration,
                     color: ClientColors.textPrimaryFor(context),
                   ),
                 ),
@@ -44,8 +49,8 @@ class HomeTripFacts extends StatelessWidget {
                 Expanded(
                   child: _Fact(
                     icon: Icons.event_seat_rounded,
-                    caption: 'Seats',
-                    value: _seatLabel(trip),
+                    caption: l10n.common_seats,
+                    value: _seatLabel(trip, l10n),
                     color: _seatColor(trip),
                   ),
                 ),
@@ -142,7 +147,9 @@ class _BookedNote extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              seats > 1 ? 'You booked $seats seats' : 'You booked this',
+              seats > 1
+                  ? context.l10n.home_youBookedSeats(seats)
+                  : context.l10n.home_youBookedThis,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: ClientTypography.labelMedium(
@@ -163,8 +170,8 @@ Color _seatColor(UpcomingTripData trip) {
       : ClientColors.journeyCyan;
 }
 
-String _seatLabel(UpcomingTripData trip) {
-  if (trip.isSoldOut) return 'Sold out';
-  if (trip.hasScarceSeats) return 'Only ${trip.seatsLeft} left';
-  return '${trip.seatsLeft} available';
+String _seatLabel(UpcomingTripData trip, AppLocalizations l10n) {
+  if (trip.isSoldOut) return l10n.common_soldOut;
+  if (trip.hasScarceSeats) return l10n.home_seatsOnlyLeft(trip.seatsLeft);
+  return l10n.home_seatsAvailable(trip.seatsLeft);
 }

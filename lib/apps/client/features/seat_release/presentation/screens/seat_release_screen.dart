@@ -2,6 +2,9 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -118,37 +121,45 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   List<SeatReleaseRecord> _pastReleases = [];
 
   // Seat-release status notifications derived from loaded account state.
-  late List<NotificationItem> _notifications;
+  List<NotificationItem> _notifications = [];
 
   bool _seatReleaseDataApplied = false;
+  bool _notificationsSeeded = false;
 
   @override
   void initState() {
     super.initState();
     context.read<SeatReleaseCubit>().load();
+  }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_notificationsSeeded) return;
+    _notificationsSeeded = true;
+    final l10n = context.l10n;
     _notifications = [
-      const NotificationItem(
-        title: 'Compensation Added',
-        body:
-            'Your released seat on Jun 2 was rebooked. EGP 50 cashback credited to your wallet!',
-        time: 'Yesterday',
+      NotificationItem(
+        title: l10n.seatRelease_notifCompensationAddedTitle,
+        body: l10n.seatRelease_notifCompensationAddedBody,
+        time: l10n.seatRelease_timeYesterday,
         icon: Icons.payments_outlined,
         color: ClientColors.journeyCyan,
       ),
-      const NotificationItem(
-        title: 'Seat Rebooked Successfully',
-        body:
-            'A passenger has booked your released seat for the trip on Jun 2.',
-        time: '2 days ago',
+      NotificationItem(
+        title: l10n.seatRelease_notifRebookedTitle,
+        body: l10n.seatRelease_notifRebookedBody,
+        time: l10n.seatRelease_timeDaysAgo(2),
         icon: Icons.check_circle_outline_rounded,
         color: Colors.blue,
       ),
-      const NotificationItem(
-        title: 'Seat Released Successfully',
-        body:
-            'You successfully released your seat (Seat 6) for the Jun 2 trip.',
-        time: '3 days ago',
+      NotificationItem(
+        title: l10n.seatRelease_notifReleasedTitle,
+        body: l10n.seatRelease_notifReleasedBody(
+          '6',
+          l10n.seatRelease_mockTripDateJun2,
+        ),
+        time: l10n.seatRelease_timeDaysAgo(3),
         icon: Icons.event_busy_rounded,
         color: Colors.orangeAccent,
       ),
@@ -177,16 +188,17 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   }
 
   String _getViewTitle() {
+    final l10n = context.l10n;
     return switch (_currentView) {
-      1 => 'Seat Release Hub',
-      2 => 'Release Reserved Seat',
-      4 => 'Seat Released Successfully',
-      5 => 'Release Record Details',
-      6 => 'Compensation Tracking',
-      7 => 'Seat Release Logs',
-      8 => 'Alerts Notifications',
-      9 => 'Milestones & Achievements',
-      _ => 'Seat Release Portal',
+      1 => l10n.seatRelease_hubTitle,
+      2 => l10n.seatRelease_formTitle,
+      4 => l10n.seatRelease_successTitle,
+      5 => l10n.seatRelease_detailsTitle,
+      6 => l10n.seatRelease_compensationTitle,
+      7 => l10n.seatRelease_historyTitle,
+      8 => l10n.seatRelease_notificationsTitle,
+      9 => l10n.seatRelease_achievementsTitle,
+      _ => l10n.seatRelease_portalTitle,
     };
   }
 
@@ -234,6 +246,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       backgroundColor: Colors.transparent,
       builder: (context) {
         final scheme = Theme.of(context).colorScheme;
+        final l10n = context.l10n;
         return Container(
           decoration: BoxDecoration(
             color: scheme.surfaceContainerHighest,
@@ -252,15 +265,22 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Confirm Seat Release',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              Text(
+                l10n.seatRelease_confirmSheetTitle,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Please confirm you want to release your seat for this specific trip. Released seats cannot be reclaimed once booked by other passengers.',
+              Text(
+                l10n.seatRelease_confirmSheetBody,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 12, color: Colors.grey, height: 1.4),
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: Colors.grey,
+                  height: 1.4,
+                ),
               ),
               const SizedBox(height: 20),
               Container(
@@ -273,18 +293,24 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 child: Column(
                   children: [
                     _buildConfirmationRow(
-                      'Trip Date',
+                      l10n.seatRelease_tripDateLabel,
                       _selectedTripForRelease!.date,
                     ),
                     const SizedBox(height: 8),
-                    _buildConfirmationRow('Route Segment', _packageRoute),
-                    const SizedBox(height: 8),
                     _buildConfirmationRow(
-                      'Seat Number',
-                      'Seat ${_selectedTripForRelease!.seatNumber}',
+                      l10n.seatRelease_routeSegmentLabel,
+                      _packageRoute,
                     ),
                     const SizedBox(height: 8),
-                    _buildConfirmationRow('Package Origin', _packageName),
+                    _buildConfirmationRow(
+                      l10n.seatRelease_seatNumberLabel,
+                      l10n.home_seatLabel(_selectedTripForRelease!.seatNumber),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildConfirmationRow(
+                      l10n.seatRelease_packageOriginLabel,
+                      _packageName,
+                    ),
                   ],
                 ),
               ),
@@ -306,7 +332,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        'This action affects only this selected trip date. Future commute dates remain unaffected.',
+                        l10n.seatRelease_confirmSheetWarning,
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
@@ -323,13 +349,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                   Expanded(
                     child: TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Go Back'),
+                      child: Text(l10n.seatRelease_goBack),
                     ),
                   ),
                   const SizedBox(width: 14),
                   Expanded(
                     child: ClientButton(
-                      label: 'Confirm Release',
+                      label: l10n.seatRelease_confirmReleaseButton,
                       expand: true,
                       onPressed: () {
                         Navigator.of(context).pop();
@@ -361,16 +387,17 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
   void _submitRelease() {
     if (_selectedTripForRelease == null) return;
+    final l10n = context.l10n;
 
     final newRecord = SeatReleaseRecord(
       releaseId: 'REL-${math.Random().nextInt(90000) + 10000}',
-      releaseDate: 'Today, Jun 3',
+      releaseDate: l10n.seatRelease_mockReleaseDateToday,
       tripDate: _selectedTripForRelease!.date,
       route: _packageRoute,
       seatNumber: _selectedTripForRelease!.seatNumber,
       reason: _selectedReason,
       notes: _notesController.text.trim().isEmpty
-          ? 'No notes provided'
+          ? l10n.seatRelease_noNotesProvided
           : _notesController.text.trim(),
       status: 'Waiting',
     );
@@ -386,10 +413,12 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       _notifications.insert(
         0,
         NotificationItem(
-          title: 'Seat Released Successfully',
-          body:
-              'You successfully released your seat (Seat ${newRecord.seatNumber}) for the ${newRecord.tripDate} trip.',
-          time: 'Just now',
+          title: l10n.seatRelease_notifReleasedTitle,
+          body: l10n.seatRelease_notifReleasedBody(
+            newRecord.seatNumber,
+            newRecord.tripDate,
+          ),
+          time: l10n.seatRelease_timeJustNow,
           icon: Icons.event_busy_rounded,
           color: Colors.orangeAccent,
         ),
@@ -468,11 +497,11 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             ),
             leading: IconButton(
               onPressed: _onBackPress,
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: const DirectionalIcon(Icons.arrow_back_rounded),
             ),
             actions: [
               IconButton(
-                tooltip: 'Refresh',
+                tooltip: context.l10n.tracking_refresh,
                 icon: const Icon(Icons.refresh_rounded),
                 onPressed: () => context.read<SeatReleaseCubit>().load(),
               ),
@@ -540,9 +569,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Upcoming Reserved Seats',
-              style: TextStyle(
+            Text(
+              context.l10n.seatRelease_upcomingReservedSeatsTitle,
+              style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
@@ -558,6 +587,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   }
 
   Widget _buildPackageHeaderCard(ColorScheme scheme) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -591,7 +621,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  _packageType,
+                  _packageTypeLabel(l10n),
                   style: const TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.bold,
@@ -613,7 +643,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _packageStatus,
+                      _packageStatusLabel(l10n),
                       style: const TextStyle(
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
@@ -646,9 +676,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'VALIDITY RANGE',
-                    style: TextStyle(
+                  Text(
+                    l10n.seatRelease_validityRangeLabel,
+                    style: const TextStyle(
                       fontSize: 8,
                       color: Colors.white70,
                       fontWeight: FontWeight.bold,
@@ -668,18 +698,18 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  const Text(
-                    'SEAT NO.',
-                    style: TextStyle(
+                  Text(
+                    l10n.seatRelease_seatNoLabel,
+                    style: const TextStyle(
                       fontSize: 8,
                       color: Colors.white70,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 2),
-                  const Text(
-                    'Seat 6',
-                    style: TextStyle(
+                  Text(
+                    l10n.home_seatLabel('6'),
+                    style: const TextStyle(
                       fontSize: 10,
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
@@ -694,7 +724,27 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
+  /// [_packageType] is sourced from the data layer as a stable English
+  /// label; this maps the known values to localized copy for display.
+  String _packageTypeLabel(AppLocalizations l10n) {
+    if (_packageType == 'Subscription package') {
+      return l10n.seatRelease_packageTypeSubscription;
+    }
+    return _packageType;
+  }
+
+  /// [_packageStatus] is sourced from the data layer as a stable English
+  /// label; this maps the known values to localized copy for display.
+  String _packageStatusLabel(AppLocalizations l10n) {
+    return switch (_packageStatus) {
+      'Active' => l10n.seatRelease_packageStatusActive,
+      'No subscription' => l10n.seatRelease_packageStatusNone,
+      _ => _packageStatus,
+    };
+  }
+
   Widget _buildStatsGrid(ColorScheme scheme) {
+    final l10n = context.l10n;
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -704,26 +754,26 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       mainAxisSpacing: 10,
       children: [
         _buildStatCard(
-          'Remaining Days',
-          '$_remainingDays Days',
+          l10n.seatRelease_statRemainingDays,
+          l10n.seatRelease_daysCount(_remainingDays),
           Icons.calendar_month_outlined,
           scheme.secondary,
         ),
         _buildStatCard(
-          'Released Seats',
+          l10n.seatRelease_statReleasedSeats,
           '$_releasedSeatsThisMonth',
           Icons.event_busy_outlined,
           Colors.orangeAccent,
         ),
         _buildStatCard(
-          'Rebooked Seats',
+          l10n.seatRelease_statRebookedSeats,
           '$_successfullyRebookedSeats',
           Icons.check_circle_outline_rounded,
           ClientColors.journeyCyan,
         ),
         _buildStatCard(
-          'Earned Reward',
-          'EGP $_totalCompensationEarned',
+          l10n.seatRelease_statEarnedReward,
+          l10n.seatRelease_egpAmount('$_totalCompensationEarned'),
           Icons.payments_outlined,
           scheme.primary,
         ),
@@ -774,7 +824,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         Expanded(
           child: _buildQuickLinkButton(
             icon: Icons.history_rounded,
-            label: 'Release Logs',
+            label: context.l10n.seatRelease_quickLinkReleaseLogs,
             color: ClientColors.journeyCyan,
             onTap: () => setState(() => _currentView = 7),
             scheme: scheme,
@@ -784,7 +834,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         Expanded(
           child: _buildQuickLinkButton(
             icon: Icons.star_border_purple500_rounded,
-            label: 'Rewards & Stats',
+            label: context.l10n.seatRelease_quickLinkRewardsStats,
             color: Colors.indigo,
             onTap: () => setState(() => _currentView = 9),
             scheme: scheme,
@@ -839,8 +889,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   Widget _buildUpcomingTripsList(ColorScheme scheme) {
     if (_upcomingTrips.isEmpty) {
       return ClientErrorCard.fullScreen(
-        message:
-            'No upcoming package trips\nAll upcoming seats are active, or no remaining days remain.',
+        message: context.l10n.seatRelease_noUpcomingTripsMessage,
       );
     }
 
@@ -945,7 +994,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'Seat ${trip.seatNumber}',
+                          context.l10n.home_seatLabel(trip.seatNumber),
                           style: const TextStyle(
                             fontSize: 11,
                             color: Colors.grey,
@@ -968,17 +1017,19 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                               });
                             } else {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
+                                SnackBar(
                                   content: Text(
-                                    'No past release record exists for this date.',
+                                    context
+                                        .l10n
+                                        .seatRelease_noPastRecordSnackbar,
                                   ),
                                 ),
                               );
                             }
                           },
-                          child: const Text(
-                            'View Logs',
-                            style: TextStyle(fontSize: 11),
+                          child: Text(
+                            context.l10n.seatRelease_viewLogsButton,
+                            style: const TextStyle(fontSize: 11),
                           ),
                         ),
                         const SizedBox(width: 6),
@@ -996,9 +1047,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                             ),
                             backgroundColor: scheme.primary,
                           ),
-                          child: const Text(
-                            'Release Seat',
-                            style: TextStyle(
+                          child: Text(
+                            context.l10n.seatRelease_releaseSeatButton,
+                            style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                               color: Colors.white,
@@ -1021,6 +1072,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   Widget _buildReleaseSeatForm(ColorScheme scheme) {
     if (_selectedTripForRelease == null) return const SizedBox.shrink();
     final trip = _selectedTripForRelease!;
+    final l10n = context.l10n;
 
     return Column(
       key: const ValueKey('view2'),
@@ -1043,9 +1095,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               const SizedBox(height: 18),
 
               // Selectable Chips for Reason
-              const Text(
-                'Reason for Releasing Seat',
-                style: TextStyle(
+              Text(
+                l10n.seatRelease_reasonSectionTitle,
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey,
@@ -1056,9 +1108,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               const SizedBox(height: 18),
 
               // Multi-line optional notes
-              const Text(
-                'Optional Notes',
-                style: TextStyle(
+              Text(
+                l10n.seatRelease_optionalNotesTitle,
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey,
@@ -1069,7 +1121,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 controller: _notesController,
                 maxLines: 3,
                 decoration: InputDecoration(
-                  hintText: 'E.g., Working from home on Thursday...',
+                  hintText: l10n.seatRelease_notesHint,
                   fillColor: scheme.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
@@ -1079,9 +1131,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               const SizedBox(height: 24),
 
               // Benefits section
-              const Text(
-                'Why release your seat?',
-                style: TextStyle(
+              Text(
+                l10n.seatRelease_whyReleaseTitle,
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                   color: Colors.grey,
@@ -1127,7 +1179,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  'Seat ${trip.seatNumber}',
+                  context.l10n.home_seatLabel(trip.seatNumber),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -1153,6 +1205,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   }
 
   Widget _buildReleaseExplanationCard(ColorScheme scheme) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1160,23 +1213,30 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: scheme.outline.withAlpha(45)),
       ),
-      child: const Row(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded, color: Colors.blueAccent, size: 20),
-          SizedBox(width: 12),
+          const Icon(
+            Icons.info_outline_rounded,
+            color: Colors.blueAccent,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Releasing is Temporary',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                  l10n.seatRelease_releasingTemporaryTitle,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'You are releasing your reserved seat for this trip date only. Your package subscription remains active and future trip bookings return automatically.',
-                  style: TextStyle(
+                  l10n.seatRelease_releasingTemporaryBody,
+                  style: const TextStyle(
                     fontSize: 10,
                     color: Colors.grey,
                     height: 1.35,
@@ -1191,6 +1251,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   }
 
   Widget _buildReleaseWarningAlert(ColorScheme scheme) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -1208,7 +1269,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  '12-Hour Threshold Requirement',
+                  l10n.seatRelease_thresholdTitle,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -1217,7 +1278,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Seat release is only available if submitted at least 12 hours before trip departure. Late requests will not be accepted.',
+                  l10n.seatRelease_thresholdBody,
                   style: TextStyle(
                     fontSize: 10,
                     color: scheme.error.withAlpha(200),
@@ -1232,6 +1293,21 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
+  /// Reason values are sourced from the data layer as stable English
+  /// labels; this maps the known values to localized copy for display.
+  String _reasonLabel(String reason) {
+    final l10n = context.l10n;
+    return switch (reason.trim().toLowerCase()) {
+      'personal plans' => l10n.seatRelease_reasonPersonalPlans,
+      'working from home' => l10n.seatRelease_reasonWorkFromHome,
+      'vacation' => l10n.seatRelease_reasonVacation,
+      'alternative transport' => l10n.seatRelease_reasonAlternativeTransport,
+      'medical reason' => l10n.seatRelease_reasonMedical,
+      'other' => l10n.seatRelease_reasonOther,
+      _ => reason,
+    };
+  }
+
   Widget _buildReasonChips(ColorScheme scheme) {
     return Wrap(
       spacing: 8,
@@ -1240,7 +1316,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         final isSelected = _selectedReason == reason;
         return ChoiceChip(
           label: Text(
-            reason,
+            _reasonLabel(reason),
             style: TextStyle(
               fontSize: 11,
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -1259,26 +1335,27 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   }
 
   Widget _buildBenefitsInfographic(ColorScheme scheme) {
+    final l10n = context.l10n;
     return Column(
       children: [
         _buildBenefitItem(
           Icons.volunteer_activism_outlined,
-          'Help the Community',
-          'Released seats become available for other passengers needing daily rides.',
+          l10n.seatRelease_benefitCommunityTitle,
+          l10n.seatRelease_benefitCommunityBody,
           scheme,
         ),
         const SizedBox(height: 10),
         _buildBenefitItem(
           Icons.card_giftcard_rounded,
-          'Earn Compensation',
-          'Receive wallet cashback or loyalty rewards if another commuter books your seat.',
+          l10n.seatRelease_benefitCompensationTitle,
+          l10n.seatRelease_benefitCompensationBody,
           scheme,
         ),
         const SizedBox(height: 10),
         _buildBenefitItem(
           Icons.eco_outlined,
-          'Optimize Route Utilization',
-          'Helps BMT optimize fleet load and reduce carbon emissions.',
+          l10n.seatRelease_benefitOptimizeTitle,
+          l10n.seatRelease_benefitOptimizeBody,
           scheme,
         ),
       ],
@@ -1353,13 +1430,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             Expanded(
               child: TextButton(
                 onPressed: () => setState(() => _currentView = 1),
-                child: const Text('Cancel'),
+                child: Text(context.l10n.common_cancel),
               ),
             ),
             const SizedBox(width: 14),
             Expanded(
               child: ClientButton(
-                label: 'Release Seat',
+                label: context.l10n.seatRelease_releaseSeatButton,
                 expand: true,
                 onPressed: _openConfirmationSheet,
               ),
@@ -1374,6 +1451,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   Widget _buildSuccessView(ColorScheme scheme) {
     if (_activeRecord == null) return const SizedBox.shrink();
     final rec = _activeRecord!;
+    final l10n = context.l10n;
 
     return Center(
       key: const ValueKey('view4'),
@@ -1389,14 +1467,14 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             child: Icon(Icons.check_rounded, color: Colors.white, size: 38),
           ),
           const SizedBox(height: 24),
-          const Text(
-            'Seat Released Successfully!',
+          Text(
+            l10n.seatRelease_successHeadline,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+            style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: 6),
           Text(
-            'Reference Code: ${rec.releaseId}',
+            l10n.seatRelease_referenceCodeLabel(rec.releaseId),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 11, color: Colors.grey),
           ),
@@ -1412,13 +1490,25 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             ),
             child: Column(
               children: [
-                _buildConfirmationRow('Released Date', rec.tripDate),
+                _buildConfirmationRow(
+                  l10n.seatRelease_releasedDateLabel,
+                  rec.tripDate,
+                ),
                 const SizedBox(height: 8),
-                _buildConfirmationRow('Commute Segment', rec.route),
+                _buildConfirmationRow(
+                  l10n.seatRelease_commuteSegmentLabel,
+                  rec.route,
+                ),
                 const SizedBox(height: 8),
-                _buildConfirmationRow('Seat Number', 'Seat ${rec.seatNumber}'),
+                _buildConfirmationRow(
+                  l10n.seatRelease_seatNumberLabel,
+                  l10n.home_seatLabel(rec.seatNumber),
+                ),
                 const SizedBox(height: 8),
-                _buildConfirmationRow('Package Source', _packageName),
+                _buildConfirmationRow(
+                  l10n.seatRelease_packageSourceLabel,
+                  _packageName,
+                ),
               ],
             ),
           ),
@@ -1436,10 +1526,10 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               children: [
                 Icon(Icons.stars_rounded, color: scheme.primary, size: 18),
                 const SizedBox(width: 10),
-                const Expanded(
+                Expanded(
                   child: Text(
-                    'We will automatically notify you and credit rewards to your wallet once your seat gets rebooked by other commuters.',
-                    style: TextStyle(
+                    l10n.seatRelease_autoNotifyBody,
+                    style: const TextStyle(
                       fontSize: 10,
                       color: Colors.grey,
                       height: 1.35,
@@ -1453,14 +1543,14 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
           // Actions
           ClientButton(
-            label: 'View Release Details',
+            label: l10n.seatRelease_viewReleaseDetailsButton,
             expand: true,
             onPressed: () => setState(() => _currentView = 5),
           ),
           const SizedBox(height: 10),
           TextButton(
             onPressed: () => setState(() => _currentView = 1),
-            child: const Text('Return to Dashboard'),
+            child: Text(l10n.seatRelease_returnToDashboardButton),
           ),
         ],
       ),
@@ -1471,6 +1561,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   Widget _buildDetailsView(ColorScheme scheme) {
     if (_activeRecord == null) return const SizedBox.shrink();
     final rec = _activeRecord!;
+    final l10n = context.l10n;
 
     return ListView(
       key: const ValueKey('view5'),
@@ -1492,7 +1583,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'ID: ${rec.releaseId}',
+                    l10n.seatRelease_idLabel(rec.releaseId),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
@@ -1502,20 +1593,29 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 ],
               ),
               const Divider(height: 24),
-              _buildDetailInfoRow('Trip Date', rec.tripDate),
+              _buildDetailInfoRow(l10n.seatRelease_tripDateLabel, rec.tripDate),
               const SizedBox(height: 6),
-              _buildDetailInfoRow('Route', rec.route),
+              _buildDetailInfoRow(l10n.packages_route, rec.route),
               const SizedBox(height: 6),
-              _buildDetailInfoRow('Released Seat', 'Seat ${rec.seatNumber}'),
+              _buildDetailInfoRow(
+                l10n.seatRelease_releasedSeatLabel,
+                l10n.home_seatLabel(rec.seatNumber),
+              ),
               const SizedBox(height: 6),
-              _buildDetailInfoRow('Reason Chosen', rec.reason),
+              _buildDetailInfoRow(
+                l10n.seatRelease_reasonChosenLabel,
+                _reasonLabel(rec.reason),
+              ),
               const SizedBox(height: 6),
-              _buildDetailInfoRow('Submit Date', rec.releaseDate),
+              _buildDetailInfoRow(
+                l10n.seatRelease_submitDateLabel,
+                rec.releaseDate,
+              ),
               if (rec.notes.isNotEmpty) ...[
                 const Divider(height: 24),
-                const Text(
-                  'Notes',
-                  style: TextStyle(fontSize: 10, color: Colors.grey),
+                Text(
+                  l10n.seatRelease_notesLabel,
+                  style: const TextStyle(fontSize: 10, color: Colors.grey),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -1529,9 +1629,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         const SizedBox(height: 24),
 
         // Beautiful vertical status timeline
-        const Text(
-          'Release Status Timeline',
-          style: TextStyle(
+        Text(
+          l10n.seatRelease_statusTimelineTitle,
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
             color: Colors.grey,
@@ -1543,7 +1643,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         const SizedBox(height: 30),
         // Go back CTA
         ClientButton(
-          label: 'Back to Dashboard',
+          label: l10n.seatRelease_backToDashboardButton,
           expand: true,
           onPressed: () => setState(() => _currentView = 1),
         ),
@@ -1572,6 +1672,20 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
+  /// Status values are sourced from the data layer as stable English codes
+  /// (also used for business-logic comparisons); this maps the known
+  /// values to localized copy for display only.
+  String _statusLabel(String status) {
+    final l10n = context.l10n;
+    return switch (status) {
+      'Waiting' => l10n.seatRelease_statusWaiting,
+      'Rebooked' => l10n.seatRelease_statusRebooked,
+      'Rewarded' => l10n.seatRelease_statusRewarded,
+      'Closed' => l10n.seatRelease_statusClosed,
+      _ => status,
+    };
+  }
+
   Widget _buildStatusChip(String status, ColorScheme scheme) {
     Color col = Colors.grey;
     if (status == 'Rewarded') col = scheme.primary;
@@ -1585,18 +1699,19 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
-        status,
+        _statusLabel(status),
         style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: col),
       ),
     );
   }
 
   Widget _buildStatusTimeline(String activeStatus, ColorScheme scheme) {
+    final l10n = context.l10n;
     final steps = [
-      'Seat Released',
-      'Waiting For Rebooking',
-      'Rebooked Successfully',
-      'Compensation Added',
+      l10n.seatRelease_timelineStepReleased,
+      l10n.seatRelease_timelineStepWaiting,
+      l10n.seatRelease_timelineStepRebooked,
+      l10n.seatRelease_notifCompensationAddedTitle,
     ];
 
     int activeIdx = 0;
@@ -1703,12 +1818,12 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   }
 
   String _getTimelineStepDescription(int index) {
+    final l10n = context.l10n;
     return switch (index) {
-      0 => 'Your seat has been released for commute pools.',
-      1 =>
-        'Seat is currently listed. Waiting for other daily passenger bookings.',
-      2 => 'Seat was successfully rebooked by another commuter.',
-      3 => 'Compensation reward credited directly to your wallet account.',
+      0 => l10n.seatRelease_timelineReleasedDesc,
+      1 => l10n.seatRelease_timelineWaitingDesc,
+      2 => l10n.seatRelease_timelineRebookedDesc,
+      3 => l10n.seatRelease_timelineRewardedDesc,
       _ => '',
     };
   }
@@ -1717,6 +1832,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   Widget _buildCompensationStatusView(ColorScheme scheme) {
     if (_activeRecord == null) return const SizedBox.shrink();
     final rec = _activeRecord!;
+    final l10n = context.l10n;
 
     return ListView(
       key: const ValueKey('view6'),
@@ -1738,13 +1854,16 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Reference: ${rec.releaseId}',
+                    l10n.seatRelease_referenceLabel(rec.releaseId),
                     style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                   const SizedBox(height: 2),
-                  const Text(
-                    'Compensation status',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                  Text(
+                    l10n.seatRelease_compensationStatusLabel,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -1759,7 +1878,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         const SizedBox(height: 24),
 
         ClientButton(
-          label: 'Back to Dashboard',
+          label: l10n.seatRelease_backToDashboardButton,
           expand: true,
           onPressed: () => setState(() => _currentView = 1),
         ),
@@ -1771,6 +1890,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     SeatReleaseRecord rec,
     ColorScheme scheme,
   ) {
+    final l10n = context.l10n;
     if (rec.status == 'Waiting') {
       return Container(
         padding: const EdgeInsets.all(24),
@@ -1779,23 +1899,30 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: scheme.outline.withAlpha(45)),
         ),
-        child: const Column(
+        child: Column(
           children: [
-            Icon(
+            const Icon(
               Icons.hourglass_empty_rounded,
               color: Colors.orangeAccent,
               size: 48,
             ),
-            SizedBox(height: 14),
+            const SizedBox(height: 14),
             Text(
-              'Waiting For Rebooking',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              l10n.seatRelease_timelineStepWaiting,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             Text(
-              'Your seat is listed for daily commuters. If another passenger books this seat prior to departure, you will unlock your reward instantly.',
+              l10n.seatRelease_compWaitingBody,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.4),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.grey,
+                height: 1.4,
+              ),
             ),
           ],
         ),
@@ -1810,23 +1937,30 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: scheme.outline.withAlpha(45)),
         ),
-        child: const Column(
+        child: Column(
           children: [
-            Icon(
+            const Icon(
               Icons.check_circle_outline_rounded,
               color: Colors.blue,
               size: 48,
             ),
-            SizedBox(height: 14),
+            const SizedBox(height: 14),
             Text(
-              'Seat Rebooked Successfully',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              l10n.seatRelease_notifRebookedTitle,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
-            SizedBox(height: 6),
+            const SizedBox(height: 6),
             Text(
-              'Your seat was successfully purchased. We are currently processing your compensation points clearance.',
+              l10n.seatRelease_compRebookedBody,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 11, color: Colors.grey, height: 1.4),
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.grey,
+                height: 1.4,
+              ),
             ),
           ],
         ),
@@ -1834,8 +1968,8 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     }
 
     // Rewarded Fintech Voucher Card
-    final amt = rec.compensationAmount ?? 'EGP 50';
-    final date = rec.rewardDate ?? 'Today';
+    final amt = rec.compensationAmount ?? l10n.seatRelease_egpAmount('50');
+    final date = rec.rewardDate ?? l10n.common_today;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -1853,9 +1987,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'COMPENSATION CREDITED',
-                style: TextStyle(
+              Text(
+                l10n.seatRelease_compensationCreditedLabel,
+                style: const TextStyle(
                   fontSize: 9,
                   fontWeight: FontWeight.bold,
                   letterSpacing: 0.5,
@@ -1875,13 +2009,13 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             ),
           ),
           const SizedBox(height: 4),
-          const Text(
-            'Credited to Account Wallet',
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
+          Text(
+            l10n.seatRelease_creditedToWalletLabel,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 2),
           Text(
-            'Clearing date: $date',
+            l10n.seatRelease_clearingDateLabel(date),
             style: const TextStyle(fontSize: 9, color: Colors.grey),
           ),
           const SizedBox(height: 16),
@@ -1891,18 +2025,18 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               color: Colors.white.withAlpha(24),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Row(
+            child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
+                const Icon(
                   Icons.verified_user_outlined,
                   color: ClientColors.journeyCyanStrong,
                   size: 14,
                 ),
-                SizedBox(width: 6),
+                const SizedBox(width: 6),
                 Text(
-                  'Transaction Cleared Successfully',
-                  style: TextStyle(
+                  l10n.seatRelease_transactionClearedLabel,
+                  style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: ClientColors.journeyCyanStrong,
@@ -1944,7 +2078,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             controller: _historySearchController,
             onChanged: (val) => setState(() => _historySearchQuery = val),
             decoration: InputDecoration(
-              hintText: 'Search release logs by date, route...',
+              hintText: context.l10n.seatRelease_historySearchHint,
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
               fillColor: scheme.surface,
               contentPadding: const EdgeInsets.symmetric(
@@ -1965,8 +2099,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         Expanded(
           child: filtered.isEmpty
               ? ClientErrorCard.fullScreen(
-                  message:
-                      'No release records found\nTry adjusting your filters or search query.',
+                  message: context.l10n.seatRelease_noHistoryRecordsMessage,
                 )
               : ListView.separated(
                   physics: const BouncingScrollPhysics(),
@@ -1984,6 +2117,12 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
+  /// 'All' is a filter-only value with no matching status code.
+  String _historyFilterLabel(String filter) {
+    if (filter == 'All') return context.l10n.seatRelease_filterAll;
+    return _statusLabel(filter);
+  }
+
   Widget _buildHistoryFilterChips(ColorScheme scheme) {
     final filters = ['All', 'Waiting', 'Rebooked', 'Rewarded'];
     return SingleChildScrollView(
@@ -1993,10 +2132,10 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         children: filters.map((f) {
           final isSel = _historyFilter == f;
           return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
+            padding: const EdgeInsetsDirectional.only(end: 8.0),
             child: ChoiceChip(
               label: Text(
-                f,
+                _historyFilterLabel(f),
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
@@ -2079,7 +2218,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                       Text(
                         log.compensationAmount != null
                             ? '+ ${log.compensationAmount}'
-                            : 'EGP 0',
+                            : context.l10n.seatRelease_egpAmount('0'),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w900,
@@ -2111,9 +2250,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Alert History Log',
-              style: TextStyle(
+            Text(
+              context.l10n.seatRelease_alertHistoryLogTitle,
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
@@ -2121,7 +2260,10 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             ),
             TextButton(
               onPressed: () => setState(() => _notifications.clear()),
-              child: const Text('Clear All', style: TextStyle(fontSize: 11)),
+              child: Text(
+                context.l10n.seatRelease_clearAllButton,
+                style: const TextStyle(fontSize: 11),
+              ),
             ),
           ],
         ),
@@ -2129,7 +2271,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
         if (_notifications.isEmpty)
           ClientErrorCard.fullScreen(
-            message: 'No new notifications\nYou are completely caught up.',
+            message: context.l10n.seatRelease_noNotificationsMessage,
           )
         else
           ..._notifications.map((n) {
@@ -2191,6 +2333,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
   // --- SCREEN 9: LOYALTY & ACHIEVEMENTS ---
   Widget _buildLoyaltyAchievementsView(ColorScheme scheme) {
+    final l10n = context.l10n;
     return ListView(
       key: const ValueKey('view9'),
       physics: const BouncingScrollPhysics(),
@@ -2212,9 +2355,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Seat Release Achievements',
-                style: TextStyle(
+              Text(
+                l10n.seatRelease_achievementsHeaderTitle,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -2225,18 +2368,18 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
                   _buildAchievementCountTile(
-                    'Seats Released',
+                    l10n.seatRelease_tileSeatsReleased,
                     '$_releasedSeatsThisMonth',
                     Icons.event_busy_outlined,
                   ),
                   _buildAchievementCountTile(
-                    'Rebooked Successfully',
+                    l10n.seatRelease_tileRebookedSuccessfully,
                     '$_successfullyRebookedSeats',
                     Icons.check_circle_outline_rounded,
                   ),
                   _buildAchievementCountTile(
-                    'Rewards Earned',
-                    'EGP $_totalCompensationEarned',
+                    l10n.seatRelease_tileRewardsEarned,
+                    l10n.seatRelease_egpAmount('$_totalCompensationEarned'),
                     Icons.payments_outlined,
                   ),
                 ],
@@ -2246,9 +2389,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         ),
         const SizedBox(height: 24),
 
-        const Text(
-          'Unlockable Badges',
-          style: TextStyle(
+        Text(
+          l10n.seatRelease_unlockableBadgesTitle,
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
             color: Colors.grey,
@@ -2258,30 +2401,36 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
         // Badges progress indicators
         _buildAchievementProgressTile(
-          title: 'Eco Commuter Tier I',
-          subtitle: 'Release 5 seats to reduce shuttle overhead fuel.',
+          title: l10n.seatRelease_badgeEcoTitle,
+          subtitle: l10n.seatRelease_badgeEcoSubtitle,
           progress: _releasedSeatsThisMonth / 5,
-          progressText: '$_releasedSeatsThisMonth/5 Released',
+          progressText: l10n.seatRelease_badgeProgressReleased(
+            _releasedSeatsThisMonth,
+          ),
           icon: Icons.eco_outlined,
           color: ClientColors.journeyCyan,
           scheme: scheme,
         ),
         const SizedBox(height: 12),
         _buildAchievementProgressTile(
-          title: 'Community Helper Gold',
-          subtitle: 'Help 3 other commuters find seats.',
+          title: l10n.seatRelease_badgeCommunityTitle,
+          subtitle: l10n.seatRelease_badgeCommunitySubtitle,
           progress: _successfullyRebookedSeats / 3,
-          progressText: '$_successfullyRebookedSeats/3 Rebooked',
+          progressText: l10n.seatRelease_badgeProgressRebooked(
+            _successfullyRebookedSeats,
+          ),
           icon: Icons.volunteer_activism_outlined,
           color: Colors.pinkAccent,
           scheme: scheme,
         ),
         const SizedBox(height: 12),
         _buildAchievementProgressTile(
-          title: 'Reward Collector Level 2',
-          subtitle: 'Accumulate EGP 200 in released rewards.',
+          title: l10n.seatRelease_badgeRewardTitle,
+          subtitle: l10n.seatRelease_badgeRewardSubtitle,
           progress: _totalCompensationEarned / 200,
-          progressText: 'EGP $_totalCompensationEarned/EGP 200',
+          progressText: l10n.seatRelease_badgeProgressReward(
+            '$_totalCompensationEarned',
+          ),
           icon: Icons.emoji_events_outlined,
           color: Colors.orangeAccent,
           scheme: scheme,
@@ -2379,7 +2528,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 ),
                 const SizedBox(height: 6),
                 Align(
-                  alignment: Alignment.centerRight,
+                  alignment: AlignmentDirectional.centerEnd,
                   child: Text(
                     progressText,
                     style: const TextStyle(

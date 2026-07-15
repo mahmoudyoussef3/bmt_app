@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// A tailored empty state per trip filter, each with a "browse routes"
 /// action (spec FR-012) — never a bare icon-and-text dead end.
@@ -20,16 +21,16 @@ class TripsEmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final message = switch (filter) {
-      TripFilter.upcoming => 'No upcoming trips scheduled',
-      TripFilter.active => 'No trips in progress right now',
-      TripFilter.completed => 'No completed trips yet',
-      TripFilter.cancelled => 'No cancelled trips',
+      TripFilter.upcoming => context.l10n.trips_emptyUpcomingTitle,
+      TripFilter.active => context.l10n.trips_emptyActiveTitle,
+      TripFilter.completed => context.l10n.trips_emptyCompletedTitle,
+      TripFilter.cancelled => context.l10n.trips_emptyCancelledTitle,
     };
     final subtitle = switch (filter) {
-      TripFilter.upcoming => 'Book a trip and it will show up here.',
-      TripFilter.active => 'Trips currently on the road will appear here.',
-      TripFilter.completed => 'Trips you finish will show up here.',
-      TripFilter.cancelled => 'Trips you cancel will show up here.',
+      TripFilter.upcoming => context.l10n.trips_emptyUpcomingSubtitle,
+      TripFilter.active => context.l10n.trips_emptyActiveSubtitle,
+      TripFilter.completed => context.l10n.trips_emptyCompletedSubtitle,
+      TripFilter.cancelled => context.l10n.trips_emptyCancelledSubtitle,
     };
 
     return Padding(
@@ -58,7 +59,7 @@ class TripsEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           ClientButton(
-            label: 'Browse routes',
+            label: context.l10n.home_browseRoutes,
             onPressed: onBrowseRoutes,
             expand: false,
           ),

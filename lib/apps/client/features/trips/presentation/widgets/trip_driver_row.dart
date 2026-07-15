@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_payment_chip.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 
 /// The driver avatar/name + payment status row at the bottom of [TripCard].
 class TripDriverRow extends StatelessWidget {
@@ -37,7 +38,10 @@ class TripDriverRow extends StatelessWidget {
             ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
           ),
         ),
-        TripPaymentChip(label: trip.paymentLabel, status: trip.paymentStatus),
+        TripPaymentChip(
+          label: paymentLabelFor(context, trip.paymentStatus),
+          status: trip.paymentStatus,
+        ),
       ],
     );
   }

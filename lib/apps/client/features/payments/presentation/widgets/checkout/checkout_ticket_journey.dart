@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The ride the rider is paying for: pick-up on the left, drop-off on the
 /// right, ride length on the line between them — the way a boarding pass reads.
@@ -20,18 +21,22 @@ class CheckoutTicketJourney extends StatelessWidget {
       children: [
         Expanded(
           child: _Endpoint(
-            caption: 'Pick-up',
+            caption: context.l10n.common_pickup,
             time: formatTripTime(context, data.departureTime),
             stop: data.pickupPoint,
             align: CrossAxisAlignment.start,
           ),
         ),
         _Connector(
-          duration: formatTripDuration(data.departureTime, data.arrivalTime),
+          duration: formatTripDuration(
+            context,
+            data.departureTime,
+            data.arrivalTime,
+          ),
         ),
         Expanded(
           child: _Endpoint(
-            caption: 'Drop-off',
+            caption: context.l10n.common_dropOff,
             time: formatTripTime(context, data.arrivalTime),
             stop: data.destination,
             align: CrossAxisAlignment.end,
@@ -118,7 +123,7 @@ class _Connector extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            duration.isEmpty ? 'Direct' : duration,
+            duration.isEmpty ? context.l10n.payments_directTrip : duration,
             style: ClientTypography.labelSmall(
               context,
             ).copyWith(color: ClientColors.textSecondaryFor(context)),

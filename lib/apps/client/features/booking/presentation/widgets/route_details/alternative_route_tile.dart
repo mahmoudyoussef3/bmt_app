@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/utils/route_type_classifier.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// A single alternative-route row inside [RouteAlternativesSection], tagged
 /// direct/multi-stop via the route-type classifier.
@@ -64,7 +65,7 @@ class AlternativeRouteTile extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
+            DirectionalIcon(
               Icons.chevron_right_rounded,
               color: ClientColors.textTertiaryFor(context),
             ),
@@ -89,7 +90,7 @@ class _RouteTypeBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        routeTypeLabel(type),
+        routeTypeLabel(context, type),
         style: ClientTypography.labelSmall(
           context,
         ).copyWith(fontWeight: FontWeight.w800),

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_cancellation_reasons.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_premium_panel.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_soft_icon.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Shown when a trip has been cancelled, explaining why.
 class TripCancellationReasonCard extends StatelessWidget {
@@ -27,14 +29,14 @@ class TripCancellationReasonCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Cancellation Reason',
+                  context.l10n.trips_cancellationReasonTitle,
                   style: ClientTypography.headingSmall(
                     context,
                   ).copyWith(color: ClientColors.textPrimaryFor(context)),
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  reason,
+                  cancellationReasonLabel(context, reason),
                   style: ClientTypography.bodyMedium(context).copyWith(
                     fontWeight: FontWeight.w600,
                     color: ClientColors.textSecondaryFor(context),

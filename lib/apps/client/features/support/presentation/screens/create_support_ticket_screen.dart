@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../widgets/create_ticket_form.dart';
 
@@ -18,7 +19,7 @@ class CreateSupportTicketScreen extends StatelessWidget {
     if (state is SupportSuccess) {
       _showSnack(
         context,
-        'Ticket created. Our team will get back to you shortly.',
+        context.l10n.support_ticketCreatedSnack,
       );
       Navigator.pop(context);
       if (state.ticket != null) {
@@ -57,7 +58,7 @@ class CreateSupportTicketScreen extends StatelessWidget {
       backgroundColor: scheme.surface,
       appBar: AppBar(
         title: Text(
-          'New ticket',
+          context.l10n.support_newTicketTitle,
           style: ClientTypography.headingSmall(
             context,
           ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w800),

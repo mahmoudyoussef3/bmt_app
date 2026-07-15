@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_destination_chips.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_greeting_row.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_search_pill.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Full-bleed gradient canvas at the top of home: greeting, notification
 /// bell, the "Where to?" search pill and one-tap destination shortcuts.
@@ -98,7 +99,7 @@ class HomeHeroHeader extends StatelessWidget {
                     if (destinations.isNotEmpty) ...[
                       const SizedBox(height: ClientSpacing.md),
                       Text(
-                        'POPULAR DESTINATIONS',
+                        context.l10n.home_popularDestinations,
                         style: ClientTypography.labelSmall(context).copyWith(
                           color: Colors.white.withAlpha(160),
                           fontWeight: FontWeight.w800,

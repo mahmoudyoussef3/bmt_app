@@ -8,6 +8,9 @@ import 'package:bmt_app/apps/client/features/support/domain/entities/support_tic
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_attachment.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+
+import '../widgets/support_ticket_labels.dart';
 
 class SupportTicketDetailsScreen extends StatefulWidget {
   final String ticketId;
@@ -58,23 +61,6 @@ class _SupportTicketDetailsScreenState
         return Icons.lock_rounded;
       case TicketStatus.rejected:
         return Icons.cancel_rounded;
-    }
-  }
-
-  String _getStatusLabel(TicketStatus status) {
-    switch (status) {
-      case TicketStatus.submitted:
-        return 'Submitted';
-      case TicketStatus.underReview:
-        return 'Under Review';
-      case TicketStatus.contacted:
-        return 'Contacted';
-      case TicketStatus.resolved:
-        return 'Resolved';
-      case TicketStatus.closed:
-        return 'Closed';
-      case TicketStatus.rejected:
-        return 'Rejected';
     }
   }
 
@@ -170,7 +156,7 @@ class _SupportTicketDetailsScreenState
             ),
             body: Center(
               child: Text(
-                'Failed to load ticket details',
+                context.l10n.support_failedToLoad,
                 style: ClientTypography.bodyLarge(
                   context,
                 ).copyWith(color: scheme.onSurfaceVariant),
@@ -195,16 +181,20 @@ class _SupportTicketDetailsScreenState
       iconTheme: IconThemeData(color: scheme.onSurface),
       actions: [
         IconButton(
-          tooltip: 'Refresh',
+          tooltip: context.l10n.support_refresh,
           icon: const Icon(Icons.refresh_rounded),
           onPressed: () =>
               context.read<SupportCubit>().openTicketDetails(ticket.id),
         ),
       ],
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.only(left: 48, right: 24, bottom: 16),
+        titlePadding: const EdgeInsetsDirectional.only(
+          start: 48,
+          end: 24,
+          bottom: 16,
+        ),
         title: Text(
-          'Ticket ${ticket.ticketNumber}',
+          context.l10n.support_ticketNumberTitle(ticket.ticketNumber),
           style: ClientTypography.headingSmall(
             context,
           ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w900),
@@ -221,8 +211,8 @@ class _SupportTicketDetailsScreenState
                 ),
               ),
             ),
-            Positioned(
-              right: -40,
+            PositionedDirectional(
+              end: -40,
               top: -20,
               child: Icon(
                 Icons.support_agent_rounded,
@@ -261,7 +251,7 @@ class _SupportTicketDetailsScreenState
           const SizedBox(width: 16),
           Expanded(
             child: Text(
-              'Our customer service team is reviewing your ticket and may contact you shortly.',
+              context.l10n.support_reviewingNotice,
               style: ClientTypography.bodyMedium(
                 context,
               ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w600),
@@ -333,7 +323,7 @@ class _SupportTicketDetailsScreenState
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            ticket.category,
+                            supportCategoryLabel(context, ticket.category),
                             style: ClientTypography.labelMedium(context)
                                 .copyWith(
                                   color: scheme.onSecondaryContainer,
@@ -353,7 +343,10 @@ class _SupportTicketDetailsScreenState
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          DateFormat('MMM dd, yyyy').format(ticket.createdAt),
+                          DateFormat(
+                            'MMM dd, yyyy',
+                            Localizations.localeOf(context).toString(),
+                          ).format(ticket.createdAt),
                           style: ClientTypography.labelMedium(context).copyWith(
                             color: scheme.onSurfaceVariant,
                             fontWeight: FontWeight.w600,
@@ -392,7 +385,7 @@ class _SupportTicketDetailsScreenState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Current Status',
+                        context.l10n.support_currentStatus,
                         style: ClientTypography.labelSmall(context).copyWith(
                           color: scheme.onSurfaceVariant,
                           fontWeight: FontWeight.w600,
@@ -400,7 +393,7 @@ class _SupportTicketDetailsScreenState
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _getStatusLabel(ticket.status),
+                        supportStatusLabel(context, ticket.status),
                         style: ClientTypography.labelMedium(context).copyWith(
                           color: statusColor,
                           fontWeight: FontWeight.w800,
@@ -426,7 +419,7 @@ class _SupportTicketDetailsScreenState
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Assigned to',
+                          context.l10n.support_assignedTo,
                           style: ClientTypography.labelSmall(context).copyWith(
                             color: scheme.onSurfaceVariant,
                             fontSize: 10,
@@ -463,7 +456,7 @@ class _SupportTicketDetailsScreenState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Description',
+                  context.l10n.support_description,
                   style: ClientTypography.headingSmall(context).copyWith(
                     color: scheme.onSurface,
                     fontWeight: FontWeight.w800,
@@ -517,7 +510,7 @@ class _SupportTicketDetailsScreenState
               ),
               const SizedBox(width: 12),
               Text(
-                'Customer Service Note',
+                context.l10n.support_customerServiceNote,
                 style: ClientTypography.headingSmall(context).copyWith(
                   color: Colors.orange.shade800,
                   fontWeight: FontWeight.w800,
@@ -546,7 +539,7 @@ class _SupportTicketDetailsScreenState
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Attachments',
+          context.l10n.support_attachments,
           style: ClientTypography.headingSmall(
             context,
           ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w800),

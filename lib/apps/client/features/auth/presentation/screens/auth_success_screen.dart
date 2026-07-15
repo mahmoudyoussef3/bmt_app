@@ -62,9 +62,7 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
     final scheme = Theme.of(context).colorScheme;
     final created = _hasSession;
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Scaffold(
+    return Scaffold(
         backgroundColor: scheme.surface,
         body: DecoratedBox(
           decoration: BoxDecoration(
@@ -169,7 +167,6 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
             ),
           ),
         ),
-      ),
     );
   }
 }

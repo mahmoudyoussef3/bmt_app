@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The total, pinned above the call to action. The old summary buried it two
 /// scrolls below "Proceed to Payment", so riders committed without ever seeing
@@ -14,9 +15,12 @@ class SummaryTotalRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final rides = session.selectedPackage?.rideCount ?? 1;
     final plan = session.selectedPackage?.displayName ?? '';
-    final ridesLabel = rides == 1 ? '1 ride' : '$rides rides';
+    final ridesLabel = rides == 1
+        ? l10n.booking_oneRide
+        : l10n.packages_ridesCount(rides);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -26,7 +30,7 @@ class SummaryTotalRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Total due',
+                l10n.booking_totalDue,
                 style: ClientTypography.labelSmall(
                   context,
                 ).copyWith(color: ClientColors.textTertiaryFor(context)),
@@ -45,7 +49,7 @@ class SummaryTotalRow extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Text(
-          'EGP ${session.totalPrice.toStringAsFixed(0)}',
+          l10n.packages_egpAmount(session.totalPrice.toStringAsFixed(0)),
           style: ClientTypography.priceMedium(
             context,
           ).copyWith(color: ClientColors.primaryFor(context)),

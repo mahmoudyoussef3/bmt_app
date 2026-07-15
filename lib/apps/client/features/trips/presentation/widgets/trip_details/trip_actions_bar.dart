@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_danger_button.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Trip Details' sticky bottom action bar — exactly one primary action set
 /// per trip status, never a stray duplicate action (a previous version
@@ -63,7 +64,7 @@ class TripActionsBar extends StatelessWidget {
             children: [
               if (canTrack)
                 ClientButton(
-                  label: 'Track Vehicle',
+                  label: context.l10n.trips_trackVehicleButton,
                   icon: const Icon(Icons.my_location_rounded, size: 20),
                   onPressed: () => Navigator.pushNamed(
                     context,
@@ -74,7 +75,9 @@ class TripActionsBar extends StatelessWidget {
               if (canTrack && canCancel) const SizedBox(height: 10),
               if (canCancel)
                 TripDangerButton(
-                  label: cancelInFlight ? 'Cancelling…' : 'Cancel Trip',
+                  label: cancelInFlight
+                      ? context.l10n.trips_cancellingInFlight
+                      : context.l10n.trips_cancelTripButton,
                   isLoading: cancelInFlight,
                   onPressed: onCancel,
                 ),
@@ -84,7 +87,7 @@ class TripActionsBar extends StatelessWidget {
                     if (canReview) ...[
                       Expanded(
                         child: ClientButton(
-                          label: 'Rate Trip',
+                          label: context.l10n.tracking_rateTrip,
                           onPressed: onReview,
                         ),
                       ),
@@ -92,7 +95,7 @@ class TripActionsBar extends StatelessWidget {
                     ],
                     Expanded(
                       child: ClientButton.secondary(
-                        label: 'Book Again',
+                        label: context.l10n.tracking_bookAgain,
                         onPressed: () =>
                             Navigator.pushNamed(context, '/booking/search'),
                       ),

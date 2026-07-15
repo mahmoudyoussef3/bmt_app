@@ -141,7 +141,7 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
 
     final currentPoints = account?['points'] as int? ?? 0;
     if (currentPoints < pointsCost) {
-      throw Exception('رصيد النقاط غير كافٍ لاستبدال هذه المكافأة');
+      throw Exception('Insufficient points balance to redeem this reward');
     }
 
     await Future.wait([
@@ -151,7 +151,7 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
           .eq('client_id', user.id),
       _supabase.from('loyalty_transactions').insert({
         'client_id': user.id,
-        'title': 'استبدال: $rewardTitle',
+        'title': 'Redeemed: $rewardTitle',
         'points': -pointsCost,
         'is_earned': false,
       }),

@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_legend.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/seat_widget.dart';
 
 class SeatSelectionScreen extends StatefulWidget {
@@ -170,6 +171,7 @@ class _SeatSelectionContent extends StatelessWidget {
   }
 
   Widget _buildHeader(BuildContext context) {
+    final l10n = context.l10n;
     return ClientCard(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       padding: const EdgeInsets.fromLTRB(14, 14, 14, 16),
@@ -198,7 +200,7 @@ class _SeatSelectionContent extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        'Select Your Seat',
+                        l10n.seatSelection_selectYourSeat,
                         style: ClientTypography.headingSmall(context).copyWith(
                           color: ClientColors.textPrimaryFor(context),
                           height: 1.1,
@@ -206,7 +208,7 @@ class _SeatSelectionContent extends StatelessWidget {
                       ),
                     ),
                     IconButton(
-                      tooltip: 'Refresh',
+                      tooltip: l10n.tracking_refresh,
                       icon: Icon(
                         Icons.refresh_rounded,
                         color: ClientColors.primaryFor(context),
@@ -228,7 +230,7 @@ class _SeatSelectionContent extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        '${data.availableCount} free',
+                        l10n.seatSelection_seatsFreeCount(data.availableCount),
                         style: ClientTypography.labelSmall(context).copyWith(
                           color: ClientColors.primaryFor(context),
                           fontWeight: FontWeight.w700,
@@ -254,6 +256,7 @@ class _SeatSelectionContent extends StatelessWidget {
 
   // ignore: unused_element
   Widget _buildTripOverview(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -284,14 +287,14 @@ class _SeatSelectionContent extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Choose a seat',
+                      l10n.seatSelection_chooseASeat,
                       style: ClientTypography.headingSmall(
                         context,
                       ).copyWith(color: ClientColors.textPrimaryFor(context)),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Tap an available seat to continue',
+                      l10n.seatSelection_tapSeatToContinue,
                       style: ClientTypography.bodySmall(
                         context,
                       ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -310,7 +313,7 @@ class _SeatSelectionContent extends StatelessWidget {
                   border: Border.all(color: ClientColors.primaryMuted),
                 ),
                 child: Text(
-                  '${data.availableCount} open',
+                  l10n.seatSelection_seatsOpenCount(data.availableCount),
                   style: ClientTypography.labelSmall(context).copyWith(
                     color: ClientColors.primaryFor(context),
                     fontWeight: FontWeight.w700,
@@ -327,11 +330,11 @@ class _SeatSelectionContent extends StatelessWidget {
               _InfoPill(icon: Icons.route_rounded, label: data.route),
               _InfoPill(
                 icon: Icons.schedule_rounded,
-                label: 'Departs ${data.departureTime}',
+                label: l10n.seatSelection_departsAt(data.departureTime),
               ),
-              const _InfoPill(
+              _InfoPill(
                 icon: Icons.groups_rounded,
-                label: '15-seat microbus',
+                label: l10n.seatSelection_microbusCapacity,
               ),
             ],
           ),
@@ -346,6 +349,7 @@ class _SeatSelectionContent extends StatelessWidget {
     required double aisleGap,
     required double rowGap,
   }) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
@@ -370,7 +374,7 @@ class _SeatSelectionContent extends StatelessWidget {
                   border: Border.all(color: ClientColors.primaryMuted),
                 ),
                 child: Text(
-                  'FRONT OF VEHICLE',
+                  l10n.seatSelection_frontOfVehicle,
                   style: ClientTypography.labelSmall(context).copyWith(
                     color: ClientColors.primaryFor(context),
                     fontWeight: FontWeight.w700,
@@ -378,7 +382,7 @@ class _SeatSelectionContent extends StatelessWidget {
                 ),
               ),
               Text(
-                'Cabin layout',
+                l10n.seatSelection_cabinLayout,
                 style: ClientTypography.bodySmall(context).copyWith(
                   color: ClientColors.textSecondaryFor(context),
                   fontWeight: FontWeight.w600,
@@ -407,7 +411,7 @@ class _SeatSelectionContent extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Driver',
+                      l10n.booking_driver,
                       style: ClientTypography.bodySmall(context).copyWith(
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.4,
@@ -417,7 +421,7 @@ class _SeatSelectionContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Seats 1 and 2 are reserved for the driver cabin',
+                  l10n.seatSelection_driverCabinNote,
                   style: ClientTypography.bodySmall(context).copyWith(
                     color: ClientColors.textTertiaryFor(context),
                     fontWeight: FontWeight.w500,
@@ -443,7 +447,7 @@ class _SeatSelectionContent extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Driver Cabin',
+                        l10n.seatSelection_driverCabinLabel,
                         style: ClientTypography.bodySmall(context).copyWith(
                           fontWeight: FontWeight.w700,
                           color: ClientColors.textSecondaryFor(context),
@@ -469,6 +473,7 @@ class _SeatSelectionContent extends StatelessWidget {
   }
 
   Widget _buildEmptyState(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 28),
       decoration: BoxDecoration(
@@ -492,7 +497,7 @@ class _SeatSelectionContent extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Select one seat to continue',
+            l10n.seatSelection_selectSeatToContinue,
             textAlign: TextAlign.center,
             style: ClientTypography.bodyMedium(context).copyWith(
               fontWeight: FontWeight.w700,
@@ -501,7 +506,7 @@ class _SeatSelectionContent extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            'Tap one available seat on the layout above.',
+            l10n.seatSelection_tapAvailableSeatHint,
             textAlign: TextAlign.center,
             style: ClientTypography.bodySmall(context).copyWith(
               color: ClientColors.textSecondaryFor(context),
@@ -514,6 +519,7 @@ class _SeatSelectionContent extends StatelessWidget {
   }
 
   Widget _buildSelectedSeatsSummary(BuildContext context, String seatId) {
+    final l10n = context.l10n;
     final seatNum = data.seats
         .firstWhere(
           (s) => s.id == seatId,
@@ -548,15 +554,17 @@ class _SeatSelectionContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Seat $seatNum selected',
+                  l10n.seatSelection_seatSelectedTitle('$seatNum'),
                   style: ClientTypography.bodyMedium(context).copyWith(
                     fontWeight: FontWeight.w800,
                     color: ClientColors.textPrimaryFor(context),
                   ),
                 ),
                 Text(
-                  '1 seat · EGP ${data.pricePerSeat.toStringAsFixed(2)} each · '
-                  'Total EGP ${loaded.total.toStringAsFixed(2)}',
+                  l10n.seatSelection_seatSummaryLine(
+                    data.pricePerSeat.toStringAsFixed(2),
+                    loaded.total.toStringAsFixed(2),
+                  ),
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -584,7 +592,7 @@ class _SeatSelectionContent extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Middle rows use a pair on the left and a single seat on the right for a more realistic shuttle layout.',
+              context.l10n.seatSelection_hintCardBody,
               style: ClientTypography.bodySmall(
                 context,
               ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -593,6 +601,17 @@ class _SeatSelectionContent extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Maps the raw error code emitted by [SeatSelectionCubit] to a localized,
+  /// user-friendly message. The cubit has no BuildContext, so it stores a
+  /// stable code and this widget resolves the copy from AppLocalizations.
+  String? _lockErrorMessage(BuildContext context, String? code) {
+    if (code == null || code.trim().isEmpty) return null;
+    if (code == 'seat_unavailable') {
+      return context.l10n.seatSelection_lockErrorSeatUnavailable;
+    }
+    return code;
   }
 
   Widget _buildBottomSummary(BuildContext context, String? seatNumStr) {
@@ -625,7 +644,7 @@ class _SeatSelectionContent extends StatelessWidget {
                 selectedSeat: seatNumStr,
                 pricePerSeat: data.pricePerSeat,
                 isLoading: loaded.isLocking,
-                errorMessage: loaded.lockError,
+                errorMessage: _lockErrorMessage(context, loaded.lockError),
                 onConfirm: selectedSeat == null || loaded.isLocking
                     ? null
                     : () async {
@@ -646,6 +665,12 @@ class _SeatSelectionContent extends StatelessWidget {
                             'selectedSeatId': selectedSeat,
                             'selectedSeat': seatNumStr,
                             'driverName': data.driverName,
+                            'driverRating': data.driverRating,
+                            'driverImageUrl': data.driverImageUrl,
+                            'vehicleName': [data.vehicleName, data.vehicleModel]
+                                .where((part) => part.trim().isNotEmpty)
+                                .join(' '),
+                            'vehicleImageUrl': data.vehicleImageUrl,
                             'baseFare': data.pricePerSeat,
                             'serviceFee': 0,
                             'tax': 0,

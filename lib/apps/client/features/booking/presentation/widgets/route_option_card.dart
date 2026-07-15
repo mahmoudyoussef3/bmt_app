@@ -4,6 +4,8 @@ import 'package:latlong2/latlong.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class RouteOptionCard extends StatelessWidget {
   const RouteOptionCard({
@@ -22,67 +24,66 @@ class RouteOptionCard extends StatelessWidget {
     final points = _extractRoutePoints(route);
     final hasSavedStations = route.points.isNotEmpty;
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: Material(
-        color: selected
-            ? ClientColors.primaryLight
-            : ClientColors.surfaceFor(context),
+    return Material(
+      color: selected
+          ? ClientColors.primaryLight
+          : ClientColors.surfaceFor(context),
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
         borderRadius: BorderRadius.circular(16),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(
-                color: selected
-                    ? ClientColors.primary
-                    : ClientColors.borderFor(context),
-                width: selected ? 2 : 1,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: selected
+                  ? ClientColors.primary
+                  : ClientColors.borderFor(context),
+              width: selected ? 2 : 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _Header(route: route, selected: selected),
+              const SizedBox(height: 14),
+              _MainRouteLine(points: points),
+              const SizedBox(height: 14),
+              _CompactPointsPreview(
+                points: points,
+                hasSavedStations: hasSavedStations,
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _Header(route: route, selected: selected),
-                const SizedBox(height: 14),
-                _MainRouteLine(points: points),
-                const SizedBox(height: 14),
-                _CompactPointsPreview(
-                  points: points,
-                  hasSavedStations: hasSavedStations,
-                ),
-                if (points.where((p) => p.hasCoordinates).length >= 2) ...[
-                  const SizedBox(height: 12),
-                  _StationsMiniMap(points: points),
-                ],
-                const SizedBox(height: 14),
-                Divider(color: ClientColors.borderFor(context)),
+              if (points.where((p) => p.hasCoordinates).length >= 2) ...[
                 const SizedBox(height: 12),
-                Row(
-                  children: [
-                    _MetaItem(
-                      icon: Icons.schedule_rounded,
-                      label: route.duration,
-                    ),
-                    const SizedBox(width: 14),
-                    _MetaItem(
-                      icon: Icons.event_seat_rounded,
-                      label: '${route.availableSeats} seats',
-                    ),
-                    const Spacer(),
-                    Text(
-                      route.startingPrice,
-                      style: ClientTypography.priceMedium(
-                        context,
-                      ).copyWith(color: ClientColors.primary, fontSize: 16),
-                    ),
-                  ],
-                ),
+                _StationsMiniMap(points: points),
               ],
-            ),
+              const SizedBox(height: 14),
+              Divider(color: ClientColors.borderFor(context)),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  _MetaItem(
+                    icon: Icons.schedule_rounded,
+                    label: route.duration,
+                  ),
+                  const SizedBox(width: 14),
+                  _MetaItem(
+                    icon: Icons.event_seat_rounded,
+                    label: context.l10n.booking_seatsCountLabel(
+                      route.availableSeats,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    route.startingPrice,
+                    style: ClientTypography.priceMedium(
+                      context,
+                    ).copyWith(color: ClientColors.primary, fontSize: 16),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -238,7 +239,7 @@ class _Header extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              'Fastest',
+              context.l10n.payments_fastestBadge,
               style: ClientTypography.labelSmall(context).copyWith(
                 color: ClientColors.primary,
                 fontWeight: FontWeight.w700,
@@ -255,7 +256,7 @@ class _Header extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
             child: Text(
-              'Selected',
+              context.l10n.seatSelection_seatStatusSelected,
               style: ClientTypography.labelSmall(context).copyWith(
                 color: ClientColors.primary,
                 fontWeight: FontWeight.w700,
@@ -287,14 +288,14 @@ class _MainRouteLine extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: _PointBlock(label: 'From', value: start),
+          child: _PointBlock(label: context.l10n.booking_from, value: start),
         ),
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10),
-          child: Icon(Icons.arrow_back_rounded),
+          child: DirectionalIcon(Icons.arrow_back_rounded),
         ),
         Expanded(
-          child: _PointBlock(label: 'To', value: end),
+          child: _PointBlock(label: context.l10n.booking_to, value: end),
         ),
       ],
     );
@@ -361,10 +362,12 @@ class _CompactPointsPreview extends StatelessWidget {
         children: [
           Text(
             hasSavedStations
-                ? '${points.length} route stops'
+                ? context.l10n.booking_routeStopsCount(points.length)
                 : previewPoints.isEmpty
-                ? 'Direct trip with no intermediate stops'
-                : '${previewPoints.length} intermediate stops',
+                ? context.l10n.booking_directTripNoStops
+                : context.l10n.booking_intermediateStopsCount(
+                    previewPoints.length,
+                  ),
             style: ClientTypography.bodySmall(
               context,
             ).copyWith(fontWeight: FontWeight.w800),
@@ -381,7 +384,7 @@ class _CompactPointsPreview extends StatelessWidget {
             if (previewPoints.length > 4) ...[
               const SizedBox(height: 8),
               Text(
-                '+ ${previewPoints.length - 4} more stops',
+                context.l10n.booking_moreStopsCount(previewPoints.length - 4),
                 style: ClientTypography.bodySmall(
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),

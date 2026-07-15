@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Modern seat status legend for the seat selection screen.
 class SeatLegend extends StatelessWidget {
@@ -8,11 +9,12 @@ class SeatLegend extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Seat legend',
+          l10n.seatSelection_seatLegendTitle,
           style: ClientTypography.labelMedium(context).copyWith(
             fontWeight: FontWeight.w700,
             color: ClientColors.textSecondaryFor(context),
@@ -24,14 +26,14 @@ class SeatLegend extends StatelessWidget {
             final wrap = constraints.maxWidth < 520;
             final items = [
               _LegendChip(
-                label: 'Available',
+                label: l10n.booking_available,
                 icon: Icons.event_seat_outlined,
                 color: ClientColors.surfaceFor(context),
                 borderColor: ClientColors.borderFor(context),
                 iconColor: ClientColors.textPrimaryFor(context),
               ),
               _LegendChip(
-                label: 'Selected',
+                label: l10n.seatSelection_seatStatusSelected,
                 icon: Icons.check_circle_rounded,
                 color: ClientColors.primary,
                 borderColor: ClientColors.primary,
@@ -39,7 +41,7 @@ class SeatLegend extends StatelessWidget {
                 textColor: ClientColors.textInverse,
               ),
               _LegendChip(
-                label: 'Reserved',
+                label: l10n.seatSelection_seatStatusReserved,
                 icon: Icons.lock_rounded,
                 color: ClientColors.surfaceMutedFor(context),
                 borderColor: ClientColors.borderFor(context),
@@ -56,7 +58,7 @@ class SeatLegend extends StatelessWidget {
                   .map(
                     (chip) => Expanded(
                       child: Padding(
-                        padding: const EdgeInsets.only(right: 8),
+                        padding: const EdgeInsetsDirectional.only(end: 8),
                         child: chip,
                       ),
                     ),

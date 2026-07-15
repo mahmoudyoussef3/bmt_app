@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_list/trip_stat_chip.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The Trips tab's gradient hero: title, subtitle, "book a trip" action, and
 /// upcoming/active stat chips. Uses [ClientColors.heroGradientFor] — the same
@@ -39,7 +40,7 @@ class TripsHeader extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'My Trips',
+                      context.l10n.home_myTrips,
                       style: ClientTypography.headingLarge(context).copyWith(
                         color: Colors.white,
                         fontWeight: FontWeight.w800,
@@ -47,7 +48,7 @@ class TripsHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Upcoming, active, and past commutes',
+                      context.l10n.trips_headerSubtitle,
                       style: ClientTypography.bodySmall(
                         context,
                       ).copyWith(color: Colors.white.withAlpha(205)),
@@ -58,7 +59,7 @@ class TripsHeader extends StatelessWidget {
               IconButton.filled(
                 onPressed: onBookTrip,
                 icon: const Icon(Icons.add_rounded, color: Colors.white),
-                tooltip: 'Book new trip',
+                tooltip: context.l10n.trips_bookNewTripTooltip,
               ),
             ],
           ),
@@ -67,7 +68,7 @@ class TripsHeader extends StatelessWidget {
             children: [
               Expanded(
                 child: TripStatChip(
-                  label: 'Upcoming',
+                  label: context.l10n.trips_filterUpcoming,
                   value: '$upcomingCount',
                   icon: Icons.upcoming_rounded,
                 ),
@@ -75,7 +76,7 @@ class TripsHeader extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: TripStatChip(
-                  label: 'Active',
+                  label: context.l10n.trips_filterActive,
                   value: '$activeCount',
                   icon: Icons.directions_bus_rounded,
                 ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import '../../domain/entities/support_timeline_event.dart';
 
 class SupportTimeline extends StatelessWidget {
@@ -15,7 +16,7 @@ class SupportTimeline extends StatelessWidget {
       return Padding(
         padding: const EdgeInsets.all(16),
         child: Text(
-          'No timeline events available.',
+          context.l10n.support_timelineEmpty,
           style: ClientTypography.bodySmall(
             context,
           ).copyWith(color: ClientColors.textTertiaryFor(context)),
@@ -80,7 +81,10 @@ class SupportTimeline extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        DateFormat('MMM dd, HH:mm').format(event.createdAt),
+                        DateFormat(
+                          'MMM dd, HH:mm',
+                          Localizations.localeOf(context).toString(),
+                        ).format(event.createdAt),
                         style: ClientTypography.labelSmall(context).copyWith(
                           color: ClientColors.textTertiaryFor(context),
                         ),

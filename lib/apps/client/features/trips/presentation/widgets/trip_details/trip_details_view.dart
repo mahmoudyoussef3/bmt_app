@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_hero_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_live_tracking_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review_flow.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
 /// The fully-loaded Trip Details screen body.
@@ -63,7 +64,7 @@ class TripDetailsView extends StatelessWidget {
           // from the back arrow.
           if (onRefresh != null)
             IconButton(
-              tooltip: 'Refresh',
+              tooltip: context.l10n.tracking_refresh,
               icon: const Icon(Icons.refresh_rounded),
               onPressed: onRefresh,
             ),

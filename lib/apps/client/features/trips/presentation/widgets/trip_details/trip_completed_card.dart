@@ -6,6 +6,8 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_premium_panel.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review_flow.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_soft_icon.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// The tail of a completed trip: an invitation to rate it, or — once the
 /// passenger has rated it — a receipt they can tap to re-read what they said.
@@ -36,9 +38,8 @@ class TripCompletedCard extends StatelessWidget {
             Expanded(
               child: Text(
                 rated
-                    ? 'You rated this trip. Tap to see the review you left.'
-                    : 'Help us improve by rating your trip with '
-                          '${trip.driverName}.',
+                    ? context.l10n.trips_completedRatedNote
+                    : context.l10n.trips_completedRateInvite(trip.driverName),
                 style: ClientTypography.bodyMedium(context).copyWith(
                   fontWeight: FontWeight.w700,
                   color: ClientColors.textPrimaryFor(context),
@@ -46,7 +47,7 @@ class TripCompletedCard extends StatelessWidget {
               ),
             ),
             if (rated)
-              Icon(
+              DirectionalIcon(
                 Icons.chevron_right_rounded,
                 color: ClientColors.textSecondaryFor(context),
               ),

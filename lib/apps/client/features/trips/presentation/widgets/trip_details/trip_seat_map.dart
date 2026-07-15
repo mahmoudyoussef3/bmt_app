@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dar
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_driver_seat_tile.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_extra_seats.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_tile.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Lays real [TripSeat]s out in the same cabin shape the passenger picked
 /// from while booking: two driver seats up front, three-across rows split by
@@ -41,7 +42,7 @@ class TripSeatMap extends StatelessWidget {
         ),
         SizedBox(height: seatSize * 0.13),
         Text(
-          'DRIVER',
+          context.l10n.trips_seatMapDriverLabel.toUpperCase(),
           style: ClientTypography.labelSmall(context).copyWith(
             color: ClientColors.textTertiaryFor(context),
             letterSpacing: 1.2,

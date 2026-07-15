@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The live payment/booking follow-up shown while a manual-transfer receipt
 /// is under review. Reflects the real `operation_bookings` payment status
@@ -27,7 +28,7 @@ class BookingVerificationStatusCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final phase = _phaseContent();
+    final phase = _phaseContent(context);
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -72,14 +73,14 @@ class BookingVerificationStatusCard extends StatelessWidget {
           TextButton.icon(
             onPressed: onViewBookingStatus,
             icon: const Icon(Icons.timeline_rounded, size: 18),
-            label: const Text('View Full Trip & Payment Status'),
+            label: Text(context.l10n.payments_viewFullTripStatus),
           ),
         ],
         const SizedBox(height: 8),
         Text(
           _isRejected
-              ? 'You can contact support for help or try booking another trip.'
-              : 'You will receive a notification once your payment has been approved.',
+              ? context.l10n.payments_rejectedHelpText
+              : context.l10n.payments_pendingApprovalNotice,
           textAlign: TextAlign.center,
           style: ClientTypography.bodySmall(
             context,
@@ -101,13 +102,17 @@ class BookingVerificationStatusCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _infoRow(context, 'Booking Reference', bookingReference),
+          _infoRow(
+            context,
+            context.l10n.payments_bookingReferenceLabel,
+            bookingReference,
+          ),
           const SizedBox(height: 14),
           Divider(height: 1, color: ClientColors.borderFor(context)),
           const SizedBox(height: 14),
           _infoRow(
             context,
-            'Booking Status',
+            context.l10n.payments_bookingStatusLabel,
             phase.statusLabel,
             valueColor: phase.statusColor,
           ),
@@ -115,18 +120,23 @@ class BookingVerificationStatusCard extends StatelessWidget {
           if (_isRejected && reason != null && reason.isNotEmpty)
             _infoRow(
               context,
-              'Reason',
+              context.l10n.payments_reasonLabel,
               reason,
               valueColor: ClientColors.journeyRed,
             )
           else if (!_isApproved)
-            _infoRow(context, 'Estimated Review Time', '5–15 Minutes'),
+            _infoRow(
+              context,
+              context.l10n.payments_estimatedReviewTimeLabel,
+              context.l10n.payments_estimatedReviewTimeValue,
+            ),
         ],
       ),
     );
   }
 
-  _StatusPhase _phaseContent() {
+  _StatusPhase _phaseContent(BuildContext context) {
+    final l10n = context.l10n;
     if (_isApproved) {
       return _StatusPhase(
         gradient: const [
@@ -134,10 +144,9 @@ class BookingVerificationStatusCard extends StatelessWidget {
           ClientColors.journeyCyanStrong,
         ],
         icon: Icons.check_circle_rounded,
-        title: 'Payment Approved',
-        subtitle:
-            'Your payment was verified. Your seat is confirmed and ready to track.',
-        statusLabel: 'Approved',
+        title: l10n.payments_paymentApprovedTitle,
+        subtitle: l10n.payments_paymentApprovedSubtitle,
+        statusLabel: l10n.payments_statusApproved,
         statusColor: ClientColors.journeyCyan,
       );
     }
@@ -145,20 +154,18 @@ class BookingVerificationStatusCard extends StatelessWidget {
       return _StatusPhase(
         gradient: const [ClientColors.journeyRed, Color(0xFFB91C1C)],
         icon: Icons.cancel_rounded,
-        title: 'Payment Rejected',
-        subtitle:
-            "We couldn't verify this payment. Contact support or try booking again.",
-        statusLabel: 'Rejected',
+        title: l10n.payments_paymentRejectedTitle,
+        subtitle: l10n.payments_paymentRejectedSubtitle,
+        statusLabel: l10n.payments_statusRejected,
         statusColor: ClientColors.journeyRed,
       );
     }
-    return const _StatusPhase(
-      gradient: [Colors.orangeAccent, Colors.deepOrange],
+    return _StatusPhase(
+      gradient: const [Colors.orangeAccent, Colors.deepOrange],
       icon: Icons.hourglass_top_rounded,
-      title: 'Payment Receipt Submitted',
-      subtitle:
-          'Your booking request has been received. Our finance team is reviewing your payment.',
-      statusLabel: 'Pending Verification',
+      title: l10n.payments_paymentReceiptSubmittedTitle,
+      subtitle: l10n.payments_paymentReceiptSubmittedSubtitle,
+      statusLabel: l10n.payments_statusPendingVerification,
       statusColor: Colors.orange,
     );
   }

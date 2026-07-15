@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_payment_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seats_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_vehicle_card.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The Driver/Vehicle/Seats/Payment sections, plus a trailing
 /// cancellation-reason or rate-this-trip card when relevant.
@@ -27,29 +28,31 @@ class TripDetailSections extends StatelessWidget {
     return Column(
       children: [
         TripDetailSection(
-          title: 'Captain',
-          subtitle: trip.isFinished ? 'Who drove you' : 'Who is driving you',
+          title: context.l10n.tracking_captain,
+          subtitle: trip.isFinished
+              ? context.l10n.trips_captainSubtitleFinished
+              : context.l10n.trips_captainSubtitleActive,
           icon: Icons.person_pin_circle_rounded,
           child: TripDriverCard(trip: trip),
         ),
         const SizedBox(height: 14),
         TripDetailSection(
-          title: 'Vehicle',
-          subtitle: 'The bus on this trip',
+          title: context.l10n.tracking_vehicle,
+          subtitle: context.l10n.trips_vehicleSubtitle,
           icon: Icons.directions_bus_filled_rounded,
           child: TripVehicleCard(trip: trip),
         ),
         const SizedBox(height: 14),
         TripDetailSection(
-          title: 'Seats',
-          subtitle: 'Your seats on the cabin map',
+          title: context.l10n.common_seats,
+          subtitle: context.l10n.trips_seatsSubtitle,
           icon: Icons.event_seat_rounded,
           child: TripSeatsCard(trip: trip),
         ),
         const SizedBox(height: 14),
         TripDetailSection(
-          title: 'Payment',
-          subtitle: 'Status and fare breakdown',
+          title: context.l10n.payments_stepPayment,
+          subtitle: context.l10n.trips_paymentSubtitle,
           icon: Icons.payments_rounded,
           child: TripPaymentCard(trip: trip),
         ),

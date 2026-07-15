@@ -3,8 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/maps/overlays/map_loading_shimmer.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
 
 import '../cubit/tracking_cubit.dart';
 import '../cubit/tracking_state.dart';
@@ -39,7 +39,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = context.l10n;
     final labels = TrackingLabels(
       l10n,
       Localizations.localeOf(context).toString(),

@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_badge.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_schedule_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_soft_icon.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// A QR-free boarding pass for upcoming/in-progress trips — the reference, the
 /// seat, and where to be, in the order a passenger needs them at the door.
@@ -42,12 +43,14 @@ class TripBoardingCard extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Boarding pass',
+                  context.l10n.trips_boardingPassTitle,
                   style: ClientTypography.headingSmall(context),
                 ),
               ),
               TripInlineBadge(
-                label: onBoard ? 'On board' : 'Ready',
+                label: onBoard
+                    ? context.l10n.trips_boardingOnBoard
+                    : context.l10n.trips_boardingReady,
                 color: ClientColors.journeyCyan,
               ),
             ],
@@ -59,7 +62,7 @@ class TripBoardingCard extends StatelessWidget {
               Expanded(
                 flex: 3,
                 child: BoardingField(
-                  label: 'Booking ref',
+                  label: context.l10n.trips_bookingRefLabel,
                   value: trip.reference,
                 ),
               ),
@@ -67,7 +70,9 @@ class TripBoardingCard extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: BoardingField(
-                  label: seats.length > 1 ? 'Seats' : 'Seat',
+                  label: seats.length > 1
+                      ? context.l10n.common_seats
+                      : context.l10n.trips_factSeat,
                   value: seats.isEmpty ? '—' : seats.join(', '),
                   emphasis: true,
                 ),
@@ -80,20 +85,20 @@ class TripBoardingCard extends StatelessWidget {
           ),
           BoardingStubLine(
             icon: Icons.location_on_rounded,
-            label: 'Board at',
+            label: context.l10n.tracking_boardAt,
             value: trip.pickup,
           ),
           const SizedBox(height: 10),
           BoardingStubLine(
             icon: Icons.schedule_rounded,
-            label: 'Departs',
+            label: context.l10n.trips_factDeparts,
             value: tripDepartureLabel(context, trip),
           ),
           const SizedBox(height: 14),
           Text(
             onBoard
-                ? 'Enjoy your ride — the captain has your seat on the manifest.'
-                : 'Show this reference to the captain when you board.',
+                ? context.l10n.trips_boardingOnBoardNote
+                : context.l10n.trips_boardingReadyNote,
             style: ClientTypography.bodySmall(
               context,
             ).copyWith(color: ClientColors.textTertiaryFor(context)),

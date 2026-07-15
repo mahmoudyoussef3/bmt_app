@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
@@ -11,6 +12,7 @@ import '../widgets/auth_error_banner.dart';
 import '../widgets/premium_auth_button.dart';
 import '../widgets/premium_auth_scaffold.dart';
 import '../widgets/premium_auth_text_field.dart';
+import '../widgets/remember_me_checkbox.dart';
 
 class SignInScreen extends StatefulWidget {
   const SignInScreen({super.key});
@@ -27,6 +29,26 @@ class _SignInScreenState extends State<SignInScreen> {
 
   final _emailFocus = FocusNode();
   final _passwordFocus = FocusNode();
+
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillRememberedCredentials();
+  }
+
+  Future<void> _prefillRememberedCredentials() async {
+    final creds = await context
+        .read<ClientAuthCubit>()
+        .loadRememberedCredentials();
+    if (!mounted || creds == null) return;
+    setState(() {
+      _emailController.text = creds.email;
+      _passwordController.text = creds.password;
+      _rememberMe = true;
+    });
+  }
 
   @override
   void dispose() {
@@ -46,6 +68,7 @@ class _SignInScreenState extends State<SignInScreen> {
     context.read<ClientAuthCubit>().signIn(
       email: _emailController.text.trim().toLowerCase(),
       password: _passwordController.text,
+      rememberMe: _rememberMe,
     );
   }
 
@@ -62,9 +85,7 @@ class _SignInScreenState extends State<SignInScreen> {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: BlocListener<ClientAuthCubit, ClientAuthState>(
+    return BlocListener<ClientAuthCubit, ClientAuthState>(
         listenWhen: (previous, current) =>
             previous.signInStatus != current.signInStatus,
         listener: (context, state) {
@@ -77,9 +98,8 @@ class _SignInScreenState extends State<SignInScreen> {
         },
         child: PremiumAuthScaffold(
           logo: const AuthBrandLogo(),
-          title: 'Welcome Back',
-          subtitle:
-              'Log in to track your trips, manage subscriptions, and track buses in real-time.',
+          title: l10n.auth_welcomeBack,
+          subtitle: l10n.auth_signInHeroSubtitle,
           child: BlocBuilder<ClientAuthCubit, ClientAuthState>(
             buildWhen: (previous, current) =>
                 previous.signInStatus != current.signInStatus,
@@ -156,7 +176,16 @@ class _SignInScreenState extends State<SignInScreen> {
                           },
                         ),
 
-                        const SizedBox(height: 10),
+                        const SizedBox(height: 4),
+
+                        RememberMeCheckbox(
+                          value: _rememberMe,
+                          label: l10n.auth_rememberMe,
+                          onChanged: isLoading
+                              ? (_) {}
+                              : (checked) =>
+                                    setState(() => _rememberMe = checked),
+                        ),
 
                         Align(
                           alignment: AlignmentDirectional.centerStart,
@@ -178,7 +207,9 @@ class _SignInScreenState extends State<SignInScreen> {
                         const SizedBox(height: 24),
 
                         PremiumAuthButton(
-                          text: isLoading ? 'Signing in...' : l10n.auth_signIn,
+                          text: isLoading
+                              ? l10n.auth_signingIn
+                              : l10n.auth_signIn,
                           onPressed: isLoading ? null : _submit,
                           isLoading: isLoading,
                         ),
@@ -203,7 +234,6 @@ class _SignInScreenState extends State<SignInScreen> {
             },
           ),
         ),
-      ),
     );
   }
 }
@@ -236,7 +266,7 @@ class _WelcomeBackCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'All your trips and bookings in one place — log in and follow your day easily.',
+              context.l10n.auth_signInInfoCard,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 height: 1.55,
                 color: scheme.onSurface,
@@ -296,7 +326,7 @@ class _SecurityNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'Make sure to use the email associated with your account to access your bookings and subscriptions.',
+      context.l10n.auth_signInSecurityNote,
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
         height: 1.55,

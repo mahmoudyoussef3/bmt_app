@@ -6,7 +6,54 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/communication/domain/entities/conversation.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/communication_cubit.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/communication_state.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
+
+/// Localized display label for a conversation category. Categories are
+/// stored verbatim (see the Supabase datasource) — this maps the known
+/// values to a translated label and falls back to the raw value.
+String _categoryLabel(BuildContext context, String category) {
+  final l10n = context.l10n;
+  return switch (category) {
+    'Driver' => l10n.communication_categoryDriver,
+    'Support' => l10n.communication_categorySupport,
+    'Group' => l10n.communication_categoryGroup,
+    _ => category,
+  };
+}
+
+/// Localized display label for a conversation-list filter chip. Filter
+/// values themselves stay canonical English (they're compared against
+/// [Conversation.category]); only the chip label is translated.
+String _filterLabel(BuildContext context, String filter) {
+  final l10n = context.l10n;
+  return switch (filter) {
+    'All' => l10n.communication_filterAll,
+    'Drivers' => l10n.communication_filterDrivers,
+    'Support' => l10n.communication_filterSupport,
+    'Groups' => l10n.communication_filterGroups,
+    _ => filter,
+  };
+}
+
+/// Locale-aware relative time for a conversation/message timestamp from the
+/// datasource (an ISO string). Locally-simulated messages set a plain clock
+/// string directly (e.g. "08:30 PM") rather than going through the
+/// datasource, so those aren't ISO-parseable — shown as-is, unchanged from
+/// today's behavior.
+String _displayTime(BuildContext context, String value) {
+  final parsed = DateTime.tryParse(value);
+  if (parsed == null) return value;
+
+  final l10n = context.l10n;
+  final diff = DateTime.now().difference(parsed.toLocal());
+  if (diff.inMinutes < 1) return l10n.communication_justNow;
+  if (diff.inMinutes < 60) return l10n.tracking_updatedMinutesAgo(diff.inMinutes);
+  if (diff.inHours < 24) return l10n.communication_hoursAgo(diff.inHours);
+  if (diff.inDays == 1) return l10n.seatRelease_timeYesterday;
+  return l10n.seatRelease_timeDaysAgo(diff.inDays);
+}
 
 class CommunicationScreen extends StatefulWidget {
   const CommunicationScreen({super.key});
@@ -133,7 +180,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
     final newMessage = ChatMessage(
       id: 'msg_${math.Random().nextInt(10000)}',
       sender: 'client',
-      senderName: 'You',
+      senderName: context.l10n.communication_you,
       text: text,
       time: timeStr,
     );
@@ -193,7 +240,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
     final driver = _conversations.firstWhere((c) => c.category == 'Driver');
     setState(() {
       _callName = driver.name;
-      _callRole = 'Shuttle Driver • Active Trip';
+      _callRole = context.l10n.communication_incomingCallRole;
       _callInitials = driver.initials;
       _currentView = 6; // Incoming Call view
     });
@@ -228,7 +275,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
         id: 'msg_${math.Random().nextInt(10000)}',
         sender: 'other',
         senderName: _callName,
-        text: '📞 Missed Call',
+        text: context.l10n.communication_missedCallText,
         time: timeStr,
       );
 
@@ -241,14 +288,17 @@ class _CommunicationScreenState extends State<CommunicationScreen>
         );
         context.read<CommunicationCubit>().incrementUnread(_callInitials);
         setState(() {
-          _notifications.insert(0, 'Missed call from $_callName');
+          _notifications.insert(
+            0,
+            context.l10n.communication_missedCallFrom(_callName),
+          );
         });
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Missed call from $_callName',
+            context.l10n.communication_missedCallFrom(_callName),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
           backgroundColor: Colors.redAccent,
@@ -263,9 +313,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
       _currentView = 1;
     });
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Call ended'),
-        duration: Duration(seconds: 1),
+      SnackBar(
+        content: Text(context.l10n.communication_callEnded),
+        duration: const Duration(seconds: 1),
       ),
     );
   }
@@ -296,7 +346,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
           return Scaffold(
             backgroundColor: scheme.surfaceContainerHighest,
             body: EmptyState(
-              title: 'Messages unavailable',
+              title: context.l10n.communication_messagesUnavailable,
               subtitle: state.message,
             ),
           );
@@ -335,17 +385,17 @@ class _CommunicationScreenState extends State<CommunicationScreen>
   PreferredSizeWidget? _buildAppBar(ColorScheme scheme) {
     if (_currentView == 1) {
       return AppBar(
-        title: const Text(
-          'Chat Hub',
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+        title: Text(
+          context.l10n.communication_chatHubTitle,
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: DirectionalIcon(Icons.arrow_back_rounded),
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: context.l10n.communication_refresh,
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () => context.read<CommunicationCubit>().load(),
           ),
@@ -354,7 +404,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
               Icons.ring_volume_rounded,
               color: ClientColors.journeyCyan,
             ),
-            tooltip: 'Simulate Incoming Call',
+            tooltip: context.l10n.communication_simulateIncomingCall,
             onPressed: _triggerIncomingCallSimulation,
           ),
           const SizedBox(width: 8),
@@ -372,7 +422,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
     return AppBar(
       titleSpacing: 0,
       leading: IconButton(
-        icon: const Icon(Icons.arrow_back_rounded),
+        icon: DirectionalIcon(Icons.arrow_back_rounded),
         onPressed: _onBackPress,
       ),
       title: Row(
@@ -381,8 +431,8 @@ class _CommunicationScreenState extends State<CommunicationScreen>
             children: [
               AppAvatar(initials: initials, radius: 18),
               if (isOnline)
-                Positioned(
-                  right: 0,
+                PositionedDirectional(
+                  end: 0,
                   bottom: 0,
                   child: Container(
                     width: 10,
@@ -411,7 +461,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  isOnline ? 'Online' : 'Offline',
+                  isOnline
+                      ? context.l10n.communication_online
+                      : context.l10n.communication_offline,
                   style: TextStyle(
                     fontSize: 10,
                     color: isOnline ? ClientColors.journeyCyan : Colors.grey,
@@ -428,7 +480,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
             icon: const Icon(Icons.phone_outlined),
             onPressed: () => _startOutgoingCall(
               _activeConversation!.name,
-              'Shuttle Driver',
+              context.l10n.communication_shuttleDriverRole,
               _activeConversation!.initials,
             ),
           ),
@@ -511,7 +563,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
             controller: _searchController,
             onChanged: (val) => setState(() => _searchQuery = val),
             decoration: InputDecoration(
-              hintText: 'Search chats, contacts, messages...',
+              hintText: context.l10n.communication_searchHint,
               prefixIcon: const Icon(Icons.search_rounded, size: 20),
               fillColor: scheme.surface,
               contentPadding: const EdgeInsets.symmetric(
@@ -540,9 +592,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
         // Chats list
         Expanded(
           child: filtered.isEmpty
-              ? const EmptyState(
-                  title: 'No conversations found',
-                  subtitle: 'Filter or search in your active shuttle runs.',
+              ? EmptyState(
+                  title: context.l10n.communication_emptyTitle,
+                  subtitle: context.l10n.communication_emptySubtitle,
                   emoji: '💬',
                 )
               : ListView.separated(
@@ -569,10 +621,10 @@ class _CommunicationScreenState extends State<CommunicationScreen>
         children: filters.map((f) {
           final isSel = _selectedFilter == f;
           return Padding(
-            padding: const EdgeInsets.only(right: 8.0),
+            padding: const EdgeInsetsDirectional.only(end: 8.0),
             child: ChoiceChip(
               label: Text(
-                f,
+                _filterLabel(context, f),
                 style: TextStyle(
                   fontSize: 12,
                   fontWeight: isSel ? FontWeight.bold : FontWeight.normal,
@@ -593,7 +645,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
   }
 
   Widget _buildConversationItem(Conversation chat, ColorScheme scheme) {
-    final isMissed = chat.lastMessage.contains('📞 Missed Call');
+    final isMissed = chat.lastMessage.contains(
+      context.l10n.communication_missedCallText,
+    );
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
@@ -614,8 +668,8 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                     children: [
                       AppAvatar(initials: chat.initials, radius: 24),
                       if (chat.isOnline)
-                        Positioned(
-                          right: 0,
+                        PositionedDirectional(
+                          end: 0,
                           bottom: 0,
                           child: Container(
                             width: 12,
@@ -653,7 +707,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                               ),
                             ),
                             Text(
-                              chat.time,
+                              _displayTime(context, chat.time),
                               style: const TextStyle(
                                 fontSize: 10,
                                 color: Colors.grey,
@@ -677,7 +731,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                chat.category,
+                                _categoryLabel(context, chat.category),
                                 style: TextStyle(
                                   fontSize: 8,
                                   fontWeight: FontWeight.bold,
@@ -780,7 +834,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
 
   Widget _buildSupportSubHeader(ColorScheme scheme) {
     final ticketId = _activeConversation!.meta?['ticketId'] ?? '#TK-XXXX';
-    final status = _activeConversation!.meta?['status'] ?? 'Open';
+    final status =
+        _activeConversation!.meta?['status'] ??
+        context.l10n.communication_statusOpenFallback;
     return Container(
       width: double.infinity,
       color: scheme.surface,
@@ -797,7 +853,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
               ),
               const SizedBox(width: 6),
               Text(
-                'Support Ticket Reference: $ticketId',
+                context.l10n.communication_ticketReference(ticketId),
                 style: const TextStyle(
                   fontSize: 11,
                   color: Colors.grey,
@@ -849,10 +905,10 @@ class _CommunicationScreenState extends State<CommunicationScreen>
 
   Widget _buildDriverTripBanner(ColorScheme scheme) {
     final meta = _activeConversation!.meta ?? {};
-    final route = meta['route'] ?? 'Banha → Smart Village';
-    final vehicle = meta['vehicle'] ?? 'Comfort Van';
-    final eta = meta['eta'] ?? '8 mins';
-    final rating = meta['rating'] ?? '4.9 ★';
+    final route = meta['route'] ?? context.l10n.communication_demoRoute;
+    final vehicle = meta['vehicle'] ?? context.l10n.communication_demoVehicle;
+    final eta = meta['eta'] ?? context.l10n.communication_demoEta;
+    final rating = meta['rating'] ?? context.l10n.communication_demoRating;
 
     return Container(
       color: scheme.surface,
@@ -917,37 +973,49 @@ class _CommunicationScreenState extends State<CommunicationScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildDriverQuickActionChip('📞 Call', () {
-                _startOutgoingCall(
-                  _activeConversation!.name,
-                  'Shuttle Driver',
-                  _activeConversation!.initials,
-                );
-              }, scheme),
-              _buildDriverQuickActionChip('📍 Share Location', () {
-                context.read<CommunicationCubit>().addMessage(
-                  ChatMessage(
-                    id: 'd_loc',
-                    sender: 'client',
-                    senderName: 'You',
-                    text: '📍 Shared Live Location',
-                    time: 'Just now',
-                  ),
-                );
-                _scrollToBottom();
-              }, scheme),
-              _buildDriverQuickActionChip('⏰ Late 5m', () {
-                context.read<CommunicationCubit>().addMessage(
-                  ChatMessage(
-                    id: 'd_late',
-                    sender: 'client',
-                    senderName: 'You',
-                    text: 'I will be late by 5 minutes, please hold for me.',
-                    time: 'Just now',
-                  ),
-                );
-                _scrollToBottom();
-              }, scheme),
+              _buildDriverQuickActionChip(
+                context.l10n.communication_callAction,
+                () {
+                  _startOutgoingCall(
+                    _activeConversation!.name,
+                    context.l10n.communication_shuttleDriverRole,
+                    _activeConversation!.initials,
+                  );
+                },
+                scheme,
+              ),
+              _buildDriverQuickActionChip(
+                context.l10n.communication_shareLocationAction,
+                () {
+                  context.read<CommunicationCubit>().addMessage(
+                    ChatMessage(
+                      id: 'd_loc',
+                      sender: 'client',
+                      senderName: context.l10n.communication_you,
+                      text: context.l10n.communication_sharedLocationMessage,
+                      time: context.l10n.communication_justNow,
+                    ),
+                  );
+                  _scrollToBottom();
+                },
+                scheme,
+              ),
+              _buildDriverQuickActionChip(
+                context.l10n.communication_late5mAction,
+                () {
+                  context.read<CommunicationCubit>().addMessage(
+                    ChatMessage(
+                      id: 'd_late',
+                      sender: 'client',
+                      senderName: context.l10n.communication_you,
+                      text: context.l10n.communication_lateMessageText,
+                      time: context.l10n.communication_justNow,
+                    ),
+                  );
+                  _scrollToBottom();
+                },
+                scheme,
+              ),
             ],
           ),
         ],
@@ -1000,8 +1068,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
 
   Widget _buildGroupDetailsHeader(ColorScheme scheme) {
     final meta = _activeConversation!.meta ?? {};
-    final route = meta['route'] ?? 'Route Info';
-    final count = meta['membersCount'] ?? '10 members';
+    final route = meta['route'] ?? context.l10n.communication_demoGroupRoute;
+    final count =
+        meta['membersCount'] ?? context.l10n.communication_demoMembersCount;
     final shuttle = meta['shuttle'] ?? '';
 
     return Container(
@@ -1074,7 +1143,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
 
   Widget _buildSmallAvatarCircle(String initials, ColorScheme scheme) {
     return Padding(
-      padding: const EdgeInsets.only(right: 6.0),
+      padding: const EdgeInsetsDirectional.only(end: 6.0),
       child: AppAvatar(initials: initials, radius: 15),
     );
   }
@@ -1098,18 +1167,20 @@ class _CommunicationScreenState extends State<CommunicationScreen>
 
   Widget _buildMessageItem(ChatMessage msg, bool isUser, ColorScheme scheme) {
     return Align(
-      alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+      alignment: isUser
+          ? AlignmentDirectional.centerEnd
+          : AlignmentDirectional.centerStart,
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         constraints: const BoxConstraints(maxWidth: 290),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: isUser ? scheme.primary : scheme.surface,
-          borderRadius: BorderRadius.only(
-            topLeft: const Radius.circular(16),
-            topRight: const Radius.circular(16),
-            bottomLeft: isUser ? const Radius.circular(16) : Radius.zero,
-            bottomRight: isUser ? Radius.zero : const Radius.circular(16),
+          borderRadius: BorderRadiusDirectional.only(
+            topStart: const Radius.circular(16),
+            topEnd: const Radius.circular(16),
+            bottomStart: isUser ? const Radius.circular(16) : Radius.zero,
+            bottomEnd: isUser ? Radius.zero : const Radius.circular(16),
           ),
           border: isUser
               ? null
@@ -1141,7 +1212,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  msg.time,
+                  _displayTime(context, msg.time),
                   style: TextStyle(
                     fontSize: 8,
                     color: isUser ? Colors.white.withAlpha(160) : Colors.grey,
@@ -1194,8 +1265,8 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                       size: 30,
                     ),
                   ),
-                  Positioned(
-                    right: 8,
+                  PositionedDirectional(
+                    end: 8,
                     bottom: 8,
                     child: CircleAvatar(
                       radius: 12,
@@ -1306,9 +1377,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
 
   Widget _buildTypingIndicator(ColorScheme scheme) {
     return Align(
-      alignment: Alignment.centerLeft,
+      alignment: AlignmentDirectional.centerStart,
       child: Container(
-        margin: const EdgeInsets.only(left: 16, bottom: 12),
+        margin: const EdgeInsetsDirectional.only(start: 16, bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: scheme.surface,
@@ -1330,7 +1401,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
             const _BouncingDot(delayMs: 400),
             const SizedBox(width: 8),
             Text(
-              '${_activeConversation!.name.split(' ').first} is typing...',
+              context.l10n.communication_isTyping(
+                _activeConversation!.name.split(' ').first,
+              ),
               style: const TextStyle(fontSize: 10, color: Colors.grey),
             ),
           ],
@@ -1357,9 +1430,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                 ChatMessage(
                   id: 'sim_att',
                   sender: 'user',
-                  senderName: 'User',
-                  text: 'Attached image',
-                  time: 'Just now',
+                  senderName: context.l10n.communication_userSenderFallback,
+                  text: context.l10n.communication_attachedImageMessage,
+                  time: context.l10n.communication_justNow,
                   type: 'image',
                   attachmentName: 'screenshot_evidence.jpg',
                   attachmentSize: '290 KB',
@@ -1378,9 +1451,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                 ChatMessage(
                   id: 'sim_voice',
                   sender: 'user',
-                  senderName: 'User',
-                  text: '🎙️ Voice Message',
-                  time: 'Just now',
+                  senderName: context.l10n.communication_userSenderFallback,
+                  text: context.l10n.communication_voiceMessageText,
+                  time: context.l10n.communication_justNow,
                   type: 'voice',
                   duration: '0:08',
                 ),
@@ -1394,7 +1467,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
             child: TextField(
               controller: _messageController,
               decoration: InputDecoration(
-                hintText: 'Type your message...',
+                hintText: context.l10n.communication_messageInputHint,
                 fillColor: scheme.surfaceContainerHighest,
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(24),
@@ -1418,7 +1491,7 @@ class _CommunicationScreenState extends State<CommunicationScreen>
                 color: scheme.primary,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
+              child: DirectionalIcon(
                 Icons.send_rounded,
                 color: Colors.white,
                 size: 16,
@@ -1503,9 +1576,9 @@ class _CommunicationScreenState extends State<CommunicationScreen>
 
                   Text(
                     _currentView == 5
-                        ? 'Ringing...'
+                        ? context.l10n.communication_ringing
                         : _currentView == 6
-                        ? 'Incoming Shuttle Call...'
+                        ? context.l10n.communication_incomingShuttleCall
                         : _formatDuration(_callDurationSeconds),
                     style: TextStyle(
                       fontSize: 14,
@@ -1538,13 +1611,13 @@ class _CommunicationScreenState extends State<CommunicationScreen>
           _buildCallActionButton(
             icon: Icons.call_end_rounded,
             color: Colors.redAccent,
-            label: 'Decline',
+            label: context.l10n.communication_decline,
             onTap: () => _declineCall(true), // Registers missed call
           ),
           _buildCallActionButton(
             icon: Icons.call_rounded,
             color: ClientColors.journeyCyanStrong,
-            label: 'Accept',
+            label: context.l10n.communication_accept,
             onTap: _acceptIncomingCall,
           ),
         ],
@@ -1557,15 +1630,21 @@ class _CommunicationScreenState extends State<CommunicationScreen>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            _buildToggleCallButton(Icons.mic_off_rounded, 'Mute'),
-            _buildToggleCallButton(Icons.volume_up_rounded, 'Speaker'),
+            _buildToggleCallButton(
+              Icons.mic_off_rounded,
+              context.l10n.communication_mute,
+            ),
+            _buildToggleCallButton(
+              Icons.volume_up_rounded,
+              context.l10n.communication_speaker,
+            ),
           ],
         ),
         const SizedBox(height: 40),
         _buildCallActionButton(
           icon: Icons.call_end_rounded,
           color: Colors.redAccent,
-          label: 'Hang Up',
+          label: context.l10n.communication_hangUp,
           onTap: _hangUpCall,
         ),
       ],

@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/map/booking_map_adapters.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/maps/map_style.dart';
 import 'package:bmt_app/core/widgets/maps/overlays/glass_info_card.dart';
 
 /// "850 m" under a kilometre, otherwise "12.4 km".
-String formatRouteDistance(double meters) => meters < 1000
-    ? '${meters.round()} m'
-    : '${(meters / 1000).toStringAsFixed(1)} km';
+String formatRouteDistance(BuildContext context, double meters) {
+  final l10n = context.l10n;
+  return meters < 1000
+      ? l10n.booking_distanceMeters(meters.round())
+      : l10n.booking_distanceKm((meters / 1000).toStringAsFixed(1));
+}
 
 /// "25 min" under an hour, otherwise "1h 05m".
-String formatRouteDuration(double seconds) {
+String formatRouteDuration(BuildContext context, double seconds) {
   final minutes = (seconds / 60).round();
-  if (minutes < 60) return '$minutes min';
+  final l10n = context.l10n;
+  if (minutes < 60) return l10n.common_durationMinutes(minutes);
   final hours = minutes ~/ 60;
   final rest = minutes % 60;
-  return '${hours}h ${rest.toString().padLeft(2, '0')}m';
+  if (rest == 0) return l10n.common_durationHours(hours);
+  return l10n.common_durationHoursMinutes(hours, rest);
 }
 
 /// Transit-style facts card: headline distance · duration, then compact chips
@@ -33,6 +39,7 @@ class RouteMapInfoPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final headline = <String>[
       if ((info.distance ?? '').trim().isNotEmpty) info.distance!.trim(),
       if ((info.duration ?? '').trim().isNotEmpty) info.duration!.trim(),
@@ -72,17 +79,19 @@ class RouteMapInfoPanel extends StatelessWidget {
             children: [
               _Fact(
                 icon: Icons.route_rounded,
-                label: stopCount == 1 ? '1 stop' : '$stopCount stops',
+                label: stopCount == 1
+                    ? l10n.booking_oneStop
+                    : l10n.booking_stopsCountLabel(stopCount),
               ),
               if (info.availableSeats != null)
                 _Fact(
                   icon: Icons.event_seat_rounded,
-                  label: '${info.availableSeats} seats',
+                  label: l10n.booking_seatsCountLabel(info.availableSeats!),
                 ),
               if (info.passengerCount != null)
                 _Fact(
                   icon: Icons.people_alt_rounded,
-                  label: '${info.passengerCount} riders',
+                  label: l10n.booking_ridersCount(info.passengerCount!),
                 ),
               if (info.status != null && info.status!.trim().isNotEmpty)
                 _Fact(icon: Icons.circle, iconSize: 8, label: info.status!),
@@ -171,7 +180,10 @@ class _RouteMapLoadingPillState extends State<RouteMapLoadingPill>
             ),
           ),
           const SizedBox(width: 7),
-          Text('Tracing road…', style: MapStyle.pillLabel(context)),
+          Text(
+            context.l10n.booking_tracingRoad,
+            style: MapStyle.pillLabel(context),
+          ),
         ],
       ),
     );

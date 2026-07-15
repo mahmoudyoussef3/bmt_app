@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/overview_stop_dot.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// [RouteOverviewScreen]'s simple numbered stop list (a lighter-weight
 /// variant than Route Details' `RouteStopTimeline`).
@@ -59,14 +60,14 @@ class _StopRow extends StatelessWidget {
                 ),
                 if (isFirst)
                   Text(
-                    'Pickup point',
+                    context.l10n.booking_pickupPoint,
                     style: ClientTypography.labelSmall(
                       context,
                     ).copyWith(color: ClientColors.primary),
                   ),
                 if (isLast)
                   Text(
-                    'Final stop',
+                    context.l10n.booking_finalStop,
                     style: ClientTypography.labelSmall(
                       context,
                     ).copyWith(color: ClientColors.journeyCyan),

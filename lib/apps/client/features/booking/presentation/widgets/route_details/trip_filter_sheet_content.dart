@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/models/trip_fi
 import 'package:bmt_app/apps/client/features/booking/presentation/utils/day_part.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/utils/filter_bounds.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/utils/trip_sort.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Opens the filter sheet for Route Details' available-trips list — price,
 /// seats, vehicle type, time of day, and sort, all backed by real per-trip
@@ -47,6 +48,7 @@ class _TripFilterSheetContentState extends State<TripFilterSheetContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final vehicleTypes = uniqueSortedValues(
       widget.trips.map((t) => t.vehicleType),
     );
@@ -59,14 +61,14 @@ class _TripFilterSheetContentState extends State<TripFilterSheetContent> {
     final resultCount = widget.trips.where(_draft.matches).length;
 
     return FilterBottomSheet(
-      title: 'Filter trips',
+      title: l10n.booking_filterTrips,
       resultCount: resultCount,
       canReset: _draft.activeCount > 0,
       onReset: () => setState(() => _draft = _draft.reset()),
       onApply: () => Navigator.of(context).pop(_draft),
       groups: [
         FilterRangeSlider(
-          label: 'Price',
+          label: l10n.booking_price,
           values:
               _draft.priceRange ?? RangeValues(priceBounds.$1, priceBounds.$2),
           min: priceBounds.$1,
@@ -76,7 +78,7 @@ class _TripFilterSheetContentState extends State<TripFilterSheetContent> {
               setState(() => _draft = _draft.copyWith(priceRange: v)),
         ),
         FilterRangeSlider(
-          label: 'Available seats',
+          label: l10n.booking_availableSeats,
           values:
               _draft.seatsRange ?? RangeValues(seatsBounds.$1, seatsBounds.$2),
           min: seatsBounds.$1,
@@ -87,7 +89,7 @@ class _TripFilterSheetContentState extends State<TripFilterSheetContent> {
         ),
         if (vehicleTypes.isNotEmpty)
           NullableFilterChipGroup(
-            label: 'Vehicle type',
+            label: l10n.booking_filterVehicleType,
             options: vehicleTypes,
             selected: _draft.vehicleType,
             onSelected: (v) => setState(
@@ -97,9 +99,11 @@ class _TripFilterSheetContentState extends State<TripFilterSheetContent> {
             ),
           ),
         FilterChipGroup<DayPart?>(
-          label: 'Time of day',
+          label: l10n.booking_filterTimeOfDay,
           options: const [null, ...DayPart.values],
-          optionLabel: (value) => value == null ? 'Any' : timeOfDayLabel(value),
+          optionLabel: (value) => value == null
+              ? l10n.booking_filterAny
+              : timeOfDayLabel(context, value),
           selected: _draft.timeOfDay,
           onSelected: (v) => setState(
             () => _draft = v == null
@@ -108,9 +112,9 @@ class _TripFilterSheetContentState extends State<TripFilterSheetContent> {
           ),
         ),
         FilterChipGroup<TripSort>(
-          label: 'Sort by',
+          label: l10n.booking_filterSortBy,
           options: TripSort.values,
-          optionLabel: tripSortLabel,
+          optionLabel: (value) => tripSortLabel(context, value),
           selected: _draft.sort,
           onSelected: (v) => setState(() => _draft = _draft.copyWith(sort: v)),
         ),

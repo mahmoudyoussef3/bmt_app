@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/stop_meta_labels.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/timeline_stop_dot.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// One stop row in `RouteStopTimeline`: rail marker, stop name, and a muted
 /// caption saying what the passenger may do there.
@@ -89,7 +90,9 @@ class _StopDetails extends StatelessWidget {
             if (kind != TimelineStopKind.waypoint) ...[
               const SizedBox(width: 10),
               StopRoleChip(
-                label: kind == TimelineStopKind.origin ? 'Start' : 'End',
+                label: kind == TimelineStopKind.origin
+                    ? context.l10n.booking_stopStart
+                    : context.l10n.booking_stopEnd,
                 color: accent,
               ),
             ],

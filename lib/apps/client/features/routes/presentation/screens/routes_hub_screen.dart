@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/client/features/routes/presentation/widgets/routes_
 import 'package:bmt_app/apps/client/features/routes/presentation/widgets/routes_hub_hero.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/widgets/routes_hub_search_card.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/widgets/routes_hub_skeleton.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
@@ -47,7 +48,7 @@ class _RoutesHubScreenState extends State<RoutesHubScreen> {
               behavior: SnackBarBehavior.floating,
               content: Text(message),
               action: SnackBarAction(
-                label: 'Retry',
+                label: context.l10n.common_retry,
                 onPressed: () => context.read<RoutesHubCubit>().load(),
               ),
             ),
@@ -88,28 +89,54 @@ class _LoadedBody extends StatelessWidget {
   final RoutesHubData data;
   final void Function(RoutesHubAction) onOpenAction;
 
+  /// The hub's copy is static app chrome (see the comment in
+  /// [SupabaseRoutesHubDatasource]) that happens to be threaded through the
+  /// data layer for `searchAction`/`popularRoutesAction` routing — the
+  /// display text itself is localized here rather than read off [data], so
+  /// [RoutesHubData.title]/[subtitle]/etc. stay unused by design.
+  List<RoutesHubFlowStep> _localizedSteps(BuildContext context) {
+    final l10n = context.l10n;
+    final labels = [
+      (l10n.routes_step1Title, l10n.routes_step1Subtitle),
+      (l10n.routes_step2Title, l10n.routes_step2Subtitle),
+      (l10n.routes_step3Title, l10n.routes_step3Subtitle),
+      (l10n.routes_step4Title, l10n.routes_step4Subtitle),
+    ];
+    return data.flowSteps.map((step) {
+      final idx = step.step - 1;
+      if (idx < 0 || idx >= labels.length) return step;
+      final (title, subtitle) = labels[idx];
+      return RoutesHubFlowStep(
+        step: step.step,
+        title: title,
+        subtitle: subtitle,
+      );
+    }).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return RefreshIndicator(
       onRefresh: () => context.read<RoutesHubCubit>().load(),
       child: ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: AppLayout.pagePaddingWithTop,
         children: [
-          RoutesHubHero(title: data.title, subtitle: data.subtitle),
+          RoutesHubHero(title: l10n.nav_routes, subtitle: l10n.routes_heroSubtitle),
           const SizedBox(height: 24),
           RoutesHubSearchCard(
-            title: data.searchTitle,
-            description: data.searchDescription,
+            title: l10n.home_whereAreYouGoing,
+            description: l10n.routes_searchDescription,
             onSearch: () => onOpenAction(data.searchAction),
           ),
           const SizedBox(height: 32),
-          const ClientSectionHeader(title: 'How it works'),
+          ClientSectionHeader(title: l10n.routes_howItWorks),
           const SizedBox(height: 16),
-          RoutesHubFlowSteps(steps: data.flowSteps),
+          RoutesHubFlowSteps(steps: _localizedSteps(context)),
           const SizedBox(height: 28),
           AppButton.secondary(
-            text: 'Browse popular routes',
+            text: l10n.routes_browsePopularRoutes,
             icon: const Icon(Icons.trending_up_rounded, size: 18),
             onPressed: () => onOpenAction(data.popularRoutesAction),
           ),

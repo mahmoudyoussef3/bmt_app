@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/trackin
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_progress_summary.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_soft_icon.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Shown for an in-progress trip: real route-completion progress from the
 /// shared [RouteProgressEngine] (via a locally-scoped [TrackingCubit], the
@@ -55,7 +56,7 @@ class _TripLiveTrackingCardBody extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  'Your trip is in progress',
+                  context.l10n.trips_liveTripInProgress,
                   style: ClientTypography.headingSmall(
                     context,
                   ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -72,7 +73,7 @@ class _TripLiveTrackingCardBody extends StatelessWidget {
                   backgroundColor: ClientColors.primary,
                   foregroundColor: ClientColors.textInverse,
                 ),
-                child: const Text('Track'),
+                child: Text(context.l10n.trips_liveTrackButton),
               ),
             ],
           ),

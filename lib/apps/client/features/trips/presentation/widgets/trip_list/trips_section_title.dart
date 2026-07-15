@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The section heading above a trip list ("Upcoming trips · 3").
 class TripsSectionTitle extends StatelessWidget {
@@ -13,12 +14,12 @@ class TripsSectionTitle extends StatelessWidget {
   final TripFilter filter;
   final int count;
 
-  String get _title {
+  String _title(BuildContext context) {
     return switch (filter) {
-      TripFilter.upcoming => 'Upcoming trips',
-      TripFilter.active => 'In progress trips',
-      TripFilter.completed => 'Completed trips',
-      TripFilter.cancelled => 'Cancelled trips',
+      TripFilter.upcoming => context.l10n.trips_sectionUpcoming,
+      TripFilter.active => context.l10n.trips_sectionActive,
+      TripFilter.completed => context.l10n.trips_sectionCompleted,
+      TripFilter.cancelled => context.l10n.trips_sectionCancelled,
     };
   }
 
@@ -28,7 +29,7 @@ class TripsSectionTitle extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
-          _title,
+          _title(context),
           style: Theme.of(
             context,
           ).textTheme.displaySmall?.copyWith(fontWeight: FontWeight.w700),

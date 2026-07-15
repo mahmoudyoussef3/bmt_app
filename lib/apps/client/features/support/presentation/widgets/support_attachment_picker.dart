@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Optional evidence for a ticket — a receipt screenshot, a photo of a
 /// damaged package. Empty is a perfectly valid state, so this never blocks
@@ -62,7 +63,7 @@ class SupportAttachmentPicker extends StatelessWidget {
                   Text(
                     hasFile
                         ? attachment!.path.split('/').last
-                        : 'Upload image or document',
+                        : context.l10n.support_uploadPrompt,
                     style: ClientTypography.bodyMedium(context).copyWith(
                       color: scheme.onSurface,
                       fontWeight: FontWeight.w700,
@@ -73,7 +74,7 @@ class SupportAttachmentPicker extends StatelessWidget {
                   if (!hasFile) ...[
                     const SizedBox(height: 4),
                     Text(
-                      'JPG, PNG, or PDF up to 5MB',
+                      context.l10n.support_uploadHint,
                       style: ClientTypography.bodySmall(
                         context,
                       ).copyWith(color: scheme.onSurfaceVariant),
@@ -85,7 +86,7 @@ class SupportAttachmentPicker extends StatelessWidget {
             if (hasFile)
               IconButton(
                 icon: Icon(Icons.close_rounded, color: scheme.error),
-                tooltip: 'Remove attachment',
+                tooltip: context.l10n.support_removeAttachment,
                 onPressed: onClear,
               ),
           ],

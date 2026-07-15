@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_ticket_facts.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_ticket_journey.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// What the rider is about to buy, drawn as the ticket they will end up
 /// holding. A table of the fields they already typed is something to proofread;
@@ -72,14 +73,16 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Your seat',
+                  context.l10n.payments_yourSeat,
                   style: ClientTypography.labelSmall(
                     context,
                   ).copyWith(color: Colors.white70),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  seat.isEmpty ? 'Seat not selected' : 'Seat $seat',
+                  seat.isEmpty
+                      ? context.l10n.payments_seatNotSelected
+                      : context.l10n.payments_seatNumber(seat),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: ClientTypography.headingSmall(

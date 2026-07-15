@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/client_nav_destination.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// One tab of the floating nav island: icon over label, both animating between
 /// the resting and selected treatments.
@@ -27,12 +28,13 @@ class ClientNavItem extends StatelessWidget {
     final Color color = isActive
         ? ClientColors.textInverse
         : ClientColors.textTertiaryFor(context);
+    final label = destination.labelFor(context.l10n);
 
     return Expanded(
       child: Semantics(
         button: true,
         selected: isActive,
-        label: destination.label,
+        label: label,
         child: GestureDetector(
           behavior: HitTestBehavior.opaque,
           onTap: onTap,
@@ -68,7 +70,7 @@ class ClientNavItem extends StatelessWidget {
                   fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
                   letterSpacing: isActive ? 0.2 : 0,
                 ),
-                child: Text(destination.label),
+                child: Text(label),
               ),
             ],
           ),

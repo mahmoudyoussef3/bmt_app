@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_action_button.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_badge.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The assigned captain's identity and rating — plus the live-journey actions
 /// (call, chat, track), which only exist while there is a journey to act on.
@@ -35,7 +36,7 @@ class TripDriverCard extends StatelessWidget {
               ),
             ),
             TripInlineBadge(
-              label: driverBadgeLabelFor(trip.status),
+              label: driverBadgeLabelFor(context, trip.status),
               color: driverBadgeColorFor(trip.status),
             ),
           ],
@@ -65,7 +66,7 @@ class _LiveActions extends StatelessWidget {
         Expanded(
           child: TripInlineActionButton(
             icon: Icons.call_rounded,
-            label: 'Call',
+            label: context.l10n.tracking_call,
             onTap: () => _callDriver(context),
           ),
         ),
@@ -73,7 +74,7 @@ class _LiveActions extends StatelessWidget {
         Expanded(
           child: TripInlineActionButton(
             icon: Icons.chat_bubble_rounded,
-            label: 'Chat',
+            label: context.l10n.trips_actionChat,
             onTap: () => Navigator.pushNamed(context, '/communication'),
           ),
         ),
@@ -82,7 +83,7 @@ class _LiveActions extends StatelessWidget {
           Expanded(
             child: TripInlineActionButton(
               icon: Icons.location_on_rounded,
-              label: 'Track',
+              label: context.l10n.trips_liveTrackButton,
               onTap: () => Navigator.pushNamed(
                 context,
                 '/tracking',
@@ -98,17 +99,16 @@ class _LiveActions extends StatelessWidget {
   Future<void> _callDriver(BuildContext context) async {
     final phone = trip.driverPhone.trim();
     final messenger = ScaffoldMessenger.of(context);
+    final l10n = context.l10n;
     if (phone.isEmpty) {
       messenger.showSnackBar(
-        const SnackBar(content: Text('Driver phone number is not available.')),
+        SnackBar(content: Text(l10n.trips_driverPhoneUnavailable)),
       );
       return;
     }
     final uri = Uri(scheme: 'tel', path: phone);
     if (!await launchUrl(uri)) {
-      messenger.showSnackBar(
-        SnackBar(content: Text('Could not start a call to $phone.')),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l10n.trips_callFailed(phone))));
     }
   }
 }

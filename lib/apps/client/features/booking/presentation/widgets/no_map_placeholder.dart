@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Graceful fallback shown wherever a route/trip map would render but no
 /// valid stop coordinates are available — the rest of the screen stays
@@ -24,7 +25,7 @@ class NoMapPlaceholder extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              'Map coordinates unavailable',
+              context.l10n.booking_mapCoordinatesUnavailable,
               style: ClientTypography.labelLarge(context),
             ),
           ],

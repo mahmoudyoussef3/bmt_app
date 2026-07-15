@@ -13,6 +13,7 @@ import 'package:bmt_app/apps/client/features/payments/presentation/widgets/check
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_notice.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_pay_bar.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_ticket_card.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The wizard's last step, drawn with the same checkout the rest of the app
 /// pays through — the ticket, the fare, the methods, the pay bar.
@@ -52,6 +53,7 @@ class WizardPaymentBody extends StatelessWidget {
         .firstOrNull;
     final needsReceipt = wizardMethodRequiresReceipt(session.paymentMethod);
     final blocked = wizardPaymentBlockedReason(
+      context: context,
       session: session,
       data: data,
       uploading: uploading,
@@ -111,7 +113,9 @@ class WizardPaymentBody extends StatelessWidget {
         CheckoutPayBar(
           total: data.subtotal,
           subtotal: data.subtotal,
-          label: needsReceipt ? 'Submit receipt' : 'Pay now',
+          label: needsReceipt
+              ? context.l10n.booking_submitReceipt
+              : context.l10n.payments_payNow,
           blockedReason: blocked,
           onPay: blocked == null ? onConfirm : null,
         ),

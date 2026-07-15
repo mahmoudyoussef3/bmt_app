@@ -39,12 +39,16 @@ class PaymentCheckoutData {
   final String pickupPoint;
   final String destination;
   final String vehicleNumber;
+  final String vehicleName;
+  final String vehicleImageUrl;
   final String tripDate;
   final String departureTime;
   final String arrivalTime;
   final String selectedSeatId;
   final String selectedSeat;
   final String driverName;
+  final String driverImageUrl;
+  final double driverRating;
   final int baseFare;
   final int serviceFee;
   final int tax;
@@ -62,12 +66,21 @@ class PaymentCheckoutData {
     required this.selectedSeatId,
     required this.selectedSeat,
     required this.driverName,
+    this.vehicleName = '',
+    this.vehicleImageUrl = '',
+    this.driverImageUrl = '',
+    this.driverRating = 0,
     this.baseFare = 0,
     this.serviceFee = 0,
     this.tax = 0,
     this.walletBalanceLabel = 'Wallet Balance',
     this.walletBalance = 0,
   });
+
+  /// The friendly label for the vehicle on the ticket: its name (brand/model)
+  /// when known, falling back to the plate/code so the fact is never blank.
+  String get vehicleLabel =>
+      vehicleName.trim().isNotEmpty ? vehicleName.trim() : vehicleNumber;
 
   int get subtotal => baseFare + serviceFee + tax;
 

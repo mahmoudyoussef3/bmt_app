@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
@@ -89,9 +90,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final scheme = theme.colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: BlocListener<ClientAuthCubit, ClientAuthState>(
+    return BlocListener<ClientAuthCubit, ClientAuthState>(
         listenWhen: (previous, current) =>
             previous.signUpStatus != current.signUpStatus,
         listener: (context, state) {
@@ -105,9 +104,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
         },
         child: PremiumAuthScaffold(
           logo: const AuthBrandLogo(),
-          title: 'Create Account',
-          subtitle:
-              'Register your details once and enjoy booking trips, tracking buses, and managing subscriptions easily.',
+          title: l10n.auth_createAccountTitle,
+          subtitle: l10n.auth_signUpHeroSubtitle,
           child: BlocBuilder<ClientAuthCubit, ClientAuthState>(
             buildWhen: (previous, current) =>
                 previous.signUpStatus != current.signUpStatus,
@@ -139,7 +137,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         const SizedBox(height: 18),
 
                         AuthSectionCard(
-                          title: 'Account Details',
+                          title: l10n.auth_accountDetails,
                           icon: Icons.account_circle_outlined,
                           children: [
                             PremiumAuthTextField(
@@ -192,7 +190,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         const SizedBox(height: 14),
 
                         AuthSectionCard(
-                          title: 'Login Details',
+                          title: l10n.auth_loginDetails,
                           icon: Icons.lock_person_outlined,
                           children: [
                             PremiumAuthTextField(
@@ -275,7 +273,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                         PremiumAuthButton(
                           text: isLoading
-                              ? 'Creating Account...'
+                              ? l10n.auth_creatingAccount
                               : l10n.auth_createAccount,
                           onPressed: isLoading ? null : _submit,
                           isLoading: isLoading,
@@ -301,7 +299,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
             },
           ),
         ),
-      ),
     );
   }
 }
@@ -338,7 +335,7 @@ class _TrustBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Your data is secure and used only to manage your trips and bookings.',
+              context.l10n.auth_signUpTrustBanner,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 height: 1.55,
                 color: scheme.onSurface,
@@ -398,7 +395,7 @@ class _SecurityNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'By clicking Create Account, a confirmation will be sent to your email.',
+      context.l10n.auth_signUpSecurityNote,
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
         height: 1.55,

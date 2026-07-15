@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_upcoming_trip_card.dart';
 
@@ -78,15 +79,14 @@ class _NoDepartures extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'No departures scheduled',
+                      context.l10n.home_noDepartures,
                       style: ClientTypography.headingSmall(
                         context,
                       ).copyWith(fontWeight: FontWeight.w800),
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      'Nothing is open for booking right now. Browse the '
-                      'routes to see what runs and when.',
+                      context.l10n.home_noDeparturesBody,
                       style: ClientTypography.bodySmall(context).copyWith(
                         color: ClientColors.textSecondaryFor(context),
                       ),
@@ -101,7 +101,7 @@ class _NoDepartures extends StatelessWidget {
             alignment: AlignmentDirectional.centerEnd,
             child: TextButton(
               onPressed: onBrowseRoutes,
-              child: const Text('Browse routes'),
+              child: Text(context.l10n.home_browseRoutes),
             ),
           ),
         ],

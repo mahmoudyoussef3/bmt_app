@@ -11,6 +11,8 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summar
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_fare_card.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_ticket_card.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_total_row.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// The last stop before payment. It answers three questions in order: is this
 /// the right ride, can I still change it, and what will I pay.
@@ -34,10 +36,10 @@ class WizardSummaryStep extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
               physics: const BouncingScrollPhysics(),
               children: [
-                const BookingStepIntro(
+                BookingStepIntro(
                   icon: Icons.fact_check_rounded,
-                  title: 'Review your booking',
-                  subtitle: 'Nothing is charged until you pay on the next step.',
+                  title: context.l10n.booking_reviewYourBooking,
+                  subtitle: context.l10n.booking_nothingChargedUntilPay,
                 ),
                 const SizedBox(height: 18),
                 SummaryTicketCard(session: session),
@@ -53,8 +55,8 @@ class WizardSummaryStep extends StatelessWidget {
           BookingBottomAction(
             summary: SummaryTotalRow(session: session),
             child: ClientButton(
-              label: 'Proceed to payment',
-              icon: const Icon(Icons.arrow_forward_rounded),
+              label: context.l10n.booking_proceedToPayment,
+              icon: const DirectionalIcon(Icons.arrow_forward_rounded),
               onPressed: onNext,
             ),
           ),
@@ -81,7 +83,7 @@ class _AssuranceNote extends StatelessWidget {
         const SizedBox(width: 6),
         Expanded(
           child: Text(
-            'Your seat is held while you complete payment.',
+            context.l10n.booking_seatHeldWhilePaying,
             style: ClientTypography.bodySmall(
               context,
             ).copyWith(color: ClientColors.textTertiaryFor(context)),

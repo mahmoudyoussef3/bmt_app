@@ -1,11 +1,27 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/client/features/auth/domain/entities/remembered_credentials.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/repositories/client_auth_repository.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/repositories/remember_me_repository.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/clear_remembered_credentials_usecase.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/get_remembered_credentials_usecase.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/save_remembered_credentials_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_in_with_email_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_state.dart';
+
+class _FakeRememberMeRepository implements RememberMeRepository {
+  @override
+  Future<void> save({required String email, required String password}) async {}
+
+  @override
+  Future<RememberedCredentials?> read() async => null;
+
+  @override
+  Future<void> clear() async {}
+}
 
 class _FakeAuthRepository implements ClientAuthRepository {
   _FakeAuthRepository({this.signOutFails = false});
@@ -39,10 +55,16 @@ class _FakeAuthRepository implements ClientAuthRepository {
 }
 
 ClientAuthCubit _cubit(_FakeAuthRepository repository) {
+  final rememberMeRepo = _FakeRememberMeRepository();
   return ClientAuthCubit(
     signInWithEmail: SignInWithEmailUseCase(repository),
     signUpWithEmail: SignUpWithEmailUseCase(repository),
     signOut: SignOutUseCase(repository),
+    saveRememberedCredentials: SaveRememberedCredentialsUseCase(rememberMeRepo),
+    getRememberedCredentials: GetRememberedCredentialsUseCase(rememberMeRepo),
+    clearRememberedCredentials: ClearRememberedCredentialsUseCase(
+      rememberMeRepo,
+    ),
   );
 }
 

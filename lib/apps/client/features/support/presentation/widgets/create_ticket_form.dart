@@ -6,6 +6,7 @@ import 'package:file_picker/file_picker.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_category.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import 'support_attachment_picker.dart';
 import 'support_category_dropdown.dart';
@@ -67,9 +68,9 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
       child: ListView(
         padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
         children: [
-          const SupportFieldLabel(
-            label: 'What is this about?',
-            hint: 'Pick the topic closest to your issue.',
+          SupportFieldLabel(
+            label: context.l10n.support_topicLabel,
+            hint: context.l10n.support_topicHint,
           ),
           SupportCategoryDropdown(
             value: _category,
@@ -77,29 +78,27 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
           ),
           const SizedBox(height: 24),
           SupportTextField(
-            label: 'Subject',
-            labelHint: 'A short summary of the problem.',
+            label: context.l10n.support_subjectLabel,
+            labelHint: context.l10n.support_subjectHint,
             controller: _titleController,
-            hint: 'e.g. Charged twice for one booking',
-            emptyMessage: 'Subject is required',
+            hint: context.l10n.support_subjectPlaceholder,
+            emptyMessage: context.l10n.support_subjectRequired,
             minLength: 5,
           ),
           const SizedBox(height: 24),
           SupportTextField(
-            label: 'Details',
-            labelHint:
-                'What happened, and when? Add your trip or booking '
-                'reference if you have it.',
+            label: context.l10n.support_detailsLabel,
+            labelHint: context.l10n.support_detailsHint,
             controller: _descController,
-            hint: 'Describe the issue…',
-            emptyMessage: 'Details are required',
+            hint: context.l10n.support_detailsPlaceholder,
+            emptyMessage: context.l10n.support_detailsRequired,
             minLength: 10,
             maxLines: 6,
           ),
           const SizedBox(height: 24),
-          const SupportFieldLabel(
-            label: 'Attachment',
-            hint: 'Optional — a screenshot or receipt helps us a lot.',
+          SupportFieldLabel(
+            label: context.l10n.support_attachmentLabel,
+            hint: context.l10n.support_attachmentHint,
           ),
           SupportAttachmentPicker(
             attachment: _attachment,
@@ -108,7 +107,9 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
           ),
           const SizedBox(height: 40),
           ClientButton(
-            label: widget.isSubmitting ? 'Submitting…' : 'Submit ticket',
+            label: widget.isSubmitting
+                ? context.l10n.support_submitting
+                : context.l10n.support_submitTicket,
             isLoading: widget.isSubmitting,
             onPressed: _submit,
           ),

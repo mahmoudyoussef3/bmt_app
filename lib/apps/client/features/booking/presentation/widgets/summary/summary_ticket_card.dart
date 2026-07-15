@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/core/widgets/dashed_divider.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_ticket_facts.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_ticket_journey.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The booking the rider is about to pay for, drawn as the ticket they will
 /// end up holding. Showing the outcome — not a table of the inputs they typed —
@@ -69,7 +70,7 @@ class _Header extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Your ticket',
+                  context.l10n.booking_yourTicket,
                   style: ClientTypography.labelSmall(
                     context,
                   ).copyWith(color: Colors.white70),

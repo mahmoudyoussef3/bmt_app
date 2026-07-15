@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The colour key for the Trip Details seat map: your seat, still-available,
 /// and taken. Mirrors the three live seat states.
@@ -17,17 +18,17 @@ class TripSeatLegend extends StatelessWidget {
       children: [
         _LegendDot(
           color: ClientColors.primary,
-          label: 'Your seat',
+          label: context.l10n.trips_seatLegendYours,
           outlined: false,
         ),
         _LegendDot(
           color: ClientColors.seatAvailableFor(context),
-          label: 'Available',
+          label: context.l10n.trips_seatLegendAvailable,
           outlined: true,
         ),
         _LegendDot(
           color: ClientColors.surfaceMutedFor(context),
-          label: 'Taken',
+          label: context.l10n.trips_seatLegendTaken,
           outlined: true,
         ),
       ],

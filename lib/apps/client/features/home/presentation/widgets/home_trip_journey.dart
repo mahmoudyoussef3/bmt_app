@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Pickup → destination as a vertical timeline. Full width by design: stop
 /// names like "American University in Cairo" must stay readable, which the
@@ -27,9 +28,9 @@ class HomeTripJourney extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Stop(label: pickup, caption: 'Pickup'),
+              _Stop(label: pickup, caption: context.l10n.common_pickup),
               const SizedBox(height: 14),
-              _Stop(label: destination, caption: 'Drop-off'),
+              _Stop(label: destination, caption: context.l10n.common_dropOff),
             ],
           ),
         ),
@@ -60,7 +61,7 @@ class _Stop extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          label.isEmpty ? 'Stop not set' : label,
+          label.isEmpty ? context.l10n.home_stopNotSet : label,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: ClientTypography.headingSmall(

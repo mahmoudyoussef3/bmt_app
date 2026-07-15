@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/payment/wizard_transfer_account.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// What the rider needs in order to transfer, and what we need in order to
 /// recognise the transfer once it lands.
@@ -58,9 +59,9 @@ class _WizardTransferPanelState extends State<WizardTransferPanel> {
           controller: _reference,
           onChanged: (_) => _save(),
           textInputAction: TextInputAction.next,
-          decoration: const InputDecoration(
-            labelText: 'Transfer reference (optional)',
-            prefixIcon: Icon(Icons.receipt_long_outlined),
+          decoration: InputDecoration(
+            labelText: context.l10n.booking_transferReferenceOptional,
+            prefixIcon: const Icon(Icons.receipt_long_outlined),
           ),
         ),
         const SizedBox(height: 12),
@@ -68,9 +69,9 @@ class _WizardTransferPanelState extends State<WizardTransferPanel> {
           controller: _payerPhone,
           onChanged: (_) => _save(),
           keyboardType: TextInputType.phone,
-          decoration: const InputDecoration(
-            labelText: 'Phone number you paid from (optional)',
-            prefixIcon: Icon(Icons.phone_outlined),
+          decoration: InputDecoration(
+            labelText: context.l10n.booking_paidFromPhoneOptional,
+            prefixIcon: const Icon(Icons.phone_outlined),
           ),
         ),
       ],

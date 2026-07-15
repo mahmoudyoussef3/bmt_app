@@ -1,6 +1,8 @@
+import 'package:async/async.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/tracking_trip.dart';
+import '../models/tracking_point_model.dart';
 import '../models/tracking_trip_assembler.dart';
 import 'tracking_datasource.dart';
 import 'tracking_realtime.dart';
@@ -55,9 +57,33 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
     );
   }
 
+  /// Realtime delivers a fix the instant the captain shares it; the poll is a
+  /// safety net so a dropped socket, an expired realtime token, or a single
+  /// missed event can never leave the rider on a frozen map while the captain
+  /// is still sending. Re-emitting an already-seen fix is harmless — the
+  /// vehicle engine rejects any fix that is not strictly newer than the last
+  /// one it drew, so only genuinely new positions ever move the marker.
   @override
-  Stream<TrackingPoint> watchVehiclePosition(String tripId) =>
-      _realtime.watchVehiclePosition(tripId);
+  Stream<TrackingPoint> watchVehiclePosition(String tripId) {
+    final live = _realtime.watchVehiclePosition(tripId);
+    final polled = Stream.periodic(_pollInterval)
+        .asyncMap((_) => _latestOrNull(tripId))
+        .map(TrackingPointModel.fromNullableRow)
+        .where((point) => point != null)
+        .cast<TrackingPoint>();
+    return StreamGroup.merge([live, polled]);
+  }
+
+  /// A transient read failure must not end the poll — the next tick retries.
+  Future<Map<String, dynamic>?> _latestOrNull(String tripId) async {
+    try {
+      return await _query.latestLocation(tripId);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  static const _pollInterval = Duration(seconds: 8);
 
   @override
   Stream<void> watchTripChanges(String tripId) =>

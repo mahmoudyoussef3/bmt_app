@@ -1,6 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/exceptions/captain_auth_exceptions.dart';
+import '../../domain/usecases/clear_remembered_phone_usecase.dart';
+import '../../domain/usecases/get_remembered_phone_usecase.dart';
+import '../../domain/usecases/save_remembered_phone_usecase.dart';
 import '../../domain/usecases/sign_in_captain_usecase.dart';
 import '../../domain/usecases/sign_out_captain_usecase.dart';
 
@@ -30,17 +33,38 @@ class CaptainAuthCubit extends Cubit<CaptainAuthState> {
   CaptainAuthCubit({
     required SignInCaptainUseCase signIn,
     required SignOutCaptainUseCase signOut,
+    required SaveRememberedPhoneUseCase saveRememberedPhone,
+    required GetRememberedPhoneUseCase getRememberedPhone,
+    required ClearRememberedPhoneUseCase clearRememberedPhone,
   }) : _signIn = signIn,
        _signOut = signOut,
+       _saveRememberedPhone = saveRememberedPhone,
+       _getRememberedPhone = getRememberedPhone,
+       _clearRememberedPhone = clearRememberedPhone,
        super(const CaptainAuthIdle());
 
   final SignInCaptainUseCase _signIn;
   final SignOutCaptainUseCase _signOut;
+  final SaveRememberedPhoneUseCase _saveRememberedPhone;
+  final GetRememberedPhoneUseCase _getRememberedPhone;
+  final ClearRememberedPhoneUseCase _clearRememberedPhone;
 
-  Future<void> signIn({required String phone}) async {
+  /// Prefills the login form: reads whatever "Remember Me" previously saved.
+  /// A read failure must render as "nothing remembered" rather than block
+  /// the login screen from opening.
+  Future<String?> loadRememberedPhone() async {
+    try {
+      return await _getRememberedPhone();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> signIn({required String phone, required bool rememberMe}) async {
     emit(const CaptainAuthLoading());
     try {
       await _signIn(phone: phone);
+      await _applyRememberMe(rememberMe, phone: phone);
       if (!isClosed) emit(const CaptainAuthSuccess());
     } on CaptainPhoneNotRegisteredException {
       if (!isClosed) {
@@ -64,6 +88,19 @@ class CaptainAuthCubit extends Cubit<CaptainAuthState> {
   Future<void> signOut() async {
     await _signOut();
     if (!isClosed) emit(const CaptainAuthIdle());
+  }
+
+  /// Persisting (or clearing) the remembered phone is a device-storage
+  /// side-effect, not part of authentication proper — a write failure here
+  /// must never turn a successful sign-in into a reported failure.
+  Future<void> _applyRememberMe(bool rememberMe, {required String phone}) async {
+    try {
+      if (rememberMe) {
+        await _saveRememberedPhone(phone);
+      } else {
+        await _clearRememberedPhone();
+      }
+    } catch (_) {}
   }
 
   void resetError() {

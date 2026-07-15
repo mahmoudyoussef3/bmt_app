@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/localization/l10n_context.dart';
+
 /// Placeholder vehicle image gallery (no network assets).
 class VehicleImageStrip extends StatelessWidget {
   const VehicleImageStrip({
@@ -20,7 +22,7 @@ class VehicleImageStrip extends StatelessWidget {
     if (labels.isEmpty) {
       return _ImagePlaceholder(
         height: height,
-        label: 'Vehicle',
+        label: context.l10n.tracking_vehicle,
         gradientIndex: 0,
       );
     }

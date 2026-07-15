@@ -5,6 +5,8 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// Route Details' single, unambiguous sticky booking CTA (spec FR-006):
 /// a summary of the selected route plus the one action that continues into
@@ -26,8 +28,10 @@ class RouteBookingAction extends StatelessWidget {
     return BookingBottomAction(
       summary: selected == null ? null : _Summary(route: selected),
       child: ClientButton(
-        label: selected == null ? 'Select route' : 'Continue with this route',
-        icon: const Icon(Icons.arrow_forward_rounded),
+        label: selected == null
+            ? context.l10n.booking_selectRoute
+            : context.l10n.booking_continueWithThisRoute,
+        icon: const DirectionalIcon(Icons.arrow_forward_rounded),
         onPressed: selected == null ? null : () => onContinue(selected),
       ),
     );
@@ -56,7 +60,7 @@ class _Summary extends StatelessWidget {
                 ).copyWith(fontWeight: FontWeight.w800),
               ),
               Text(
-                '${route.duration} · ${route.availableSeats} seats available',
+                '${route.duration} · ${context.l10n.booking_seatsAvailableCount(route.availableSeats)}',
                 style: ClientTypography.bodySmall(
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),

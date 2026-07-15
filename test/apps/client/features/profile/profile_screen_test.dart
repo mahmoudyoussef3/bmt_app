@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/client/features/auth/domain/entities/remembered_credentials.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/repositories/client_auth_repository.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/repositories/remember_me_repository.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/clear_remembered_credentials_usecase.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/get_remembered_credentials_usecase.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/save_remembered_credentials_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_in_with_email_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_out_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_up_with_email_usecase.dart';
@@ -58,6 +63,17 @@ class _StubAuthRepository implements ClientAuthRepository {
   Future<void> sendPasswordResetEmail(String email) async {}
 }
 
+class _StubRememberMeRepository implements RememberMeRepository {
+  @override
+  Future<void> save({required String email, required String password}) async {}
+
+  @override
+  Future<RememberedCredentials?> read() async => null;
+
+  @override
+  Future<void> clear() async {}
+}
+
 const _profile = ClientProfile(
   id: 'c1',
   name: 'Mahmoud Youssef',
@@ -85,11 +101,23 @@ Widget _app({
         ),
       ),
       BlocProvider(
-        create: (_) => ClientAuthCubit(
-          signInWithEmail: SignInWithEmailUseCase(authRepository),
-          signUpWithEmail: SignUpWithEmailUseCase(authRepository),
-          signOut: SignOutUseCase(authRepository),
-        ),
+        create: (_) {
+          final rememberMeRepository = _StubRememberMeRepository();
+          return ClientAuthCubit(
+            signInWithEmail: SignInWithEmailUseCase(authRepository),
+            signUpWithEmail: SignUpWithEmailUseCase(authRepository),
+            signOut: SignOutUseCase(authRepository),
+            saveRememberedCredentials: SaveRememberedCredentialsUseCase(
+              rememberMeRepository,
+            ),
+            getRememberedCredentials: GetRememberedCredentialsUseCase(
+              rememberMeRepository,
+            ),
+            clearRememberedCredentials: ClearRememberedCredentialsUseCase(
+              rememberMeRepository,
+            ),
+          );
+        },
       ),
     ],
     child: MaterialApp(

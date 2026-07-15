@@ -13,7 +13,11 @@ class SupabaseHomeDatasource implements HomeDatasource {
 
   static const _bookingColumns =
       'id, trip_id, booking_number, status, seat, trip_date, '
-      'trip_time, route, payment_amount, pickup_point_name, dropoff_point_name';
+      'trip_time, route, payment_amount, pickup_point_name, dropoff_point_name, '
+      // The trip's own status tells Home when a booking has run its course:
+      // completion stamps the trip, not the booking, so without this a finished
+      // seat lingers as "Confirmed".
+      'operation_trips(status)';
 
   @override
   Stream<void> watchHomeChanges() {

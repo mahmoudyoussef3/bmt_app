@@ -78,7 +78,7 @@ class PasswordStrengthMeter extends StatelessWidget {
               return Expanded(
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 250),
-                  margin: EdgeInsets.only(right: index == 3 ? 0 : 6),
+                  margin: EdgeInsetsDirectional.only(end: index == 3 ? 0 : 6),
                   height: 6,
                   decoration: BoxDecoration(
                     color: active ? color : ClientColors.borderFor(context),

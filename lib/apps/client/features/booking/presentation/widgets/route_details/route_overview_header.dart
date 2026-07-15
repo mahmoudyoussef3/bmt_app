@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_overview_metric.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Route Details' header card: name, distance/duration, and a compact metric
 /// row (departure, destination, distance, duration).
@@ -66,22 +67,22 @@ class RouteOverviewHeader extends StatelessWidget {
             children: [
               RouteOverviewMetric(
                 icon: Icons.trip_origin_rounded,
-                label: 'Departure',
+                label: context.l10n.booking_departure,
                 value: route.pickup,
               ),
               RouteOverviewMetric(
                 icon: Icons.flag_rounded,
-                label: 'Destination',
+                label: context.l10n.common_destination,
                 value: route.destination,
               ),
               RouteOverviewMetric(
                 icon: Icons.straighten_rounded,
-                label: 'Distance',
+                label: context.l10n.booking_distance,
                 value: route.distance,
               ),
               RouteOverviewMetric(
                 icon: Icons.schedule_rounded,
-                label: 'Duration',
+                label: context.l10n.packages_duration,
                 value: route.duration,
               ),
             ],

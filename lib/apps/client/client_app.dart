@@ -299,6 +299,12 @@ class _ClientAppState extends State<ClientApp> {
                               args['selectedSeatId']?.toString() ?? '',
                           selectedSeat: args['selectedSeat']?.toString() ?? '',
                           driverName: args['driverName']?.toString() ?? '',
+                          vehicleName: args['vehicleName']?.toString() ?? '',
+                          vehicleImageUrl:
+                              args['vehicleImageUrl']?.toString() ?? '',
+                          driverImageUrl:
+                              args['driverImageUrl']?.toString() ?? '',
+                          driverRating: _parseRating(args['driverRating']),
                           baseFare: _parseMoney(args['baseFare']),
                           serviceFee: _parseMoney(args['serviceFee']),
                           tax: _parseMoney(args['tax']),
@@ -325,8 +331,17 @@ class _ClientAppState extends State<ClientApp> {
                   final args = ModalRoute.of(context)?.settings.arguments;
                   final hasActiveSub =
                       args is Map && args['hasActiveSubscription'] == true;
+                  // The seat flow forwards the booked trip (driver, vehicle,
+                  // route, fare) through here so the payment step can show a
+                  // real ticket instead of empty placeholders.
+                  final bookingData = args is Map
+                      ? Map<String, dynamic>.from(args)
+                      : null;
                   return _buildPackagesScope(
-                    SubscriptionScreen(hasActiveSubscription: hasActiveSub),
+                    SubscriptionScreen(
+                      hasActiveSubscription: hasActiveSub,
+                      bookingData: bookingData,
+                    ),
                   );
                 },
 
@@ -443,6 +458,11 @@ class _ClientAppState extends State<ClientApp> {
   int _parseMoney(Object? value) {
     if (value is num) return value.round();
     return num.tryParse(value?.toString() ?? '')?.round() ?? 0;
+  }
+
+  double _parseRating(Object? value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
   }
 
   Widget _buildClientShell() {

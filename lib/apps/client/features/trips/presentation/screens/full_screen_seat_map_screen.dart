@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_cabin.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
 /// A focused, full-screen view of the trip's real seat layout, so the
@@ -25,7 +26,9 @@ class FullScreenSeatMapScreen extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: ClientColors.surfaceFor(context),
         title: Text(
-          vehicleName.trim().isEmpty ? 'Seat map' : 'Seat map · $vehicleName',
+          vehicleName.trim().isEmpty
+              ? context.l10n.trips_seatMapTitle
+              : context.l10n.trips_seatMapTitleWithVehicle(vehicleName),
           style: ClientTypography.headingSmall(
             context,
           ).copyWith(color: ClientColors.textPrimaryFor(context)),

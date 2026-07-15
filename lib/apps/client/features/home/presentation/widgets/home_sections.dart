@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_active_package_card.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_bookings_list.dart';
@@ -44,6 +45,7 @@ class HomeSections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     var order = 2;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -53,11 +55,11 @@ class HomeSections extends StatelessWidget {
             order: order++,
             child: _Section(
               header: HomeSectionHeader(
-                eyebrow: 'Your journey',
+                eyebrow: l10n.home_yourJourney,
                 title: data.bookings.length == 1
-                    ? 'Your booking'
-                    : 'Your bookings',
-                subtitle: 'Seats you hold, and where each one stands.',
+                    ? l10n.home_yourBooking
+                    : l10n.home_yourBookings,
+                subtitle: l10n.home_seatsYouHold,
               ),
               child: HomeBookingsList(
                 bookings: data.bookings,
@@ -71,10 +73,10 @@ class HomeSections extends StatelessWidget {
           order: order++,
           child: _Section(
             header: HomeSectionHeader(
-              eyebrow: 'Book a seat',
-              title: 'Next departures',
-              subtitle: 'Trips open for booking, soonest first.',
-              actionLabel: 'All routes',
+              eyebrow: l10n.home_bookASeat,
+              title: l10n.home_nextDepartures,
+              subtitle: l10n.home_tripsOpenSoonest,
+              actionLabel: l10n.home_allRoutes,
               onAction: () => onOpenRoute(ClientRoutes.bookingPopularRoutes),
             ),
             child: HomeUpcomingTripsList(
@@ -92,9 +94,9 @@ class HomeSections extends StatelessWidget {
             order: order++,
             child: _Section(
               header: HomeSectionHeader(
-                eyebrow: 'Your package',
-                title: 'Active subscription',
-                actionLabel: 'Manage',
+                eyebrow: l10n.home_yourPackage,
+                title: l10n.home_activeSubscription,
+                actionLabel: l10n.common_manage,
                 onAction: _openSubscription,
               ),
               child: HomeActivePackageCard(

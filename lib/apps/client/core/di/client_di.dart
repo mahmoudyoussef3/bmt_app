@@ -12,13 +12,19 @@ import '../../../../core/security/secure_storage.dart';
 import '../../features/auth/data/datasources/client_auth_datasource.dart';
 import '../../features/auth/data/datasources/supabase_client_auth_datasource.dart';
 import '../../features/auth/data/repositories/client_auth_repository_impl.dart';
+import '../../features/auth/data/repositories/remember_me_repository_impl.dart';
 import '../../features/auth/domain/repositories/client_auth_repository.dart';
+import '../../features/auth/domain/repositories/remember_me_repository.dart';
+import '../../features/auth/domain/usecases/clear_remembered_credentials_usecase.dart';
+import '../../features/auth/domain/usecases/get_remembered_credentials_usecase.dart';
+import '../../features/auth/domain/usecases/save_remembered_credentials_usecase.dart';
 import '../../features/auth/domain/usecases/sign_in_with_email_usecase.dart';
 import '../../features/auth/domain/usecases/sign_out_usecase.dart';
 import '../../features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import '../../features/auth/domain/usecases/send_password_reset_email_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/cubit/forgot_password_cubit.dart';
+import '../storage/remember_me_store.dart';
 
 import '../../features/auth/data/datasources/mock_auth_datasource.dart';
 import '../../features/auth/data/repositories/auth_repository_impl.dart';
@@ -264,12 +270,46 @@ void _registerAuthDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<RememberMeStore>()) {
+    clientGetIt.registerLazySingleton<RememberMeStore>(() => RememberMeStore());
+  }
+
+  if (!clientGetIt.isRegistered<RememberMeRepository>()) {
+    clientGetIt.registerLazySingleton<RememberMeRepository>(
+      () => RememberMeRepositoryImpl(clientGetIt<RememberMeStore>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<SaveRememberedCredentialsUseCase>()) {
+    clientGetIt.registerLazySingleton<SaveRememberedCredentialsUseCase>(
+      () => SaveRememberedCredentialsUseCase(clientGetIt<RememberMeRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<GetRememberedCredentialsUseCase>()) {
+    clientGetIt.registerLazySingleton<GetRememberedCredentialsUseCase>(
+      () => GetRememberedCredentialsUseCase(clientGetIt<RememberMeRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<ClearRememberedCredentialsUseCase>()) {
+    clientGetIt.registerLazySingleton<ClearRememberedCredentialsUseCase>(
+      () => ClearRememberedCredentialsUseCase(clientGetIt<RememberMeRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<ClientAuthCubit>()) {
     clientGetIt.registerFactory<ClientAuthCubit>(
       () => ClientAuthCubit(
         signInWithEmail: clientGetIt<SignInWithEmailUseCase>(),
         signUpWithEmail: clientGetIt<SignUpWithEmailUseCase>(),
         signOut: clientGetIt<SignOutUseCase>(),
+        saveRememberedCredentials:
+            clientGetIt<SaveRememberedCredentialsUseCase>(),
+        getRememberedCredentials:
+            clientGetIt<GetRememberedCredentialsUseCase>(),
+        clearRememberedCredentials:
+            clientGetIt<ClearRememberedCredentialsUseCase>(),
       ),
     );
   }

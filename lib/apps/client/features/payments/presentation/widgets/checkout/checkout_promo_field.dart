@@ -5,6 +5,8 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_state.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Promo entry, folded away until asked for.
 ///
@@ -98,7 +100,7 @@ class _ClosedRow extends StatelessWidget {
             const SizedBox(width: 8),
             Flexible(
               child: Text(
-                'Have a promo code?',
+                context.l10n.payments_havePromoCode,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: ClientTypography.labelLarge(
@@ -144,8 +146,10 @@ class _OpenRow extends StatelessWidget {
                 style: ClientTypography.bodyMedium(context),
                 decoration: InputDecoration(
                   isDense: true,
-                  hintText: 'Enter code',
-                  errorText: invalid ? 'That code is not valid' : null,
+                  hintText: context.l10n.payments_enterCodeHint,
+                  errorText: invalid
+                      ? context.l10n.payments_promoCodeInvalid
+                      : null,
                   prefixIcon: const Icon(Icons.local_offer_outlined, size: 18),
                   prefixIconConstraints: const BoxConstraints(
                     minWidth: 36,
@@ -162,7 +166,7 @@ class _OpenRow extends StatelessWidget {
                       dimension: 16,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Apply'),
+                  : Text(context.l10n.payments_apply),
             ),
           ],
         ),
@@ -201,7 +205,10 @@ class _AppliedRow extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '$code applied — you save $discount EGP',
+              context.l10n.payments_promoApplied(
+                code,
+                FormatUtil.currency(context, discount),
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: ClientTypography.labelLarge(
@@ -212,7 +219,7 @@ class _AppliedRow extends StatelessWidget {
           IconButton(
             onPressed: onRemove,
             visualDensity: VisualDensity.compact,
-            tooltip: 'Remove promo code',
+            tooltip: context.l10n.payments_removePromoCode,
             icon: Icon(Icons.close_rounded, size: 16, color: tone.fg),
           ),
         ],

@@ -167,25 +167,13 @@ class SupabaseReferralRewardsDatasource {
     };
   }
 
+  /// Returns a plain `yyyy-MM-dd` date. Locale-aware display formatting
+  /// (month names, ordering) happens in the presentation layer, which has
+  /// the `BuildContext` this data layer must stay free of.
   static String _formatDate(String? iso) {
     if (iso == null) return '';
     try {
-      final dt = DateTime.parse(iso);
-      const months = [
-        'Jan',
-        'Feb',
-        'Mar',
-        'Apr',
-        'May',
-        'Jun',
-        'Jul',
-        'Aug',
-        'Sep',
-        'Oct',
-        'Nov',
-        'Dec',
-      ];
-      return '${months[dt.month - 1]} ${dt.day}, ${dt.year}';
+      return DateTime.parse(iso).toIso8601String().split('T').first;
     } catch (_) {
       return iso.split('T').first;
     }

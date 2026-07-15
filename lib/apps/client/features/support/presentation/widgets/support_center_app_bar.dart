@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Support Center app bar. The refresh action is only enabled once a
 /// workspace has actually loaded — tapping it mid-load or mid-error would
@@ -25,7 +26,7 @@ class SupportCenterAppBar extends StatelessWidget
       scrolledUnderElevation: 0,
       elevation: 0,
       title: Text(
-        'Support Center',
+        context.l10n.support_centerTitle,
         style: ClientTypography.headingSmall(context).copyWith(
           color: scheme.onSurface,
           fontWeight: FontWeight.w800,
@@ -39,7 +40,7 @@ class SupportCenterAppBar extends StatelessWidget
           builder: (context, state) {
             return IconButton(
               icon: Icon(Icons.refresh_rounded, color: scheme.primary),
-              tooltip: 'Refresh',
+              tooltip: context.l10n.support_refresh,
               onPressed: state is SupportLoaded ? onRefresh : null,
             );
           },

@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 import '../../../../../../core/theme/colors.dart';
 import '../../../../../../core/theme/tokens.dart';
 import '../cubit/phone_auth_cubit.dart';
@@ -80,13 +82,14 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const DirectionalIcon(Icons.arrow_back),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: const Text('التحقق من الرقم'),
+        title: Text(l10n.auth_verifyNumberTitle),
       ),
       body: BlocConsumer<PhoneAuthCubit, PhoneAuthState>(
         listener: (context, state) {
@@ -119,7 +122,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 children: [
                   const SizedBox(height: 24),
                   Text(
-                    'أدخل الرمز المكون من 6 أرقام',
+                    l10n.auth_enterOtpTitle,
                     style: Theme.of(context).textTheme.displayMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -127,7 +130,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'تم إرسال الرمز في رسالة نصية إلى:\n${widget.phoneNumber}',
+                    l10n.auth_otpSentTo(widget.phoneNumber),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                       color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                       height: 1.5,
@@ -184,7 +187,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       style: ElevatedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 56),
                       ),
-                      child: const Text('تحقق'),
+                      child: Text(l10n.auth_verify),
                     ),
 
                   const Spacer(),
@@ -194,7 +197,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'لم تستلم الرمز؟',
+                        l10n.auth_didntReceiveCode,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                         ),
@@ -208,8 +211,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                             : null,
                         child: Text(
                           _resendCountdown > 0
-                              ? 'إعادة الإرسال ($_resendCountdown)'
-                              : 'إعادة إرسال الرمز',
+                              ? l10n.auth_resendCountdown(_resendCountdown)
+                              : l10n.auth_resendCode,
                           style: TextStyle(
                             color: _resendCountdown > 0
                                 ? Theme.of(context).colorScheme.onSurface.withOpacity(0.4)

@@ -4,6 +4,8 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The pinned bar the rider actually presses.
 ///
@@ -66,7 +68,7 @@ class CheckoutPayBar extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'Your seat is held while you pay.',
+              context.l10n.payments_seatHeldWhilePaying,
               textAlign: TextAlign.center,
               style: ClientTypography.labelMedium(
                 context,
@@ -92,7 +94,7 @@ class _TotalBlock extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Total',
+          context.l10n.payments_total,
           style: ClientTypography.labelSmall(
             context,
           ).copyWith(color: ClientColors.textTertiaryFor(context)),
@@ -101,7 +103,7 @@ class _TotalBlock extends StatelessWidget {
         AnimatedSwitcher(
           duration: ClientMotion.base,
           child: Text(
-            '$total EGP',
+            FormatUtil.currency(context, total),
             key: ValueKey(total),
             style: ClientTypography.priceMedium(
               context,
@@ -110,7 +112,7 @@ class _TotalBlock extends StatelessWidget {
         ),
         if (subtotal > total)
           Text(
-            '$subtotal EGP',
+            FormatUtil.currency(context, subtotal),
             style: ClientTypography.labelMedium(context).copyWith(
               color: ClientColors.textTertiaryFor(context),
               decoration: TextDecoration.lineThrough,

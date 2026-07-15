@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Shown when the rider has no confirmed booking to track.
 ///
@@ -16,7 +16,7 @@ class TrackingEmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
+    final l10n = context.l10n;
 
     return Center(
       child: Padding(

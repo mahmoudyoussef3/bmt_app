@@ -4,7 +4,9 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/payment_row.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_badge.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The fare breakdown and payment status for this trip.
 class TripPaymentCard extends StatelessWidget {
@@ -32,29 +34,32 @@ class TripPaymentCard extends StatelessWidget {
               // too, as this card used to, said the same thing twice.
               Expanded(
                 child: Text(
-                  _paymentNote(trip.paymentStatus),
+                  _paymentNote(context, trip.paymentStatus),
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
               ),
               const SizedBox(width: 10),
-              TripInlineBadge(label: trip.paymentLabel, color: color),
+              TripInlineBadge(
+                label: paymentLabelFor(context, trip.paymentStatus),
+                color: color,
+              ),
             ],
           ),
         ),
         const SizedBox(height: 18),
-        PaymentRow(label: 'Trip fare', value: trip.fare),
+        PaymentRow(label: context.l10n.payments_ticketFare, value: trip.fare),
         const SizedBox(height: 8),
-        const PaymentRow(label: 'Service fee', value: '0'),
+        PaymentRow(label: context.l10n.payments_serviceFee, value: '0'),
         const SizedBox(height: 8),
-        const PaymentRow(label: 'Discount', value: '0'),
+        PaymentRow(label: context.l10n.trips_discountLabel, value: '0'),
         Divider(height: 26, color: ClientColors.borderFor(context)),
         Row(
           children: [
             Expanded(
               child: Text(
-                'Total',
+                context.l10n.payments_total,
                 style: ClientTypography.headingSmall(
                   context,
                 ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -72,14 +77,14 @@ class TripPaymentCard extends StatelessWidget {
     );
   }
 
-  String _paymentNote(PaymentStatus status) {
+  String _paymentNote(BuildContext context, PaymentStatus status) {
     return switch (status) {
-      PaymentStatus.paid => 'Your payment is confirmed.',
-      PaymentStatus.pending => 'Waiting for your payment.',
-      PaymentStatus.underReview => 'Our team is reviewing your payment.',
-      PaymentStatus.refunded => 'This fare was refunded to you.',
-      PaymentStatus.failed => 'The payment did not go through.',
-      PaymentStatus.cancelled => 'This booking was cancelled.',
+      PaymentStatus.paid => context.l10n.trips_paymentNotePaid,
+      PaymentStatus.pending => context.l10n.trips_paymentNotePending,
+      PaymentStatus.underReview => context.l10n.trips_paymentNoteUnderReview,
+      PaymentStatus.refunded => context.l10n.trips_paymentNoteRefunded,
+      PaymentStatus.failed => context.l10n.trips_paymentNoteFailed,
+      PaymentStatus.cancelled => context.l10n.trips_paymentNoteCancelled,
     };
   }
 

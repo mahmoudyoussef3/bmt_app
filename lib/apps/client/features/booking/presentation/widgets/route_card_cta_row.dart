@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// The bottom "next action" row of [PopularRouteListCard]: hint text plus a
 /// directional arrow badge.
@@ -16,7 +18,9 @@ class RouteCardCtaRow extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            hasTrips ? 'Choose trip time and vehicle' : 'View route details',
+            hasTrips
+                ? context.l10n.booking_chooseTripTimeAndVehicle
+                : context.l10n.booking_viewRouteDetails,
             style: ClientTypography.labelMedium(context).copyWith(
               color: ClientColors.textSecondaryFor(context),
               fontWeight: FontWeight.w700,
@@ -32,7 +36,7 @@ class RouteCardCtaRow extends StatelessWidget {
                 : ClientColors.surfaceMutedFor(context),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
+          child: DirectionalIcon(
             Icons.arrow_forward_rounded,
             color: hasTrips
                 ? Colors.white

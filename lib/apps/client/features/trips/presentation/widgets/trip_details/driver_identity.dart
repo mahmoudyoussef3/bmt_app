@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The driver's name and public star-rating row inside [TripDriverCard].
 ///
@@ -45,7 +46,7 @@ class DriverIdentity extends StatelessWidget {
             ),
             const SizedBox(width: 4),
             Text(
-              _isRated ? rating.toStringAsFixed(1) : 'New captain',
+              _isRated ? rating.toStringAsFixed(1) : context.l10n.trips_newCaptain,
               style: ClientTypography.bodySmall(context).copyWith(
                 fontWeight: FontWeight.w900,
                 color: ClientColors.textPrimaryFor(context),
@@ -55,7 +56,9 @@ class DriverIdentity extends StatelessWidget {
             // straight off the card's right edge.
             Flexible(
               child: Text(
-                _isRated ? ' · $ratingCount ratings' : ' · Verified captain',
+                _isRated
+                    ? ' · ${context.l10n.trips_ratingsCount(ratingCount)}'
+                    : ' · ${context.l10n.trips_verifiedCaptain}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: ClientTypography.bodySmall(

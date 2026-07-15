@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/widgets/app_dialogs.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 import '../cubit/forgot_password_cubit.dart';
@@ -66,15 +68,13 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     final scheme = Theme.of(context).colorScheme;
     final l10n = AppLocalizations.of(context)!;
 
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: BlocConsumer<ForgotPasswordCubit, ForgotPasswordState>(
+    return BlocConsumer<ForgotPasswordCubit, ForgotPasswordState>(
         listenWhen: (previous, current) => previous.status != current.status,
         listener: (context, state) {
           if (state.status == ForgotPasswordStatus.failure) {
             AppDialogs.showErrorDialog(
               context,
-              title: 'Failed to send recovery link',
+              title: l10n.auth_recoveryLinkFailed,
               message: _localizedError(context, state.errorMessage),
               onRetry: _submit,
             );
@@ -94,9 +94,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
           return PremiumAuthScaffold(
             logo: const AuthBrandLogo(),
-            title: 'Forgot Password?',
-            subtitle:
-                'Do not worry, enter your email and we will send you a secure link to reset your password.',
+            title: l10n.auth_forgotPasswordTitle,
+            subtitle: l10n.auth_forgotPasswordSubtitle,
             child: AbsorbPointer(
               absorbing: isLoading,
               child: Form(
@@ -146,7 +145,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                       PremiumAuthButton(
                         text: isLoading
-                            ? 'Sending link...'
+                            ? l10n.auth_sendingLink
                             : l10n.auth_sendResetLink,
                         onPressed: isLoading ? null : _submit,
                         isLoading: isLoading,
@@ -156,7 +155,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
                       TextButton.icon(
                         onPressed: isLoading ? null : _goBackToLogin,
-                        icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                        icon: const DirectionalIcon(
+                          Icons.arrow_forward_rounded,
+                          size: 18,
+                        ),
                         label: Text(l10n.auth_backToLogin),
                         style: TextButton.styleFrom(
                           textStyle: const TextStyle(
@@ -175,7 +177,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ),
           );
         },
-      ),
     );
   }
 }
@@ -200,7 +201,7 @@ class _ForgotPasswordSuccessView extends StatelessWidget {
 
     return PremiumAuthScaffold(
       logo: const AuthBrandLogo(),
-      title: 'Check your email',
+      title: l10n.auth_checkEmailTitle,
       subtitle: l10n.auth_checkEmailMessage(state.email),
       showBack: false,
       child: Column(
@@ -273,7 +274,7 @@ class _ResetInfoCard extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'We will send a temporary link to your email. Open it soon to set a new password.',
+              context.l10n.auth_resetInfoCard,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 height: 1.55,
                 color: scheme.onSurface,
@@ -319,7 +320,7 @@ class _SuccessMailCard extends StatelessWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            'Recovery link sent',
+            context.l10n.auth_recoveryLinkSent,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w900,
@@ -337,7 +338,7 @@ class _SuccessMailCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Open the email and click the link to reset your password.',
+            context.l10n.auth_openEmailToReset,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               height: 1.55,
@@ -375,7 +376,7 @@ class _EmailHelpCard extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Did not find the email? Check your spam folder or wait a bit before resending.',
+              context.l10n.auth_emailHelp,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                 height: 1.55,
                 color: scheme.onSurfaceVariant,
@@ -397,7 +398,7 @@ class _SecurityNote extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      'For your security, the system may prevent sending multiple links in a short period.',
+      context.l10n.auth_forgotSecurityNote,
       textAlign: TextAlign.center,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
         height: 1.55,

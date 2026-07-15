@@ -1,21 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Premium booking summary before continue (UI only).
 class SeatBookingSummaryPanel extends StatelessWidget {
   const SeatBookingSummaryPanel({
     super.key,
     required this.selectedSeat,
-    this.vehicleName = 'Mega Coach Elite',
-    this.route = 'Banha Station → Smart Village',
+    this.vehicleName,
+    this.route,
     this.pricePerSeat = 25.0,
     this.onPassengerDetailsTap,
   });
 
   final String? selectedSeat;
-  final String vehicleName;
-  final String route;
+  final String? vehicleName;
+  final String? route;
   final double pricePerSeat;
   final VoidCallback? onPassengerDetailsTap;
 
@@ -26,6 +28,9 @@ class SeatBookingSummaryPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasSelection = selectedSeat != null;
+    final l10n = context.l10n;
+    final resolvedVehicleName = vehicleName ?? l10n.seatSelection_defaultVehicleName;
+    final resolvedRoute = route ?? l10n.seatSelection_defaultRoute;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -38,38 +43,38 @@ class SeatBookingSummaryPanel extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Booking summary',
+            l10n.seatSelection_bookingSummaryTitle,
             style: ClientTypography.bodyMedium(
               context,
             ).copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 12),
-          _SummaryRow(label: 'Vehicle', value: vehicleName),
-          _SummaryRow(label: 'Route', value: route),
+          _SummaryRow(label: l10n.payments_vehicle, value: resolvedVehicleName),
+          _SummaryRow(label: l10n.packages_route, value: resolvedRoute),
           _SummaryRow(
-            label: 'Selected seat',
-            value: hasSelection ? 'Seat $selectedSeat' : '—',
+            label: l10n.seatSelection_selectedSeatLabel,
+            value: hasSelection ? l10n.home_seatLabel('$selectedSeat') : '—',
             emphasized: hasSelection,
           ),
           const SizedBox(height: 10),
           Divider(color: ClientColors.borderFor(context)),
           const SizedBox(height: 10),
           _SummaryRow(
-            label: 'Price per seat',
-            value: 'EGP ${pricePerSeat.toStringAsFixed(2)}',
+            label: l10n.seatSelection_pricePerSeatLabel,
+            value: FormatUtil.currency(context, pricePerSeat),
           ),
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Total amount',
+                l10n.seatSelection_totalAmountLabel,
                 style: ClientTypography.bodyMedium(
                   context,
                 ).copyWith(fontWeight: FontWeight.w700),
               ),
               Text(
-                'EGP ${total.toStringAsFixed(2)}',
+                FormatUtil.currency(context, total),
                 style: ClientTypography.priceMedium(
                   context,
                 ).copyWith(color: ClientColors.primary),

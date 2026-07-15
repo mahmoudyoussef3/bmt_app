@@ -3,6 +3,8 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/vehicle_detail.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_rating_row.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// Focused trip + vehicle choice card.
 class VehicleCompareCard extends StatelessWidget {
@@ -19,6 +21,7 @@ class VehicleCompareCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Material(
       color: selected
           ? ClientColors.primaryContainerFor(context)
@@ -115,7 +118,7 @@ class VehicleCompareCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            '${vehicle.vehicleType} · ${vehicle.capacity} seats capacity',
+                            '${vehicle.vehicleType} · ${l10n.booking_seatsCapacity(vehicle.capacity)}',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: ClientTypography.bodySmall(context).copyWith(
@@ -140,13 +143,17 @@ class VehicleCompareCard extends StatelessWidget {
                   backgroundColor: ClientColors.primary,
                   foregroundColor: ClientColors.textInverse,
                 ),
-                icon: Icon(
+                icon: selected
+                    ? const Icon(Icons.check_circle_rounded, size: 19)
+                    : const DirectionalIcon(
+                        Icons.arrow_forward_rounded,
+                        size: 19,
+                      ),
+                label: Text(
                   selected
-                      ? Icons.check_circle_rounded
-                      : Icons.arrow_forward_rounded,
-                  size: 19,
+                      ? l10n.seatSelection_seatStatusSelected
+                      : l10n.booking_selectTripAndVehicle,
                 ),
-                label: Text(selected ? 'Selected' : 'Select trip and vehicle'),
               ),
             ],
           ),
@@ -163,6 +170,7 @@ class _OccupancyBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final occupancyPercent = (vehicle.occupancyRatio * 100).round();
     final lowSeats = vehicle.availableSeats <= 4;
 
@@ -173,7 +181,7 @@ class _OccupancyBlock extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                'Occupancy',
+                l10n.booking_occupancy,
                 style: ClientTypography.labelMedium(context).copyWith(
                   color: ClientColors.textSecondaryFor(context),
                   fontWeight: FontWeight.w800,
@@ -181,7 +189,7 @@ class _OccupancyBlock extends StatelessWidget {
               ),
             ),
             Text(
-              '$occupancyPercent% full',
+              l10n.booking_percentFull(occupancyPercent),
               style: ClientTypography.labelMedium(
                 context,
               ).copyWith(fontWeight: FontWeight.w900),
@@ -202,7 +210,10 @@ class _OccupancyBlock extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          '${vehicle.availableSeats} available · ${vehicle.occupiedSeats} booked',
+          l10n.booking_availableBookedSeats(
+            vehicle.availableSeats,
+            vehicle.occupiedSeats,
+          ),
           style: ClientTypography.bodySmall(context).copyWith(
             color: ClientColors.textSecondaryFor(context),
             fontWeight: FontWeight.w700,
@@ -231,7 +242,7 @@ class _SeatsBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
-        '$availableSeats seats',
+        context.l10n.booking_seatsCountLabel(availableSeats),
         style: ClientTypography.labelMedium(context).copyWith(
           color: lowSeats
               ? ClientColors.onJourneyAmber

@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/full_screen_seat_map_screen.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_cabin.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_summary.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The passenger's reserved seat(s) rendered on the vehicle's real seat map —
 /// the same live layout the passenger saw while booking, not a mock preview.
@@ -42,7 +43,7 @@ class TripSeatsCard extends StatelessWidget {
                 ),
               ),
               icon: const Icon(Icons.fullscreen_rounded, size: 20),
-              label: const Text('View full seat map'),
+              label: Text(context.l10n.trips_viewFullSeatMap),
               style: OutlinedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 foregroundColor: ClientColors.primary,
@@ -56,7 +57,7 @@ class TripSeatsCard extends StatelessWidget {
         ] else if (mySeats.isEmpty) ...[
           const SizedBox(height: 8),
           Text(
-            'A seat will be assigned once your booking is confirmed.',
+            context.l10n.trips_seatPendingAssignment,
             style: ClientTypography.bodySmall(
               context,
             ).copyWith(color: ClientColors.textSecondaryFor(context)),

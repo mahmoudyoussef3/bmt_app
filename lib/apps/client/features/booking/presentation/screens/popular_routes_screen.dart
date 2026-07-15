@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/popular_routes_body.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Full list of routes for quick client discovery.
 class PopularRoutesScreen extends StatefulWidget {
@@ -35,11 +36,11 @@ class _PopularRoutesScreenState extends State<PopularRoutesScreen> {
     return BlocBuilder<BookingCubit, BookingState>(
       builder: (context, state) {
         return BookingFlowScaffold(
-          title: 'Routes',
+          title: context.l10n.nav_routes,
           query: _query.isComplete ? _query : null,
           actions: [
             IconButton(
-              tooltip: 'Refresh',
+              tooltip: context.l10n.tracking_refresh,
               icon: const Icon(Icons.refresh_rounded),
               onPressed: () =>
                   context.read<BookingCubit>().loadPopularRoutes(force: true),

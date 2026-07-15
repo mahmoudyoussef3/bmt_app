@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import 'support_ticket_labels.dart';
 
 class SupportTicketCard extends StatelessWidget {
   const SupportTicketCard({
@@ -29,23 +30,6 @@ class SupportTicketCard extends StatelessWidget {
         return ClientColors.textTertiaryFor(context);
       case TicketStatus.rejected:
         return ClientColors.journeyRed;
-    }
-  }
-
-  String _getStatusLabel(TicketStatus status) {
-    switch (status) {
-      case TicketStatus.submitted:
-        return 'Submitted';
-      case TicketStatus.underReview:
-        return 'Under Review';
-      case TicketStatus.contacted:
-        return 'Contacted';
-      case TicketStatus.resolved:
-        return 'Resolved';
-      case TicketStatus.closed:
-        return 'Closed';
-      case TicketStatus.rejected:
-        return 'Rejected';
     }
   }
 
@@ -88,7 +72,7 @@ class SupportTicketCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
-                    _getStatusLabel(ticket.status),
+                    supportStatusLabel(context, ticket.status),
                     style: ClientTypography.labelSmall(context).copyWith(
                       fontWeight: FontWeight.w800,
                       color: statusColor,
@@ -154,7 +138,7 @@ class SupportTicketCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      ticket.category,
+                      supportCategoryLabel(context, ticket.category),
                       style: ClientTypography.labelMedium(context).copyWith(
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w600,
@@ -171,7 +155,10 @@ class SupportTicketCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      DateFormat('MMM dd, yyyy').format(ticket.createdAt),
+                      DateFormat(
+                        'MMM dd, yyyy',
+                        Localizations.localeOf(context).toString(),
+                      ).format(ticket.createdAt),
                       style: ClientTypography.labelMedium(context).copyWith(
                         color: scheme.onSurfaceVariant,
                         fontWeight: FontWeight.w600,

@@ -5,6 +5,8 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// One way to pay.
 ///
@@ -65,7 +67,7 @@ class CheckoutMethodTile extends StatelessWidget {
             ),
             if (selected || warning != null)
               _Detail(
-                text: warning ?? _nextStep(method.type),
+                text: warning ?? _nextStep(context, method.type),
                 isWarning: warning != null,
               ),
           ],
@@ -74,18 +76,17 @@ class CheckoutMethodTile extends StatelessWidget {
     );
   }
 
-  String _nextStep(PaymentMethodType type) => switch (type) {
-    PaymentMethodType.creditCard =>
-      'You will finish on Paymob’s encrypted card page.',
-    PaymentMethodType.instapay =>
-      'Transfer, then attach the receipt on the next step.',
-    PaymentMethodType.bankTransfer =>
-      'Bank details come next — attach the receipt after you transfer.',
-    PaymentMethodType.vodafoneCash =>
-      'Send from your wallet, then attach the receipt on the next step.',
-    PaymentMethodType.walletBalance =>
-      'Deducted from your balance the moment you confirm.',
-  };
+  String _nextStep(BuildContext context, PaymentMethodType type) =>
+      switch (type) {
+        PaymentMethodType.creditCard => context.l10n.payments_nextStepCard,
+        PaymentMethodType.instapay => context.l10n.payments_nextStepInstapay,
+        PaymentMethodType.bankTransfer =>
+          context.l10n.payments_nextStepBankTransfer,
+        PaymentMethodType.vodafoneCash =>
+          context.l10n.payments_nextStepVodafoneCash,
+        PaymentMethodType.walletBalance =>
+          context.l10n.payments_nextStepWallet,
+      };
 }
 
 class _Titles extends StatelessWidget {
@@ -149,7 +150,7 @@ class _RecommendedBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(ClientRadius.pill),
       ),
       child: Text(
-        'Fastest',
+        context.l10n.payments_fastestBadge,
         style: ClientTypography.labelSmall(
           context,
         ).copyWith(color: tone.fg, fontWeight: FontWeight.w700),
@@ -240,17 +241,17 @@ class _Detail extends StatelessWidget {
         : ClientColors.textSecondaryFor(context);
 
     return Padding(
-      padding: const EdgeInsets.only(top: 12, left: 54),
+      padding: const EdgeInsetsDirectional.only(top: 12, start: 54),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            isWarning
-                ? Icons.error_outline_rounded
-                : Icons.arrow_forward_rounded,
-            size: 14,
-            color: color,
-          ),
+          isWarning
+              ? Icon(Icons.error_outline_rounded, size: 14, color: color)
+              : DirectionalIcon(
+                  Icons.arrow_forward_rounded,
+                  size: 14,
+                  color: color,
+                ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(

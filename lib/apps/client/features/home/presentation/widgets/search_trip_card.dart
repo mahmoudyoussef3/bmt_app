@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/search_field_row.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Search trip form card with pickup, destination, date, and time fields.
 class SearchTripCard extends StatelessWidget {
@@ -38,6 +39,7 @@ class SearchTripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final scheme = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -75,14 +77,14 @@ class SearchTripCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Search Trip',
+                      l10n.home_searchTripTitle,
                       style: ClientTypography.labelLarge(
                         context,
                       ).copyWith(fontWeight: FontWeight.w700),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Find your next commute in seconds',
+                      l10n.home_searchTripSubtitle,
                       style: ClientTypography.bodySmall(
                         context,
                       ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -100,25 +102,25 @@ class SearchTripCard extends StatelessWidget {
                   SearchFieldRow(
                     icon: Icons.trip_origin_rounded,
                     iconColor: ClientColors.journeyCyan,
-                    label: 'Pickup Location',
+                    label: l10n.home_pickupLocation,
                     value: pickup,
-                    placeholder: 'Select pickup point',
+                    placeholder: l10n.home_selectPickupPoint,
                     onTap: onPickupTap,
                   ),
                   const SizedBox(height: 10),
                   SearchFieldRow(
                     icon: Icons.location_on_rounded,
                     iconColor: ClientColors.journeyAmber,
-                    label: 'Destination',
+                    label: l10n.common_destination,
                     value: destination,
-                    placeholder: 'Where are you going?',
+                    placeholder: l10n.home_whereAreYouGoing,
                     onTap: onDestinationTap,
                   ),
                 ],
               ),
               if (onSwap != null)
-                Positioned(
-                  right: 8,
+                PositionedDirectional(
+                  end: 8,
                   top: 0,
                   bottom: 0,
                   child: Center(child: _SwapButton(onTap: onSwap!)),
@@ -132,9 +134,9 @@ class SearchTripCard extends StatelessWidget {
                 child: SearchFieldRow(
                   icon: Icons.calendar_today_rounded,
                   iconColor: ClientColors.primary,
-                  label: 'Date',
+                  label: l10n.common_date,
                   value: date,
-                  placeholder: 'Today',
+                  placeholder: l10n.common_today,
                   onTap: onDateTap,
                   compact: true,
                 ),
@@ -144,9 +146,9 @@ class SearchTripCard extends StatelessWidget {
                 child: SearchFieldRow(
                   icon: Icons.schedule_rounded,
                   iconColor: ClientColors.primary,
-                  label: 'Time',
+                  label: l10n.common_time,
                   value: time,
-                  placeholder: 'Select time',
+                  placeholder: l10n.home_selectTime,
                   onTap: onTimeTap,
                   compact: true,
                 ),
@@ -155,7 +157,7 @@ class SearchTripCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           ClientButton(
-            label: 'Search Trips',
+            label: l10n.home_searchTrips,
             expand: true,
             onPressed: onSearch,
           ),

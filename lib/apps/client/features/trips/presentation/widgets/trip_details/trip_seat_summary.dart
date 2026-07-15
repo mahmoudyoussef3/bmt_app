@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The headline for the Seats section: the passenger's own seat(s) on the
 /// left, live cabin availability on the right.
@@ -43,8 +44,10 @@ class TripSeatSummary extends StatelessWidget {
             children: [
               Text(
                 hasSeats
-                    ? (mySeatLabels.length == 1 ? 'Your seat' : 'Your seats')
-                    : 'Seat pending',
+                    ? (mySeatLabels.length == 1
+                          ? context.l10n.trips_seatLegendYours
+                          : context.l10n.trips_yourSeatsPlural)
+                    : context.l10n.trips_seatPending,
                 style: ClientTypography.bodySmall(context).copyWith(
                   color: ClientColors.textSecondaryFor(context),
                   fontWeight: FontWeight.w700,
@@ -52,7 +55,9 @@ class TripSeatSummary extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                hasSeats ? mySeatLabels.join(', ') : 'Awaiting confirmation',
+                hasSeats
+                    ? mySeatLabels.join(', ')
+                    : context.l10n.trips_awaitingConfirmation,
                 style: ClientTypography.headingSmall(
                   context,
                 ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -65,14 +70,17 @@ class TripSeatSummary extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '$availableSeats of $totalSeats',
+                context.l10n.trips_seatsAvailableOfTotal(
+                  availableSeats,
+                  totalSeats,
+                ),
                 style: ClientTypography.bodyMedium(context).copyWith(
                   fontWeight: FontWeight.w900,
                   color: ClientColors.textPrimaryFor(context),
                 ),
               ),
               Text(
-                'seats free',
+                context.l10n.trips_seatsFreeLabel,
                 style: ClientTypography.bodySmall(
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),

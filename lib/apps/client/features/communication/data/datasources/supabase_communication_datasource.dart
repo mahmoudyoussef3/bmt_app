@@ -149,14 +149,13 @@ class SupabaseCommunicationDatasource {
     return parts.take(2).map((part) => part[0].toUpperCase()).join();
   }
 
+  /// Returns the raw ISO timestamp. Relative-time phrasing ("5 min ago",
+  /// "Yesterday"...) is computed in the presentation layer, which has the
+  /// `BuildContext` this data layer must stay free of — see `_displayTime`
+  /// in `communication_screen.dart`.
   String _relativeTime(Object? value) {
     final parsed = DateTime.tryParse(value?.toString() ?? '');
     if (parsed == null) return '';
-    final diff = DateTime.now().difference(parsed.toLocal());
-    if (diff.inMinutes < 1) return 'Just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} min ago';
-    if (diff.inHours < 24) return '${diff.inHours} hr ago';
-    if (diff.inDays == 1) return 'Yesterday';
-    return '${diff.inDays} days ago';
+    return parsed.toIso8601String();
   }
 }

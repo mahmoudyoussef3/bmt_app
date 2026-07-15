@@ -82,10 +82,13 @@ class SeatSelectionCubit extends Cubit<SeatSelectionState> {
     }
   }
 
+  /// Keeps the raw error code (e.g. `seat_unavailable`) in state; the
+  /// presentation layer maps it to a localized, user-friendly message since
+  /// this cubit has no BuildContext to resolve AppLocalizations with.
   String _lockErrorMessage(Object error) {
     final message = error.toString();
     if (message.contains('seat_unavailable')) {
-      return 'Seat is no longer available. Please choose another seat.';
+      return 'seat_unavailable';
     }
     return message.replaceFirst(RegExp(r'^Exception: ?'), '');
   }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The three things a rider worries about at the moment of paying, answered
 /// before they ask. Concrete promises about how this checkout behaves — not
@@ -25,25 +26,21 @@ class CheckoutAssurance extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const _Line(
+          _Line(
             icon: Icons.lock_rounded,
-            text: 'Card details are entered on the bank’s page, never stored '
-                'by BMT.',
+            text: context.l10n.payments_assuranceCardDetails,
           ),
           const SizedBox(height: 10),
-          const _Line(
+          _Line(
             icon: Icons.event_seat_rounded,
-            text: 'Your seat is held for you now and released only if the '
-                'payment fails.',
+            text: context.l10n.payments_assuranceSeatHeld,
           ),
           const SizedBox(height: 10),
           _Line(
             icon: Icons.support_agent_rounded,
             text: requiresReceipt
-                ? 'Transfers are checked by our team, and you will be notified '
-                      'once confirmed.'
-                : 'Something looks wrong? Support can see this booking by its '
-                      'reference.',
+                ? context.l10n.payments_assuranceTransferChecked
+                : context.l10n.payments_assuranceSupportReference,
           ),
         ],
       ),

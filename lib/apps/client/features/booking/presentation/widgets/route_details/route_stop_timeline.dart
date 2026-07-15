@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_opt
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_inline_empty.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_timeline_header.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/timeline_stop_tile.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Route Details' ordered stop timeline: pickup/drop-off availability by
 /// stop, with a graceful empty state when stations aren't published yet.
@@ -31,10 +32,10 @@ class RouteStopTimeline extends StatelessWidget {
           RouteTimelineHeader(stopCount: orderedPoints.length),
           if (orderedPoints.isEmpty) ...[
             const SizedBox(height: 16),
-            const RouteDetailsInlineEmpty(
+            RouteDetailsInlineEmpty(
               icon: Icons.alt_route_rounded,
-              title: 'Stops are not published yet',
-              subtitle: 'Route stations will appear here once available.',
+              title: context.l10n.booking_stopsNotPublishedYet,
+              subtitle: context.l10n.booking_routeStationsWillAppear,
             ),
           ] else ...[
             const SizedBox(height: 18),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/badge.dart';
 
 /// The subscription the rider is riding on. Home renders this only when one
@@ -126,9 +127,12 @@ class _Validity extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final remaining = package.remainingDays;
+    final l10n = context.l10n;
     final label = remaining == 0
-        ? 'Expires today'
-        : '$remaining ${remaining == 1 ? 'day' : 'days'} left';
+        ? l10n.home_expiresToday
+        : remaining == 1
+        ? l10n.home_dayLeft
+        : l10n.home_daysLeft(remaining);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,

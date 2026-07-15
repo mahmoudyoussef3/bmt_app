@@ -3,6 +3,8 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_support_data.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_cancellation_reasons.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Cancellation reason picker + confirmation dialog. Returns the chosen reason
 /// once the client confirms, or null if they backed out — the caller is what
@@ -42,12 +44,12 @@ Future<String?> showTripCancellationFlow(
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Cancellation reason',
+                    ctx.l10n.trips_cancelReasonTitle,
                     style: ClientTypography.headingMedium(ctx),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    'Trip $tripReference',
+                    ctx.l10n.trips_cancelReasonTripRef(tripReference),
                     style: ClientTypography.bodySmall(
                       ctx,
                     ).copyWith(color: ClientColors.textSecondaryFor(ctx)),
@@ -93,7 +95,7 @@ Future<String?> showTripCancellationFlow(
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    r,
+                                    cancellationReasonLabel(ctx, r),
                                     style: ClientTypography.bodyMedium(ctx),
                                   ),
                                 ),
@@ -106,7 +108,7 @@ Future<String?> showTripCancellationFlow(
                   }),
                   const SizedBox(height: 16),
                   ClientButton(
-                    label: 'Continue',
+                    label: ctx.l10n.payments_continueLabel,
                     expand: true,
                     onPressed: () => Navigator.pop(ctx, selectedReason),
                   ),
@@ -125,15 +127,13 @@ Future<String?> showTripCancellationFlow(
     context: context,
     builder: (ctx) => AlertDialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      title: const Text('Cancel this trip?'),
+      title: Text(ctx.l10n.trips_cancelDialogTitle),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your booking will be cancelled, your seat released back to the '
-            'trip, and your payment will no longer be reviewed. This cannot '
-            'be undone — you would have to book again.',
+            ctx.l10n.trips_cancelDialogBody,
             style: ClientTypography.bodySmall(ctx),
           ),
           const SizedBox(height: 12),
@@ -153,7 +153,9 @@ Future<String?> showTripCancellationFlow(
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
-                    'Reason: $reason',
+                    ctx.l10n.trips_cancelReasonPrefix(
+                      cancellationReasonLabel(ctx, reason),
+                    ),
                     style: ClientTypography.bodySmall(
                       ctx,
                     ).copyWith(fontWeight: FontWeight.w600),
@@ -167,12 +169,12 @@ Future<String?> showTripCancellationFlow(
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('Keep trip'),
+          child: Text(ctx.l10n.trips_keepTrip),
         ),
         FilledButton(
           onPressed: () => Navigator.pop(ctx, true),
           style: FilledButton.styleFrom(backgroundColor: ClientColors.primary),
-          child: const Text('Confirm cancellation'),
+          child: Text(ctx.l10n.trips_confirmCancellation),
         ),
       ],
     ),

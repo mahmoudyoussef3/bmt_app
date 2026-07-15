@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/core/localization/l10n_context.dart';
+
 import '../../domain/entities/client_notification.dart';
 import '../cubit/notifications_cubit.dart';
 import '../cubit/notifications_state.dart';
@@ -32,7 +34,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           return CustomScrollView(
             slivers: [
               SliverAppBar(
-                title: Text('Notifications', style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                title: Text(context.l10n.common_notifications, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
                 backgroundColor: cs.surface,
                 pinned: true,
                 floating: true,
@@ -44,7 +46,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     TextButton(
                       onPressed: () =>
                           context.read<NotificationsCubit>().markAllAsRead(),
-                      child: Text('Mark all read', style: TextStyle(color: cs.primary, fontWeight: FontWeight.w700)),
+                      child: Text(context.l10n.notifications_markAllRead, style: TextStyle(color: cs.primary, fontWeight: FontWeight.w700)),
                     ),
                 ],
               ),
@@ -68,7 +70,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         FilledButton(
                           onPressed: () =>
                               context.read<NotificationsCubit>().startWatching(),
-                          child: const Text('Retry'),
+                          child: Text(context.l10n.common_retry),
                         ),
                       ],
                     ),
@@ -144,13 +146,13 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'No notifications yet',
+              context.l10n.notifications_emptyTitle,
               style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 12),
             Text(
-              'Trip updates, booking confirmations and reminders will appear here when they arrive.',
+              context.l10n.notifications_emptyBody,
               style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
               textAlign: TextAlign.center,
             ),

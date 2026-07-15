@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:bmt_app/core/localization/l10n_context.dart';
+
 import '../../domain/entities/client_notification.dart';
 
 class NotificationTile extends StatelessWidget {
@@ -24,9 +26,9 @@ class NotificationTile extends StatelessWidget {
       key: ValueKey(notification.id),
       direction: DismissDirection.endToStart,
       background: Container(
-        alignment: Alignment.centerRight,
+        alignment: AlignmentDirectional.centerEnd,
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-        padding: const EdgeInsets.only(right: 24),
+        padding: const EdgeInsetsDirectional.only(end: 24),
         decoration: BoxDecoration(
           color: cs.primaryContainer,
           borderRadius: BorderRadius.circular(24),
@@ -91,7 +93,7 @@ class NotificationTile extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
-                        'New',
+                        context.l10n.notifications_newBadge,
                         style: tt.labelSmall?.copyWith(
                           color: cs.primary,
                           fontWeight: FontWeight.w900,
@@ -117,7 +119,7 @@ class NotificationTile extends StatelessWidget {
                   Icon(Icons.access_time_rounded, size: 14, color: cs.onSurfaceVariant.withAlpha(150)),
                   const SizedBox(width: 6),
                   Text(
-                    _formatDate(notification.createdAt),
+                    _formatDate(context, notification.createdAt),
                     style: tt.labelMedium?.copyWith(
                       color: cs.onSurfaceVariant.withAlpha(150),
                       fontWeight: FontWeight.w600,
@@ -132,7 +134,8 @@ class NotificationTile extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime date) {
-    return DateFormat('MMM dd, yyyy • hh:mm a').format(date);
+  String _formatDate(BuildContext context, DateTime date) {
+    final locale = Localizations.localeOf(context).toString();
+    return DateFormat('MMM dd, yyyy • hh:mm a', locale).format(date);
   }
 }

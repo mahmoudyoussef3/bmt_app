@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// A wrong seat or a wrong date found on the review screen used to mean backing
 /// out of the whole wizard. These jump straight to the step that owns the
@@ -13,20 +14,20 @@ class SummaryEditStrip extends StatelessWidget {
 
   final ValueChanged<int> onEditStep;
 
-  static const _targets = <(String, IconData, int)>[
-    ('Stops', Icons.place_rounded, 0),
-    ('Trip', Icons.schedule_rounded, 1),
-    ('Seat', Icons.event_seat_rounded, 2),
-    ('Fare', Icons.local_offer_rounded, 3),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final targets = <(String, IconData, int)>[
+      (l10n.booking_stepStops, Icons.place_rounded, 0),
+      (l10n.notifications_categoryTrip, Icons.schedule_rounded, 1),
+      (l10n.payments_stepSeat, Icons.event_seat_rounded, 2),
+      (l10n.booking_fare, Icons.local_offer_rounded, 3),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Need a change?',
+          l10n.booking_needAChange,
           style: ClientTypography.labelMedium(
             context,
           ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -34,10 +35,10 @@ class SummaryEditStrip extends StatelessWidget {
         const SizedBox(height: 8),
         Row(
           children: [
-            for (final (label, icon, step) in _targets)
+            for (final (label, icon, step) in targets)
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsetsDirectional.only(end: 8),
                   child: _EditChip(
                     label: label,
                     icon: icon,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'widgets/splash_glow_backdrop.dart';
 import 'widgets/splash_wordmark.dart';
 import 'widgets/splash_progress_track.dart';
@@ -103,7 +104,7 @@ class _ClientSplashScreenState extends State<ClientSplashScreen>
                 FadeTransition(
                   opacity: _taglineOpacity,
                   child: Text(
-                    'Your journey, simplified.',
+                    context.l10n.splash_tagline,
                     style: ClientTypography.bodyMedium(context).copyWith(
                       color: ClientColors.textTertiaryFor(context),
                       letterSpacing: 0.4,

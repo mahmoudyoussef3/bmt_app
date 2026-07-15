@@ -24,6 +24,8 @@ import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/lock
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/release_trip_seat_lock_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/update_existing_booking_payment_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 const _stepCount = 6;
@@ -60,6 +62,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
 
   Future<void> _confirmBooking() async {
     final session = context.read<BookingWizardCubit>().state;
+    final l10n = context.l10n;
     final tripId = session.selectedTrip?.id ?? '';
     final seatId = session.selectedSeatId ?? '';
 
@@ -153,14 +156,14 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
 
       if (session.isCardPayment) {
         if (bookingId == null || bookingId.isEmpty) {
-          throw Exception('The booking reference was not created.');
+          throw Exception(l10n.booking_referenceNotCreated);
         }
         final methods = await clientGetIt<GetPaymentMethodsUseCase>()();
         final cardMethod = methods
             .where((method) => method.type == PaymentMethodType.creditCard)
             .firstOrNull;
         if (cardMethod == null) {
-          throw Exception('Card payment is not available right now.');
+          throw Exception(l10n.booking_cardPaymentUnavailable);
         }
         final checkout = wizardCheckoutData(session);
         final cardSession =
@@ -180,9 +183,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
           ),
         );
         if (paid != true) {
-          throw Exception(
-            'Card payment was not completed. Your booking remains pending.',
-          );
+          throw Exception(l10n.booking_cardPaymentNotCompleted);
         }
       }
 
@@ -226,18 +227,18 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Booking Failed',
+            l10n.booking_bookingFailed,
             style: ClientTypography.headingSmall(
               context,
             ).copyWith(color: ClientColors.journeyRed),
           ),
           content: Text(
             reason.contains('seat_unavailable')
-                ? 'This seat was just taken. Please go back and choose another seat.'
+                ? l10n.booking_seatJustTaken
                 : reason.contains('lock_expired')
-                ? 'Your seat hold expired. Please select your seat again.'
+                ? l10n.booking_seatHoldExpired
                 : reason.contains('duplicate_active_booking')
-                ? 'You already have a pending booking for this trip. Please continue payment from your existing booking.'
+                ? l10n.booking_duplicateActiveBooking
                 : reason,
             style: ClientTypography.bodySmall(context),
           ),
@@ -250,17 +251,17 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
                     context,
                   ).popUntil((route) => route.isFirst); // Close wizard
                 },
-                child: const Text(
-                  'Open My Bookings',
-                  style: TextStyle(color: ClientColors.primary),
+                child: Text(
+                  l10n.booking_openMyBookings,
+                  style: const TextStyle(color: ClientColors.primary),
                 ),
               )
             else
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
-                child: const Text(
-                  'OK',
-                  style: TextStyle(color: ClientColors.primary),
+                child: Text(
+                  l10n.booking_ok,
+                  style: const TextStyle(color: ClientColors.primary),
                 ),
               ),
           ],
@@ -304,7 +305,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
               backgroundColor: ClientColors.surfaceFor(context),
               elevation: 0,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back_rounded),
+                icon: const DirectionalIcon(Icons.arrow_back_rounded),
                 onPressed: _confirming ? null : _back,
               ),
               title: BlocBuilder<BookingWizardCubit, BookingWizardSession>(
@@ -312,7 +313,7 @@ class _BookingWizardScreenState extends State<BookingWizardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Book your seat',
+                      context.l10n.booking_bookYourSeat,
                       style: ClientTypography.bodyMedium(
                         context,
                       ).copyWith(fontWeight: FontWeight.w700),

@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_brand_app_bar.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Shown when a trip ID doesn't resolve to a trip — offers a way forward
 /// instead of a dead-end message (spec FR-012).
@@ -36,13 +37,12 @@ class TripEmptyView extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Trip not found',
+                context.l10n.trips_notFoundTitle,
                 style: ClientTypography.headingMedium(context),
               ),
               const SizedBox(height: 8),
               Text(
-                'This trip may have been removed or the link is no longer '
-                'valid. Browse routes to plan your next ride.',
+                context.l10n.trips_notFoundBody,
                 textAlign: TextAlign.center,
                 style: ClientTypography.bodyMedium(
                   context,
@@ -50,14 +50,14 @@ class TripEmptyView extends StatelessWidget {
               ),
               const SizedBox(height: 24),
               ClientButton(
-                label: 'Browse routes',
+                label: context.l10n.home_browseRoutes,
                 onPressed: () =>
                     Navigator.of(context).pushNamed('/booking/search'),
                 expand: false,
               ),
               const SizedBox(height: 10),
               ClientButton.text(
-                label: 'Go back',
+                label: context.l10n.payments_goBack,
                 onPressed: () => Navigator.of(context).maybePop(),
               ),
             ],

@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import 'google_g_logo.dart';
 
@@ -47,7 +48,7 @@ class SocialLoginButtons extends StatelessWidget {
         const SizedBox(width: ClientSpacing.sm),
         Expanded(
           child: _ProviderButton(
-            label: 'Phone',
+            label: context.l10n.welcome_providerPhone,
             glyph: Icon(
               Icons.phone_iphone_rounded,
               size: 22,

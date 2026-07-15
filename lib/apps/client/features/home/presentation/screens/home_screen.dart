@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/home/presentation/cubit/home_state.
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_content.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_loading_skeleton.dart';
 import 'package:bmt_app/core/localization/failure_l10n_ext.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Client home — the passenger's launchpad.
 ///
@@ -65,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               behavior: SnackBarBehavior.floating,
               content: Text(failure.localizedMessage(context)),
               action: SnackBarAction(
-                label: 'Retry',
+                label: context.l10n.common_retry,
                 onPressed: () => context.read<HomeCubit>().load(),
               ),
             ),

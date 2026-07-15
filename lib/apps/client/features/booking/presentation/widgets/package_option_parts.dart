@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Identity row of a [PackageOptionCard]: what the plan is, what it bundles,
 /// and whether it is the rider's current pick.
@@ -21,11 +22,12 @@ class PackagePlanHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final title = plan.nameEn.trim().isEmpty ? plan.nameAr : plan.nameEn;
-    final rides = '${plan.rideCount} ${plan.rideCount == 1 ? 'ride' : 'rides'}';
-    final days =
-        '${plan.durationDays} '
-        '${plan.durationDays == 1 ? 'day' : 'days'}';
+    final ridesValidDays = l10n.booking_ridesValidForDays(
+      l10n.packages_ridesCount(plan.rideCount),
+      l10n.packages_daysCount(plan.durationDays),
+    );
 
     return Row(
       children: [
@@ -59,7 +61,7 @@ class PackagePlanHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                '$rides · valid $days',
+                ridesValidDays,
                 style: ClientTypography.labelSmall(
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -106,6 +108,7 @@ class PackagePriceBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -114,7 +117,7 @@ class PackagePriceBlock extends StatelessWidget {
           textBaseline: TextBaseline.alphabetic,
           children: [
             Text(
-              'EGP ${price.toStringAsFixed(0)}',
+              l10n.packages_egpAmount(price.toStringAsFixed(0)),
               style: ClientTypography.priceMedium(
                 context,
               ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -125,7 +128,7 @@ class PackagePriceBlock extends StatelessWidget {
               // a long fare must never push the price the rider pays off-card.
               Flexible(
                 child: Text(
-                  'EGP ${regularTotal!.toStringAsFixed(0)}',
+                  l10n.packages_egpAmount(regularTotal!.toStringAsFixed(0)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: ClientTypography.bodySmall(context).copyWith(
@@ -140,7 +143,7 @@ class PackagePriceBlock extends StatelessWidget {
         if (perRide != null) ...[
           const SizedBox(height: 3),
           Text(
-            'EGP ${perRide!.toStringAsFixed(0)} per ride',
+            l10n.booking_pricePerRide(perRide!.toStringAsFixed(0)),
             style: ClientTypography.labelSmall(
               context,
             ).copyWith(color: ClientColors.textSecondaryFor(context)),

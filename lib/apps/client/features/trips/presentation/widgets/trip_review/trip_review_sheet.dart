@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_revie
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_state.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_form.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_submitted_view.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class TripReviewSheet extends StatelessWidget {
   const TripReviewSheet({super.key, required this.trip});
@@ -17,24 +18,35 @@ class TripReviewSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Cap the sheet so a tall review (three rating cards + comment box, or a
+    // small screen with the keyboard up) scrolls inside the sheet instead of
+    // overflowing the layout.
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.9;
     return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.only(
-          left: 20,
-          right: 20,
-          top: 12,
-          bottom: 20 + MediaQuery.viewInsetsOf(context).bottom,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const _SheetGrabber(),
-            const SizedBox(height: 16),
-            BlocBuilder<TripReviewCubit, TripReviewState>(
-              builder: (context, state) => _body(context, state),
-            ),
-          ],
+      child: ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: maxHeight),
+        child: Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 12,
+            bottom: 20 + MediaQuery.viewInsetsOf(context).bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const _SheetGrabber(),
+              const SizedBox(height: 16),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: BlocBuilder<TripReviewCubit, TripReviewState>(
+                    builder: (context, state) => _body(context, state),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -83,7 +95,7 @@ class _ReviewLoading extends StatelessWidget {
           const CircularProgressIndicator(),
           const SizedBox(height: 16),
           Text(
-            'Opening your review…',
+            context.l10n.trips_reviewOpening,
             style: ClientTypography.bodySmall(
               context,
             ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -112,7 +124,7 @@ class _ReviewError extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'We could not open your review',
+            context.l10n.trips_reviewOpenError,
             style: ClientTypography.headingSmall(context),
             textAlign: TextAlign.center,
           ),
@@ -126,7 +138,7 @@ class _ReviewError extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           ClientButton(
-            label: 'Try again',
+            label: context.l10n.common_tryAgain,
             onPressed: () => context.read<TripReviewCubit>().retry(),
           ),
         ],

@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Builds the standard invite copy + deep link for a referral code, and shares
 /// it through WhatsApp / Facebook / Messenger / Instagram / the native sheet.
@@ -16,16 +17,18 @@ class ReferralShareService {
 
   static String inviteLink(String code) => '$_appLinkBase$code';
 
-  static String inviteMessage(String code) =>
-      'Join me on EasyWay and book your daily commute! '
-      'Use my referral code $code to get a welcome reward.\n${inviteLink(code)}';
+  static String inviteMessage(BuildContext context, String code) =>
+      context.l10n.referral_inviteMessage(code, inviteLink(code));
 
-  static Future<void> shareNative(String code) async {
-    await Share.share(inviteMessage(code), subject: 'Join me on EasyWay');
+  static Future<void> shareNative(BuildContext context, String code) async {
+    await Share.share(
+      inviteMessage(context, code),
+      subject: context.l10n.referral_shareYourInvite,
+    );
   }
 
-  static Future<bool> shareWhatsApp(String code) {
-    final text = Uri.encodeComponent(inviteMessage(code));
+  static Future<bool> shareWhatsApp(BuildContext context, String code) {
+    final text = Uri.encodeComponent(inviteMessage(context, code));
     return _launch('https://wa.me/?text=$text');
   }
 
@@ -41,8 +44,10 @@ class ReferralShareService {
 
   /// Instagram has no public text-share URL, so we copy the invite and open the
   /// app for the user to paste into a story or DM.
-  static Future<bool> shareInstagram(String code) async {
-    await Clipboard.setData(ClipboardData(text: inviteMessage(code)));
+  static Future<bool> shareInstagram(BuildContext context, String code) async {
+    await Clipboard.setData(
+      ClipboardData(text: inviteMessage(context, code)),
+    );
     if (await _launch('instagram://app')) return true;
     return _launch('https://www.instagram.com');
   }
@@ -74,8 +79,8 @@ class ReferralShareSheet extends StatelessWidget {
     final messenger = ScaffoldMessenger.of(context);
     final navigator = Navigator.of(context);
     final ok = await action();
-    if (!ok) {
-      await ReferralShareService.shareNative(code);
+    if (!ok && context.mounted) {
+      await ReferralShareService.shareNative(context, code);
     }
     if (navigator.canPop()) navigator.pop();
     messenger.hideCurrentSnackBar();
@@ -83,57 +88,64 @@ class ReferralShareSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final channels = <_ShareChannel>[
       _ShareChannel(
         icon: Icons.chat_rounded,
-        label: 'WhatsApp',
+        label: l10n.referral_channelWhatsapp,
         color: const Color(0xFF25D366),
-        onTap: () =>
-            _run(context, () => ReferralShareService.shareWhatsApp(code)),
+        onTap: () => _run(
+          context,
+          () => ReferralShareService.shareWhatsApp(context, code),
+        ),
       ),
       _ShareChannel(
         icon: Icons.facebook_rounded,
-        label: 'Facebook',
+        label: l10n.referral_channelFacebook,
         color: const Color(0xFF1877F2),
         onTap: () =>
             _run(context, () => ReferralShareService.shareFacebook(code)),
       ),
       _ShareChannel(
         icon: Icons.send_rounded,
-        label: 'Messenger',
+        label: l10n.referral_channelMessenger,
         color: const Color(0xFF0084FF),
         onTap: () =>
             _run(context, () => ReferralShareService.shareMessenger(code)),
       ),
       _ShareChannel(
         icon: Icons.camera_alt_rounded,
-        label: 'Instagram',
+        label: l10n.referral_channelInstagram,
         color: const Color(0xFFE1306C),
-        onTap: () =>
-            _run(context, () => ReferralShareService.shareInstagram(code)),
+        onTap: () => _run(
+          context,
+          () => ReferralShareService.shareInstagram(context, code),
+        ),
       ),
       _ShareChannel(
         icon: Icons.copy_rounded,
-        label: 'Copy link',
+        label: l10n.referral_copyLink,
         color: ClientColors.journeySlate,
         onTap: () async {
           final messenger = ScaffoldMessenger.of(context);
           final navigator = Navigator.of(context);
           await Clipboard.setData(
-            ClipboardData(text: ReferralShareService.inviteMessage(code)),
+            ClipboardData(
+              text: ReferralShareService.inviteMessage(context, code),
+            ),
           );
           if (navigator.canPop()) navigator.pop();
           messenger.showSnackBar(
-            const SnackBar(content: Text('Invite copied to clipboard')),
+            SnackBar(content: Text(l10n.referral_inviteCopiedSnack)),
           );
         },
       ),
       _ShareChannel(
         icon: Icons.ios_share_rounded,
-        label: 'More',
+        label: l10n.referral_more,
         color: ClientColors.primary,
         onTap: () => _run(context, () async {
-          await ReferralShareService.shareNative(code);
+          await ReferralShareService.shareNative(context, code);
           return true;
         }),
       ),
@@ -163,12 +175,12 @@ class ReferralShareSheet extends StatelessWidget {
             ),
             const SizedBox(height: 18),
             Text(
-              'Share your invite',
+              l10n.referral_shareYourInvite,
               style: ClientTypography.headingMedium(context),
             ),
             const SizedBox(height: 4),
             Text(
-              'Invite friends with code $code and earn rewards.',
+              l10n.referral_shareSheetSubtitle(code),
               style: ClientTypography.bodyMedium(
                 context,
               ).copyWith(color: ClientColors.textSecondaryFor(context)),

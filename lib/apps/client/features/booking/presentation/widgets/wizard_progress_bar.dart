@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
-
-const _labels = ['Stops', 'Trip', 'Seat', 'Package', 'Summary', 'Payment'];
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class WizardProgressBar extends StatelessWidget {
   const WizardProgressBar({super.key, required this.step});
@@ -11,7 +10,16 @@ class WizardProgressBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = (step + 1) / _labels.length;
+    final l10n = context.l10n;
+    final labels = [
+      l10n.booking_stepStops,
+      l10n.notifications_categoryTrip,
+      l10n.payments_stepSeat,
+      l10n.loyalty_categoryPackage,
+      l10n.booking_summary,
+      l10n.payments_stepPayment,
+    ];
+    final progress = (step + 1) / labels.length;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
       child: Column(
@@ -22,14 +30,14 @@ class WizardProgressBar extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  _labels[step],
+                  labels[step],
                   style: ClientTypography.labelMedium(
                     context,
                   ).copyWith(color: ClientColors.primaryFor(context)),
                 ),
               ),
               Text(
-                'Step ${step + 1} of ${_labels.length}',
+                l10n.booking_stepXOfY(step + 1, labels.length),
                 style: ClientTypography.labelSmall(
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),

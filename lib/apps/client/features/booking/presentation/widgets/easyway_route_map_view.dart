@@ -169,16 +169,20 @@ class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
     _fitRoute();
   }
 
-  RouteMapInfoData get _mergedInfo {
+  RouteMapInfoData _mergedInfo(BuildContext context) {
     final base = widget.info ?? const RouteMapInfoData();
     final road = _road;
     return RouteMapInfoData(
       distance:
           base.distance ??
-          (road != null ? formatRouteDistance(road.distanceMeters) : null),
+          (road != null
+              ? formatRouteDistance(context, road.distanceMeters)
+              : null),
       duration:
           base.duration ??
-          (road != null ? formatRouteDuration(road.durationSeconds) : null),
+          (road != null
+              ? formatRouteDuration(context, road.durationSeconds)
+              : null),
       status: base.status,
       availableSeats: base.availableSeats,
       passengerCount: base.passengerCount,
@@ -252,7 +256,10 @@ class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              RouteMapInfoPanel(stopCount: stops.length, info: _mergedInfo),
+              RouteMapInfoPanel(
+                stopCount: stops.length,
+                info: _mergedInfo(context),
+              ),
               if (stops.length > 1) ...[
                 const SizedBox(height: 8),
                 const MapLegendPill(),

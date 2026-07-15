@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/reviewable_tr
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_cubit.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_state.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_rating_card.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class TripReviewForm extends StatefulWidget {
   const TripReviewForm({super.key, required this.trip, required this.state});
@@ -40,7 +41,10 @@ class _TripReviewFormState extends State<TripReviewForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text('Rate your trip', style: ClientTypography.headingMedium(context)),
+        Text(
+          context.l10n.trips_reviewFormTitle,
+          style: ClientTypography.headingMedium(context),
+        ),
         const SizedBox(height: 6),
         Text(
           trip.reference,
@@ -50,21 +54,21 @@ class _TripReviewFormState extends State<TripReviewForm> {
         ),
         const SizedBox(height: 20),
         TripReviewRatingCard(
-          title: 'Driver rating',
+          title: context.l10n.trips_ratingDriver,
           subtitle: trip.driverName,
           value: state.draft.driverRating,
           onChanged: cubit.rateDriver,
         ),
         const SizedBox(height: 16),
         TripReviewRatingCard(
-          title: 'Vehicle rating',
+          title: context.l10n.trips_ratingVehicle,
           subtitle: trip.vehicleName,
           value: state.draft.vehicleRating,
           onChanged: cubit.rateVehicle,
         ),
         const SizedBox(height: 16),
         TripReviewRatingCard(
-          title: 'Route rating',
+          title: context.l10n.trips_ratingRoute,
           subtitle: trip.routeLine,
           value: state.draft.routeRating,
           onChanged: cubit.rateRoute,
@@ -77,7 +81,7 @@ class _TripReviewFormState extends State<TripReviewForm> {
           enabled: !state.isSubmitting,
           onChanged: cubit.writeComment,
           decoration: InputDecoration(
-            hintText: 'Share feedback (optional)',
+            hintText: context.l10n.trips_reviewCommentHint,
             counterText: '',
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
@@ -90,7 +94,9 @@ class _TripReviewFormState extends State<TripReviewForm> {
         ],
         const SizedBox(height: 20),
         ClientButton(
-          label: state.isSubmitting ? 'Submitting…' : 'Submit review',
+          label: state.isSubmitting
+              ? context.l10n.trips_reviewSubmitting
+              : context.l10n.trips_submitReviewButton,
           isLoading: state.isSubmitting,
           // Stays disabled until all three ratings are set — the sheet never
           // submits stars the passenger did not choose.
@@ -99,7 +105,7 @@ class _TripReviewFormState extends State<TripReviewForm> {
         if (!state.draft.isValid && !state.isSubmitting) ...[
           const SizedBox(height: 8),
           Text(
-            'Give the driver, vehicle, and route a star rating to continue.',
+            context.l10n.trips_reviewIncompleteHint,
             textAlign: TextAlign.center,
             style: ClientTypography.bodySmall(
               context,

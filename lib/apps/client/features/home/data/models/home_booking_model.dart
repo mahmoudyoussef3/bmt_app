@@ -6,6 +6,13 @@ abstract final class HomeBookingMapper {
   /// Returns `null` when the row is not a live commitment (draft, completed or
   /// cancelled), so Home only ever shows bookings the rider can still act on.
   static HomeBookingData? fromRow(Map<String, dynamic> row) {
+    // A finished or cancelled trip is history, not something to act on. Trip
+    // completion stamps `operation_trips.status`, not the booking's own
+    // `status`, so a just-completed booking still reads `confirmed`/`boarded`;
+    // Home must consult the trip to drop it, or the seat lingers as
+    // "Confirmed" on Home while Trips already shows it completed.
+    if (_tripEnded(row['operation_trips'])) return null;
+
     final status = HomeBookingStatus.fromRow(row['status']?.toString());
     if (status == null) return null;
 
@@ -25,6 +32,17 @@ abstract final class HomeBookingMapper {
       seatLabel: row['seat']?.toString().trim() ?? '',
       fare: moneyLabel(row['payment_amount'] as num?),
     );
+  }
+
+  /// Reads the embedded `operation_trips(status)`; `true` once the trip has
+  /// `completed` or been `cancelled`. A missing embed (older query, RLS) reads
+  /// as not-ended so a booking is never hidden on incomplete data.
+  static bool _tripEnded(Object? trip) {
+    final status = (trip is Map<String, dynamic> ? trip['status'] : null)
+        ?.toString()
+        .trim()
+        .toLowerCase();
+    return status == 'completed' || status == 'cancelled';
   }
 
   /// `route` is the free-text label a booking was created with, such as

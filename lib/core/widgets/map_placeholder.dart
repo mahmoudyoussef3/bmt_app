@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
 class MapPlaceholder extends StatelessWidget {
@@ -54,14 +55,14 @@ class MapPlaceholder extends StatelessWidget {
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    'Live route preview',
+                    context.l10n.map_livePreviewTitle,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w800,
                     ),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Real-time vehicle position and route flow',
+                    context.l10n.map_livePreviewSubtitle,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: scheme.onSurface.withAlpha(175),
                     ),

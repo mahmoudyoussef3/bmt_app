@@ -6,7 +6,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/booking_hub_data.dart';
 import '../cubit/booking_cubit.dart';
 import '../cubit/booking_state.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key, required this.onOpenRoute});
@@ -81,12 +82,12 @@ class _BookingHubContent extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppLocalizations.of(context)!.booking_title,
+                context.l10n.booking_title,
                 style: ClientTypography.headingLarge(context),
               ),
               const SizedBox(height: 6),
               Text(
-                AppLocalizations.of(context)!.booking_subtitle,
+                context.l10n.booking_subtitle,
                 style: ClientTypography.bodySmall(
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -96,14 +97,14 @@ class _BookingHubContent extends StatelessWidget {
                 children: [
                   Expanded(
                     child: _BookingChip(
-                      label: AppLocalizations.of(context)!.booking_today,
+                      label: context.l10n.booking_today,
                       value: data.todayRoutes,
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _BookingChip(
-                      label: AppLocalizations.of(context)!.booking_month,
+                      label: context.l10n.booking_month,
                       value: data.monthPlans,
                     ),
                   ),
@@ -118,8 +119,8 @@ class _BookingHubContent extends StatelessWidget {
         _NavCard(
           onTap: () => onOpenRoute('/daily-booking'),
           icon: Icons.directions_bus_rounded,
-          title: AppLocalizations.of(context)!.booking_dailyBooking,
-          subtitle: AppLocalizations.of(context)!.booking_dailyBookingDesc,
+          title: context.l10n.booking_dailyBooking,
+          subtitle: context.l10n.booking_dailyBookingDesc,
         ),
         const SizedBox(height: 12),
 
@@ -127,15 +128,13 @@ class _BookingHubContent extends StatelessWidget {
         _NavCard(
           onTap: () => onOpenRoute('/subscription'),
           icon: Icons.calendar_month_rounded,
-          title: AppLocalizations.of(context)!.booking_monthlySubscription,
-          subtitle: AppLocalizations.of(
-            context,
-          )!.booking_monthlySubscriptionDesc,
+          title: context.l10n.booking_monthlySubscription,
+          subtitle: context.l10n.booking_monthlySubscriptionDesc,
         ),
         const SizedBox(height: 20),
 
         Text(
-          AppLocalizations.of(context)!.booking_summary,
+          context.l10n.booking_summary,
           style: ClientTypography.headingSmall(context),
         ),
         const SizedBox(height: 12),
@@ -151,17 +150,17 @@ class _BookingHubContent extends StatelessWidget {
           child: Column(
             children: [
               _BookingMetric(
-                label: AppLocalizations.of(context)!.booking_activeTrips,
+                label: context.l10n.booking_activeTrips,
                 value: data.activeTrips,
               ),
               const SizedBox(height: 12),
               _BookingMetric(
-                label: AppLocalizations.of(context)!.booking_upcomingBookings,
+                label: context.l10n.booking_upcomingBookings,
                 value: data.upcomingBookings,
               ),
               const SizedBox(height: 12),
               _BookingMetric(
-                label: AppLocalizations.of(context)!.booking_reservedSeats,
+                label: context.l10n.booking_reservedSeats,
                 value: data.reservedSeats,
               ),
             ],
@@ -230,7 +229,7 @@ class _NavCard extends StatelessWidget {
                   ],
                 ),
               ),
-              Icon(
+              DirectionalIcon(
                 Icons.chevron_right_rounded,
                 color: ClientColors.textTertiaryFor(context),
               ),

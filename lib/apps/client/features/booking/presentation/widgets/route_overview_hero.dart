@@ -4,6 +4,8 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// [RouteOverviewScreen]'s hero: route origin/destination endpoints plus a
 /// compact fact row (duration, distance, seats).
@@ -27,7 +29,7 @@ class RouteOverviewHero extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ROUTE OVERVIEW',
+            context.l10n.booking_routeOverviewLabel,
             style: ClientTypography.labelSmall(
               context,
             ).copyWith(color: ClientColors.primary, letterSpacing: 1),
@@ -36,7 +38,10 @@ class RouteOverviewHero extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: _RouteEnd(label: 'FROM', value: start),
+                child: _RouteEnd(
+                  label: context.l10n.booking_from.toUpperCase(),
+                  value: start,
+                ),
               ),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -47,14 +52,18 @@ class RouteOverviewHero extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: ClientColors.primaryGradient,
                   ),
-                  child: const Icon(
+                  child: const DirectionalIcon(
                     Icons.arrow_forward_rounded,
                     color: Colors.white,
                   ),
                 ),
               ),
               Expanded(
-                child: _RouteEnd(label: 'TO', value: end, alignEnd: true),
+                child: _RouteEnd(
+                  label: context.l10n.booking_to.toUpperCase(),
+                  value: end,
+                  alignEnd: true,
+                ),
               ),
             ],
           ),

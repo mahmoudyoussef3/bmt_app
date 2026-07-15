@@ -1,4 +1,7 @@
+import 'package:flutter/widgets.dart';
+
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Whether a route runs directly between its endpoints or serves
 /// intermediate stops along the way. Purely a display grouping derived from
@@ -15,9 +18,10 @@ RouteType classifyRouteType(RouteOptionData route) {
       : RouteType.multiStop;
 }
 
-String routeTypeLabel(RouteType type) {
+String routeTypeLabel(BuildContext context, RouteType type) {
+  final l10n = context.l10n;
   return switch (type) {
-    RouteType.direct => 'Direct',
-    RouteType.multiStop => 'Multi-stop',
+    RouteType.direct => l10n.booking_routeTypeDirect,
+    RouteType.multiStop => l10n.booking_routeTypeMultiStop,
   };
 }

@@ -145,6 +145,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get auth_signInFailed => 'Sign in failed.';
 
   @override
+  String get auth_rememberMe => 'Remember me';
+
+  @override
   String get auth_welcomeBack => 'Welcome Back';
 
   @override
@@ -1311,4 +1314,3502 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profile_refreshFailed => 'We couldn\'t refresh your profile.';
+
+  @override
+  String get welcome_continueWithEmail => 'Continue with Email';
+
+  @override
+  String get welcome_createAccount => 'Create an account';
+
+  @override
+  String get welcome_orContinueWith => 'or continue with';
+
+  @override
+  String get welcome_continueAsGuest => 'Continue as guest';
+
+  @override
+  String get welcome_heroTagline =>
+      'Smart, comfortable transport.\nBook, track, and ride — all in one place.';
+
+  @override
+  String get welcome_valueSeats => 'Reserve seats';
+
+  @override
+  String get welcome_valueTracking => 'Live bus tracking';
+
+  @override
+  String get welcome_valuePasses => 'Manage passes';
+
+  @override
+  String welcome_comingSoonTitle(String provider) {
+    return '$provider sign-in is coming soon';
+  }
+
+  @override
+  String get welcome_comingSoonBody =>
+      'We\'re still putting the finishing touches on it. For now, continue with your email to book trips and track buses right away.';
+
+  @override
+  String get welcome_maybeLater => 'Maybe later';
+
+  @override
+  String get welcome_providerPhone => 'Phone';
+
+  @override
+  String get auth_termsAndConditions => 'Terms & Conditions';
+
+  @override
+  String get welcome_languageName => 'English';
+
+  @override
+  String get auth_signInHeroSubtitle =>
+      'Log in to track your trips, manage subscriptions, and follow buses in real time.';
+
+  @override
+  String get auth_signingIn => 'Signing in...';
+
+  @override
+  String get auth_signInInfoCard =>
+      'All your trips and bookings in one place — log in and follow your day easily.';
+
+  @override
+  String get auth_signInSecurityNote =>
+      'Make sure to use the email associated with your account to access your bookings and subscriptions.';
+
+  @override
+  String get auth_signUpHeroSubtitle =>
+      'Register your details once and enjoy booking trips, tracking buses, and managing subscriptions easily.';
+
+  @override
+  String get auth_accountDetails => 'Account Details';
+
+  @override
+  String get auth_loginDetails => 'Login Details';
+
+  @override
+  String get auth_creatingAccount => 'Creating Account...';
+
+  @override
+  String get auth_signUpTrustBanner =>
+      'Your data is secure and used only to manage your trips and bookings.';
+
+  @override
+  String get auth_signUpSecurityNote =>
+      'By clicking Create Account, a confirmation will be sent to your email.';
+
+  @override
+  String get auth_sendingLink => 'Sending link...';
+
+  @override
+  String get auth_recoveryLinkFailed => 'Failed to send recovery link';
+
+  @override
+  String get auth_resetInfoCard =>
+      'We will send a temporary link to your email. Open it soon to set a new password.';
+
+  @override
+  String get auth_recoveryLinkSent => 'Recovery link sent';
+
+  @override
+  String get auth_openEmailToReset =>
+      'Open the email and tap the link to reset your password.';
+
+  @override
+  String get auth_emailHelp =>
+      'Didn\'t find the email? Check your spam folder or wait a bit before resending.';
+
+  @override
+  String get auth_forgotSecurityNote =>
+      'For your security, the system may prevent sending multiple links in a short period.';
+
+  @override
+  String get auth_help => 'Help?';
+
+  @override
+  String get auth_enterPhoneTitle => 'Enter your phone number';
+
+  @override
+  String get auth_enterPhoneSubtitle =>
+      'We\'ll send a verification code to the number you enter.';
+
+  @override
+  String get auth_or => 'or';
+
+  @override
+  String get auth_continue => 'Continue';
+
+  @override
+  String get auth_verifyNumberTitle => 'Verify number';
+
+  @override
+  String get auth_enterOtpTitle => 'Enter the 6-digit code';
+
+  @override
+  String auth_otpSentTo(String phone) {
+    return 'The code was sent by SMS to:\n$phone';
+  }
+
+  @override
+  String get auth_verify => 'Verify';
+
+  @override
+  String get auth_didntReceiveCode => 'Didn\'t receive the code?';
+
+  @override
+  String auth_resendCountdown(int seconds) {
+    return 'Resend ($seconds)';
+  }
+
+  @override
+  String get auth_resendCode => 'Resend code';
+
+  @override
+  String get auth_mustAcceptTerms => 'You must accept the Terms & Conditions.';
+
+  @override
+  String get auth_completeProfileTitle => 'Complete your profile';
+
+  @override
+  String get auth_welcomeToApp => 'Welcome to BMT';
+
+  @override
+  String get auth_completeProfileSubtitle =>
+      'We need a few details to give you the best service.';
+
+  @override
+  String get auth_nameHint => 'Ahmed Hassan';
+
+  @override
+  String get auth_nameRequired => 'Name is required';
+
+  @override
+  String get auth_emailOptional => 'Email (optional)';
+
+  @override
+  String get auth_gender => 'Gender';
+
+  @override
+  String get auth_genderMale => 'Male';
+
+  @override
+  String get auth_genderFemale => 'Female';
+
+  @override
+  String get auth_acceptTermsCheckbox =>
+      'I agree to the Terms of Service and Privacy Policy.';
+
+  @override
+  String get auth_createAccountAndStart => 'Create account and get started';
+
+  @override
+  String get auth_invalidPhoneShort => 'Invalid number';
+
+  @override
+  String get splash_tagline => 'Your journey, simplified.';
+
+  @override
+  String get common_today => 'Today';
+
+  @override
+  String get common_date => 'Date';
+
+  @override
+  String get common_time => 'Time';
+
+  @override
+  String get common_seats => 'Seats';
+
+  @override
+  String get common_soldOut => 'Sold out';
+
+  @override
+  String get common_notSet => 'Not set';
+
+  @override
+  String get common_notifications => 'Notifications';
+
+  @override
+  String get common_support => 'Support';
+
+  @override
+  String get common_manage => 'Manage';
+
+  @override
+  String get common_pickup => 'Pickup';
+
+  @override
+  String get common_destination => 'Destination';
+
+  @override
+  String get common_dropOff => 'Drop-off';
+
+  @override
+  String get nav_home => 'Home';
+
+  @override
+  String get nav_routes => 'Routes';
+
+  @override
+  String get nav_trips => 'Trips';
+
+  @override
+  String get nav_profile => 'Profile';
+
+  @override
+  String get home_myTrips => 'My trips';
+
+  @override
+  String get home_greetingMorning => 'Good morning';
+
+  @override
+  String get home_greetingAfternoon => 'Good afternoon';
+
+  @override
+  String get home_greetingEvening => 'Good evening';
+
+  @override
+  String get home_welcomeAboard => 'Welcome aboard';
+
+  @override
+  String get home_popularDestinations => 'POPULAR DESTINATIONS';
+
+  @override
+  String get home_searchRoutesTimesSeats => 'Search routes, times and seats';
+
+  @override
+  String get home_expiresToday => 'Expires today';
+
+  @override
+  String get home_trackYourBus => 'Track your bus';
+
+  @override
+  String get home_yourBooking => 'Your booking';
+
+  @override
+  String get home_yourBookings => 'Your bookings';
+
+  @override
+  String get home_yourJourney => 'Your journey';
+
+  @override
+  String get home_seatsYouHold => 'Seats you hold, and where each one stands.';
+
+  @override
+  String get home_bookASeat => 'Book a seat';
+
+  @override
+  String get home_nextDepartures => 'Next departures';
+
+  @override
+  String get home_tripsOpenSoonest => 'Trips open for booking, soonest first.';
+
+  @override
+  String get home_allRoutes => 'All routes';
+
+  @override
+  String get home_yourPackage => 'Your package';
+
+  @override
+  String get home_activeSubscription => 'Active subscription';
+
+  @override
+  String get home_bookAnotherSeat => 'Book another seat';
+
+  @override
+  String get home_bookSeat => 'Book seat';
+
+  @override
+  String get home_fareNotPublished => 'Fare not published yet';
+
+  @override
+  String get home_fareFrom => 'FARE FROM';
+
+  @override
+  String get home_departureToBeSet => 'Departure time to be set';
+
+  @override
+  String get home_boarding => 'Boarding';
+
+  @override
+  String get home_rideTime => 'Ride time';
+
+  @override
+  String home_youBookedSeats(int seats) {
+    return 'You booked $seats seats';
+  }
+
+  @override
+  String get home_youBookedThis => 'You booked this';
+
+  @override
+  String get home_pickupShort => 'Pickup';
+
+  @override
+  String get home_stopNotSet => 'Stop not set';
+
+  @override
+  String get home_noDepartures => 'No departures scheduled';
+
+  @override
+  String get home_noDeparturesBody =>
+      'Nothing is open for booking right now. Browse the routes to see what runs and when.';
+
+  @override
+  String get home_browseRoutes => 'Browse routes';
+
+  @override
+  String get home_searchTripTitle => 'Search Trip';
+
+  @override
+  String get home_searchTripSubtitle => 'Find your next commute in seconds';
+
+  @override
+  String get home_pickupLocation => 'Pickup Location';
+
+  @override
+  String get home_selectPickupPoint => 'Select pickup point';
+
+  @override
+  String get home_whereAreYouGoing => 'Where are you going?';
+
+  @override
+  String get home_selectTime => 'Select time';
+
+  @override
+  String get home_searchTrips => 'Search Trips';
+
+  @override
+  String home_seatsOnlyLeft(int count) {
+    return 'Only $count left';
+  }
+
+  @override
+  String home_seatsAvailable(int count) {
+    return '$count available';
+  }
+
+  @override
+  String get home_statusUnderReview => 'Under review';
+
+  @override
+  String get home_statusConfirmed => 'Confirmed';
+
+  @override
+  String get home_statusOnBoard => 'On board';
+
+  @override
+  String get home_statusUnderReviewExplanation =>
+      'We are checking your payment. You will be notified as soon as your seat is confirmed.';
+
+  @override
+  String get home_statusConfirmedExplanation =>
+      'Your seat is held. Be at the pickup point 10 minutes before departure.';
+
+  @override
+  String get home_statusOnBoardExplanation =>
+      'You are on board. Have a good trip.';
+
+  @override
+  String get home_yourBookingFallback => 'Your booking';
+
+  @override
+  String home_seatLabel(String label) {
+    return 'Seat $label';
+  }
+
+  @override
+  String home_daysLeft(int days) {
+    return '$days days left';
+  }
+
+  @override
+  String get home_dayLeft => '1 day left';
+
+  @override
+  String booking_searchHint(String title) {
+    return 'Search $title';
+  }
+
+  @override
+  String get booking_noPickupPointsAvailable =>
+      'No pickup points available yet. Please check back soon.';
+
+  @override
+  String get booking_noDestinationsAvailable =>
+      'No destinations available yet.';
+
+  @override
+  String get booking_noDepartureTimesAvailable =>
+      'No departure times available for this route yet.';
+
+  @override
+  String get map_livePreviewTitle => 'Live route preview';
+
+  @override
+  String get map_livePreviewSubtitle =>
+      'Real-time vehicle position and route flow';
+
+  @override
+  String get notifications_markAllRead => 'Mark all read';
+
+  @override
+  String get notifications_emptyTitle => 'No notifications yet';
+
+  @override
+  String get notifications_emptyBody =>
+      'Trip updates, booking confirmations and reminders will appear here when they arrive.';
+
+  @override
+  String get notifications_newBadge => 'New';
+
+  @override
+  String get notifications_categoryAll => 'All';
+
+  @override
+  String get notifications_categoryBooking => 'Booking';
+
+  @override
+  String get notifications_categoryPayment => 'Payment';
+
+  @override
+  String get notifications_categoryTrip => 'Trip';
+
+  @override
+  String get notifications_categoryNews => 'News';
+
+  @override
+  String get notifications_categoryOffers => 'Offers';
+
+  @override
+  String get notifications_categoryAlerts => 'Alerts';
+
+  @override
+  String get trips_headerSubtitle => 'Upcoming, active, and past commutes';
+
+  @override
+  String get trips_bookNewTripTooltip => 'Book new trip';
+
+  @override
+  String get trips_filterUpcoming => 'Upcoming';
+
+  @override
+  String get trips_filterActive => 'Active';
+
+  @override
+  String get trips_filterCompleted => 'Completed';
+
+  @override
+  String get trips_filterCancelled => 'Cancelled';
+
+  @override
+  String get trips_sectionUpcoming => 'Upcoming trips';
+
+  @override
+  String get trips_sectionActive => 'In progress trips';
+
+  @override
+  String get trips_sectionCompleted => 'Completed trips';
+
+  @override
+  String get trips_sectionCancelled => 'Cancelled trips';
+
+  @override
+  String get trips_emptyUpcomingTitle => 'No upcoming trips scheduled';
+
+  @override
+  String get trips_emptyUpcomingSubtitle =>
+      'Book a trip and it will show up here.';
+
+  @override
+  String get trips_emptyActiveTitle => 'No trips in progress right now';
+
+  @override
+  String get trips_emptyActiveSubtitle =>
+      'Trips currently on the road will appear here.';
+
+  @override
+  String get trips_emptyCompletedTitle => 'No completed trips yet';
+
+  @override
+  String get trips_emptyCompletedSubtitle =>
+      'Trips you finish will show up here.';
+
+  @override
+  String get trips_emptyCancelledTitle => 'No cancelled trips';
+
+  @override
+  String get trips_emptyCancelledSubtitle =>
+      'Trips you cancel will show up here.';
+
+  @override
+  String get payments_checkoutTitle => 'Checkout';
+
+  @override
+  String get payments_encrypted => 'Encrypted';
+
+  @override
+  String get payments_fareSummary => 'Fare summary';
+
+  @override
+  String get payments_ticketFare => 'Ticket fare';
+
+  @override
+  String get payments_serviceFee => 'Service fee';
+
+  @override
+  String get payments_tax => 'Tax';
+
+  @override
+  String get payments_promoDiscount => 'Promo discount';
+
+  @override
+  String get payments_total => 'Total';
+
+  @override
+  String get payments_assuranceCardDetails =>
+      'Card details are entered on the bank\'s page, never stored by BMT.';
+
+  @override
+  String get payments_assuranceSeatHeld =>
+      'Your seat is held for you now and released only if the payment fails.';
+
+  @override
+  String get payments_assuranceTransferChecked =>
+      'Transfers are checked by our team, and you will be notified once confirmed.';
+
+  @override
+  String get payments_assuranceSupportReference =>
+      'Something looks wrong? Support can see this booking by its reference.';
+
+  @override
+  String payments_bookingMissingItems(String items) {
+    return 'This booking is missing $items';
+  }
+
+  @override
+  String get payments_completeBeforePaying =>
+      'Go back and complete it before paying.';
+
+  @override
+  String get payments_goBack => 'Go back';
+
+  @override
+  String get payments_howToPay => 'How would you like to pay?';
+
+  @override
+  String payments_balanceAmount(String amount) {
+    return 'Balance $amount';
+  }
+
+  @override
+  String payments_shortByAmount(String amount) {
+    return 'Short by $amount — top up or pick another method.';
+  }
+
+  @override
+  String get payments_noMethodsAvailable =>
+      'No payment method is switched on right now. Your seat is still held — contact support and we will take it from there.';
+
+  @override
+  String get payments_nextStepCard =>
+      'You will finish on Paymob\'s encrypted card page.';
+
+  @override
+  String get payments_nextStepInstapay =>
+      'Transfer, then attach the receipt on the next step.';
+
+  @override
+  String get payments_nextStepBankTransfer =>
+      'Bank details come next — attach the receipt after you transfer.';
+
+  @override
+  String get payments_nextStepVodafoneCash =>
+      'Send from your wallet, then attach the receipt on the next step.';
+
+  @override
+  String get payments_nextStepWallet =>
+      'Deducted from your balance the moment you confirm.';
+
+  @override
+  String get payments_fastestBadge => 'Fastest';
+
+  @override
+  String get payments_seatHeldWhilePaying => 'Your seat is held while you pay.';
+
+  @override
+  String get payments_stepSeat => 'Seat';
+
+  @override
+  String get payments_stepPayment => 'Payment';
+
+  @override
+  String get payments_stepTicket => 'Ticket';
+
+  @override
+  String get payments_havePromoCode => 'Have a promo code?';
+
+  @override
+  String get payments_enterCodeHint => 'Enter code';
+
+  @override
+  String get payments_promoCodeInvalid => 'That code is not valid';
+
+  @override
+  String get payments_apply => 'Apply';
+
+  @override
+  String payments_promoApplied(String code, String amount) {
+    return '$code applied — you save $amount';
+  }
+
+  @override
+  String get payments_removePromoCode => 'Remove promo code';
+
+  @override
+  String get payments_yourSeat => 'Your seat';
+
+  @override
+  String get payments_seatNotSelected => 'Seat not selected';
+
+  @override
+  String payments_seatNumber(String seat) {
+    return 'Seat $seat';
+  }
+
+  @override
+  String get payments_vehicle => 'Vehicle';
+
+  @override
+  String get payments_driver => 'Driver';
+
+  @override
+  String get payments_directTrip => 'Direct';
+
+  @override
+  String get booking_bookYourSeat => 'Book your seat';
+
+  @override
+  String get booking_bookingFailed => 'Booking Failed';
+
+  @override
+  String get booking_seatJustTaken =>
+      'This seat was just taken. Please go back and choose another seat.';
+
+  @override
+  String get booking_seatHoldExpired =>
+      'Your seat hold expired. Please select your seat again.';
+
+  @override
+  String get booking_duplicateActiveBooking =>
+      'You already have a pending booking for this trip. Please continue payment from your existing booking.';
+
+  @override
+  String get booking_openMyBookings => 'Open My Bookings';
+
+  @override
+  String get booking_ok => 'OK';
+
+  @override
+  String get booking_referenceNotCreated =>
+      'The booking reference was not created.';
+
+  @override
+  String get booking_cardPaymentUnavailable =>
+      'Card payment is not available right now.';
+
+  @override
+  String get booking_cardPaymentNotCompleted =>
+      'Card payment was not completed. Your booking remains pending.';
+
+  @override
+  String get trips_statusInProgress => 'In progress';
+
+  @override
+  String get trips_paymentPaid => 'Paid';
+
+  @override
+  String get trips_paymentPending => 'Pending';
+
+  @override
+  String get trips_paymentUnderReview => 'Under Review';
+
+  @override
+  String get trips_paymentRefunded => 'Refunded';
+
+  @override
+  String get trips_paymentFailed => 'Failed';
+
+  @override
+  String get trips_driverBadgeAssigned => 'Assigned';
+
+  @override
+  String get trips_driverBadgeEnRoute => 'En route';
+
+  @override
+  String get trips_driverBadgeCompleted => 'Trip complete';
+
+  @override
+  String get trips_driverBadgeCancelled => 'Trip cancelled';
+
+  @override
+  String get trips_liveLoadingPosition => 'Loading live position…';
+
+  @override
+  String get trips_livePositionUnavailable =>
+      'Live position unavailable right now.';
+
+  @override
+  String get trips_liveWaitingForVehicle =>
+      'Waiting for the vehicle\'s live position…';
+
+  @override
+  String trips_liveRouteCoveredPercent(int percent) {
+    return '$percent% of the route covered';
+  }
+
+  @override
+  String get trips_liveTripInProgress => 'Your trip is in progress';
+
+  @override
+  String get trips_liveTrackButton => 'Track';
+
+  @override
+  String get payments_continueLabel => 'Continue';
+
+  @override
+  String get payments_payNow => 'Pay now';
+
+  @override
+  String get payments_missingBookingDetails =>
+      'Some booking details are missing.';
+
+  @override
+  String get payments_choosePaymentMethod =>
+      'Choose a payment method to continue.';
+
+  @override
+  String payments_walletShortByAmount(String amount) {
+    return 'Your wallet is $amount short of this fare.';
+  }
+
+  @override
+  String get support_minLengthHint => 'Please add a bit more detail';
+
+  @override
+  String get support_refresh => 'Refresh';
+
+  @override
+  String get support_centerTitle => 'Support Center';
+
+  @override
+  String get support_categoryBooking => 'Booking Issue';
+
+  @override
+  String get support_categoryPayment => 'Payment Issue';
+
+  @override
+  String get support_categoryTripDelay => 'Trip Delay';
+
+  @override
+  String get support_categoryDriverVehicle => 'Driver or Vehicle Issue';
+
+  @override
+  String get support_categorySubscription => 'Subscription Issue';
+
+  @override
+  String get support_categoryLostItem => 'Lost Item';
+
+  @override
+  String get support_categoryOther => 'Other';
+
+  @override
+  String get support_emptyTitle => 'No tickets yet';
+
+  @override
+  String get support_emptyBody =>
+      'When you open a ticket it will appear here, along with its status and every reply from our team.';
+
+  @override
+  String get support_uploadPrompt => 'Upload image or document';
+
+  @override
+  String get support_uploadHint => 'JPG, PNG, or PDF up to 5MB';
+
+  @override
+  String get support_removeAttachment => 'Remove attachment';
+
+  @override
+  String get support_myTickets => 'My tickets';
+
+  @override
+  String get support_statusSubmitted => 'Submitted';
+
+  @override
+  String get support_statusUnderReview => 'Under Review';
+
+  @override
+  String get support_statusContacted => 'Contacted';
+
+  @override
+  String get support_statusResolved => 'Resolved';
+
+  @override
+  String get support_statusClosed => 'Closed';
+
+  @override
+  String get support_statusRejected => 'Rejected';
+
+  @override
+  String get support_timelineEmpty => 'No timeline events available.';
+
+  @override
+  String get support_heroTitle => 'How can we help?';
+
+  @override
+  String get support_heroBody =>
+      'Tell us what went wrong and our team will follow up on your ticket. We usually reply within a few hours.';
+
+  @override
+  String get support_createTicket => 'Create a ticket';
+
+  @override
+  String get support_topicLabel => 'What is this about?';
+
+  @override
+  String get support_topicHint => 'Pick the topic closest to your issue.';
+
+  @override
+  String get support_subjectLabel => 'Subject';
+
+  @override
+  String get support_subjectHint => 'A short summary of the problem.';
+
+  @override
+  String get support_subjectPlaceholder => 'e.g. Charged twice for one booking';
+
+  @override
+  String get support_subjectRequired => 'Subject is required';
+
+  @override
+  String get support_detailsLabel => 'Details';
+
+  @override
+  String get support_detailsHint =>
+      'What happened, and when? Add your trip or booking reference if you have it.';
+
+  @override
+  String get support_detailsPlaceholder => 'Describe the issue…';
+
+  @override
+  String get support_detailsRequired => 'Details are required';
+
+  @override
+  String get support_attachmentLabel => 'Attachment';
+
+  @override
+  String get support_attachmentHint =>
+      'Optional — a screenshot or receipt helps us a lot.';
+
+  @override
+  String get support_submitting => 'Submitting…';
+
+  @override
+  String get support_submitTicket => 'Submit ticket';
+
+  @override
+  String get support_newTicketTitle => 'New ticket';
+
+  @override
+  String get support_ticketCreatedSnack =>
+      'Ticket created. Our team will get back to you shortly.';
+
+  @override
+  String support_ticketNumberTitle(String number) {
+    return 'Ticket $number';
+  }
+
+  @override
+  String get support_failedToLoad => 'Failed to load ticket details';
+
+  @override
+  String get support_reviewingNotice =>
+      'Our customer service team is reviewing your ticket and may contact you shortly.';
+
+  @override
+  String get support_currentStatus => 'Current Status';
+
+  @override
+  String get support_assignedTo => 'Assigned to';
+
+  @override
+  String get support_description => 'Description';
+
+  @override
+  String get support_customerServiceNote => 'Customer Service Note';
+
+  @override
+  String get support_attachments => 'Attachments';
+
+  @override
+  String get booking_tapToChoosePickupStation =>
+      'Tap to choose a pickup station';
+
+  @override
+  String get booking_noMappedPickupStations =>
+      'No mapped pickup stations are available';
+
+  @override
+  String get booking_tapToChooseDestination => 'Tap to choose a destination';
+
+  @override
+  String get booking_noMappedDestinations =>
+      'No mapped destinations are available';
+
+  @override
+  String get booking_mapCouldNotBeLoaded => 'Map could not be loaded';
+
+  @override
+  String get common_tomorrow => 'Tomorrow';
+
+  @override
+  String common_durationMinutes(int minutes) {
+    return '${minutes}m';
+  }
+
+  @override
+  String common_durationHours(int hours) {
+    return '${hours}h';
+  }
+
+  @override
+  String common_durationHoursMinutes(int hours, int minutes) {
+    return '${hours}h ${minutes}m';
+  }
+
+  @override
+  String get seatSelection_selectYourSeat => 'Select Your Seat';
+
+  @override
+  String seatSelection_seatsFreeCount(int count) {
+    return '$count free';
+  }
+
+  @override
+  String get seatSelection_chooseASeat => 'Choose a seat';
+
+  @override
+  String get seatSelection_tapSeatToContinue =>
+      'Tap an available seat to continue';
+
+  @override
+  String seatSelection_seatsOpenCount(int count) {
+    return '$count open';
+  }
+
+  @override
+  String get seatSelection_microbusCapacity => '15-seat microbus';
+
+  @override
+  String get seatSelection_frontOfVehicle => 'FRONT OF VEHICLE';
+
+  @override
+  String get seatSelection_cabinLayout => 'Cabin layout';
+
+  @override
+  String get seatSelection_driverCabinNote =>
+      'Seats 1 and 2 are reserved for the driver cabin';
+
+  @override
+  String get seatSelection_driverCabinLabel => 'Driver Cabin';
+
+  @override
+  String get seatSelection_selectSeatToContinue =>
+      'Select one seat to continue';
+
+  @override
+  String get seatSelection_tapAvailableSeatHint =>
+      'Tap one available seat on the layout above.';
+
+  @override
+  String seatSelection_seatSelectedTitle(String seatNum) {
+    return 'Seat $seatNum selected';
+  }
+
+  @override
+  String seatSelection_seatSummaryLine(String price, String total) {
+    return '1 seat · EGP $price each · Total EGP $total';
+  }
+
+  @override
+  String get seatSelection_hintCardBody =>
+      'Middle rows use a pair on the left and a single seat on the right for a more realistic shuttle layout.';
+
+  @override
+  String seatSelection_departsAt(String time) {
+    return 'Departs $time';
+  }
+
+  @override
+  String get seatSelection_selectedSeatLabel => 'Selected seat';
+
+  @override
+  String get seatSelection_seatNumbersLabel => 'Seat numbers';
+
+  @override
+  String get seatSelection_perSeatLabel => 'Per seat';
+
+  @override
+  String get seatSelection_reservingSeat => 'Reserving seat...';
+
+  @override
+  String get seatSelection_continueBooking => 'Continue Booking';
+
+  @override
+  String get seatSelection_selectASeat => 'Select a Seat';
+
+  @override
+  String seatSelection_seatCountSelected(int count) {
+    return '$count seat selected';
+  }
+
+  @override
+  String get seatSelection_passengerInformation => 'Passenger information';
+
+  @override
+  String get seatSelection_contactDetails => 'Contact details';
+
+  @override
+  String get seatSelection_passengerNameLabel => 'Passenger name';
+
+  @override
+  String get seatSelection_fullNameHint => 'Full name as on ID';
+
+  @override
+  String get seatSelection_passengerPhoneLabel => 'Passenger phone number';
+
+  @override
+  String get seatSelection_phoneHint => '+20 10 1234 5678';
+
+  @override
+  String get seatSelection_phoneUsageNote =>
+      'We will use this number for trip updates.';
+
+  @override
+  String get seatSelection_saveDetails => 'Save details';
+
+  @override
+  String get seatSelection_bookingSummaryTitle => 'Booking summary';
+
+  @override
+  String get seatSelection_pricePerSeatLabel => 'Price per seat';
+
+  @override
+  String get seatSelection_totalAmountLabel => 'Total amount';
+
+  @override
+  String get seatSelection_seatLegendTitle => 'Seat legend';
+
+  @override
+  String get seatSelection_seatStatusSelected => 'Selected';
+
+  @override
+  String get seatSelection_seatStatusReserved => 'Reserved';
+
+  @override
+  String get seatSelection_passengersTitle => 'Passengers';
+
+  @override
+  String get seatSelection_oneSeatBadge => '1 seat';
+
+  @override
+  String get seatSelection_addPassengerHint =>
+      'Select another seat to add a passenger (UI preview)';
+
+  @override
+  String get seatSelection_awaitingSeatSelection => 'Awaiting seat selection';
+
+  @override
+  String seatSelection_passengerIndexLabel(int index) {
+    return 'Passenger $index';
+  }
+
+  @override
+  String get seatSelection_seatsLeftLabel => 'seats left';
+
+  @override
+  String seatSelection_acStatusLabel(String status) {
+    return 'A/C · $status';
+  }
+
+  @override
+  String get seatSelection_lockErrorSeatUnavailable =>
+      'Seat is no longer available. Please choose another seat.';
+
+  @override
+  String get payments_stepFintechConnection =>
+      'Establishing secure fintech connection...';
+
+  @override
+  String get payments_stepVerifyingAccount =>
+      'Verifying account status and limit...';
+
+  @override
+  String get payments_stepReservingSeat =>
+      'Reserving seat and finalising ticket metadata...';
+
+  @override
+  String get payments_pendingLabel => 'Pending';
+
+  @override
+  String get payments_methodLabel => 'Method:';
+
+  @override
+  String get payments_transactionIdLabel => 'Transaction ID:';
+
+  @override
+  String payments_driverSeatSummary(String driver, String seat) {
+    return 'Driver: $driver • Seat: $seat';
+  }
+
+  @override
+  String get payments_processingPaymentTitle => 'Processing Payment';
+
+  @override
+  String get payments_doNotCloseScreen =>
+      'Please do not close this screen or press back button.';
+
+  @override
+  String get payments_secureCheckoutTitle => 'Secure Checkout';
+
+  @override
+  String get payments_paymobCheckoutOpened => 'Paymob Checkout Opened';
+
+  @override
+  String get payments_paymentSubmitted => 'Payment Submitted';
+
+  @override
+  String get payments_completeCardPaymentPaymob =>
+      'Complete card payment in the secure Paymob page.';
+
+  @override
+  String get payments_receiptSentForReview =>
+      'Your receipt was sent for operations review.';
+
+  @override
+  String get payments_bookingRefLabel => 'Booking Ref:';
+
+  @override
+  String get payments_paidAmountLabel => 'Paid Amount:';
+
+  @override
+  String get payments_paymentMethodLabel => 'Payment Method:';
+
+  @override
+  String get payments_viewTicket => 'View Ticket';
+
+  @override
+  String get payments_backToHome => 'Back to Home';
+
+  @override
+  String get payments_paymentFailedTitle => 'Payment Failed';
+
+  @override
+  String get payments_transactionNotProcessed =>
+      'Your transaction could not be processed.';
+
+  @override
+  String get payments_reasonForFailure => 'Reason for Failure';
+
+  @override
+  String get payments_paymentNotCompleted => 'Payment could not be completed.';
+
+  @override
+  String get payments_retryPayment => 'Retry Payment';
+
+  @override
+  String get payments_contactSupport => 'Contact Support';
+
+  @override
+  String get payments_contactCustomerSupportTitle => 'Contact Customer Support';
+
+  @override
+  String payments_supportDialogBody(String ticketNumber) {
+    return 'Our customer support agents are ready to assist you. Reference ticket number: $ticketNumber';
+  }
+
+  @override
+  String get payments_close => 'Close';
+
+  @override
+  String get trips_newCaptain => 'New captain';
+
+  @override
+  String trips_ratingsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count ratings',
+      one: '1 rating',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get trips_verifiedCaptain => 'Verified captain';
+
+  @override
+  String get trips_factDeparts => 'Departs';
+
+  @override
+  String get trips_factSeat => 'Seat';
+
+  @override
+  String get trips_seatNotAssigned => 'Not assigned';
+
+  @override
+  String trips_completedAt(String date) {
+    return 'Completed $date';
+  }
+
+  @override
+  String get trips_boardingPassTitle => 'Boarding pass';
+
+  @override
+  String get trips_boardingOnBoard => 'On board';
+
+  @override
+  String get trips_boardingReady => 'Ready';
+
+  @override
+  String get trips_bookingRefLabel => 'Booking ref';
+
+  @override
+  String get trips_boardingOnBoardNote =>
+      'Enjoy your ride — the captain has your seat on the manifest.';
+
+  @override
+  String get trips_boardingReadyNote =>
+      'Show this reference to the captain when you board.';
+
+  @override
+  String get trips_detailsTitle => 'Trip details';
+
+  @override
+  String get trips_cancellationReasonTitle => 'Cancellation Reason';
+
+  @override
+  String get trips_completedRatedNote =>
+      'You rated this trip. Tap to see the review you left.';
+
+  @override
+  String trips_completedRateInvite(String driverName) {
+    return 'Help us improve by rating your trip with $driverName.';
+  }
+
+  @override
+  String get trips_actionChat => 'Chat';
+
+  @override
+  String get trips_driverPhoneUnavailable =>
+      'Driver phone number is not available.';
+
+  @override
+  String trips_callFailed(String phone) {
+    return 'Could not start a call to $phone.';
+  }
+
+  @override
+  String get trips_seatLegendYours => 'Your seat';
+
+  @override
+  String get trips_seatLegendAvailable => 'Available';
+
+  @override
+  String get trips_seatLegendTaken => 'Taken';
+
+  @override
+  String get trips_seatMapDriverLabel => 'Driver';
+
+  @override
+  String get trips_yourSeatsPlural => 'Your seats';
+
+  @override
+  String get trips_seatPending => 'Seat pending';
+
+  @override
+  String get trips_awaitingConfirmation => 'Awaiting confirmation';
+
+  @override
+  String trips_seatsAvailableOfTotal(int available, int total) {
+    return '$available of $total';
+  }
+
+  @override
+  String get trips_seatsFreeLabel => 'seats free';
+
+  @override
+  String get trips_viewFullSeatMap => 'View full seat map';
+
+  @override
+  String get trips_seatPendingAssignment =>
+      'A seat will be assigned once your booking is confirmed.';
+
+  @override
+  String trips_vehicleCode(String code) {
+    return 'Vehicle code: $code';
+  }
+
+  @override
+  String get trips_trackVehicleButton => 'Track Vehicle';
+
+  @override
+  String get trips_cancellingInFlight => 'Cancelling…';
+
+  @override
+  String get trips_cancelTripButton => 'Cancel Trip';
+
+  @override
+  String get trips_captainSubtitleFinished => 'Who drove you';
+
+  @override
+  String get trips_captainSubtitleActive => 'Who is driving you';
+
+  @override
+  String get trips_vehicleSubtitle => 'The bus on this trip';
+
+  @override
+  String get trips_seatsSubtitle => 'Your seats on the cabin map';
+
+  @override
+  String get trips_paymentSubtitle => 'Status and fare breakdown';
+
+  @override
+  String get trips_paymentNotePaid => 'Your payment is confirmed.';
+
+  @override
+  String get trips_paymentNotePending => 'Waiting for your payment.';
+
+  @override
+  String get trips_paymentNoteUnderReview =>
+      'Our team is reviewing your payment.';
+
+  @override
+  String get trips_paymentNoteRefunded => 'This fare was refunded to you.';
+
+  @override
+  String get trips_paymentNoteFailed => 'The payment did not go through.';
+
+  @override
+  String get trips_paymentNoteCancelled => 'This booking was cancelled.';
+
+  @override
+  String get trips_discountLabel => 'Discount';
+
+  @override
+  String get trips_seatMapTitle => 'Seat map';
+
+  @override
+  String trips_seatMapTitleWithVehicle(String vehicle) {
+    return 'Seat map · $vehicle';
+  }
+
+  @override
+  String trips_cancelSuccessMessage(String reference) {
+    return 'Trip $reference was cancelled and your seat is available again.';
+  }
+
+  @override
+  String get seatRelease_hubTitle => 'Seat Release Hub';
+
+  @override
+  String get seatRelease_formTitle => 'Release Reserved Seat';
+
+  @override
+  String get seatRelease_successTitle => 'Seat Released Successfully';
+
+  @override
+  String get seatRelease_detailsTitle => 'Release Record Details';
+
+  @override
+  String get seatRelease_compensationTitle => 'Compensation Tracking';
+
+  @override
+  String get seatRelease_historyTitle => 'Seat Release Logs';
+
+  @override
+  String get seatRelease_notificationsTitle => 'Alerts Notifications';
+
+  @override
+  String get seatRelease_achievementsTitle => 'Milestones & Achievements';
+
+  @override
+  String get seatRelease_portalTitle => 'Seat Release Portal';
+
+  @override
+  String get seatRelease_notifCompensationAddedTitle => 'Compensation Added';
+
+  @override
+  String get seatRelease_notifCompensationAddedBody =>
+      'Your released seat on Jun 2 was rebooked. EGP 50 cashback credited to your wallet!';
+
+  @override
+  String get seatRelease_timeYesterday => 'Yesterday';
+
+  @override
+  String get seatRelease_notifRebookedTitle => 'Seat Rebooked Successfully';
+
+  @override
+  String get seatRelease_notifRebookedBody =>
+      'A passenger has booked your released seat for the trip on Jun 2.';
+
+  @override
+  String seatRelease_timeDaysAgo(int count) {
+    return '$count days ago';
+  }
+
+  @override
+  String get seatRelease_notifReleasedTitle => 'Seat Released Successfully';
+
+  @override
+  String seatRelease_notifReleasedBody(String seat, String date) {
+    return 'You successfully released your seat (Seat $seat) for the $date trip.';
+  }
+
+  @override
+  String get seatRelease_timeJustNow => 'Just now';
+
+  @override
+  String get seatRelease_confirmSheetTitle => 'Confirm Seat Release';
+
+  @override
+  String get seatRelease_confirmSheetBody =>
+      'Please confirm you want to release your seat for this specific trip. Released seats cannot be reclaimed once booked by other passengers.';
+
+  @override
+  String get seatRelease_tripDateLabel => 'Trip Date';
+
+  @override
+  String get seatRelease_routeSegmentLabel => 'Route Segment';
+
+  @override
+  String get seatRelease_seatNumberLabel => 'Seat Number';
+
+  @override
+  String get seatRelease_packageOriginLabel => 'Package Origin';
+
+  @override
+  String get seatRelease_confirmSheetWarning =>
+      'This action affects only this selected trip date. Future commute dates remain unaffected.';
+
+  @override
+  String get seatRelease_goBack => 'Go Back';
+
+  @override
+  String get seatRelease_confirmReleaseButton => 'Confirm Release';
+
+  @override
+  String get seatRelease_mockReleaseDateToday => 'Today, Jun 3';
+
+  @override
+  String get seatRelease_noNotesProvided => 'No notes provided';
+
+  @override
+  String get seatRelease_statusWaiting => 'Waiting';
+
+  @override
+  String get seatRelease_statusRebooked => 'Rebooked';
+
+  @override
+  String get seatRelease_statusRewarded => 'Rewarded';
+
+  @override
+  String get seatRelease_statusClosed => 'Closed';
+
+  @override
+  String get seatRelease_filterAll => 'All';
+
+  @override
+  String get seatRelease_timelineStepReleased => 'Seat Released';
+
+  @override
+  String get seatRelease_timelineStepWaiting => 'Waiting For Rebooking';
+
+  @override
+  String get seatRelease_timelineStepRebooked => 'Rebooked Successfully';
+
+  @override
+  String get seatRelease_timelineReleasedDesc =>
+      'Your seat has been released for commute pools.';
+
+  @override
+  String get seatRelease_timelineWaitingDesc =>
+      'Seat is currently listed. Waiting for other daily passenger bookings.';
+
+  @override
+  String get seatRelease_timelineRebookedDesc =>
+      'Seat was successfully rebooked by another commuter.';
+
+  @override
+  String get seatRelease_timelineRewardedDesc =>
+      'Compensation reward credited directly to your wallet account.';
+
+  @override
+  String get seatRelease_upcomingReservedSeatsTitle =>
+      'Upcoming Reserved Seats';
+
+  @override
+  String get seatRelease_noUpcomingTripsMessage =>
+      'No upcoming package trips\nAll upcoming seats are active, or no remaining days remain.';
+
+  @override
+  String get seatRelease_validityRangeLabel => 'VALIDITY RANGE';
+
+  @override
+  String get seatRelease_seatNoLabel => 'SEAT NO.';
+
+  @override
+  String get seatRelease_statRemainingDays => 'Remaining Days';
+
+  @override
+  String get seatRelease_statReleasedSeats => 'Released Seats';
+
+  @override
+  String get seatRelease_statRebookedSeats => 'Rebooked Seats';
+
+  @override
+  String get seatRelease_statEarnedReward => 'Earned Reward';
+
+  @override
+  String seatRelease_daysCount(int days) {
+    return '$days Days';
+  }
+
+  @override
+  String seatRelease_egpAmount(String amount) {
+    return 'EGP $amount';
+  }
+
+  @override
+  String get seatRelease_quickLinkReleaseLogs => 'Release Logs';
+
+  @override
+  String get seatRelease_quickLinkRewardsStats => 'Rewards & Stats';
+
+  @override
+  String get seatRelease_viewLogsButton => 'View Logs';
+
+  @override
+  String get seatRelease_releaseSeatButton => 'Release Seat';
+
+  @override
+  String get seatRelease_noPastRecordSnackbar =>
+      'No past release record exists for this date.';
+
+  @override
+  String get seatRelease_reasonSectionTitle => 'Reason for Releasing Seat';
+
+  @override
+  String get seatRelease_optionalNotesTitle => 'Optional Notes';
+
+  @override
+  String get seatRelease_notesHint => 'E.g., Working from home on Thursday...';
+
+  @override
+  String get seatRelease_whyReleaseTitle => 'Why release your seat?';
+
+  @override
+  String get seatRelease_releasingTemporaryTitle => 'Releasing is Temporary';
+
+  @override
+  String get seatRelease_releasingTemporaryBody =>
+      'You are releasing your reserved seat for this trip date only. Your package subscription remains active and future trip bookings return automatically.';
+
+  @override
+  String get seatRelease_thresholdTitle => '12-Hour Threshold Requirement';
+
+  @override
+  String get seatRelease_thresholdBody =>
+      'Seat release is only available if submitted at least 12 hours before trip departure. Late requests will not be accepted.';
+
+  @override
+  String get seatRelease_reasonPersonalPlans => 'Personal plans';
+
+  @override
+  String get seatRelease_reasonWorkFromHome => 'Working from home';
+
+  @override
+  String get seatRelease_reasonVacation => 'Vacation';
+
+  @override
+  String get seatRelease_reasonAlternativeTransport => 'Alternative transport';
+
+  @override
+  String get seatRelease_reasonMedical => 'Medical reason';
+
+  @override
+  String get seatRelease_reasonOther => 'Other';
+
+  @override
+  String get seatRelease_benefitCommunityTitle => 'Help the Community';
+
+  @override
+  String get seatRelease_benefitCommunityBody =>
+      'Released seats become available for other passengers needing daily rides.';
+
+  @override
+  String get seatRelease_benefitCompensationTitle => 'Earn Compensation';
+
+  @override
+  String get seatRelease_benefitCompensationBody =>
+      'Receive wallet cashback or loyalty rewards if another commuter books your seat.';
+
+  @override
+  String get seatRelease_benefitOptimizeTitle => 'Optimize Route Utilization';
+
+  @override
+  String get seatRelease_benefitOptimizeBody =>
+      'Helps BMT optimize fleet load and reduce carbon emissions.';
+
+  @override
+  String get seatRelease_successHeadline => 'Seat Released Successfully!';
+
+  @override
+  String seatRelease_referenceCodeLabel(String code) {
+    return 'Reference Code: $code';
+  }
+
+  @override
+  String get seatRelease_releasedDateLabel => 'Released Date';
+
+  @override
+  String get seatRelease_commuteSegmentLabel => 'Commute Segment';
+
+  @override
+  String get seatRelease_packageSourceLabel => 'Package Source';
+
+  @override
+  String get seatRelease_autoNotifyBody =>
+      'We will automatically notify you and credit rewards to your wallet once your seat gets rebooked by other commuters.';
+
+  @override
+  String get seatRelease_viewReleaseDetailsButton => 'View Release Details';
+
+  @override
+  String get seatRelease_returnToDashboardButton => 'Return to Dashboard';
+
+  @override
+  String seatRelease_idLabel(String id) {
+    return 'ID: $id';
+  }
+
+  @override
+  String get seatRelease_releasedSeatLabel => 'Released Seat';
+
+  @override
+  String get seatRelease_reasonChosenLabel => 'Reason Chosen';
+
+  @override
+  String get seatRelease_submitDateLabel => 'Submit Date';
+
+  @override
+  String get seatRelease_notesLabel => 'Notes';
+
+  @override
+  String get seatRelease_statusTimelineTitle => 'Release Status Timeline';
+
+  @override
+  String get seatRelease_backToDashboardButton => 'Back to Dashboard';
+
+  @override
+  String seatRelease_referenceLabel(String code) {
+    return 'Reference: $code';
+  }
+
+  @override
+  String get seatRelease_compensationStatusLabel => 'Compensation status';
+
+  @override
+  String get seatRelease_compWaitingBody =>
+      'Your seat is listed for daily commuters. If another passenger books this seat prior to departure, you will unlock your reward instantly.';
+
+  @override
+  String get seatRelease_compRebookedBody =>
+      'Your seat was successfully purchased. We are currently processing your compensation points clearance.';
+
+  @override
+  String get seatRelease_compensationCreditedLabel => 'COMPENSATION CREDITED';
+
+  @override
+  String get seatRelease_creditedToWalletLabel => 'Credited to Account Wallet';
+
+  @override
+  String seatRelease_clearingDateLabel(String date) {
+    return 'Clearing date: $date';
+  }
+
+  @override
+  String get seatRelease_transactionClearedLabel =>
+      'Transaction Cleared Successfully';
+
+  @override
+  String get seatRelease_historySearchHint =>
+      'Search release logs by date, route...';
+
+  @override
+  String get seatRelease_noHistoryRecordsMessage =>
+      'No release records found\nTry adjusting your filters or search query.';
+
+  @override
+  String get seatRelease_alertHistoryLogTitle => 'Alert History Log';
+
+  @override
+  String get seatRelease_clearAllButton => 'Clear All';
+
+  @override
+  String get seatRelease_noNotificationsMessage =>
+      'No new notifications\nYou are completely caught up.';
+
+  @override
+  String get seatRelease_achievementsHeaderTitle => 'Seat Release Achievements';
+
+  @override
+  String get seatRelease_tileSeatsReleased => 'Seats Released';
+
+  @override
+  String get seatRelease_tileRebookedSuccessfully => 'Rebooked Successfully';
+
+  @override
+  String get seatRelease_tileRewardsEarned => 'Rewards Earned';
+
+  @override
+  String get seatRelease_unlockableBadgesTitle => 'Unlockable Badges';
+
+  @override
+  String get seatRelease_badgeEcoTitle => 'Eco Commuter Tier I';
+
+  @override
+  String get seatRelease_badgeEcoSubtitle =>
+      'Release 5 seats to reduce shuttle overhead fuel.';
+
+  @override
+  String seatRelease_badgeProgressReleased(int count) {
+    return '$count/5 Released';
+  }
+
+  @override
+  String get seatRelease_badgeCommunityTitle => 'Community Helper Gold';
+
+  @override
+  String get seatRelease_badgeCommunitySubtitle =>
+      'Help 3 other commuters find seats.';
+
+  @override
+  String seatRelease_badgeProgressRebooked(int count) {
+    return '$count/3 Rebooked';
+  }
+
+  @override
+  String get seatRelease_badgeRewardTitle => 'Reward Collector Level 2';
+
+  @override
+  String get seatRelease_badgeRewardSubtitle =>
+      'Accumulate EGP 200 in released rewards.';
+
+  @override
+  String seatRelease_badgeProgressReward(String amount) {
+    return 'EGP $amount/EGP 200';
+  }
+
+  @override
+  String get seatRelease_packageStatusActive => 'Active';
+
+  @override
+  String get seatRelease_packageStatusNone => 'No subscription';
+
+  @override
+  String get seatRelease_packageTypeSubscription => 'Subscription package';
+
+  @override
+  String get booking_routeDetails => 'Route details';
+
+  @override
+  String booking_allStopsCount(int count) {
+    return 'All Stops ($count)';
+  }
+
+  @override
+  String get booking_departure => 'Departure';
+
+  @override
+  String get booking_routeSummary => 'Route Summary';
+
+  @override
+  String booking_seatsAvailableCount(int count) {
+    return '$count seats available';
+  }
+
+  @override
+  String get booking_selectSeat => 'Select Seat';
+
+  @override
+  String get booking_unableToLoadVehicleDetails =>
+      'Unable to load vehicle details';
+
+  @override
+  String get booking_vehicleNotFound => 'Vehicle not found';
+
+  @override
+  String get payments_attachReceiptTitle => 'Attach Receipt';
+
+  @override
+  String payments_uploadReceiptError(String error) {
+    return 'Unable to upload receipt: $error';
+  }
+
+  @override
+  String get payments_transferInstructionsTitle => 'Transfer Instructions';
+
+  @override
+  String get payments_transferInstructionsBody =>
+      'Transfer the exact booking amount to the address below and upload the transaction screenshot.';
+
+  @override
+  String get payments_amountToSendLabel => 'Amount to send:';
+
+  @override
+  String get payments_instapayIpaLabel => 'InstaPay IPA:';
+
+  @override
+  String get payments_notConfigured => 'Not configured';
+
+  @override
+  String get payments_accountHolderLabel => 'Account Holder:';
+
+  @override
+  String get payments_mobileWalletNoLabel => 'Mobile Wallet No:';
+
+  @override
+  String get payments_walletTypeLabel => 'Wallet Type:';
+
+  @override
+  String get payments_defaultWalletChannels =>
+      'Vodafone / Orange / Etisalat / WE';
+
+  @override
+  String payments_copiedToClipboard(String value) {
+    return '$value copied to clipboard';
+  }
+
+  @override
+  String get payments_uploadReceiptScreenshot => 'Upload Receipt Screenshot';
+
+  @override
+  String get payments_tapToSelectFile => 'Tap to select a file (PNG, JPG)';
+
+  @override
+  String get payments_receiptAttachedTitle => 'Receipt Attached';
+
+  @override
+  String get payments_receiptAttachedBody =>
+      'Submit payment to reserve your selected seat and send the receipt for verification.';
+
+  @override
+  String get payments_uploading => 'Uploading...';
+
+  @override
+  String get payments_submitPayment => 'Submit Payment';
+
+  @override
+  String get booking_chooseTripAndVehicle => 'Choose trip and vehicle';
+
+  @override
+  String get booking_availableTripsLabel => 'Available trips';
+
+  @override
+  String booking_tripOptionsWithVehicles(int count) {
+    return '$count trip options with assigned vehicles';
+  }
+
+  @override
+  String get booking_sortEarliest => 'Earliest';
+
+  @override
+  String get booking_sortLowestPrice => 'Lowest price';
+
+  @override
+  String get booking_sortMostSeats => 'Most seats';
+
+  @override
+  String get payments_closeCheckoutTooltip => 'Close checkout';
+
+  @override
+  String get payments_paymobCheckoutTitle => 'Paymob Checkout';
+
+  @override
+  String get payments_reloadTooltip => 'Reload';
+
+  @override
+  String get payments_unableToLoadCheckout => 'Unable to load checkout';
+
+  @override
+  String get payments_bookingTitle => 'Booking';
+
+  @override
+  String get payments_processingBookingTitle => 'Processing your booking...';
+
+  @override
+  String get payments_processingBookingSubtitle =>
+      'This should only take a moment';
+
+  @override
+  String get payments_bookingConfirmedTitle => 'Booking Confirmed';
+
+  @override
+  String get payments_bookingConfirmedSubtitle =>
+      'Your seat is reserved — confirmation below';
+
+  @override
+  String get payments_bookingReferenceLabel => 'Booking Reference';
+
+  @override
+  String get payments_departsLabel => 'Departs';
+
+  @override
+  String payments_vehicleNumberLabel(String vehicle) {
+    return 'Vehicle $vehicle';
+  }
+
+  @override
+  String get payments_notesLabel => 'Notes';
+
+  @override
+  String get payments_bookingNotesBody =>
+      'Please arrive 10 minutes before departure. Cancellation allowed up to 1 hour before departure.';
+
+  @override
+  String get payments_trackVehicle => 'Track Vehicle';
+
+  @override
+  String get trips_notFoundTitle => 'Trip not found';
+
+  @override
+  String get trips_notFoundBody =>
+      'This trip may have been removed or the link is no longer valid. Browse routes to plan your next ride.';
+
+  @override
+  String trips_starRatingSemantic(int star, String title) {
+    return '$star of 5 for $title';
+  }
+
+  @override
+  String get payments_viewFullTripStatus => 'View Full Trip & Payment Status';
+
+  @override
+  String get payments_rejectedHelpText =>
+      'You can contact support for help or try booking another trip.';
+
+  @override
+  String get payments_pendingApprovalNotice =>
+      'You will receive a notification once your payment has been approved.';
+
+  @override
+  String get payments_bookingStatusLabel => 'Booking Status';
+
+  @override
+  String get payments_reasonLabel => 'Reason';
+
+  @override
+  String get payments_estimatedReviewTimeLabel => 'Estimated Review Time';
+
+  @override
+  String get payments_estimatedReviewTimeValue => '5–15 Minutes';
+
+  @override
+  String get payments_paymentApprovedTitle => 'Payment Approved';
+
+  @override
+  String get payments_paymentApprovedSubtitle =>
+      'Your payment was verified. Your seat is confirmed and ready to track.';
+
+  @override
+  String get payments_statusApproved => 'Approved';
+
+  @override
+  String get payments_paymentRejectedTitle => 'Payment Rejected';
+
+  @override
+  String get payments_paymentRejectedSubtitle =>
+      'We couldn\'t verify this payment. Contact support or try booking again.';
+
+  @override
+  String get payments_statusRejected => 'Rejected';
+
+  @override
+  String get payments_paymentReceiptSubmittedTitle =>
+      'Payment Receipt Submitted';
+
+  @override
+  String get payments_paymentReceiptSubmittedSubtitle =>
+      'Your booking request has been received. Our finance team is reviewing your payment.';
+
+  @override
+  String get payments_statusPendingVerification => 'Pending Verification';
+
+  @override
+  String get booking_from => 'From';
+
+  @override
+  String get booking_to => 'To';
+
+  @override
+  String booking_seatsCountLabel(int count) {
+    return '$count seats';
+  }
+
+  @override
+  String booking_routeStopsCount(int count) {
+    return '$count route stops';
+  }
+
+  @override
+  String get booking_directTripNoStops =>
+      'Direct trip with no intermediate stops';
+
+  @override
+  String booking_intermediateStopsCount(int count) {
+    return '$count intermediate stops';
+  }
+
+  @override
+  String booking_moreStopsCount(int count) {
+    return '+ $count more stops';
+  }
+
+  @override
+  String get loyalty_titlePortal => 'Loyalty Portal';
+
+  @override
+  String get loyalty_titleLedger => 'Points Ledger Logs';
+
+  @override
+  String get loyalty_titleCatalog => 'Redeem Points Catalog';
+
+  @override
+  String get loyalty_titleHub => 'Loyalty Hub';
+
+  @override
+  String get loyalty_refresh => 'Refresh';
+
+  @override
+  String get loyalty_confirmRedemptionTitle => 'Confirm Redemption';
+
+  @override
+  String get loyalty_confirmRedemptionBody =>
+      'Are you sure you want to redeem this reward?';
+
+  @override
+  String loyalty_costPoints(int points) {
+    return 'Cost: $points points';
+  }
+
+  @override
+  String get loyalty_currentBalance => 'Current Balance:';
+
+  @override
+  String get loyalty_balanceAfterRedemption => 'Balance After Redemption:';
+
+  @override
+  String get loyalty_redeemNow => 'Redeem Now';
+
+  @override
+  String get loyalty_voucherUnlocked => 'Voucher Unlocked! 🎫';
+
+  @override
+  String get loyalty_couponGeneratedBody =>
+      'Coupon code generated successfully. You can use it during payment checkout.';
+
+  @override
+  String get loyalty_copyAndClose => 'Copy & Close';
+
+  @override
+  String get loyalty_voucherCopiedSnack => 'Voucher code copied to clipboard!';
+
+  @override
+  String get loyalty_navRedeemTitle => 'Redeem Points';
+
+  @override
+  String get loyalty_navRedeemSubtitle => 'Browse Catalog';
+
+  @override
+  String get loyalty_navHistoryTitle => 'Points History';
+
+  @override
+  String get loyalty_navHistorySubtitle => 'Ledger Logs';
+
+  @override
+  String loyalty_activeTierPerks(String tier) {
+    return 'Active $tier Perks';
+  }
+
+  @override
+  String get loyalty_exploreMembership => 'Explore Membership Levels';
+
+  @override
+  String loyalty_tierMemberBadge(String tier) {
+    return '$tier member';
+  }
+
+  @override
+  String get loyalty_megaLoyaltyBadge => 'MEGA LOYALTY';
+
+  @override
+  String get loyalty_pointsBalanceLabel => 'COMMUTE POINTS BALANCE';
+
+  @override
+  String get loyalty_ptsUnit => 'pts';
+
+  @override
+  String get loyalty_nextGoalPlatinum => 'Next Goal: Platinum Tier';
+
+  @override
+  String loyalty_ptsToGo(int points) {
+    return '$points pts to go';
+  }
+
+  @override
+  String get loyalty_platinumFootnote =>
+      '* Platinum tier rewards earn double points on all travels.';
+
+  @override
+  String get loyalty_currentTier => 'Current Tier';
+
+  @override
+  String loyalty_needsPoints(String points) {
+    return 'Needs $points';
+  }
+
+  @override
+  String get loyalty_transactionLedger => 'Points Transaction Ledger';
+
+  @override
+  String get loyalty_activeLogs => 'Active logs';
+
+  @override
+  String loyalty_expiringOn(String date) {
+    return 'Expiring on $date';
+  }
+
+  @override
+  String get loyalty_redeemableBalance => 'Redeemable points balance';
+
+  @override
+  String get loyalty_goldLevelMember => 'Gold Level Member';
+
+  @override
+  String get loyalty_catalogRewards => 'Catalog Rewards';
+
+  @override
+  String get loyalty_categoryDiscount => 'Discount';
+
+  @override
+  String get loyalty_categoryFreeRide => 'FreeRide';
+
+  @override
+  String get loyalty_categoryCashback => 'Cashback';
+
+  @override
+  String get loyalty_categoryPackage => 'Package';
+
+  @override
+  String get loyalty_tierBronze => 'Bronze';
+
+  @override
+  String get loyalty_tierSilver => 'Silver';
+
+  @override
+  String get loyalty_tierGold => 'Gold';
+
+  @override
+  String get loyalty_tierPlatinum => 'Platinum';
+
+  @override
+  String get trips_cancelReasonTitle => 'Cancellation reason';
+
+  @override
+  String trips_cancelReasonTripRef(String reference) {
+    return 'Trip $reference';
+  }
+
+  @override
+  String get trips_reasonScheduleChange => 'Schedule change';
+
+  @override
+  String get trips_reasonAlternativeTransport => 'Found alternative transport';
+
+  @override
+  String get trips_reasonDriverDelay => 'Driver delay concern';
+
+  @override
+  String get trips_reasonPersonalEmergency => 'Personal emergency';
+
+  @override
+  String get trips_reasonDuplicateBooking => 'Duplicate booking';
+
+  @override
+  String get trips_cancelDialogTitle => 'Cancel this trip?';
+
+  @override
+  String get trips_cancelDialogBody =>
+      'Your booking will be cancelled, your seat released back to the trip, and your payment will no longer be reviewed. This cannot be undone — you would have to book again.';
+
+  @override
+  String trips_cancelReasonPrefix(String reason) {
+    return 'Reason: $reason';
+  }
+
+  @override
+  String get trips_keepTrip => 'Keep trip';
+
+  @override
+  String get trips_confirmCancellation => 'Confirm cancellation';
+
+  @override
+  String get booking_resetAllFilters => 'Reset all';
+
+  @override
+  String get booking_licensedCaptain => 'Licensed captain';
+
+  @override
+  String get booking_eta => 'ETA';
+
+  @override
+  String get booking_bookNow => 'Book Now';
+
+  @override
+  String booking_seatsLeftShort(int count) {
+    return '$count left';
+  }
+
+  @override
+  String get seatRelease_mockTripDateJun2 => 'Jun 2';
+
+  @override
+  String get packages_refreshTooltip => 'Refresh';
+
+  @override
+  String get packages_continueToPayment => 'Continue to Payment';
+
+  @override
+  String get packages_free => 'Free';
+
+  @override
+  String packages_extraFeeAmount(String amount) {
+    return '+$amount';
+  }
+
+  @override
+  String get packages_chooseYourSeat => 'Choose Your Seat';
+
+  @override
+  String get packages_seatTapInstructions =>
+      'Tap to reserve seat. Reserving more seats multiplies the package.';
+
+  @override
+  String get packages_noOptionsAvailable => 'No options available';
+
+  @override
+  String get packages_selectOption => 'Select option';
+
+  @override
+  String get packages_frontDriverCabin => 'Front / Driver Cabin';
+
+  @override
+  String get packages_aisle => 'Aisle';
+
+  @override
+  String get packages_seatAvailable => 'Available';
+
+  @override
+  String get packages_seatSelected => 'Selected';
+
+  @override
+  String get packages_seatOccupied => 'Occupied';
+
+  @override
+  String packages_seatsSelectedCount(int count) {
+    return 'Seats Selected: $count';
+  }
+
+  @override
+  String packages_costLabel(String amount) {
+    return 'Cost: $amount';
+  }
+
+  @override
+  String packages_savingsLabel(String amount) {
+    return 'Savings: $amount';
+  }
+
+  @override
+  String get packages_continueToSummary => 'Continue to Summary';
+
+  @override
+  String get packages_targetRouteLabel => 'Target Route';
+
+  @override
+  String get packages_pickupStopLabel => 'Pickup Stop';
+
+  @override
+  String get packages_destinationStopLabel => 'Destination Stop';
+
+  @override
+  String get packages_vehicleCategoryLabel => 'Vehicle Category';
+
+  @override
+  String get packages_selectedSeatsLabel => 'Selected Seats';
+
+  @override
+  String packages_daysCount(int days) {
+    return '$days Days';
+  }
+
+  @override
+  String get packages_tripsAllocatedLabel => 'Trips Allocated';
+
+  @override
+  String get packages_packageValidityLabel => 'Package Validity';
+
+  @override
+  String get packages_agreeTermsText =>
+      'I agree to the recurring commuter subscription terms and conditions policy.';
+
+  @override
+  String get packages_submitForPaymentReview => 'Submit for Payment Review';
+
+  @override
+  String get packages_agreeTermsRequired =>
+      'Please agree to the terms before submitting.';
+
+  @override
+  String get packages_requestSubmittedTitle => 'Request Submitted';
+
+  @override
+  String get packages_requestSubmittedSubtitle =>
+      'Your subscription is pending payment confirmation. It will become usable only after finance approval.';
+
+  @override
+  String get packages_subscriptionRequestLabel => 'Subscription Request';
+
+  @override
+  String packages_copiedIdMessage(String id) {
+    return 'Copied ID: $id';
+  }
+
+  @override
+  String get packages_commuterPackageLabel => 'Commuter Package';
+
+  @override
+  String get packages_durationLimitLabel => 'Duration Limit';
+
+  @override
+  String get packages_totalTripsScopeLabel => 'Total Trips Scope';
+
+  @override
+  String get packages_travelRouteLabel => 'Travel Route';
+
+  @override
+  String get packages_vehicleStandardLabel => 'Vehicle Standard';
+
+  @override
+  String get packages_amountDueLabel => 'Amount Due';
+
+  @override
+  String get packages_backToHome => 'Back to Home';
+
+  @override
+  String get packages_activatingPackage => 'Activating Package...';
+
+  @override
+  String get packages_confirmingCredentials =>
+      'Confirming commuter credentials and reserving seats.';
+
+  @override
+  String packages_activateSubscriptionError(String error) {
+    return 'Could not activate subscription: $error';
+  }
+
+  @override
+  String get trips_reviewFormTitle => 'Rate your trip';
+
+  @override
+  String get trips_ratingDriver => 'Driver rating';
+
+  @override
+  String get trips_ratingVehicle => 'Vehicle rating';
+
+  @override
+  String get trips_ratingRoute => 'Route rating';
+
+  @override
+  String get trips_reviewCommentHint => 'Share feedback (optional)';
+
+  @override
+  String get trips_reviewSubmitting => 'Submitting…';
+
+  @override
+  String get trips_submitReviewButton => 'Submit review';
+
+  @override
+  String get trips_reviewIncompleteHint =>
+      'Give the driver, vehicle, and route a star rating to continue.';
+
+  @override
+  String get trips_reviewThankYouTitle => 'Thank you for your review';
+
+  @override
+  String trips_reviewThankYouBody(String reference) {
+    return 'Your feedback on $reference went straight to our operations team. Only they can see it.';
+  }
+
+  @override
+  String get trips_reviewYourFeedbackLabel => 'Your feedback';
+
+  @override
+  String get trips_reviewOpening => 'Opening your review…';
+
+  @override
+  String get trips_reviewOpenError => 'We could not open your review';
+
+  @override
+  String get booking_price => 'Price';
+
+  @override
+  String get booking_mapCoordinatesUnavailable => 'Map coordinates unavailable';
+
+  @override
+  String booking_saveDiscountPercent(int percent) {
+    return 'Save $percent%';
+  }
+
+  @override
+  String get booking_bestValue => 'BEST VALUE';
+
+  @override
+  String booking_ridesValidForDays(String rides, String days) {
+    return '$rides · valid $days';
+  }
+
+  @override
+  String booking_pricePerRide(String amount) {
+    return 'EGP $amount per ride';
+  }
+
+  @override
+  String get booking_yourSelectedTrip => 'Your selected trip';
+
+  @override
+  String get booking_startsWithYourTrip => 'Starts with your trip';
+
+  @override
+  String get booking_couldNotLoadFares => 'Could not load fares';
+
+  @override
+  String get booking_chooseTripTimeAndVehicle => 'Choose trip time and vehicle';
+
+  @override
+  String get booking_viewRouteDetails => 'View route details';
+
+  @override
+  String booking_tripsCountToday(int count) {
+    return '$count trips today';
+  }
+
+  @override
+  String get booking_noTripsToday => 'No trips today';
+
+  @override
+  String get referral_titleMain => 'Referrals & Rewards';
+
+  @override
+  String get referral_titleInvite => 'Invite Friends';
+
+  @override
+  String get referral_titleHistory => 'Referral History';
+
+  @override
+  String get referral_titleWallet => 'Rewards Wallet';
+
+  @override
+  String get referral_titleHub => 'Referral Hub';
+
+  @override
+  String get referral_codeCopiedSnack => 'Referral code copied to clipboard!';
+
+  @override
+  String get referral_refresh => 'Refresh';
+
+  @override
+  String get referral_redemptionSuccessTitle => 'Redemption Successful! 🎉';
+
+  @override
+  String get referral_redemptionSuccessBody =>
+      'Rewards have been converted and transferred directly to your Main Wallet Balance!';
+
+  @override
+  String get referral_successfullyTransferred => 'Successfully Transferred';
+
+  @override
+  String get referral_awesome => 'Awesome';
+
+  @override
+  String get referral_scratchSubtitle =>
+      'Scratch card to reveal your promotional reward code!';
+
+  @override
+  String get referral_claimReward => 'Claim Reward';
+
+  @override
+  String get referral_scratchToReveal => 'Scratch card to reveal';
+
+  @override
+  String get referral_scratchWithFinger => 'Scratch with finger!';
+
+  @override
+  String get referral_rewardsUnavailable => 'Rewards unavailable';
+
+  @override
+  String referral_referralsCount(int count) {
+    return '$count referrals';
+  }
+
+  @override
+  String get referral_milestoneFirst => 'First Referral Milestone';
+
+  @override
+  String get referral_milestoneReached => 'Milestone Reached!';
+
+  @override
+  String get referral_milestoneNext => 'Next Referral Milestone';
+
+  @override
+  String referral_milestoneDescFirst(int target) {
+    return 'Invite $target friends to unlock your first referral bonus.';
+  }
+
+  @override
+  String get referral_milestoneDescReached =>
+      'Great work! You have reached the current milestone.';
+
+  @override
+  String referral_milestoneDescNext(int remaining) {
+    String _temp0 = intl.Intl.pluralLogic(
+      remaining,
+      locale: localeName,
+      other: '$remaining more friends',
+      one: '1 more friend',
+    );
+    return 'Invite $_temp0 to unlock your next reward.';
+  }
+
+  @override
+  String referral_progressCount(int current, int target) {
+    return 'Progress: $current / $target referrals';
+  }
+
+  @override
+  String get referral_statTotalInvites => 'Total Invites';
+
+  @override
+  String get referral_statSuccessful => 'Successful';
+
+  @override
+  String get referral_statTotalEarned => 'Total Earned';
+
+  @override
+  String get referral_yourCodeLabel => 'Your Referral Code';
+
+  @override
+  String get referral_inviteFriendsNow => 'Invite Friends Now';
+
+  @override
+  String get referral_walletSubtitle => 'Scratch vouchers & redeem balances';
+
+  @override
+  String referral_claimableBadge(int amount) {
+    return 'EGP $amount Claimable';
+  }
+
+  @override
+  String get referral_logsHistoryTitle => 'Referral Logs & History';
+
+  @override
+  String get referral_logsHistorySubtitle =>
+      'Track status of invites and code claims';
+
+  @override
+  String get referral_scanToJoin => 'Scan to Join BMT';
+
+  @override
+  String get referral_qrHint =>
+      'Let friends scan this QR to automatically register with your code!';
+
+  @override
+  String get referral_close => 'Close';
+
+  @override
+  String get referral_howItWorks => 'How it works';
+
+  @override
+  String get referral_step1Title => 'Share your code';
+
+  @override
+  String get referral_step1Subtitle =>
+      'Send your unique code to friends via any channel.';
+
+  @override
+  String get referral_step2Title => 'Friend registers';
+
+  @override
+  String get referral_step2Subtitle =>
+      'They sign up and complete their first trip using your code.';
+
+  @override
+  String get referral_step3Title => 'You both earn';
+
+  @override
+  String get referral_step3Subtitle =>
+      'You receive a referral reward credited to your wallet.';
+
+  @override
+  String get referral_directShareOptions => 'Direct Share Options';
+
+  @override
+  String get referral_shareLink => 'Share Link';
+
+  @override
+  String get referral_showQr => 'Show QR';
+
+  @override
+  String get referral_copyCode => 'Copy Code';
+
+  @override
+  String get referral_referralsLog => 'Referrals Log';
+
+  @override
+  String referral_totalReferralsCount(int count) {
+    return '$count total referrals';
+  }
+
+  @override
+  String referral_invitedOn(String date) {
+    return 'Invited: $date';
+  }
+
+  @override
+  String get referral_statusRegistered => 'Registered';
+
+  @override
+  String get referral_statusFirstOrderCompleted => 'First Order Completed';
+
+  @override
+  String get referral_statusRewardGranted => 'Reward Granted';
+
+  @override
+  String get referral_statusPendingRegistration => 'Pending Registration';
+
+  @override
+  String referral_egpTotal(int amount) {
+    return 'EGP $amount';
+  }
+
+  @override
+  String referral_egpEarned(int amount) {
+    return '+ EGP $amount';
+  }
+
+  @override
+  String get referral_egpZero => 'EGP 0';
+
+  @override
+  String get referral_claimVouchersTitle => 'Claim Reward Vouchers';
+
+  @override
+  String get referral_walletLabel => 'Referral Wallet';
+
+  @override
+  String referral_walletAvailable(int amount) {
+    return 'EGP $amount available';
+  }
+
+  @override
+  String get referral_noBalanceYet => 'No balance yet';
+
+  @override
+  String get referral_transferHint =>
+      'You can transfer this balance to your main wallet.';
+
+  @override
+  String get referral_earnBalanceHint =>
+      'Earn balance by inviting friends with your referral code.';
+
+  @override
+  String get referral_redeemToWallet => 'Redeem to Wallet';
+
+  @override
+  String get referral_noBalanceToRedeem => 'No balance to redeem';
+
+  @override
+  String referral_revealedCode(String code) {
+    return 'Revealed Code: $code';
+  }
+
+  @override
+  String get referral_lockedScratchToReveal => 'Locked - Scratch to reveal';
+
+  @override
+  String get referral_inviteCopiedSnack => 'Invite copied to clipboard';
+
+  @override
+  String get referral_shareYourInvite => 'Share your invite';
+
+  @override
+  String referral_shareSheetSubtitle(String code) {
+    return 'Invite friends with code $code and earn rewards.';
+  }
+
+  @override
+  String get referral_channelWhatsapp => 'WhatsApp';
+
+  @override
+  String get referral_channelFacebook => 'Facebook';
+
+  @override
+  String get referral_channelMessenger => 'Messenger';
+
+  @override
+  String get referral_channelInstagram => 'Instagram';
+
+  @override
+  String get referral_copyLink => 'Copy link';
+
+  @override
+  String get referral_more => 'More';
+
+  @override
+  String get booking_filters => 'Filters';
+
+  @override
+  String booking_filtersCount(int count) {
+    return 'Filters ($count)';
+  }
+
+  @override
+  String booking_filtersActiveSemantics(String label) {
+    return '$label active';
+  }
+
+  @override
+  String get booking_faresFrom => 'Fares from';
+
+  @override
+  String get booking_chooseThisRoute => 'Choose this route';
+
+  @override
+  String get booking_routeOverviewLabel => 'ROUTE OVERVIEW';
+
+  @override
+  String get booking_finalStop => 'Final stop';
+
+  @override
+  String get booking_findYourBestCommute => 'Find your best commute';
+
+  @override
+  String get booking_searchRoutesWhenAvailable =>
+      'Search active routes when they become available.';
+
+  @override
+  String booking_routesMatchSearch(int visible, int total) {
+    return '$visible of $total routes match your search';
+  }
+
+  @override
+  String get booking_searchDepartureDestinationHint =>
+      'Search departure, destination, or route name';
+
+  @override
+  String get booking_clearSearch => 'Clear search';
+
+  @override
+  String get booking_full => 'Full';
+
+  @override
+  String get booking_occupancy => 'Occupancy';
+
+  @override
+  String booking_percentFull(int percent) {
+    return '$percent% full';
+  }
+
+  @override
+  String booking_availableBookedSeats(int available, int booked) {
+    return '$available available · $booked booked';
+  }
+
+  @override
+  String get booking_selectTripAndVehicle => 'Select trip and vehicle';
+
+  @override
+  String booking_seatsCapacity(int count) {
+    return '$count seats capacity';
+  }
+
+  @override
+  String get booking_stepStops => 'Stops';
+
+  @override
+  String booking_stepXOfY(int step, int total) {
+    return 'Step $step of $total';
+  }
+
+  @override
+  String get communication_chatHubTitle => 'Chat Hub';
+
+  @override
+  String get communication_refresh => 'Refresh';
+
+  @override
+  String get communication_simulateIncomingCall => 'Simulate Incoming Call';
+
+  @override
+  String get communication_online => 'Online';
+
+  @override
+  String get communication_offline => 'Offline';
+
+  @override
+  String communication_missedCallFrom(String name) {
+    return 'Missed call from $name';
+  }
+
+  @override
+  String get communication_callEnded => 'Call ended';
+
+  @override
+  String get communication_searchHint => 'Search chats, contacts, messages...';
+
+  @override
+  String get communication_filterAll => 'All';
+
+  @override
+  String get communication_filterDrivers => 'Drivers';
+
+  @override
+  String get communication_filterSupport => 'Support';
+
+  @override
+  String get communication_filterGroups => 'Groups';
+
+  @override
+  String get communication_emptyTitle => 'No conversations found';
+
+  @override
+  String get communication_emptySubtitle =>
+      'Filter or search in your active shuttle runs.';
+
+  @override
+  String get communication_categoryDriver => 'Driver';
+
+  @override
+  String get communication_categorySupport => 'Support';
+
+  @override
+  String get communication_categoryGroup => 'Group';
+
+  @override
+  String communication_ticketReference(String ticketId) {
+    return 'Support Ticket Reference: $ticketId';
+  }
+
+  @override
+  String get communication_statusOpenFallback => 'Open';
+
+  @override
+  String get communication_demoRoute => 'Banha → Smart Village';
+
+  @override
+  String get communication_demoVehicle => 'Comfort Van';
+
+  @override
+  String get communication_demoEta => '8 mins';
+
+  @override
+  String get communication_demoRating => '4.9 ★';
+
+  @override
+  String get communication_callAction => '📞 Call';
+
+  @override
+  String get communication_shareLocationAction => '📍 Share Location';
+
+  @override
+  String get communication_late5mAction => '⏰ Late 5m';
+
+  @override
+  String get communication_you => 'You';
+
+  @override
+  String get communication_sharedLocationMessage => '📍 Shared Live Location';
+
+  @override
+  String get communication_lateMessageText =>
+      'I will be late by 5 minutes, please hold for me.';
+
+  @override
+  String get communication_demoGroupRoute => 'Route Info';
+
+  @override
+  String get communication_demoMembersCount => '10 members';
+
+  @override
+  String communication_isTyping(String name) {
+    return '$name is typing...';
+  }
+
+  @override
+  String get communication_messageInputHint => 'Type your message...';
+
+  @override
+  String get communication_attachedImageMessage => 'Attached image';
+
+  @override
+  String get communication_userSenderFallback => 'User';
+
+  @override
+  String get communication_justNow => 'Just now';
+
+  @override
+  String get communication_voiceMessageText => '🎙️ Voice Message';
+
+  @override
+  String get communication_incomingCallRole => 'Shuttle Driver • Active Trip';
+
+  @override
+  String get communication_shuttleDriverRole => 'Shuttle Driver';
+
+  @override
+  String get communication_ringing => 'Ringing...';
+
+  @override
+  String get communication_incomingShuttleCall => 'Incoming Shuttle Call...';
+
+  @override
+  String get communication_decline => 'Decline';
+
+  @override
+  String get communication_accept => 'Accept';
+
+  @override
+  String get communication_mute => 'Mute';
+
+  @override
+  String get communication_speaker => 'Speaker';
+
+  @override
+  String get communication_hangUp => 'Hang Up';
+
+  @override
+  String get communication_missedCallText => '📞 Missed Call';
+
+  @override
+  String get booking_pickYourSeat => 'Pick your seat';
+
+  @override
+  String get booking_frontSeatsNote => 'Front seats are nearest to the driver.';
+
+  @override
+  String booking_freeCount(int count) {
+    return '$count free';
+  }
+
+  @override
+  String get booking_yourSelectedSeat => 'Your selected seat';
+
+  @override
+  String get booking_continueToPackages => 'Continue to packages';
+
+  @override
+  String get booking_additionalVehicleSeats => 'Additional vehicle seats';
+
+  @override
+  String get booking_couldNotLoadSeats => 'Could not load seats';
+
+  @override
+  String get communication_messagesUnavailable => 'Messages unavailable';
+
+  @override
+  String get booking_whereGetOnOff => 'Where will you get on and off?';
+
+  @override
+  String get booking_choosePickupThenStop =>
+      'Choose your pickup first, then a stop further along the route.';
+
+  @override
+  String booking_stopsCountLabel(int count) {
+    return '$count stops';
+  }
+
+  @override
+  String get booking_selectYourPickupStop => '1  Select your pickup stop';
+
+  @override
+  String get booking_selectYourDropoffStop =>
+      '2  Now select your drop-off stop';
+
+  @override
+  String get booking_routeSegmentReady => 'Route segment ready';
+
+  @override
+  String get booking_routeBeginsHere => 'Route begins here';
+
+  @override
+  String get booking_finalDestination => 'Final destination';
+
+  @override
+  String get booking_pickupDropoffPoint => 'Pickup and drop-off point';
+
+  @override
+  String get booking_findAvailableTrips => 'Find available trips';
+
+  @override
+  String get booking_reviewYourBooking => 'Review your booking';
+
+  @override
+  String get booking_nothingChargedUntilPay =>
+      'Nothing is charged until you pay on the next step.';
+
+  @override
+  String get booking_proceedToPayment => 'Proceed to payment';
+
+  @override
+  String get booking_seatHeldWhilePaying =>
+      'Your seat is held while you complete payment.';
+
+  @override
+  String get booking_chooseYourDeparture => 'Choose your departure';
+
+  @override
+  String booking_pickupToDropoff(String pickup, String dropoff) {
+    return '$pickup to $dropoff';
+  }
+
+  @override
+  String get booking_chooseASeat => 'Choose a seat';
+
+  @override
+  String booking_departsAtTime(String time) {
+    return 'Departs $time';
+  }
+
+  @override
+  String booking_departsOnDayAtTime(String day, String time) {
+    return 'Departs $day · $time';
+  }
+
+  @override
+  String get booking_perRide => 'per ride';
+
+  @override
+  String get booking_noTripsAvailable => 'No trips available';
+
+  @override
+  String booking_noTripsFoundForRoute(String route) {
+    return 'No trips found for $route today.';
+  }
+
+  @override
+  String get routes_heroSubtitle => 'Search, compare, and book your commute';
+
+  @override
+  String get routes_searchDescription =>
+      'Enter pickup, destination, date and time to see available trips.';
+
+  @override
+  String get routes_step1Title => 'Search';
+
+  @override
+  String get routes_step1Subtitle => 'Pickup, destination, date & time';
+
+  @override
+  String get routes_step2Title => 'Compare';
+
+  @override
+  String get routes_step2Subtitle => 'Routes and vehicles';
+
+  @override
+  String get routes_step3Title => 'Select seat';
+
+  @override
+  String get routes_step3Subtitle => 'Choose your place on board';
+
+  @override
+  String get routes_step4Title => 'Pay';
+
+  @override
+  String get routes_step4Subtitle => 'Secure checkout';
+
+  @override
+  String get routes_howItWorks => 'How it works';
+
+  @override
+  String get routes_browsePopularRoutes => 'Browse popular routes';
+
+  @override
+  String get routes_tagFastDiscovery => 'Fast discovery';
+
+  @override
+  String get routes_tagLiveAvailability => 'Live availability';
+
+  @override
+  String get routes_tagPremiumRoutes => 'Premium routes';
+
+  @override
+  String get routes_searchTripsButton => 'Search trips';
+
+  @override
+  String get booking_routeTypeDirect => 'Direct';
+
+  @override
+  String get booking_routeTypeMultiStop => 'Multi-stop';
+
+  @override
+  String get booking_chooseBestDeparture =>
+      'Choose the departure that works best for you.';
+
+  @override
+  String get booking_noExactMatchCoversTrip =>
+      'No exact match for your search. These routes cover most of your trip.';
+
+  @override
+  String get booking_noRouteMatchClosest =>
+      'No route matches this exact trip yet. Here are the closest options we run.';
+
+  @override
+  String get booking_bestResultsForYou => 'Best results for you';
+
+  @override
+  String get booking_otherMatchingRoutes => 'Other matching routes';
+
+  @override
+  String get booking_noBookableTripsNow => 'No bookable trips right now';
+
+  @override
+  String get booking_noScheduledTripsYet => 'No scheduled trips yet';
+
+  @override
+  String get booking_routeHasPricingNoTrip =>
+      'This route has pricing, but no upcoming trip is open for booking.';
+
+  @override
+  String get booking_tripsFromDashboardAppear =>
+      'Trips created from the dashboard will appear here.';
+
+  @override
+  String get booking_noTripsMatchFilters => 'No trips match your filters';
+
+  @override
+  String get booking_tryWideningFilterRange =>
+      'Try widening the price, seats, or time-of-day range.';
+
+  @override
+  String get booking_continueWithThisRoute => 'Continue with this route';
+
+  @override
+  String get booking_dragToExpandDetails => 'Drag to expand route details';
+
+  @override
+  String get booking_isThisRouteSuitable => 'Is this route suitable?';
+
+  @override
+  String get booking_closestRoutesForSearch => 'Closest routes for your search';
+
+  @override
+  String get booking_editStops => 'Edit stops';
+
+  @override
+  String get booking_noBookableRouteFound => 'No bookable route found';
+
+  @override
+  String get booking_tryDifferentDepartureDest =>
+      'Try a different departure, destination, or travel time.';
+
+  @override
+  String get booking_distance => 'Distance';
+
+  @override
+  String get booking_startingPrice => 'Starting price';
+
+  @override
+  String get booking_priceRange => 'Price range';
+
+  @override
+  String get booking_stopsNotPublishedYet => 'Stops are not published yet';
+
+  @override
+  String get booking_routeStationsWillAppear =>
+      'Route stations will appear here once available.';
+
+  @override
+  String get booking_routeTimeline => 'Route timeline';
+
+  @override
+  String get booking_whereGetOnOffShort => 'Where you can get on and off';
+
+  @override
+  String get booking_oneStop => '1 stop';
+
+  @override
+  String get booking_stopCapabilityBoardAlight => 'Pickup & drop-off';
+
+  @override
+  String get booking_stopCapabilityBoardOnly => 'Pickup only';
+
+  @override
+  String get booking_stopCapabilityAlightOnly => 'Drop-off only';
+
+  @override
+  String get booking_stopCapabilityPassThrough => 'Pass-through';
+
+  @override
+  String get booking_stopStart => 'Start';
+
+  @override
+  String get booking_stopEnd => 'End';
+
+  @override
+  String get booking_filterTrips => 'Filter trips';
+
+  @override
+  String get booking_filterVehicleType => 'Vehicle type';
+
+  @override
+  String get booking_filterTimeOfDay => 'Time of day';
+
+  @override
+  String get booking_filterAny => 'Any';
+
+  @override
+  String get booking_filterSortBy => 'Sort by';
+
+  @override
+  String get booking_dayPartMorning => 'Morning';
+
+  @override
+  String get booking_dayPartAfternoon => 'Afternoon';
+
+  @override
+  String get booking_dayPartEvening => 'Evening';
+
+  @override
+  String get booking_tripSortEarliestDeparture => 'Earliest departure';
+
+  @override
+  String get booking_needAChange => 'Need a change?';
+
+  @override
+  String get booking_fare => 'Fare';
+
+  @override
+  String get booking_fareBreakdown => 'Fare breakdown';
+
+  @override
+  String booking_ridesStartsOn(String rides, String date) {
+    return '$rides · starts $date';
+  }
+
+  @override
+  String get booking_worksOutTo => 'Works out to';
+
+  @override
+  String get booking_youSave => 'You save';
+
+  @override
+  String booking_vsSingleTickets(int count) {
+    return 'vs. $count single tickets';
+  }
+
+  @override
+  String get booking_totalDue => 'Total due';
+
+  @override
+  String get booking_yourTicket => 'Your ticket';
+
+  @override
+  String get booking_ridesLabel => 'Rides';
+
+  @override
+  String get booking_oneRide => '1 ride';
+
+  @override
+  String get booking_receiptTooLarge => 'Receipts must be 8 MB or smaller.';
+
+  @override
+  String get booking_receiptUnreadable =>
+      'That file could not be read. Try another one.';
+
+  @override
+  String get booking_someDetailsAreMissing =>
+      'Some booking details are missing.';
+
+  @override
+  String get booking_choosePaymentMethodToContinue =>
+      'Choose a payment method to continue.';
+
+  @override
+  String get booking_receiptStillUploading =>
+      'Your receipt is still uploading.';
+
+  @override
+  String get booking_attachReceiptToContinue =>
+      'Attach your transfer receipt to continue.';
+
+  @override
+  String get booking_submitReceipt => 'Submit receipt';
+
+  @override
+  String get booking_couldNotLoadPaymentMethods =>
+      'We could not load the ways to pay. Your seat is still yours — try again.';
+
+  @override
+  String get booking_proofOfTransfer => 'Proof of transfer';
+
+  @override
+  String get booking_receiptAttachedNote =>
+      'Attached. Our team will check it against your transfer.';
+
+  @override
+  String get booking_receiptHintUpTo8mb =>
+      'A screenshot or PDF of the transfer — up to 8 MB.';
+
+  @override
+  String get booking_uploadingEllipsis => 'Uploading…';
+
+  @override
+  String get booking_replaceReceipt => 'Replace receipt';
+
+  @override
+  String get booking_attachReceipt => 'Attach receipt';
+
+  @override
+  String booking_sendMethodTo(String method) {
+    return 'Send $method to';
+  }
+
+  @override
+  String get booking_contactSupportForTransfer =>
+      'Contact support for the transfer details.';
+
+  @override
+  String get booking_copyAccount => 'Copy account';
+
+  @override
+  String get booking_accountNumberCopied => 'Account number copied.';
+
+  @override
+  String get booking_transferReferenceOptional =>
+      'Transfer reference (optional)';
+
+  @override
+  String get booking_paidFromPhoneOptional =>
+      'Phone number you paid from (optional)';
+
+  @override
+  String booking_distanceMeters(int meters) {
+    return '$meters m';
+  }
+
+  @override
+  String booking_distanceKm(String km) {
+    return '$km km';
+  }
+
+  @override
+  String booking_ridersCount(int count) {
+    return '$count riders';
+  }
+
+  @override
+  String get booking_tracingRoad => 'Tracing road…';
+
+  @override
+  String get booking_sortShortestDuration => 'Shortest duration';
+
+  @override
+  String get booking_sortMostTrips => 'Most trips';
+
+  @override
+  String get booking_filterRoutes => 'Filter routes';
+
+  @override
+  String get booking_seatsAvailableShort => 'Seats available';
+
+  @override
+  String get booking_checkLater => 'Check later';
+
+  @override
+  String get booking_noActiveRoutesYet => 'No active routes yet';
+
+  @override
+  String get booking_routesFromDashboardAppear =>
+      'Routes published from the dashboard will appear here when they are ready for booking.';
+
+  @override
+  String get booking_refreshRoutes => 'Refresh routes';
+
+  @override
+  String get booking_noRoutesMatchSearch => 'No routes match your search';
+
+  @override
+  String get booking_tryDifferentSearchTerm =>
+      'Try a different search term or adjust your filters.';
+
+  @override
+  String get booking_resetFilters => 'Reset filters';
+
+  @override
+  String booking_pricesAreForRoute(String pickup, String dropoff) {
+    return 'Prices are for $pickup → $dropoff.';
+  }
+
+  @override
+  String get booking_yourPickupFallback => 'your pickup';
+
+  @override
+  String get booking_yourStopFallback => 'your stop';
+
+  @override
+  String booking_optionsCount(int count) {
+    return '$count options';
+  }
+
+  @override
+  String get booking_chooseYourFare => 'Choose your fare';
+
+  @override
+  String get booking_reviewBooking => 'Review booking';
+
+  @override
+  String get seatSelection_defaultVehicleName => 'Standard Coach';
+
+  @override
+  String get seatSelection_defaultRoute => 'Route not selected';
+
+  @override
+  String communication_hoursAgo(int hours) {
+    return '$hours hr ago';
+  }
+
+  @override
+  String referral_inviteMessage(String code, String link) {
+    return 'Join me on EasyWay and book your daily commute! Use my referral code $code to get a welcome reward.\n$link';
+  }
 }

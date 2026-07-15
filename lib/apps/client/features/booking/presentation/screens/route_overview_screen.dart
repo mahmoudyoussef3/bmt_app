@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_overview_hero.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_overview_meta_row.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_overview_stop_timeline.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// A secondary, simpler route-details variant. Registered at
 /// `BookingRoutes.routeOverview` but not currently reachable from any
@@ -83,7 +84,7 @@ class RouteOverviewScreen extends StatelessWidget {
                   RouteOverviewMetaRow(route: route),
                   const SizedBox(height: 20),
                   Text(
-                    'All Stops (${stops.length})',
+                    context.l10n.booking_allStopsCount(stops.length),
                     style: ClientTypography.labelMedium(
                       context,
                     ).copyWith(fontWeight: FontWeight.w700),

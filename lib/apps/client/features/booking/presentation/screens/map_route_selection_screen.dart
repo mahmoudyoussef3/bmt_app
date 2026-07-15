@@ -12,7 +12,8 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/easyway_route_map_view.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// Selects real pickup and destination stations and previews them on a map.
 class MapRouteSelectionScreen extends StatefulWidget {
@@ -99,7 +100,7 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context)!;
+    final localizations = context.l10n;
 
     return BlocBuilder<BookingCubit, BookingState>(
       builder: (context, state) {
@@ -134,7 +135,7 @@ class _MapRouteSelectionScreenState extends State<MapRouteSelectionScreen> {
             title: Text(localizations.booking_selectOnMap),
             actions: [
               IconButton(
-                tooltip: 'Refresh',
+                tooltip: localizations.tracking_refresh,
                 icon: const Icon(Icons.refresh_rounded),
                 onPressed: () =>
                     context.read<BookingCubit>().loadMapPins(force: true),
@@ -220,7 +221,7 @@ class _SelectionPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final localizations = AppLocalizations.of(context)!;
+    final localizations = context.l10n;
 
     return Container(
       padding: const EdgeInsets.all(ClientSpacing.md),
@@ -247,8 +248,8 @@ class _SelectionPanel extends StatelessWidget {
             label: localizations.booking_pickupPoint,
             value: pickup?.label ?? localizations.booking_notSet,
             subtitle: pickupEnabled
-                ? pickup?.subtitle ?? 'Tap to choose a pickup station'
-                : 'No mapped pickup stations are available',
+                ? pickup?.subtitle ?? localizations.booking_tapToChoosePickupStation
+                : localizations.booking_noMappedPickupStations,
             enabled: pickupEnabled,
             onTap: onPickup,
           ),
@@ -259,15 +260,15 @@ class _SelectionPanel extends StatelessWidget {
             label: localizations.booking_destinationPoint,
             value: destination?.label ?? localizations.booking_notSet,
             subtitle: destinationEnabled
-                ? destination?.subtitle ?? 'Tap to choose a destination'
-                : 'No mapped destinations are available',
+                ? destination?.subtitle ?? localizations.booking_tapToChooseDestination
+                : localizations.booking_noMappedDestinations,
             enabled: destinationEnabled,
             onTap: onDestination,
           ),
           const SizedBox(height: 14),
           ClientButton(
             label: localizations.booking_confirmRoute,
-            icon: const Icon(Icons.arrow_forward_rounded),
+            icon: const DirectionalIcon(Icons.arrow_forward_rounded),
             onPressed: onConfirm,
           ),
         ],
@@ -421,7 +422,7 @@ class _StationPickerSheet extends StatelessWidget {
                           Icons.check_circle_rounded,
                           color: ClientColors.primaryFor(context),
                         )
-                      : const Icon(Icons.chevron_right_rounded),
+                      : const DirectionalIcon(Icons.chevron_right_rounded),
                   onTap: () => Navigator.pop(context, pin),
                 );
               },
@@ -481,7 +482,7 @@ class _MapErrorState extends StatelessWidget {
             ),
             const SizedBox(height: 14),
             Text(
-              'Map could not be loaded',
+              context.l10n.booking_mapCouldNotBeLoaded,
               style: ClientTypography.headingSmall(context),
             ),
             const SizedBox(height: 6),
@@ -493,7 +494,11 @@ class _MapErrorState extends StatelessWidget {
               ).copyWith(color: ClientColors.textSecondaryFor(context)),
             ),
             const SizedBox(height: 18),
-            ClientButton(label: 'Try again', expand: false, onPressed: onRetry),
+            ClientButton(
+              label: context.l10n.common_tryAgain,
+              expand: false,
+              onPressed: onRetry,
+            ),
           ],
         ),
       ),

@@ -8,6 +8,7 @@ import '../widgets/captain_auth_error_banner.dart';
 import '../widgets/captain_auth_field.dart';
 import '../widgets/captain_auth_header.dart';
 import '../widgets/captain_auth_scaffold.dart';
+import '../widgets/captain_remember_me_checkbox.dart';
 import 'captain_request_access_screen.dart';
 
 class CaptainLoginScreen extends StatefulWidget {
@@ -25,6 +26,23 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _phoneCtrl = TextEditingController();
 
+  bool _rememberMe = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _prefillRememberedPhone();
+  }
+
+  Future<void> _prefillRememberedPhone() async {
+    final phone = await context.read<CaptainAuthCubit>().loadRememberedPhone();
+    if (!mounted || phone == null) return;
+    setState(() {
+      _phoneCtrl.text = phone;
+      _rememberMe = true;
+    });
+  }
+
   @override
   void dispose() {
     _phoneCtrl.dispose();
@@ -34,7 +52,10 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
   void _submit() {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
-    context.read<CaptainAuthCubit>().signIn(phone: _phoneCtrl.text.trim());
+    context.read<CaptainAuthCubit>().signIn(
+      phone: _phoneCtrl.text.trim(),
+      rememberMe: _rememberMe,
+    );
   }
 
   void _openRequestAccess() {
@@ -93,7 +114,13 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
                         return digits.length < 10 ? 'أدخل رقم هاتف صحيح' : null;
                       },
                     ),
-                    const SizedBox(height: 20),
+                    CaptainRememberMeCheckbox(
+                      value: _rememberMe,
+                      onChanged: loading
+                          ? (_) {}
+                          : (checked) => setState(() => _rememberMe = checked),
+                    ),
+                    const SizedBox(height: 12),
                     CaptainButton(
                       label: loading ? 'جارٍ تسجيل الدخول...' : 'تسجيل الدخول',
                       isLoading: loading,

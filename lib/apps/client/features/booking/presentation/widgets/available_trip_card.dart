@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class AvailableTripCard extends StatelessWidget {
   const AvailableTripCard({
@@ -15,6 +16,7 @@ class AvailableTripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final lowSeats = trip.availableSeats <= 4;
 
     return AppCard(
@@ -49,7 +51,7 @@ class AvailableTripCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Vehicle ${trip.vehicleId}',
+                      '${l10n.tracking_vehicle} ${trip.vehicleId}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(
                           context,
@@ -98,7 +100,7 @@ class AvailableTripCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'Licensed captain',
+                      l10n.booking_licensedCaptain,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Theme.of(
                           context,
@@ -109,7 +111,9 @@ class AvailableTripCard extends StatelessWidget {
                 ),
               ),
               StatusChip(
-                label: lowSeats ? '${trip.availableSeats} left' : 'Available',
+                label: lowSeats
+                    ? l10n.booking_seatsLeftShort(trip.availableSeats)
+                    : l10n.booking_available,
                 color: lowSeats
                     ? Theme.of(context).colorScheme.tertiary.withAlpha(24)
                     : Theme.of(context).colorScheme.secondary.withAlpha(20),
@@ -128,23 +132,23 @@ class AvailableTripCard extends StatelessWidget {
             children: [
               _Info(
                 icon: Icons.schedule_rounded,
-                label: 'ETA',
+                label: l10n.booking_eta,
                 value: trip.estimatedArrival,
               ),
               _Info(
                 icon: Icons.route_rounded,
-                label: 'Duration',
+                label: l10n.packages_duration,
                 value: trip.routeDuration,
               ),
               _Info(
                 icon: Icons.event_seat_rounded,
-                label: 'Seats',
-                value: '${trip.availableSeats} available',
+                label: l10n.common_seats,
+                value: l10n.home_seatsAvailable(trip.availableSeats),
               ),
             ],
           ),
           const SizedBox(height: 14),
-          AppButton.primary(text: 'Book Now', onPressed: onBook),
+          AppButton.primary(text: l10n.booking_bookNow, onPressed: onBook),
         ],
       ),
     );

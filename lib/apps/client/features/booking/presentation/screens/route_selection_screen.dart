@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_booking_action.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_body.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Route details and decision screen for the current search.
 class RouteSelectionScreen extends StatefulWidget {
@@ -57,11 +58,11 @@ class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
         final selectedRoute = _selectedRoute(routes);
 
         return BookingFlowScaffold(
-          title: 'Route details',
+          title: context.l10n.booking_routeDetails,
           query: _query,
           actions: [
             IconButton(
-              tooltip: 'Refresh',
+              tooltip: context.l10n.tracking_refresh,
               icon: const Icon(Icons.refresh_rounded),
               onPressed: () =>
                   context.read<BookingCubit>().loadRoutes(_query, force: true),

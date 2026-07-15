@@ -8,7 +8,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_image_strip.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Full vehicle profile for informed booking decisions.
 class VehicleDetailsScreen extends StatefulWidget {
@@ -57,88 +57,75 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.ltr,
-      child: BlocBuilder<BookingCubit, BookingState>(
-        builder: (context, state) {
-          if (state is BookingLoading) {
-            return const _VehicleLoadingView();
-          }
+    return BlocBuilder<BookingCubit, BookingState>(
+      builder: (context, state) {
+        if (state is BookingLoading) {
+          return const _VehicleLoadingView();
+        }
 
-          if (state is BookingError) {
-            return _VehicleErrorView(message: state.message);
-          }
+        if (state is BookingError) {
+          return _VehicleErrorView(message: state.message);
+        }
 
-          final vehicle = state is VehicleDetailsLoaded ? state.vehicle : null;
-          if (vehicle == null) {
-            return const _VehicleEmptyView();
-          }
+        final vehicle = state is VehicleDetailsLoaded ? state.vehicle : null;
+        if (vehicle == null) {
+          return const _VehicleEmptyView();
+        }
 
-          final query = bookingQueryFromContext(context);
+        final query = bookingQueryFromContext(context);
 
-          return Scaffold(
-            extendBody: true,
-            body: CustomScrollView(
-              slivers: [
-                _VehicleGalleryAppBar(
-                  vehicle: vehicle,
-                  galleryController: _galleryController,
-                  galleryIndex: _galleryIndex,
-                  onPageChanged: (index) =>
-                      setState(() => _galleryIndex = index),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 128),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _QuickStatsCard(vehicle: vehicle),
-                        const SizedBox(height: 20),
-                        _DetailSection(
-                          title: AppLocalizations.of(
-                            context,
-                          )!.booking_comfortAndAmenities,
-                          subtitle: AppLocalizations.of(
-                            context,
-                          )!.booking_comfortDesc,
-                          icon: Icons.airline_seat_recline_extra_rounded,
-                          child: _ComfortCard(vehicle: vehicle),
-                        ),
-                        const SizedBox(height: 20),
-                        _DetailSection(
-                          title: AppLocalizations.of(context)!.booking_driver,
-                          subtitle: AppLocalizations.of(
-                            context,
-                          )!.booking_driverDesc,
-                          icon: Icons.person_pin_circle_rounded,
-                          child: _DriverCard(vehicle: vehicle),
-                        ),
-                        const SizedBox(height: 20),
-                        _DetailSection(
-                          title: AppLocalizations.of(
-                            context,
-                          )!.booking_priceAndAvailability,
-                          subtitle: AppLocalizations.of(
-                            context,
-                          )!.booking_priceDesc,
-                          icon: Icons.payments_rounded,
-                          child: _PricingAvailabilityCard(vehicle: vehicle),
-                        ),
-                        if (query.isComplete) ...[
-                          const SizedBox(height: 14),
-                          _RouteSummaryCard(summary: query.summaryLine),
-                        ],
+        return Scaffold(
+          extendBody: true,
+          body: CustomScrollView(
+            slivers: [
+              _VehicleGalleryAppBar(
+                vehicle: vehicle,
+                galleryController: _galleryController,
+                galleryIndex: _galleryIndex,
+                onPageChanged: (index) =>
+                    setState(() => _galleryIndex = index),
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 128),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _QuickStatsCard(vehicle: vehicle),
+                      const SizedBox(height: 20),
+                      _DetailSection(
+                        title: context.l10n.booking_comfortAndAmenities,
+                        subtitle: context.l10n.booking_comfortDesc,
+                        icon: Icons.airline_seat_recline_extra_rounded,
+                        child: _ComfortCard(vehicle: vehicle),
+                      ),
+                      const SizedBox(height: 20),
+                      _DetailSection(
+                        title: context.l10n.booking_driver,
+                        subtitle: context.l10n.booking_driverDesc,
+                        icon: Icons.person_pin_circle_rounded,
+                        child: _DriverCard(vehicle: vehicle),
+                      ),
+                      const SizedBox(height: 20),
+                      _DetailSection(
+                        title: context.l10n.booking_priceAndAvailability,
+                        subtitle: context.l10n.booking_priceDesc,
+                        icon: Icons.payments_rounded,
+                        child: _PricingAvailabilityCard(vehicle: vehicle),
+                      ),
+                      if (query.isComplete) ...[
+                        const SizedBox(height: 14),
+                        _RouteSummaryCard(summary: query.summaryLine),
                       ],
-                    ),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            bottomNavigationBar: _VehicleBottomBar(vehicle: vehicle),
-          );
-        },
-      ),
+              ),
+            ],
+          ),
+          bottomNavigationBar: _VehicleBottomBar(vehicle: vehicle),
+        );
+      },
     );
   }
 }
@@ -162,10 +149,10 @@ class _VehicleGalleryAppBar extends StatelessWidget {
       expandedHeight: 310,
       pinned: true,
       stretch: true,
-      title: Text(AppLocalizations.of(context)!.booking_vehicleDetails),
+      title: Text(context.l10n.booking_vehicleDetails),
       actions: [
         IconButton(
-          tooltip: 'Refresh',
+          tooltip: context.l10n.tracking_refresh,
           icon: const Icon(Icons.refresh_rounded),
           onPressed: () => context.read<BookingCubit>().loadVehicleDetails(
             vehicle.id,
@@ -256,7 +243,7 @@ class _QuickStatsCard extends StatelessWidget {
           Expanded(
             child: _QuickStat(
               icon: Icons.payments_rounded,
-              label: AppLocalizations.of(context)!.booking_tripPrice,
+              label: context.l10n.booking_tripPrice,
               value: vehicle.price,
             ),
           ),
@@ -264,7 +251,7 @@ class _QuickStatsCard extends StatelessWidget {
           Expanded(
             child: _QuickStat(
               icon: Icons.event_seat_rounded,
-              label: AppLocalizations.of(context)!.booking_availableSeats,
+              label: context.l10n.booking_availableSeats,
               value: '${vehicle.availableSeats}',
             ),
           ),
@@ -272,7 +259,7 @@ class _QuickStatsCard extends StatelessWidget {
           Expanded(
             child: _QuickStat(
               icon: Icons.schedule_rounded,
-              label: 'Departure',
+              label: context.l10n.booking_departure,
               value: vehicle.departureTime,
             ),
           ),
@@ -388,21 +375,21 @@ class _ComfortCard extends StatelessWidget {
         children: [
           _ComfortTile(
             icon: Icons.ac_unit_rounded,
-            label: AppLocalizations.of(context)!.booking_ac,
+            label: context.l10n.booking_ac,
             value: vehicle.hasAirConditioning
-                ? AppLocalizations.of(context)!.booking_available
-                : AppLocalizations.of(context)!.booking_unavailable,
+                ? context.l10n.booking_available
+                : context.l10n.booking_unavailable,
             positive: vehicle.hasAirConditioning,
           ),
           _ComfortTile(
             icon: Icons.chair_rounded,
-            label: AppLocalizations.of(context)!.booking_seatType,
+            label: context.l10n.booking_seatType,
             value: vehicle.seatType,
             positive: true,
           ),
           _ComfortTile(
             icon: Icons.chair_rounded,
-            label: AppLocalizations.of(context)!.booking_seatType,
+            label: context.l10n.booking_seatType,
             value: vehicle.seatType,
             positive: true,
           ),
@@ -513,7 +500,7 @@ class _DriverCard extends StatelessWidget {
           ),
           ClientStatusBadge(
             status: ClientJourneyStatus.active,
-            label: AppLocalizations.of(context)!.booking_certified,
+            label: context.l10n.booking_certified,
           ),
         ],
       ),
@@ -539,7 +526,7 @@ class _PricingAvailabilityCard extends StatelessWidget {
         children: [
           Expanded(
             child: _PriceSeatColumn(
-              label: AppLocalizations.of(context)!.booking_tripPrice,
+              label: context.l10n.booking_tripPrice,
               value: vehicle.price,
               icon: Icons.payments_rounded,
               color: ClientColors.primary,
@@ -548,9 +535,9 @@ class _PricingAvailabilityCard extends StatelessWidget {
           const _VerticalDivider(),
           Expanded(
             child: _PriceSeatColumn(
-              label: AppLocalizations.of(context)!.booking_availableSeats,
+              label: context.l10n.booking_availableSeats,
               value:
-                  '${vehicle.availableSeats} ${AppLocalizations.of(context)!.booking_remaining}',
+                  '${vehicle.availableSeats} ${context.l10n.booking_remaining}',
               icon: Icons.event_seat_rounded,
               color: ClientColors.journeyCyan,
             ),
@@ -627,7 +614,7 @@ class _RouteSummaryCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Route Summary',
+                  context.l10n.booking_routeSummary,
                   style: ClientTypography.bodySmall(context).copyWith(
                     color: ClientColors.textSecondaryFor(context),
                     fontWeight: FontWeight.w700,
@@ -688,7 +675,9 @@ class _VehicleBottomBar extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${vehicle.availableSeats} seats available',
+                    context.l10n.booking_seatsAvailableCount(
+                      vehicle.availableSeats,
+                    ),
                     style: ClientTypography.bodySmall(context).copyWith(
                       color: ClientColors.textSecondaryFor(context),
                       fontWeight: FontWeight.w700,
@@ -701,7 +690,7 @@ class _VehicleBottomBar extends StatelessWidget {
             Expanded(
               flex: 2,
               child: ClientButton(
-                label: 'Select Seat',
+                label: context.l10n.booking_selectSeat,
                 onPressed: () => Navigator.pushNamed(
                   context,
                   '/seat-selection',
@@ -756,9 +745,9 @@ class _VehicleLoadingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      appBar: _StaticVehicleAppBar(title: 'Vehicle Details'),
-      body: Center(
+    return Scaffold(
+      appBar: _StaticVehicleAppBar(title: context.l10n.booking_vehicleDetails),
+      body: const Center(
         child: CircularProgressIndicator(color: ClientColors.primary),
       ),
     );
@@ -773,7 +762,7 @@ class _VehicleErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const _StaticVehicleAppBar(title: 'Vehicle Details'),
+      appBar: _StaticVehicleAppBar(title: context.l10n.booking_vehicleDetails),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -794,7 +783,7 @@ class _VehicleErrorView extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'Unable to load vehicle details',
+                  context.l10n.booking_unableToLoadVehicleDetails,
                   textAlign: TextAlign.center,
                   style: ClientTypography.headingSmall(
                     context,
@@ -823,10 +812,10 @@ class _VehicleEmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const _StaticVehicleAppBar(title: 'Vehicle Details'),
+      appBar: _StaticVehicleAppBar(title: context.l10n.booking_vehicleDetails),
       body: Center(
         child: Text(
-          'Vehicle not found',
+          context.l10n.booking_vehicleNotFound,
           style: ClientTypography.bodyMedium(
             context,
           ).copyWith(color: ClientColors.textSecondaryFor(context)),

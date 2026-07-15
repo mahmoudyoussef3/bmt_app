@@ -8,6 +8,36 @@ import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_state.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
+
+/// Localized display label for a loyalty tier name. Tier names are stored
+/// verbatim in Supabase (`loyalty_tiers.name`, matched against the canonical
+/// values computed by `_calculateTier`) — this only maps the known values to
+/// a translated label and falls back to the raw value for anything else.
+String _tierLabel(BuildContext context, String tierName) {
+  final l10n = context.l10n;
+  return switch (tierName) {
+    'Bronze' => l10n.loyalty_tierBronze,
+    'Silver' => l10n.loyalty_tierSilver,
+    'Gold' => l10n.loyalty_tierGold,
+    'Platinum' => l10n.loyalty_tierPlatinum,
+    _ => tierName,
+  };
+}
+
+/// Localized display label for a reward's category, stored verbatim in
+/// Supabase (`loyalty_rewards.category`). Falls back to the raw value.
+String _rewardCategoryLabel(BuildContext context, String category) {
+  final l10n = context.l10n;
+  return switch (category) {
+    'Discount' => l10n.loyalty_categoryDiscount,
+    'FreeRide' => l10n.loyalty_categoryFreeRide,
+    'Cashback' => l10n.loyalty_categoryCashback,
+    'Package' => l10n.loyalty_categoryPackage,
+    _ => category,
+  };
+}
 
 // Particle physics for celebration confetti
 class ConfettiParticle {
@@ -87,12 +117,13 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
     }
   }
 
-  String _getViewTitle() {
+  String _getViewTitle(BuildContext context) {
+    final l10n = context.l10n;
     return switch (_currentView) {
-      1 => 'Loyalty Portal',
-      2 => 'Points Ledger Logs',
-      3 => 'Redeem Points Catalog',
-      _ => 'Loyalty Hub',
+      1 => l10n.loyalty_titlePortal,
+      2 => l10n.loyalty_titleLedger,
+      3 => l10n.loyalty_titleCatalog,
+      _ => l10n.loyalty_titleHub,
     };
   }
 
@@ -145,16 +176,16 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: const Text(
-            'Confirm Redemption',
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          title: Text(
+            context.l10n.loyalty_confirmRedemptionTitle,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Are you sure you want to redeem this reward?',
+                context.l10n.loyalty_confirmRedemptionBody,
                 style: TextStyle(
                   fontSize: 12,
                   color: scheme.onSurface.withAlpha(180),
@@ -188,7 +219,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                             ),
                           ),
                           Text(
-                            'Cost: ${reward.pointsCost} points',
+                            context.l10n.loyalty_costPoints(reward.pointsCost),
                             style: const TextStyle(
                               fontSize: 10,
                               color: Colors.grey,
@@ -204,12 +235,12 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Current Balance:',
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  Text(
+                    context.l10n.loyalty_currentBalance,
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                   Text(
-                    '$_currentPoints pts',
+                    '$_currentPoints ${context.l10n.loyalty_ptsUnit}',
                     style: const TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -220,12 +251,12 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
-                    'Balance After Redemption:',
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                  Text(
+                    context.l10n.loyalty_balanceAfterRedemption,
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                   Text(
-                    '${_currentPoints - reward.pointsCost} pts',
+                    '${_currentPoints - reward.pointsCost} ${context.l10n.loyalty_ptsUnit}',
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -239,7 +270,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('Cancel'),
+              child: Text(context.l10n.common_cancel),
             ),
             ElevatedButton(
               onPressed: () {
@@ -247,9 +278,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                 _processRedeem(reward);
               },
               style: ElevatedButton.styleFrom(backgroundColor: scheme.primary),
-              child: const Text(
-                'Redeem Now',
-                style: TextStyle(
+              child: Text(
+                context.l10n.loyalty_redeemNow,
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -276,16 +307,16 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: const Center(child: Text('Voucher Unlocked! 🎫')),
+          title: Center(child: Text(context.l10n.loyalty_voucherUnlocked)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.stars_rounded, color: Colors.amber, size: 54),
               const SizedBox(height: 12),
-              const Text(
-                'Coupon code generated successfully. You can use it during payment checkout.',
+              Text(
+                context.l10n.loyalty_couponGeneratedBody,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 11, color: Colors.grey),
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
               ),
               const SizedBox(height: 16),
               Container(
@@ -346,14 +377,14 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
           actions: [
             Center(
               child: ClientButton(
-                label: 'Copy & Close',
+                label: context.l10n.loyalty_copyAndClose,
                 expand: true,
                 onPressed: () {
                   Clipboard.setData(ClipboardData(text: reward.couponCode));
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Voucher code copied to clipboard!'),
+                    SnackBar(
+                      content: Text(context.l10n.loyalty_voucherCopiedSnack),
                       backgroundColor: ClientColors.journeyCyan,
                     ),
                   );
@@ -383,16 +414,16 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
           backgroundColor: scheme.surfaceContainerHighest,
           appBar: AppBar(
             title: Text(
-              _getViewTitle(),
+              _getViewTitle(context),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             leading: IconButton(
               onPressed: _onBackPress,
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: DirectionalIcon(Icons.arrow_back_rounded),
             ),
             actions: [
               IconButton(
-                tooltip: 'Refresh',
+                tooltip: context.l10n.loyalty_refresh,
                 icon: const Icon(Icons.refresh_rounded),
                 onPressed: () => context.read<LoyaltyCubit>().load(),
               ),
@@ -470,8 +501,8 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
             Expanded(
               child: _buildDashboardNavCard(
                 icon: Icons.wallet_giftcard_rounded,
-                title: 'Redeem Points',
-                subtitle: 'Browse Catalog',
+                title: context.l10n.loyalty_navRedeemTitle,
+                subtitle: context.l10n.loyalty_navRedeemSubtitle,
                 color: Colors.orangeAccent,
                 onTap: () => setState(() => _currentView = 3),
                 scheme: scheme,
@@ -481,8 +512,8 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
             Expanded(
               child: _buildDashboardNavCard(
                 icon: Icons.receipt_long_rounded,
-                title: 'Points History',
-                subtitle: 'Ledger Logs',
+                title: context.l10n.loyalty_navHistoryTitle,
+                subtitle: context.l10n.loyalty_navHistorySubtitle,
                 color: ClientColors.journeyCyan,
                 onTap: () => setState(() => _currentView = 2),
                 scheme: scheme,
@@ -494,7 +525,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
 
         // Tier Perks list
         Text(
-          'Active ${activeTier.name} Perks',
+          context.l10n.loyalty_activeTierPerks(_tierLabel(context, activeTier.name)),
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -507,9 +538,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
 
         const SizedBox(height: 24),
         // Explore Tiers
-        const Text(
-          'Explore Membership Levels',
-          style: TextStyle(
+        Text(
+          context.l10n.loyalty_exploreMembership,
+          style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
             color: Colors.grey,
@@ -546,8 +577,8 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
       child: Stack(
         children: [
           // Background large vector icon
-          Positioned(
-            right: -20,
+          PositionedDirectional(
+            end: -20,
             bottom: -20,
             child: Icon(
               _iconForTier(tier),
@@ -575,7 +606,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                         Icon(_iconForTier(tier), color: Colors.white, size: 14),
                         const SizedBox(width: 6),
                         Text(
-                          '${tier.name} member',
+                          context.l10n.loyalty_tierMemberBadge(_tierLabel(context, tier.name)),
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -585,9 +616,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                       ],
                     ),
                   ),
-                  const Text(
-                    'MEGA LOYALTY',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.loyalty_megaLoyaltyBadge,
+                    style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       color: Colors.white,
@@ -597,9 +628,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                 ],
               ),
               const Spacer(),
-              const Text(
-                'COMMUTE POINTS BALANCE',
-                style: TextStyle(
+              Text(
+                context.l10n.loyalty_pointsBalanceLabel,
+                style: const TextStyle(
                   fontSize: 9,
                   color: Colors.white70,
                   fontWeight: FontWeight.bold,
@@ -619,9 +650,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                     ),
                   ),
                   const SizedBox(width: 6),
-                  const Text(
-                    'pts',
-                    style: TextStyle(
+                  Text(
+                    context.l10n.loyalty_ptsUnit,
+                    style: const TextStyle(
                       fontSize: 16,
                       color: Colors.white70,
                       fontWeight: FontWeight.bold,
@@ -654,12 +685,12 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Next Goal: Platinum Tier',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+              Text(
+                context.l10n.loyalty_nextGoalPlatinum,
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               Text(
-                '$ptsToNext pts to go',
+                context.l10n.loyalty_ptsToGo(ptsToNext),
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
@@ -679,9 +710,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
-            '* Platinum tier rewards earn double points on all travels.',
-            style: TextStyle(fontSize: 9, color: Colors.grey),
+          Text(
+            context.l10n.loyalty_platinumFootnote,
+            style: const TextStyle(fontSize: 9, color: Colors.grey),
           ),
         ],
       ),
@@ -781,7 +812,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
           final isCurrent = t.name == _currentTierName;
           return Container(
             width: 140,
-            margin: const EdgeInsets.only(right: 10),
+            margin: const EdgeInsetsDirectional.only(end: 10),
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               gradient: LinearGradient(colors: _gradientForTier(t)),
@@ -800,7 +831,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                     Icon(_iconForTier(t), size: 16, color: Colors.white),
                     const SizedBox(width: 6),
                     Text(
-                      t.name,
+                      _tierLabel(context, t.name),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
@@ -811,7 +842,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  isCurrent ? 'Current Tier' : 'Needs ${t.pointsRequired}',
+                  isCurrent
+                      ? context.l10n.loyalty_currentTier
+                      : context.l10n.loyalty_needsPoints(t.pointsRequired),
                   style: const TextStyle(fontSize: 9, color: Colors.white70),
                 ),
               ],
@@ -828,20 +861,20 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        const Row(
+        Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Points Transaction Ledger',
-              style: TextStyle(
+              context.l10n.loyalty_transactionLedger,
+              style: const TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
                 color: Colors.grey,
               ),
             ),
             Text(
-              'Active logs',
-              style: TextStyle(fontSize: 11, color: Colors.grey),
+              context.l10n.loyalty_activeLogs,
+              style: const TextStyle(fontSize: 11, color: Colors.grey),
             ),
           ],
         ),
@@ -904,7 +937,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              'Expiring on ${tx.expirationDate}',
+                              context.l10n.loyalty_expiringOn(tx.expirationDate!),
                               style: const TextStyle(
                                 fontSize: 9,
                                 color: Colors.redAccent,
@@ -918,7 +951,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                   ),
                 ),
                 Text(
-                  tx.isEarned ? '+${tx.points} pts' : '-${tx.points} pts',
+                  tx.isEarned
+                      ? '+${tx.points} ${context.l10n.loyalty_ptsUnit}'
+                      : '-${tx.points} ${context.l10n.loyalty_ptsUnit}',
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
@@ -955,9 +990,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Redeemable points balance',
-                    style: TextStyle(fontSize: 10, color: Colors.grey),
+                  Text(
+                    context.l10n.loyalty_redeemableBalance,
+                    style: const TextStyle(fontSize: 10, color: Colors.grey),
                   ),
                   const SizedBox(height: 4),
                   Row(
@@ -969,7 +1004,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '$_currentPoints pts',
+                        '$_currentPoints ${context.l10n.loyalty_ptsUnit}',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
@@ -989,7 +1024,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
-                  'Gold Level Member',
+                  context.l10n.loyalty_goldLevelMember,
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
@@ -1002,9 +1037,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
         ),
         const SizedBox(height: 20),
 
-        const Text(
-          'Catalog Rewards',
-          style: TextStyle(
+        Text(
+          context.l10n.loyalty_catalogRewards,
+          style: const TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.bold,
             color: Colors.grey,
@@ -1081,7 +1116,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
-                                        reward.category,
+                                        _rewardCategoryLabel(context, reward.category),
                                         style: TextStyle(
                                           fontSize: 8,
                                           fontWeight: FontWeight.bold,
@@ -1119,9 +1154,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                                       : Colors.grey,
                                 ),
                               ),
-                              const Text(
-                                'pts',
-                                style: TextStyle(
+                              Text(
+                                context.l10n.loyalty_ptsUnit,
+                                style: const TextStyle(
                                   fontSize: 9,
                                   color: Colors.grey,
                                 ),

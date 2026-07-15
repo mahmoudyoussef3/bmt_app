@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class VehicleCard extends StatelessWidget {
   final String id;
@@ -22,6 +23,7 @@ class VehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final isFull = seatsLeft <= 0;
 
     return Container(
@@ -41,7 +43,7 @@ class VehicleCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Vehicle $id',
+                    '${l10n.tracking_vehicle} $id',
                     style: ClientTypography.bodyMedium(
                       context,
                     ).copyWith(fontWeight: FontWeight.w700),
@@ -66,7 +68,7 @@ class VehicleCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  isFull ? 'Full' : 'Available',
+                  isFull ? l10n.booking_full : l10n.booking_available,
                   style: ClientTypography.labelSmall(context).copyWith(
                     color: isFull
                         ? ClientColors.onJourneyRed
@@ -95,7 +97,7 @@ class VehicleCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                '$seatsLeft seats left',
+                '$seatsLeft ${l10n.seatSelection_seatsLeftLabel}',
                 style: ClientTypography.bodySmall(context),
               ),
             ],
@@ -109,7 +111,7 @@ class VehicleCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Occupancy',
+                      l10n.booking_occupancy,
                       style: ClientTypography.bodySmall(
                         context,
                       ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -143,7 +145,7 @@ class VehicleCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Select Seat'),
+                child: Text(l10n.booking_selectSeat),
               ),
             ],
           ),

@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_empty_view.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_error_view.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_loading_view.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Premium trip details screen with a branded boarding pass, route timeline,
 /// driver actions, vehicle info, a live seat map, payment summary, and the
@@ -52,9 +53,7 @@ class _TripDetailsScreenState extends State<TripDetailsScreen> {
       ..showSnackBar(
         SnackBar(
           content: Text(
-            failure ??
-                'Trip $cancelled was cancelled and your seat is available '
-                    'again.',
+            failure ?? context.l10n.trips_cancelSuccessMessage(cancelled ?? ''),
           ),
           backgroundColor: failure != null ? ClientColors.journeyRed : null,
         ),

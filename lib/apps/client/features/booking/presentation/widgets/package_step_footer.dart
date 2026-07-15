@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// When the rider's plan starts running: the date of the trip they already
 /// picked. This is a fact, not a control — a plan that starts on any other day
@@ -20,7 +21,7 @@ class PackageStartNote extends StatelessWidget {
   Widget build(BuildContext context) {
     final accent = ClientColors.primaryFor(context);
     final label = date == null
-        ? 'Your selected trip'
+        ? context.l10n.booking_yourSelectedTrip
         : formatCalendarDay(context, date!);
 
     return BookingSurfaceCard(
@@ -41,7 +42,7 @@ class PackageStartNote extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Starts with your trip',
+                  context.l10n.booking_startsWithYourTrip,
                   style: ClientTypography.labelSmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -87,7 +88,9 @@ class PackageStepSummary extends StatelessWidget {
           ),
         ),
         Text(
-          'EGP ${session.totalPrice.toStringAsFixed(0)}',
+          context.l10n.packages_egpAmount(
+            session.totalPrice.toStringAsFixed(0),
+          ),
           style: ClientTypography.priceSmall(
             context,
           ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -122,7 +125,7 @@ class PackageFaresError extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Could not load fares',
+              context.l10n.booking_couldNotLoadFares,
               style: ClientTypography.headingSmall(context),
             ),
             const SizedBox(height: 6),
@@ -134,7 +137,10 @@ class PackageFaresError extends StatelessWidget {
               ).copyWith(color: ClientColors.textSecondaryFor(context)),
             ),
             const SizedBox(height: 18),
-            ClientButton(label: 'Try again', onPressed: onRetry),
+            ClientButton(
+              label: context.l10n.common_tryAgain,
+              onPressed: onRetry,
+            ),
           ],
         ),
       ),

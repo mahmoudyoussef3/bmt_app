@@ -33,11 +33,13 @@ class SeatSelectionData {
     required this.vehicleName,
     required this.vehicleType,
     required this.vehicleModel,
+    required this.vehicleImageUrl,
     required this.tripDate,
     required this.departureTime,
     required this.arrivalTime,
     required this.driverName,
     required this.driverRating,
+    required this.driverImageUrl,
   });
 
   final String tripId;
@@ -49,11 +51,13 @@ class SeatSelectionData {
   final String vehicleName;
   final String vehicleType;
   final String vehicleModel;
+  final String vehicleImageUrl;
   final String tripDate;
   final String departureTime;
   final String arrivalTime;
   final String driverName;
   final double driverRating;
+  final String driverImageUrl;
 
   int get availableCount => seats.where((seat) => seat.isAvailable).length;
 

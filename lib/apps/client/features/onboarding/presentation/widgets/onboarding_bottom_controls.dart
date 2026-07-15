@@ -33,7 +33,7 @@ class OnboardingBottomControls extends StatelessWidget {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   curve: Curves.easeOut,
-                  margin: const EdgeInsets.only(right: 8),
+                  margin: const EdgeInsetsDirectional.only(end: 8),
                   height: 8,
                   width: isActive ? 26 : 8,
                   decoration: BoxDecoration(

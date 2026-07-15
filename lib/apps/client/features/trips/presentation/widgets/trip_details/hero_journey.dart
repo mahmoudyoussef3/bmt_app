@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The pickup → drop-off rail on the trip hero.
 ///
@@ -26,7 +27,7 @@ class HeroJourney extends StatelessWidget {
       children: [
         _JourneyStop(
           node: const _OriginNode(),
-          label: 'PICKUP',
+          label: context.l10n.common_pickup.toUpperCase(),
           place: pickup,
           trailing: departureLabel,
         ),
@@ -43,7 +44,7 @@ class HeroJourney extends StatelessWidget {
         ),
         _JourneyStop(
           node: const _DestinationNode(),
-          label: 'DROP-OFF',
+          label: context.l10n.common_dropOff.toUpperCase(),
           place: destination,
         ),
       ],

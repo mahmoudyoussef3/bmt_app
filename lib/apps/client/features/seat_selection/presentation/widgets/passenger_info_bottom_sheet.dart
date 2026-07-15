@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Passenger details bottom sheet (UI placeholder — no validation logic).
 Future<void> showPassengerInfoBottomSheet(
@@ -29,6 +30,7 @@ class _PassengerInfoSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
@@ -48,13 +50,13 @@ class _PassengerInfoSheet extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'Passenger information',
+              l10n.seatSelection_passengerInformation,
               style: ClientTypography.headingMedium(context),
             ),
             if (seatLabel != null) ...[
               const SizedBox(height: 6),
               Text(
-                'Seat $seatLabel',
+                l10n.home_seatLabel(seatLabel!),
                 style: ClientTypography.bodySmall(context).copyWith(
                   color: ClientColors.primary,
                   fontWeight: FontWeight.w700,
@@ -63,22 +65,22 @@ class _PassengerInfoSheet extends StatelessWidget {
             ],
             const SizedBox(height: 20),
             Text(
-              'Contact details',
+              l10n.seatSelection_contactDetails,
               style: ClientTypography.labelLarge(
                 context,
               ).copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
-            const _PassengerField(
-              label: 'Passenger name',
-              hint: 'Full name as on ID',
+            _PassengerField(
+              label: l10n.seatSelection_passengerNameLabel,
+              hint: l10n.seatSelection_fullNameHint,
               icon: Icons.person_outline_rounded,
               showValid: true,
             ),
             const SizedBox(height: 14),
-            const _PassengerField(
-              label: 'Passenger phone number',
-              hint: '+20 10 1234 5678',
+            _PassengerField(
+              label: l10n.seatSelection_passengerPhoneLabel,
+              hint: l10n.seatSelection_phoneHint,
               icon: Icons.phone_outlined,
               keyboardType: TextInputType.phone,
             ),
@@ -93,7 +95,7 @@ class _PassengerInfoSheet extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'We will use this number for trip updates.',
+                    l10n.seatSelection_phoneUsageNote,
                     style: ClientTypography.bodySmall(
                       context,
                     ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -103,7 +105,7 @@ class _PassengerInfoSheet extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             ClientButton(
-              label: 'Save details',
+              label: l10n.seatSelection_saveDetails,
               expand: true,
               onPressed: () => Navigator.pop(context),
             ),

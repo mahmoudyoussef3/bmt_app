@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Compact vehicle + driver summary for seat selection.
 class SeatSelectionVehicleCard extends StatelessWidget {
@@ -27,6 +28,7 @@ class SeatSelectionVehicleCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -99,7 +101,7 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                     ).copyWith(color: ClientColors.primary),
                   ),
                   Text(
-                    'seats left',
+                    l10n.seatSelection_seatsLeftLabel,
                     style: ClientTypography.bodySmall(
                       context,
                     ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -117,7 +119,7 @@ class SeatSelectionVehicleCard extends StatelessWidget {
             children: [
               _MetaChip(
                 icon: Icons.ac_unit_rounded,
-                label: 'A/C · $airConditioning',
+                label: l10n.seatSelection_acStatusLabel(airConditioning),
               ),
               _MetaChip(icon: Icons.chair_rounded, label: seatType),
             ],
@@ -162,7 +164,7 @@ class SeatSelectionVehicleCard extends StatelessWidget {
                           ).copyWith(fontWeight: FontWeight.w700),
                         ),
                         Text(
-                          ' · Captain',
+                          ' · ${l10n.tracking_captain}',
                           style: ClientTypography.bodySmall(context).copyWith(
                             color: ClientColors.textSecondaryFor(context),
                           ),

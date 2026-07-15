@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// How each booking status looks. Amber reads as "waiting on us", blue as
 /// "settled", cyan as "happening now" — the same language the rest of the
@@ -27,4 +28,16 @@ extension HomeBookingStatusStyle on HomeBookingStatus {
 
   /// A pulsing dot belongs to a trip that is actually under way.
   bool get isPulsing => this == HomeBookingStatus.onBoard;
+
+  String labelFor(AppLocalizations l10n) => switch (this) {
+    HomeBookingStatus.underReview => l10n.home_statusUnderReview,
+    HomeBookingStatus.confirmed => l10n.home_statusConfirmed,
+    HomeBookingStatus.onBoard => l10n.home_statusOnBoard,
+  };
+
+  String explanationFor(AppLocalizations l10n) => switch (this) {
+    HomeBookingStatus.underReview => l10n.home_statusUnderReviewExplanation,
+    HomeBookingStatus.confirmed => l10n.home_statusConfirmedExplanation,
+    HomeBookingStatus.onBoard => l10n.home_statusOnBoardExplanation,
+  };
 }

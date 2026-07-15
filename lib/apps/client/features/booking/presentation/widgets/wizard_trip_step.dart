@@ -9,6 +9,8 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_opt
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class WizardTripStep extends StatelessWidget {
   const WizardTripStep({super.key, required this.onNext});
@@ -30,11 +32,13 @@ class WizardTripStep extends StatelessWidget {
                 children: [
                   BookingStepIntro(
                     icon: Icons.directions_bus_rounded,
-                    title: 'Choose your departure',
-                    subtitle:
-                        '${session.pickupStop?.name ?? ''} to ${session.dropoffStop?.name ?? ''}',
+                    title: context.l10n.booking_chooseYourDeparture,
+                    subtitle: context.l10n.booking_pickupToDropoff(
+                      session.pickupStop?.name ?? '',
+                      session.dropoffStop?.name ?? '',
+                    ),
                     trailing: BookingCountPill(
-                      label: '${trips.length} available',
+                      label: context.l10n.home_seatsAvailable(trips.length),
                       color: ClientColors.journeyCyan,
                     ),
                   ),
@@ -75,7 +79,9 @@ class WizardTripStep extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          'EGP ${session.selectedTrip!.price}',
+                          context.l10n.packages_egpAmount(
+                            session.selectedTrip!.price,
+                          ),
                           style: ClientTypography.priceSmall(
                             context,
                           ).copyWith(color: ClientColors.primary),
@@ -83,8 +89,8 @@ class WizardTripStep extends StatelessWidget {
                       ],
                     ),
               child: ClientButton(
-                label: 'Choose a seat',
-                icon: const Icon(Icons.arrow_forward_rounded),
+                label: context.l10n.booking_chooseASeat,
+                icon: const DirectionalIcon(Icons.arrow_forward_rounded),
                 onPressed: session.tripValid ? onNext : null,
               ),
             ),
@@ -100,8 +106,8 @@ class WizardTripStep extends StatelessWidget {
 String _departureSummary(BuildContext context, RouteTripOptionData trip) {
   final day = formatTripDay(context, trip.tripDate);
   final time = formatTripTime(context, trip.departureTime);
-  if (day.isEmpty) return 'Departs $time';
-  return 'Departs $day · $time';
+  if (day.isEmpty) return context.l10n.booking_departsAtTime(time);
+  return context.l10n.booking_departsOnDayAtTime(day, time);
 }
 
 class _TripCard extends StatelessWidget {
@@ -185,7 +191,7 @@ class _TripCard extends StatelessWidget {
                                   color: ClientColors.borderStrongFor(context),
                                 ),
                               ),
-                              const Icon(
+                              const DirectionalIcon(
                                 Icons.arrow_forward_rounded,
                                 size: 15,
                                 color: ClientColors.journeySlate,
@@ -230,7 +236,7 @@ class _TripCard extends StatelessWidget {
                   child: _chip(
                     context,
                     Icons.event_seat_rounded,
-                    '${trip.availableSeats} seats left',
+                    '${trip.availableSeats} ${context.l10n.seatSelection_seatsLeftLabel}',
                     color: trip.availableSeats <= 3
                         ? ClientColors.journeyAmber
                         : ClientColors.journeyCyan,
@@ -240,7 +246,7 @@ class _TripCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'EGP ${trip.price}',
+                      context.l10n.packages_egpAmount(trip.price),
                       style: ClientTypography.priceSmall(context).copyWith(
                         color: isSelected
                             ? ClientColors.primary
@@ -248,7 +254,7 @@ class _TripCard extends StatelessWidget {
                       ),
                     ),
                     Text(
-                      'per ride',
+                      context.l10n.booking_perRide,
                       style: ClientTypography.labelSmall(
                         context,
                       ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -310,12 +316,12 @@ class _EmptyTrips extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              'No trips available',
+              context.l10n.booking_noTripsAvailable,
               style: ClientTypography.headingSmall(context),
             ),
             const SizedBox(height: 8),
             Text(
-              'No trips found for $routeName today.',
+              context.l10n.booking_noTripsFoundForRoute(routeName),
               textAlign: TextAlign.center,
               style: ClientTypography.bodySmall(
                 context,

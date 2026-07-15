@@ -10,6 +10,8 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/packag
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_state.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class WizardPackageStep extends StatefulWidget {
   const WizardPackageStep({super.key, required this.onNext});
@@ -55,7 +57,9 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
         final featured = _featuredIndex(plans);
 
         return BlocBuilder<BookingWizardCubit, BookingWizardSession>(
-          builder: (context, session) => Column(
+          builder: (context, session) {
+            final l10n = context.l10n;
+            return Column(
             children: [
               Expanded(
                 child: ListView(
@@ -63,12 +67,15 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
                   children: [
                     BookingStepIntro(
                       icon: Icons.local_offer_rounded,
-                      title: 'Choose your fare',
-                      subtitle:
-                          'Prices are for ${session.pickupStop?.name ?? 'your pickup'}'
-                          ' → ${session.dropoffStop?.name ?? 'your stop'}.',
+                      title: l10n.booking_chooseYourFare,
+                      subtitle: l10n.booking_pricesAreForRoute(
+                        session.pickupStop?.name ??
+                            l10n.booking_yourPickupFallback,
+                        session.dropoffStop?.name ??
+                            l10n.booking_yourStopFallback,
+                      ),
                       trailing: BookingCountPill(
-                        label: '${plans.length} options',
+                        label: l10n.booking_optionsCount(plans.length),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -97,13 +104,14 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
                     ? null
                     : PackageStepSummary(session: session),
                 child: ClientButton(
-                  label: 'Review booking',
-                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: l10n.booking_reviewBooking,
+                  icon: const DirectionalIcon(Icons.arrow_forward_rounded),
                   onPressed: session.packageValid ? widget.onNext : null,
                 ),
               ),
             ],
-          ),
+            );
+          },
         );
       },
     );

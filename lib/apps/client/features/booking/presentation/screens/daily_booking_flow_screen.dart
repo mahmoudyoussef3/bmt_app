@@ -9,7 +9,8 @@ import '../widgets/booking_summary_card.dart';
 import '../widgets/route_selection_tile.dart';
 import '../widgets/time_selection_chip.dart';
 import '../widgets/vehicle_card.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class DailyBookingFlowScreen extends StatefulWidget {
   const DailyBookingFlowScreen({super.key});
@@ -83,7 +84,9 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
                       return Expanded(
                         child: Container(
                           height: 6,
-                          margin: EdgeInsets.only(right: index == 3 ? 0 : 6),
+                          margin: EdgeInsetsDirectional.only(
+                            end: index == 3 ? 0 : 6,
+                          ),
                           decoration: BoxDecoration(
                             color: active
                                 ? Theme.of(context).colorScheme.primary
@@ -110,7 +113,7 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
     switch (_step) {
       case 1:
         return _selectionList(
-          title: AppLocalizations.of(context)!.booking_selectPickupPoint,
+          title: context.l10n.booking_selectPickupPoint,
           items: data.pickupPoints,
           activeColor: Theme.of(context).colorScheme.primary,
           onSelect: (value) => setState(() {
@@ -120,7 +123,7 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
         );
       case 2:
         return _selectionList(
-          title: AppLocalizations.of(context)!.booking_selectDestination,
+          title: context.l10n.booking_selectDestination,
           items: data.destinations,
           activeColor: Theme.of(context).colorScheme.secondary,
           onSelect: (value) => setState(() {
@@ -182,14 +185,12 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppLocalizations.of(
-                            context,
-                          )!.booking_availableVehicles,
+                          context.l10n.booking_availableVehicles,
                           style: Theme.of(context).textTheme.titleMedium,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          AppLocalizations.of(context)!.booking_pickBestShuttle,
+                          context.l10n.booking_pickBestShuttle,
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                       ],
@@ -272,25 +273,25 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
             onPressed: _step == 1
                 ? () => Navigator.of(context).maybePop()
                 : () => setState(() => _step -= 1),
-            icon: const Icon(Icons.chevron_left_rounded),
+            icon: const DirectionalIcon(Icons.chevron_left_rounded),
           ),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                AppLocalizations.of(context)!.booking_bookYourRide,
+                context.l10n.booking_bookYourRide,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               Text(
-                AppLocalizations.of(context)!.booking_stepOf4(_step),
+                context.l10n.booking_stepOf4(_step),
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ],
           ),
           const Spacer(),
           IconButton(
-            tooltip: 'Refresh',
+            tooltip: context.l10n.tracking_refresh,
             icon: const Icon(Icons.refresh_rounded),
             onPressed: () =>
                 context.read<BookingCubit>().loadDailyBookingData(force: true),

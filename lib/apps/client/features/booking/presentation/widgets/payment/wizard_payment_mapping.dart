@@ -1,5 +1,8 @@
+import 'package:flutter/widgets.dart';
+
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The wizard carries its own session object while the checkout widgets speak
 /// [PaymentCheckoutData]. Mapping lives here alone, so the payment step and the
@@ -53,18 +56,20 @@ bool wizardMethodRequiresReceipt(String? id) =>
 /// Every reason the pay button could refuse is named here, so the bar can show
 /// the reason before it is pressed rather than failing on tap.
 String? wizardPaymentBlockedReason({
+  required BuildContext context,
   required BookingWizardSession session,
   required PaymentCheckoutData data,
   required bool uploading,
 }) {
-  if (!data.isReadyForPayment) return 'Some booking details are missing.';
+  final l10n = context.l10n;
+  if (!data.isReadyForPayment) return l10n.booking_someDetailsAreMissing;
   if (session.paymentMethod == null) {
-    return 'Choose a payment method to continue.';
+    return l10n.booking_choosePaymentMethodToContinue;
   }
-  if (uploading) return 'Your receipt is still uploading.';
+  if (uploading) return l10n.booking_receiptStillUploading;
   if (wizardMethodRequiresReceipt(session.paymentMethod) &&
       session.receiptUrl == null) {
-    return 'Attach your transfer receipt to continue.';
+    return l10n.booking_attachReceiptToContinue;
   }
   return null;
 }

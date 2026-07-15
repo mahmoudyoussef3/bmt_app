@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// Greeting + identity row on the hero: avatar initial, time-aware greeting,
 /// and the notification bell.
@@ -18,6 +20,7 @@ class HomeGreetingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final firstName = _firstName(userName);
+    final l10n = context.l10n;
 
     return Row(
       children: [
@@ -55,7 +58,7 @@ class HomeGreetingRow extends StatelessWidget {
                   Icon(_greetingIcon(), size: 13, color: Colors.white.withAlpha(200)),
                   const SizedBox(width: 5),
                   Text(
-                    _greeting(),
+                    _greeting(l10n),
                     style: ClientTypography.bodySmall(
                       context,
                     ).copyWith(color: Colors.white.withAlpha(200)),
@@ -64,7 +67,7 @@ class HomeGreetingRow extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                firstName ?? 'Welcome aboard',
+                firstName ?? l10n.home_welcomeAboard,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: ClientTypography.headingMedium(context).copyWith(
@@ -78,7 +81,7 @@ class HomeGreetingRow extends StatelessWidget {
         ),
         const SizedBox(width: 12),
         Tooltip(
-          message: 'Notifications',
+          message: l10n.common_notifications,
           child: Material(
             color: Colors.white.withAlpha(26),
             borderRadius: BorderRadius.circular(ClientRadius.md),
@@ -113,11 +116,11 @@ class HomeGreetingRow extends StatelessWidget {
     return cleaned.split(RegExp(r'\s+')).first;
   }
 
-  static String _greeting() {
+  static String _greeting(AppLocalizations l10n) {
     final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    if (hour < 12) return l10n.home_greetingMorning;
+    if (hour < 17) return l10n.home_greetingAfternoon;
+    return l10n.home_greetingEvening;
   }
 
   static IconData _greetingIcon() {

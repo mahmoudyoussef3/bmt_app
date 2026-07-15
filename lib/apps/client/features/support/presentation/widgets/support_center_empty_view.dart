@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'support_home_header.dart';
 
 /// Shown when the client has zero support tickets. The hero above already
@@ -37,7 +38,7 @@ class SupportCenterEmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              'No tickets yet',
+              context.l10n.support_emptyTitle,
               textAlign: TextAlign.center,
               style: ClientTypography.headingSmall(context).copyWith(
                 color: ClientColors.textPrimaryFor(context),
@@ -46,8 +47,7 @@ class SupportCenterEmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'When you open a ticket it will appear here, along with its '
-              'status and every reply from our team.',
+              context.l10n.support_emptyBody,
               textAlign: TextAlign.center,
               style: ClientTypography.bodyMedium(context).copyWith(
                 color: ClientColors.textSecondaryFor(context),

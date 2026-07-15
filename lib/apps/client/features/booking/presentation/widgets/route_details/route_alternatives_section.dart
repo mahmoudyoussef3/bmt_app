@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/alternative_route_tile.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// "Other matching routes" — every alternative route for the current search.
 class RouteAlternativesSection extends StatelessWidget {
@@ -27,7 +28,7 @@ class RouteAlternativesSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Other matching routes',
+          context.l10n.booking_otherMatchingRoutes,
           style: Theme.of(
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),

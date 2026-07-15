@@ -10,7 +10,8 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
-import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class SubscriptionScreen extends StatefulWidget {
   const SubscriptionScreen({
@@ -68,7 +69,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     final error = state.subscribeError;
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not activate subscription: $error')),
+        SnackBar(
+          content: Text(
+            context.l10n.packages_activateSubscriptionError(error),
+          ),
+        ),
       );
       context.read<PackagesCubit>().clearSubscribeError();
       return;
@@ -94,17 +99,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           appBar: AppBar(
             title: Text(
               isProcessing
-                  ? AppLocalizations.of(context)!.packages_processing
+                  ? context.l10n.packages_processing
                   : _getStepTitle(context),
               style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             leading: IconButton(
               onPressed: _onBackPress,
-              icon: const Icon(Icons.arrow_back_rounded),
+              icon: const DirectionalIcon(Icons.arrow_back_rounded),
             ),
             actions: [
               IconButton(
-                tooltip: 'Refresh',
+                tooltip: context.l10n.packages_refreshTooltip,
                 icon: const Icon(Icons.refresh_rounded),
                 onPressed: () => context.read<PackagesCubit>().load(),
               ),
@@ -114,16 +119,16 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           body: Stack(
             children: [
               // Background glows
-              Positioned(
+              PositionedDirectional(
                 top: -80,
-                right: -80,
+                end: -80,
                 child: _BackgroundCircleGlow(
                   color: scheme.primary.withAlpha(20),
                 ),
               ),
-              Positioned(
+              PositionedDirectional(
                 bottom: -60,
-                left: -80,
+                start: -80,
                 child: _BackgroundCircleGlow(
                   color: scheme.secondary.withAlpha(15),
                 ),
@@ -158,17 +163,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
   String _getStepTitle(BuildContext context) {
     switch (_currentStep) {
       case 1:
-        return AppLocalizations.of(context)!.packages_commutePackages;
+        return context.l10n.packages_commutePackages;
       case 2:
-        return AppLocalizations.of(context)!.packages_packageDetails;
+        return context.l10n.packages_packageDetails;
       case 3:
-        return AppLocalizations.of(context)!.packages_configureTravel;
+        return context.l10n.packages_configureTravel;
       case 4:
-        return AppLocalizations.of(context)!.packages_reviewSummary;
+        return context.l10n.packages_reviewSummary;
       case 5:
-        return AppLocalizations.of(context)!.packages_subscribed;
+        return context.l10n.packages_subscribed;
       default:
-        return AppLocalizations.of(context)!.packages_subscribePlan;
+        return context.l10n.packages_subscribePlan;
     }
   }
 
@@ -202,22 +207,22 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _buildFilterTab(
-                AppLocalizations.of(context)!.packages_all,
+                context.l10n.packages_all,
                 loaded,
                 scheme,
               ),
               _buildFilterTab(
-                AppLocalizations.of(context)!.packages_weekly,
+                context.l10n.packages_weekly,
                 loaded,
                 scheme,
               ),
               _buildFilterTab(
-                AppLocalizations.of(context)!.packages_monthly,
+                context.l10n.packages_monthly,
                 loaded,
                 scheme,
               ),
               _buildFilterTab(
-                AppLocalizations.of(context)!.packages_quarterly,
+                context.l10n.packages_quarterly,
                 loaded,
                 scheme,
               ),
@@ -314,8 +319,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           child: Stack(
             children: [
               // Subtle background decoration
-              Positioned(
-                right: -40,
+              PositionedDirectional(
+                end: -40,
                 top: -40,
                 child: Container(
                   width: 120,
@@ -326,8 +331,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   ),
                 ),
               ),
-              Positioned(
-                left: -20,
+              PositionedDirectional(
+                start: -20,
                 bottom: -20,
                 child: Container(
                   width: 80,
@@ -366,9 +371,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              AppLocalizations.of(
-                                context,
-                              )!.packages_savePercent(
+                              context.l10n.packages_savePercent(
                                 package.discountPercent.toInt(),
                               ),
                               style: TextStyle(
@@ -386,21 +389,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           _buildMiniDetailColumn(
-                            AppLocalizations.of(context)!.packages_duration,
-                            package.durationLabel,
+                            context.l10n.packages_duration,
+                            context.l10n.packages_daysCount(package.days),
                           ),
                           _buildMiniDetailColumn(
-                            AppLocalizations.of(context)!.packages_totalTrips,
-                            AppLocalizations.of(
-                              context,
-                            )!.packages_ridesCount(package.tripsCount),
+                            context.l10n.packages_totalTrips,
+                            context.l10n.packages_ridesCount(package.tripsCount),
                           ),
                           if (widget.bookingData != null)
                             _buildMiniDetailColumn(
-                              AppLocalizations.of(
-                                context,
-                              )!.packages_totalSavings,
-                              AppLocalizations.of(context)!.packages_egpAmount(
+                              context.l10n.packages_totalSavings,
+                              context.l10n.packages_egpAmount(
                                 package.savingsAmount.toString(),
                               ),
                               isHighlight: true,
@@ -421,9 +420,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.packages_originalPrice(
+                                  context.l10n.packages_originalPrice(
                                     package.basePrice.toString(),
                                   ),
                                   style: const TextStyle(
@@ -438,9 +435,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                   textBaseline: TextBaseline.alphabetic,
                                   children: [
                                     Text(
-                                      AppLocalizations.of(
-                                        context,
-                                      )!.packages_egpAmount(
+                                      context.l10n.packages_egpAmount(
                                         package.startingPrice.toString(),
                                       ),
                                       style: TextStyle(
@@ -451,9 +446,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                                     ),
                                     const SizedBox(width: 4),
                                     Text(
-                                      AppLocalizations.of(
-                                        context,
-                                      )!.packages_startingPrice,
+                                      context.l10n.packages_startingPrice,
                                       style: const TextStyle(
                                         fontSize: 11,
                                         color: Colors.grey,
@@ -468,18 +461,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.packages_packageDiscount,
+                                  context.l10n.packages_packageDiscount,
                                   style: const TextStyle(
                                     fontSize: 10,
                                     color: Colors.grey,
                                   ),
                                 ),
                                 Text(
-                                  AppLocalizations.of(
-                                    context,
-                                  )!.packages_percentOff(
+                                  context.l10n.packages_percentOff(
                                     package.discountPercent.toInt(),
                                   ),
                                   style: TextStyle(
@@ -497,7 +486,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                               color: scheme.primary.withAlpha(20),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
+                            child: DirectionalIcon(
                               Icons.arrow_forward_rounded,
                               size: 18,
                               color: scheme.primary,
@@ -558,7 +547,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
               // Benefits
               Text(
-                AppLocalizations.of(context)!.packages_whatIsIncluded,
+                context.l10n.packages_whatIsIncluded,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -568,21 +557,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 10),
               _buildBenefitRow(
                 Icons.event_seat_rounded,
-                AppLocalizations.of(context)!.packages_reservedSeatGuaranteed,
-                AppLocalizations.of(context)!.packages_reservedSeatDesc,
+                context.l10n.packages_reservedSeatGuaranteed,
+                context.l10n.packages_reservedSeatDesc,
                 scheme,
               ),
               _buildBenefitRow(
                 Icons.schedule_rounded,
-                AppLocalizations.of(context)!.packages_flexibleTiming,
-                AppLocalizations.of(context)!.packages_flexibleTimingDesc,
+                context.l10n.packages_flexibleTiming,
+                context.l10n.packages_flexibleTimingDesc,
                 scheme,
               ),
               const SizedBox(height: 20),
 
               // Route details card
               Text(
-                AppLocalizations.of(context)!.packages_routeLimits,
+                context.l10n.packages_routeLimits,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -600,22 +589,18 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 child: Column(
                   children: [
                     _buildRowDetailText(
-                      AppLocalizations.of(context)!.packages_routeScope,
-                      AppLocalizations.of(context)!.packages_routeScopeDesc,
+                      context.l10n.packages_routeScope,
+                      context.l10n.packages_routeScopeDesc,
                     ),
                     const SizedBox(height: 8),
                     _buildRowDetailText(
-                      AppLocalizations.of(context)!.packages_includedRides,
-                      AppLocalizations.of(
-                        context,
-                      )!.packages_singleTripsDesc(package.tripsCount),
+                      context.l10n.packages_includedRides,
+                      context.l10n.packages_singleTripsDesc(package.tripsCount),
                     ),
                     const SizedBox(height: 8),
                     _buildRowDetailText(
-                      AppLocalizations.of(context)!.packages_validityPeriod,
-                      AppLocalizations.of(
-                        context,
-                      )!.packages_consecutiveDaysDesc(package.days),
+                      context.l10n.packages_validityPeriod,
+                      context.l10n.packages_consecutiveDaysDesc(package.days),
                     ),
                   ],
                 ),
@@ -624,7 +609,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
               // Terms Conditions
               Text(
-                AppLocalizations.of(context)!.packages_termsCancellation,
+                context.l10n.packages_termsCancellation,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -640,9 +625,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   border: Border.all(color: ClientColors.borderFor(context)),
                 ),
                 child: Text(
-                  '${AppLocalizations.of(context)!.packages_termsText1}\n'
-                  '${AppLocalizations.of(context)!.packages_termsText2}\n'
-                  '${AppLocalizations.of(context)!.packages_termsText3(package.tripsCount)}',
+                  '${context.l10n.packages_termsText1}\n'
+                  '${context.l10n.packages_termsText2}\n'
+                  '${context.l10n.packages_termsText3(package.tripsCount)}',
                   style: TextStyle(
                     fontSize: 12,
                     height: 1.4,
@@ -656,7 +641,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         ),
         // Bottom sticky button
         _buildStickyCTA(
-          label: 'Continue to Payment',
+          label: context.l10n.packages_continueToPayment,
           onPressed: () {
             final Map<String, dynamic> combinedArgs = {};
             if (widget.bookingData != null) {
@@ -711,7 +696,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  package.durationLabel,
+                  context.l10n.packages_daysCount(package.days),
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
@@ -739,13 +724,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.packages_basePrice,
+                      context.l10n.packages_basePrice,
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
                     Text(
-                      AppLocalizations.of(
-                        context,
-                      )!.packages_egpAmount(package.basePrice.toString()),
+                      context.l10n.packages_egpAmount(package.basePrice.toString()),
                       style: const TextStyle(
                         fontSize: 13,
                         decoration: TextDecoration.lineThrough,
@@ -758,13 +741,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.packages_packageDiscount,
+                      context.l10n.packages_packageDiscount,
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
                     Text(
-                      AppLocalizations.of(
-                        context,
-                      )!.packages_percentOff(package.discountPercent.toInt()),
+                      context.l10n.packages_percentOff(package.discountPercent.toInt()),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -777,13 +758,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.packages_subscriptionCost,
+                      context.l10n.packages_subscriptionCost,
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
                     Text(
-                      AppLocalizations.of(
-                        context,
-                      )!.packages_egpAmount(package.startingPrice.toString()),
+                      context.l10n.packages_egpAmount(package.startingPrice.toString()),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -802,13 +781,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.packages_packageDiscount,
+                      context.l10n.packages_packageDiscount,
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
                     Text(
-                      AppLocalizations.of(
-                        context,
-                      )!.packages_percentOff(package.discountPercent.toInt()),
+                      context.l10n.packages_percentOff(package.discountPercent.toInt()),
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
@@ -900,7 +877,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             children: [
               // Route Selection Dropdown
               Text(
-                AppLocalizations.of(context)!.packages_selectTargetRoute,
+                context.l10n.packages_selectTargetRoute,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -927,7 +904,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.packages_pickupPoint,
+                          context.l10n.packages_pickupPoint,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -953,7 +930,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.packages_destination,
+                          context.l10n.packages_destination,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,
@@ -981,7 +958,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
               // Vehicle Type Selector
               Text(
-                AppLocalizations.of(context)!.packages_selectVehicleCategory,
+                context.l10n.packages_selectVehicleCategory,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -999,8 +976,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           context.read<PackagesCubit>().selectVehicle(idx),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 220),
-                        margin: EdgeInsets.only(
-                          right: idx == loaded.data.vehicles.length - 1 ? 0 : 8,
+                        margin: EdgeInsetsDirectional.only(
+                          end: idx == loaded.data.vehicles.length - 1 ? 0 : 8,
                         ),
                         padding: const EdgeInsets.symmetric(
                           vertical: 12,
@@ -1037,8 +1014,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                             const SizedBox(height: 2),
                             Text(
                               vehicle.extraFee > 0
-                                  ? '+EGP ${vehicle.extraFee}'
-                                  : 'Free',
+                                  ? context.l10n.packages_extraFeeAmount(
+                                      context.l10n.packages_egpAmount(
+                                        vehicle.extraFee.toString(),
+                                      ),
+                                    )
+                                  : context.l10n.packages_free,
                               style: TextStyle(
                                 fontSize: 9,
                                 color: isSelected
@@ -1056,8 +1037,8 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               const SizedBox(height: 20),
 
               // Seat Selection Map Picker
-              const Text(
-                'Choose Your Seat',
+              Text(
+                context.l10n.packages_chooseYourSeat,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1065,9 +1046,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 ),
               ),
               const SizedBox(height: 4),
-              const Text(
-                'Tap to reserve seat. Reserving more seats multiplies the package.',
-                style: TextStyle(fontSize: 11, color: Colors.grey),
+              Text(
+                context.l10n.packages_seatTapInstructions,
+                style: const TextStyle(fontSize: 11, color: Colors.grey),
               ),
               const SizedBox(height: 14),
               _buildSeatMapGrid(loaded, scheme),
@@ -1118,7 +1099,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
         child: DropdownButton<String>(
           value: safeValue,
           hint: Text(
-            uniqueItems.isEmpty ? 'No options available' : 'Select option',
+            uniqueItems.isEmpty
+                ? context.l10n.packages_noOptionsAvailable
+                : context.l10n.packages_selectOption,
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
           ),
           items: uniqueItems.map((item) {
@@ -1168,17 +1151,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Row(
+              Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.directions_car_rounded,
                     size: 14,
                     color: Colors.grey,
                   ),
-                  SizedBox(width: 6),
+                  const SizedBox(width: 6),
                   Text(
-                    'Front / Driver Cabin',
-                    style: TextStyle(fontSize: 11, color: Colors.grey),
+                    context.l10n.packages_frontDriverCabin,
+                    style: const TextStyle(fontSize: 11, color: Colors.grey),
                   ),
                 ],
               ),
@@ -1210,12 +1193,15 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     // Seat Left 2
                     _buildSeatButton((rowIdx * 4) + 2, loaded, scheme),
                     // Middle Aisle Gap
-                    const SizedBox(
+                    SizedBox(
                       width: 32,
                       child: Center(
                         child: Text(
-                          'Aisle',
-                          style: TextStyle(fontSize: 9, color: Colors.grey),
+                          context.l10n.packages_aisle,
+                          style: const TextStyle(
+                            fontSize: 9,
+                            color: Colors.grey,
+                          ),
                         ),
                       ),
                     ),
@@ -1236,12 +1222,20 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildLegendItem(Colors.transparent, scheme.outline, 'Available'),
-              _buildLegendItem(scheme.primary, scheme.primary, 'Selected'),
+              _buildLegendItem(
+                Colors.transparent,
+                scheme.outline,
+                context.l10n.packages_seatAvailable,
+              ),
+              _buildLegendItem(
+                scheme.primary,
+                scheme.primary,
+                context.l10n.packages_seatSelected,
+              ),
               _buildLegendItem(
                 scheme.outline.withAlpha(120),
                 scheme.outline.withAlpha(120),
-                'Occupied',
+                context.l10n.packages_seatOccupied,
               ),
             ],
           ),
@@ -1331,13 +1325,17 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Seats Selected: 1',
+                      context.l10n.packages_seatsSelectedCount(1),
                       style: const TextStyle(fontSize: 11, color: Colors.grey),
                     ),
                     Row(
                       children: [
                         Text(
-                          'Cost: ${AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.rawSubtotal.toString())}',
+                          context.l10n.packages_costLabel(
+                            context.l10n.packages_egpAmount(
+                              loaded.pricing.rawSubtotal.toString(),
+                            ),
+                          ),
                           style: const TextStyle(
                             fontSize: 11,
                             color: Colors.grey,
@@ -1345,7 +1343,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         ),
                         const SizedBox(width: 8),
                         Text(
-                          'Savings: ${AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.totalSavings.toString())}',
+                          context.l10n.packages_savingsLabel(
+                            context.l10n.packages_egpAmount(
+                              loaded.pricing.totalSavings.toString(),
+                            ),
+                          ),
                           style: TextStyle(
                             fontSize: 11,
                             color: scheme.secondary,
@@ -1357,9 +1359,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   ],
                 ),
                 Text(
-                  AppLocalizations.of(
-                    context,
-                  )!.packages_egpAmount(loaded.pricing.finalPrice.toString()),
+                  context.l10n.packages_egpAmount(loaded.pricing.finalPrice.toString()),
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -1373,7 +1373,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               children: [
                 Expanded(
                   child: ClientButton(
-                    label: 'Continue to Summary',
+                    label: context.l10n.packages_continueToSummary,
                     expand: true,
                     onPressed: () {
                       setState(() {
@@ -1418,7 +1418,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          AppLocalizations.of(context)!.packages_reviewSummary,
+                          context.l10n.packages_reviewSummary,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 16,
@@ -1446,29 +1446,32 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                     ),
                     const Divider(height: 24),
                     _buildSummaryDetailRow(
-                      'Target Route',
+                      context.l10n.packages_targetRouteLabel,
                       loaded.selectedRoute,
                     ),
                     _buildSummaryDetailRow(
-                      'Pickup Stop',
+                      context.l10n.packages_pickupStopLabel,
                       loaded.selectedPickup,
                     ),
                     _buildSummaryDetailRow(
-                      'Destination Stop',
+                      context.l10n.packages_destinationStopLabel,
                       loaded.selectedDestination,
                     ),
                     _buildSummaryDetailRow(
-                      'Vehicle Category',
+                      context.l10n.packages_vehicleCategoryLabel,
                       loaded.selectedVehicle.name,
                     ),
-                    _buildSummaryDetailRow('Selected Seats', '1'),
                     _buildSummaryDetailRow(
-                      'Trips Allocated',
-                      '${package.tripsCount} Rides',
+                      context.l10n.packages_selectedSeatsLabel,
+                      '1',
                     ),
                     _buildSummaryDetailRow(
-                      'Package Validity',
-                      '${package.days} Days',
+                      context.l10n.packages_tripsAllocatedLabel,
+                      context.l10n.packages_ridesCount(package.tripsCount),
+                    ),
+                    _buildSummaryDetailRow(
+                      context.l10n.packages_packageValidityLabel,
+                      context.l10n.packages_daysCount(package.days),
                     ),
                   ],
                 ),
@@ -1477,7 +1480,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
               // Final pricing card
               Text(
-                AppLocalizations.of(context)!.packages_billingDetails,
+                context.l10n.packages_billingDetails,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
@@ -1495,21 +1498,21 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 child: Column(
                   children: [
                     _buildPricingRow(
-                      AppLocalizations.of(context)!.packages_basePrice,
-                      AppLocalizations.of(context)!.packages_egpAmount(
+                      context.l10n.packages_basePrice,
+                      context.l10n.packages_egpAmount(
                         loaded.pricing.rawSubtotal.toString(),
                       ),
                     ),
                     const SizedBox(height: 8),
                     _buildPricingRow(
-                      AppLocalizations.of(context)!.packages_packageDiscount,
-                      '-${AppLocalizations.of(context)!.packages_egpAmount(loaded.pricing.discountValue.toString())}',
+                      context.l10n.packages_packageDiscount,
+                      '-${context.l10n.packages_egpAmount(loaded.pricing.discountValue.toString())}',
                       color: scheme.primary,
                     ),
                     const SizedBox(height: 8),
                     _buildPricingRow(
-                      AppLocalizations.of(context)!.packages_totalSavings,
-                      AppLocalizations.of(context)!.packages_egpAmount(
+                      context.l10n.packages_totalSavings,
+                      context.l10n.packages_egpAmount(
                         loaded.pricing.totalSavings.toString(),
                       ),
                       color: scheme.secondary,
@@ -1519,16 +1522,14 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          AppLocalizations.of(
-                            context,
-                          )!.packages_subscriptionCost,
+                          context.l10n.packages_subscriptionCost,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
                           ),
                         ),
                         Text(
-                          AppLocalizations.of(context)!.packages_egpAmount(
+                          context.l10n.packages_egpAmount(
                             loaded.pricing.finalPrice.toString(),
                           ),
                           style: TextStyle(
@@ -1554,10 +1555,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         .setAgreeTerms(val ?? false),
                     activeColor: scheme.primary,
                   ),
-                  const Expanded(
+                  Expanded(
                     child: Text(
-                      'I agree to the recurring commuter subscription terms and conditions policy.',
-                      style: TextStyle(fontSize: 11, height: 1.3),
+                      context.l10n.packages_agreeTermsText,
+                      style: const TextStyle(fontSize: 11, height: 1.3),
                     ),
                   ),
                 ],
@@ -1569,15 +1570,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
         // Confirm Action sticky bottom panel
         _buildStickyCTA(
-          label: 'Submit for Payment Review',
+          label: context.l10n.packages_submitForPaymentReview,
           onPressed: loaded.agreeTerms
               ? _activateSubscription
               : () {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Please agree to the terms before submitting.',
-                      ),
+                    SnackBar(
+                      content: Text(context.l10n.packages_agreeTermsRequired),
                     ),
                   );
                 },
@@ -1673,19 +1672,19 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             ],
           ),
           const SizedBox(height: 20),
-          const Text(
-            'Request Submitted',
-            style: TextStyle(
+          Text(
+            context.l10n.packages_requestSubmittedTitle,
+            style: const TextStyle(
               fontSize: 22,
               fontWeight: FontWeight.w900,
               color: Colors.orange,
             ),
           ),
           const SizedBox(height: 6),
-          const Text(
-            'Your subscription is pending payment confirmation. It will become usable only after finance approval.',
+          Text(
+            context.l10n.packages_requestSubmittedSubtitle,
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 12, color: Colors.grey),
+            style: const TextStyle(fontSize: 12, color: Colors.grey),
           ),
           const SizedBox(height: 24),
 
@@ -1703,9 +1702,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Subscription Request',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.packages_subscriptionRequestLabel,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1715,7 +1714,11 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                         final id = loaded.subscriptionId ?? '';
                         Clipboard.setData(ClipboardData(text: id));
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text('Copied ID: $id')),
+                          SnackBar(
+                            content: Text(
+                              context.l10n.packages_copiedIdMessage(id),
+                            ),
+                          ),
                         );
                       },
                       child: Row(
@@ -1740,36 +1743,53 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   ],
                 ),
                 const Divider(height: 20),
-                _buildReceiptRow('Commuter Package', package.name),
-                _buildReceiptRow('Duration Limit', package.durationLabel),
                 _buildReceiptRow(
-                  'Total Trips Scope',
-                  '${package.tripsCount} Rides',
+                  context.l10n.packages_commuterPackageLabel,
+                  package.name,
                 ),
-                _buildReceiptRow('Selected Seats', '1'),
-                _buildReceiptRow('Travel Route', loaded.selectedRoute),
-                _buildReceiptRow('Pickup Stop', loaded.selectedPickup),
                 _buildReceiptRow(
-                  'Destination Stop',
+                  context.l10n.packages_durationLimitLabel,
+                  context.l10n.packages_daysCount(package.days),
+                ),
+                _buildReceiptRow(
+                  context.l10n.packages_totalTripsScopeLabel,
+                  context.l10n.packages_ridesCount(package.tripsCount),
+                ),
+                _buildReceiptRow(
+                  context.l10n.packages_selectedSeatsLabel,
+                  '1',
+                ),
+                _buildReceiptRow(
+                  context.l10n.packages_travelRouteLabel,
+                  loaded.selectedRoute,
+                ),
+                _buildReceiptRow(
+                  context.l10n.packages_pickupStopLabel,
+                  loaded.selectedPickup,
+                ),
+                _buildReceiptRow(
+                  context.l10n.packages_destinationStopLabel,
                   loaded.selectedDestination,
                 ),
                 _buildReceiptRow(
-                  'Vehicle Standard',
+                  context.l10n.packages_vehicleStandardLabel,
                   loaded.selectedVehicle.name,
                 ),
                 const Divider(height: 20),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      'Amount Due',
-                      style: TextStyle(
+                    Text(
+                      context.l10n.packages_amountDueLabel,
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                     Text(
-                      'EGP ${loaded.pricing.finalPrice}',
+                      context.l10n.packages_egpAmount(
+                        loaded.pricing.finalPrice.toString(),
+                      ),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
@@ -1788,7 +1808,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
             children: [
               Expanded(
                 child: ClientButton(
-                  label: 'Back to Home',
+                  label: context.l10n.packages_backToHome,
                   expand: true,
                   onPressed: () {
                     Navigator.of(context).popUntil((route) => route.isFirst);
@@ -1867,13 +1887,13 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               child: CircularProgressIndicator(strokeWidth: 5),
             ),
             const SizedBox(height: 24),
-            const Text(
-              'Activating Package...',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            Text(
+              context.l10n.packages_activatingPackage,
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
-              'Confirming commuter credentials and reserving seats.',
+              context.l10n.packages_confirmingCredentials,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 12,

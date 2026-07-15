@@ -19,6 +19,8 @@ import 'package:bmt_app/apps/client/features/payments/presentation/widgets/check
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_promo_field.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_skeleton.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_ticket_card.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The rider reviews the ticket they are buying, picks how to pay, and pays.
 ///
@@ -79,17 +81,22 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   }
 
   /// Why the rider cannot pay yet — `null` once they can.
-  String? _blockedReason(PaymentCheckoutLoaded state, int total) {
+  String? _blockedReason(
+    BuildContext context,
+    PaymentCheckoutLoaded state,
+    int total,
+  ) {
     final data = widget.checkoutData;
     if (!data.isReadyForPayment) {
-      return 'Some booking details are missing.';
+      return context.l10n.payments_missingBookingDetails;
     }
     final method = state.selectedPaymentMethod;
-    if (method == null) return 'Choose a payment method to continue.';
+    if (method == null) return context.l10n.payments_choosePaymentMethod;
     if (method.type == PaymentMethodType.walletBalance &&
         data.walletBalance < total) {
-      return 'Your wallet is ${total - data.walletBalance} EGP short of this '
-          'fare.';
+      return context.l10n.payments_walletShortByAmount(
+        FormatUtil.currency(context, total - data.walletBalance),
+      );
     }
     return null;
   }
@@ -115,7 +122,7 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
   Widget _buildCheckout(BuildContext context, PaymentCheckoutLoaded state) {
     final data = widget.checkoutData;
     final total = data.totalForDiscount(state.promoDiscount);
-    final blockedReason = _blockedReason(state, total);
+    final blockedReason = _blockedReason(context, state, total);
     final cubit = context.read<PaymentCubit>();
     final padding = MediaQuery.sizeOf(context).width < 380 ? 16.0 : 20.0;
 
@@ -123,7 +130,9 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
       bottomBar: CheckoutPayBar(
         total: total,
         subtotal: data.subtotal,
-        label: state.requiresReceipt ? 'Continue' : 'Pay now',
+        label: state.requiresReceipt
+            ? context.l10n.payments_continueLabel
+            : context.l10n.payments_payNow,
         blockedReason: blockedReason,
         onPay: blockedReason == null ? () => _pay(state) : null,
       ),

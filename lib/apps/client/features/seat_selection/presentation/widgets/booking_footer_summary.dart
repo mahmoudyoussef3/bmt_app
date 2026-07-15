@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class BookingFooterSummary extends StatelessWidget {
   final String? selectedSeat;
@@ -25,6 +26,7 @@ class BookingFooterSummary extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasSeat = selectedSeat != null;
+    final l10n = context.l10n;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -44,7 +46,7 @@ class BookingFooterSummary extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Selected seat',
+                  l10n.seatSelection_selectedSeatLabel,
                   style: ClientTypography.labelMedium(context).copyWith(
                     fontWeight: FontWeight.w700,
                     color: ClientColors.textPrimaryFor(context),
@@ -55,7 +57,7 @@ class BookingFooterSummary extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _PriceStat(
-                        label: 'Seats',
+                        label: l10n.common_seats,
                         value: '$_seatCount',
                         icon: Icons.event_seat_rounded,
                       ),
@@ -63,8 +65,8 @@ class BookingFooterSummary extends StatelessWidget {
                     Expanded(
                       flex: 2,
                       child: _PriceStat(
-                        label: 'Seat numbers',
-                        value: 'Seat $selectedSeat',
+                        label: l10n.seatSelection_seatNumbersLabel,
+                        value: l10n.home_seatLabel('$selectedSeat'),
                         icon: Icons.confirmation_number_outlined,
                       ),
                     ),
@@ -75,7 +77,7 @@ class BookingFooterSummary extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _PriceStat(
-                        label: 'Per seat',
+                        label: l10n.seatSelection_perSeatLabel,
                         value: 'EGP ${pricePerSeat.toStringAsFixed(2)}',
                         icon: Icons.payments_outlined,
                       ),
@@ -85,7 +87,7 @@ class BookingFooterSummary extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.end,
                         children: [
                           Text(
-                            'Total',
+                            l10n.payments_total,
                             style: ClientTypography.labelSmall(context)
                                 .copyWith(
                                   color: ClientColors.textSecondaryFor(context),
@@ -130,7 +132,7 @@ class BookingFooterSummary extends StatelessWidget {
                     ).copyWith(color: ClientColors.primary),
                   ),
                   Text(
-                    '$_seatCount seat selected',
+                    l10n.seatSelection_seatCountSelected(_seatCount),
                     style: ClientTypography.bodySmall(
                       context,
                     ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -142,10 +144,10 @@ class BookingFooterSummary extends StatelessWidget {
             Expanded(
               child: ClientButton(
                 label: isLoading
-                    ? 'Reserving seat...'
+                    ? l10n.seatSelection_reservingSeat
                     : hasSeat
-                    ? 'Continue Booking'
-                    : 'Select a Seat',
+                    ? l10n.seatSelection_continueBooking
+                    : l10n.seatSelection_selectASeat,
                 isLoading: isLoading,
                 onPressed: onConfirm,
               ),
@@ -176,7 +178,7 @@ class _EmptySelectionBanner extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Select one seat to continue',
+              context.l10n.seatSelection_selectSeatToContinue,
               style: ClientTypography.bodySmall(context).copyWith(
                 fontWeight: FontWeight.w600,
                 color: ClientColors.textSecondaryFor(context),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class BookingSummaryCard extends StatelessWidget {
   final String pickup;
@@ -26,15 +27,18 @@ class BookingSummaryCard extends StatelessWidget {
       child: Row(
         children: [
           Expanded(
-            child: _SummaryCell(label: 'From', value: pickup),
+            child: _SummaryCell(label: context.l10n.booking_from, value: pickup),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _SummaryCell(label: 'To', value: destination),
+            child: _SummaryCell(
+              label: context.l10n.booking_to,
+              value: destination,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: _SummaryCell(label: 'Time', value: time),
+            child: _SummaryCell(label: context.l10n.common_time, value: time),
           ),
         ],
       ),

@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/client/features/payments/presentation/widgets/booki
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/usecases/get_trip_details_usecase.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
   final String seat;
@@ -133,7 +134,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Booking',
+                    context.l10n.payments_bookingTitle,
                     style: ClientTypography.headingSmall(
                       context,
                     ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -178,14 +179,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
         ),
         const SizedBox(height: 18),
         Text(
-          'Processing your booking...',
+          context.l10n.payments_processingBookingTitle,
           style: ClientTypography.headingSmall(
             context,
           ).copyWith(color: ClientColors.textPrimaryFor(context)),
         ),
         const SizedBox(height: 6),
         Text(
-          'This should only take a moment',
+          context.l10n.payments_processingBookingSubtitle,
           style: ClientTypography.bodySmall(
             context,
           ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -263,14 +264,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
           ),
           const SizedBox(height: 18),
           Text(
-            'Booking Confirmed',
+            context.l10n.payments_bookingConfirmedTitle,
             style: ClientTypography.headingLarge(
               context,
             ).copyWith(color: ClientColors.textPrimaryFor(context)),
           ),
           const SizedBox(height: 6),
           Text(
-            'Your seat is reserved — confirmation below',
+            context.l10n.payments_bookingConfirmedSubtitle,
             style: ClientTypography.bodySmall(
               context,
             ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -290,7 +291,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                   children: [
                     Expanded(
                       child: Text(
-                        'Booking Reference',
+                        context.l10n.payments_bookingReferenceLabel,
                         style: ClientTypography.bodySmall(context).copyWith(
                           color: ClientColors.textSecondaryFor(context),
                         ),
@@ -329,7 +330,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Seat ${widget.seat}',
+                            context.l10n.payments_seatNumber(widget.seat),
                             style: ClientTypography.bodySmall(context).copyWith(
                               color: ClientColors.textSecondaryFor(context),
                             ),
@@ -342,7 +343,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          'Departs',
+                          context.l10n.payments_departsLabel,
                           style: ClientTypography.bodySmall(context).copyWith(
                             color: ClientColors.textSecondaryFor(context),
                           ),
@@ -389,7 +390,9 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Vehicle ${widget.vehicleId}',
+                            context.l10n.payments_vehicleNumberLabel(
+                              widget.vehicleId,
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: ClientTypography.bodySmall(context).copyWith(
@@ -405,14 +408,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                 Divider(height: 1, color: ClientColors.borderFor(context)),
                 const SizedBox(height: 10),
                 Text(
-                  'Notes',
+                  context.l10n.payments_notesLabel,
                   style: ClientTypography.labelSmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Please arrive 10 minutes before departure. Cancellation allowed up to 1 hour before departure.',
+                  context.l10n.payments_bookingNotesBody,
                   style: ClientTypography.bodySmall(context).copyWith(
                     color: ClientColors.textSecondaryFor(context),
                     height: 1.4,
@@ -437,14 +440,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
         children: [
           Expanded(
             child: ClientButton.secondary(
-              label: 'Back to Home',
+              label: context.l10n.payments_backToHome,
               onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: ClientButton(
-              label: 'Track Vehicle',
+              label: context.l10n.payments_trackVehicle,
               onPressed: () => Navigator.of(context).pushNamed(
                 '/tracking',
                 arguments: {
@@ -461,14 +464,14 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
         children: [
           Expanded(
             child: ClientButton.secondary(
-              label: 'Back to Home',
+              label: context.l10n.payments_backToHome,
               onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: ClientButton(
-              label: 'Contact Support',
+              label: context.l10n.payments_contactSupport,
               onPressed: () => Navigator.of(context).pushNamed('/support'),
             ),
           ),
@@ -476,7 +479,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
       );
     }
     return ClientButton.secondary(
-      label: 'Back to Home',
+      label: context.l10n.payments_backToHome,
       onPressed: () => Navigator.of(context).popUntil((r) => r.isFirst),
     );
   }

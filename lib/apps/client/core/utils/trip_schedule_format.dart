@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/localization/l10n_context.dart';
+
 /// Supabase hands trips a raw `yyyy-MM-dd` date and an `HH:mm:ss` time. Riders
 /// need "Today · 8:30 AM", so the formatting lives here rather than in a card.
 
@@ -8,8 +10,8 @@ String formatCalendarDay(BuildContext context, DateTime date) {
   final daysAway = DateUtils.dateOnly(
     date,
   ).difference(DateUtils.dateOnly(DateTime.now())).inDays;
-  if (daysAway == 0) return 'Today';
-  if (daysAway == 1) return 'Tomorrow';
+  if (daysAway == 0) return context.l10n.common_today;
+  if (daysAway == 1) return context.l10n.common_tomorrow;
   return MaterialLocalizations.of(context).formatMediumDate(date);
 }
 
@@ -36,7 +38,7 @@ String formatTripTime(BuildContext context, String rawTime) {
 /// How long the ride takes, as "1h 19m", between two raw `HH:mm:ss` times.
 /// An arrival earlier than the departure is read as crossing midnight rather
 /// than as a negative ride.
-String formatTripDuration(String rawDeparture, String rawArrival) {
+String formatTripDuration(BuildContext context, String rawDeparture, String rawArrival) {
   final from = _parseClock(rawDeparture);
   final to = _parseClock(rawArrival);
   if (from == null || to == null) return '';
@@ -48,9 +50,10 @@ String formatTripDuration(String rawDeparture, String rawArrival) {
 
   final hours = minutes ~/ 60;
   final rest = minutes % 60;
-  if (hours == 0) return '${rest}m';
-  if (rest == 0) return '${hours}h';
-  return '${hours}h ${rest}m';
+  final l10n = context.l10n;
+  if (hours == 0) return l10n.common_durationMinutes(rest);
+  if (rest == 0) return l10n.common_durationHours(hours);
+  return l10n.common_durationHoursMinutes(hours, rest);
 }
 
 TimeOfDay? _parseClock(String rawTime) {

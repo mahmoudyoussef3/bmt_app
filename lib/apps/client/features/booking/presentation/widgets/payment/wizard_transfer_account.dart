@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Where to send the money.
 ///
@@ -34,7 +35,7 @@ class WizardTransferAccount extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Send ${method.title} to',
+            context.l10n.booking_sendMethodTo(method.title),
             style: ClientTypography.labelSmall(
               context,
             ).copyWith(color: ClientColors.textTertiaryFor(context)),
@@ -42,7 +43,7 @@ class WizardTransferAccount extends StatelessWidget {
           const SizedBox(height: 6),
           if (account.isEmpty)
             Text(
-              'Contact support for the transfer details.',
+              context.l10n.booking_contactSupportForTransfer,
               style: ClientTypography.bodySmall(
                 context,
               ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -92,7 +93,7 @@ class _CopyableAccount extends StatelessWidget {
           ),
         ),
         IconButton(
-          tooltip: 'Copy account',
+          tooltip: context.l10n.booking_copyAccount,
           visualDensity: VisualDensity.compact,
           icon: Icon(
             Icons.copy_rounded,
@@ -100,11 +101,12 @@ class _CopyableAccount extends StatelessWidget {
             color: ClientColors.primaryFor(context),
           ),
           onPressed: () async {
+            final l10n = context.l10n;
             await Clipboard.setData(ClipboardData(text: account));
             await HapticFeedback.selectionClick();
             if (!context.mounted) return;
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Account number copied.')),
+              SnackBar(content: Text(l10n.booking_accountNumberCopied)),
             );
           },
         ),

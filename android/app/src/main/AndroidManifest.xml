@@ -1,9 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
-    <application    
+    <application
         android:label="${appName}"
         android:name="${applicationName}"
-        android:icon="${appIcon}">
+        android:icon="${appIcon}"
+        android:supportsRtl="true">
         <activity
             android:name="com.example.bmt_app.MainActivity"
             android:exported="true"

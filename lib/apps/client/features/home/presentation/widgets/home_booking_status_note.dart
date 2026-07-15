@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_booking_status_style.dart';
 
@@ -31,7 +32,7 @@ class HomeBookingStatusNote extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              status.explanation,
+              status.explanationFor(context.l10n),
               style: ClientTypography.bodySmall(
                 context,
               ).copyWith(color: accent, fontWeight: FontWeight.w600),

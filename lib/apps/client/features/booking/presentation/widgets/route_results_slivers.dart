@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/popular_route_list_card.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_results_empty_state.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Builds the sliver(s) for the discovery grid's data section: the
 /// no-routes-at-all empty state, the no-match empty state, or the result
@@ -15,15 +16,15 @@ List<Widget> routeResultsSlivers({
   required VoidCallback onResetFilters,
   required ValueChanged<PopularRouteListData> onRouteTap,
 }) {
+  final l10n = context.l10n;
   if (routes.isEmpty) {
     return [
       SliverFillRemaining(
         hasScrollBody: false,
         child: RouteResultsEmptyState(
-          title: 'No active routes yet',
-          subtitle:
-              'Routes published from the dashboard will appear here when they are ready for booking.',
-          actionLabel: 'Refresh routes',
+          title: l10n.booking_noActiveRoutesYet,
+          subtitle: l10n.booking_routesFromDashboardAppear,
+          actionLabel: l10n.booking_refreshRoutes,
           onAction: onRetry,
         ),
       ),
@@ -34,9 +35,9 @@ List<Widget> routeResultsSlivers({
       SliverFillRemaining(
         hasScrollBody: false,
         child: RouteResultsEmptyState(
-          title: 'No routes match your search',
-          subtitle: 'Try a different search term or adjust your filters.',
-          actionLabel: 'Reset filters',
+          title: l10n.booking_noRoutesMatchSearch,
+          subtitle: l10n.booking_tryDifferentSearchTerm,
+          actionLabel: l10n.booking_resetFilters,
           onAction: onResetFilters,
         ),
       ),

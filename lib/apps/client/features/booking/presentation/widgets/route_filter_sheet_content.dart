@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_opt
 import 'package:bmt_app/apps/client/features/booking/presentation/models/route_filter_criteria.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/utils/filter_bounds.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/utils/route_result_sort.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class RouteFilterSheetContent extends StatefulWidget {
   const RouteFilterSheetContent({
@@ -32,6 +33,7 @@ class _RouteFilterSheetContentState extends State<RouteFilterSheetContent> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final departures = uniqueSortedValues(widget.routes.map((r) => r.pickup));
     final destinations = uniqueSortedValues(
       widget.routes.map((r) => r.destination),
@@ -47,14 +49,14 @@ class _RouteFilterSheetContentState extends State<RouteFilterSheetContent> {
     final resultCount = widget.routes.where(_draft.matches).length;
 
     return FilterBottomSheet(
-      title: 'Filter routes',
+      title: l10n.booking_filterRoutes,
       resultCount: resultCount,
       canReset: _draft.activeCount > 0,
       onReset: () => setState(() => _draft = _draft.reset()),
       onApply: () => Navigator.of(context).pop(_draft),
       groups: [
         FilterRangeSlider(
-          label: 'Price range',
+          label: l10n.booking_priceRange,
           values:
               _draft.priceRange ?? RangeValues(priceBounds.$1, priceBounds.$2),
           min: priceBounds.$1,
@@ -64,7 +66,7 @@ class _RouteFilterSheetContentState extends State<RouteFilterSheetContent> {
               setState(() => _draft = _draft.copyWith(priceRange: values)),
         ),
         FilterRangeSlider(
-          label: 'Duration',
+          label: l10n.packages_duration,
           values:
               _draft.durationRange ??
               RangeValues(durationBounds.$1, durationBounds.$2),
@@ -76,7 +78,7 @@ class _RouteFilterSheetContentState extends State<RouteFilterSheetContent> {
         ),
         if (departures.isNotEmpty)
           NullableFilterChipGroup(
-            label: 'Departure',
+            label: l10n.booking_departure,
             options: departures,
             selected: _draft.pickup,
             onSelected: (v) => setState(
@@ -87,7 +89,7 @@ class _RouteFilterSheetContentState extends State<RouteFilterSheetContent> {
           ),
         if (destinations.isNotEmpty)
           NullableFilterChipGroup(
-            label: 'Destination',
+            label: l10n.common_destination,
             options: destinations,
             selected: _draft.destination,
             onSelected: (v) => setState(
@@ -97,9 +99,9 @@ class _RouteFilterSheetContentState extends State<RouteFilterSheetContent> {
             ),
           ),
         FilterChipGroup<RouteResultSort>(
-          label: 'Sort by',
+          label: l10n.booking_filterSortBy,
           options: RouteResultSort.values,
-          optionLabel: routeResultSortLabel,
+          optionLabel: (value) => routeResultSortLabel(context, value),
           selected: _draft.sort,
           onSelected: (value) =>
               setState(() => _draft = _draft.copyWith(sort: value)),

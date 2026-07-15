@@ -6,6 +6,8 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_method_tile.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The list of ways to pay.
 ///
@@ -34,9 +36,9 @@ class CheckoutMethodPicker extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          padding: const EdgeInsetsDirectional.only(start: 4, bottom: 12),
           child: Text(
-            'How would you like to pay?',
+            context.l10n.payments_howToPay,
             style: ClientTypography.headingSmall(
               context,
             ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -51,8 +53,8 @@ class CheckoutMethodPicker extends StatelessWidget {
               child: CheckoutMethodTile(
                 method: method,
                 selected: selected == method.type,
-                note: _noteFor(method.type),
-                warning: _warningFor(method.type),
+                note: _noteFor(context, method.type),
+                warning: _warningFor(context, method.type),
                 onTap: () {
                   HapticFeedback.selectionClick();
                   onSelect(method.type);
@@ -63,16 +65,19 @@ class CheckoutMethodPicker extends StatelessWidget {
     );
   }
 
-  String? _noteFor(PaymentMethodType type) {
+  String? _noteFor(BuildContext context, PaymentMethodType type) {
     if (type != PaymentMethodType.walletBalance) return null;
-    return 'Balance $walletBalance EGP';
+    return context.l10n.payments_balanceAmount(
+      FormatUtil.currency(context, walletBalance),
+    );
   }
 
-  String? _warningFor(PaymentMethodType type) {
+  String? _warningFor(BuildContext context, PaymentMethodType type) {
     if (type != PaymentMethodType.walletBalance) return null;
     if (walletBalance >= total) return null;
-    return 'Short by ${total - walletBalance} EGP — top up or pick another '
-        'method.';
+    return context.l10n.payments_shortByAmount(
+      FormatUtil.currency(context, total - walletBalance),
+    );
   }
 }
 
@@ -97,8 +102,7 @@ class _NoMethods extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'No payment method is switched on right now. Your seat is still '
-              'held — contact support and we will take it from there.',
+              context.l10n.payments_noMethodsAvailable,
               style: ClientTypography.bodySmall(
                 context,
               ).copyWith(color: ClientColors.textSecondaryFor(context)),

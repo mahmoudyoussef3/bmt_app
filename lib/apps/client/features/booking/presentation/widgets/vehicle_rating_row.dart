@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/vehicle_detail.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The captain behind this trip and what past passengers thought of them.
 ///
@@ -47,7 +48,7 @@ class VehicleRatingRow extends StatelessWidget {
           )
         else
           Text(
-            'New captain',
+            context.l10n.trips_newCaptain,
             style: ClientTypography.labelSmall(
               context,
             ).copyWith(color: ClientColors.textSecondaryFor(context)),

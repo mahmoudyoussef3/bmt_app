@@ -10,6 +10,8 @@ import 'package:bmt_app/apps/client/features/payments/presentation/screens/booki
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/paymob_checkout_webview_screen.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PaymentProcessingScreen extends StatefulWidget {
@@ -51,17 +53,24 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
   late String _bookingReference;
   String? _bookingId;
 
-  final List<String> _progressSteps = [
-    'Establishing secure fintech connection...',
-    'Verifying account status and limit...',
-    'Reserving seat and finalising ticket metadata...',
+  static const _pendingSentinel = 'Pending';
+  static const _progressStepCount = 3;
+
+  List<String> _progressSteps(BuildContext context) => [
+    context.l10n.payments_stepFintechConnection,
+    context.l10n.payments_stepVerifyingAccount,
+    context.l10n.payments_stepReservingSeat,
   ];
+
+  /// Shows the localized placeholder while the real value is still pending.
+  String _pendingOr(BuildContext context, String value) =>
+      value == _pendingSentinel ? context.l10n.payments_pendingLabel : value;
 
   @override
   void initState() {
     super.initState();
-    _transactionId = 'Pending';
-    _bookingReference = 'Pending';
+    _transactionId = _pendingSentinel;
+    _bookingReference = _pendingSentinel;
 
     _pulseController = AnimationController(
       vsync: this,
@@ -80,7 +89,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
 
     _stepTimer = Timer.periodic(const Duration(milliseconds: 900), (timer) {
       if (!mounted) return;
-      if (_currentStepIndex < _progressSteps.length - 1) {
+      if (_currentStepIndex < _progressStepCount - 1) {
         setState(() {
           _currentStepIndex++;
         });
@@ -226,7 +235,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      'Secure Checkout',
+                      context.l10n.payments_secureCheckoutTitle,
                       style: ClientTypography.headingSmall(
                         context,
                       ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -296,14 +305,14 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
             ),
             const SizedBox(height: 24),
             Text(
-              'Processing Payment',
+              context.l10n.payments_processingPaymentTitle,
               style: ClientTypography.headingMedium(
                 context,
               ).copyWith(color: ClientColors.textPrimaryFor(context)),
             ),
             const SizedBox(height: 6),
             Text(
-              'Please do not close this screen or press back button.',
+              context.l10n.payments_doNotCloseScreen,
               textAlign: TextAlign.center,
               style: ClientTypography.bodySmall(
                 context,
@@ -334,7 +343,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          _progressSteps[_currentStepIndex],
+                          _progressSteps(context)[_currentStepIndex],
                           style: ClientTypography.bodySmall(context).copyWith(
                             color: ClientColors.textPrimaryFor(context),
                             fontWeight: FontWeight.bold,
@@ -348,14 +357,14 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                   const SizedBox(height: 12),
                   _buildDetailTextRow(
                     context,
-                    'Method:',
+                    context.l10n.payments_methodLabel,
                     widget.paymentMethod.title,
                   ),
                   const SizedBox(height: 6),
                   _buildDetailTextRow(
                     context,
-                    'Transaction ID:',
-                    _transactionId,
+                    context.l10n.payments_transactionIdLabel,
+                    _pendingOr(context, _transactionId),
                   ),
                 ],
               ),
@@ -390,7 +399,10 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                           ),
                         ),
                         Text(
-                          'Driver: ${widget.checkoutData.driverName} • Seat: ${widget.checkoutData.selectedSeat}',
+                          context.l10n.payments_driverSeatSummary(
+                            widget.checkoutData.driverName,
+                            widget.checkoutData.selectedSeat,
+                          ),
                           style: ClientTypography.bodySmall(context).copyWith(
                             color: ClientColors.textTertiaryFor(context),
                           ),
@@ -399,7 +411,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     ),
                   ),
                   Text(
-                    '$total EGP',
+                    FormatUtil.currency(context, total),
                     style: ClientTypography.bodyMedium(context).copyWith(
                       fontWeight: FontWeight.w900,
                       color: ClientColors.primary,
@@ -476,8 +488,8 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                 const SizedBox(height: 20),
                 Text(
                   _externalCardCheckout
-                      ? 'Paymob Checkout Opened'
-                      : 'Payment Submitted',
+                      ? context.l10n.payments_paymobCheckoutOpened
+                      : context.l10n.payments_paymentSubmitted,
                   style: ClientTypography.headingMedium(
                     context,
                   ).copyWith(color: ClientColors.journeyCyan),
@@ -485,8 +497,8 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                 const SizedBox(height: 4),
                 Text(
                   _externalCardCheckout
-                      ? 'Complete card payment in the secure Paymob page.'
-                      : 'Your receipt was sent for operations review.',
+                      ? context.l10n.payments_completeCardPaymentPaymob
+                      : context.l10n.payments_receiptSentForReview,
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -503,28 +515,28 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     children: [
                       _buildDetailTextRow(
                         context,
-                        'Booking Ref:',
-                        _bookingReference,
+                        context.l10n.payments_bookingRefLabel,
+                        _pendingOr(context, _bookingReference),
                         isBoldValue: true,
                         valueColor: ClientColors.primary,
                       ),
                       const SizedBox(height: 10),
                       _buildDetailTextRow(
                         context,
-                        'Paid Amount:',
-                        '$total EGP',
+                        context.l10n.payments_paidAmountLabel,
+                        FormatUtil.currency(context, total),
                       ),
                       const SizedBox(height: 6),
                       _buildDetailTextRow(
                         context,
-                        'Payment Method:',
+                        context.l10n.payments_paymentMethodLabel,
                         widget.paymentMethod.title,
                       ),
                       const SizedBox(height: 6),
                       _buildDetailTextRow(
                         context,
-                        'Transaction ID:',
-                        _transactionId,
+                        context.l10n.payments_transactionIdLabel,
+                        _pendingOr(context, _transactionId),
                       ),
                     ],
                   ),
@@ -534,7 +546,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
           ),
           const SizedBox(height: 24),
           ClientButton(
-            label: 'View Ticket',
+            label: context.l10n.payments_viewTicket,
             onPressed: () {
               final isManualTransfer =
                   widget.paymentMethod.type == PaymentMethodType.instapay ||
@@ -558,7 +570,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
           ),
           const SizedBox(height: 10),
           ClientButton.secondary(
-            label: 'Back to Home',
+            label: context.l10n.payments_backToHome,
             onPressed: () {
               Navigator.of(context).popUntil((route) => route.isFirst);
             },
@@ -603,14 +615,14 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Payment Failed',
+                  context.l10n.payments_paymentFailedTitle,
                   style: ClientTypography.headingMedium(
                     context,
                   ).copyWith(color: ClientColors.journeyRed),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  'Your transaction could not be processed.',
+                  context.l10n.payments_transactionNotProcessed,
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -628,14 +640,15 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Reason for Failure',
+                        context.l10n.payments_reasonForFailure,
                         style: ClientTypography.labelSmall(context).copyWith(
                           color: ClientColors.textTertiaryFor(context),
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _failureReason ?? 'Payment could not be completed.',
+                        _failureReason ??
+                            context.l10n.payments_paymentNotCompleted,
                         style: ClientTypography.bodyMedium(context).copyWith(
                           color: ClientColors.textPrimaryFor(context),
                           fontWeight: FontWeight.bold,
@@ -649,8 +662,8 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                       const SizedBox(height: 12),
                       _buildDetailTextRow(
                         context,
-                        'Transaction ID:',
-                        _transactionId,
+                        context.l10n.payments_transactionIdLabel,
+                        _pendingOr(context, _transactionId),
                       ),
                     ],
                   ),
@@ -660,12 +673,12 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
           ),
           const SizedBox(height: 24),
           ClientButton(
-            label: 'Retry Payment',
+            label: context.l10n.payments_retryPayment,
             onPressed: () => Navigator.of(context).pop(),
           ),
           const SizedBox(height: 10),
           ClientButton.secondary(
-            label: 'Contact Support',
+            label: context.l10n.payments_contactSupport,
             onPressed: () => _showSupportDialog(context),
           ),
         ],
@@ -717,7 +730,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
 
   String _cleanFailureReason(Object error) {
     final raw = error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
-    if (raw.trim().isEmpty) return 'Payment could not be completed.';
+    if (raw.trim().isEmpty) return context.l10n.payments_paymentNotCompleted;
     return raw;
   }
 
@@ -731,7 +744,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
             borderRadius: BorderRadius.circular(16),
           ),
           title: Text(
-            'Contact Customer Support',
+            context.l10n.payments_contactCustomerSupportTitle,
             style: ClientTypography.headingSmall(
               context,
             ).copyWith(color: ClientColors.textPrimaryFor(context)),
@@ -740,7 +753,9 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'Our customer support agents are ready to assist you. Reference ticket number: $_transactionId',
+                context.l10n.payments_supportDialogBody(
+                  _pendingOr(context, _transactionId),
+                ),
                 style: ClientTypography.bodySmall(
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -750,9 +765,9 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text(
-                'Close',
-                style: TextStyle(color: ClientColors.primary),
+              child: Text(
+                context.l10n.payments_close,
+                style: const TextStyle(color: ClientColors.primary),
               ),
             ),
           ],

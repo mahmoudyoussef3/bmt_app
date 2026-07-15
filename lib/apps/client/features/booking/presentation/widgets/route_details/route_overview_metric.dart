@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/localization/l10n_context.dart';
+
 /// A single fact pill (departure, destination, distance, duration) inside
 /// [RouteOverviewHeader].
 class RouteOverviewMetric extends StatelessWidget {
@@ -44,7 +46,7 @@ class RouteOverviewMetric extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  value.isEmpty ? 'Not set' : value,
+                  value.isEmpty ? context.l10n.common_notSet : value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(

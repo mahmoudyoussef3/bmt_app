@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Support Center hero. It carries the screen's single call to action: the
 /// Support Center is a ticket workflow, not a category browser, so the client
@@ -47,7 +48,7 @@ class SupportHomeHeader extends StatelessWidget {
               const SizedBox(width: 14),
               Expanded(
                 child: Text(
-                  'How can we help?',
+                  context.l10n.support_heroTitle,
                   style: ClientTypography.headingMedium(
                     context,
                   ).copyWith(color: Colors.white, fontWeight: FontWeight.w800),
@@ -57,8 +58,7 @@ class SupportHomeHeader extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'Tell us what went wrong and our team will follow up on your '
-            'ticket. We usually reply within a few hours.',
+            context.l10n.support_heroBody,
             style: ClientTypography.bodySmall(
               context,
             ).copyWith(color: Colors.white.withAlpha(220), height: 1.5),
@@ -98,7 +98,7 @@ class _CreateTicketButton extends StatelessWidget {
             Icon(Icons.add_rounded, size: 20, color: primary),
             const SizedBox(width: 8),
             Text(
-              'Create a ticket',
+              context.l10n.support_createTicket,
               style: ClientTypography.labelLarge(
                 context,
               ).copyWith(color: primary, fontWeight: FontWeight.w800),

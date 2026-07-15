@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_booking_status_note.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_booking_status_style.dart';
@@ -53,7 +54,7 @@ class HomeBookingCard extends StatelessWidget {
           if (trackable) ...[
             const SizedBox(height: ClientSpacing.md),
             ClientButton(
-              label: 'Track your bus',
+              label: context.l10n.home_trackYourBus,
               icon: const Icon(
                 Icons.near_me_rounded,
                 color: Colors.white,
@@ -78,7 +79,7 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final reference = booking.bookingNumber.isEmpty
-        ? 'Your booking'
+        ? context.l10n.home_yourBookingFallback
         : booking.bookingNumber;
 
     return Row(
@@ -111,7 +112,7 @@ class _Header extends StatelessWidget {
         const SizedBox(width: ClientSpacing.sm),
         ClientStatusBadge(
           status: booking.status.badge,
-          label: booking.status.label,
+          label: booking.status.labelFor(context.l10n),
           showDot: booking.status.isPulsing,
         ),
       ],
@@ -135,7 +136,7 @@ class _Facts extends StatelessWidget {
           HomeTripChip(
             color: ClientColors.journeySlate,
             icon: Icons.event_seat_rounded,
-            label: 'Seat ${booking.seatLabel}',
+            label: context.l10n.home_seatLabel(booking.seatLabel),
           ),
         if (booking.fare.isNotEmpty)
           HomeTripChip(

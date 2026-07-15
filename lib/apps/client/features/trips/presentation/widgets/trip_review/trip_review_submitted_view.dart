@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/reviewable_trip.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_review.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_rating_card.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The passenger's stored review, read-only. Reviewing is a one-time act per
 /// trip, so re-opening the sheet confirms what they said rather than inviting
@@ -36,7 +37,7 @@ class TripReviewSubmittedView extends StatelessWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Thank you for your review',
+                context.l10n.trips_reviewThankYouTitle,
                 style: ClientTypography.headingMedium(context),
               ),
             ),
@@ -44,27 +45,26 @@ class TripReviewSubmittedView extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          'Your feedback on ${trip.reference} went straight to our operations '
-          'team. Only they can see it.',
+          context.l10n.trips_reviewThankYouBody(trip.reference),
           style: ClientTypography.bodySmall(
             context,
           ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
         const SizedBox(height: 20),
         TripReviewRatingCard(
-          title: 'Driver rating',
+          title: context.l10n.trips_ratingDriver,
           subtitle: trip.driverName,
           value: review.driverRating,
         ),
         const SizedBox(height: 16),
         TripReviewRatingCard(
-          title: 'Vehicle rating',
+          title: context.l10n.trips_ratingVehicle,
           subtitle: trip.vehicleName,
           value: review.vehicleRating,
         ),
         const SizedBox(height: 16),
         TripReviewRatingCard(
-          title: 'Route rating',
+          title: context.l10n.trips_ratingRoute,
           subtitle: trip.routeLine,
           value: review.routeRating,
         ),
@@ -74,7 +74,7 @@ class TripReviewSubmittedView extends StatelessWidget {
         ],
         const SizedBox(height: 20),
         ClientButton.secondary(
-          label: 'Close',
+          label: context.l10n.payments_close,
           onPressed: () => Navigator.of(context).pop(),
         ),
       ],
@@ -101,7 +101,7 @@ class _CommentCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Your feedback',
+            context.l10n.trips_reviewYourFeedbackLabel,
             style: ClientTypography.bodyMedium(
               context,
             ).copyWith(fontWeight: FontWeight.w700),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/widgets/directional_icon.dart';
+
 class PremiumAuthScaffold extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -58,7 +60,7 @@ class PremiumAuthScaffold extends StatelessWidget {
                     children: [
                       if (showBack)
                         IconButton(
-                          icon: Icon(
+                          icon: DirectionalIcon(
                             Icons.arrow_back_ios_new_rounded,
                             color: theme.iconTheme.color,
                           ),

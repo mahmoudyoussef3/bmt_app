@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Shown above Route Details' content when the passenger's search had no
 /// exact match — explains why the closest routes are being shown instead.
@@ -14,8 +15,8 @@ class ClosestMatchBanner extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final isPartial = quality == RouteMatchQuality.partial;
     final message = isPartial
-        ? 'No exact match for your search. These routes cover most of your trip.'
-        : 'No route matches this exact trip yet. Here are the closest options we run.';
+        ? context.l10n.booking_noExactMatchCoversTrip
+        : context.l10n.booking_noRouteMatchClosest;
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -33,7 +34,7 @@ class ClosestMatchBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Best results for you',
+                  context.l10n.booking_bestResultsForYou,
                   style: Theme.of(
                     context,
                   ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),

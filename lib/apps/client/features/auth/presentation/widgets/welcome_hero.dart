@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The branded hero block on the welcome screen: app mark, "EasyWay" wordmark,
 /// a supporting tagline, and three quick value props.
@@ -55,7 +56,7 @@ class WelcomeHero extends StatelessWidget {
         ),
         const SizedBox(height: ClientSpacing.sm),
         Text(
-          'Smart, comfortable transport.\nBook, track, and ride — all in one place.',
+          context.l10n.welcome_heroTagline,
           textAlign: TextAlign.center,
           style: ClientTypography.bodyMedium(context).copyWith(
             color: ClientColors.textSecondaryFor(context),
@@ -74,14 +75,21 @@ class _ValueProps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
+    final l10n = context.l10n;
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _ValueProp(icon: Icons.event_seat_rounded, label: 'Reserve\nseats'),
-        _ValueProp(icon: Icons.my_location_rounded, label: 'Live bus\ntracking'),
+        _ValueProp(
+          icon: Icons.event_seat_rounded,
+          label: l10n.welcome_valueSeats,
+        ),
+        _ValueProp(
+          icon: Icons.my_location_rounded,
+          label: l10n.welcome_valueTracking,
+        ),
         _ValueProp(
           icon: Icons.card_membership_rounded,
-          label: 'Manage\npasses',
+          label: l10n.welcome_valuePasses,
         ),
       ],
     );

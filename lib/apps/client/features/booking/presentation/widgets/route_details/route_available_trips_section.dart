@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_inline_empty.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/trip_filter_sheet_content.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/trip_option_tile.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Route Details' "available trips" card: every departure for the selected
 /// route, filterable by price/seats/vehicle type/time of day (research.md §2)
@@ -36,6 +37,7 @@ class _RouteAvailableTripsSectionState
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     final filtered = [...widget.trips.where(_criteria.matches)]
       ..sort(_criteria.compare);
 
@@ -59,17 +61,17 @@ class _RouteAvailableTripsSectionState
             RouteDetailsInlineEmpty(
               icon: Icons.event_busy_rounded,
               title: widget.hasRoutePricing
-                  ? 'No bookable trips right now'
-                  : 'No scheduled trips yet',
+                  ? l10n.booking_noBookableTripsNow
+                  : l10n.booking_noScheduledTripsYet,
               subtitle: widget.hasRoutePricing
-                  ? 'This route has pricing, but no upcoming trip is open for booking.'
-                  : 'Trips created from the dashboard will appear here.',
+                  ? l10n.booking_routeHasPricingNoTrip
+                  : l10n.booking_tripsFromDashboardAppear,
             )
           else if (filtered.isEmpty)
             RouteDetailsInlineEmpty(
               icon: Icons.filter_alt_off_rounded,
-              title: 'No trips match your filters',
-              subtitle: 'Try widening the price, seats, or time-of-day range.',
+              title: l10n.booking_noTripsMatchFilters,
+              subtitle: l10n.booking_tryWideningFilterRange,
             )
           else
             ...filtered.map(
