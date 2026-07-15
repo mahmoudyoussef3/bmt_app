@@ -64,6 +64,8 @@ class CaptainTripRemoteDataSource {
     final driverId = _cachedDriverId;
     if (driverId == null) return const [];
 
+    final today = _isoDate(DateTime.now());
+
     final response = await _supabase
         .from('operation_trips')
         .select('''
@@ -75,16 +77,24 @@ class CaptainTripRemoteDataSource {
           trip_events(title)
         ''')
         .eq('driver_id', driverId)
-        .inFilter('status', [
-          'scheduled',
-          'open_for_booking',
-          'boarding',
-          'in_progress',
-        ])
+        // Trips still to drive (any day) plus today's already-completed ones —
+        // otherwise a captain done for the day sees "no trips assigned" instead
+        // of a day summary that accounts for what they already drove today.
+        .or(
+          'status.in.(scheduled,open_for_booking,boarding,in_progress),'
+          'and(status.eq.completed,trip_date.eq.$today)',
+        )
         .order('trip_date')
         .order('departure_time');
 
     return response.map<AssignedTripModel>(_mapTrip).toList();
+  }
+
+  String _isoDate(DateTime date) {
+    final y = date.year.toString().padLeft(4, '0');
+    final m = date.month.toString().padLeft(2, '0');
+    final d = date.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
   }
 
   Future<String?> _resolveDriverId(User user) async {
