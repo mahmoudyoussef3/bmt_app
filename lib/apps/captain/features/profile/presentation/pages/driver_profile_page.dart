@@ -16,6 +16,7 @@ import '../../domain/entities/driver_profile.dart';
 import '../cubit/driver_profile_cubit.dart';
 import '../cubit/driver_profile_state.dart';
 import '../widgets/captain_appearance_sheet.dart';
+import '../widgets/driver_profile_metrics.dart';
 import '../widgets/driver_profile_skeleton.dart';
 import '../widgets/verification_card.dart';
 
@@ -59,24 +60,17 @@ class _ProfileBody extends StatelessWidget {
           SliverPadding(
             padding: EdgeInsetsDirectional.fromSTEB(
               CaptainDesignTokens.s24,
-              0,
+              CaptainDesignTokens.s24,
               CaptainDesignTokens.s24,
               // Cleared for the shell's floating nav bar.
               CaptainBottomNav.reservedSpace(context),
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                const SizedBox(height: CaptainDesignTokens.s24),
-                _StatsCard(profile: profile),
-                const SizedBox(height: CaptainDesignTokens.s16),
                 VerificationCard(profile: profile),
                 const SizedBox(height: CaptainDesignTokens.s16),
                 if (profile.hasVehicle) ...[
                   _VehicleCard(profile: profile),
-                  const SizedBox(height: CaptainDesignTokens.s16),
-                ],
-                if (profile.hasRating) ...[
-                  _RatingCard(rating: profile.averageRating),
                   const SizedBox(height: CaptainDesignTokens.s16),
                 ],
                 _InfoCard(profile: profile),
@@ -93,6 +87,13 @@ class _ProfileBody extends StatelessWidget {
   }
 }
 
+/// The captain's identity block: avatar, name, standing and lifetime numbers,
+/// all on the brand gradient.
+///
+/// The stats live here rather than in a card of their own — they *are* the
+/// captain's identity on this screen, and hosting them on the header's gradient
+/// leaves exactly one accent surface instead of a flat header competing with a
+/// gradient card directly beneath it.
 class _ProfileSliverHeader extends StatelessWidget {
   const _ProfileSliverHeader({required this.profile});
 
@@ -100,161 +101,205 @@ class _ProfileSliverHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return SliverAppBar(
-      expandedHeight: 220,
+      expandedHeight: DriverProfileMetrics.headerHeight,
       pinned: true,
       elevation: 0,
-      backgroundColor: CaptainColors.backgroundFor(context),
+      backgroundColor: scheme.primary,
+      foregroundColor: CaptainColors.onPrimary,
       centerTitle: true,
       title: Text(
         'ملفي',
-        style: CaptainTypography.titleMedium(context).copyWith(
-          fontWeight: FontWeight.w800,
-          color: CaptainColors.textPrimaryFor(context),
-        ),
+        style: CaptainTypography.titleMedium(
+          context,
+        ).copyWith(fontWeight: FontWeight.w800, color: CaptainColors.onPrimary),
       ),
-
-      flexibleSpace: FlexibleSpaceBar(
-        background: Container(
-          decoration: BoxDecoration(
-            color: CaptainColors.backgroundFor(context),
-          ),
-          child: SafeArea(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(height: CaptainDesignTokens.s24),
-                Container(
-                  width: 84,
-                  height: 84,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: CaptainColors.primary.withValues(alpha: 0.1),
-                    border: Border.all(
-                      color: CaptainColors.surfaceFor(context),
-                      width: 3,
-                    ),
-                    boxShadow: CaptainDesignTokens.floatingShadow(context),
-                  ),
-                  child: profile.photoUrl != null
-                      ? ClipOval(
-                          child: Image.network(
-                            profile.photoUrl!,
-                            fit: BoxFit.cover,
-                            errorBuilder: (ctx, err, stack) => _InitialsAvatar(
-                              name: profile.name,
-                              large: true,
-                            ),
-                          ),
-                        )
-                      : _InitialsAvatar(name: profile.name, large: true),
-                ),
-                const SizedBox(height: CaptainDesignTokens.s12),
-                Text(
-                  profile.name,
-                  style: CaptainTypography.titleLarge(context).copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: CaptainColors.textPrimaryFor(context),
+      flexibleSpace: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: CaptainColors.primaryGradient(context),
+        ),
+        child: Stack(
+          children: [
+            // A soft highlight that keeps the large gradient from reading flat.
+            PositionedDirectional(
+              top: -80,
+              end: -40,
+              child: Container(
+                width: 240,
+                height: 240,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [Colors.white.withAlpha(40), Colors.transparent],
                   ),
                 ),
-                if (profile.hasRating) ...[
-                  const SizedBox(height: CaptainDesignTokens.s8),
-                  _StarRating(rating: profile.averageRating),
-                ],
-              ],
+              ),
             ),
-          ),
+            FlexibleSpaceBar(
+              background: SafeArea(
+                child: Padding(
+                  // Top clears the pinned toolbar the title sits in.
+                  padding: const EdgeInsets.fromLTRB(
+                    CaptainDesignTokens.s24,
+                    kToolbarHeight,
+                    CaptainDesignTokens.s24,
+                    CaptainDesignTokens.s16,
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _ProfileAvatar(profile: profile),
+                      const SizedBox(height: CaptainDesignTokens.s12),
+                      Text(
+                        profile.name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: CaptainTypography.titleLarge(context).copyWith(
+                          fontWeight: FontWeight.w900,
+                          color: CaptainColors.onPrimary,
+                        ),
+                      ),
+                      if (profile.hasRating) ...[
+                        const SizedBox(height: CaptainDesignTokens.s8),
+                        _RatingPill(rating: profile.averageRating),
+                      ],
+                      const SizedBox(height: CaptainDesignTokens.s20),
+                      _HeaderStats(profile: profile),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _StatsCard extends StatelessWidget {
-  const _StatsCard({required this.profile});
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.profile});
 
   final DriverProfile profile;
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      width: 76,
+      height: 76,
       decoration: BoxDecoration(
-        borderRadius: CaptainDesignTokens.br24,
-        gradient: LinearGradient(
-          colors: [
-            CaptainColors.primary,
-            CaptainColors.primary.withValues(alpha: 0.8),
-          ],
-          begin: AlignmentDirectional.topStart,
-          end: AlignmentDirectional.bottomEnd,
-        ),
-        boxShadow: CaptainDesignTokens.floatingShadow(context),
-      ),
-      padding: const EdgeInsets.all(CaptainDesignTokens.s24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(CaptainDesignTokens.s12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: CaptainDesignTokens.br12,
-                ),
-                child: const Icon(
-                  Icons.bar_chart_rounded,
-                  size: 20,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: CaptainDesignTokens.s12),
-              Text(
-                'إحصائياتي',
-                style: CaptainTypography.titleSmall(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w800, color: Colors.white),
-              ),
-            ],
+        shape: BoxShape.circle,
+        color: Colors.white.withAlpha(40),
+        border: Border.all(color: Colors.white.withAlpha(140), width: 2.5),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withAlpha(30),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
           ),
-          const SizedBox(height: CaptainDesignTokens.s24),
-          Row(
-            children: [
-              _StatTile(
-                label: 'رحلات',
-                value: '${profile.totalTrips}',
-                icon: Icons.route_rounded,
-                isLight: true,
+        ],
+      ),
+      child: profile.photoUrl != null
+          ? ClipOval(
+              child: Image.network(
+                profile.photoUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (ctx, err, stack) =>
+                    _InitialsAvatar(name: profile.name, large: true),
               ),
-              Container(
-                width: 1,
-                height: 40,
-                color: Colors.white.withValues(alpha: 0.2),
-              ),
-              _StatTile(
-                label: 'ركاب',
-                value: '${profile.totalPassengers}',
-                icon: Icons.people_alt_rounded,
-                isLight: true,
-              ),
-              if (profile.hasRating) ...[
-                Container(
-                  width: 1,
-                  height: 40,
-                  color: Colors.white.withValues(alpha: 0.2),
-                ),
-                _StatTile(
-                  label: 'تقييم',
-                  value: profile.averageRating.toStringAsFixed(1),
-                  icon: Icons.star_rounded,
-                  isLight: true,
-                ),
-              ],
-            ],
+            )
+          : _InitialsAvatar(name: profile.name, large: true),
+    );
+  }
+}
+
+/// Rating and its plain-language reading in one pill — the qualitative label a
+/// captain actually reads, next to the number it comes from.
+class _RatingPill extends StatelessWidget {
+  const _RatingPill({required this.rating});
+
+  final double rating;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        CaptainDesignTokens.s8,
+        CaptainDesignTokens.s4,
+        CaptainDesignTokens.s12,
+        CaptainDesignTokens.s4,
+      ),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(38),
+        borderRadius: CaptainDesignTokens.brPill,
+        border: Border.all(color: Colors.white.withAlpha(50)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.star_rounded, size: 16, color: CaptainColors.rating),
+          const SizedBox(width: CaptainDesignTokens.s4),
+          Text(
+            '${rating.toStringAsFixed(1)} · ${_ratingLabel(rating)}',
+            style: CaptainTypography.labelMedium(
+              context,
+            ).copyWith(color: CaptainColors.onPrimary),
           ),
         ],
       ),
     );
+  }
+
+  String _ratingLabel(double r) {
+    if (r >= 4.5) return 'ممتاز';
+    if (r >= 4.0) return 'جيد جداً';
+    if (r >= 3.5) return 'جيد';
+    if (r >= 3.0) return 'مقبول';
+    return 'بحاجة لتحسين';
+  }
+}
+
+/// Lifetime totals, on glass tiles over the header gradient.
+class _HeaderStats extends StatelessWidget {
+  const _HeaderStats({required this.profile});
+
+  final DriverProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: CaptainDesignTokens.s12),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(30),
+        borderRadius: CaptainDesignTokens.br16,
+        border: Border.all(color: Colors.white.withAlpha(40)),
+      ),
+      child: Row(
+        children: [
+          _StatTile(
+            label: 'رحلات',
+            value: '${profile.totalTrips}',
+            icon: Icons.route_rounded,
+          ),
+          _StatDivider(),
+          _StatTile(
+            label: 'ركاب',
+            value: '${profile.totalPassengers}',
+            icon: Icons.people_alt_rounded,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 32, color: Colors.white.withAlpha(45));
   }
 }
 
@@ -323,57 +368,6 @@ class _VehicleCard extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _RatingCard extends StatelessWidget {
-  const _RatingCard({required this.rating});
-
-  final double rating;
-
-  @override
-  Widget build(BuildContext context) {
-    return _SectionCard(
-      title: 'تقييم الركاب',
-      icon: Icons.star_rounded,
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Text(
-                rating.toStringAsFixed(1),
-                style: CaptainTypography.displaySmall(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w900, color: Colors.amber),
-              ),
-              const SizedBox(width: CaptainDesignTokens.s24),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _StarRating(rating: rating),
-                  const SizedBox(height: CaptainDesignTokens.s8),
-                  Text(
-                    _ratingLabel(rating),
-                    style: CaptainTypography.bodyMedium(context).copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: CaptainColors.textPrimaryFor(context),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  String _ratingLabel(double r) {
-    if (r >= 4.5) return 'ممتاز';
-    if (r >= 4.0) return 'جيد جداً';
-    if (r >= 3.5) return 'جيد';
-    if (r >= 3.0) return 'مقبول';
-    return 'بحاجة لتحسين';
   }
 }
 
@@ -530,57 +524,44 @@ class _SectionCard extends StatelessWidget {
   }
 }
 
+/// A single lifetime total. Only ever rendered on the header gradient, so it
+/// commits to on-primary colours rather than carrying a light/dark switch.
 class _StatTile extends StatelessWidget {
   const _StatTile({
     required this.label,
     required this.value,
     required this.icon,
-    this.isLight = false,
   });
 
   final String label;
   final String value;
   final IconData icon;
-  final bool isLight;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Container(
-            padding: const EdgeInsets.all(CaptainDesignTokens.s12),
-            decoration: BoxDecoration(
-              color: isLight
-                  ? Colors.white.withValues(alpha: 0.2)
-                  : CaptainColors.primary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              color: isLight ? Colors.white : CaptainColors.primary,
-              size: 24,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, color: Colors.white.withAlpha(200), size: 14),
+              const SizedBox(width: CaptainDesignTokens.s4),
+              Text(
+                label,
+                style: CaptainTypography.labelSmall(
+                  context,
+                ).copyWith(color: Colors.white.withAlpha(200)),
+              ),
+            ],
           ),
-          const SizedBox(height: CaptainDesignTokens.s12),
+          const SizedBox(height: CaptainDesignTokens.s4),
           Text(
             value,
             style: CaptainTypography.headlineSmall(context).copyWith(
               fontWeight: FontWeight.w900,
-              color: isLight
-                  ? Colors.white
-                  : CaptainColors.textPrimaryFor(context),
-            ),
-          ),
-          const SizedBox(height: CaptainDesignTokens.s8),
-          Text(
-            label,
-            textAlign: TextAlign.center,
-            style: CaptainTypography.labelSmall(context).copyWith(
-              color: isLight
-                  ? Colors.white.withValues(alpha: 0.8)
-                  : CaptainColors.textSecondaryFor(context),
-              fontWeight: FontWeight.w600,
+              color: CaptainColors.onPrimary,
             ),
           ),
         ],
@@ -606,53 +587,39 @@ class _DetailRow extends StatelessWidget {
       padding: const EdgeInsetsDirectional.only(
         bottom: CaptainDesignTokens.s12,
       ),
+      // The label yields before the value does: a truncated "الموديل" still
+      // reads, a truncated plate number is useless. Neither may overflow —
+      // these rows carry long values (models, plates) on narrow phones.
       child: Row(
         children: [
           Icon(icon, size: 18, color: CaptainColors.textSecondaryFor(context)),
           const SizedBox(width: CaptainDesignTokens.s12),
-          Text(
-            label,
-            style: CaptainTypography.bodyMedium(context).copyWith(
-              color: CaptainColors.textSecondaryFor(context),
-              fontWeight: FontWeight.w500,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: CaptainTypography.bodyMedium(context).copyWith(
+                color: CaptainColors.textSecondaryFor(context),
+                fontWeight: FontWeight.w500,
+              ),
             ),
           ),
-          const Spacer(),
-          Text(
-            value,
-            style: CaptainTypography.bodyMedium(context).copyWith(
-              color: CaptainColors.textPrimaryFor(context),
-              fontWeight: FontWeight.w700,
+          const SizedBox(width: CaptainDesignTokens.s12),
+          Expanded(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.end,
+              style: CaptainTypography.bodyMedium(context).copyWith(
+                color: CaptainColors.textPrimaryFor(context),
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-class _StarRating extends StatelessWidget {
-  const _StarRating({required this.rating});
-
-  final double rating;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: List.generate(5, (i) {
-        final filled = i < rating.floor();
-        final half = !filled && i < rating;
-        return Icon(
-          filled
-              ? Icons.star_rounded
-              : half
-              ? Icons.star_half_rounded
-              : Icons.star_outline_rounded,
-          color: Colors.amber,
-          size: 20,
-        );
-      }),
     );
   }
 }

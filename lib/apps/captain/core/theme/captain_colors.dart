@@ -5,6 +5,10 @@ class CaptainColors {
   static const Color primary = Color(0xFF2563EB); // Vibrant Blue
   static const Color onPrimary = Colors.white;
 
+  /// The deep end of the brand gradient (Indigo 700). Pairs with [primary] to
+  /// give the splash mark, auth lockup and profile header a shared identity.
+  static const Color primaryDeep = Color(0xFF4338CA);
+
   // Semantic
   static const Color online = Color(0xFF10B981); // Emerald 500
   static const Color offline = Color(0xFF64748B); // Slate 500
@@ -12,6 +16,10 @@ class CaptainColors {
   static const Color error = Color(0xFFEF4444); // Red 500
   static const Color warning = Color(0xFFF59E0B); // Amber 500
   static const Color success = Color(0xFF22C55E); // Green 500
+
+  /// Star/rating gold. Distinct from [warning] on purpose: a rating is not a
+  /// caution state, and the two must stay independently tunable.
+  static const Color rating = Color(0xFFFBBF24); // Amber 400
 
   // Backgrounds & Surfaces
   static const Color backgroundLight = Color(0xFFF8FAFC);
@@ -52,5 +60,15 @@ class CaptainColors {
     return Theme.of(context).brightness == Brightness.dark
         ? dividerDark
         : dividerLight;
+  }
+
+  /// The brand gradient used by the splash mark, auth lockup and profile
+  /// header, so the captain sees one identity across all three.
+  static LinearGradient primaryGradient(BuildContext context) {
+    return LinearGradient(
+      colors: [Theme.of(context).colorScheme.primary, primaryDeep],
+      begin: AlignmentDirectional.topStart,
+      end: AlignmentDirectional.bottomEnd,
+    );
   }
 }

@@ -40,11 +40,13 @@ class VerificationCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: CaptainDesignTokens.s12),
-              Text(
-                'التحقق والتوثيق',
-                style: CaptainTypography.titleSmall(context).copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: CaptainColors.textPrimaryFor(context),
+              Expanded(
+                child: Text(
+                  'التحقق والتوثيق',
+                  style: CaptainTypography.titleSmall(context).copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: CaptainColors.textPrimaryFor(context),
+                  ),
                 ),
               ),
             ],
@@ -203,21 +205,32 @@ class _Fact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The label yields before the value does — a truncated "كابتن منذ" still
+    // reads, a truncated captain code does not.
     return Row(
       children: [
-        Text(
-          label,
-          style: CaptainTypography.bodyMedium(context).copyWith(
-            color: CaptainColors.textSecondaryFor(context),
-            fontWeight: FontWeight.w500,
+        Flexible(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: CaptainTypography.bodyMedium(context).copyWith(
+              color: CaptainColors.textSecondaryFor(context),
+              fontWeight: FontWeight.w500,
+            ),
           ),
         ),
-        const Spacer(),
-        Text(
-          value,
-          style: CaptainTypography.bodyMedium(context).copyWith(
-            color: CaptainColors.textPrimaryFor(context),
-            fontWeight: FontWeight.w700,
+        const SizedBox(width: CaptainDesignTokens.s12),
+        Expanded(
+          child: Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.end,
+            style: CaptainTypography.bodyMedium(context).copyWith(
+              color: CaptainColors.textPrimaryFor(context),
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_brand_mark.dart';
 
 /// Brand lockup + title/subtitle used at the top of captain auth screens.
 class CaptainAuthHeader extends StatelessWidget {
@@ -21,27 +23,8 @@ class CaptainAuthHeader extends StatelessWidget {
 
     return Column(
       children: [
-        Container(
-          width: 84,
-          height: 84,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [scheme.primary, scheme.primary.withAlpha(200)],
-              begin: AlignmentDirectional.topStart,
-              end: AlignmentDirectional.bottomEnd,
-            ),
-            borderRadius: BorderRadius.circular(26),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.primary.withAlpha(70),
-                blurRadius: 26,
-                offset: const Offset(0, 12),
-              ),
-            ],
-          ),
-          child: Icon(icon, size: 42, color: scheme.onPrimary),
-        ),
-        const SizedBox(height: 24),
+        CaptainBrandMark(icon: icon),
+        const SizedBox(height: CaptainDesignTokens.s24),
         Text(
           title,
           textAlign: TextAlign.center,
@@ -49,7 +32,7 @@ class CaptainAuthHeader extends StatelessWidget {
             context,
           ).copyWith(fontWeight: FontWeight.w900, letterSpacing: -0.5),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: CaptainDesignTokens.s8),
         Text(
           subtitle,
           textAlign: TextAlign.center,

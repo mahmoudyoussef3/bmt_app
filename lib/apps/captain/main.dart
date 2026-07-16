@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/captain/features/auth/presentation/screens/captain_
 import 'package:bmt_app/apps/captain/features/onboarding/presentation/cubit/captain_onboarding_cubit.dart';
 import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_onboarding_flow.dart';
 import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_welcome_home.dart';
+import 'package:bmt_app/apps/captain/features/splash/presentation/screens/captain_splash_screen.dart';
 import 'package:bmt_app/core/flavors/app_bootstrap.dart';
 import 'package:bmt_app/core/flavors/app_flavor.dart';
 
@@ -162,11 +163,7 @@ class _CaptainAuthGateState extends State<_CaptainAuthGate> {
             Supabase.instance.client.auth.currentSession;
         if (session != null) return const CaptainAppShell();
 
-        if (_loading) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
+        if (_loading) return const CaptainSplashScreen();
         if (_session != null) return _welcomeHome(_session!);
         if (_pendingPhone != null || _requesting) return _onboarding();
 
