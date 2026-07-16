@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 
 import '../../domain/entities/assigned_trip.dart';
@@ -80,13 +81,7 @@ class AssignedTripCard extends StatelessWidget {
   }
 
   String _timeRange() =>
-      '${_time(trip.departureTime)} - ${_time(trip.expectedArrivalTime)}';
-
-  String _time(DateTime value) {
-    final hour = value.hour.toString().padLeft(2, '0');
-    final minute = value.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
+      CaptainFormats.timeRange(trip.departureTime, trip.expectedArrivalTime);
 }
 
 class _BoardingBar extends StatelessWidget {

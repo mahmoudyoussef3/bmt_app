@@ -45,10 +45,10 @@ class _CaptainAppShellState extends State<CaptainAppShell> {
     return MultiBlocProvider(
       providers: [
         BlocProvider<AssignedTripsCubit>(
-          create: (_) => captainGetIt<AssignedTripsCubit>(),
+          create: (_) => captainGetIt<AssignedTripsCubit>()..load(),
         ),
         BlocProvider<TripHistoryCubit>(
-          create: (_) => captainGetIt<TripHistoryCubit>(),
+          create: (_) => captainGetIt<TripHistoryCubit>()..load(),
         ),
         BlocProvider<DriverProfileCubit>(
           create: (_) => captainGetIt<DriverProfileCubit>()..load(),

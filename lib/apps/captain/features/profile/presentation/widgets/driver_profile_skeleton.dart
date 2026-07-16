@@ -34,19 +34,19 @@ class DriverProfileSkeleton extends StatelessWidget {
               CaptainDesignTokens.s24,
               CaptainBottomNav.reservedSpace(context),
             ),
-            children: [
+            children: const [
               CaptainSkeleton(
                 height: 180,
                 width: double.infinity,
                 borderRadius: CaptainDesignTokens.br24,
               ),
-              const SizedBox(height: CaptainDesignTokens.s16),
+              SizedBox(height: CaptainDesignTokens.s16),
               CaptainSkeleton(
                 height: 200,
                 width: double.infinity,
                 borderRadius: CaptainDesignTokens.br24,
               ),
-              const SizedBox(height: CaptainDesignTokens.s16),
+              SizedBox(height: CaptainDesignTokens.s16),
               CaptainSkeleton(
                 height: 120,
                 width: double.infinity,

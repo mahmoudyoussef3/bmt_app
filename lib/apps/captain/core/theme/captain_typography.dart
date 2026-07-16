@@ -2,14 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class CaptainTypography {
+  /// The built themes, keyed by brightness.
+  ///
+  /// Building one costs a `GoogleFonts.cairoTextTheme()` plus fifteen
+  /// `copyWith` calls, and the accessors below are read straight from `build`
+  /// methods — including list-item builders that run per frame. Without this
+  /// cache every one of those reads reconstructs the whole theme. There are
+  /// only ever two possible results, so they are built once and reused.
+  static final Map<bool, TextTheme> _cache = {};
+
   static TextTheme textTheme(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _buildTheme(isDark);
+    return _themeFor(isDark);
   }
 
   static TextTheme textThemeFromBrightness(Brightness brightness) {
-    return _buildTheme(brightness == Brightness.dark);
+    return _themeFor(brightness == Brightness.dark);
   }
+
+  static TextTheme _themeFor(bool isDark) =>
+      _cache.putIfAbsent(isDark, () => _buildTheme(isDark));
 
   static TextTheme _buildTheme(bool isDark) {
     final color = isDark ? Colors.white : const Color(0xFF0F172A);

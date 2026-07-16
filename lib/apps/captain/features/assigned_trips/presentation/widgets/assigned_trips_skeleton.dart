@@ -27,13 +27,13 @@ class AssignedTripsSkeleton extends StatelessWidget {
               CaptainBottomNav.reservedSpace(context),
             ),
             children: [
-              CaptainSkeleton(
+              const CaptainSkeleton(
                 height: 190,
                 width: double.infinity,
                 borderRadius: CaptainDesignTokens.br24,
               ),
               const SizedBox(height: CaptainDesignTokens.s16),
-              CaptainSkeleton(
+              const CaptainSkeleton(
                 height: 110,
                 width: double.infinity,
                 borderRadius: CaptainDesignTokens.br16,
@@ -42,7 +42,7 @@ class AssignedTripsSkeleton extends StatelessWidget {
               const CaptainSkeleton(height: 20, width: 140),
               const SizedBox(height: CaptainDesignTokens.s12),
               for (var i = 0; i < 3; i++) ...[
-                CaptainSkeleton(
+                const CaptainSkeleton(
                   height: 170,
                   width: double.infinity,
                   borderRadius: CaptainDesignTokens.br24,

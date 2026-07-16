@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/captain/features/trip_history/domain/entities/trip_
 import 'package:bmt_app/apps/captain/features/trip_history/domain/usecases/get_trip_history_usecase.dart';
 import 'package:bmt_app/apps/captain/features/trip_history/presentation/cubit/trip_history_cubit.dart';
 import 'package:bmt_app/apps/captain/features/trip_history/presentation/cubit/trip_history_state.dart';
+import 'package:bmt_app/apps/captain/features/trip_history/presentation/utils/trip_history_filters.dart';
 
 void main() {
   late _FakeTripHistoryRepository repository;
@@ -26,7 +27,7 @@ void main() {
     await cubit.load();
 
     expect(cubit.state, isA<TripHistoryLoaded>());
-    expect((cubit.state as TripHistoryLoaded).trips.map((t) => t.id), ['a']);
+    expect(_visibleIds(cubit.state), ['a']);
   });
 
   test('load() reports an error without throwing', () async {
@@ -50,16 +51,13 @@ void main() {
     final refreshFuture = cubit.refresh();
 
     expect(cubit.state, isA<TripHistoryLoaded>());
-    expect((cubit.state as TripHistoryLoaded).trips.map((t) => t.id), ['a']);
+    expect(_visibleIds(cubit.state), ['a']);
 
     repository.completer!.complete();
     await refreshFuture;
 
     expect(cubit.state, isA<TripHistoryLoaded>());
-    expect((cubit.state as TripHistoryLoaded).trips.map((t) => t.id), [
-      'a',
-      'b',
-    ]);
+    expect(_visibleIds(cubit.state), ['a', 'b']);
   });
 
   test('refresh() keeps the current list on a silent failure', () async {
@@ -70,7 +68,7 @@ void main() {
     await cubit.refresh();
 
     expect(cubit.state, isA<TripHistoryLoaded>());
-    expect((cubit.state as TripHistoryLoaded).trips.map((t) => t.id), ['a']);
+    expect(_visibleIds(cubit.state), ['a']);
   });
 
   test('refresh() falls back to load() when nothing has loaded yet', () async {
@@ -80,13 +78,92 @@ void main() {
 
     expect(cubit.state, isA<TripHistoryLoaded>());
   });
+
+  test('search() narrows the list to matching routes', () async {
+    repository.trips = [
+      _trip('a', route: 'القاهرة - الإسكندرية'),
+      _trip('b', route: 'القاهرة - أسوان'),
+    ];
+    await cubit.load();
+
+    cubit.search('أسوان');
+
+    expect(_visibleIds(cubit.state), ['b']);
+  });
+
+  test('search() leaves the whole-history totals alone', () async {
+    repository.trips = [
+      _trip('a', route: 'القاهرة - الإسكندرية'),
+      _trip('b', route: 'القاهرة - أسوان'),
+    ];
+    await cubit.load();
+
+    cubit.search('أسوان');
+
+    // The header reports the trip's real history, not the filtered view.
+    final state = cubit.state as TripHistoryLoaded;
+    expect(state.totalTrips, 2);
+    expect(state.totalPassengers, 40);
+  });
+
+  test('an empty search matches everything again', () async {
+    repository.trips = [
+      _trip('a', route: 'القاهرة - الإسكندرية'),
+      _trip('b', route: 'القاهرة - أسوان'),
+    ];
+    await cubit.load();
+
+    cubit.search('أسوان');
+    cubit.search('');
+
+    expect(_visibleIds(cubit.state), ['a', 'b']);
+  });
+
+  test('a refresh preserves the active search', () async {
+    repository.trips = [
+      _trip('a', route: 'القاهرة - الإسكندرية'),
+      _trip('b', route: 'القاهرة - أسوان'),
+    ];
+    await cubit.load();
+    cubit.search('أسوان');
+
+    await cubit.refresh();
+
+    // Re-fetching must not silently drop what the captain was looking at.
+    final state = cubit.state as TripHistoryLoaded;
+    expect(state.query, 'أسوان');
+    expect(_visibleIds(cubit.state), ['b']);
+  });
+
+  test('filterByDate() reports no matches without claiming the history is '
+      'empty', () async {
+    repository.trips = [_trip('a', date: DateTime(2020, 1, 1))];
+    await cubit.load();
+
+    cubit.filterByDate(TripHistoryDateFilter.today);
+
+    final state = cubit.state as TripHistoryLoaded;
+    expect(state.hasNoMatches, isTrue);
+    expect(state.hasNoTrips, isFalse);
+  });
 }
 
-TripHistoryItem _trip(String id) {
-  final departure = DateTime(2026, 7, 16, 8);
+/// The trips the screen would actually render, flattened out of their recency
+/// buckets and back into plain order.
+List<String> _visibleIds(TripHistoryState state) => [
+  for (final group in (state as TripHistoryLoaded).groups)
+    for (final trip in group.trips) trip.id,
+];
+
+TripHistoryItem _trip(
+  String id, {
+  String route = 'القاهرة - الإسكندرية',
+  DateTime? date,
+}) {
+  final departure = date ?? DateTime(2026, 7, 16, 8);
   return TripHistoryItem(
     id: id,
-    route: 'القاهرة - الإسكندرية',
+    route: route,
     tripDate: departure,
     departureTime: departure,
     arrivalTime: departure.add(const Duration(hours: 3)),

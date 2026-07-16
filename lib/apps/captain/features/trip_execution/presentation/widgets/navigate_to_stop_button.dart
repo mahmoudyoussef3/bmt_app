@@ -30,7 +30,9 @@ class NavigateToStopButton extends StatelessWidget {
       ),
       style: OutlinedButton.styleFrom(
         padding: const EdgeInsets.symmetric(vertical: CaptainDesignTokens.s12),
-        shape: RoundedRectangleBorder(borderRadius: CaptainDesignTokens.br16),
+        shape: const RoundedRectangleBorder(
+          borderRadius: CaptainDesignTokens.br16,
+        ),
       ),
     );
   }

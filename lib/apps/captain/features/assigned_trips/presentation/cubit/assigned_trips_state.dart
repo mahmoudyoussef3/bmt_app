@@ -9,7 +9,11 @@ class AssignedTripsLoading extends AssignedTripsState {
 }
 
 class AssignedTripsLoaded extends AssignedTripsState {
-  const AssignedTripsLoaded(this.trips, {this.newTripIds = const {}});
+  const AssignedTripsLoaded(
+    this.trips, {
+    this.newTripIds = const {},
+    this.isRefreshing = false,
+  });
 
   final List<AssignedTrip> trips;
 
@@ -17,6 +21,20 @@ class AssignedTripsLoaded extends AssignedTripsState {
   /// "new assignment" notice — a purely local, device-side notion (see
   /// [SeenTripsRepository]), not a backend field.
   final Set<String> newTripIds;
+
+  /// A captain-initiated refresh is in flight.
+  ///
+  /// Only ever true for an explicit refresh, never for the realtime-triggered
+  /// background poll: the empty-state view turns this into a visible spinner
+  /// and a "جاري التحديث…" label, and that should answer the captain's tap
+  /// rather than flicker on its own whenever operations touches the schedule.
+  final bool isRefreshing;
+
+  AssignedTripsLoaded copyWith({bool? isRefreshing}) => AssignedTripsLoaded(
+    trips,
+    newTripIds: newTripIds,
+    isRefreshing: isRefreshing ?? this.isRefreshing,
+  );
 }
 
 class AssignedTripsError extends AssignedTripsState {

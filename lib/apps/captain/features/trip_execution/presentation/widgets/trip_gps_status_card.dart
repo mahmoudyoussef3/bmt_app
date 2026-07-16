@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/assigned_trip.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/domain/entities/trip_execution_state.dart';
 import 'package:bmt_app/core/tracking/geo_math.dart';
@@ -68,7 +69,7 @@ class TripGpsStatusCard extends StatelessWidget {
                 child: _Fact(
                   icon: Icons.flag_rounded,
                   label: 'الوصول المتوقع',
-                  value: _timeLabel(expectedArrivalTime),
+                  value: CaptainFormats.clock(expectedArrivalTime),
                 ),
               ),
               Expanded(
@@ -83,12 +84,6 @@ class TripGpsStatusCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _timeLabel(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
   }
 
   String _distanceLabel(TripLastLocationFix? fix, AssignedTripStop? dest) {

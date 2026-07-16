@@ -33,7 +33,7 @@ class CaptainRequestPendingView extends StatelessWidget {
               color: scheme.primary.withAlpha(24),
               shape: BoxShape.circle,
             ),
-            child: Center(child: SizedBox(width: 44, height: 44)),
+            child: const Center(child: SizedBox(width: 44, height: 44)),
           ),
         ),
         const SizedBox(height: 28),

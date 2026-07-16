@@ -1,12 +1,14 @@
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_detail_row.dart';
 
 import '../../domain/entities/driver_profile.dart';
+import 'verification_status_badge.dart';
 
 /// The captain's real verification standing — license expiry and account
 /// status, both already recorded on `drivers` and already fetched by
@@ -57,13 +59,18 @@ class VerificationCard extends StatelessWidget {
           _AccountStatusRow(status: profile.accountStatus),
           if (profile.employeeCode != null) ...[
             const SizedBox(height: CaptainDesignTokens.s12),
-            _Fact(label: 'كود الكابتن', value: profile.employeeCode!),
+            CaptainDetailRow(
+              label: 'كود الكابتن',
+              value: profile.employeeCode!,
+              bottomSpacing: 0,
+            ),
           ],
           if (profile.hireDate != null) ...[
             const SizedBox(height: CaptainDesignTokens.s12),
-            _Fact(
+            CaptainDetailRow(
               label: 'كابتن منذ',
-              value: DateFormat('MMMM y', 'ar').format(profile.hireDate!),
+              value: CaptainFormats.monthAndYear(profile.hireDate!),
+              bottomSpacing: 0,
             ),
           ],
         ],
@@ -81,7 +88,7 @@ class _LicenseStatusRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final expiry = profile.licenseExpiryDate;
     if (expiry == null) {
-      return const _StatusBadge(
+      return const VerificationStatusBadge(
         icon: Icons.badge_outlined,
         label: 'رخصة القيادة',
         detail: 'غير مسجّلة',
@@ -89,9 +96,9 @@ class _LicenseStatusRow extends StatelessWidget {
       );
     }
 
-    final dateLabel = DateFormat('d MMMM y', 'ar').format(expiry);
+    final dateLabel = CaptainFormats.dayMonthYear(expiry);
     if (profile.isLicenseExpired) {
-      return _StatusBadge(
+      return VerificationStatusBadge(
         icon: Icons.error_rounded,
         label: 'رخصة القيادة منتهية',
         detail: 'انتهت في $dateLabel',
@@ -99,14 +106,14 @@ class _LicenseStatusRow extends StatelessWidget {
       );
     }
     if (profile.isLicenseExpiringSoon) {
-      return _StatusBadge(
+      return VerificationStatusBadge(
         icon: Icons.warning_amber_rounded,
         label: 'رخصة القيادة تنتهي قريباً',
         detail: 'تنتهي في $dateLabel — يُنصح بالتجديد',
         color: CaptainColors.warning,
       );
     }
-    return _StatusBadge(
+    return VerificationStatusBadge(
       icon: Icons.check_circle_rounded,
       label: 'رخصة القيادة سارية',
       detail: 'حتى $dateLabel',
@@ -139,101 +146,6 @@ class _AccountStatusRow extends StatelessWidget {
         CaptainColors.error,
       ),
     };
-    return _StatusBadge(icon: icon, label: label, color: color);
-  }
-}
-
-class _StatusBadge extends StatelessWidget {
-  const _StatusBadge({
-    required this.icon,
-    required this.label,
-    required this.color,
-    this.detail,
-  });
-
-  final IconData icon;
-  final String label;
-  final String? detail;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: CaptainDesignTokens.s12,
-        vertical: CaptainDesignTokens.s12,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: CaptainDesignTokens.br12,
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: CaptainDesignTokens.s12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  style: CaptainTypography.labelLarge(
-                    context,
-                  ).copyWith(color: color, fontWeight: FontWeight.w800),
-                ),
-                if (detail != null)
-                  Text(
-                    detail!,
-                    style: CaptainTypography.labelSmall(
-                      context,
-                    ).copyWith(color: CaptainColors.textSecondaryFor(context)),
-                  ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Fact extends StatelessWidget {
-  const _Fact({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    // The label yields before the value does — a truncated "كابتن منذ" still
-    // reads, a truncated captain code does not.
-    return Row(
-      children: [
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: CaptainTypography.bodyMedium(context).copyWith(
-              color: CaptainColors.textSecondaryFor(context),
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ),
-        const SizedBox(width: CaptainDesignTokens.s12),
-        Expanded(
-          child: Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.end,
-            style: CaptainTypography.bodyMedium(context).copyWith(
-              color: CaptainColors.textPrimaryFor(context),
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-      ],
-    );
+    return VerificationStatusBadge(icon: icon, label: label, color: color);
   }
 }

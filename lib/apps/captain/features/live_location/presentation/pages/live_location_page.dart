@@ -1,4 +1,5 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -136,8 +137,7 @@ class LocationUpdatePage extends StatelessWidget {
 
   String _formatTime(DateTime value) {
     final local = value.toLocal();
-    final hour = local.hour.toString().padLeft(2, '0');
-    final minute = local.minute.toString().padLeft(2, '0');
-    return '${local.year}/${local.month}/${local.day} - $hour:$minute';
+    return '${local.year}/${local.month}/${local.day} - '
+        '${CaptainFormats.clock(local)}';
   }
 }

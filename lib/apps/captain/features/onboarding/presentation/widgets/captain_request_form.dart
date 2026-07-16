@@ -20,8 +20,8 @@ class _RequestSteps extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: const [
+    return const Column(
+      children: [
         _Step(index: 1, icon: Icons.edit_outlined, label: 'أرسل بياناتك'),
         _Step(
           index: 2,

@@ -68,9 +68,11 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
     emit(TripExecutionLoading(_snapshot));
     try {
       final result = await _startBoarding(tripId);
+      if (isClosed) return;
       _snapshot = _snapshot.copyWith(status: result.status);
       emit(TripExecutionIdle(_snapshot));
     } catch (error) {
+      if (isClosed) return;
       emit(TripExecutionError(error.toString(), _snapshot));
     }
   }
@@ -79,9 +81,11 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
     emit(TripExecutionLoading(_snapshot));
     try {
       final result = await _startTrip(tripId);
+      if (isClosed) return;
       _snapshot = _snapshot.copyWith(status: result.status);
       emit(TripExecutionIdle(_snapshot));
     } catch (error) {
+      if (isClosed) return;
       emit(TripExecutionError(error.toString(), _snapshot));
     }
   }
@@ -90,9 +94,11 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
     emit(TripExecutionLoading(_snapshot));
     try {
       final result = await _completeTrip(tripId);
+      if (isClosed) return;
       _snapshot = _snapshot.copyWith(status: result.status);
       emit(TripExecutionIdle(_snapshot));
     } catch (error) {
+      if (isClosed) return;
       emit(TripExecutionError(error.toString(), _snapshot));
     }
   }

@@ -24,181 +24,184 @@ import '../widgets/captain_focus_card.dart';
 import '../widgets/home_quick_actions.dart';
 import '../widgets/new_assignments_banner.dart';
 
-class AssignedTripsPage extends StatefulWidget {
+class AssignedTripsPage extends StatelessWidget {
   const AssignedTripsPage({super.key});
-
-  @override
-  State<AssignedTripsPage> createState() => _AssignedTripsPageState();
-}
-
-class _AssignedTripsPageState extends State<AssignedTripsPage> {
-  bool _refreshing = false;
-
-  @override
-  void initState() {
-    super.initState();
-    context.read<AssignedTripsCubit>().load();
-  }
-
-  Future<void> _refresh() async {
-    setState(() => _refreshing = true);
-    try {
-      final succeeded = await context.read<AssignedTripsCubit>().refresh();
-      if (!succeeded && mounted) {
-        AppSnackbar.error(
-          context,
-          'تعذر تحديث الرحلات، تحقق من الاتصال وحاول مجدداً',
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _refreshing = false);
-    }
-  }
-
-  void _openTrip(AssignedTrip trip) => context.openTripExecution(trip);
-
-  void _openManifest(AssignedTrip trip) =>
-      context.openPassengerManifest(trip.id);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
       body: BlocBuilder<AssignedTripsCubit, AssignedTripsState>(
-        builder: (context, state) {
-          if (state is AssignedTripsLoading) {
-            return const AssignedTripsSkeleton();
-          }
-
-          if (state is AssignedTripsError) {
-            return SafeArea(
-              child: AsyncStateView(
-                status: AsyncViewStatus.error,
-                errorMessage: state.message,
-                onRetry: () => context.read<AssignedTripsCubit>().load(),
-                child: const SizedBox.shrink(),
-              ),
-            );
-          }
-
-          final trips = state is AssignedTripsLoaded
-              ? state.trips
-              : const <AssignedTrip>[];
-          final newTripIds = state is AssignedTripsLoaded
-              ? state.newTripIds
-              : const <String>{};
-
-          return RefreshIndicator(
-            onRefresh: _refresh,
-            child: _Content(
-              summary: CaptainDaySummary.fromTrips(trips),
-              trips: trips,
-              newTripCount: newTripIds.length,
-              isRefreshing: _refreshing,
-              onRefresh: _refresh,
-              onOpenTrip: _openTrip,
-              onOpenManifest: _openManifest,
-              onAcknowledgeNewTrips: () =>
-                  context.read<AssignedTripsCubit>().acknowledgeNewTrips(),
-            ),
-          );
+        builder: (context, state) => switch (state) {
+          AssignedTripsLoading() => const AssignedTripsSkeleton(),
+          AssignedTripsError(:final message) => _ErrorBody(message: message),
+          AssignedTripsLoaded() => _Content(state: state),
         },
       ),
     );
   }
 }
 
-class _Content extends StatelessWidget {
-  const _Content({
-    required this.summary,
-    required this.trips,
-    required this.newTripCount,
-    required this.isRefreshing,
-    required this.onRefresh,
-    required this.onOpenTrip,
-    required this.onOpenManifest,
-    required this.onAcknowledgeNewTrips,
-  });
+class _ErrorBody extends StatelessWidget {
+  const _ErrorBody({required this.message});
 
-  final CaptainDaySummary summary;
-  final List<AssignedTrip> trips;
-  final int newTripCount;
-  final bool isRefreshing;
-  final Future<void> Function() onRefresh;
-  final ValueChanged<AssignedTrip> onOpenTrip;
-  final ValueChanged<AssignedTrip> onOpenManifest;
-  final VoidCallback onAcknowledgeNewTrips;
+  final String message;
 
   @override
   Widget build(BuildContext context) {
+    return SafeArea(
+      child: AsyncStateView(
+        status: AsyncViewStatus.error,
+        errorMessage: message,
+        onRetry: () => context.read<AssignedTripsCubit>().load(),
+        child: const SizedBox.shrink(),
+      ),
+    );
+  }
+}
+
+class _Content extends StatelessWidget {
+  const _Content({required this.state});
+
+  final AssignedTripsLoaded state;
+
+  /// Refreshes and reports a failure. A silent no-op would be indistinguishable
+  /// from a successful refresh that found nothing new.
+  Future<void> _refresh(BuildContext context) async {
+    final succeeded = await context.read<AssignedTripsCubit>().refresh();
+    if (!succeeded && context.mounted) {
+      AppSnackbar.error(
+        context,
+        'تعذر تحديث الرحلات، تحقق من الاتصال وحاول مجدداً',
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final summary = CaptainDaySummary.fromTrips(state.trips);
     final focus = summary.focusTrip;
     // The focus trip is already shown as the hero above, so the list carries
     // the rest of the day.
-    final rest = trips.where((t) => t.id != focus?.id).toList();
+    final rest = focus == null
+        ? state.trips
+        : [
+            for (final t in state.trips)
+              if (t.id != focus.id) t,
+          ];
 
-    return CustomScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
-      slivers: [
-        AssignedTripsHeader(
-          onAvatarTap: () => showCaptainDevModeSheet(context),
-          onNotificationsTap: () => context.openNotifications(),
-        ),
-        SliverPadding(
-          padding: EdgeInsetsDirectional.fromSTEB(
-            CaptainDesignTokens.s20,
-            CaptainDesignTokens.s20,
-            CaptainDesignTokens.s20,
-            // The shell paints this page under its floating nav bar.
-            CaptainBottomNav.reservedSpace(context),
+    return RefreshIndicator(
+      onRefresh: () => _refresh(context),
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          AssignedTripsHeader(
+            onAvatarTap: () => showCaptainDevModeSheet(context),
+            onNotificationsTap: () => context.openNotifications(),
           ),
-          sliver: SliverList.list(
-            children: [
-              if (summary.isEmpty)
-                CaptainAwaitingTripsView(
-                  onRefresh: onRefresh,
-                  isRefreshing: isRefreshing,
-                  title: 'لا توجد رحلات اليوم',
-                  message:
-                      'لم تُسند إليك أي رحلة حتى الآن. فور إسناد رحلة من قِبل '
-                      'العمليات ستظهر هنا تلقائياً — لا حاجة لإعادة تسجيل الدخول.',
-                )
-              else ...[
-                if (newTripCount > 0) ...[
-                  NewAssignmentsBanner(
-                    count: newTripCount,
-                    onAcknowledge: onAcknowledgeNewTrips,
-                  ),
-                  const SizedBox(height: CaptainDesignTokens.s16),
-                ],
-                if (focus != null)
-                  CaptainFocusCard(trip: focus, onOpen: () => onOpenTrip(focus))
-                else
-                  CaptainDayCompleteCard(tripCount: summary.totalTrips),
-                if (focus != null) ...[
-                  const SizedBox(height: CaptainDesignTokens.s16),
-                  HomeQuickActions(tripId: focus.id),
-                ],
-                const SizedBox(height: CaptainDesignTokens.s16),
-                AssignedTripsStatsStrip(summary: summary),
-                if (rest.isNotEmpty) ...[
-                  const SizedBox(height: CaptainDesignTokens.s24),
-                  AssignedTripsSectionTitle(
-                    title: focus == null ? 'رحلات اليوم' : 'بقية رحلات اليوم',
-                    count: rest.length,
-                  ),
-                  const SizedBox(height: CaptainDesignTokens.s12),
-                  for (final trip in rest) ...[
-                    AssignedTripCard(
-                      trip: trip,
-                      onOpen: () => onOpenTrip(trip),
-                      onManifest: () => onOpenManifest(trip),
+          SliverPadding(
+            padding: EdgeInsetsDirectional.fromSTEB(
+              CaptainDesignTokens.s20,
+              CaptainDesignTokens.s20,
+              CaptainDesignTokens.s20,
+              // The shell paints this page under its floating nav bar.
+              CaptainBottomNav.reservedSpace(context),
+            ),
+            sliver: summary.isEmpty
+                ? SliverToBoxAdapter(
+                    child: CaptainAwaitingTripsView(
+                      onRefresh: () => _refresh(context),
+                      isRefreshing: state.isRefreshing,
+                      title: 'لا توجد رحلات اليوم',
+                      message:
+                          'لم تُسند إليك أي رحلة حتى الآن. فور إسناد رحلة من قِبل '
+                          'العمليات ستظهر هنا تلقائياً — لا حاجة لإعادة تسجيل الدخول.',
                     ),
-                    const SizedBox(height: CaptainDesignTokens.s12),
-                  ],
-                ],
-              ],
-            ],
+                  )
+                : _DaySlivers(
+                    state: state,
+                    summary: summary,
+                    focus: focus,
+                    rest: rest,
+                  ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The captain's day: what's next, the numbers, then everything else.
+class _DaySlivers extends StatelessWidget {
+  const _DaySlivers({
+    required this.state,
+    required this.summary,
+    required this.focus,
+    required this.rest,
+  });
+
+  final AssignedTripsLoaded state;
+  final CaptainDaySummary summary;
+  final AssignedTrip? focus;
+  final List<AssignedTrip> rest;
+
+  @override
+  Widget build(BuildContext context) {
+    final newTripCount = state.newTripIds.length;
+    final focusTrip = focus;
+
+    return SliverMainAxisGroup(
+      slivers: [
+        SliverList.list(
+          children: [
+            if (newTripCount > 0) ...[
+              NewAssignmentsBanner(
+                count: newTripCount,
+                onAcknowledge: () =>
+                    context.read<AssignedTripsCubit>().acknowledgeNewTrips(),
+              ),
+              const SizedBox(height: CaptainDesignTokens.s16),
+            ],
+            if (focusTrip != null)
+              CaptainFocusCard(
+                trip: focusTrip,
+                onOpen: () => context.openTripExecution(focusTrip),
+              )
+            else
+              CaptainDayCompleteCard(tripCount: summary.totalTrips),
+            if (focusTrip != null) ...[
+              const SizedBox(height: CaptainDesignTokens.s16),
+              HomeQuickActions(tripId: focusTrip.id),
+            ],
+            const SizedBox(height: CaptainDesignTokens.s16),
+            AssignedTripsStatsStrip(summary: summary),
+            if (rest.isNotEmpty) ...[
+              const SizedBox(height: CaptainDesignTokens.s24),
+              AssignedTripsSectionTitle(
+                title: focusTrip == null ? 'رحلات اليوم' : 'بقية رحلات اليوم',
+                count: rest.length,
+              ),
+              const SizedBox(height: CaptainDesignTokens.s12),
+            ],
+          ],
+        ),
+        // Built lazily: the rest of the day can run long, and only the cards
+        // near the viewport need to exist.
+        SliverList.builder(
+          itemCount: rest.length,
+          itemBuilder: (context, i) {
+            final trip = rest[i];
+            return Padding(
+              padding: const EdgeInsetsDirectional.only(
+                bottom: CaptainDesignTokens.s12,
+              ),
+              child: AssignedTripCard(
+                trip: trip,
+                onOpen: () => context.openTripExecution(trip),
+                onManifest: () => context.openPassengerManifest(trip.id),
+              ),
+            );
+          },
         ),
       ],
     );

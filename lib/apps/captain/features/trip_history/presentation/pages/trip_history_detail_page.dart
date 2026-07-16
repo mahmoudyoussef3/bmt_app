@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
@@ -76,9 +76,9 @@ class _TripSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel = DateFormat('EEEE، d MMMM y', 'ar').format(trip.tripDate);
-    final departure = _fmt(trip.departureTime);
-    final arrival = _fmt(trip.arrivalTime);
+    final dateLabel = CaptainFormats.fullDate(trip.tripDate);
+    final departure = CaptainFormats.clock(trip.departureTime);
+    final arrival = CaptainFormats.clock(trip.arrivalTime);
 
     return CaptainCard(
       child: Column(
@@ -125,7 +125,7 @@ class _TripSummaryCard extends StatelessWidget {
                 child: _Fact(
                   icon: Icons.timer_rounded,
                   label: 'المدة',
-                  value: _durationLabel(trip.duration),
+                  value: CaptainFormats.duration(trip.duration),
                 ),
               ),
             ],
@@ -133,19 +133,6 @@ class _TripSummaryCard extends StatelessWidget {
         ],
       ),
     );
-  }
-
-  String _fmt(DateTime dt) {
-    final h = dt.hour.toString().padLeft(2, '0');
-    final m = dt.minute.toString().padLeft(2, '0');
-    return '$h:$m';
-  }
-
-  String _durationLabel(Duration dur) {
-    if (dur.inMinutes <= 0) return '—';
-    final hours = dur.inHours;
-    final minutes = dur.inMinutes.remainder(60);
-    return hours > 0 ? '$hoursس $minutesد' : '$minutesد';
   }
 }
 

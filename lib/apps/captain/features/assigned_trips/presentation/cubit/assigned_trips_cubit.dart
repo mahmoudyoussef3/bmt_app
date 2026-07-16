@@ -49,27 +49,40 @@ class AssignedTripsCubit extends Cubit<AssignedTripsState> {
     }
   }
 
-  /// Re-fetches the trip list. Returns whether it succeeded so a manual
-  /// pull-to-refresh can tell the captain it failed — a silent no-op
-  /// otherwise looks identical to a successful refresh. Background
-  /// refreshes (triggered by realtime changes, see [_subscribeToChanges])
-  /// call this too and ignore the result: quietly retrying on the next
-  /// change is the right behavior there, not surfacing a message for a
-  /// momentary connectivity blip nobody asked about.
-  Future<bool> refresh() async {
+  /// Re-fetches the trip list at the captain's request, showing progress while
+  /// it runs. Returns whether it succeeded so a manual pull-to-refresh can
+  /// tell the captain it failed — a silent no-op otherwise looks identical to
+  /// a successful refresh.
+  Future<bool> refresh() => _fetch(showProgress: true);
+
+  /// The realtime-triggered re-fetch. Silent by design: it ignores the result
+  /// and shows no progress, because quietly retrying on the next change is the
+  /// right behavior for a background poll, not surfacing a message — or a
+  /// spinner — for a momentary connectivity blip nobody asked about.
+  Future<void> _backgroundRefresh() => _fetch(showProgress: false);
+
+  Future<bool> _fetch({required bool showProgress}) async {
     if (_refreshing) return true;
     _refreshing = true;
+    if (showProgress) _setRefreshing(true);
     try {
       final trips = await _getAssignedTrips();
       if (isClosed) return true;
       emit(AssignedTripsLoaded(trips, newTripIds: _newTripIds(trips)));
       return true;
     } catch (_) {
-      // Keep current state on silent refresh failure
+      // Keep current state on silent refresh failure.
+      if (showProgress) _setRefreshing(false);
       return false;
     } finally {
       _refreshing = false;
     }
+  }
+
+  void _setRefreshing(bool value) {
+    final current = state;
+    if (isClosed || current is! AssignedTripsLoaded) return;
+    emit(current.copyWith(isRefreshing: value));
   }
 
   /// Dismisses the "new assignment" notice: everything currently visible
@@ -94,7 +107,10 @@ class AssignedTripsCubit extends Cubit<AssignedTripsState> {
     _subscription?.cancel();
     _subscription = _watchAssignedTrips().listen((_) {
       _refreshDebounce?.cancel();
-      _refreshDebounce = Timer(const Duration(milliseconds: 250), refresh);
+      _refreshDebounce = Timer(
+        const Duration(milliseconds: 250),
+        _backgroundRefresh,
+      );
     }, onError: (_) {});
   }
 

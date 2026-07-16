@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
 
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
+import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_notification_bell.dart';
 import 'package:bmt_app/apps/captain/features/profile/presentation/cubit/driver_profile_cubit.dart';
@@ -45,8 +45,8 @@ class AssignedTripsHeader extends StatelessWidget {
         GestureDetector(onTap: onAvatarTap, child: const _HeaderAvatar()),
         const SizedBox(width: CaptainDesignTokens.s20),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        background: const _HeaderBackground(),
+      flexibleSpace: const FlexibleSpaceBar(
+        background: _HeaderBackground(),
         collapseMode: CollapseMode.parallax,
       ),
     );
@@ -123,7 +123,7 @@ class _TodayLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      DateFormat('EEEE، d MMMM', 'ar').format(DateTime.now()),
+      CaptainFormats.dayAndMonth(DateTime.now()),
       style: CaptainTypography.bodyMedium(context).copyWith(
         color: Colors.white.withValues(alpha: 0.85),
         fontWeight: FontWeight.w600,
