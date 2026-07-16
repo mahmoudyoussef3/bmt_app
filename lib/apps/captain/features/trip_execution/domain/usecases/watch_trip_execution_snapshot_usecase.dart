@@ -1,11 +1,16 @@
 import '../entities/trip_execution_state.dart';
 import '../repositories/trip_execution_repository.dart';
 
-class WatchTripExecutionStatusUseCase {
-  const WatchTripExecutionStatusUseCase(this._repository);
+class WatchTripExecutionSnapshotUseCase {
+  const WatchTripExecutionSnapshotUseCase(this._repository);
 
   final TripExecutionRepository _repository;
 
-  Stream<TripExecutionStatus> call(String tripId) =>
-      _repository.watchTripStatus(tripId);
+  Stream<TripExecutionSnapshot> call({
+    required String tripId,
+    required int routePointCount,
+  }) => _repository.watchTripSnapshot(
+    tripId: tripId,
+    routePointCount: routePointCount,
+  );
 }

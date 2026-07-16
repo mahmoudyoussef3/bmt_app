@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 
 import '../cubit/captain_auth_cubit.dart';
@@ -9,7 +10,6 @@ import '../widgets/captain_auth_field.dart';
 import '../widgets/captain_auth_header.dart';
 import '../widgets/captain_auth_scaffold.dart';
 import '../widgets/captain_remember_me_checkbox.dart';
-import 'captain_request_access_screen.dart';
 
 class CaptainLoginScreen extends StatefulWidget {
   const CaptainLoginScreen({super.key, this.onRequestAccess});
@@ -64,9 +64,7 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
       swap();
       return;
     }
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const CaptainRequestAccessScreen()),
-    );
+    context.openRequestAccess();
   }
 
   @override

@@ -1,4 +1,5 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,9 +46,7 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
             }
             if (state is IncidentError) {
               setState(() => _submitting = false);
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
+              AppSnackbar.error(context, state.message);
             }
           },
           builder: (context, state) {
@@ -106,10 +105,9 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
                   onPressed: () {
                     final description = _description.trim();
                     if (description.length < 8) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('اكتب وصفاً واضحاً قبل إرسال البلاغ'),
-                        ),
+                      AppSnackbar.warning(
+                        context,
+                        'اكتب وصفاً واضحاً قبل إرسال البلاغ',
                       );
                       return;
                     }

@@ -10,9 +10,6 @@ import '../cubit/captain_notifications_state.dart';
 class CaptainNotificationsPage extends StatelessWidget {
   const CaptainNotificationsPage({super.key});
 
-  static Route<void> route() =>
-      MaterialPageRoute(builder: (_) => const CaptainNotificationsPage());
-
   @override
   Widget build(BuildContext context) {
     return BlocProvider<CaptainNotificationsCubit>(

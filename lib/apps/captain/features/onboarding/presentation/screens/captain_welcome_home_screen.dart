@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/captain/core/session/captain_session_store.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
-import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_awaiting_trips_view.dart';
 
 import '../cubit/captain_activation_cubit.dart';
@@ -64,17 +64,17 @@ class _CaptainWelcomeHomeScreenState extends State<CaptainWelcomeHomeScreen> {
                 onRefresh: _refresh,
                 child: ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(CaptainSpacing.lg),
+                  padding: const EdgeInsets.all(CaptainDesignTokens.s16),
                   children: [
                     CaptainIdentityCard(session: widget.session),
                     if (state is CaptainActivationFailed) ...[
-                      const SizedBox(height: CaptainSpacing.lg),
+                      const SizedBox(height: CaptainDesignTokens.s16),
                       CaptainActivationError(
                         message: state.message,
                         onRetry: _refresh,
                       ),
                     ],
-                    const SizedBox(height: CaptainSpacing.xl),
+                    const SizedBox(height: CaptainDesignTokens.s24),
                     CaptainAwaitingTripsView(
                       onRefresh: _refresh,
                       isRefreshing: state is CaptainActivationChecking,

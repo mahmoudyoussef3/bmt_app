@@ -249,11 +249,20 @@ class _ScanResult extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isSuccess = result.status == CheckInStatus.boarded;
-    final color = isSuccess
-        ? Colors.green
-        : Theme.of(context).colorScheme.error;
-    final icon = isSuccess ? Icons.check_circle_rounded : Icons.cancel_rounded;
+    final (icon, color) = switch (result.status) {
+      CheckInStatus.boarded || CheckInStatus.alreadyCheckedIn => (
+        Icons.check_circle_rounded,
+        Colors.green,
+      ),
+      CheckInStatus.pendingSync => (
+        Icons.cloud_sync_rounded,
+        Colors.orange.shade700,
+      ),
+      CheckInStatus.absent || CheckInStatus.cancelled => (
+        Icons.cancel_rounded,
+        Theme.of(context).colorScheme.error,
+      ),
+    };
 
     return AppCard(
       padding: const EdgeInsets.all(16),
@@ -275,6 +284,16 @@ class _ScanResult extends StatelessWidget {
           ],
           const SizedBox(height: 8),
           StatusChip(label: _statusLabel(result.status)),
+          if (result.status == CheckInStatus.pendingSync) ...[
+            const SizedBox(height: 8),
+            Text(
+              'سيتم التحقق من التذكرة تلقائياً عند عودة الاتصال',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
           if (result.errorMessage != null) ...[
             const SizedBox(height: 8),
             Text(
@@ -292,5 +311,6 @@ class _ScanResult extends StatelessWidget {
     CheckInStatus.absent => 'غائب',
     CheckInStatus.cancelled => 'ملغي',
     CheckInStatus.alreadyCheckedIn => 'تم التسجيل مسبقاً',
+    CheckInStatus.pendingSync => 'بانتظار المزامنة',
   };
 }

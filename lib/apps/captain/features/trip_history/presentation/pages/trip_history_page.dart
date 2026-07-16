@@ -1,9 +1,10 @@
-import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_loading_state.dart';
-import 'package:bmt_app/core/widgets/widgets.dart' hide CaptainCard;
+import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
+import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -59,42 +60,15 @@ class _HistoryList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final totalPassengers = trips.fold<int>(0, (s, t) => s + t.boardedCount);
 
     return RefreshIndicator(
       onRefresh: () => context.read<TripHistoryCubit>().refresh(),
       child: CustomScrollView(
         slivers: [
-          SliverAppBar(
-            pinned: true,
-            expandedHeight: 110,
-            backgroundColor: scheme.surface,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.symmetric(
-                horizontal: 20,
-                vertical: 14,
-              ),
-              title: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'سجل الرحلات',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: scheme.onSurface,
-                    ),
-                  ),
-                  Text(
-                    '${trips.length} رحلة مكتملة',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          CaptainSliverHeader(
+            title: 'سجل الرحلات',
+            subtitle: '${trips.length} رحلة مكتملة',
           ),
           if (trips.isEmpty)
             SliverFillRemaining(
@@ -116,9 +90,9 @@ class _HistoryList extends StatelessWidget {
             ),
             SliverPadding(
               padding: EdgeInsetsDirectional.fromSTEB(
-                CaptainSpacing.xl,
-                CaptainSpacing.md,
-                CaptainSpacing.xl,
+                CaptainDesignTokens.s24,
+                CaptainDesignTokens.s8,
+                CaptainDesignTokens.s24,
                 // Cleared for the shell's floating nav bar.
                 CaptainBottomNav.reservedSpace(context),
               ),
@@ -126,7 +100,7 @@ class _HistoryList extends StatelessWidget {
                 itemCount: trips.length,
                 itemBuilder: (context, i) => Padding(
                   padding: const EdgeInsetsDirectional.only(
-                    bottom: CaptainSpacing.lg,
+                    bottom: CaptainDesignTokens.s16,
                   ),
                   child: _TripHistoryCard(trip: trips[i]),
                 ),
@@ -150,10 +124,10 @@ class _SummaryRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsetsDirectional.fromSTEB(
-        CaptainSpacing.xl,
-        CaptainSpacing.lg,
-        CaptainSpacing.xl,
-        CaptainSpacing.md,
+        CaptainDesignTokens.s24,
+        CaptainDesignTokens.s16,
+        CaptainDesignTokens.s24,
+        CaptainDesignTokens.s8,
       ),
       child: Row(
         children: [
@@ -165,7 +139,7 @@ class _SummaryRow extends StatelessWidget {
               value: '$totalTrips',
             ),
           ),
-          const SizedBox(width: CaptainSpacing.lg),
+          const SizedBox(width: CaptainDesignTokens.s16),
           Expanded(
             child: _SummaryTile(
               icon: Icons.people_alt_rounded,
@@ -197,20 +171,20 @@ class _SummaryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return CaptainCard(
       padding: const EdgeInsets.symmetric(
-        horizontal: CaptainSpacing.lg,
-        vertical: CaptainSpacing.lg,
+        horizontal: CaptainDesignTokens.s16,
+        vertical: CaptainDesignTokens.s16,
       ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(CaptainSpacing.md),
+            padding: const EdgeInsets.all(CaptainDesignTokens.s8),
             decoration: BoxDecoration(
               color: color.withAlpha(20),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 20),
           ),
-          const SizedBox(width: CaptainSpacing.md),
+          const SizedBox(width: CaptainDesignTokens.s8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -254,21 +228,21 @@ class _TripHistoryCard extends StatelessWidget {
           // Header
           Container(
             padding: const EdgeInsetsDirectional.fromSTEB(
-              CaptainSpacing.lg,
-              CaptainSpacing.lg,
-              CaptainSpacing.lg,
-              CaptainSpacing.lg,
+              CaptainDesignTokens.s16,
+              CaptainDesignTokens.s16,
+              CaptainDesignTokens.s16,
+              CaptainDesignTokens.s16,
             ),
             decoration: BoxDecoration(
               color: Colors.green.withAlpha(12),
               borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(CaptainRadius.xl),
+                top: CaptainDesignTokens.r24,
               ),
             ),
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(CaptainSpacing.md),
+                  padding: const EdgeInsets.all(CaptainDesignTokens.s8),
                   decoration: BoxDecoration(
                     color: Colors.green.withAlpha(20),
                     shape: BoxShape.circle,
@@ -279,7 +253,7 @@ class _TripHistoryCard extends StatelessWidget {
                     size: 18,
                   ),
                 ),
-                const SizedBox(width: CaptainSpacing.md),
+                const SizedBox(width: CaptainDesignTokens.s8),
                 Expanded(
                   child: Text(
                     trip.route,
@@ -290,12 +264,12 @@ class _TripHistoryCard extends StatelessWidget {
                 ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: CaptainSpacing.md,
-                    vertical: CaptainSpacing.sm,
+                    horizontal: CaptainDesignTokens.s8,
+                    vertical: CaptainDesignTokens.s4,
                   ),
                   decoration: BoxDecoration(
                     color: Colors.green.withAlpha(20),
-                    borderRadius: CaptainRadius.rSm,
+                    borderRadius: CaptainDesignTokens.br8,
                     border: Border.all(color: Colors.green.withAlpha(60)),
                   ),
                   child: Text(
@@ -310,7 +284,7 @@ class _TripHistoryCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(CaptainSpacing.lg),
+            padding: const EdgeInsets.all(CaptainDesignTokens.s16),
             child: Column(
               children: [
                 // Date + time row
@@ -321,7 +295,7 @@ class _TripHistoryCard extends StatelessWidget {
                       size: 14,
                       color: scheme.onSurfaceVariant,
                     ),
-                    const SizedBox(width: CaptainSpacing.sm),
+                    const SizedBox(width: CaptainDesignTokens.s4),
                     Expanded(
                       child: Text(
                         dateLabel,
@@ -338,7 +312,7 @@ class _TripHistoryCard extends StatelessWidget {
                     ),
                   ],
                 ),
-                const SizedBox(height: CaptainSpacing.md),
+                const SizedBox(height: CaptainDesignTokens.s8),
                 // Stats row
                 Row(
                   children: [
@@ -347,13 +321,13 @@ class _TripHistoryCard extends StatelessWidget {
                       label: '${trip.boardedCount}/${trip.passengerCount} راكب',
                       color: scheme.primary,
                     ),
-                    const SizedBox(width: CaptainSpacing.md),
+                    const SizedBox(width: CaptainDesignTokens.s8),
                     _Chip(
                       icon: Icons.timer_rounded,
                       label: durLabel,
                       color: Colors.teal,
                     ),
-                    const SizedBox(width: CaptainSpacing.md),
+                    const SizedBox(width: CaptainDesignTokens.s8),
                     if (trip.vehicleNumber.isNotEmpty)
                       _Chip(
                         icon: Icons.directions_bus_rounded,
@@ -388,18 +362,18 @@ class _Chip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: CaptainSpacing.md,
-        vertical: CaptainSpacing.sm,
+        horizontal: CaptainDesignTokens.s8,
+        vertical: CaptainDesignTokens.s4,
       ),
       decoration: BoxDecoration(
         color: color.withAlpha(15),
-        borderRadius: CaptainRadius.rSm,
+        borderRadius: CaptainDesignTokens.br8,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, size: 13, color: color),
-          const SizedBox(width: CaptainSpacing.sm),
+          const SizedBox(width: CaptainDesignTokens.s4),
           Text(
             label,
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -420,13 +394,13 @@ class _HistorySkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.all(CaptainSpacing.xl),
+        padding: const EdgeInsets.all(CaptainDesignTokens.s24),
         children: [
           const CaptainSkeleton(height: 28, width: 140),
-          const SizedBox(height: CaptainSpacing.xl),
+          const SizedBox(height: CaptainDesignTokens.s24),
           for (var i = 0; i < 5; i++) ...[
             const CaptainSkeleton(height: 120, width: double.infinity),
-            const SizedBox(height: CaptainSpacing.md),
+            const SizedBox(height: CaptainDesignTokens.s8),
           ],
         ],
       ),

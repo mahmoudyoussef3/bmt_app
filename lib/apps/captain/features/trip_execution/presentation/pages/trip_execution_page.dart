@@ -1,14 +1,9 @@
 import 'dart:async';
 
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/assigned_trip.dart';
-import 'package:bmt_app/apps/captain/features/check_in/presentation/pages/check_in_page.dart';
-import 'package:bmt_app/apps/captain/features/communication/presentation/pages/chats_page.dart';
 import 'package:bmt_app/apps/captain/features/incidents/domain/entities/incident_report.dart';
-import 'package:bmt_app/apps/captain/features/incidents/presentation/pages/report_incident_page.dart';
-import 'package:bmt_app/apps/captain/features/live_location/presentation/pages/live_location_page.dart';
-import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/pages/passenger_list_page.dart';
-import 'package:bmt_app/apps/captain/features/trip_status_updates/presentation/pages/status_update_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -16,7 +11,10 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_confirm_dialog.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_status_chip.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 
 import '../../domain/entities/trip_execution_state.dart';
 import '../cubit/trip_execution_cubit.dart';
@@ -30,12 +28,16 @@ class TripExecutionPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<TripExecutionCubit>(
-      create: (_) =>
-          captainGetIt<TripExecutionCubit>()
-            ..watch(trip.id, _executionStatusFromTrip(trip.status)),
+      create: (_) => captainGetIt<TripExecutionCubit>()
+        ..watch(
+          tripId: trip.id,
+          routePointCount: trip.stops.length,
+          initialSnapshot: _initialSnapshotFromTrip(trip),
+        ),
       child: BlocBuilder<TripExecutionCubit, TripExecutionCubitState>(
         builder: (context, state) {
-          final status = _statusFromState(state);
+          final snapshot = _snapshotFromState(state);
+          final status = snapshot.status;
 
           return Scaffold(
             backgroundColor: CaptainColors.backgroundFor(context),
@@ -44,31 +46,7 @@ class TripExecutionPage extends StatelessWidget {
                 : null,
             body: CustomScrollView(
               slivers: [
-                SliverAppBar(
-                  expandedHeight: 80,
-                  pinned: true,
-                  elevation: 0,
-                  backgroundColor: CaptainColors.backgroundFor(context),
-                  iconTheme: IconThemeData(
-                    color: CaptainColors.textPrimaryFor(context),
-                  ),
-                  flexibleSpace: FlexibleSpaceBar(
-                    background: Container(
-                      color: CaptainColors.backgroundFor(context),
-                    ),
-                    titlePadding: const EdgeInsets.symmetric(
-                      horizontal: CaptainDesignTokens.s32,
-                      vertical: CaptainDesignTokens.s16,
-                    ),
-                    title: Text(
-                      'تنفيذ الرحلة',
-                      style: CaptainTypography.titleLarge(context).copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: CaptainColors.textPrimaryFor(context),
-                      ),
-                    ),
-                  ),
-                ),
+                const CaptainSliverHeader(title: 'تنفيذ الرحلة'),
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(
@@ -82,7 +60,7 @@ class TripExecutionPage extends StatelessWidget {
                       children: [
                         _ExecutionHeaderCard(
                           trip: trip,
-                          status: status,
+                          snapshot: snapshot,
                           state: state,
                         ),
                         const SizedBox(height: CaptainDesignTokens.s24),
@@ -91,7 +69,7 @@ class TripExecutionPage extends StatelessWidget {
                           _NextStopBanner(
                             tripId: trip.id,
                             stops: trip.stops,
-                            initialArrivedCount: trip.arrivedStationsCount,
+                            arrivedStationsCount: snapshot.arrivedStationsCount,
                           ),
                           const SizedBox(height: CaptainDesignTokens.s24),
                         ],
@@ -115,61 +93,34 @@ class TripExecutionPage extends StatelessWidget {
                             _ActionTile(
                               label: 'الركاب',
                               icon: Icons.people_alt_rounded,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      PassengerListPage(tripId: trip.id),
-                                ),
-                              ),
+                              onTap: () =>
+                                  context.openPassengerManifest(trip.id),
                             ),
                             _ActionTile(
                               label: 'تسجيل الدخول',
                               icon: Icons.qr_code_scanner_rounded,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => CheckInPage(tripId: trip.id),
-                                ),
-                              ),
+                              onTap: () => context.openCheckIn(trip.id),
                             ),
                             _ActionTile(
                               label: 'إرسال الموقع',
                               icon: Icons.my_location_rounded,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      LocationUpdatePage(tripId: trip.id),
-                                ),
-                              ),
+                              onTap: () => context.openLocationUpdate(trip.id),
                             ),
                             _ActionTile(
                               label: 'التواصل',
                               icon: Icons.chat_bubble_outline_rounded,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) => ChatsPage(tripId: trip.id),
-                                ),
-                              ),
+                              onTap: () => context.openChats(trip.id),
                             ),
                             _ActionTile(
                               label: 'تحديث الحالة',
                               icon: Icons.sync_rounded,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      StatusUpdatePage(tripId: trip.id),
-                                ),
-                              ),
+                              onTap: () => context.openStatusUpdate(trip.id),
                             ),
                             _ActionTile(
                               label: 'بلاغ طارئ',
                               icon: Icons.report_problem_outlined,
                               destructive: true,
-                              onTap: () => Navigator.of(context).push(
-                                MaterialPageRoute(
-                                  builder: (_) =>
-                                      ReportIncidentPage(tripId: trip.id),
-                                ),
-                              ),
+                              onTap: () => context.openReportIncident(trip.id),
                             ),
                           ],
                         ),
@@ -185,33 +136,38 @@ class TripExecutionPage extends StatelessWidget {
     );
   }
 
-  TripExecutionStatus _statusFromState(TripExecutionCubitState state) {
+  TripExecutionSnapshot _snapshotFromState(TripExecutionCubitState state) {
     return switch (state) {
-      TripExecutionIdle(:final status) => status,
-      TripExecutionLoading(:final previousStatus) => previousStatus,
-      TripExecutionError(:final previousStatus) => previousStatus,
+      TripExecutionIdle(:final snapshot) => snapshot,
+      TripExecutionLoading(:final previousSnapshot) => previousSnapshot,
+      TripExecutionError(:final previousSnapshot) => previousSnapshot,
     };
   }
 
-  TripExecutionStatus _executionStatusFromTrip(AssignedTripStatus status) {
-    return switch (status) {
-      AssignedTripStatus.scheduled => TripExecutionStatus.scheduled,
-      AssignedTripStatus.boarding => TripExecutionStatus.boarding,
-      AssignedTripStatus.inProgress => TripExecutionStatus.inProgress,
-      AssignedTripStatus.completed => TripExecutionStatus.completed,
-    };
+  TripExecutionSnapshot _initialSnapshotFromTrip(AssignedTrip trip) {
+    return TripExecutionSnapshot(
+      status: switch (trip.status) {
+        AssignedTripStatus.scheduled => TripExecutionStatus.scheduled,
+        AssignedTripStatus.boarding => TripExecutionStatus.boarding,
+        AssignedTripStatus.inProgress => TripExecutionStatus.inProgress,
+        AssignedTripStatus.completed => TripExecutionStatus.completed,
+      },
+      passengerCount: trip.passengerCount,
+      boardedCount: trip.boardedCount,
+      arrivedStationsCount: trip.arrivedStationsCount,
+    );
   }
 }
 
 class _ExecutionHeaderCard extends StatelessWidget {
   const _ExecutionHeaderCard({
     required this.trip,
-    required this.status,
+    required this.snapshot,
     required this.state,
   });
 
   final AssignedTrip trip;
-  final TripExecutionStatus status;
+  final TripExecutionSnapshot snapshot;
   final TripExecutionCubitState state;
 
   @override
@@ -240,7 +196,7 @@ class _ExecutionHeaderCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: CaptainDesignTokens.s12),
-              _StatusBadge(status: status),
+              _StatusBadge(status: snapshot.status),
             ],
           ),
           const SizedBox(height: CaptainDesignTokens.s12),
@@ -258,7 +214,8 @@ class _ExecutionHeaderCard extends StatelessWidget {
               const SizedBox(width: CaptainDesignTokens.s12),
               _TripFact(
                 icon: Icons.people_alt_rounded,
-                value: '${trip.boardedCount}/${trip.passengerCount} صعدوا',
+                value:
+                    '${snapshot.boardedCount}/${snapshot.passengerCount} صعدوا',
               ),
             ],
           ),
@@ -270,7 +227,7 @@ class _ExecutionHeaderCard extends StatelessWidget {
           if (state is TripExecutionLoading)
             const Center(child: CircularProgressIndicator())
           else
-            _actionButton(context, status, trip.id),
+            _actionButton(context, snapshot.status, trip.id),
         ],
       ),
     );
@@ -295,14 +252,17 @@ class _ExecutionHeaderCard extends StatelessWidget {
         color: Colors.orange,
       ),
       TripExecutionStatus.inProgress => _PremiumActionButton(
-        onPressed: () => context.read<TripExecutionCubit>().complete(tripId),
+        onPressed: () => _confirmAndComplete(context, tripId),
         icon: Icons.check_circle_rounded,
         label: 'إنهاء الرحلة',
         color: CaptainColors.success,
       ),
+      // A terminal state, not an action — disabled (not a live button that
+      // silently does nothing) so it reads as "this trip is done" rather
+      // than as a tappable control.
       TripExecutionStatus.completed ||
       TripExecutionStatus.cancelled => OutlinedButton(
-        onPressed: () {},
+        onPressed: null,
         style: OutlinedButton.styleFrom(
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
@@ -315,6 +275,21 @@ class _ExecutionHeaderCard extends StatelessWidget {
         ),
       ),
     };
+  }
+
+  /// Completing a trip is a terminal, irreversible transition — confirm
+  /// before firing it so one mis-tap while driving can't end the trip.
+  Future<void> _confirmAndComplete(BuildContext context, String tripId) async {
+    final confirmed = await CaptainConfirmDialog.show(
+      context,
+      title: 'إنهاء الرحلة',
+      message: 'هل أنت متأكد من إنهاء الرحلة؟ لا يمكن التراجع عن هذا الإجراء.',
+      confirmLabel: 'إنهاء الرحلة',
+      confirmColor: CaptainColors.success,
+    );
+    if (confirmed && context.mounted) {
+      context.read<TripExecutionCubit>().complete(tripId);
+    }
   }
 
   String _timeRange(AssignedTrip trip) {
@@ -371,32 +346,43 @@ class _NextStopBanner extends StatefulWidget {
   const _NextStopBanner({
     required this.tripId,
     required this.stops,
-    required this.initialArrivedCount,
+    required this.arrivedStationsCount,
   });
 
   final String tripId;
   final List<AssignedTripStop> stops;
 
-  /// How many stations were already confirmed arrived (the shared
-  /// `trip_events` arrival floor) when this trip was loaded — lets the
-  /// banner resume at the correct next station instead of always starting
-  /// from the first one.
-  final int initialArrivedCount;
+  /// The live count of stations confirmed arrived (the shared `trip_events`
+  /// arrival floor), read fresh from the cubit on every rebuild rather than
+  /// captured once — so reopening this screen mid-trip always resumes at the
+  /// correct next station instead of replaying a snapshot from whenever the
+  /// trip was first loaded.
+  final int arrivedStationsCount;
 
   @override
   State<_NextStopBanner> createState() => _NextStopBannerState();
 }
 
 class _NextStopBannerState extends State<_NextStopBanner> {
-  late int _currentIndex = widget.initialArrivedCount.clamp(
-    0,
-    widget.stops.length,
-  );
   bool _isSubmitting = false;
 
+  /// A local bump ahead of [widget.arrivedStationsCount] so a successful tap
+  /// advances the banner immediately, without waiting for the realtime round
+  /// trip back through the live watch. Cleared automatically once the live
+  /// count catches up to (or passes) it.
+  int? _optimisticIndex;
+
+  int get _currentIndex {
+    final live = widget.arrivedStationsCount.clamp(0, widget.stops.length);
+    final optimistic = _optimisticIndex;
+    if (optimistic == null || live >= optimistic) return live;
+    return optimistic;
+  }
+
   Future<void> _markCurrentStopArrived() async {
-    if (_isSubmitting || _currentIndex >= widget.stops.length) return;
-    final stop = widget.stops[_currentIndex];
+    final index = _currentIndex;
+    if (_isSubmitting || index >= widget.stops.length) return;
+    final stop = widget.stops[index];
     setState(() => _isSubmitting = true);
     try {
       await context.read<TripExecutionCubit>().markStationArrived(
@@ -406,22 +392,21 @@ class _NextStopBannerState extends State<_NextStopBanner> {
       );
       if (!mounted) return;
       setState(() {
-        _currentIndex++;
+        _optimisticIndex = index + 1;
         _isSubmitting = false;
       });
     } catch (_) {
       if (!mounted) return;
       setState(() => _isSubmitting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('تعذر تسجيل الوصول للمحطة، حاول مجدداً')),
-      );
+      AppSnackbar.error(context, 'تعذر تسجيل الوصول للمحطة، حاول مجدداً');
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final remaining = widget.stops.length - _currentIndex;
-    final isLast = _currentIndex >= widget.stops.length;
+    final currentIndex = _currentIndex;
+    final remaining = widget.stops.length - currentIndex;
+    final isLast = currentIndex >= widget.stops.length;
 
     return Container(
       decoration: BoxDecoration(
@@ -472,7 +457,7 @@ class _NextStopBannerState extends State<_NextStopBanner> {
           if (!isLast) ...[
             const SizedBox(height: CaptainDesignTokens.s16),
             Text(
-              widget.stops[_currentIndex].name,
+              widget.stops[currentIndex].name,
               style: CaptainTypography.titleLarge(context).copyWith(
                 fontWeight: FontWeight.w800,
                 color: CaptainColors.textPrimaryFor(context),
@@ -538,16 +523,21 @@ class _ActionTile extends StatelessWidget {
                 child: Icon(icon, color: color, size: 28),
               ),
               const SizedBox(height: CaptainDesignTokens.s12),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: CaptainTypography.titleSmall(context).copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: destructive
-                      ? CaptainColors.error
-                      : CaptainColors.textPrimaryFor(context),
+              // Flexible so a larger text scale shrinks into whatever room
+              // is left in the tile's fixed aspect-ratio height instead of
+              // overflowing it; maxLines/ellipsis still apply within that.
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: CaptainTypography.titleSmall(context).copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: destructive
+                        ? CaptainColors.error
+                        : CaptainColors.textPrimaryFor(context),
+                  ),
                 ),
               ),
             ],
@@ -641,11 +631,14 @@ class _SosButton extends StatefulWidget {
 }
 
 class _SosButtonState extends State<_SosButton> {
-  Timer? _holdTimer;
   double _progress = 0;
   Timer? _progressTimer;
 
   void _onLongPressStart(LongPressStartDetails _) {
+    // A stray duplicate long-press-start (without an intervening end/cancel)
+    // would otherwise leave the previous periodic timer running unreferenced
+    // — never cancelled, ticking `_progress` up twice as fast.
+    _progressTimer?.cancel();
     setState(() => _progress = 0);
     _progressTimer = Timer.periodic(const Duration(milliseconds: 50), (t) {
       setState(() => _progress += 50 / 3000);
@@ -657,26 +650,20 @@ class _SosButtonState extends State<_SosButton> {
   }
 
   void _cancel() {
-    _holdTimer?.cancel();
     _progressTimer?.cancel();
     if (mounted) setState(() => _progress = 0);
   }
 
   void _triggerSos() {
     if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => ReportIncidentPage(
-          tripId: widget.tripId,
-          initialType: IncidentType.emergency,
-        ),
-      ),
+    context.openReportIncident(
+      widget.tripId,
+      initialType: IncidentType.emergency,
     );
   }
 
   @override
   void dispose() {
-    _holdTimer?.cancel();
     _progressTimer?.cancel();
     super.dispose();
   }
@@ -710,20 +697,10 @@ class _SosButtonState extends State<_SosButton> {
               'طوارئ',
               style: TextStyle(fontWeight: FontWeight.w900),
             ),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: const Text(
-                    'اضغط مطولاً 3 ثوانٍ لإرسال نداء الاستغاثة',
-                  ),
-                  behavior: SnackBarBehavior.floating,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
+            onPressed: () => AppSnackbar.warning(
+              context,
+              'اضغط مطولاً 3 ثوانٍ لإرسال نداء الاستغاثة',
+            ),
           ),
         ],
       ),

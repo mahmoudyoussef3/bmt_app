@@ -24,6 +24,9 @@ class CaptainRequestAccessScreen extends StatelessWidget {
       child: CaptainOnboardingFlow(
         onBackToLogin: () => Navigator.of(context).maybePop(),
         onEnterHome: (CaptainLocalSession session) {
+          // Stays a direct push rather than a CaptainRoutes name: the welcome
+          // home takes an `onSignOut` callback, and behaviour does not survive
+          // a trip through `settings.arguments` the way plain data does.
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (_) => CaptainWelcomeHome(

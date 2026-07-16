@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/apps/captain/core/session/captain_driver_id_resolver.dart';
 import 'package:bmt_app/core/tracking/progress/arrival_events.dart';
 
 import '../../domain/entities/assigned_trip.dart';
@@ -60,7 +61,7 @@ class CaptainTripRemoteDataSource {
     final user = _supabase.auth.currentUser;
     if (user == null) return const [];
 
-    _cachedDriverId = await _resolveDriverId(user);
+    _cachedDriverId = await resolveCaptainDriverId(_supabase, user);
     final driverId = _cachedDriverId;
     if (driverId == null) return const [];
 
@@ -97,16 +98,6 @@ class CaptainTripRemoteDataSource {
     return '$y-$m-$d';
   }
 
-  Future<String?> _resolveDriverId(User user) async {
-    final direct = await _supabase
-        .from('drivers')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-    if (direct != null) return direct['id'] as String?;
-    return null;
-  }
-
   AssignedTripModel _mapTrip(Map<String, dynamic> json) {
     final route = json['operation_routes'] as Map<String, dynamic>? ?? {};
     final vehicle = json['vehicles'] as Map<String, dynamic>? ?? {};
@@ -119,9 +110,13 @@ class CaptainTripRemoteDataSource {
             ),
           );
     final passengers = (json['trip_passengers'] as List?) ?? const [];
+    // scan_passenger_ticket writes 'confirmed' on check-in (see migration_07)
+    // — trip_passengers.status has no 'boarded' value in its check
+    // constraint. 'completed' is kept defensively; nothing currently writes
+    // it, but it would mean the same thing if something one day did.
     final boarded = passengers.where((p) {
       final status = (p as Map<String, dynamic>)['status']?.toString();
-      return status == 'boarded' || status == 'completed';
+      return status == 'confirmed' || status == 'completed';
     }).length;
     final tripDate = json['trip_date']?.toString() ?? '';
 

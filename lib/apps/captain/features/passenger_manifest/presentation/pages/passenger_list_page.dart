@@ -1,5 +1,6 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
-import 'package:bmt_app/apps/captain/features/communication/presentation/pages/chat_details_page.dart';
+import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,6 +10,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
 
 import '../../domain/entities/passenger.dart';
 import '../cubit/passenger_manifest_cubit.dart';
@@ -51,8 +53,9 @@ class _PassengerListViewState extends State<_PassengerListView> {
 
   List<Passenger> _apply(List<Passenger> all) {
     var result = all;
-    if (_filter != null)
+    if (_filter != null) {
       result = result.where((p) => p.status == _filter).toList();
+    }
     if (_search.isNotEmpty) {
       final q = _search.toLowerCase();
       result = result
@@ -72,13 +75,7 @@ class _PassengerListViewState extends State<_PassengerListView> {
     return BlocConsumer<PassengerManifestCubit, PassengerManifestState>(
       listener: (context, state) {
         if (state is PassengerManifestUpdateError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('فشل تحديث الحالة: ${state.message}'),
-              backgroundColor: CaptainColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+          AppSnackbar.error(context, 'فشل تحديث الحالة: ${state.message}');
         }
       },
       builder: (context, state) {
@@ -107,10 +104,9 @@ class _PassengerListViewState extends State<_PassengerListView> {
           backgroundColor: CaptainColors.backgroundFor(context),
           body: CustomScrollView(
             slivers: [
-              _AppBar(
-                tripId: widget.tripId,
-                total: passengers.length,
-                boarded: boarded,
+              CaptainSliverHeader(
+                title: 'قائمة الركاب',
+                subtitle: 'صعد $boarded من أصل ${passengers.length}',
               ),
               if (state is PassengerManifestLoading)
                 const SliverFillRemaining(
@@ -216,14 +212,10 @@ class _PassengerListViewState extends State<_PassengerListView> {
                             passenger: p,
                             onCall: () =>
                                 launchUrl(Uri.parse('tel:${p.phone}')),
-                            onChat: () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => ChatDetailsPage(
-                                  tripId: widget.tripId,
-                                  passengerId: p.id,
-                                  title: p.name,
-                                ),
-                              ),
+                            onChat: () => context.openChatDetails(
+                              tripId: widget.tripId,
+                              passengerId: p.id,
+                              title: p.name,
                             ),
                           ),
                         );
@@ -235,49 +227,6 @@ class _PassengerListViewState extends State<_PassengerListView> {
           ),
         );
       },
-    );
-  }
-}
-
-class _AppBar extends StatelessWidget {
-  const _AppBar({
-    required this.tripId,
-    required this.total,
-    required this.boarded,
-  });
-
-  final String tripId;
-  final int total;
-  final int boarded;
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverAppBar(
-      pinned: true,
-      expandedHeight: 80,
-      backgroundColor: CaptainColors.surfaceFor(context),
-      iconTheme: IconThemeData(color: CaptainColors.textPrimaryFor(context)),
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.symmetric(horizontal: 48, vertical: 14),
-        title: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'قائمة الركاب',
-              style: CaptainTypography.titleLarge(
-                context,
-              ).copyWith(fontWeight: FontWeight.w800),
-            ),
-            Text(
-              'صعد $boarded من أصل $total',
-              style: CaptainTypography.labelMedium(
-                context,
-              ).copyWith(color: CaptainColors.textSecondaryFor(context)),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

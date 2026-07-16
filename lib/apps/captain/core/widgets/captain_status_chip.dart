@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/captain_spacing.dart';
+import '../theme/captain_design_tokens.dart';
 
 enum CaptainStatusVariant { info, success, warning, error, neutral }
 
@@ -42,12 +42,12 @@ class CaptainStatusChip extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: CaptainSpacing.md,
-        vertical: CaptainSpacing.sm,
+        horizontal: CaptainDesignTokens.s8,
+        vertical: CaptainDesignTokens.s4,
       ),
       decoration: BoxDecoration(
         color: bgColor,
-        borderRadius: CaptainRadius.rPill,
+        borderRadius: CaptainDesignTokens.brPill,
         border: Border.all(color: fgColor.withAlpha(50)),
       ),
       child: Row(
@@ -55,7 +55,7 @@ class CaptainStatusChip extends StatelessWidget {
         children: [
           if (icon != null) ...[
             Icon(icon, size: 14, color: fgColor),
-            const SizedBox(width: CaptainSpacing.sm),
+            const SizedBox(width: CaptainDesignTokens.s4),
           ],
           Text(
             label,

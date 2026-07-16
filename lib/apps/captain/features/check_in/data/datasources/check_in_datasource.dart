@@ -4,6 +4,8 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/apps/captain/core/session/captain_driver_id_resolver.dart';
+
 import '../../domain/entities/check_in_result.dart';
 import '../models/check_in_model.dart';
 
@@ -30,19 +32,19 @@ class CheckInDataSource {
 
     if (offline) {
       await _enqueue(tripId: tripId, bookingId: bookingId);
+      // Not a confirmed board — the ticket hasn't been checked against the
+      // booking yet. `flushOfflineQueue` runs the real validation once back
+      // online; reporting `boarded` here would tell the captain a possibly
+      // invalid or already-used ticket succeeded before anyone checked it.
       return CheckInModel(
         tripId: tripId,
         passengerId: bookingId,
-        status: CheckInStatus.boarded,
+        status: CheckInStatus.pendingSync,
         errorMessage: null,
       );
     }
 
-    return _callRpc(
-      tripId: tripId,
-      bookingId: bookingId,
-      driverUserId: driver.id,
-    );
+    return _callRpc(tripId: tripId, bookingId: bookingId, driver: driver);
   }
 
   Future<int> flushOfflineQueue() async {
@@ -62,7 +64,7 @@ class CheckInDataSource {
         await _callRpc(
           tripId: map['tripId'] as String,
           bookingId: map['bookingId'] as String,
-          driverUserId: driver.id,
+          driver: driver,
         );
         flushed++;
       } catch (_) {
@@ -98,40 +100,33 @@ class CheckInDataSource {
   Future<CheckInModel> _callRpc({
     required String tripId,
     required String bookingId,
-    required String driverUserId,
+    required User driver,
   }) async {
-    final driverRecord = await _supabase
-        .from('drivers')
-        .select('id')
-        .eq('user_id', driverUserId)
-        .maybeSingle();
-
-    if (driverRecord == null) {
+    final driverId = await resolveCaptainDriverId(_supabase, driver);
+    if (driverId == null) {
       throw Exception('Driver profile not found');
     }
 
-    try {
-      final response = await _supabase.rpc(
-        'scan_passenger_ticket',
-        params: {
-          'p_trip_id': tripId,
-          'p_booking_id': bookingId,
-          'p_driver_id': driverRecord['id'] as String,
-        },
-      );
+    // scan_passenger_ticket always returns a well-formed `success` payload for
+    // every business outcome (invalid ticket, not approved, already checked
+    // in) — see migration_07. A PostgrestException here is therefore never a
+    // business answer; it's a real transport/permission/timeout failure, so
+    // it must propagate as a genuine error rather than being reported as
+    // "passenger absent". The caller (CheckInCubit.check / flushOfflineQueue)
+    // already handles that.
+    final response = await _supabase.rpc(
+      'scan_passenger_ticket',
+      params: {
+        'p_trip_id': tripId,
+        'p_booking_id': bookingId,
+        'p_driver_id': driverId,
+      },
+    );
 
-      return CheckInModel.fromRpcResponse(
-        tripId: tripId,
-        passengerId: bookingId,
-        response: Map<String, dynamic>.from(response as Map),
-      );
-    } on PostgrestException catch (e) {
-      return CheckInModel(
-        tripId: tripId,
-        passengerId: bookingId,
-        status: CheckInStatus.absent,
-        errorMessage: e.message,
-      );
-    }
+    return CheckInModel.fromRpcResponse(
+      tripId: tripId,
+      passengerId: bookingId,
+      response: Map<String, dynamic>.from(response as Map),
+    );
   }
 }

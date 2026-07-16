@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/captain_spacing.dart';
+import '../theme/captain_design_tokens.dart';
 
 enum CaptainButtonVariant { primary, secondary, danger, outline }
 
@@ -65,10 +65,10 @@ class CaptainButton extends StatelessWidget {
               valueColor: AlwaysStoppedAnimation<Color>(fgColor),
             ),
           ),
-          const SizedBox(width: CaptainSpacing.md),
+          const SizedBox(width: CaptainDesignTokens.s8),
         ] else if (icon != null) ...[
           Icon(icon, size: 20, color: fgColor),
-          const SizedBox(width: CaptainSpacing.md),
+          const SizedBox(width: CaptainDesignTokens.s8),
         ],
         Flexible(
           child: FittedBox(
@@ -88,14 +88,14 @@ class CaptainButton extends StatelessWidget {
 
     return InkWell(
       onTap: isLoading ? null : onPressed,
-      borderRadius: CaptainRadius.rLg,
+      borderRadius: CaptainDesignTokens.br16,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: CaptainSpacing.lg),
+        padding: const EdgeInsets.symmetric(horizontal: CaptainDesignTokens.s16),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: CaptainRadius.rLg,
+          borderRadius: CaptainDesignTokens.br16,
           border: borderColor != null ? Border.all(color: borderColor) : null,
           boxShadow:
               variant == CaptainButtonVariant.primary && onPressed != null

@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/apps/captain/core/session/captain_driver_id_resolver.dart';
+
 import '../../domain/entities/trip_history_item.dart';
 
 class TripHistoryDataSource {
@@ -11,7 +13,7 @@ class TripHistoryDataSource {
     final user = _supabase.auth.currentUser;
     if (user == null) return const [];
 
-    final driverId = await _resolveDriverId(user);
+    final driverId = await resolveCaptainDriverId(_supabase, user);
     if (driverId == null) return const [];
 
     final response = await _supabase
@@ -30,32 +32,18 @@ class TripHistoryDataSource {
     return (response as List).map(_mapRow).toList();
   }
 
-  Future<String?> _resolveDriverId(User user) async {
-    final direct = await _supabase
-        .from('drivers')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-    if (direct != null) return direct['id'] as String?;
-
-    final phone = user.phone;
-    if (phone == null || phone.isEmpty) return null;
-    final byPhone = await _supabase
-        .from('drivers')
-        .select('id')
-        .eq('phone', phone)
-        .maybeSingle();
-    return byPhone?['id'] as String?;
-  }
-
   TripHistoryItem _mapRow(dynamic json) {
     final row = json as Map<String, dynamic>;
     final route = row['operation_routes'] as Map<String, dynamic>? ?? {};
     final vehicle = row['vehicles'] as Map<String, dynamic>? ?? {};
     final passengers = (row['trip_passengers'] as List?) ?? [];
+    // scan_passenger_ticket writes 'confirmed' on check-in (see migration_07)
+    // — trip_passengers.status has no 'boarded' value in its check
+    // constraint. 'completed' is kept defensively; nothing currently writes
+    // it, but it would mean the same thing if something one day did.
     final boarded = passengers.where((p) {
       final s = (p as Map<String, dynamic>)['status']?.toString();
-      return s == 'boarded' || s == 'completed';
+      return s == 'confirmed' || s == 'completed';
     }).length;
 
     final dateStr = row['trip_date']?.toString() ?? '';

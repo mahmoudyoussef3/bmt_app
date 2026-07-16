@@ -1,4 +1,14 @@
-enum CheckInStatus { boarded, absent, cancelled, alreadyCheckedIn }
+enum CheckInStatus {
+  boarded,
+  absent,
+  cancelled,
+  alreadyCheckedIn,
+
+  /// Scanned while offline: saved locally, not yet checked against the
+  /// booking. Distinct from [boarded] — the ticket hasn't been validated yet,
+  /// so this must never read as a confirmed board.
+  pendingSync,
+}
 
 class CheckInResult {
   const CheckInResult({

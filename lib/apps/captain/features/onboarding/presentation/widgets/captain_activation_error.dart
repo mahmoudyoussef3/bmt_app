@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
-import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
 /// Surfaces a failed attempt to establish the operational session (network,
@@ -19,10 +19,10 @@ class CaptainActivationError extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(CaptainSpacing.lg),
+      padding: const EdgeInsets.all(CaptainDesignTokens.s16),
       decoration: BoxDecoration(
         color: CaptainColors.error.withValues(alpha: 0.08),
-        borderRadius: CaptainRadius.rLg,
+        borderRadius: CaptainDesignTokens.br16,
         border: Border.all(color: CaptainColors.error.withValues(alpha: 0.2)),
       ),
       child: Row(
@@ -32,7 +32,7 @@ class CaptainActivationError extends StatelessWidget {
             color: CaptainColors.error,
             size: 20,
           ),
-          const SizedBox(width: CaptainSpacing.md),
+          const SizedBox(width: CaptainDesignTokens.s8),
           Expanded(
             child: Text(
               message,

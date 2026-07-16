@@ -9,9 +9,14 @@ class AssignedTripsLoading extends AssignedTripsState {
 }
 
 class AssignedTripsLoaded extends AssignedTripsState {
-  const AssignedTripsLoaded(this.trips);
+  const AssignedTripsLoaded(this.trips, {this.newTripIds = const {}});
 
   final List<AssignedTrip> trips;
+
+  /// Trips assigned since the captain last acknowledged the home screen's
+  /// "new assignment" notice — a purely local, device-side notion (see
+  /// [SeenTripsRepository]), not a backend field.
+  final Set<String> newTripIds;
 }
 
 class AssignedTripsError extends AssignedTripsState {

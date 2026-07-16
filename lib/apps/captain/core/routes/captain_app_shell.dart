@@ -91,6 +91,9 @@ class _CaptainAppShellState extends State<CaptainAppShell> {
   ) {
     if (state is! CaptainNotificationReceived) return;
 
+    // Not AppSnackbar: this is a longer-lived, dismissible operations
+    // broadcast (5s + a close action), not a transient success/warning/error
+    // confirmation — a different shape than the ones that helper covers.
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(

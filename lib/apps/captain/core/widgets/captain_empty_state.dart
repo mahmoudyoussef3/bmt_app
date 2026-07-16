@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/captain_spacing.dart';
+import '../theme/captain_design_tokens.dart';
 
 class CaptainEmptyState extends StatelessWidget {
   const CaptainEmptyState({
@@ -20,19 +20,19 @@ class CaptainEmptyState extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Padding(
-      padding: const EdgeInsets.all(CaptainSpacing.xxl),
+      padding: const EdgeInsets.all(CaptainDesignTokens.s32),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(CaptainSpacing.xl),
+            padding: const EdgeInsets.all(CaptainDesignTokens.s24),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerHighest,
               shape: BoxShape.circle,
             ),
             child: Icon(icon, size: 48, color: scheme.onSurfaceVariant),
           ),
-          const SizedBox(height: CaptainSpacing.xl),
+          const SizedBox(height: CaptainDesignTokens.s24),
           Text(
             title,
             style: Theme.of(context).textTheme.titleLarge?.copyWith(
@@ -41,7 +41,7 @@ class CaptainEmptyState extends StatelessWidget {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: CaptainSpacing.md),
+          const SizedBox(height: CaptainDesignTokens.s8),
           Text(
             subtitle,
             style: Theme.of(
@@ -50,7 +50,7 @@ class CaptainEmptyState extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           if (action != null) ...[
-            const SizedBox(height: CaptainSpacing.xxl),
+            const SizedBox(height: CaptainDesignTokens.s32),
             action!,
           ],
         ],

@@ -1,4 +1,5 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -20,9 +21,7 @@ class LocationUpdatePage extends StatelessWidget {
         body: BlocConsumer<LiveLocationCubit, LiveLocationState>(
           listener: (context, state) {
             if (state is LiveLocationReady && state.lastSentAt != null) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('تم إرسال موقعك الحالي بنجاح.')),
-              );
+              AppSnackbar.success(context, 'تم إرسال موقعك الحالي بنجاح.');
             }
           },
           builder: (context, state) {

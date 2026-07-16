@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/apps/captain/core/session/captain_driver_id_resolver.dart';
+
 import '../../domain/entities/driver_profile.dart';
 
 class DriverProfileDataSource {
@@ -11,20 +13,19 @@ class DriverProfileDataSource {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('المستخدم غير مسجّل الدخول');
 
-    // Sign-in links drivers.user_id to this session (see
-    // link_current_captain_driver), so a direct match is always expected.
-    final driverRow = await _supabase
-        .from('drivers')
-        .select()
-        .eq('user_id', user.id)
-        .maybeSingle();
-    if (driverRow == null) {
+    final driverId = await resolveCaptainDriverId(_supabase, user);
+    if (driverId == null) {
       throw Exception(
         'لم يتم العثور على ملف السائق، حاول تسجيل الدخول مرة أخرى',
       );
     }
+
+    final driverRow = await _supabase
+        .from('drivers')
+        .select()
+        .eq('id', driverId)
+        .single();
     final driver = Map<String, dynamic>.from(driverRow);
-    final driverId = driver['id'] as String;
 
     // Completed trips count + total passengers
     final completedTrips = await _supabase
@@ -62,7 +63,7 @@ class DriverProfileDataSource {
       name: driver['full_name'] as String? ?? 'السائق',
       phone: driver['phone'] as String? ?? '',
       licenseNumber: driver['license_number'] as String?,
-      photoUrl: driver['photo_url'] as String?,
+      photoUrl: driver['profile_image_url'] as String?,
       averageRating: avgRating,
       totalTrips: totalTrips,
       totalPassengers: totalPassengers,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
-import '../theme/captain_spacing.dart';
+import '../theme/captain_design_tokens.dart';
 
 class CaptainCard extends StatelessWidget {
   const CaptainCard({
     super.key,
     required this.child,
-    this.padding = const EdgeInsets.all(CaptainSpacing.lg),
+    this.padding = const EdgeInsets.all(CaptainDesignTokens.s16),
     this.onTap,
     this.color,
     this.borderColor,
@@ -24,7 +24,7 @@ class CaptainCard extends StatelessWidget {
     final card = Container(
       decoration: BoxDecoration(
         color: color ?? scheme.surface,
-        borderRadius: CaptainRadius.rXl,
+        borderRadius: CaptainDesignTokens.br24,
         border: Border.all(color: borderColor ?? scheme.outline.withAlpha(20)),
         boxShadow: [
           BoxShadow(
@@ -38,7 +38,7 @@ class CaptainCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: CaptainRadius.rXl,
+          borderRadius: CaptainDesignTokens.br24,
           child: Padding(padding: padding, child: child),
         ),
       ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/captain_colors.dart';
-import '../theme/captain_spacing.dart';
+import '../theme/captain_design_tokens.dart';
 import '../theme/captain_typography.dart';
 import 'captain_awaiting_step.dart';
 import 'captain_button.dart';
@@ -33,10 +33,10 @@ class CaptainAwaitingTripsView extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(CaptainSpacing.xl),
+      padding: const EdgeInsets.all(CaptainDesignTokens.s24),
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
-        borderRadius: CaptainRadius.rXl,
+        borderRadius: CaptainDesignTokens.br24,
         border: Border.all(color: CaptainColors.primary.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
@@ -49,7 +49,7 @@ class CaptainAwaitingTripsView extends StatelessWidget {
       child: Column(
         children: [
           const CaptainPulseBadge(icon: Icons.route_rounded),
-          const SizedBox(height: CaptainSpacing.lg),
+          const SizedBox(height: CaptainDesignTokens.s16),
           Text(
             title,
             textAlign: TextAlign.center,
@@ -57,7 +57,7 @@ class CaptainAwaitingTripsView extends StatelessWidget {
               context,
             ).copyWith(fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: CaptainSpacing.md),
+          const SizedBox(height: CaptainDesignTokens.s8),
           Text(
             message,
             textAlign: TextAlign.center,
@@ -66,12 +66,12 @@ class CaptainAwaitingTripsView extends StatelessWidget {
               height: 1.6,
             ),
           ),
-          const SizedBox(height: CaptainSpacing.xl),
+          const SizedBox(height: CaptainDesignTokens.s24),
           Container(
-            padding: const EdgeInsets.all(CaptainSpacing.lg),
+            padding: const EdgeInsets.all(CaptainDesignTokens.s16),
             decoration: BoxDecoration(
               color: CaptainColors.primary.withValues(alpha: 0.04),
-              borderRadius: CaptainRadius.rLg,
+              borderRadius: CaptainDesignTokens.br16,
               border: Border.all(
                 color: CaptainColors.primary.withValues(alpha: 0.08),
               ),
@@ -94,9 +94,9 @@ class CaptainAwaitingTripsView extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: CaptainSpacing.lg),
+          const SizedBox(height: CaptainDesignTokens.s16),
           _LiveSyncChip(isRefreshing: isRefreshing),
-          const SizedBox(height: CaptainSpacing.lg),
+          const SizedBox(height: CaptainDesignTokens.s16),
           CaptainButton(
             label: 'تحديث الآن',
             icon: Icons.refresh_rounded,
@@ -121,12 +121,12 @@ class _LiveSyncChip extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: CaptainSpacing.lg,
-        vertical: CaptainSpacing.md,
+        horizontal: CaptainDesignTokens.s16,
+        vertical: CaptainDesignTokens.s8,
       ),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.10),
-        borderRadius: CaptainRadius.rPill,
+        borderRadius: CaptainDesignTokens.brPill,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -138,7 +138,7 @@ class _LiveSyncChip extends StatelessWidget {
             size: 16,
             color: color,
           ),
-          const SizedBox(width: CaptainSpacing.md),
+          const SizedBox(width: CaptainDesignTokens.s8),
           Text(
             isRefreshing ? 'جاري التحديث…' : 'متصل بالعمليات — التحديث تلقائي',
             style: CaptainTypography.labelMedium(

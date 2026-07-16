@@ -1,4 +1,5 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -74,7 +75,8 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                           ? state.conversation.messages
                           : const <CaptainMessage>[];
                       if (messages.isEmpty) {
-                        return const EmptyState(
+                        return const CaptainEmptyState(
+                          icon: Icons.forum_outlined,
                           title: 'لا توجد رسائل بعد',
                           subtitle: 'ابدأ المحادثة برسالة قصيرة وواضحة.',
                         );

@@ -1,4 +1,4 @@
-import 'package:bmt_app/apps/captain/features/communication/presentation/pages/chat_details_page.dart';
+import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 
@@ -15,12 +15,8 @@ class ChatsPage extends StatelessWidget {
         padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 20),
         children: [
           AppCard(
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (_) =>
-                    ChatDetailsPage(tripId: tripId, title: 'جميع الركاب'),
-              ),
-            ),
+            onTap: () =>
+                context.openChatDetails(tripId: tripId, title: 'جميع الركاب'),
             padding: const EdgeInsets.all(16),
             child: ListTile(
               contentPadding: EdgeInsets.zero,

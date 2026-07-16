@@ -5,15 +5,16 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_confirm_dialog.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
-import 'package:bmt_app/core/widgets/widgets.dart' hide CaptainCard;
+import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/driver_profile.dart';
 import '../cubit/driver_profile_cubit.dart';
 import '../cubit/driver_profile_state.dart';
+import '../widgets/driver_profile_skeleton.dart';
 
 class DriverProfilePage extends StatelessWidget {
   const DriverProfilePage({super.key});
@@ -25,9 +26,7 @@ class DriverProfilePage extends StatelessWidget {
         return Scaffold(
           backgroundColor: CaptainColors.backgroundFor(context),
           body: switch (state) {
-            DriverProfileLoading() => const Center(
-              child: CircularProgressIndicator(),
-            ),
+            DriverProfileLoading() => const DriverProfileSkeleton(),
             DriverProfileError(:final message) => _ErrorBody(
               message: message,
               onRetry: () => context.read<DriverProfileCubit>().load(),
@@ -406,29 +405,7 @@ class _SignOutButton extends StatelessWidget {
     return CaptainButton(
       label: 'تسجيل الخروج',
       icon: Icons.logout_rounded,
-      onPressed: () async {
-        final confirmed = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('تسجيل الخروج'),
-            content: const Text('هل أنت متأكد من تسجيل الخروج؟'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('إلغاء'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                style: FilledButton.styleFrom(backgroundColor: Colors.red),
-                child: const Text('خروج'),
-              ),
-            ],
-          ),
-        );
-        if (confirmed == true && context.mounted) {
-          await Supabase.instance.client.auth.signOut();
-        }
-      },
+      onPressed: () => _confirmAndSignOut(context),
       variant: CaptainButtonVariant.danger,
     );
   }
@@ -675,25 +652,14 @@ class _ErrorBody extends StatelessWidget {
 }
 
 Future<void> _confirmAndSignOut(BuildContext context) async {
-  final confirmed = await showDialog<bool>(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text('تسجيل الخروج'),
-      content: const Text('هل أنت متأكد من تسجيل الخروج؟'),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(ctx, false),
-          child: const Text('إلغاء'),
-        ),
-        FilledButton(
-          onPressed: () => Navigator.pop(ctx, true),
-          style: FilledButton.styleFrom(backgroundColor: Colors.red),
-          child: const Text('خروج'),
-        ),
-      ],
-    ),
+  final confirmed = await CaptainConfirmDialog.show(
+    context,
+    title: 'تسجيل الخروج',
+    message: 'هل أنت متأكد من تسجيل الخروج؟',
+    confirmLabel: 'خروج',
+    confirmColor: Colors.red,
   );
-  if (confirmed == true) {
+  if (confirmed) {
     await captainGetIt<CaptainAuthCubit>().signOut();
   }
 }

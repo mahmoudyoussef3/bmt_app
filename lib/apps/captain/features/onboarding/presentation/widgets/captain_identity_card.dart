@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/captain/core/session/captain_session_store.dart';
-import 'package:bmt_app/apps/captain/core/theme/captain_spacing.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 
@@ -32,7 +32,7 @@ class CaptainIdentityCard extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: CaptainSpacing.md),
+          const SizedBox(width: CaptainDesignTokens.s8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

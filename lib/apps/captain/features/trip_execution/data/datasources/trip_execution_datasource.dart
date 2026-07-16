@@ -36,8 +36,39 @@ class TripExecutionDataSource {
     );
   }
 
-  Stream<TripExecutionStatus> watchTripStatus(String tripId) {
-    final controller = StreamController<TripExecutionStatus>.broadcast();
+  /// Watches this trip's status, boarded/passenger counts, and confirmed
+  /// station arrivals, re-fetching the aggregate snapshot on every relevant
+  /// change so none of them go stale for the lifetime of the execution
+  /// screen. `trip_passengers`/`trip_events` changes aren't filtered to this
+  /// trip at the channel level (Realtime only supports a single equality
+  /// filter, already spent on `operation_trips.id`) — the same trade-off
+  /// `CaptainTripRemoteDataSource.watchTripUpdates` makes; the debounced
+  /// re-fetch below is what actually scopes the result to [tripId].
+  Stream<TripExecutionSnapshot> watchSnapshot({
+    required String tripId,
+    required int routePointCount,
+  }) {
+    final controller = StreamController<TripExecutionSnapshot>.broadcast();
+    Timer? debounce;
+
+    Future<void> emitSnapshot() async {
+      if (controller.isClosed) return;
+      try {
+        final snapshot = await _fetchSnapshot(tripId, routePointCount);
+        if (!controller.isClosed) controller.add(snapshot);
+      } catch (_) {
+        // Realtime is a refinement over the initial fetch already shown by
+        // the screen; a transient refresh failure just waits for the next
+        // change (or the next manual reopen) rather than surfacing an error
+        // over data the captain can already see.
+      }
+    }
+
+    void scheduleEmit() {
+      debounce?.cancel();
+      debounce = Timer(const Duration(milliseconds: 250), emitSnapshot);
+    }
+
     final channel = _supabase
         .channel('captain_trip_execution:$tripId')
         .onPostgresChanges(
@@ -49,16 +80,69 @@ class TripExecutionDataSource {
             column: 'id',
             value: tripId,
           ),
-          callback: (change) {
-            final status = _mapStatus(change.newRecord['status']?.toString());
-            if (status != null && !controller.isClosed) {
-              controller.add(status);
-            }
-          },
+          callback: (_) => scheduleEmit(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'trip_passengers',
+          callback: (_) => scheduleEmit(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'trip_events',
+          callback: (_) => scheduleEmit(),
         )
         .subscribe();
-    controller.onCancel = channel.unsubscribe;
+
+    controller.onCancel = () {
+      debounce?.cancel();
+      channel.unsubscribe();
+    };
+
+    emitSnapshot();
     return controller.stream;
+  }
+
+  Future<TripExecutionSnapshot> _fetchSnapshot(
+    String tripId,
+    int routePointCount,
+  ) async {
+    final response = await _supabase
+        .from('operation_trips')
+        .select('status, trip_passengers(status), trip_events(title)')
+        .eq('id', tripId)
+        .single();
+
+    final status =
+        _mapStatus(response['status']?.toString()) ??
+        TripExecutionStatus.scheduled;
+
+    final passengers = (response['trip_passengers'] as List?) ?? const [];
+    // scan_passenger_ticket writes 'confirmed' on check-in (see
+    // migration_07) — trip_passengers.status has no 'boarded' value in its
+    // check constraint. 'completed' is kept defensively; nothing currently
+    // writes it, but it would mean the same thing if something one day did.
+    final boarded = passengers.where((p) {
+      final s = (p as Map<String, dynamic>)['status']?.toString();
+      return s == 'confirmed' || s == 'completed';
+    }).length;
+
+    final events = (response['trip_events'] as List?) ?? const [];
+    final arrivalEventCount = countStationArrivalEvents(
+      events.map((e) => (e as Map<String, dynamic>)['title'] as String?),
+    );
+
+    return TripExecutionSnapshot(
+      status: status,
+      passengerCount: passengers.length,
+      boardedCount: boarded,
+      arrivedStationsCount: stationArrivalFloor(
+        arrivalEventCount: arrivalEventCount,
+        routePointCount: routePointCount,
+      ),
+    );
   }
 
   /// Inserts the canonical per-station arrival marker into `trip_events` —

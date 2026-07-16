@@ -48,9 +48,14 @@ import '../../features/notifications/presentation/cubit/captain_notifications_cu
 import '../../features/notifications/presentation/cubit/captain_notification_badge_cubit.dart';
 
 import '../../features/assigned_trips/data/datasources/captain_trip_remote_datasource.dart';
+import '../../features/assigned_trips/data/datasources/seen_trips_local_datasource.dart';
 import '../../features/assigned_trips/data/repositories/captain_trip_repository_impl.dart';
+import '../../features/assigned_trips/data/repositories/seen_trips_repository_impl.dart';
 import '../../features/assigned_trips/domain/repositories/captain_trip_repository.dart';
+import '../../features/assigned_trips/domain/repositories/seen_trips_repository.dart';
 import '../../features/assigned_trips/domain/usecases/get_assigned_trips_usecase.dart';
+import '../../features/assigned_trips/domain/usecases/get_seen_trip_ids_usecase.dart';
+import '../../features/assigned_trips/domain/usecases/mark_trips_seen_usecase.dart';
 import '../../features/assigned_trips/domain/usecases/watch_assigned_trips_usecase.dart';
 import '../../features/assigned_trips/presentation/cubit/assigned_trips_cubit.dart';
 import '../../features/check_in/data/datasources/check_in_datasource.dart';
@@ -90,7 +95,7 @@ import '../../features/trip_execution/domain/repositories/trip_execution_reposit
 import '../../features/trip_execution/domain/usecases/complete_trip_usecase.dart';
 import '../../features/trip_execution/domain/usecases/mark_station_arrived_usecase.dart';
 import '../../features/trip_execution/domain/usecases/start_boarding_usecase.dart';
-import '../../features/trip_execution/domain/usecases/watch_trip_execution_status_usecase.dart';
+import '../../features/trip_execution/domain/usecases/watch_trip_execution_snapshot_usecase.dart';
 import '../../features/trip_execution/domain/usecases/start_trip_usecase.dart';
 import '../../features/trip_execution/presentation/cubit/trip_execution_cubit.dart';
 import '../../features/trip_status_updates/data/datasources/trip_status_datasource.dart';
@@ -170,7 +175,8 @@ void _registerOnboardingDependencies() {
   }
   if (!captainGetIt.isRegistered<CaptainActivationCubit>()) {
     captainGetIt.registerFactory<CaptainActivationCubit>(
-      () => CaptainActivationCubit(signIn: captainGetIt<SignInCaptainUseCase>()),
+      () =>
+          CaptainActivationCubit(signIn: captainGetIt<SignInCaptainUseCase>()),
     );
   }
 }
@@ -265,11 +271,33 @@ void _registerAssignedTripsDependencies() {
       () => WatchAssignedTripsUseCase(captainGetIt<CaptainTripRepository>()),
     );
   }
+  if (!captainGetIt.isRegistered<SeenTripsLocalDataSource>()) {
+    captainGetIt.registerLazySingleton<SeenTripsLocalDataSource>(
+      () => const SeenTripsLocalDataSource(),
+    );
+  }
+  if (!captainGetIt.isRegistered<SeenTripsRepository>()) {
+    captainGetIt.registerLazySingleton<SeenTripsRepository>(
+      () => SeenTripsRepositoryImpl(captainGetIt<SeenTripsLocalDataSource>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<GetSeenTripIdsUseCase>()) {
+    captainGetIt.registerLazySingleton<GetSeenTripIdsUseCase>(
+      () => GetSeenTripIdsUseCase(captainGetIt<SeenTripsRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<MarkTripsSeenUseCase>()) {
+    captainGetIt.registerLazySingleton<MarkTripsSeenUseCase>(
+      () => MarkTripsSeenUseCase(captainGetIt<SeenTripsRepository>()),
+    );
+  }
   if (!captainGetIt.isRegistered<AssignedTripsCubit>()) {
     captainGetIt.registerFactory<AssignedTripsCubit>(
       () => AssignedTripsCubit(
         getAssignedTrips: captainGetIt<GetAssignedTripsUseCase>(),
         watchAssignedTrips: captainGetIt<WatchAssignedTripsUseCase>(),
+        getSeenTripIds: captainGetIt<GetSeenTripIdsUseCase>(),
+        markTripsSeen: captainGetIt<MarkTripsSeenUseCase>(),
       ),
     );
   }
@@ -346,9 +374,9 @@ void _registerTripExecutionDependencies() {
       () => StartBoardingUseCase(captainGetIt<TripExecutionRepository>()),
     );
   }
-  if (!captainGetIt.isRegistered<WatchTripExecutionStatusUseCase>()) {
-    captainGetIt.registerLazySingleton<WatchTripExecutionStatusUseCase>(
-      () => WatchTripExecutionStatusUseCase(
+  if (!captainGetIt.isRegistered<WatchTripExecutionSnapshotUseCase>()) {
+    captainGetIt.registerLazySingleton<WatchTripExecutionSnapshotUseCase>(
+      () => WatchTripExecutionSnapshotUseCase(
         captainGetIt<TripExecutionRepository>(),
       ),
     );
@@ -364,7 +392,7 @@ void _registerTripExecutionDependencies() {
         startBoarding: captainGetIt<StartBoardingUseCase>(),
         startTrip: captainGetIt<StartTripUseCase>(),
         completeTrip: captainGetIt<CompleteTripUseCase>(),
-        watchTripStatus: captainGetIt<WatchTripExecutionStatusUseCase>(),
+        watchTripSnapshot: captainGetIt<WatchTripExecutionSnapshotUseCase>(),
         markStationArrived: captainGetIt<MarkStationArrivedUseCase>(),
       ),
     );

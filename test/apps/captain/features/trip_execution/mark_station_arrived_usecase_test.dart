@@ -59,6 +59,8 @@ class _FakeTripExecutionRepository implements TripExecutionRepository {
       throw UnimplementedError();
 
   @override
-  Stream<TripExecutionStatus> watchTripStatus(String tripId) =>
-      throw UnimplementedError();
+  Stream<TripExecutionSnapshot> watchTripSnapshot({
+    required String tripId,
+    required int routePointCount,
+  }) => throw UnimplementedError();
 }

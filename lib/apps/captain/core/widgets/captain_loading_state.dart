@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/captain_spacing.dart';
+import '../theme/captain_design_tokens.dart';
 
 class CaptainSkeleton extends StatefulWidget {
   const CaptainSkeleton({
@@ -52,7 +52,7 @@ class _CaptainSkeletonState extends State<CaptainSkeleton>
               scheme.surfaceContainerHighest.withAlpha(200),
               _controller.value,
             ),
-            borderRadius: widget.borderRadius ?? CaptainRadius.rSm,
+            borderRadius: widget.borderRadius ?? CaptainDesignTokens.br8,
           ),
         );
       },

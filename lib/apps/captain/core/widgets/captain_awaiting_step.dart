@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/captain_colors.dart';
-import '../theme/captain_spacing.dart';
+import '../theme/captain_design_tokens.dart';
 import '../theme/captain_typography.dart';
 
 enum CaptainStepState { done, current, upcoming }
@@ -66,7 +66,7 @@ class CaptainAwaitingStep extends StatelessWidget {
               ),
           ],
         ),
-        const SizedBox(width: CaptainSpacing.md),
+        const SizedBox(width: CaptainDesignTokens.s8),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(top: 3),

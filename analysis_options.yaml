@@ -9,6 +9,15 @@
 # packages, and plugins designed to encourage good coding practices.
 include: package:flutter_lints/flutter.yaml
 
+analyzer:
+  exclude:
+    # Generated output (build_runner: retrofit / json_serializable / freezed).
+    # These are never hand-edited (see CLAUDE.md §9), so analyzer findings in
+    # them are unactionable — e.g. retrofit emits an unused `_dio` field for a
+    # service that declares no endpoints yet.
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
 linter:
   # The lint rules applied to this project can be customized in the
   # section below to disable rules from the `package:flutter_lints/flutter.yaml`

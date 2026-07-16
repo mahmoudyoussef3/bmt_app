@@ -8,7 +8,7 @@ import 'package:bmt_app/apps/captain/features/trip_execution/domain/usecases/com
 import 'package:bmt_app/apps/captain/features/trip_execution/domain/usecases/mark_station_arrived_usecase.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/domain/usecases/start_boarding_usecase.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/domain/usecases/start_trip_usecase.dart';
-import 'package:bmt_app/apps/captain/features/trip_execution/domain/usecases/watch_trip_execution_status_usecase.dart';
+import 'package:bmt_app/apps/captain/features/trip_execution/domain/usecases/watch_trip_execution_snapshot_usecase.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/cubit/trip_execution_cubit.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/cubit/trip_execution_state.dart';
 
@@ -22,7 +22,7 @@ void main() {
       startBoarding: StartBoardingUseCase(repository),
       startTrip: StartTripUseCase(repository),
       completeTrip: CompleteTripUseCase(repository),
-      watchTripStatus: WatchTripExecutionStatusUseCase(repository),
+      watchTripSnapshot: WatchTripExecutionSnapshotUseCase(repository),
       markStationArrived: MarkStationArrivedUseCase(repository),
     );
   });
@@ -33,7 +33,7 @@ void main() {
     await cubit.board('trip-1');
 
     final state = cubit.state as TripExecutionIdle;
-    expect(state.status, TripExecutionStatus.boarding);
+    expect(state.snapshot.status, TripExecutionStatus.boarding);
   });
 
   test(
@@ -127,6 +127,8 @@ class _FakeTripExecutionRepository implements TripExecutionRepository {
   }
 
   @override
-  Stream<TripExecutionStatus> watchTripStatus(String tripId) =>
-      const Stream.empty();
+  Stream<TripExecutionSnapshot> watchTripSnapshot({
+    required String tripId,
+    required int routePointCount,
+  }) => const Stream.empty();
 }

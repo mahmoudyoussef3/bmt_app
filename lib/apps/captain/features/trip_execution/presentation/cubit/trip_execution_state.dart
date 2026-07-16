@@ -5,20 +5,20 @@ sealed class TripExecutionCubitState {
 }
 
 class TripExecutionIdle extends TripExecutionCubitState {
-  const TripExecutionIdle(this.status);
+  const TripExecutionIdle(this.snapshot);
 
-  final TripExecutionStatus status;
+  final TripExecutionSnapshot snapshot;
 }
 
 class TripExecutionLoading extends TripExecutionCubitState {
-  const TripExecutionLoading(this.previousStatus);
+  const TripExecutionLoading(this.previousSnapshot);
 
-  final TripExecutionStatus previousStatus;
+  final TripExecutionSnapshot previousSnapshot;
 }
 
 class TripExecutionError extends TripExecutionCubitState {
-  const TripExecutionError(this.message, this.previousStatus);
+  const TripExecutionError(this.message, this.previousSnapshot);
 
   final String message;
-  final TripExecutionStatus previousStatus;
+  final TripExecutionSnapshot previousSnapshot;
 }

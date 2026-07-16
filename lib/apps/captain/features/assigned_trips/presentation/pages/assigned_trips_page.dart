@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
+import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_awaiting_trips_view.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_dev_mode_sheet.dart';
-import 'package:bmt_app/apps/captain/features/notifications/presentation/pages/captain_notifications_page.dart';
-import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/pages/passenger_list_page.dart';
-import 'package:bmt_app/apps/captain/features/trip_execution/presentation/pages/trip_execution_page.dart';
 
 import '../../domain/entities/assigned_trip.dart';
 import '../../domain/entities/captain_day_summary.dart';
@@ -22,6 +21,8 @@ import '../widgets/assigned_trips_skeleton.dart';
 import '../widgets/assigned_trips_stats_strip.dart';
 import '../widgets/captain_day_complete_card.dart';
 import '../widgets/captain_focus_card.dart';
+import '../widgets/home_quick_actions.dart';
+import '../widgets/new_assignments_banner.dart';
 
 class AssignedTripsPage extends StatefulWidget {
   const AssignedTripsPage({super.key});
@@ -42,19 +43,22 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
   Future<void> _refresh() async {
     setState(() => _refreshing = true);
     try {
-      await context.read<AssignedTripsCubit>().refresh();
+      final succeeded = await context.read<AssignedTripsCubit>().refresh();
+      if (!succeeded && mounted) {
+        AppSnackbar.error(
+          context,
+          'تعذر تحديث الرحلات، تحقق من الاتصال وحاول مجدداً',
+        );
+      }
     } finally {
       if (mounted) setState(() => _refreshing = false);
     }
   }
 
-  void _openTrip(AssignedTrip trip) => Navigator.of(
-    context,
-  ).push(MaterialPageRoute(builder: (_) => TripExecutionPage(trip: trip)));
+  void _openTrip(AssignedTrip trip) => context.openTripExecution(trip);
 
-  void _openManifest(AssignedTrip trip) => Navigator.of(
-    context,
-  ).push(MaterialPageRoute(builder: (_) => PassengerListPage(tripId: trip.id)));
+  void _openManifest(AssignedTrip trip) =>
+      context.openPassengerManifest(trip.id);
 
   @override
   Widget build(BuildContext context) {
@@ -80,16 +84,22 @@ class _AssignedTripsPageState extends State<AssignedTripsPage> {
           final trips = state is AssignedTripsLoaded
               ? state.trips
               : const <AssignedTrip>[];
+          final newTripIds = state is AssignedTripsLoaded
+              ? state.newTripIds
+              : const <String>{};
 
           return RefreshIndicator(
             onRefresh: _refresh,
             child: _Content(
               summary: CaptainDaySummary.fromTrips(trips),
               trips: trips,
+              newTripCount: newTripIds.length,
               isRefreshing: _refreshing,
               onRefresh: _refresh,
               onOpenTrip: _openTrip,
               onOpenManifest: _openManifest,
+              onAcknowledgeNewTrips: () =>
+                  context.read<AssignedTripsCubit>().acknowledgeNewTrips(),
             ),
           );
         },
@@ -102,18 +112,22 @@ class _Content extends StatelessWidget {
   const _Content({
     required this.summary,
     required this.trips,
+    required this.newTripCount,
     required this.isRefreshing,
     required this.onRefresh,
     required this.onOpenTrip,
     required this.onOpenManifest,
+    required this.onAcknowledgeNewTrips,
   });
 
   final CaptainDaySummary summary;
   final List<AssignedTrip> trips;
+  final int newTripCount;
   final bool isRefreshing;
   final Future<void> Function() onRefresh;
   final ValueChanged<AssignedTrip> onOpenTrip;
   final ValueChanged<AssignedTrip> onOpenManifest;
+  final VoidCallback onAcknowledgeNewTrips;
 
   @override
   Widget build(BuildContext context) {
@@ -127,8 +141,7 @@ class _Content extends StatelessWidget {
       slivers: [
         AssignedTripsHeader(
           onAvatarTap: () => showCaptainDevModeSheet(context),
-          onNotificationsTap: () =>
-              Navigator.of(context).push(CaptainNotificationsPage.route()),
+          onNotificationsTap: () => context.openNotifications(),
         ),
         SliverPadding(
           padding: EdgeInsetsDirectional.fromSTEB(
@@ -150,10 +163,21 @@ class _Content extends StatelessWidget {
                       'العمليات ستظهر هنا تلقائياً — لا حاجة لإعادة تسجيل الدخول.',
                 )
               else ...[
+                if (newTripCount > 0) ...[
+                  NewAssignmentsBanner(
+                    count: newTripCount,
+                    onAcknowledge: onAcknowledgeNewTrips,
+                  ),
+                  const SizedBox(height: CaptainDesignTokens.s16),
+                ],
                 if (focus != null)
                   CaptainFocusCard(trip: focus, onOpen: () => onOpenTrip(focus))
                 else
                   CaptainDayCompleteCard(tripCount: summary.totalTrips),
+                if (focus != null) ...[
+                  const SizedBox(height: CaptainDesignTokens.s16),
+                  HomeQuickActions(tripId: focus.id),
+                ],
                 const SizedBox(height: CaptainDesignTokens.s16),
                 AssignedTripsStatsStrip(summary: summary),
                 if (rest.isNotEmpty) ...[
