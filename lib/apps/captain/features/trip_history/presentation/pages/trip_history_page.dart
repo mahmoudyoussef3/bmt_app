@@ -1,4 +1,7 @@
+import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
@@ -12,6 +15,7 @@ import 'package:intl/intl.dart';
 import '../../domain/entities/trip_history_item.dart';
 import '../cubit/trip_history_cubit.dart';
 import '../cubit/trip_history_state.dart';
+import '../utils/trip_history_filters.dart';
 
 class TripHistoryPage extends StatefulWidget {
   const TripHistoryPage({super.key});
@@ -21,6 +25,9 @@ class TripHistoryPage extends StatefulWidget {
 }
 
 class _TripHistoryPageState extends State<TripHistoryPage> {
+  String _query = '';
+  TripHistoryDateFilter _dateFilter = TripHistoryDateFilter.all;
+
   @override
   void initState() {
     super.initState();
@@ -45,7 +52,14 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
                 child: const SizedBox.shrink(),
               ),
             ),
-            TripHistoryLoaded(:final trips) => _HistoryList(trips: trips),
+            TripHistoryLoaded(:final trips) => _HistoryList(
+              allTrips: trips,
+              query: _query,
+              dateFilter: _dateFilter,
+              onQueryChanged: (value) => setState(() => _query = value),
+              onDateFilterChanged: (value) =>
+                  setState(() => _dateFilter = value),
+            ),
           },
         );
       },
@@ -54,13 +68,29 @@ class _TripHistoryPageState extends State<TripHistoryPage> {
 }
 
 class _HistoryList extends StatelessWidget {
-  const _HistoryList({required this.trips});
+  const _HistoryList({
+    required this.allTrips,
+    required this.query,
+    required this.dateFilter,
+    required this.onQueryChanged,
+    required this.onDateFilterChanged,
+  });
 
-  final List<TripHistoryItem> trips;
+  final List<TripHistoryItem> allTrips;
+  final String query;
+  final TripHistoryDateFilter dateFilter;
+  final ValueChanged<String> onQueryChanged;
+  final ValueChanged<TripHistoryDateFilter> onDateFilterChanged;
 
   @override
   Widget build(BuildContext context) {
-    final totalPassengers = trips.fold<int>(0, (s, t) => s + t.boardedCount);
+    final totalPassengers = allTrips.fold<int>(0, (s, t) => s + t.boardedCount);
+    final filtered = filterTripHistory(
+      trips: allTrips,
+      dateFilter: dateFilter,
+      query: query,
+    );
+    final groups = groupTripHistoryByPeriod(filtered);
 
     return RefreshIndicator(
       onRefresh: () => context.read<TripHistoryCubit>().refresh(),
@@ -68,9 +98,9 @@ class _HistoryList extends StatelessWidget {
         slivers: [
           CaptainSliverHeader(
             title: 'سجل الرحلات',
-            subtitle: '${trips.length} رحلة مكتملة',
+            subtitle: '${allTrips.length} رحلة مكتملة',
           ),
-          if (trips.isEmpty)
+          if (allTrips.isEmpty)
             SliverFillRemaining(
               hasScrollBody: false,
               child: Center(
@@ -84,31 +114,168 @@ class _HistoryList extends StatelessWidget {
           else ...[
             SliverToBoxAdapter(
               child: _SummaryRow(
-                totalTrips: trips.length,
+                totalTrips: allTrips.length,
                 totalPassengers: totalPassengers,
               ),
             ),
-            SliverPadding(
-              padding: EdgeInsetsDirectional.fromSTEB(
-                CaptainDesignTokens.s24,
-                CaptainDesignTokens.s8,
-                CaptainDesignTokens.s24,
-                // Cleared for the shell's floating nav bar.
-                CaptainBottomNav.reservedSpace(context),
-              ),
-              sliver: SliverList.builder(
-                itemCount: trips.length,
-                itemBuilder: (context, i) => Padding(
-                  padding: const EdgeInsetsDirectional.only(
-                    bottom: CaptainDesignTokens.s16,
-                  ),
-                  child: _TripHistoryCard(trip: trips[i]),
-                ),
+            SliverToBoxAdapter(
+              child: _SearchAndFilterBar(
+                query: query,
+                dateFilter: dateFilter,
+                onQueryChanged: onQueryChanged,
+                onDateFilterChanged: onDateFilterChanged,
               ),
             ),
+            if (filtered.isEmpty)
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: Center(
+                  child: CaptainEmptyState(
+                    title: 'لا نتائج مطابقة',
+                    subtitle: 'جرّب كلمة بحث مختلفة أو غيّر الفترة الزمنية.',
+                    icon: Icons.search_off_rounded,
+                  ),
+                ),
+              )
+            else
+              SliverPadding(
+                padding: EdgeInsetsDirectional.fromSTEB(
+                  CaptainDesignTokens.s24,
+                  CaptainDesignTokens.s8,
+                  CaptainDesignTokens.s24,
+                  // Cleared for the shell's floating nav bar.
+                  CaptainBottomNav.reservedSpace(context),
+                ),
+                sliver: SliverList.list(
+                  children: [
+                    for (final group in groups) ...[
+                      _GroupLabel(label: group.label),
+                      const SizedBox(height: CaptainDesignTokens.s8),
+                      for (var i = 0; i < group.trips.length; i++) ...[
+                        _AnimatedEntry(
+                          index: i,
+                          child: _TripHistoryCard(trip: group.trips[i]),
+                        ),
+                        const SizedBox(height: CaptainDesignTokens.s16),
+                      ],
+                    ],
+                  ],
+                ),
+              ),
           ],
         ],
       ),
+    );
+  }
+}
+
+class _SearchAndFilterBar extends StatelessWidget {
+  const _SearchAndFilterBar({
+    required this.query,
+    required this.dateFilter,
+    required this.onQueryChanged,
+    required this.onDateFilterChanged,
+  });
+
+  final String query;
+  final TripHistoryDateFilter dateFilter;
+  final ValueChanged<String> onQueryChanged;
+  final ValueChanged<TripHistoryDateFilter> onDateFilterChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        CaptainDesignTokens.s24,
+        CaptainDesignTokens.s8,
+        CaptainDesignTokens.s24,
+        CaptainDesignTokens.s8,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          TextField(
+            onChanged: onQueryChanged,
+            textInputAction: TextInputAction.search,
+            decoration: InputDecoration(
+              hintText: 'ابحث باسم الخط...',
+              prefixIcon: const Icon(Icons.search_rounded),
+              isDense: true,
+              filled: true,
+              fillColor: CaptainColors.surfaceFor(context),
+              border: OutlineInputBorder(
+                borderRadius: CaptainDesignTokens.br12,
+                borderSide: BorderSide(
+                  color: CaptainColors.dividerFor(context),
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: CaptainDesignTokens.s12),
+          SizedBox(
+            height: 36,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                for (final filter in TripHistoryDateFilter.values) ...[
+                  ChoiceChip(
+                    label: Text(filter.label),
+                    selected: dateFilter == filter,
+                    onSelected: (_) => onDateFilterChanged(filter),
+                  ),
+                  const SizedBox(width: CaptainDesignTokens.s8),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _GroupLabel extends StatelessWidget {
+  const _GroupLabel({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: CaptainDesignTokens.s8),
+      child: Text(
+        label,
+        style: CaptainTypography.titleSmall(
+          context,
+        ).copyWith(fontWeight: FontWeight.w900),
+      ),
+    );
+  }
+}
+
+/// A gentle staggered fade + slide-in for list items as they first appear.
+class _AnimatedEntry extends StatelessWidget {
+  const _AnimatedEntry({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0, end: 1),
+      duration: Duration(milliseconds: 260 + (index.clamp(0, 8) * 40)),
+      curve: Curves.easeOutCubic,
+      builder: (context, value, child) {
+        return Opacity(
+          opacity: value,
+          child: Transform.translate(
+            offset: Offset(0, (1 - value) * 12),
+            child: child,
+          ),
+        );
+      },
+      child: child,
     );
   }
 }
@@ -134,7 +301,7 @@ class _SummaryRow extends StatelessWidget {
           Expanded(
             child: _SummaryTile(
               icon: Icons.check_circle_rounded,
-              color: Colors.green,
+              color: CaptainColors.success,
               label: 'رحلات',
               value: '$totalTrips',
             ),
@@ -219,9 +386,11 @@ class _TripHistoryCard extends StatelessWidget {
     final durLabel = dur.inMinutes > 0
         ? '${dur.inHours > 0 ? '${dur.inHours}س ' : ''}${dur.inMinutes.remainder(60)}د'
         : '—';
+    final fullyBoarded = trip.boardingRate >= 1;
 
     return CaptainCard(
       padding: EdgeInsets.zero,
+      onTap: () => context.openTripHistoryDetail(trip),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -234,7 +403,7 @@ class _TripHistoryCard extends StatelessWidget {
               CaptainDesignTokens.s16,
             ),
             decoration: BoxDecoration(
-              color: Colors.green.withAlpha(12),
+              color: CaptainColors.success.withValues(alpha: 0.05),
               borderRadius: const BorderRadius.vertical(
                 top: CaptainDesignTokens.r24,
               ),
@@ -244,12 +413,12 @@ class _TripHistoryCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(CaptainDesignTokens.s8),
                   decoration: BoxDecoration(
-                    color: Colors.green.withAlpha(20),
+                    color: CaptainColors.success.withValues(alpha: 0.08),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
                     Icons.check_circle_rounded,
-                    color: Colors.green,
+                    color: CaptainColors.success,
                     size: 18,
                   ),
                 ),
@@ -268,14 +437,16 @@ class _TripHistoryCard extends StatelessWidget {
                     vertical: CaptainDesignTokens.s4,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.green.withAlpha(20),
+                    color: CaptainColors.success.withValues(alpha: 0.08),
                     borderRadius: CaptainDesignTokens.br8,
-                    border: Border.all(color: Colors.green.withAlpha(60)),
+                    border: Border.all(
+                      color: CaptainColors.success.withValues(alpha: 0.24),
+                    ),
                   ),
                   child: Text(
                     'مكتملة',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Colors.green,
+                      color: CaptainColors.success,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
@@ -319,7 +490,9 @@ class _TripHistoryCard extends StatelessWidget {
                     _Chip(
                       icon: Icons.people_alt_rounded,
                       label: '${trip.boardedCount}/${trip.passengerCount} راكب',
-                      color: scheme.primary,
+                      color: fullyBoarded
+                          ? CaptainColors.success
+                          : CaptainColors.warning,
                     ),
                     const SizedBox(width: CaptainDesignTokens.s8),
                     _Chip(
@@ -334,6 +507,12 @@ class _TripHistoryCard extends StatelessWidget {
                         label: trip.vehicleNumber,
                         color: scheme.onSurfaceVariant,
                       ),
+                    const Spacer(),
+                    Icon(
+                      Icons.chevron_left_rounded,
+                      size: 20,
+                      color: scheme.onSurfaceVariant,
+                    ),
                   ],
                 ),
               ],

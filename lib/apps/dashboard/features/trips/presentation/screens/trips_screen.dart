@@ -16,6 +16,12 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../widgets/trip_creation_wizard.dart';
 import '../widgets/trip_pricing_tab.dart';
+import '../widgets/trip_row_card.dart';
+import '../widgets/trip_ui_helpers.dart';
+import '../widgets/trips_filter_sheet.dart';
+import '../widgets/trips_grouped_view.dart';
+import '../widgets/trips_timeline_view.dart';
+import '../widgets/trips_view_mode_switch.dart';
 
 class TripsScreen extends StatelessWidget {
   const TripsScreen({super.key});
@@ -104,7 +110,17 @@ class _LoadedTrips extends StatelessWidget {
         const SizedBox(height: AppSpacing.medium),
         _SimpleToolbar(state: state),
         const SizedBox(height: AppSpacing.medium),
-        _TripsList(state: state),
+        switch (state.viewMode) {
+          TripsViewMode.list => _TripsList(state: state),
+          TripsViewMode.grouped => TripsGroupedView(
+            state: state,
+            onOpenDetails: (trip) => _openTripDetails(context, trip),
+          ),
+          TripsViewMode.timeline => TripsTimelineView(
+            trips: state.timelineTrips,
+            onOpenDetails: (trip) => _openTripDetails(context, trip),
+          ),
+        },
       ],
     );
   }
@@ -301,6 +317,29 @@ class _SimpleToolbar extends StatelessWidget {
               isDense: true,
             ),
           );
+          final filterButton = Stack(
+            clipBehavior: Clip.none,
+            children: [
+              IconButton.outlined(
+                tooltip: 'فلاتر متقدمة',
+                onPressed: () => showTripsFilterSheet(context),
+                icon: const Icon(Icons.tune_rounded),
+              ),
+              if (state.hasAdvancedFilters)
+                Positioned(
+                  right: 6,
+                  top: 6,
+                  child: Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.error,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+            ],
+          );
           final chips = Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -321,17 +360,48 @@ class _SimpleToolbar extends StatelessWidget {
                 )
                 .toList(),
           );
+          final viewModeRow = SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: TripsViewModeSwitch(
+              viewMode: state.viewMode,
+              onChanged: cubit.changeViewMode,
+            ),
+          );
           if (constraints.maxWidth < 760) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [search, const SizedBox(height: 12), chips],
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: search),
+                    const SizedBox(width: 8),
+                    filterButton,
+                  ],
+                ),
+                const SizedBox(height: 12),
+                chips,
+                const SizedBox(height: 12),
+                viewModeRow,
+              ],
             );
           }
-          return Row(
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(width: 380, child: search),
-              const SizedBox(width: 16),
-              Expanded(child: chips),
+              Row(
+                children: [
+                  SizedBox(width: 380, child: search),
+                  const SizedBox(width: 8),
+                  filterButton,
+                  const SizedBox(width: 16),
+                  Expanded(child: chips),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: viewModeRow,
+              ),
             ],
           );
         },
@@ -388,7 +458,10 @@ class _TripsList extends StatelessWidget {
             ...trips.indexed.map(
               (entry) => Padding(
                 padding: EdgeInsets.only(top: entry.$1 == 0 ? 0 : 10),
-                child: _TripRow(trip: entry.$2),
+                child: TripRowCard(
+                  trip: entry.$2,
+                  onOpenDetails: () => _openTripDetails(context, entry.$2),
+                ),
               ),
             ),
         ],
@@ -397,248 +470,24 @@ class _TripsList extends StatelessWidget {
   }
 }
 
-class _TripRow extends StatelessWidget {
-  const _TripRow({required this.trip});
-
-  final OperationTrip trip;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final occupancy = trip.capacity == 0
-        ? 0.0
-        : (trip.bookedSeats / trip.capacity).clamp(0.0, 1.0);
-    final isStale = trip.isStaleBooking();
-    return Material(
-      color: scheme.surfaceContainerLowest,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => _openDetails(context),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final content = Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: _statusColor(
-                            context,
-                            trip.status,
-                          ).withAlpha(22),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          Icons.route_rounded,
-                          color: _statusColor(context, trip.status),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              trip.route,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w900),
-                            ),
-                            const SizedBox(height: 3),
-                            Text(
-                              '${_friendlyDate(trip.date)}، ${trip.departure}'
-                              '${trip.arrival.isEmpty ? '' : ' - ${trip.arrival}'}',
-                              style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: scheme.onSurfaceVariant),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      StatusChip(
-                        label: trip.status.label,
-                        color: isStale
-                            ? scheme.error.withAlpha(28)
-                            : _statusColor(context, trip.status).withAlpha(28),
-                        textColor: isStale
-                            ? scheme.error
-                            : _statusColor(context, trip.status),
-                      ),
-                    ],
-                  ),
-                  if (isStale) ...[
-                    const SizedBox(height: 12),
-                    const _StaleTripNotice(),
-                  ],
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _Fact(
-                          icon: Icons.person_outline_rounded,
-                          text: trip.driver,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: _Fact(
-                          icon: Icons.directions_bus_outlined,
-                          text: trip.vehicle,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 14),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(999),
-                          child: LinearProgressIndicator(
-                            value: occupancy,
-                            minHeight: 7,
-                            backgroundColor: scheme.surfaceContainerHighest,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        '${trip.bookedSeats} من ${trip.capacity} مقعد',
-                        style: Theme.of(context).textTheme.labelMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.w700,
-                              color: scheme.onSurfaceVariant,
-                            ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-              final actions = Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextButton.icon(
-                    onPressed: () => _openDetails(context),
-                    icon: const Icon(Icons.arrow_forward_rounded, size: 18),
-                    label: const Text('عرض التفاصيل'),
-                  ),
-                  PopupMenuButton<String>(
-                    tooltip: 'المزيد',
-                    onSelected: (value) {
-                      if (value == 'copy') _duplicate(context);
-                      if (value == 'delete') _delete(context);
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
-                        value: 'copy',
-                        child: ListTile(
-                          leading: Icon(Icons.copy_rounded),
-                          title: Text('نسخ الرحلة'),
-                        ),
-                      ),
-                      PopupMenuItem(
-                        value: 'delete',
-                        child: ListTile(
-                          leading: Icon(Icons.delete_outline_rounded),
-                          title: Text('حذف الرحلة'),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              );
-              if (constraints.maxWidth < 760) {
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    content,
-                    const SizedBox(height: 10),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: actions,
-                    ),
-                  ],
-                );
-              }
-              return Row(
-                children: [
-                  Expanded(child: content),
-                  const SizedBox(width: 12),
-                  actions,
-                ],
-              );
-            },
-          ),
-        ),
+void _openTripDetails(BuildContext context, OperationTrip trip) {
+  final detailsCubit = context.read<TripDetailsCubit>()..showDetails(trip);
+  showDialog<void>(
+    context: context,
+    builder: (_) => MultiBlocProvider(
+      providers: [
+        BlocProvider.value(value: detailsCubit),
+        BlocProvider.value(value: context.read<TripsListCubit>()),
+        BlocProvider.value(value: context.read<TripSeatsCubit>()),
+        BlocProvider.value(value: context.read<TripPassengersCubit>()),
+        BlocProvider.value(value: context.read<TripPricingCubit>()),
+      ],
+      child: const Directionality(
+        textDirection: TextDirection.rtl,
+        child: _TripDetailsDialog(),
       ),
-    );
-  }
-
-  void _openDetails(BuildContext context) {
-    final detailsCubit = context.read<TripDetailsCubit>()..showDetails(trip);
-    showDialog<void>(
-      context: context,
-      builder: (_) => MultiBlocProvider(
-        providers: [
-          BlocProvider.value(value: detailsCubit),
-          BlocProvider.value(value: context.read<TripsListCubit>()),
-          BlocProvider.value(value: context.read<TripSeatsCubit>()),
-          BlocProvider.value(value: context.read<TripPassengersCubit>()),
-          BlocProvider.value(value: context.read<TripPricingCubit>()),
-        ],
-        child: const Directionality(
-          textDirection: TextDirection.rtl,
-          child: _TripDetailsDialog(),
-        ),
-      ),
-    ).then((_) => detailsCubit.closeDetails());
-  }
-
-  void _duplicate(BuildContext context) {
-    final listCubit = context.read<TripsListCubit>();
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => BlocProvider(
-        create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: TripCreationWizardDialog(prefillTrip: trip),
-        ),
-      ),
-    ).then((_) => listCubit.load());
-  }
-
-  Future<void> _delete(BuildContext context) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('حذف الرحلة؟'),
-        content: Text('سيتم حذف رحلة ${trip.route} نهائياً.'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('حذف'),
-          ),
-        ],
-      ),
-    );
-    if (confirmed == true && context.mounted) {
-      await context.read<TripsListCubit>().deleteTrip(trip.id);
-    }
-  }
+    ),
+  ).then((_) => detailsCubit.closeDetails());
 }
 
 class _TripDetailsDialog extends StatelessWidget {
@@ -723,12 +572,12 @@ class _DetailsHeader extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: _statusColor(context, trip.status).withAlpha(22),
+                  color: tripStatusColor(context, trip.status).withAlpha(22),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   Icons.route_rounded,
-                  color: _statusColor(context, trip.status),
+                  color: tripStatusColor(context, trip.status),
                 ),
               ),
               const SizedBox(width: 12),
@@ -750,17 +599,17 @@ class _DetailsHeader extends StatelessWidget {
                         const SizedBox(width: 8),
                         StatusChip(
                           label: trip.status.label,
-                          color: _statusColor(
+                          color: tripStatusColor(
                             context,
                             trip.status,
                           ).withAlpha(24),
-                          textColor: _statusColor(context, trip.status),
+                          textColor: tripStatusColor(context, trip.status),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${_friendlyDate(trip.date)}، ${trip.departure}'
+                      '${tripFriendlyDate(trip.date)}، ${trip.departure}'
                       '  •  ${trip.driver}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -822,7 +671,7 @@ class _DetailsHeader extends StatelessWidget {
             children: [
               header,
               const SizedBox(height: 12),
-              _StaleTripNotice(
+              StaleTripBanner(
                 actions: Wrap(
                   spacing: 8,
                   runSpacing: 8,
@@ -1106,7 +955,7 @@ class _OverviewTab extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        _friendlyDate(trip.date),
+                        tripFriendlyDate(trip.date),
                         style: Theme.of(context).textTheme.labelMedium
                             ?.copyWith(
                               color: scheme.primary,
@@ -1681,76 +1530,6 @@ class _SeatLegend extends StatelessWidget {
   }
 }
 
-/// Explains why an open trip is missing from the client app: its departure day
-/// has passed, so the booking search filters it out no matter what status the
-/// dashboard shows. [actions] lets the details dialog offer a way to resolve it.
-class _StaleTripNotice extends StatelessWidget {
-  const _StaleTripNotice({this.actions});
-
-  final Widget? actions;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: scheme.errorContainer.withAlpha(70),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: scheme.error.withAlpha(60)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(Icons.visibility_off_rounded, size: 18, color: scheme.error),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'فات موعد هذه الرحلة وما زالت مفتوحة للحجز، لذلك لا تظهر '
-                  'للعملاء في التطبيق. أنهِها أو ألغِها لتصحيح الحالة.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onErrorContainer,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          if (actions != null) ...[
-            const SizedBox(height: 10),
-            Align(alignment: AlignmentDirectional.centerStart, child: actions!),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _Fact extends StatelessWidget {
-  const _Fact({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 17),
-        const SizedBox(width: 5),
-        Flexible(
-          child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis),
-        ),
-      ],
-    );
-  }
-}
-
 class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.message});
 
@@ -1796,18 +1575,6 @@ String _actionLabel(OperationTripStatus status) {
   };
 }
 
-Color _statusColor(BuildContext context, OperationTripStatus status) {
-  final scheme = Theme.of(context).colorScheme;
-  return switch (status) {
-    OperationTripStatus.scheduled => scheme.secondary,
-    OperationTripStatus.openForBooking => scheme.primary,
-    OperationTripStatus.boarding => scheme.tertiary,
-    OperationTripStatus.inProgress => Colors.green,
-    OperationTripStatus.completed => Colors.teal,
-    OperationTripStatus.cancelled => scheme.error,
-  };
-}
-
 Color _seatColor(BuildContext context, TripSeatState state) {
   final scheme = Theme.of(context).colorScheme;
   return switch (state) {
@@ -1830,24 +1597,3 @@ String _listTitle(String filter) {
   };
 }
 
-String _friendlyDate(String value) {
-  final date = DateTime.tryParse(value);
-  if (date == null) return value;
-  final now = DateTime.now();
-  final today = DateTime(now.year, now.month, now.day);
-  final day = DateTime(date.year, date.month, date.day);
-  final difference = day.difference(today).inDays;
-  if (difference == 0) return 'اليوم';
-  if (difference == 1) return 'غداً';
-  if (difference == -1) return 'أمس';
-  const weekdays = [
-    'الاثنين',
-    'الثلاثاء',
-    'الأربعاء',
-    'الخميس',
-    'الجمعة',
-    'السبت',
-    'الأحد',
-  ];
-  return '${weekdays[date.weekday - 1]}، ${date.day}/${date.month}';
-}

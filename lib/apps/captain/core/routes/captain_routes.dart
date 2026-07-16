@@ -12,6 +12,7 @@ class CaptainRoutes {
 
   static const requestAccess = '/captain/request-access';
   static const notifications = '/captain/notifications';
+  static const tripHistoryDetail = '/captain/history/detail';
 
   // Trip-scoped routes. Every one of these needs at least a trip id.
   static const tripExecution = '/captain/trip';

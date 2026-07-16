@@ -4,6 +4,20 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../domain/usecases/trip_management_usecases.dart';
 
+/// How the loaded trips are laid out on screen.
+enum TripsViewMode {
+  /// Single list driven by the [TripsListLoaded.quickFilter] chip.
+  list,
+
+  /// Always-visible sections: upcoming / active / completed (+ stale /
+  /// cancelled when non-empty), each independently filtered by search and
+  /// the advanced filters.
+  grouped,
+
+  /// Chronological, date-grouped view of the current quick-filtered set.
+  timeline,
+}
+
 sealed class TripsListState {
   const TripsListState();
 }
@@ -31,6 +45,7 @@ class TripsListLoaded extends TripsListState {
   final String vehicleFilter;
   final String occupancyFilter;
   final String dateFilter;
+  final TripsViewMode viewMode;
 
   const TripsListLoaded({
     required this.trips,
@@ -42,20 +57,56 @@ class TripsListLoaded extends TripsListState {
     this.vehicleFilter = 'الكل',
     this.occupancyFilter = 'الكل',
     this.dateFilter = 'الكل',
+    this.viewMode = TripsViewMode.list,
   });
 
-  List<OperationTrip> get filteredTrips {
+  bool _matchesSearchAndAdvancedFilters(OperationTrip trip) {
     final query = searchQuery.trim().toLowerCase();
+    final matchesSearch =
+        query.isEmpty ||
+        trip.id.toLowerCase().contains(query) ||
+        trip.route.toLowerCase().contains(query) ||
+        trip.driver.toLowerCase().contains(query) ||
+        trip.vehicle.toLowerCase().contains(query);
+    final matchesStatus = statusFilter == null || trip.status == statusFilter;
+    final matchesRoute = routeFilter == 'الكل' || trip.route == routeFilter;
+    final matchesDriver = driverFilter == 'الكل' || trip.driver == driverFilter;
+    final matchesVehicle =
+        vehicleFilter == 'الكل' || trip.vehicle == vehicleFilter;
+    final occupancy = trip.capacity == 0 ? 0 : trip.bookedSeats / trip.capacity;
+    final matchesOccupancy = switch (occupancyFilter) {
+      'فارغة' => trip.bookedSeats == 0,
+      'أقل من 50%' => occupancy > 0 && occupancy < 0.5,
+      '50% - 80%' => occupancy >= 0.5 && occupancy < 0.8,
+      'ممتلئة تقريباً' => occupancy >= 0.8 && trip.availableSeats > 0,
+      'ممتلئة' => trip.availableSeats == 0 && trip.capacity > 0,
+      _ => true,
+    };
+    final matchesDate = dateFilter == 'الكل' || trip.date == dateFilter;
+    return matchesSearch &&
+        matchesStatus &&
+        matchesRoute &&
+        matchesDriver &&
+        matchesVehicle &&
+        matchesOccupancy &&
+        matchesDate;
+  }
+
+  /// True when any filter beyond the default quick chip is narrowing the
+  /// list — drives the filter button's active badge.
+  bool get hasAdvancedFilters =>
+      statusFilter != null ||
+      routeFilter != 'الكل' ||
+      driverFilter != 'الكل' ||
+      vehicleFilter != 'الكل' ||
+      occupancyFilter != 'الكل' ||
+      dateFilter != 'الكل';
+
+  List<OperationTrip> get filteredTrips {
     final now = DateTime.now();
     final todayStr =
         '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     return trips.where((trip) {
-      final matchesSearch =
-          query.isEmpty ||
-          trip.id.toLowerCase().contains(query) ||
-          trip.route.toLowerCase().contains(query) ||
-          trip.driver.toLowerCase().contains(query) ||
-          trip.vehicle.toLowerCase().contains(query);
       final matchesQuick = switch (quickFilter) {
         'today' => trip.date == todayStr,
         'upcoming' =>
@@ -70,34 +121,64 @@ class TripsListLoaded extends TripsListState {
         'cancelled' => trip.status == OperationTripStatus.cancelled,
         _ => true,
       };
-      final matchesStatus = statusFilter == null || trip.status == statusFilter;
-      final matchesRoute = routeFilter == 'الكل' || trip.route == routeFilter;
-      final matchesDriver =
-          driverFilter == 'الكل' || trip.driver == driverFilter;
-      final matchesVehicle =
-          vehicleFilter == 'الكل' || trip.vehicle == vehicleFilter;
-      final occupancy = trip.capacity == 0
-          ? 0
-          : trip.bookedSeats / trip.capacity;
-      final matchesOccupancy = switch (occupancyFilter) {
-        'فارغة' => trip.bookedSeats == 0,
-        'أقل من 50%' => occupancy > 0 && occupancy < 0.5,
-        '50% - 80%' => occupancy >= 0.5 && occupancy < 0.8,
-        'ممتلئة تقريباً' => occupancy >= 0.8 && trip.availableSeats > 0,
-        'ممتلئة' => trip.availableSeats == 0 && trip.capacity > 0,
-        _ => true,
-      };
-      final matchesDate = dateFilter == 'الكل' || trip.date == dateFilter;
-      return matchesSearch &&
-          matchesQuick &&
-          matchesStatus &&
-          matchesRoute &&
-          matchesDriver &&
-          matchesVehicle &&
-          matchesOccupancy &&
-          matchesDate;
+      return matchesQuick && _matchesSearchAndAdvancedFilters(trip);
     }).toList();
   }
+
+  List<OperationTrip> _sortedByDeparture(Iterable<OperationTrip> source) {
+    final list = source.toList();
+    list.sort((a, b) {
+      final aTime = a.scheduledAt;
+      final bTime = b.scheduledAt;
+      if (aTime == null && bTime == null) return 0;
+      if (aTime == null) return 1;
+      if (bTime == null) return -1;
+      return aTime.compareTo(bTime);
+    });
+    return list;
+  }
+
+  /// Trips respecting search + advanced filters only (ignores the quick
+  /// filter chip), used as the base set for the grouped view's sections.
+  List<OperationTrip> get advancedFilteredTrips =>
+      trips.where(_matchesSearchAndAdvancedFilters).toList();
+
+  List<OperationTrip> get upcomingGroupTrips => _sortedByDeparture(
+    advancedFilteredTrips.where(
+      (trip) =>
+          (trip.status == OperationTripStatus.scheduled ||
+              trip.status == OperationTripStatus.openForBooking) &&
+          !trip.isStaleBooking(),
+    ),
+  );
+
+  List<OperationTrip> get activeGroupTrips => _sortedByDeparture(
+    advancedFilteredTrips.where(
+      (trip) =>
+          trip.status == OperationTripStatus.boarding ||
+          trip.status == OperationTripStatus.inProgress,
+    ),
+  );
+
+  List<OperationTrip> get completedGroupTrips => _sortedByDeparture(
+    advancedFilteredTrips.where(
+      (trip) => trip.status == OperationTripStatus.completed,
+    ),
+  );
+
+  List<OperationTrip> get staleGroupTrips => _sortedByDeparture(
+    advancedFilteredTrips.where((trip) => trip.isStaleBooking()),
+  );
+
+  List<OperationTrip> get cancelledGroupTrips => _sortedByDeparture(
+    advancedFilteredTrips.where(
+      (trip) => trip.status == OperationTripStatus.cancelled,
+    ),
+  );
+
+  /// The current quick-filtered + searched set, ordered chronologically and
+  /// grouped by day in the timeline view.
+  List<OperationTrip> get timelineTrips => _sortedByDeparture(filteredTrips);
 
   List<String> get routes => [
     'الكل',
@@ -165,6 +246,7 @@ class TripsListLoaded extends TripsListState {
     String? vehicleFilter,
     String? occupancyFilter,
     String? dateFilter,
+    TripsViewMode? viewMode,
   }) {
     return TripsListLoaded(
       trips: trips ?? this.trips,
@@ -178,6 +260,7 @@ class TripsListLoaded extends TripsListState {
       vehicleFilter: vehicleFilter ?? this.vehicleFilter,
       occupancyFilter: occupancyFilter ?? this.occupancyFilter,
       dateFilter: dateFilter ?? this.dateFilter,
+      viewMode: viewMode ?? this.viewMode,
     );
   }
 }
@@ -263,6 +346,27 @@ class TripsListCubit extends Cubit<TripsListState> {
     final current = state;
     if (current is! TripsListLoaded) return;
     emit(current.copyWith(dateFilter: date));
+  }
+
+  void changeViewMode(TripsViewMode mode) {
+    final current = state;
+    if (current is! TripsListLoaded) return;
+    emit(current.copyWith(viewMode: mode));
+  }
+
+  void clearAdvancedFilters() {
+    final current = state;
+    if (current is! TripsListLoaded) return;
+    emit(
+      current.copyWith(
+        clearStatusFilter: true,
+        routeFilter: 'الكل',
+        driverFilter: 'الكل',
+        vehicleFilter: 'الكل',
+        occupancyFilter: 'الكل',
+        dateFilter: 'الكل',
+      ),
+    );
   }
 
   void appendTrip(OperationTrip trip) {

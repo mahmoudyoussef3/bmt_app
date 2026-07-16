@@ -10,6 +10,8 @@ import 'package:bmt_app/apps/captain/features/live_location/presentation/pages/l
 import 'package:bmt_app/apps/captain/features/notifications/presentation/pages/captain_notifications_page.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/pages/passenger_list_page.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/pages/trip_execution_page.dart';
+import 'package:bmt_app/apps/captain/features/trip_history/domain/entities/trip_history_item.dart';
+import 'package:bmt_app/apps/captain/features/trip_history/presentation/pages/trip_history_detail_page.dart';
 import 'package:bmt_app/apps/captain/features/trip_status_updates/presentation/pages/status_update_page.dart';
 
 import 'captain_app_shell.dart';
@@ -84,6 +86,11 @@ class CaptainAppRouter {
       CaptainRoutes.reportIncident => _buildReportIncident(
         settings,
         args! as ReportIncidentArgs,
+      ),
+
+      CaptainRoutes.tripHistoryDetail => _page(
+        settings,
+        TripHistoryDetailPage(trip: args! as TripHistoryItem),
       ),
 
       _ => null,

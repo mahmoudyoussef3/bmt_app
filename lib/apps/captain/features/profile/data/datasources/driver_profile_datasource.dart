@@ -71,6 +71,20 @@ class DriverProfileDataSource {
       plateNumber: vehicle?['plate_number'] as String?,
       vehicleModel: vehicle?['model'] as String?,
       vehicleCapacity: (vehicle?['capacity'] as num?)?.toInt(),
+      employeeCode: driver['employee_code'] as String?,
+      licenseExpiryDate: DateTime.tryParse(
+        driver['license_expiry_date']?.toString() ?? '',
+      ),
+      hireDate: DateTime.tryParse(driver['hire_date']?.toString() ?? ''),
+      accountStatus: _accountStatus(driver['status'] as String?),
     );
+  }
+
+  DriverAccountStatus _accountStatus(String? status) {
+    return switch (status) {
+      'suspended' => DriverAccountStatus.suspended,
+      'archived' => DriverAccountStatus.archived,
+      _ => DriverAccountStatus.active,
+    };
   }
 }

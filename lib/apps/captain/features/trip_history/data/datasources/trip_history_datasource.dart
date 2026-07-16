@@ -3,11 +3,32 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bmt_app/apps/captain/core/session/captain_driver_id_resolver.dart';
 
 import '../../domain/entities/trip_history_item.dart';
+import '../../domain/entities/trip_history_stop.dart';
 
 class TripHistoryDataSource {
   const TripHistoryDataSource(this._supabase);
 
   final SupabaseClient _supabase;
+
+  Future<List<TripHistoryStop>> getTripStops(String tripId) async {
+    final response = await _supabase
+        .from('trip_route_points')
+        .select('point_name, point_order, arrival_offset, departure_offset')
+        .eq('trip_id', tripId)
+        .order('point_order');
+
+    return (response as List).map((row) {
+      final r = row as Map<String, dynamic>;
+      final scheduled = (r['arrival_offset'] as String?)?.isNotEmpty == true
+          ? r['arrival_offset'] as String
+          : r['departure_offset'] as String?;
+      return TripHistoryStop(
+        name: r['point_name']?.toString() ?? '',
+        order: (r['point_order'] as num?)?.toInt() ?? 0,
+        scheduledTime: scheduled,
+      );
+    }).toList();
+  }
 
   Future<List<TripHistoryItem>> getTripHistory() async {
     final user = _supabase.auth.currentUser;

@@ -13,6 +13,7 @@ import 'package:bmt_app/core/flavors/app_flavor.dart';
 
 import 'package:bmt_app/core/notifications/fcm_service.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_theme.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_theme_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -75,18 +76,25 @@ class _CaptainAppState extends State<CaptainApp> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      navigatorKey: _navigatorKey,
-      debugShowCheckedModeBanner: false,
-      title: AppFlavorConfig.current.appName,
-      localizationsDelegates: AppLocalizations.localizationsDelegates,
-      supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('ar'),
-      theme: CaptainTheme.light(),
-      darkTheme: CaptainTheme.dark(),
-      themeMode: ThemeMode.system,
-      home: const _CaptainAuthGate(),
-      onGenerateRoute: CaptainAppRouter.generateRoute,
+    return BlocProvider<CaptainThemeCubit>(
+      create: (_) => captainGetIt<CaptainThemeCubit>()..load(),
+      child: BlocBuilder<CaptainThemeCubit, CaptainThemeState>(
+        builder: (context, themeState) {
+          return MaterialApp(
+            navigatorKey: _navigatorKey,
+            debugShowCheckedModeBanner: false,
+            title: AppFlavorConfig.current.appName,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+            locale: const Locale('ar'),
+            theme: CaptainTheme.light(),
+            darkTheme: CaptainTheme.dark(),
+            themeMode: themeState.themeMode,
+            home: const _CaptainAuthGate(),
+            onGenerateRoute: CaptainAppRouter.generateRoute,
+          );
+        },
+      ),
     );
   }
 }

@@ -158,6 +158,17 @@ class OperationTrip {
     return seats.where((seat) => seat.state == TripSeatState.blocked).length;
   }
 
+  /// Combines [date] and [departure] into a sortable instant. Used to order
+  /// trips chronologically (timeline/grouped views) regardless of status.
+  DateTime? get scheduledAt {
+    final day = DateTime.tryParse(date);
+    if (day == null) return null;
+    final parts = departure.split(':');
+    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+    return DateTime(day.year, day.month, day.day, hour, minute);
+  }
+
   /// A trip whose departure day has passed while it is still advertised as
   /// bookable.
   ///

@@ -12,10 +12,22 @@ extension AssignedTripStatusX on AssignedTripStatus {
 /// row id so the captain app can report an arrival against the exact point
 /// (see `trip_events` title `'وصول محطة'` convention).
 class AssignedTripStop {
-  const AssignedTripStop({required this.id, required this.name});
+  const AssignedTripStop({
+    required this.id,
+    required this.name,
+    this.latitude,
+    this.longitude,
+  });
 
   final String id;
   final String name;
+
+  /// Null when the route point was saved without coordinates — captains
+  /// created before route mapping was mandatory can still have these.
+  final double? latitude;
+  final double? longitude;
+
+  bool get hasCoordinates => latitude != null && longitude != null;
 }
 
 class AssignedTrip {

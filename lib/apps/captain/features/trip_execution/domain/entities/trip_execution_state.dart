@@ -13,6 +13,23 @@ class TripExecutionStateData {
   final TripExecutionStatus status;
 }
 
+/// The captain's last one-shot location send for this trip (see
+/// `live_location` — continuous/background tracking is not used). Never
+/// treat [recordedAt] as current; the GPS status card shows its age
+/// explicitly so a captain who hasn't sent a fresh fix in a while sees that,
+/// rather than a number that quietly goes stale.
+class TripLastLocationFix {
+  const TripLastLocationFix({
+    required this.latitude,
+    required this.longitude,
+    required this.recordedAt,
+  });
+
+  final double latitude;
+  final double longitude;
+  final DateTime recordedAt;
+}
+
 /// Live snapshot of a trip's execution progress.
 ///
 /// Watched continuously for the lifetime of the execution screen, so the
@@ -24,12 +41,14 @@ class TripExecutionSnapshot {
     required this.passengerCount,
     required this.boardedCount,
     required this.arrivedStationsCount,
+    this.lastLocation,
   });
 
   final TripExecutionStatus status;
   final int passengerCount;
   final int boardedCount;
   final int arrivedStationsCount;
+  final TripLastLocationFix? lastLocation;
 
   TripExecutionSnapshot copyWith({TripExecutionStatus? status}) {
     return TripExecutionSnapshot(
@@ -37,6 +56,7 @@ class TripExecutionSnapshot {
       passengerCount: passengerCount,
       boardedCount: boardedCount,
       arrivedStationsCount: arrivedStationsCount,
+      lastLocation: lastLocation,
     );
   }
 }

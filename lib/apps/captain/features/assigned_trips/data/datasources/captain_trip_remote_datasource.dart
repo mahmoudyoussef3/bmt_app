@@ -73,7 +73,7 @@ class CaptainTripRemoteDataSource {
           *,
           operation_routes(name, start_city, end_city),
           vehicles(vehicle_code, plate_number),
-          trip_route_points(id, point_name, point_order),
+          trip_route_points(id, point_name, point_order, latitude, longitude),
           trip_passengers(id, status),
           trip_events(title)
         ''')
@@ -125,6 +125,8 @@ class CaptainTripRemoteDataSource {
           (p) => AssignedTripStop(
             id: p['id']?.toString() ?? '',
             name: p['point_name']?.toString() ?? '',
+            latitude: (p['latitude'] as num?)?.toDouble(),
+            longitude: (p['longitude'] as num?)?.toDouble(),
           ),
         )
         .toList();

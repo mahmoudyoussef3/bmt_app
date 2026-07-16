@@ -94,6 +94,17 @@ class TripExecutionDataSource {
           table: 'trip_events',
           callback: (_) => scheduleEmit(),
         )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'trip_live_locations',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'trip_id',
+            value: tripId,
+          ),
+          callback: (_) => scheduleEmit(),
+        )
         .subscribe();
 
     controller.onCancel = () {
@@ -142,6 +153,32 @@ class TripExecutionDataSource {
         arrivalEventCount: arrivalEventCount,
         routePointCount: routePointCount,
       ),
+      lastLocation: await _fetchLastLocation(tripId),
+    );
+  }
+
+  /// The captain's most recent one-shot location send for this trip, if
+  /// any — `live_location` sends a single fix at a time rather than a
+  /// continuous stream, so this is simply the newest row, not a live feed.
+  Future<TripLastLocationFix?> _fetchLastLocation(String tripId) async {
+    final row = await _supabase
+        .from('trip_live_locations')
+        .select('latitude, longitude, recorded_at')
+        .eq('trip_id', tripId)
+        .order('recorded_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    if (row == null) return null;
+
+    final lat = (row['latitude'] as num?)?.toDouble();
+    final lng = (row['longitude'] as num?)?.toDouble();
+    final recordedAt = DateTime.tryParse(row['recorded_at']?.toString() ?? '');
+    if (lat == null || lng == null || recordedAt == null) return null;
+
+    return TripLastLocationFix(
+      latitude: lat,
+      longitude: lng,
+      recordedAt: recordedAt.toLocal(),
     );
   }
 

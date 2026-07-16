@@ -3,6 +3,8 @@ import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../session/captain_session_store.dart';
+import '../theme/captain_theme_cubit.dart';
+import '../theme/captain_theme_repository.dart';
 import '../../features/onboarding/data/datasources/captain_onboarding_datasource.dart';
 import '../../features/onboarding/data/repositories/captain_onboarding_repository_impl.dart';
 import '../../features/onboarding/domain/repositories/captain_onboarding_repository.dart';
@@ -33,7 +35,9 @@ import '../../features/trip_history/data/datasources/trip_history_datasource.dar
 import '../../features/trip_history/data/repositories/trip_history_repository_impl.dart';
 import '../../features/trip_history/domain/repositories/trip_history_repository.dart';
 import '../../features/trip_history/domain/usecases/get_trip_history_usecase.dart';
+import '../../features/trip_history/domain/usecases/get_trip_stops_usecase.dart';
 import '../../features/trip_history/presentation/cubit/trip_history_cubit.dart';
+import '../../features/trip_history/presentation/cubit/trip_history_detail_cubit.dart';
 
 import '../../features/passenger_manifest/domain/usecases/update_passenger_status_usecase.dart';
 
@@ -130,6 +134,22 @@ void registerCaptainDependencies() {
   _registerTripHistoryDependencies();
   _registerAuthDependencies();
   _registerOnboardingDependencies();
+  _registerThemeDependencies();
+}
+
+void _registerThemeDependencies() {
+  if (!captainGetIt.isRegistered<CaptainThemeRepository>()) {
+    captainGetIt.registerLazySingleton<CaptainThemeRepository>(
+      () => const CaptainThemeRepository(),
+    );
+  }
+  // Singleton — the root MaterialApp and the Profile settings sheet must
+  // share one instance so changing the theme there updates the app live.
+  if (!captainGetIt.isRegistered<CaptainThemeCubit>()) {
+    captainGetIt.registerLazySingleton<CaptainThemeCubit>(
+      () => CaptainThemeCubit(captainGetIt<CaptainThemeRepository>()),
+    );
+  }
 }
 
 void _registerOnboardingDependencies() {
@@ -638,9 +658,19 @@ void _registerTripHistoryDependencies() {
       () => GetTripHistoryUseCase(captainGetIt<TripHistoryRepository>()),
     );
   }
+  if (!captainGetIt.isRegistered<GetTripStopsUseCase>()) {
+    captainGetIt.registerLazySingleton<GetTripStopsUseCase>(
+      () => GetTripStopsUseCase(captainGetIt<TripHistoryRepository>()),
+    );
+  }
   if (!captainGetIt.isRegistered<TripHistoryCubit>()) {
     captainGetIt.registerFactory<TripHistoryCubit>(
       () => TripHistoryCubit(captainGetIt<GetTripHistoryUseCase>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<TripHistoryDetailCubit>()) {
+    captainGetIt.registerFactory<TripHistoryDetailCubit>(
+      () => TripHistoryDetailCubit(captainGetIt<GetTripStopsUseCase>()),
     );
   }
 }

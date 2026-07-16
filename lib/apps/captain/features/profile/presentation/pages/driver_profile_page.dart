@@ -1,6 +1,7 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_theme_cubit.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
@@ -14,7 +15,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/driver_profile.dart';
 import '../cubit/driver_profile_cubit.dart';
 import '../cubit/driver_profile_state.dart';
+import '../widgets/captain_appearance_sheet.dart';
 import '../widgets/driver_profile_skeleton.dart';
+import '../widgets/verification_card.dart';
 
 class DriverProfilePage extends StatelessWidget {
   const DriverProfilePage({super.key});
@@ -66,6 +69,8 @@ class _ProfileBody extends StatelessWidget {
                 const SizedBox(height: CaptainDesignTokens.s24),
                 _StatsCard(profile: profile),
                 const SizedBox(height: CaptainDesignTokens.s16),
+                VerificationCard(profile: profile),
+                const SizedBox(height: CaptainDesignTokens.s16),
                 if (profile.hasVehicle) ...[
                   _VehicleCard(profile: profile),
                   const SizedBox(height: CaptainDesignTokens.s16),
@@ -75,6 +80,8 @@ class _ProfileBody extends StatelessWidget {
                   const SizedBox(height: CaptainDesignTokens.s16),
                 ],
                 _InfoCard(profile: profile),
+                const SizedBox(height: CaptainDesignTokens.s16),
+                const _SettingsCard(),
                 const SizedBox(height: CaptainDesignTokens.s32),
                 _SignOutButton(),
               ]),
@@ -397,6 +404,68 @@ class _InfoCard extends StatelessWidget {
       ),
     );
   }
+}
+
+class _SettingsCard extends StatelessWidget {
+  const _SettingsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return _SectionCard(
+      title: 'الإعدادات',
+      icon: Icons.settings_rounded,
+      child: BlocBuilder<CaptainThemeCubit, CaptainThemeState>(
+        builder: (context, state) {
+          return InkWell(
+            onTap: () => showCaptainAppearanceSheet(context),
+            borderRadius: CaptainDesignTokens.br12,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: CaptainDesignTokens.s4,
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.dark_mode_outlined,
+                    size: 18,
+                    color: CaptainColors.textSecondaryFor(context),
+                  ),
+                  const SizedBox(width: CaptainDesignTokens.s12),
+                  Text(
+                    'المظهر',
+                    style: CaptainTypography.bodyMedium(context).copyWith(
+                      color: CaptainColors.textSecondaryFor(context),
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    _themeModeLabel(state.themeMode),
+                    style: CaptainTypography.bodyMedium(context).copyWith(
+                      color: CaptainColors.textPrimaryFor(context),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: CaptainDesignTokens.s4),
+                  Icon(
+                    Icons.chevron_left_rounded,
+                    size: 20,
+                    color: CaptainColors.textSecondaryFor(context),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  String _themeModeLabel(ThemeMode mode) => switch (mode) {
+    ThemeMode.light => 'فاتح',
+    ThemeMode.dark => 'داكن',
+    ThemeMode.system => 'تلقائي',
+  };
 }
 
 class _SignOutButton extends StatelessWidget {

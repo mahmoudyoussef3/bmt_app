@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_confirm_dialog.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_connectivity_banner.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_status_chip.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
@@ -19,6 +20,9 @@ import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import '../../domain/entities/trip_execution_state.dart';
 import '../cubit/trip_execution_cubit.dart';
 import '../cubit/trip_execution_state.dart';
+import '../widgets/navigate_to_stop_button.dart';
+import '../widgets/route_progress_timeline.dart';
+import '../widgets/trip_gps_status_card.dart';
 
 class TripExecutionPage extends StatelessWidget {
   const TripExecutionPage({super.key, required this.trip});
@@ -58,6 +62,7 @@ class TripExecutionPage extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
+                        const CaptainConnectivityBanner(),
                         _ExecutionHeaderCard(
                           trip: trip,
                           snapshot: snapshot,
@@ -71,6 +76,21 @@ class TripExecutionPage extends StatelessWidget {
                             stops: trip.stops,
                             arrivedStationsCount: snapshot.arrivedStationsCount,
                           ),
+                          const SizedBox(height: CaptainDesignTokens.s24),
+                          RouteProgressTimeline(
+                            stops: trip.stops,
+                            arrivedStationsCount: snapshot.arrivedStationsCount,
+                          ),
+                          const SizedBox(height: CaptainDesignTokens.s24),
+                          TripGpsStatusCard(
+                            lastLocation: snapshot.lastLocation,
+                            destination: trip.stops.last,
+                            expectedArrivalTime: trip.expectedArrivalTime,
+                            onSendLocation: () =>
+                                context.openLocationUpdate(trip.id),
+                          ),
+                          const SizedBox(height: CaptainDesignTokens.s16),
+                          NavigateToStopButton(stop: _nextStop(trip, snapshot)),
                           const SizedBox(height: CaptainDesignTokens.s24),
                         ],
                         Text(
@@ -134,6 +154,18 @@ class TripExecutionPage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  /// The next stop the captain hasn't reported arrived yet, or null once
+  /// every station on the route has been reported (nothing left to
+  /// navigate to).
+  AssignedTripStop? _nextStop(
+    AssignedTrip trip,
+    TripExecutionSnapshot snapshot,
+  ) {
+    final index = snapshot.arrivedStationsCount;
+    if (index >= trip.stops.length) return null;
+    return trip.stops[index];
   }
 
   TripExecutionSnapshot _snapshotFromState(TripExecutionCubitState state) {
