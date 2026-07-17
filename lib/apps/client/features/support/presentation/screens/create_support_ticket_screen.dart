@@ -1,7 +1,7 @@
+import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
@@ -17,15 +17,12 @@ class CreateSupportTicketScreen extends StatelessWidget {
   /// form.
   void _onStateChanged(BuildContext context, SupportState state) {
     if (state is SupportSuccess) {
-      _showSnack(
-        context,
-        context.l10n.support_ticketCreatedSnack,
-      );
+      _showSnack(context, context.l10n.support_ticketCreatedSnack);
       Navigator.pop(context);
       if (state.ticket != null) {
         Navigator.pushNamed(
           context,
-          ClientRoutes.ticketDetails,
+          SupportRoutes.ticketDetails,
           arguments: state.ticket!.id,
         );
       }

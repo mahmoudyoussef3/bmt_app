@@ -77,6 +77,58 @@ class PaymentCheckoutData {
     this.walletBalance = 0,
   });
 
+  /// Rebuilds checkout data from untyped route arguments, mirroring the
+  /// `BookingSearchQuery.fromArguments` convention. Every field falls back to
+  /// an empty value so a malformed hand-off renders a blank ticket rather than
+  /// throwing during a route build.
+  static PaymentCheckoutData fromArguments(Object? args) {
+    if (args is PaymentCheckoutData) return args;
+    if (args is! Map) {
+      return const PaymentCheckoutData(
+        tripId: '',
+        pickupPoint: '',
+        destination: '',
+        vehicleNumber: '',
+        tripDate: '',
+        departureTime: '',
+        arrivalTime: '',
+        selectedSeatId: '',
+        selectedSeat: '',
+        driverName: '',
+      );
+    }
+    return PaymentCheckoutData(
+      tripId: args['tripId']?.toString() ?? '',
+      pickupPoint: args['pickupPoint']?.toString() ?? '',
+      destination: args['destination']?.toString() ?? '',
+      vehicleNumber: args['vehicleNumber']?.toString() ?? '',
+      tripDate: args['tripDate']?.toString() ?? '',
+      departureTime: args['departureTime']?.toString() ?? '',
+      arrivalTime: args['arrivalTime']?.toString() ?? '',
+      selectedSeatId: args['selectedSeatId']?.toString() ?? '',
+      selectedSeat: args['selectedSeat']?.toString() ?? '',
+      driverName: args['driverName']?.toString() ?? '',
+      vehicleName: args['vehicleName']?.toString() ?? '',
+      vehicleImageUrl: args['vehicleImageUrl']?.toString() ?? '',
+      driverImageUrl: args['driverImageUrl']?.toString() ?? '',
+      driverRating: _toDouble(args['driverRating']),
+      baseFare: _toMoney(args['baseFare']),
+      serviceFee: _toMoney(args['serviceFee']),
+      tax: _toMoney(args['tax']),
+    );
+  }
+
+  /// Fares cross the route boundary as either a num or its string form.
+  static int _toMoney(Object? value) {
+    if (value is num) return value.round();
+    return num.tryParse(value?.toString() ?? '')?.round() ?? 0;
+  }
+
+  static double _toDouble(Object? value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
   /// The friendly label for the vehicle on the ticket: its name (brand/model)
   /// when known, falling back to the plate/code so the fact is never blank.
   String get vehicleLabel =>

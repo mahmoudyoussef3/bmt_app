@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -48,7 +49,9 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
 
   void _continue() {
     if (_hasSession) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/home', (_) => false);
+      Navigator.of(
+        context,
+      ).pushNamedAndRemoveUntil(ClientRoutes.home, (_) => false);
     } else {
       Navigator.of(
         context,
@@ -63,110 +66,109 @@ class _AuthSuccessScreenState extends State<AuthSuccessScreen>
     final created = _hasSession;
 
     return Scaffold(
-        backgroundColor: scheme.surface,
-        body: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: RadialGradient(
-              center: Alignment.topCenter,
-              radius: 1.1,
-              colors: [ClientColors.primary.withAlpha(28), scheme.surface],
-            ),
+      backgroundColor: scheme.surface,
+      body: DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: RadialGradient(
+            center: Alignment.topCenter,
+            radius: 1.1,
+            colors: [ClientColors.primary.withAlpha(28), scheme.surface],
           ),
-          child: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const AuthBrandLogo(),
-                  const Spacer(),
-                  ScaleTransition(
-                    scale: _scale,
-                    child: _SuccessBadge(created: created),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const AuthBrandLogo(),
+                const Spacer(),
+                ScaleTransition(
+                  scale: _scale,
+                  child: _SuccessBadge(created: created),
+                ),
+                const SizedBox(height: 28),
+                FadeTransition(
+                  opacity: _fade,
+                  child: Column(
+                    children: [
+                      Text(
+                        created
+                            ? l10n.authSuccess_createdTitle
+                            : l10n.authSuccess_verifyTitle,
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.headlineMedium
+                            ?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.5,
+                            ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        created
+                            ? l10n.authSuccess_createdSubtitle
+                            : l10n.authSuccess_verifySubtitle(
+                                widget.email ?? '',
+                              ),
+                        textAlign: TextAlign.center,
+                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                          height: 1.5,
+                          color: scheme.onSurfaceVariant,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
+                ),
+                if (created) ...[
                   const SizedBox(height: 28),
                   FadeTransition(
                     opacity: _fade,
                     child: Column(
                       children: [
-                        Text(
-                          created
-                              ? l10n.authSuccess_createdTitle
-                              : l10n.authSuccess_verifyTitle,
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineMedium
-                              ?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.5,
-                              ),
+                        _PerkRow(
+                          icon: Icons.event_seat_rounded,
+                          label: l10n.authSuccess_perkBooking,
                         ),
-                        const SizedBox(height: 12),
-                        Text(
-                          created
-                              ? l10n.authSuccess_createdSubtitle
-                              : l10n.authSuccess_verifySubtitle(
-                                  widget.email ?? '',
-                                ),
-                          textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodyLarge
-                              ?.copyWith(
-                                height: 1.5,
-                                color: scheme.onSurfaceVariant,
-                                fontWeight: FontWeight.w500,
-                              ),
+                        _PerkRow(
+                          icon: Icons.location_on_rounded,
+                          label: l10n.authSuccess_perkTracking,
+                        ),
+                        _PerkRow(
+                          icon: Icons.card_membership_rounded,
+                          label: l10n.authSuccess_perkPasses,
                         ),
                       ],
                     ),
                   ),
-                  if (created) ...[
-                    const SizedBox(height: 28),
-                    FadeTransition(
-                      opacity: _fade,
-                      child: Column(
-                        children: [
-                          _PerkRow(
-                            icon: Icons.event_seat_rounded,
-                            label: l10n.authSuccess_perkBooking,
-                          ),
-                          _PerkRow(
-                            icon: Icons.location_on_rounded,
-                            label: l10n.authSuccess_perkTracking,
-                          ),
-                          _PerkRow(
-                            icon: Icons.card_membership_rounded,
-                            label: l10n.authSuccess_perkPasses,
-                          ),
-                        ],
+                ],
+                const Spacer(),
+                PressableScale(
+                  onTap: _continue,
+                  child: FilledButton(
+                    onPressed: _continue,
+                    style: FilledButton.styleFrom(
+                      minimumSize: const Size.fromHeight(56),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
                     ),
-                  ],
-                  const Spacer(),
-                  PressableScale(
-                    onTap: _continue,
-                    child: FilledButton(
-                      onPressed: _continue,
-                      style: FilledButton.styleFrom(
-                        minimumSize: const Size.fromHeight(56),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                      child: Text(
-                        created
-                            ? l10n.authSuccess_getStarted
-                            : l10n.authSuccess_backToSignIn,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w900,
-                        ),
+                    child: Text(
+                      created
+                          ? l10n.authSuccess_getStarted
+                          : l10n.authSuccess_backToSignIn,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
+      ),
     );
   }
 }

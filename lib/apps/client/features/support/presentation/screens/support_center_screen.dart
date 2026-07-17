@@ -1,7 +1,7 @@
+import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
@@ -29,7 +29,7 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
   /// The create screen runs on its own cubit instance, so a ticket filed there
   /// is invisible here until we pull the list again on return.
   Future<void> _openCreateTicket() async {
-    await Navigator.pushNamed(context, ClientRoutes.createTicket);
+    await Navigator.pushNamed(context, SupportRoutes.createTicket);
     if (!mounted) return;
     await _refresh();
   }

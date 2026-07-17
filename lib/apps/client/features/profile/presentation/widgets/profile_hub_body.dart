@@ -1,7 +1,7 @@
+import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_state.dart';
 import 'package:bmt_app/apps/client/features/profile/domain/entities/client_profile.dart';
@@ -101,7 +101,7 @@ class ProfileHubBody extends StatelessWidget {
             package.daysRemaining ?? 0,
           ),
           actionLabel: l10n.profile_packageRenew,
-          onAction: () => onOpenRoute(ClientRoutes.subscription),
+          onAction: () => onOpenRoute(PackagesRoutes.subscription),
         ),
       ],
     ];

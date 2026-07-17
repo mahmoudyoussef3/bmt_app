@@ -1,6 +1,7 @@
+import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/widgets/profile_hub_tile.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/widgets/profile_section.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
@@ -33,13 +34,13 @@ class ProfileAccountSection extends StatelessWidget {
           icon: Icons.card_membership_outlined,
           title: l10n.profile_subscription,
           subtitle: l10n.profile_subscriptionSubtitle,
-          onTap: () => onOpenRoute(ClientRoutes.subscription),
+          onTap: () => onOpenRoute(PackagesRoutes.subscription),
         ),
         ProfileHubTile(
           icon: Icons.confirmation_number_outlined,
           title: l10n.profile_myTrips,
           subtitle: l10n.profile_myTripsSubtitle,
-          onTap: () => onOpenRoute(ClientRoutes.myTrips),
+          onTap: () => onOpenRoute(TripsRoutes.myTrips),
         ),
       ],
     );

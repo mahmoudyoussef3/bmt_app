@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -17,10 +18,11 @@ class PhoneLoginScreen extends StatefulWidget {
 class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
   final TextEditingController _phoneController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
-  
-  // Selected Country Code Mock
-  String _selectedCountryCode = '+20';
-  
+
+  // Single-market app: the picker beside the field is display-only, so the
+  // dial code is fixed rather than selectable state.
+  final String _selectedCountryCode = '+20';
+
   @override
   void dispose() {
     _phoneController.dispose();
@@ -55,7 +57,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
       body: BlocConsumer<PhoneAuthCubit, PhoneAuthState>(
         listener: (context, state) {
           if (state is AuthPhoneSubmitted) {
-            Navigator.of(context).pushNamed('/otp', arguments: state.phone);
+            Navigator.of(
+              context,
+            ).pushNamed(AuthRoutes.otp, arguments: state.phone);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -76,55 +80,67 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                   children: [
                     Text(
                       l10n.auth_enterPhoneTitle,
-                      style: Theme.of(context).textTheme.displayMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: Theme.of(context).textTheme.displayMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       l10n.auth_enterPhoneSubtitle,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Phone Input
                     Row(
                       children: [
                         // Country Picker (Mock)
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 16,
+                          ),
                           decoration: BoxDecoration(
-                            color: Theme.of(context).inputDecorationTheme.fillColor,
-                            border: Border.all(color: Theme.of(context).colorScheme.outline),
-                            borderRadius: BorderRadius.circular(AppTokens.radius),
+                            color: Theme.of(
+                              context,
+                            ).inputDecorationTheme.fillColor,
+                            border: Border.all(
+                              color: Theme.of(context).colorScheme.outline,
+                            ),
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.radius,
+                            ),
                           ),
                           child: Row(
                             children: [
-                              const Text('🇪🇬', style: TextStyle(fontSize: 20)),
+                              const Text(
+                                '🇪🇬',
+                                style: TextStyle(fontSize: 20),
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 _selectedCountryCode,
-                                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                                  fontWeight: FontWeight.w500,
-                                ),
+                                style: Theme.of(context).textTheme.bodyLarge
+                                    ?.copyWith(fontWeight: FontWeight.w500),
                               ),
                               const Icon(Icons.arrow_drop_down),
                             ],
                           ),
                         ),
                         const SizedBox(width: 12),
-                        
+
                         // Phone TextField
                         Expanded(
                           child: TextFormField(
                             controller: _phoneController,
                             keyboardType: TextInputType.phone,
                             textDirection: TextDirection.ltr,
-                            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              letterSpacing: 2,
-                            ),
+                            style: Theme.of(
+                              context,
+                            ).textTheme.bodyLarge?.copyWith(letterSpacing: 2),
                             decoration: const InputDecoration(
                               hintText: '100 000 0000',
                             ),
@@ -142,25 +158,35 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                       ],
                     ),
                     const Spacer(),
-                    
+
                     // Or divider
                     Row(
                       children: [
-                        Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
+                        Expanded(
+                          child: Divider(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                        ),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 16),
                           child: Text(
                             l10n.auth_or,
                             style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.5),
                             ),
                           ),
                         ),
-                        Expanded(child: Divider(color: Theme.of(context).colorScheme.outline)),
+                        Expanded(
+                          child: Divider(
+                            color: Theme.of(context).colorScheme.outline,
+                          ),
+                        ),
                       ],
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Social Login
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -179,7 +205,7 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                       ],
                     ),
                     const SizedBox(height: 32),
-                    
+
                     // Continue Button
                     ElevatedButton(
                       onPressed: state is AuthLoading ? null : _submitPhone,
@@ -192,7 +218,9 @@ class _PhoneLoginScreenState extends State<PhoneLoginScreen> {
                               width: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(l10n.auth_continue),

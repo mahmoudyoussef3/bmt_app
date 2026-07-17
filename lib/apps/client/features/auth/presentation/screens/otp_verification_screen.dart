@@ -1,3 +1,5 @@
+import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
+import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -10,7 +12,7 @@ import '../cubit/phone_auth_state.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
-  
+
   const OtpVerificationScreen({super.key, required this.phoneNumber});
 
   @override
@@ -18,9 +20,12 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final List<TextEditingController> _controllers = List.generate(6, (index) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (index) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
-  
+
   int _resendCountdown = 60;
   Timer? _timer;
 
@@ -94,9 +99,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       body: BlocConsumer<PhoneAuthCubit, PhoneAuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            Navigator.of(context).pushReplacementNamed('/home');
+            Navigator.of(context).pushReplacementNamed(ClientRoutes.home);
           } else if (state is AuthProfileIncomplete) {
-            Navigator.of(context).pushReplacementNamed('/complete_profile', arguments: state.phone);
+            Navigator.of(context).pushReplacementNamed(
+              AuthRoutes.completeProfile,
+              arguments: state.phone,
+            );
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -132,7 +140,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   Text(
                     l10n.auth_otpSentTo(widget.phoneNumber),
                     style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.6),
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
@@ -155,21 +165,31 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                           textAlign: TextAlign.center,
                           maxLength: 1,
                           enabled: !isLoading,
-                          style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: Theme.of(context).textTheme.displaySmall
+                              ?.copyWith(fontWeight: FontWeight.bold),
                           decoration: InputDecoration(
                             counterText: '',
                             filled: true,
-                            fillColor: Theme.of(context).inputDecorationTheme.fillColor,
+                            fillColor: Theme.of(
+                              context,
+                            ).inputDecorationTheme.fillColor,
                             contentPadding: EdgeInsets.zero,
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                              borderSide: BorderSide(color: Theme.of(context).colorScheme.outline),
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusSmall,
+                              ),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.outline,
+                              ),
                             ),
                             focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                              borderSide: BorderSide(color: Theme.of(context).colorScheme.primary, width: 2),
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radiusSmall,
+                              ),
+                              borderSide: BorderSide(
+                                color: Theme.of(context).colorScheme.primary,
+                                width: 2,
+                              ),
                             ),
                           ),
                           onChanged: (value) => _onOtpChanged(value, index),
@@ -199,14 +219,18 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       Text(
                         l10n.auth_didntReceiveCode,
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
                       TextButton(
                         onPressed: _resendCountdown == 0
                             ? () {
                                 _startTimer();
-                                context.read<PhoneAuthCubit>().submitPhone(widget.phoneNumber);
+                                context.read<PhoneAuthCubit>().submitPhone(
+                                  widget.phoneNumber,
+                                );
                               }
                             : null,
                         child: Text(
@@ -215,7 +239,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                               : l10n.auth_resendCode,
                           style: TextStyle(
                             color: _resendCountdown > 0
-                                ? Theme.of(context).colorScheme.onSurface.withOpacity(0.4)
+                                ? Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.withValues(alpha: 0.4)
                                 : Theme.of(context).colorScheme.primary,
                             fontWeight: FontWeight.bold,
                           ),

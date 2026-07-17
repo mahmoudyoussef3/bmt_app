@@ -1,8 +1,10 @@
+import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
@@ -31,7 +33,7 @@ class HomeContent extends StatelessWidget {
   static const double _tileOverlap = HomeQuickActions.height / 2;
 
   void _openSearch([String? destination]) {
-    onOpenRoute(ClientRoutes.bookingSearch, <String, String>{
+    onOpenRoute(BookingRoutes.search, <String, String>{
       'destination': ?destination,
     });
   }
@@ -64,7 +66,14 @@ class HomeContent extends StatelessWidget {
               backgroundColor: ClientColors.heroTopFor(context),
               systemOverlayStyle: SystemUiOverlayStyle.light,
             ),
-            SliverToBoxAdapter(child: _buildHeroWithActions(context, isTablet, horizontalPadding, maxWidth)),
+            SliverToBoxAdapter(
+              child: _buildHeroWithActions(
+                context,
+                isTablet,
+                horizontalPadding,
+                maxWidth,
+              ),
+            ),
             SliverToBoxAdapter(
               child: Center(
                 child: ConstrainedBox(
@@ -126,14 +135,12 @@ class HomeContent extends StatelessWidget {
                 child: HomeEntrance(
                   order: 1,
                   child: HomeQuickActions(
-                    onRoutes: () =>
-                        onOpenRoute(ClientRoutes.bookingPopularRoutes),
+                    onRoutes: () => onOpenRoute(BookingRoutes.popularRoutes),
                     onTrips: () => onOpenRoute(TripsRoutes.myTrips),
-                    onPackages: () =>
-                        onOpenRoute(ClientRoutes.subscription, {
-                          'hasActiveSubscription': data.activePackage != null,
-                        }),
-                    onSupport: () => onOpenRoute(ClientRoutes.support),
+                    onPackages: () => onOpenRoute(PackagesRoutes.subscription, {
+                      'hasActiveSubscription': data.activePackage != null,
+                    }),
+                    onSupport: () => onOpenRoute(SupportRoutes.center),
                   ),
                 ),
               ),

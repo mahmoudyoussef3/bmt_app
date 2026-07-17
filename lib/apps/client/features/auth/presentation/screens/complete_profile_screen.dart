@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -8,7 +9,7 @@ import '../cubit/phone_auth_state.dart';
 
 class CompleteProfileScreen extends StatefulWidget {
   final String phoneNumber;
-  
+
   const CompleteProfileScreen({super.key, required this.phoneNumber});
 
   @override
@@ -19,7 +20,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  
+
   String _selectedGender = 'Male';
   bool _acceptTerms = false;
 
@@ -41,7 +42,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
         );
         return;
       }
-      
+
       context.read<PhoneAuthCubit>().completeProfile(
         phone: widget.phoneNumber,
         fullName: _nameController.text.trim(),
@@ -62,7 +63,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       body: BlocConsumer<PhoneAuthCubit, PhoneAuthState>(
         listener: (context, state) {
           if (state is AuthAuthenticated) {
-            Navigator.of(context).pushReplacementNamed('/home');
+            Navigator.of(context).pushReplacementNamed(ClientRoutes.home);
           } else if (state is AuthError) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
@@ -91,7 +92,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     Text(
                       l10n.auth_completeProfileSubtitle,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -99,7 +102,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     // Name Field
                     Text(
                       l10n.auth_fullName,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -120,7 +125,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                     // Email Field
                     Text(
                       l10n.auth_emailOptional,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -133,11 +140,13 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Gender Selection
                     Text(
                       l10n.auth_gender,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Row(
@@ -147,7 +156,8 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             label: l10n.auth_genderMale,
                             icon: Icons.male,
                             isSelected: _selectedGender == 'Male',
-                            onTap: () => setState(() => _selectedGender = 'Male'),
+                            onTap: () =>
+                                setState(() => _selectedGender = 'Male'),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -156,24 +166,26 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                             label: l10n.auth_genderFemale,
                             icon: Icons.female,
                             isSelected: _selectedGender == 'Female',
-                            onTap: () => setState(() => _selectedGender = 'Female'),
+                            onTap: () =>
+                                setState(() => _selectedGender = 'Female'),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 48),
-                    
+
                     // Terms
                     CheckboxListTile(
                       value: _acceptTerms,
-                      onChanged: (val) => setState(() => _acceptTerms = val ?? false),
+                      onChanged: (val) =>
+                          setState(() => _acceptTerms = val ?? false),
                       title: Text(l10n.auth_acceptTermsCheckbox),
                       controlAffinity: ListTileControlAffinity.leading,
                       contentPadding: EdgeInsets.zero,
                       activeColor: Theme.of(context).colorScheme.primary,
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Submit Button
                     ElevatedButton(
                       onPressed: state is AuthLoading ? null : _submit,
@@ -186,7 +198,9 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                               width: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(l10n.auth_createAccountAndStart),
@@ -218,7 +232,7 @@ class _GenderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(AppTokens.radius),
@@ -226,7 +240,9 @@ class _GenderCard extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 16),
         decoration: BoxDecoration(
-          color: isSelected ? colorScheme.primary.withOpacity(0.1) : Theme.of(context).inputDecorationTheme.fillColor,
+          color: isSelected
+              ? colorScheme.primary.withValues(alpha: 0.1)
+              : Theme.of(context).inputDecorationTheme.fillColor,
           border: Border.all(
             color: isSelected ? colorScheme.primary : colorScheme.outline,
             width: isSelected ? 2 : 1,
@@ -238,14 +254,18 @@ class _GenderCard extends StatelessWidget {
             Icon(
               icon,
               size: 32,
-              color: isSelected ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.5),
+              color: isSelected
+                  ? colorScheme.primary
+                  : colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(height: 8),
             Text(
               label,
               style: TextStyle(
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                color: isSelected ? colorScheme.primary : colorScheme.onSurface.withOpacity(0.7),
+                color: isSelected
+                    ? colorScheme.primary
+                    : colorScheme.onSurface.withValues(alpha: 0.7),
               ),
             ),
           ],

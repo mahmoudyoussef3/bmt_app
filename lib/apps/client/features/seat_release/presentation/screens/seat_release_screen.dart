@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
@@ -26,37 +25,6 @@ class NotificationItem {
     required this.icon,
     required this.color,
   });
-}
-
-// Particle physics for Confetti celebration
-class ConfettiParticle {
-  double x;
-  double y;
-  double vx;
-  double vy;
-  double size;
-  Color color;
-  double rotation;
-  double rotationSpeed;
-
-  ConfettiParticle({
-    required this.x,
-    required this.y,
-    required this.vx,
-    required this.vy,
-    required this.size,
-    required this.color,
-    required this.rotation,
-    required this.rotationSpeed,
-  });
-
-  void update() {
-    x += vx;
-    y += vy;
-    vy += 0.22; // Gravity
-    vx *= 0.98; // Drag
-    rotation += rotationSpeed;
-  }
 }
 
 class SeatReleaseScreen extends StatefulWidget {
@@ -107,9 +75,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       TextEditingController();
   String _historySearchQuery = '';
 
-  // Confetti celebration particles
-  final List<ConfettiParticle> _particles = [];
-  Timer? _confettiTimer;
+  final ConfettiController _confetti = ConfettiController();
 
   // Reasons list
   List<String> _reasons = [];
@@ -170,7 +136,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   void dispose() {
     _notesController.dispose();
     _historySearchController.dispose();
-    _confettiTimer?.cancel();
+    _confetti.dispose();
     super.dispose();
   }
 
@@ -200,44 +166,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       9 => l10n.seatRelease_achievementsTitle,
       _ => l10n.seatRelease_portalTitle,
     };
-  }
-
-  void _triggerConfetti() {
-    final random = math.Random();
-    _particles.clear();
-    for (int i = 0; i < 90; i++) {
-      final angle = random.nextDouble() * math.pi * 2;
-      final speed = 4 + random.nextDouble() * 11;
-      _particles.add(
-        ConfettiParticle(
-          x: MediaQuery.of(context).size.width / 2,
-          y: MediaQuery.of(context).size.height / 3,
-          vx: math.cos(angle) * speed,
-          vy: math.sin(angle) * speed - 6,
-          size: 6 + random.nextDouble() * 8,
-          color: Colors.primaries[random.nextInt(Colors.primaries.length)],
-          rotation: random.nextDouble() * math.pi,
-          rotationSpeed: -0.1 + random.nextDouble() * 0.2,
-        ),
-      );
-    }
-
-    _confettiTimer?.cancel();
-    _confettiTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      setState(() {
-        for (var p in _particles) {
-          p.update();
-        }
-        _particles.removeWhere((p) => p.y > MediaQuery.of(context).size.height);
-      });
-      if (_particles.isEmpty) {
-        timer.cancel();
-      }
-    });
   }
 
   void _openConfirmationSheet() {
@@ -428,7 +356,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       _currentView = 4; // success view
     });
 
-    _triggerConfetti();
+    _confetti.fire();
   }
 
   // --- RENDERS ---
@@ -517,14 +445,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                   child: _buildCurrentView(scheme),
                 ),
 
-                // Confetti Overlay
-                if (_particles.isNotEmpty)
-                  IgnorePointer(
-                    child: CustomPaint(
-                      size: Size.infinite,
-                      painter: ConfettiPainter(_particles),
-                    ),
-                  ),
+                ConfettiOverlay(controller: _confetti),
               ],
             ),
           ),
@@ -1909,10 +1830,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             const SizedBox(height: 14),
             Text(
               l10n.seatRelease_timelineStepWaiting,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(height: 6),
             Text(
@@ -1947,10 +1865,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             const SizedBox(height: 14),
             Text(
               l10n.seatRelease_notifRebookedTitle,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
             ),
             const SizedBox(height: 6),
             Text(
@@ -2545,34 +2460,4 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       ),
     );
   }
-}
-
-// Confetti painter canvas particle renderer
-class ConfettiPainter extends CustomPainter {
-  final List<ConfettiParticle> particles;
-
-  ConfettiPainter(this.particles);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint();
-    for (var p in particles) {
-      paint.color = p.color;
-      canvas.save();
-      canvas.translate(p.x, p.y);
-      canvas.rotate(p.rotation);
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset.zero,
-          width: p.size,
-          height: p.size / 1.5,
-        ),
-        paint,
-      );
-      canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant ConfettiPainter oldDelegate) => true;
 }

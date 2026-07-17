@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
@@ -70,7 +71,7 @@ class TrackingCompletedCard extends StatelessWidget {
           ClientButton.secondary(
             label: l10n.tracking_bookAgain,
             onPressed: () =>
-                Navigator.of(context).pushNamed('/booking/search'),
+                Navigator.of(context).pushNamed(BookingRoutes.search),
           ),
         ],
       ),

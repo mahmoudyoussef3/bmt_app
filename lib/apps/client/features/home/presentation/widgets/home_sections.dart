@@ -1,6 +1,8 @@
+import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
@@ -25,17 +27,17 @@ class HomeSections extends StatelessWidget {
   final bool isTablet;
   final void Function(String route, [Object? arguments]) onOpenRoute;
 
-  void _openSubscription() => onOpenRoute(ClientRoutes.subscription, {
+  void _openSubscription() => onOpenRoute(PackagesRoutes.subscription, {
     'hasActiveSubscription': data.activePackage != null,
   });
 
   void _trackBooking(HomeBookingData booking) =>
-      onOpenRoute(ClientRoutes.tracking, {'bookingId': booking.id});
+      onOpenRoute(TrackingRoutes.tracking, {'bookingId': booking.id});
 
   /// Carries the exact departure the rider tapped into the booking flow, so
   /// the route/date/time are already chosen when they land there.
   void _bookTrip(UpcomingTripData trip) =>
-      onOpenRoute(ClientRoutes.bookingRouteSelection, {
+      onOpenRoute(BookingRoutes.routeSelection, {
         'routeId': trip.routeId,
         'pickup': trip.pickup,
         'destination': trip.destination,
@@ -77,14 +79,13 @@ class HomeSections extends StatelessWidget {
               title: l10n.home_nextDepartures,
               subtitle: l10n.home_tripsOpenSoonest,
               actionLabel: l10n.home_allRoutes,
-              onAction: () => onOpenRoute(ClientRoutes.bookingPopularRoutes),
+              onAction: () => onOpenRoute(BookingRoutes.popularRoutes),
             ),
             child: HomeUpcomingTripsList(
               trips: data.upcomingTrips,
               previewCount: isTablet ? 4 : 3,
               onBook: _bookTrip,
-              onBrowseRoutes: () =>
-                  onOpenRoute(ClientRoutes.bookingPopularRoutes),
+              onBrowseRoutes: () => onOpenRoute(BookingRoutes.popularRoutes),
             ),
           ),
         ),
@@ -121,7 +122,11 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [header, const SizedBox(height: ClientSpacing.md), child],
+      children: [
+        header,
+        const SizedBox(height: ClientSpacing.md),
+        child,
+      ],
     );
   }
 }

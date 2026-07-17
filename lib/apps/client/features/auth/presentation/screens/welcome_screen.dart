@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -71,9 +72,8 @@ class _TopBar extends StatelessWidget {
     return Align(
       alignment: AlignmentDirectional.centerEnd,
       child: GestureDetector(
-        onTap: () => context
-            .read<LocaleCubit>()
-            .changeLocale(isArabic ? 'en' : 'ar'),
+        onTap: () =>
+            context.read<LocaleCubit>().changeLocale(isArabic ? 'en' : 'ar'),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
@@ -139,7 +139,7 @@ class _Actions extends StatelessWidget {
         ClientButton.text(
           label: l10n.welcome_continueAsGuest,
           onPressed: () =>
-              Navigator.of(context).pushReplacementNamed('/home'),
+              Navigator.of(context).pushReplacementNamed(ClientRoutes.home),
         ),
         const SizedBox(height: ClientSpacing.sm),
         const TermsFooter(),

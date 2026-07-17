@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
@@ -48,7 +49,7 @@ class TrackingEmptyView extends StatelessWidget {
               label: l10n.tracking_emptyAction,
               expand: false,
               onPressed: () =>
-                  Navigator.of(context).pushNamed('/booking/search'),
+                  Navigator.of(context).pushNamed(BookingRoutes.search),
             ),
           ],
         ),

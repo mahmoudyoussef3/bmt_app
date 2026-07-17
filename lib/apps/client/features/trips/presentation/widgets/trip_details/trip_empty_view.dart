@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
@@ -52,7 +53,7 @@ class TripEmptyView extends StatelessWidget {
               ClientButton(
                 label: context.l10n.home_browseRoutes,
                 onPressed: () =>
-                    Navigator.of(context).pushNamed('/booking/search'),
+                    Navigator.of(context).pushNamed(BookingRoutes.search),
                 expand: false,
               ),
               const SizedBox(height: 10),

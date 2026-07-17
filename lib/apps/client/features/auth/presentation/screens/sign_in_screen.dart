@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -86,154 +87,153 @@ class _SignInScreenState extends State<SignInScreen> {
     final l10n = AppLocalizations.of(context)!;
 
     return BlocListener<ClientAuthCubit, ClientAuthState>(
-        listenWhen: (previous, current) =>
-            previous.signInStatus != current.signInStatus,
-        listener: (context, state) {
-          if (state.signInStatus == AuthSubmissionStatus.success) {
-            Navigator.of(
-              context,
-            ).pushNamedAndRemoveUntil('/home', (_) => false);
-          }
-          // Failures render inline via [AuthErrorBanner] below.
-        },
-        child: PremiumAuthScaffold(
-          logo: const AuthBrandLogo(),
-          title: l10n.auth_welcomeBack,
-          subtitle: l10n.auth_signInHeroSubtitle,
-          child: BlocBuilder<ClientAuthCubit, ClientAuthState>(
-            buildWhen: (previous, current) =>
-                previous.signInStatus != current.signInStatus,
-            builder: (context, state) {
-              final isLoading =
-                  state.signInStatus == AuthSubmissionStatus.loading;
+      listenWhen: (previous, current) =>
+          previous.signInStatus != current.signInStatus,
+      listener: (context, state) {
+        if (state.signInStatus == AuthSubmissionStatus.success) {
+          Navigator.of(
+            context,
+          ).pushNamedAndRemoveUntil(ClientRoutes.home, (_) => false);
+        }
+        // Failures render inline via [AuthErrorBanner] below.
+      },
+      child: PremiumAuthScaffold(
+        logo: const AuthBrandLogo(),
+        title: l10n.auth_welcomeBack,
+        subtitle: l10n.auth_signInHeroSubtitle,
+        child: BlocBuilder<ClientAuthCubit, ClientAuthState>(
+          buildWhen: (previous, current) =>
+              previous.signInStatus != current.signInStatus,
+          builder: (context, state) {
+            final isLoading =
+                state.signInStatus == AuthSubmissionStatus.loading;
 
-              return AbsorbPointer(
-                absorbing: isLoading,
-                child: Form(
-                  key: _formKey,
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  child: AutofillGroup(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        AuthErrorBanner(
-                          message:
-                              state.signInStatus ==
-                                  AuthSubmissionStatus.failure
-                              ? (state.signInError ?? l10n.auth_signInFailed)
-                              : null,
-                          onDismiss: context
-                              .read<ClientAuthCubit>()
-                              .dismissSignInError,
-                        ),
-                        _WelcomeBackCard(scheme: scheme),
-                        const SizedBox(height: 18),
+            return AbsorbPointer(
+              absorbing: isLoading,
+              child: Form(
+                key: _formKey,
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                child: AutofillGroup(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      AuthErrorBanner(
+                        message:
+                            state.signInStatus == AuthSubmissionStatus.failure
+                            ? (state.signInError ?? l10n.auth_signInFailed)
+                            : null,
+                        onDismiss: context
+                            .read<ClientAuthCubit>()
+                            .dismissSignInError,
+                      ),
+                      _WelcomeBackCard(scheme: scheme),
+                      const SizedBox(height: 18),
 
-                        PremiumAuthTextField(
-                          controller: _emailController,
-                          focusNode: _emailFocus,
-                          labelText: l10n.auth_email,
-                          prefixIcon: Icons.email_outlined,
-                          keyboardType: TextInputType.emailAddress,
-                          textInputAction: TextInputAction.next,
-                          autofillHints: const [AutofillHints.email],
-                          onFieldSubmitted: (_) {
-                            _passwordFocus.requestFocus();
-                          },
-                          validator: (value) {
-                            final email = value?.trim() ?? '';
-                            if (email.isEmpty) return l10n.auth_required;
+                      PremiumAuthTextField(
+                        controller: _emailController,
+                        focusNode: _emailFocus,
+                        labelText: l10n.auth_email,
+                        prefixIcon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.next,
+                        autofillHints: const [AutofillHints.email],
+                        onFieldSubmitted: (_) {
+                          _passwordFocus.requestFocus();
+                        },
+                        validator: (value) {
+                          final email = value?.trim() ?? '';
+                          if (email.isEmpty) return l10n.auth_required;
 
-                            final validEmail = RegExp(
-                              r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
-                            ).hasMatch(email);
+                          final validEmail = RegExp(
+                            r'^[^\s@]+@[^\s@]+\.[^\s@]+$',
+                          ).hasMatch(email);
 
-                            if (!validEmail) {
-                              return l10n.auth_invalidEmail;
-                            }
+                          if (!validEmail) {
+                            return l10n.auth_invalidEmail;
+                          }
 
-                            return null;
-                          },
-                        ),
+                          return null;
+                        },
+                      ),
 
-                        const SizedBox(height: 14),
+                      const SizedBox(height: 14),
 
-                        PremiumAuthTextField(
-                          controller: _passwordController,
-                          focusNode: _passwordFocus,
-                          labelText: l10n.auth_password,
-                          prefixIcon: Icons.lock_outline,
-                          isPassword: true,
-                          textInputAction: TextInputAction.done,
-                          autofillHints: const [AutofillHints.password],
-                          onFieldSubmitted: (_) => _submit(),
-                          validator: (value) {
-                            final password = value ?? '';
-                            if (password.isEmpty) {
-                              return l10n.auth_required;
-                            }
-                            return null;
-                          },
-                        ),
+                      PremiumAuthTextField(
+                        controller: _passwordController,
+                        focusNode: _passwordFocus,
+                        labelText: l10n.auth_password,
+                        prefixIcon: Icons.lock_outline,
+                        isPassword: true,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const [AutofillHints.password],
+                        onFieldSubmitted: (_) => _submit(),
+                        validator: (value) {
+                          final password = value ?? '';
+                          if (password.isEmpty) {
+                            return l10n.auth_required;
+                          }
+                          return null;
+                        },
+                      ),
 
-                        const SizedBox(height: 4),
+                      const SizedBox(height: 4),
 
-                        RememberMeCheckbox(
-                          value: _rememberMe,
-                          label: l10n.auth_rememberMe,
-                          onChanged: isLoading
-                              ? (_) {}
-                              : (checked) =>
-                                    setState(() => _rememberMe = checked),
-                        ),
+                      RememberMeCheckbox(
+                        value: _rememberMe,
+                        label: l10n.auth_rememberMe,
+                        onChanged: isLoading
+                            ? (_) {}
+                            : (checked) =>
+                                  setState(() => _rememberMe = checked),
+                      ),
 
-                        Align(
-                          alignment: AlignmentDirectional.centerStart,
-                          child: TextButton.icon(
-                            onPressed: isLoading ? null : _goToForgotPassword,
-                            icon: const Icon(
-                              Icons.help_outline_rounded,
-                              size: 18,
-                            ),
-                            label: Text(l10n.auth_forgotPassword),
-                            style: TextButton.styleFrom(
-                              textStyle: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                              ),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton.icon(
+                          onPressed: isLoading ? null : _goToForgotPassword,
+                          icon: const Icon(
+                            Icons.help_outline_rounded,
+                            size: 18,
+                          ),
+                          label: Text(l10n.auth_forgotPassword),
+                          style: TextButton.styleFrom(
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.w900,
                             ),
                           ),
                         ),
+                      ),
 
-                        const SizedBox(height: 24),
+                      const SizedBox(height: 24),
 
-                        PremiumAuthButton(
-                          text: isLoading
-                              ? l10n.auth_signingIn
-                              : l10n.auth_signIn,
-                          onPressed: isLoading ? null : _submit,
-                          isLoading: isLoading,
-                        ),
+                      PremiumAuthButton(
+                        text: isLoading
+                            ? l10n.auth_signingIn
+                            : l10n.auth_signIn,
+                        onPressed: isLoading ? null : _submit,
+                        isLoading: isLoading,
+                      ),
 
-                        const SizedBox(height: 18),
+                      const SizedBox(height: 18),
 
-                        _CreateAccountLink(
-                          scheme: scheme,
-                          text: l10n.auth_noAccount,
-                          actionText: l10n.auth_signUp,
-                          onTap: isLoading ? null : _goToSignUp,
-                        ),
+                      _CreateAccountLink(
+                        scheme: scheme,
+                        text: l10n.auth_noAccount,
+                        actionText: l10n.auth_signUp,
+                        onTap: isLoading ? null : _goToSignUp,
+                      ),
 
-                        const SizedBox(height: 8),
+                      const SizedBox(height: 8),
 
-                        _SecurityNote(scheme: scheme),
-                      ],
-                    ),
+                      _SecurityNote(scheme: scheme),
+                    ],
                   ),
                 ),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
+      ),
     );
   }
 }

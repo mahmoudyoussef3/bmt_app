@@ -1,9 +1,9 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/widgets/confetti/confetti.dart';
 import 'package:bmt_app/apps/client/features/referrals/domain/entities/referral_rewards.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_cubit.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_state.dart';
@@ -37,37 +37,6 @@ String _displayDate(BuildContext context, String isoDate) {
   return FormatUtil.date(context, parsed);
 }
 
-// Particle physics for Confetti celebration
-class ConfettiParticle {
-  double x;
-  double y;
-  double vx;
-  double vy;
-  double size;
-  Color color;
-  double rotation;
-  double rotationSpeed;
-
-  ConfettiParticle({
-    required this.x,
-    required this.y,
-    required this.vx,
-    required this.vy,
-    required this.size,
-    required this.color,
-    required this.rotation,
-    required this.rotationSpeed,
-  });
-
-  void update() {
-    x += vx;
-    y += vy;
-    vy += 0.2; // Gravity
-    vx *= 0.98; // Air resistance
-    rotation += rotationSpeed;
-  }
-}
-
 class ReferralRewardsScreen extends StatefulWidget {
   const ReferralRewardsScreen({super.key});
 
@@ -75,8 +44,7 @@ class ReferralRewardsScreen extends StatefulWidget {
   State<ReferralRewardsScreen> createState() => _ReferralRewardsScreenState();
 }
 
-class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
-    with TickerProviderStateMixin {
+class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
   // Views:
   // 1 = Referral Dashboard
   // 2 = Invite Friends Screen
@@ -105,10 +73,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
 
   List<ScratchVoucher> get _vouchers => _data?.vouchers ?? const [];
 
-  // Confetti Animation Controller & loop
-  late AnimationController _confettiController;
-  final List<ConfettiParticle> _particles = [];
-  Timer? _confettiTimer;
+  final ConfettiController _confetti = ConfettiController();
 
   // Scratch card parameters
   final List<Offset?> _scratchPoints = [];
@@ -118,18 +83,12 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
   void initState() {
     super.initState();
 
-    _confettiController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
     context.read<ReferralRewardsCubit>().load();
   }
 
   @override
   void dispose() {
-    _confettiController.dispose();
-    _confettiTimer?.cancel();
+    _confetti.dispose();
     super.dispose();
   }
 
@@ -176,46 +135,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
     ReferralShareSheet.show(context, code);
   }
 
-  // Trigger custom confetti explosion
-  void _triggerConfetti() {
-    final random = math.Random();
-    _particles.clear();
-    for (int i = 0; i < 80; i++) {
-      final angle = random.nextDouble() * math.pi * 2;
-      final speed = 4 + random.nextDouble() * 10;
-      _particles.add(
-        ConfettiParticle(
-          x: MediaQuery.of(context).size.width / 2,
-          y: MediaQuery.of(context).size.height / 3,
-          vx: math.cos(angle) * speed,
-          vy: math.sin(angle) * speed - 5, // Upward bias
-          size: 6 + random.nextDouble() * 8,
-          color: Colors.primaries[random.nextInt(Colors.primaries.length)],
-          rotation: random.nextDouble() * math.pi,
-          rotationSpeed: -0.1 + random.nextDouble() * 0.2,
-        ),
-      );
-    }
-
-    _confettiTimer?.cancel();
-    _confettiTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      setState(() {
-        for (var p in _particles) {
-          p.update();
-        }
-        // Remove particles offscreen
-        _particles.removeWhere((p) => p.y > MediaQuery.of(context).size.height);
-      });
-      if (_particles.isEmpty) {
-        timer.cancel();
-      }
-    });
-  }
-
   // Redeem Available points
   Future<void> _redeemRewards() async {
     if (_walletBalance == 0) return;
@@ -223,7 +142,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
 
     if (!mounted) return;
 
-    _triggerConfetti();
+    _confetti.fire();
 
     showDialog(
       context: context,
@@ -233,7 +152,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          title: Center(child: Text(context.l10n.referral_redemptionSuccessTitle)),
+          title: Center(
+            child: Text(context.l10n.referral_redemptionSuccessTitle),
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -425,7 +346,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                                       // If scratched enough, automatically resolve
                                       if (_scratchPoints.length > 80) {
                                         _scratchCompleted = true;
-                                        _triggerConfetti();
+                                        _confetti.fire();
                                         // Update state of voucher
                                         setState(() {
                                           context
@@ -470,7 +391,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                         setState(() {
                           _scratchCompleted = true;
                           context.read<ReferralRewardsCubit>().reveal(voucher);
-                          _triggerConfetti();
+                          _confetti.fire();
                         });
                       }
                     },
@@ -534,14 +455,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                     child: _buildCurrentView(scheme),
                   ),
 
-                  // Confetti Overlay
-                  if (_particles.isNotEmpty)
-                    IgnorePointer(
-                      child: CustomPaint(
-                        size: Size.infinite,
-                        painter: ConfettiPainter(_particles),
-                      ),
-                    ),
+                  ConfettiOverlay(controller: _confetti),
                 ],
               ),
             },
@@ -613,7 +527,10 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
               const SizedBox(width: 8),
               Text(
                 context.l10n.referral_leaderboardTitle,
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
             ],
           ),
@@ -1062,7 +979,10 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                       ],
                     ),
                   ),
-                  DirectionalIcon(Icons.chevron_right_rounded, color: Colors.grey),
+                  DirectionalIcon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.grey,
+                  ),
                 ],
               ),
             ),
@@ -1690,7 +1610,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                         const SizedBox(height: 2),
                         Text(
                           voucher.isRevealed
-                              ? context.l10n.referral_revealedCode(voucher.promoCode)
+                              ? context.l10n.referral_revealedCode(
+                                  voucher.promoCode,
+                                )
                               : context.l10n.referral_lockedScratchToReveal,
                           style: TextStyle(
                             fontSize: 10,
@@ -1705,7 +1627,10 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen>
                       ],
                     ),
                   ),
-                  DirectionalIcon(Icons.chevron_right_rounded, color: Colors.grey),
+                  DirectionalIcon(
+                    Icons.chevron_right_rounded,
+                    color: Colors.grey,
+                  ),
                 ],
               ),
             ),
@@ -1782,36 +1707,6 @@ class ScratchCardPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant ScratchCardPainter oldDelegate) => true;
-}
-
-// Confetti particle painter overlay
-class ConfettiPainter extends CustomPainter {
-  final List<ConfettiParticle> particles;
-
-  ConfettiPainter(this.particles);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint();
-    for (var p in particles) {
-      paint.color = p.color;
-      canvas.save();
-      canvas.translate(p.x, p.y);
-      canvas.rotate(p.rotation);
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset.zero,
-          width: p.size,
-          height: p.size / 1.5,
-        ),
-        paint,
-      );
-      canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant ConfettiPainter oldDelegate) => true;
 }
 
 // Custom Painter to draw a simulated QR Code

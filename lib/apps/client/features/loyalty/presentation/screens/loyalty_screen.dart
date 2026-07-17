@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -39,37 +38,6 @@ String _rewardCategoryLabel(BuildContext context, String category) {
   };
 }
 
-// Particle physics for celebration confetti
-class ConfettiParticle {
-  double x;
-  double y;
-  double vx;
-  double vy;
-  double size;
-  Color color;
-  double rotation;
-  double rotationSpeed;
-
-  ConfettiParticle({
-    required this.x,
-    required this.y,
-    required this.vx,
-    required this.vy,
-    required this.size,
-    required this.color,
-    required this.rotation,
-    required this.rotationSpeed,
-  });
-
-  void update() {
-    x += vx;
-    y += vy;
-    vy += 0.22; // Gravity
-    vx *= 0.97; // Drag
-    rotation += rotationSpeed;
-  }
-}
-
 class LoyaltyScreen extends StatefulWidget {
   const LoyaltyScreen({super.key});
 
@@ -97,14 +65,18 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
 
   List<RedeemableReward> get _rewards => _data?.rewards ?? const [];
 
-  // Confetti Particle state
-  final List<ConfettiParticle> _particles = [];
-  Timer? _confettiTimer;
+  final ConfettiController _confetti = ConfettiController();
 
   @override
   void initState() {
     super.initState();
     context.read<LoyaltyCubit>().load();
+  }
+
+  @override
+  void dispose() {
+    _confetti.dispose();
+    super.dispose();
   }
 
   // --- ACTIONS ---
@@ -125,44 +97,6 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
       3 => l10n.loyalty_titleCatalog,
       _ => l10n.loyalty_titleHub,
     };
-  }
-
-  void _triggerConfetti() {
-    final random = math.Random();
-    _particles.clear();
-    for (int i = 0; i < 90; i++) {
-      final angle = random.nextDouble() * math.pi * 2;
-      final speed = 3 + random.nextDouble() * 12;
-      _particles.add(
-        ConfettiParticle(
-          x: MediaQuery.of(context).size.width / 2,
-          y: MediaQuery.of(context).size.height / 3,
-          vx: math.cos(angle) * speed,
-          vy: math.sin(angle) * speed - 6,
-          size: 5 + random.nextDouble() * 9,
-          color: Colors.primaries[random.nextInt(Colors.primaries.length)],
-          rotation: random.nextDouble() * math.pi,
-          rotationSpeed: -0.12 + random.nextDouble() * 0.24,
-        ),
-      );
-    }
-
-    _confettiTimer?.cancel();
-    _confettiTimer = Timer.periodic(const Duration(milliseconds: 16), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      setState(() {
-        for (var p in _particles) {
-          p.update();
-        }
-        _particles.removeWhere((p) => p.y > MediaQuery.of(context).size.height);
-      });
-      if (_particles.isEmpty) {
-        timer.cancel();
-      }
-    });
   }
 
   void _confirmRedeem(RedeemableReward reward) {
@@ -296,7 +230,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
   void _processRedeem(RedeemableReward reward) {
     context.read<LoyaltyCubit>().redeem(reward);
 
-    _triggerConfetti();
+    _confetti.fire();
 
     // Show Success Voucher Modal
     showDialog(
@@ -447,14 +381,7 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                     child: _buildCurrentView(scheme),
                   ),
 
-                  // Confetti Overlay
-                  if (_particles.isNotEmpty)
-                    IgnorePointer(
-                      child: CustomPaint(
-                        size: Size.infinite,
-                        painter: ConfettiPainter(_particles),
-                      ),
-                    ),
+                  ConfettiOverlay(controller: _confetti),
                 ],
               ),
             },
@@ -525,7 +452,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
 
         // Tier Perks list
         Text(
-          context.l10n.loyalty_activeTierPerks(_tierLabel(context, activeTier.name)),
+          context.l10n.loyalty_activeTierPerks(
+            _tierLabel(context, activeTier.name),
+          ),
           style: const TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.bold,
@@ -606,7 +535,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                         Icon(_iconForTier(tier), color: Colors.white, size: 14),
                         const SizedBox(width: 6),
                         Text(
-                          context.l10n.loyalty_tierMemberBadge(_tierLabel(context, tier.name)),
+                          context.l10n.loyalty_tierMemberBadge(
+                            _tierLabel(context, tier.name),
+                          ),
                           style: const TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -687,7 +618,10 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
             children: [
               Text(
                 context.l10n.loyalty_nextGoalPlatinum,
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               Text(
                 context.l10n.loyalty_ptsToGo(ptsToNext),
@@ -937,7 +871,9 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              context.l10n.loyalty_expiringOn(tx.expirationDate!),
+                              context.l10n.loyalty_expiringOn(
+                                tx.expirationDate!,
+                              ),
                               style: const TextStyle(
                                 fontSize: 9,
                                 color: Colors.redAccent,
@@ -1116,7 +1052,10 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
                                         borderRadius: BorderRadius.circular(6),
                                       ),
                                       child: Text(
-                                        _rewardCategoryLabel(context, reward.category),
+                                        _rewardCategoryLabel(
+                                          context,
+                                          reward.category,
+                                        ),
                                         style: TextStyle(
                                           fontSize: 8,
                                           fontWeight: FontWeight.bold,
@@ -1208,34 +1147,4 @@ class _LoyaltyScreenState extends State<LoyaltyScreen>
       'premium' || _ => Icons.workspace_premium_rounded,
     };
   }
-}
-
-// Custom Confetti physics painter
-class ConfettiPainter extends CustomPainter {
-  final List<ConfettiParticle> particles;
-
-  ConfettiPainter(this.particles);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint();
-    for (var p in particles) {
-      paint.color = p.color;
-      canvas.save();
-      canvas.translate(p.x, p.y);
-      canvas.rotate(p.rotation);
-      canvas.drawRect(
-        Rect.fromCenter(
-          center: Offset.zero,
-          width: p.size,
-          height: p.size / 1.6,
-        ),
-        paint,
-      );
-      canvas.restore();
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant ConfettiPainter oldDelegate) => true;
 }

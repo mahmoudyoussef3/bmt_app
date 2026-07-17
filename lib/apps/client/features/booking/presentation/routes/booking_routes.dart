@@ -10,6 +10,8 @@ class BookingRoutes {
   static const vehicleListing = '/booking/vehicles';
   static const vehicleDetails = '/booking/vehicle-details';
 
+  static const dailyBooking = '/daily-booking';
+
   // New flow
   static const wizard = '/booking/wizard';
   static const routeOverview = '/booking/route-overview';

@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/features/communication/presentation/routes/communication_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -48,7 +49,6 @@ class TripDriverCard extends StatelessWidget {
       ],
     );
   }
-
 }
 
 /// Call, chat, and track — the actions that need a live captain. Track is held
@@ -75,7 +75,8 @@ class _LiveActions extends StatelessWidget {
           child: TripInlineActionButton(
             icon: Icons.chat_bubble_rounded,
             label: context.l10n.trips_actionChat,
-            onTap: () => Navigator.pushNamed(context, '/communication'),
+            onTap: () =>
+                Navigator.pushNamed(context, CommunicationRoutes.communication),
           ),
         ),
         if (trip.canBeTracked) ...[
@@ -108,7 +109,9 @@ class _LiveActions extends StatelessWidget {
     }
     final uri = Uri(scheme: 'tel', path: phone);
     if (!await launchUrl(uri)) {
-      messenger.showSnackBar(SnackBar(content: Text(l10n.trips_callFailed(phone))));
+      messenger.showSnackBar(
+        SnackBar(content: Text(l10n.trips_callFailed(phone))),
+      );
     }
   }
 }

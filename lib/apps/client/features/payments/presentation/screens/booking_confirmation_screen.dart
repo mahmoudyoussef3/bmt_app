@@ -1,3 +1,4 @@
+import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
 import 'dart:async';
 import 'dart:math';
 
@@ -149,8 +150,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
                   child: _processing
                       ? _buildProcessing(context)
                       : (widget.requiresVerification
-                          ? _buildVerificationWaiting(context)
-                          : _buildSuccess(context)),
+                            ? _buildVerificationWaiting(context)
+                            : _buildSuccess(context)),
                 ),
               ),
             ),
@@ -472,7 +473,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
           Expanded(
             child: ClientButton(
               label: context.l10n.payments_contactSupport,
-              onPressed: () => Navigator.of(context).pushNamed('/support'),
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(SupportRoutes.center),
             ),
           ),
         ],

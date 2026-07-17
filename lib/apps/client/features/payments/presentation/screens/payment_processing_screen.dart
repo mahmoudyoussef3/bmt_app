@@ -481,7 +481,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                     ),
                     CustomPaint(
                       size: const Size(120, 120),
-                      painter: ConfettiPainter(progress: _checkController),
+                      painter: ConfettiBurstPainter(progress: _checkController),
                     ),
                   ],
                 ),
@@ -801,58 +801,4 @@ class LoaderRingPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class ConfettiPainter extends CustomPainter {
-  final Animation<double> progress;
-
-  ConfettiPainter({required this.progress}) : super(repaint: progress);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress.value == 0) return;
-
-    final random = math.Random(42);
-    final center = Offset(size.width / 2, size.height / 2);
-    const count = 28;
-    final maxRadius = size.width * 0.7;
-
-    for (var i = 0; i < count; i++) {
-      final angle = random.nextDouble() * 2 * math.pi;
-      final distance =
-          progress.value * maxRadius * (0.4 + random.nextDouble() * 0.6);
-
-      final offset = Offset(
-        center.dx + math.cos(angle) * distance,
-        center.dy + math.sin(angle) * distance,
-      );
-
-      final sizeFactor = (1.0 - progress.value) * (4 + random.nextDouble() * 6);
-      final color = _getConfettiColor(random.nextInt(4));
-
-      final paint = Paint()
-        ..color = color.withAlpha(
-          ((1.0 - progress.value).clamp(0.0, 1.0) * 255).toInt(),
-        )
-        ..style = PaintingStyle.fill;
-
-      canvas.drawCircle(offset, sizeFactor, paint);
-    }
-  }
-
-  Color _getConfettiColor(int index) {
-    switch (index) {
-      case 0:
-        return ClientColors.primary;
-      case 1:
-        return ClientColors.journeyCyan;
-      case 2:
-        return ClientColors.journeyAmber;
-      default:
-        return ClientColors.journeyRed;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }

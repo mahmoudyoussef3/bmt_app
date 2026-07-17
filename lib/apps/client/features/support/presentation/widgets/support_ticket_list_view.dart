@@ -1,7 +1,7 @@
+import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
-import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'support_home_header.dart';
@@ -37,7 +37,7 @@ class SupportTicketListView extends StatelessWidget {
             ticket: ticket,
             onTap: () => Navigator.pushNamed(
               context,
-              ClientRoutes.ticketDetails,
+              SupportRoutes.ticketDetails,
               arguments: ticket.id,
             ),
           ),

@@ -1,20 +1,19 @@
+/// App-shell routes for the Client App.
+///
+/// Feature-owned routes live with their feature (`AuthRoutes`, `BookingRoutes`,
+/// `TripsRoutes`, `SupportRoutes`, …); this holds only what belongs to no single
+/// feature. Every path is declared exactly once across those files — a second
+/// registry for the same path is what let `/booking/search` and `/trips` drift
+/// under two names, so don't reintroduce one, and never register or navigate
+/// with a raw string.
 class ClientRoutes {
   const ClientRoutes._();
 
-  static const bookingSearch = '/booking/search';
-  static const bookingRouteSelection = '/booking/routes';
-  static const bookingPopularRoutes = '/booking/popular-routes';
-  static const myTrips = '/trips';
-  static const tripDetails = '/trips/details';
-  static const tracking = '/tracking';
-  static const subscription = '/subscription';
-  static const support = '/support';
-  static const createTicket = '/create_ticket';
-  static const ticketDetails = '/ticket_details';
-  static const createRefund = '/create_refund';
+  /// The authenticated shell that hosts the bottom navigation.
+  static const home = '/home';
 
-  // Profile hub
-  static const profile = '/profile';
+  // Legal. Reachable from the profile hub; both documents share one screen and
+  // differ only by which document they render.
   static const terms = '/legal/terms';
   static const privacy = '/legal/privacy';
 }

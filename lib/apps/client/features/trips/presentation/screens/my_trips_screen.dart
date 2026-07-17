@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubit.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_state.dart';
@@ -61,7 +61,7 @@ class _MyTripsScreenState extends State<MyTripsScreen> {
                             upcomingCount: counts[TripFilter.upcoming] ?? 0,
                             activeCount: counts[TripFilter.active] ?? 0,
                             onBookTrip: () =>
-                                widget.onOpenRoute(ClientRoutes.bookingSearch),
+                                widget.onOpenRoute(BookingRoutes.search),
                           ),
                         ),
                       ),
@@ -91,7 +91,7 @@ class _MyTripsScreenState extends State<MyTripsScreen> {
                         trips: trips,
                         onRetry: context.read<TripsCubit>().loadTrips,
                         onBrowseRoutes: () =>
-                            widget.onOpenRoute(ClientRoutes.bookingSearch),
+                            widget.onOpenRoute(BookingRoutes.search),
                         onOpenTrip: (trip) => widget.onOpenRoute(
                           TripsRoutes.tripDetails,
                           {'tripId': trip.id},

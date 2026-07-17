@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import 'package:bmt_app/apps/client/features/payments/presentation/routes/payment_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -7,7 +7,6 @@ import 'package:bmt_app/apps/client/features/packages/presentation/cubit/package
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_state.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
-import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -70,9 +69,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
     if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            context.l10n.packages_activateSubscriptionError(error),
-          ),
+          content: Text(context.l10n.packages_activateSubscriptionError(error)),
         ),
       );
       context.read<PackagesCubit>().clearSubscribeError();
@@ -206,26 +203,10 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              _buildFilterTab(
-                context.l10n.packages_all,
-                loaded,
-                scheme,
-              ),
-              _buildFilterTab(
-                context.l10n.packages_weekly,
-                loaded,
-                scheme,
-              ),
-              _buildFilterTab(
-                context.l10n.packages_monthly,
-                loaded,
-                scheme,
-              ),
-              _buildFilterTab(
-                context.l10n.packages_quarterly,
-                loaded,
-                scheme,
-              ),
+              _buildFilterTab(context.l10n.packages_all, loaded, scheme),
+              _buildFilterTab(context.l10n.packages_weekly, loaded, scheme),
+              _buildFilterTab(context.l10n.packages_monthly, loaded, scheme),
+              _buildFilterTab(context.l10n.packages_quarterly, loaded, scheme),
             ],
           ),
         ),
@@ -394,7 +375,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                           ),
                           _buildMiniDetailColumn(
                             context.l10n.packages_totalTrips,
-                            context.l10n.packages_ridesCount(package.tripsCount),
+                            context.l10n.packages_ridesCount(
+                              package.tripsCount,
+                            ),
                           ),
                           if (widget.bookingData != null)
                             _buildMiniDetailColumn(
@@ -653,7 +636,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
 
             Navigator.of(
               context,
-            ).pushNamed('/payment-checkout', arguments: combinedArgs);
+            ).pushNamed(PaymentRoutes.checkout, arguments: combinedArgs);
           },
           scheme: scheme,
         ),
@@ -728,7 +711,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
                     Text(
-                      context.l10n.packages_egpAmount(package.basePrice.toString()),
+                      context.l10n.packages_egpAmount(
+                        package.basePrice.toString(),
+                      ),
                       style: const TextStyle(
                         fontSize: 13,
                         decoration: TextDecoration.lineThrough,
@@ -745,7 +730,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
                     Text(
-                      context.l10n.packages_percentOff(package.discountPercent.toInt()),
+                      context.l10n.packages_percentOff(
+                        package.discountPercent.toInt(),
+                      ),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
@@ -762,7 +749,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
                     Text(
-                      context.l10n.packages_egpAmount(package.startingPrice.toString()),
+                      context.l10n.packages_egpAmount(
+                        package.startingPrice.toString(),
+                      ),
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -785,7 +774,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                       style: const TextStyle(fontSize: 10, color: Colors.grey),
                     ),
                     Text(
-                      context.l10n.packages_percentOff(package.discountPercent.toInt()),
+                      context.l10n.packages_percentOff(
+                        package.discountPercent.toInt(),
+                      ),
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w900,
@@ -1359,7 +1350,9 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   ],
                 ),
                 Text(
-                  context.l10n.packages_egpAmount(loaded.pricing.finalPrice.toString()),
+                  context.l10n.packages_egpAmount(
+                    loaded.pricing.finalPrice.toString(),
+                  ),
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.w900,
@@ -1667,7 +1660,12 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
               ),
               CustomPaint(
                 size: const Size(120, 120),
-                painter: _SuccessConfettiPainter(progress: _successController),
+                painter: ConfettiBurstPainter(
+                  progress: _successController,
+                  seed: 123,
+                  particleCount: 30,
+                  radiusFactor: 0.75,
+                ),
               ),
             ],
           ),
@@ -1755,10 +1753,7 @@ class _SubscriptionScreenState extends State<SubscriptionScreen>
                   context.l10n.packages_totalTripsScopeLabel,
                   context.l10n.packages_ridesCount(package.tripsCount),
                 ),
-                _buildReceiptRow(
-                  context.l10n.packages_selectedSeatsLabel,
-                  '1',
-                ),
+                _buildReceiptRow(context.l10n.packages_selectedSeatsLabel, '1'),
                 _buildReceiptRow(
                   context.l10n.packages_travelRouteLabel,
                   loaded.selectedRoute,
@@ -1929,56 +1924,3 @@ class _BackgroundCircleGlow extends StatelessWidget {
 }
 
 // --- SUCCESS CONFETTI PARTICLES PAINTER ---
-class _SuccessConfettiPainter extends CustomPainter {
-  final Animation<double> progress;
-
-  _SuccessConfettiPainter({required this.progress}) : super(repaint: progress);
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress.value == 0) return;
-
-    final random = math.Random(123);
-    final center = Offset(size.width / 2, size.height / 2);
-    final count = 30;
-    final maxRadius = size.width * 0.75;
-
-    for (var i = 0; i < count; i++) {
-      final angle = random.nextDouble() * 2 * math.pi;
-      final distance =
-          progress.value * maxRadius * (0.35 + random.nextDouble() * 0.65);
-
-      final offset = Offset(
-        center.dx + math.cos(angle) * distance,
-        center.dy + math.sin(angle) * distance,
-      );
-
-      final sizeFactor = (1.0 - progress.value) * (4 + random.nextDouble() * 5);
-      final color = _getConfettiColor(random.nextInt(4));
-
-      final paint = Paint()
-        ..color = color.withAlpha(
-          ((1.0 - progress.value).clamp(0.0, 1.0) * 255).toInt(),
-        )
-        ..style = PaintingStyle.fill;
-
-      canvas.drawCircle(offset, sizeFactor, paint);
-    }
-  }
-
-  Color _getConfettiColor(int index) {
-    switch (index) {
-      case 0:
-        return Colors.blue;
-      case 1:
-        return ClientColors.journeyCyan;
-      case 2:
-        return Colors.amber;
-      default:
-        return Colors.pink;
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}

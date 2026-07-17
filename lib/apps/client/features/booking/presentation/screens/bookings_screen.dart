@@ -1,3 +1,5 @@
+import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:flutter/material.dart';
@@ -117,7 +119,7 @@ class _BookingHubContent extends StatelessWidget {
 
         // Daily booking option
         _NavCard(
-          onTap: () => onOpenRoute('/daily-booking'),
+          onTap: () => onOpenRoute(BookingRoutes.dailyBooking),
           icon: Icons.directions_bus_rounded,
           title: context.l10n.booking_dailyBooking,
           subtitle: context.l10n.booking_dailyBookingDesc,
@@ -126,7 +128,7 @@ class _BookingHubContent extends StatelessWidget {
 
         // Monthly subscription option
         _NavCard(
-          onTap: () => onOpenRoute('/subscription'),
+          onTap: () => onOpenRoute(PackagesRoutes.subscription),
           icon: Icons.calendar_month_rounded,
           title: context.l10n.booking_monthlySubscription,
           subtitle: context.l10n.booking_monthlySubscriptionDesc,

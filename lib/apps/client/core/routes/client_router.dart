@@ -1,0 +1,269 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:bmt_app/apps/client/core/routes/client_cubit_scopes.dart';
+import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/auth_success_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/complete_profile_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/otp_verification_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/phone_login_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_in_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_up_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/available_trips_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_wizard_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/daily_booking_flow_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/map_route_selection_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/popular_routes_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_overview_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_selection_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/search_trip_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/vehicle_details_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/vehicle_listing_screen.dart';
+import 'package:bmt_app/apps/client/features/communication/presentation/routes/communication_routes.dart';
+import 'package:bmt_app/apps/client/features/communication/presentation/screens/communication_screen.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/screens/client_shell_screen.dart';
+import 'package:bmt_app/apps/client/features/loyalty/presentation/routes/loyalty_routes.dart';
+import 'package:bmt_app/apps/client/features/loyalty/presentation/screens/loyalty_screen.dart';
+import 'package:bmt_app/apps/client/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/screens/subscription_screen.dart';
+import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/apps/client/features/payments/presentation/routes/payment_routes.dart';
+import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_checkout_screen.dart';
+import 'package:bmt_app/apps/client/features/profile/domain/entities/legal_document_data.dart';
+import 'package:bmt_app/apps/client/features/profile/presentation/routes/profile_routes.dart';
+import 'package:bmt_app/apps/client/features/profile/presentation/screens/legal_document_screen.dart';
+import 'package:bmt_app/apps/client/features/profile/presentation/screens/profile_screen.dart';
+import 'package:bmt_app/apps/client/features/referrals/presentation/routes/referral_routes.dart';
+import 'package:bmt_app/apps/client/features/referrals/presentation/screens/referral_rewards_screen.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/screens/routes_hub_screen.dart';
+import 'package:bmt_app/apps/client/features/seat_release/presentation/routes/seat_release_routes.dart';
+import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
+import 'package:bmt_app/apps/client/features/seat_selection/presentation/routes/seat_selection_routes.dart';
+import 'package:bmt_app/apps/client/features/seat_selection/presentation/screens/seat_selection_screen.dart';
+import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
+import 'package:bmt_app/apps/client/features/support/presentation/screens/create_support_ticket_screen.dart';
+import 'package:bmt_app/apps/client/features/support/presentation/screens/support_center_screen.dart';
+import 'package:bmt_app/apps/client/features/support/presentation/screens/support_ticket_details_screen.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/screens/tracking_screen.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/screens/my_trips_screen.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/screens/trip_details_screen.dart';
+
+/// The Client App's route table.
+///
+/// Every entry resolves its screen's cubits through [ClientCubitScopes] and its
+/// arguments through the owning entity's `fromArguments` factory — route
+/// builders stay declarative, and argument shapes stay testable next to the
+/// types they produce.
+abstract final class ClientRouter {
+  const ClientRouter._();
+
+  static Map<String, WidgetBuilder> get routes => <String, WidgetBuilder>{
+    ClientRoutes.home: (_) => buildShell(),
+    ..._auth,
+    ..._booking,
+    ..._seats,
+    ..._payments,
+    ..._trips,
+    ..._support,
+    ..._engagement,
+    ..._profile,
+  };
+
+  /// The authenticated shell hosting the bottom navigation. Also used as the
+  /// landing screen once a session is restored, so it is exposed rather than
+  /// inlined into the table.
+  static Widget buildShell() {
+    return ClientShellScreen(
+      routesBuilder: (context) => ClientCubitScopes.routesHub(
+        RoutesHubScreen(onOpenRoute: _opener(context)),
+      ),
+      tripsBuilder: (context) =>
+          ClientCubitScopes.trips(MyTripsScreen(onOpenRoute: _opener(context))),
+      profileBuilder: (context) => ClientCubitScopes.profile(
+        ProfileScreen(onOpenRoute: _opener(context)),
+      ),
+      notificationsBuilder: (context) =>
+          ClientCubitScopes.notifications(const NotificationsScreen()),
+    );
+  }
+
+  /// Screens inside the shell push onto the root navigator rather than owning
+  /// navigation themselves.
+  static void Function(String, [Object?]) _opener(BuildContext context) {
+    return (route, [arguments]) =>
+        Navigator.of(context).pushNamed(route, arguments: arguments);
+  }
+
+  static Object? _args(BuildContext context) =>
+      ModalRoute.of(context)?.settings.arguments;
+
+  // --- Auth -----------------------------------------------------------------
+
+  static Map<String, WidgetBuilder> get _auth => <String, WidgetBuilder>{
+    AuthRoutes.welcome: (_) => ClientCubitScopes.auth(const WelcomeScreen()),
+    AuthRoutes.signIn: (_) => ClientCubitScopes.auth(const SignInScreen()),
+    AuthRoutes.signUp: (_) => ClientCubitScopes.auth(const SignUpScreen()),
+    AuthRoutes.forgotPassword: (_) =>
+        ClientCubitScopes.forgotPassword(const ForgotPasswordScreen()),
+    AuthRoutes.phoneLogin: (_) =>
+        ClientCubitScopes.phoneAuth(const PhoneLoginScreen()),
+    AuthRoutes.otp: (context) => ClientCubitScopes.phoneAuth(
+      OtpVerificationScreen(phoneNumber: _args(context) as String? ?? ''),
+    ),
+    AuthRoutes.completeProfile: (context) => ClientCubitScopes.phoneAuth(
+      CompleteProfileScreen(phoneNumber: _args(context) as String? ?? ''),
+    ),
+    AuthRoutes.success: (context) {
+      final args = _args(context);
+      return AuthSuccessScreen(
+        email: args is Map ? args['email']?.toString() : null,
+      );
+    },
+  };
+
+  // --- Booking --------------------------------------------------------------
+
+  static Map<String, WidgetBuilder> get _booking => <String, WidgetBuilder>{
+    BookingRoutes.search: (context) => ClientCubitScopes.booking(
+      SearchTripScreen(
+        initialQuery: BookingSearchQuery.fromArguments(_args(context)),
+      ),
+    ),
+    BookingRoutes.routeSelection: (_) =>
+        ClientCubitScopes.booking(const RouteSelectionScreen()),
+    BookingRoutes.popularRoutes: (_) =>
+        ClientCubitScopes.booking(const PopularRoutesScreen()),
+    BookingRoutes.mapSelection: (_) =>
+        ClientCubitScopes.booking(const MapRouteSelectionScreen()),
+    BookingRoutes.availableTrips: (_) =>
+        ClientCubitScopes.booking(const AvailableTripsScreen()),
+    BookingRoutes.vehicleListing: (_) =>
+        ClientCubitScopes.booking(const VehicleListingScreen()),
+    BookingRoutes.vehicleDetails: (context) {
+      final args = _args(context);
+      return ClientCubitScopes.booking(
+        VehicleDetailsScreen(
+          vehicleId: args is Map ? args['vehicleId']?.toString() : null,
+        ),
+      );
+    },
+    BookingRoutes.dailyBooking: (_) =>
+        ClientCubitScopes.booking(const DailyBookingFlowScreen()),
+
+    // The wizard and overview are driven by a route object rather than a cubit
+    // fetch, so they render nothing if handed the wrong argument type.
+    BookingRoutes.wizard: (context) {
+      final route = _args(context);
+      if (route is! RouteOptionData) return const SizedBox.shrink();
+      return BlocProvider(
+        create: (_) => BookingWizardCubit(route),
+        child: const BookingWizardScreen(),
+      );
+    },
+    BookingRoutes.routeOverview: (context) {
+      final route = _args(context);
+      if (route is! RouteOptionData) return const SizedBox.shrink();
+      return RouteOverviewScreen(route: route);
+    },
+  };
+
+  // --- Seats ----------------------------------------------------------------
+
+  static Map<String, WidgetBuilder> get _seats => <String, WidgetBuilder>{
+    SeatSelectionRoutes.seatSelection: (_) =>
+        ClientCubitScopes.seatSelection(const SeatSelectionScreen()),
+    SeatReleaseRoutes.seatRelease: (_) =>
+        ClientCubitScopes.seatRelease(const SeatReleaseScreen()),
+  };
+
+  // --- Payments & packages --------------------------------------------------
+
+  static Map<String, WidgetBuilder> get _payments => <String, WidgetBuilder>{
+    PaymentRoutes.checkout: (context) => ClientCubitScopes.payment(
+      PaymentCheckoutScreen(
+        checkoutData: PaymentCheckoutData.fromArguments(_args(context)),
+      ),
+    ),
+    PackagesRoutes.subscription: (context) {
+      final args = _args(context);
+      // The seat flow forwards the booked trip (driver, vehicle, route, fare)
+      // through here so the payment step can show a real ticket instead of
+      // empty placeholders.
+      return ClientCubitScopes.packages(
+        SubscriptionScreen(
+          hasActiveSubscription:
+              args is Map && args['hasActiveSubscription'] == true,
+          bookingData: args is Map ? Map<String, dynamic>.from(args) : null,
+        ),
+      );
+    },
+  };
+
+  // --- Trips & tracking -----------------------------------------------------
+
+  static Map<String, WidgetBuilder> get _trips => <String, WidgetBuilder>{
+    TripsRoutes.myTrips: (context) =>
+        ClientCubitScopes.trips(MyTripsScreen(onOpenRoute: _opener(context))),
+    TripsRoutes.tripDetails: (context) {
+      final args = _args(context);
+      return ClientCubitScopes.trips(
+        TripDetailsScreen(
+          tripId: args is Map ? args['tripId']?.toString() : null,
+        ),
+      );
+    },
+    TrackingRoutes.tracking: (context) {
+      final args = _args(context);
+      return ClientCubitScopes.tracking(
+        TrackingScreen(
+          bookingId: args is Map ? args['bookingId']?.toString() : null,
+          tripId: args is Map ? args['tripId']?.toString() : null,
+        ),
+      );
+    },
+  };
+
+  // --- Support --------------------------------------------------------------
+
+  static Map<String, WidgetBuilder> get _support => <String, WidgetBuilder>{
+    SupportRoutes.center: (_) =>
+        ClientCubitScopes.support(const SupportCenterScreen()),
+    SupportRoutes.createTicket: (_) =>
+        ClientCubitScopes.support(const CreateSupportTicketScreen()),
+    SupportRoutes.ticketDetails: (context) => ClientCubitScopes.support(
+      SupportTicketDetailsScreen(ticketId: _args(context)! as String),
+    ),
+  };
+
+  // --- Engagement -----------------------------------------------------------
+
+  static Map<String, WidgetBuilder> get _engagement => <String, WidgetBuilder>{
+    CommunicationRoutes.communication: (_) =>
+        ClientCubitScopes.communication(const CommunicationScreen()),
+    ReferralRoutes.rewards: (_) =>
+        ClientCubitScopes.referralRewards(const ReferralRewardsScreen()),
+    LoyaltyRoutes.loyalty: (_) =>
+        ClientCubitScopes.loyalty(const LoyaltyScreen()),
+  };
+
+  // --- Profile & legal ------------------------------------------------------
+
+  static Map<String, WidgetBuilder> get _profile => <String, WidgetBuilder>{
+    ProfileRoutes.profile: (context) =>
+        ClientCubitScopes.profile(ProfileScreen(onOpenRoute: _opener(context))),
+    ClientRoutes.terms: (_) =>
+        const LegalDocumentScreen(document: LegalDocument.terms),
+    ClientRoutes.privacy: (_) =>
+        const LegalDocumentScreen(document: LegalDocument.privacy),
+  };
+}
