@@ -5,6 +5,7 @@ import '../theme/captain_design_tokens.dart';
 import '../theme/captain_typography.dart';
 import 'captain_awaiting_step.dart';
 import 'captain_button.dart';
+import 'captain_live_sync_chip.dart';
 import 'captain_pulse_badge.dart';
 
 /// Shown whenever operations has not assigned the captain a trip yet — on the
@@ -37,7 +38,9 @@ class CaptainAwaitingTripsView extends StatelessWidget {
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
         borderRadius: CaptainDesignTokens.br24,
-        border: Border.all(color: CaptainColors.primary.withValues(alpha: 0.08)),
+        border: Border.all(
+          color: CaptainColors.primary.withValues(alpha: 0.08),
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.03),
@@ -95,7 +98,7 @@ class CaptainAwaitingTripsView extends StatelessWidget {
             ),
           ),
           const SizedBox(height: CaptainDesignTokens.s16),
-          _LiveSyncChip(isRefreshing: isRefreshing),
+          CaptainLiveSyncChip(isRefreshing: isRefreshing),
           const SizedBox(height: CaptainDesignTokens.s16),
           CaptainButton(
             label: 'تحديث الآن',
@@ -103,47 +106,6 @@ class CaptainAwaitingTripsView extends StatelessWidget {
             isLoading: isRefreshing,
             variant: CaptainButtonVariant.secondary,
             onPressed: onRefresh,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LiveSyncChip extends StatelessWidget {
-  const _LiveSyncChip({required this.isRefreshing});
-
-  final bool isRefreshing;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = isRefreshing ? CaptainColors.primary : CaptainColors.success;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: CaptainDesignTokens.s16,
-        vertical: CaptainDesignTokens.s8,
-      ),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.10),
-        borderRadius: CaptainDesignTokens.brPill,
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isRefreshing
-                ? Icons.sync_rounded
-                : Icons.wifi_tethering_rounded,
-            size: 16,
-            color: color,
-          ),
-          const SizedBox(width: CaptainDesignTokens.s8),
-          Text(
-            isRefreshing ? 'جاري التحديث…' : 'متصل بالعمليات — التحديث تلقائي',
-            style: CaptainTypography.labelMedium(
-              context,
-            ).copyWith(color: color, fontWeight: FontWeight.w800),
           ),
         ],
       ),

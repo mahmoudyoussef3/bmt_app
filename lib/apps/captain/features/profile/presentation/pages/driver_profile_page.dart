@@ -15,6 +15,7 @@ import '../widgets/driver_profile_info_card.dart';
 import '../widgets/driver_profile_settings_card.dart';
 import '../widgets/driver_profile_sign_out_button.dart';
 import '../widgets/driver_profile_skeleton.dart';
+import '../widgets/driver_profile_stats_card.dart';
 import '../widgets/driver_profile_vehicle_card.dart';
 import '../widgets/verification_card.dart';
 
@@ -58,6 +59,8 @@ class _ProfileBody extends StatelessWidget {
             ),
             sliver: SliverList.list(
               children: [
+                DriverProfileStatsCard(profile: profile),
+                const SizedBox(height: CaptainDesignTokens.s16),
                 VerificationCard(profile: profile),
                 const SizedBox(height: CaptainDesignTokens.s16),
                 if (profile.hasVehicle) ...[

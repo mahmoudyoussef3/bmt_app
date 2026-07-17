@@ -19,7 +19,7 @@ import '../widgets/assigned_trips_header.dart';
 import '../widgets/assigned_trips_section_title.dart';
 import '../widgets/assigned_trips_skeleton.dart';
 import '../widgets/assigned_trips_stats_strip.dart';
-import '../widgets/captain_day_complete_card.dart';
+import '../widgets/captain_day_complete_view.dart';
 import '../widgets/captain_focus_card.dart';
 import '../widgets/home_quick_actions.dart';
 import '../widgets/new_assignments_banner.dart';
@@ -123,6 +123,7 @@ class _Content extends StatelessWidget {
                     summary: summary,
                     focus: focus,
                     rest: rest,
+                    onRefresh: () => _refresh(context),
                   ),
           ),
         ],
@@ -138,12 +139,14 @@ class _DaySlivers extends StatelessWidget {
     required this.summary,
     required this.focus,
     required this.rest,
+    required this.onRefresh,
   });
 
   final AssignedTripsLoaded state;
   final CaptainDaySummary summary;
   final AssignedTrip? focus;
   final List<AssignedTrip> rest;
+  final Future<void> Function() onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -162,19 +165,23 @@ class _DaySlivers extends StatelessWidget {
               ),
               const SizedBox(height: CaptainDesignTokens.s16),
             ],
-            if (focusTrip != null)
+            if (focusTrip != null) ...[
               CaptainFocusCard(
                 trip: focusTrip,
                 onOpen: () => context.openTripExecution(focusTrip),
-              )
-            else
-              CaptainDayCompleteCard(tripCount: summary.totalTrips),
-            if (focusTrip != null) ...[
+              ),
               const SizedBox(height: CaptainDesignTokens.s16),
               HomeQuickActions(tripId: focusTrip.id),
-            ],
-            const SizedBox(height: CaptainDesignTokens.s16),
-            AssignedTripsStatsStrip(summary: summary),
+              const SizedBox(height: CaptainDesignTokens.s16),
+              // The finished day states these numbers in its own hero, so the
+              // strip would only repeat them.
+              AssignedTripsStatsStrip(summary: summary),
+            ] else
+              CaptainDayCompleteView(
+                summary: summary,
+                onRefresh: onRefresh,
+                isRefreshing: state.isRefreshing,
+              ),
             if (rest.isNotEmpty) ...[
               const SizedBox(height: CaptainDesignTokens.s24),
               AssignedTripsSectionTitle(

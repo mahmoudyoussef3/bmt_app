@@ -2,18 +2,27 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 
+import '../utils/trip_history_palette.dart';
+
 /// Lifetime totals for the history tab. Always whole-history, never filtered.
+///
+/// One strip rather than the two separate cards it used to be: these are three
+/// readings of the same record and they compare at a glance side by side, which
+/// is also the shape the day summary already uses on the trips tab.
 class TripHistorySummaryRow extends StatelessWidget {
   const TripHistorySummaryRow({
     super.key,
     required this.totalTrips,
     required this.totalPassengers,
+    required this.averagePassengers,
   });
 
   final int totalTrips;
   final int totalPassengers;
+  final int averagePassengers;
 
   @override
   Widget build(BuildContext context) {
@@ -24,24 +33,72 @@ class TripHistorySummaryRow extends StatelessWidget {
         CaptainDesignTokens.s24,
         CaptainDesignTokens.s8,
       ),
-      child: Row(
-        children: [
-          Expanded(
-            child: _SummaryTile(
-              icon: Icons.check_circle_rounded,
-              color: CaptainColors.success,
-              label: 'رحلات',
+      child: CaptainCard(
+        child: Row(
+          children: [
+            _Stat(
+              icon: Icons.route_rounded,
               value: '$totalTrips',
+              label: 'رحلة',
+              color: TripHistoryPalette.accent,
             ),
-          ),
-          const SizedBox(width: CaptainDesignTokens.s16),
-          Expanded(
-            child: _SummaryTile(
+            const _Divider(),
+            _Stat(
               icon: Icons.people_alt_rounded,
-              color: Theme.of(context).colorScheme.primary,
-              label: 'ركاب نُقلوا',
               value: '$totalPassengers',
+              label: 'راكب نُقل',
+              color: TripHistoryPalette.accentDeep,
             ),
+            const _Divider(),
+            _Stat(
+              icon: Icons.equalizer_rounded,
+              value: '$averagePassengers',
+              label: 'متوسط الرحلة',
+              color: TripHistoryPalette.accent,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Stat extends StatelessWidget {
+  const _Stat({
+    required this.icon,
+    required this.value,
+    required this.label,
+    required this.color,
+  });
+
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Column(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(height: 6),
+          Text(
+            value,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: CaptainTypography.titleLarge(
+              context,
+            ).copyWith(fontWeight: FontWeight.w900, color: color),
+          ),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: CaptainTypography.labelSmall(
+              context,
+            ).copyWith(color: TripHistoryPalette.neutral(context)),
           ),
         ],
       ),
@@ -49,50 +106,15 @@ class TripHistorySummaryRow extends StatelessWidget {
   }
 }
 
-class _SummaryTile extends StatelessWidget {
-  const _SummaryTile({
-    required this.icon,
-    required this.color,
-    required this.label,
-    required this.value,
-  });
-
-  final IconData icon;
-  final Color color;
-  final String label;
-  final String value;
+class _Divider extends StatelessWidget {
+  const _Divider();
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    return CaptainCard(
-      padding: const EdgeInsets.all(CaptainDesignTokens.s16),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(CaptainDesignTokens.s8),
-            decoration: BoxDecoration(
-              color: color.withAlpha(20),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(icon, color: color, size: 20),
-          ),
-          const SizedBox(width: CaptainDesignTokens.s8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                value,
-                style: textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: color,
-                ),
-              ),
-              Text(label, style: textTheme.labelSmall),
-            ],
-          ),
-        ],
-      ),
+    return Container(
+      width: 1,
+      height: 36,
+      color: CaptainColors.dividerFor(context),
     );
   }
 }

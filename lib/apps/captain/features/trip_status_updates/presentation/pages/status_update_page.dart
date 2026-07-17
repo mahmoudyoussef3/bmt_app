@@ -1,4 +1,5 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -106,14 +107,18 @@ class StatusUpdatePage extends StatelessWidget {
     };
   }
 
+  /// The ladder walks the brand palette from its palest tint to its deepest
+  /// shade as the trip progresses, so the colour itself reads as distance
+  /// travelled. Boarding breaks out to amber on purpose — it's the one step
+  /// that's waiting on the captain to act.
   Color _color(CaptainTripStatus status) {
     return switch (status) {
-      CaptainTripStatus.headingToPickup => Colors.blue,
-      CaptainTripStatus.arrivedPickup => Colors.teal,
-      CaptainTripStatus.boarding => Colors.orange,
-      CaptainTripStatus.departed => Colors.green,
-      CaptainTripStatus.arrivedDestination => Colors.indigo,
-      CaptainTripStatus.completed => Colors.grey,
+      CaptainTripStatus.headingToPickup => CaptainColors.primaryLight,
+      CaptainTripStatus.arrivedPickup => CaptainColors.primaryBright,
+      CaptainTripStatus.boarding => CaptainColors.warning,
+      CaptainTripStatus.departed => CaptainColors.primary,
+      CaptainTripStatus.arrivedDestination => CaptainColors.primaryDeep,
+      CaptainTripStatus.completed => CaptainColors.offline,
     };
   }
 }

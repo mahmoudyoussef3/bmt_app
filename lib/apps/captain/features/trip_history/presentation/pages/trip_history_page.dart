@@ -9,6 +9,7 @@ import 'package:bmt_app/core/widgets/widgets.dart';
 
 import '../cubit/trip_history_cubit.dart';
 import '../cubit/trip_history_state.dart';
+import '../utils/trip_history_labels.dart';
 import '../widgets/trip_history_list.dart';
 import '../widgets/trip_history_search_bar.dart';
 import '../widgets/trip_history_skeleton.dart';
@@ -65,7 +66,7 @@ class _LoadedBody extends StatelessWidget {
         slivers: [
           CaptainSliverHeader(
             title: 'سجل الرحلات',
-            subtitle: '${state.totalTrips} رحلة مكتملة',
+            subtitle: TripHistoryLabels.completedTrips(state.totalTrips),
           ),
           if (state.hasNoTrips)
             const SliverFillRemaining(
@@ -83,15 +84,23 @@ class _LoadedBody extends StatelessWidget {
               child: TripHistorySummaryRow(
                 totalTrips: state.totalTrips,
                 totalPassengers: state.totalPassengers,
+                averagePassengers: state.averagePassengers,
               ),
             ),
             SliverToBoxAdapter(
               child: TripHistorySearchBar(
                 dateFilter: state.dateFilter,
+                filterCounts: state.filterCounts,
+                matchCount: state.matchCount,
+                isFiltering: state.isFiltering,
                 onQueryChanged: cubit.search,
                 onDateFilterChanged: cubit.filterByDate,
+                onClearFilters: cubit.clearFilters,
               ),
             ),
+            // No "clear filters" action here on purpose: the search field owns
+            // its own text, so the only reset that can also empty the field is
+            // the one inside the bar — which is on screen, directly above this.
             if (state.hasNoMatches)
               const SliverFillRemaining(
                 hasScrollBody: false,

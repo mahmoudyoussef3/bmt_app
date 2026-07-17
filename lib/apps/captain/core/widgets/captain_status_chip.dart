@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../theme/captain_colors.dart';
 import '../theme/captain_design_tokens.dart';
 
 enum CaptainStatusVariant { info, success, warning, error, neutral }
@@ -24,14 +25,14 @@ class CaptainStatusChip extends StatelessWidget {
 
     switch (variant) {
       case CaptainStatusVariant.info:
-        fgColor = Colors.blue;
-        bgColor = Colors.blue.withAlpha(25);
+        fgColor = CaptainColors.primary;
+        bgColor = CaptainColors.primary.withAlpha(25);
       case CaptainStatusVariant.success:
-        fgColor = Colors.green;
-        bgColor = Colors.green.withAlpha(25);
+        fgColor = CaptainColors.success;
+        bgColor = CaptainColors.success.withAlpha(25);
       case CaptainStatusVariant.warning:
-        fgColor = Colors.orange;
-        bgColor = Colors.orange.withAlpha(25);
+        fgColor = CaptainColors.warning;
+        bgColor = CaptainColors.warning.withAlpha(25);
       case CaptainStatusVariant.error:
         fgColor = scheme.error;
         bgColor = scheme.error.withAlpha(25);

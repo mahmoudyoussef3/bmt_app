@@ -1,4 +1,5 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -252,11 +253,11 @@ class _ScanResult extends StatelessWidget {
     final (icon, color) = switch (result.status) {
       CheckInStatus.boarded || CheckInStatus.alreadyCheckedIn => (
         Icons.check_circle_rounded,
-        Colors.green,
+        CaptainColors.success,
       ),
       CheckInStatus.pendingSync => (
         Icons.cloud_sync_rounded,
-        Colors.orange.shade700,
+        CaptainColors.warning,
       ),
       CheckInStatus.absent || CheckInStatus.cancelled => (
         Icons.cancel_rounded,

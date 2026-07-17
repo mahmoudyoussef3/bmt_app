@@ -11,6 +11,17 @@ void main() {
       expect(summary.isDayComplete, isFalse);
       expect(summary.focusTrip, isNull);
       expect(summary.boardingProgress, 0);
+      expect(summary.lastArrival, isNull);
+    });
+
+    test('reports the latest arrival, not the last departure', () {
+      final summary = CaptainDaySummary.fromTrips([
+        // Leaves first but runs long, so it lands after the later departure.
+        _trip(id: 'long', hour: 8, arrivesAfter: const Duration(hours: 6)),
+        _trip(id: 'short', hour: 12, arrivesAfter: const Duration(hours: 1)),
+      ]);
+
+      expect(summary.lastArrival, DateTime(2026, 7, 14, 14));
     });
 
     test('focuses the earliest scheduled trip', () {
@@ -73,6 +84,7 @@ AssignedTrip _trip({
   AssignedTripStatus status = AssignedTripStatus.scheduled,
   int passengers = 10,
   int boarded = 0,
+  Duration arrivesAfter = const Duration(hours: 3),
 }) {
   final departure = DateTime(2026, 7, 14, hour);
   return AssignedTrip(
@@ -81,7 +93,7 @@ AssignedTrip _trip({
     vehicleNumber: 'BUS-1',
     plateNumber: 'أ ب ج 123',
     departureTime: departure,
-    expectedArrivalTime: departure.add(const Duration(hours: 3)),
+    expectedArrivalTime: departure.add(arrivesAfter),
     stops: const [],
     passengerCount: passengers,
     boardedCount: boarded,

@@ -12,11 +12,11 @@ import 'package:bmt_app/apps/captain/features/profile/presentation/pages/driver_
 import 'package:bmt_app/apps/captain/features/splash/presentation/screens/captain_splash_screen.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
-/// The profile header packs an avatar, name, rating pill and a stats row into a
-/// fixed-height sliver, and the identity block is the first thing the captain
-/// sees on both the splash and the profile. Both are pure layout, so a pump at
-/// a few real screen sizes is what actually proves they fit — the analyzer
-/// can't see a RenderFlex overflow.
+/// The profile header packs an avatar, name and rating pill onto a single
+/// toolbar row, and the identity block is the first thing the captain sees on
+/// both the splash and the profile. Both are pure layout, so a pump at a few
+/// real screen sizes is what actually proves they fit — the analyzer can't see
+/// a RenderFlex overflow.
 ///
 /// Note these assertions are deliberately conservative: `flutter_test` swaps in
 /// a test font whose glyphs are far wider than Cairo's, so Arabic strings
@@ -49,6 +49,7 @@ class _StubProfileCubit extends Cubit<DriverProfileState>
 DriverProfile _profile({
   String name = 'محمود عبد الرحمن السيد',
   double rating = 4.8,
+  String plate = 'ط ن ج 4821',
 }) {
   return DriverProfile(
     id: 'd1',
@@ -59,7 +60,7 @@ DriverProfile _profile({
     totalTrips: 1284,
     totalPassengers: 24310,
     vehicleCode: 'BUS-104',
-    plateNumber: 'ط ن ج 4821',
+    plateNumber: plate,
     vehicleModel: 'Mercedes Sprinter',
     vehicleCapacity: 24,
     employeeCode: 'EMP-2201',
@@ -109,7 +110,9 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('ملفي'), findsOneWidget);
+      // The captain's name is the header's title — there is no separate screen
+      // title to assert on.
+      expect(find.text('محمود عبد الرحمن السيد'), findsOneWidget);
       expect(find.textContaining('ممتاز'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
@@ -148,6 +151,57 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  /// The screen runs RTL, but the values it shows are identifiers, not prose.
+  /// Inheriting the screen's direction reorders the runs inside them — a latin
+  /// plate `ABC 1234` renders as `1234 ABC` — and hardcoding LTR only moves the
+  /// bug onto the Egyptian plates this fleet actually runs. Each value has to
+  /// resolve its own direction, so both are pinned here.
+  testWidgets('identifiers resolve their own direction, not the screen\'s', (
+    tester,
+  ) async {
+    // Tall enough that every card is built and laid out without scrolling —
+    // this asserts on direction, not on what fits.
+    tester.view.physicalSize = const Size(390, 2000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    Future<void> pumpWithPlate(String plate) async {
+      await tester.pumpWidget(
+        _host(
+          BlocProvider<DriverProfileCubit>(
+            // Keyed per plate: without it the second pump updates the tree in
+            // place, `create` never re-runs, and the first profile stays put.
+            key: ValueKey(plate),
+            create: (_) =>
+                _StubProfileCubit(DriverProfileLoaded(_profile(plate: plate))),
+            child: const DriverProfilePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+    }
+
+    await pumpWithPlate('ABC 1234');
+    expect(
+      Directionality.of(tester.element(find.text('ABC 1234'))),
+      TextDirection.ltr,
+    );
+    for (final value in ['01001234567', 'EMP-2201', 'LIC-99120']) {
+      expect(
+        Directionality.of(tester.element(find.text(value))),
+        TextDirection.ltr,
+        reason: value,
+      );
+    }
+
+    await pumpWithPlate('ط ن ج 4821');
+    expect(
+      Directionality.of(tester.element(find.text('ط ن ج 4821'))),
+      TextDirection.rtl,
+    );
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets('profile header survives a long name and no rating', (
     tester,

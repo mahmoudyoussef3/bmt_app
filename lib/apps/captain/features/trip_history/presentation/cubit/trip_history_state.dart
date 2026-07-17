@@ -19,6 +19,8 @@ class TripHistoryLoaded extends TripHistoryState {
     required this.totalTrips,
     required this.totalPassengers,
     required this.groups,
+    required this.matchCount,
+    required this.filterCounts,
     required this.query,
     required this.dateFilter,
   });
@@ -32,6 +34,14 @@ class TripHistoryLoaded extends TripHistoryState {
   /// The filtered trips, bucketed by recency. Empty when nothing matches.
   final List<TripHistoryGroup> groups;
 
+  /// How many trips survived the filters. The list itself only ever exists as
+  /// buckets, so this is the one place the flat number is available to report.
+  final int matchCount;
+
+  /// Trips per date range, before the search query — the filter chips show
+  /// these so an empty range can say so before the captain opens it.
+  final Map<TripHistoryDateFilter, int> filterCounts;
+
   final String query;
   final TripHistoryDateFilter dateFilter;
 
@@ -40,6 +50,13 @@ class TripHistoryLoaded extends TripHistoryState {
   bool get hasNoTrips => totalTrips == 0;
 
   bool get hasNoMatches => groups.isEmpty;
+
+  bool get isFiltering =>
+      query.trim().isNotEmpty || dateFilter != TripHistoryDateFilter.all;
+
+  /// Passengers carried per trip across the whole history, rounded.
+  int get averagePassengers =>
+      totalTrips == 0 ? 0 : (totalPassengers / totalTrips).round();
 }
 
 class TripHistoryError extends TripHistoryState {

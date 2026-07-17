@@ -42,6 +42,25 @@ List<TripHistoryItem> filterTripHistory({
   }).toList();
 }
 
+/// How many trips sit in each date range.
+///
+/// The search query is deliberately left out: a chip's count answers "is there
+/// anything for me over there?", and narrowing it by a query the captain is
+/// about to leave behind would answer a question nobody asked — every chip
+/// would read zero the moment a search missed.
+Map<TripHistoryDateFilter, int> countTripsByDateFilter(
+  List<TripHistoryItem> trips, {
+  DateTime? now,
+}) {
+  final effectiveNow = now ?? DateTime.now();
+  return {
+    for (final filter in TripHistoryDateFilter.values)
+      filter: trips
+          .where((trip) => filter.matches(trip.tripDate, effectiveNow))
+          .length,
+  };
+}
+
 class TripHistoryGroup {
   const TripHistoryGroup(this.label, this.trips);
 

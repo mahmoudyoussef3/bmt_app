@@ -146,6 +146,94 @@ void main() {
     expect(state.hasNoMatches, isTrue);
     expect(state.hasNoTrips, isFalse);
   });
+
+  test(
+    'clearFilters() drops both the search and the date range at once',
+    () async {
+      repository.trips = [
+        _trip('a', route: 'القاهرة - الإسكندرية', date: DateTime(2020, 1, 1)),
+        _trip('b', route: 'القاهرة - أسوان'),
+      ];
+      await cubit.load();
+      cubit.search('أسوان');
+      cubit.filterByDate(TripHistoryDateFilter.thisMonth);
+
+      cubit.clearFilters();
+
+      final state = cubit.state as TripHistoryLoaded;
+      expect(state.query, '');
+      expect(state.dateFilter, TripHistoryDateFilter.all);
+      expect(state.isFiltering, isFalse);
+      // Both are back, in recency order — 'b' is today, 'a' fell in "أقدم".
+      expect(_visibleIds(cubit.state), ['b', 'a']);
+    },
+  );
+
+  test('isFiltering is false only when the whole history is on screen', () async {
+    repository.trips = [_trip('a')];
+    await cubit.load();
+
+    expect((cubit.state as TripHistoryLoaded).isFiltering, isFalse);
+
+    cubit.search('أسوان');
+    expect((cubit.state as TripHistoryLoaded).isFiltering, isTrue);
+
+    cubit.search('   ');
+    // Whitespace filters nothing out, so it must not claim the view is narrowed.
+    expect((cubit.state as TripHistoryLoaded).isFiltering, isFalse);
+  });
+
+  test(
+    'matchCount counts the filtered trips, flat across their buckets',
+    () async {
+      repository.trips = [
+        _trip('a', route: 'القاهرة - أسوان'),
+        _trip('b', route: 'القاهرة - أسوان', date: DateTime(2026, 7, 15, 8)),
+        _trip('c', route: 'القاهرة - الإسكندرية'),
+      ];
+      await cubit.load();
+
+      cubit.search('أسوان');
+
+      // Two trips over two separate recency buckets — the number the captain
+      // reads is the trips, not the sections they landed in.
+      expect((cubit.state as TripHistoryLoaded).matchCount, 2);
+    },
+  );
+
+  test('filterCounts ignore the search query', () async {
+    repository.trips = [
+      _trip('a', route: 'القاهرة - أسوان', date: DateTime(2020, 1, 1)),
+      _trip('b', route: 'القاهرة - الإسكندرية', date: DateTime(2020, 1, 1)),
+    ];
+    await cubit.load();
+
+    cubit.search('لا يوجد خط بهذا الاسم');
+
+    // A chip's count answers "is there anything over there?" — a query that is
+    // about to be abandoned must not zero every range out.
+    final state = cubit.state as TripHistoryLoaded;
+    expect(state.matchCount, 0);
+    expect(state.filterCounts[TripHistoryDateFilter.all], 2);
+  });
+
+  test('averagePassengers reports the lifetime carry per trip', () async {
+    repository.trips = [
+      _trip('a', boarded: 20),
+      _trip('b', boarded: 10),
+      _trip('c', boarded: 15),
+    ];
+    await cubit.load();
+
+    expect((cubit.state as TripHistoryLoaded).averagePassengers, 15);
+  });
+
+  test('averagePassengers does not divide by an empty history', () async {
+    repository.trips = const [];
+    await cubit.load();
+
+    expect((cubit.state as TripHistoryLoaded).averagePassengers, 0);
+  });
 }
 
 /// The trips the screen would actually render, flattened out of their recency
@@ -159,6 +247,7 @@ TripHistoryItem _trip(
   String id, {
   String route = 'القاهرة - الإسكندرية',
   DateTime? date,
+  int boarded = 20,
 }) {
   final departure = date ?? DateTime(2026, 7, 16, 8);
   return TripHistoryItem(
@@ -168,7 +257,7 @@ TripHistoryItem _trip(
     departureTime: departure,
     arrivalTime: departure.add(const Duration(hours: 3)),
     passengerCount: 20,
-    boardedCount: 20,
+    boardedCount: boarded,
     vehicleNumber: 'BUS-1',
     plateNumber: 'أ ب ج 123',
   );

@@ -61,6 +61,17 @@ class TripHistoryCubit extends Cubit<TripHistoryState> {
     _emitLoaded();
   }
 
+  /// Drops the captain back to the whole history in one step.
+  ///
+  /// The search field owns its own text, so it clears that itself before
+  /// calling this — the query is never pushed back down into the field.
+  void clearFilters() {
+    if (_query.isEmpty && _dateFilter == TripHistoryDateFilter.all) return;
+    _query = '';
+    _dateFilter = TripHistoryDateFilter.all;
+    _emitLoaded();
+  }
+
   void _emitLoaded() {
     final filtered = filterTripHistory(
       trips: _allTrips,
@@ -72,6 +83,8 @@ class TripHistoryCubit extends Cubit<TripHistoryState> {
         totalTrips: _allTrips.length,
         totalPassengers: _allTrips.fold(0, (sum, t) => sum + t.boardedCount),
         groups: groupTripHistoryByPeriod(filtered),
+        matchCount: filtered.length,
+        filterCounts: countTripsByDateFilter(_allTrips),
         query: _query,
         dateFilter: _dateFilter,
       ),

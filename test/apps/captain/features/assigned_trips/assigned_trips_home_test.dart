@@ -3,7 +3,7 @@ import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/cap
 import 'package:bmt_app/apps/captain/features/assigned_trips/presentation/widgets/assigned_trip_card.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/presentation/widgets/assigned_trips_section_title.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/presentation/widgets/assigned_trips_stats_strip.dart';
-import 'package:bmt_app/apps/captain/features/assigned_trips/presentation/widgets/captain_day_complete_card.dart';
+import 'package:bmt_app/apps/captain/features/assigned_trips/presentation/widgets/captain_day_complete_view.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/presentation/widgets/captain_focus_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,8 +49,6 @@ void main() {
                         onOpen: () {},
                         onManifest: () {},
                       ),
-                    const SizedBox(height: 12),
-                    const CaptainDayCompleteCard(tripCount: 3),
                   ],
                 ),
               ),
@@ -65,6 +63,54 @@ void main() {
       expect(find.text('رحلتك الحالية'), findsOneWidget);
       // Completed trips offer the manifest, never a "start the trip" action.
       expect(find.text('كشف الركاب'), findsOneWidget);
+    });
+
+    testWidgets('finished day renders without overflow @ textScale $scale', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      final summary = CaptainDaySummary.fromTrips([
+        _trip('a', 8, status: AssignedTripStatus.completed, boarded: 18),
+        _trip('b', 13, status: AssignedTripStatus.completed, boarded: 20),
+        _trip('c', 18, status: AssignedTripStatus.completed, boarded: 16),
+      ]);
+
+      await tester.pumpWidget(
+        MaterialApp(
+          home: MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+            child: Directionality(
+              textDirection: TextDirection.rtl,
+              child: Scaffold(
+                body: ListView(
+                  padding: const EdgeInsets.all(20),
+                  children: [
+                    CaptainDayCompleteView(
+                      summary: summary,
+                      onRefresh: () async {},
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(find.text('أحسنت، أنهيت رحلات اليوم'), findsOneWidget);
+      // The day's numbers: three trips, 54 passengers carried, and the last
+      // trip departs at 18:00 and runs three hours.
+      expect(find.text('3'), findsOneWidget);
+      expect(find.text('54'), findsOneWidget);
+      expect(find.text('21:00'), findsOneWidget);
+      // The captain is told where the next trip comes from, and can ask now.
+      expect(find.text('بانتظار رحلتك التالية'), findsOneWidget);
+      expect(find.text('تحديث الآن'), findsOneWidget);
     });
   }
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/captain_colors.dart';
 import '../theme/captain_design_tokens.dart';
 import '../theme/captain_typography.dart';
+import '../utils/captain_text_direction.dart';
 
 /// A label paired with its value on one line, optionally led by an icon.
 ///
@@ -18,6 +19,7 @@ class CaptainDetailRow extends StatelessWidget {
     required this.value,
     this.icon,
     this.bottomSpacing = CaptainDesignTokens.s12,
+    this.valueIsIdentifier = false,
   });
 
   final String label;
@@ -29,6 +31,12 @@ class CaptainDetailRow extends StatelessWidget {
   /// Trailing gap, so stacked rows space themselves without the parent
   /// interleaving separators. Pass `0` for a standalone row.
   final double bottomSpacing;
+
+  /// Set when the value is an identifier rather than prose — a phone number, a
+  /// licence number, a plate. Those lay out in their own direction instead of
+  /// inheriting the screen's, which would otherwise reorder their runs into a
+  /// different number than the one stored. See [CaptainTextDirection].
+  final bool valueIsIdentifier;
 
   @override
   Widget build(BuildContext context) {
@@ -57,18 +65,43 @@ class CaptainDetailRow extends StatelessWidget {
           ),
           const SizedBox(width: CaptainDesignTokens.s12),
           Expanded(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: CaptainTypography.bodyMedium(context).copyWith(
-                color: CaptainColors.textPrimaryFor(context),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
+            child: _Value(value: value, isIdentifier: valueIsIdentifier),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _Value extends StatelessWidget {
+  const _Value({required this.value, required this.isIdentifier});
+
+  final String value;
+  final bool isIdentifier;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Text(
+      value,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      textAlign: TextAlign.end,
+      style: CaptainTypography.bodyMedium(context).copyWith(
+        color: CaptainColors.textPrimaryFor(context),
+        fontWeight: FontWeight.w700,
+      ),
+    );
+    if (!isIdentifier) return text;
+
+    // The Align stays outside the Directionality on purpose. Only the value's
+    // own characters resolve to their own direction; where the value sits on
+    // the row is still decided by the ambient direction, so it keeps hugging
+    // the row's trailing edge instead of jumping back against the label.
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      child: Directionality(
+        textDirection: CaptainTextDirection.ofIdentifier(value),
+        child: text,
       ),
     );
   }

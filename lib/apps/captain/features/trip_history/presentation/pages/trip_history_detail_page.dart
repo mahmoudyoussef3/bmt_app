@@ -7,12 +7,19 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_detail_row.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_loading_state.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 import '../../domain/entities/trip_history_item.dart';
 import '../../domain/entities/trip_history_stop.dart';
 import '../cubit/trip_history_detail_cubit.dart';
 import '../cubit/trip_history_detail_state.dart';
+import '../utils/trip_history_labels.dart';
+import '../utils/trip_history_palette.dart';
+import '../widgets/trip_history_boarding_bar.dart';
+import '../widgets/trip_history_time_strip.dart';
 
 /// A completed trip's detail: the journey's real, saved stations in order
 /// (the "timeline"), plus the same facts already on its history card.
@@ -26,41 +33,33 @@ class TripHistoryDetailPage extends StatelessWidget {
     return BlocProvider<TripHistoryDetailCubit>(
       create: (_) => captainGetIt<TripHistoryDetailCubit>()..load(trip.id),
       child: Scaffold(
-        appBar: AppBar(title: Text(trip.route)),
-        body: ListView(
-          padding: const EdgeInsetsDirectional.fromSTEB(
-            CaptainDesignTokens.s16,
-            CaptainDesignTokens.s16,
-            CaptainDesignTokens.s16,
-            CaptainDesignTokens.s24,
-          ),
-          children: [
-            _TripSummaryCard(trip: trip),
-            const SizedBox(height: CaptainDesignTokens.s24),
-            Text(
-              'مسار الرحلة',
-              style: CaptainTypography.titleSmall(
-                context,
-              ).copyWith(fontWeight: FontWeight.w900),
+        backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+        body: CustomScrollView(
+          slivers: [
+            // The same header the rest of the captain's sub-screens use, rather
+            // than a bare AppBar carrying the route as a title: the date is a
+            // fact about *this* trip and belongs beside its name, not buried in
+            // the first card.
+            CaptainSliverHeader(
+              title: trip.route,
+              subtitle: CaptainFormats.fullDate(trip.tripDate),
             ),
-            const SizedBox(height: CaptainDesignTokens.s12),
-            BlocBuilder<TripHistoryDetailCubit, TripHistoryDetailState>(
-              builder: (context, state) {
-                return switch (state) {
-                  TripHistoryDetailLoading() => const _StopsSkeleton(),
-                  TripHistoryDetailError(:final message) => AsyncStateView(
-                    status: AsyncViewStatus.error,
-                    errorMessage: message,
-                    onRetry: () =>
-                        context.read<TripHistoryDetailCubit>().load(trip.id),
-                    child: const SizedBox.shrink(),
-                  ),
-                  TripHistoryDetailLoaded(:final stops) =>
-                    stops.isEmpty
-                        ? const _NoStopsRecorded()
-                        : _StopsTimeline(stops: stops),
-                };
-              },
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(
+                CaptainDesignTokens.s16,
+                CaptainDesignTokens.s8,
+                CaptainDesignTokens.s16,
+                CaptainDesignTokens.s24,
+              ),
+              sliver: SliverList.list(
+                children: [
+                  _JourneyCard(trip: trip),
+                  const SizedBox(height: CaptainDesignTokens.s16),
+                  _VehicleCard(trip: trip),
+                  const SizedBox(height: CaptainDesignTokens.s24),
+                  _StopsSection(tripId: trip.id),
+                ],
+              ),
             ),
           ],
         ),
@@ -69,66 +68,38 @@ class TripHistoryDetailPage extends StatelessWidget {
   }
 }
 
-class _TripSummaryCard extends StatelessWidget {
-  const _TripSummaryCard({required this.trip});
+/// When the trip ran, how long it took, and who was actually on it.
+class _JourneyCard extends StatelessWidget {
+  const _JourneyCard({required this.trip});
 
   final TripHistoryItem trip;
 
   @override
   Widget build(BuildContext context) {
-    final dateLabel = CaptainFormats.fullDate(trip.tripDate);
-    final departure = CaptainFormats.clock(trip.departureTime);
-    final arrival = CaptainFormats.clock(trip.arrivalTime);
-
     return CaptainCard(
+      padding: EdgeInsets.zero,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  dateLabel,
-                  style: CaptainTypography.titleSmall(
-                    context,
-                  ).copyWith(fontWeight: FontWeight.w800),
-                ),
+          Container(
+            padding: const EdgeInsets.all(CaptainDesignTokens.s16),
+            decoration: BoxDecoration(
+              color: TripHistoryPalette.wash(context),
+              borderRadius: const BorderRadius.vertical(
+                top: CaptainDesignTokens.r24,
               ),
-              Text(
-                '$departure → $arrival',
-                style: CaptainTypography.labelLarge(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w700),
-              ),
-            ],
+            ),
+            child: TripHistoryTimeStrip(
+              departure: trip.departureTime,
+              arrival: trip.arrivalTime,
+              duration: trip.duration,
+            ),
           ),
-          const SizedBox(height: CaptainDesignTokens.s16),
-          Row(
-            children: [
-              Expanded(
-                child: _Fact(
-                  icon: Icons.people_alt_rounded,
-                  label: 'الركاب',
-                  value: '${trip.boardedCount}/${trip.passengerCount}',
-                ),
-              ),
-              Expanded(
-                child: _Fact(
-                  icon: Icons.directions_bus_rounded,
-                  label: 'المركبة',
-                  value: trip.vehicleNumber.isNotEmpty
-                      ? trip.vehicleNumber
-                      : '—',
-                ),
-              ),
-              Expanded(
-                child: _Fact(
-                  icon: Icons.timer_rounded,
-                  label: 'المدة',
-                  value: CaptainFormats.duration(trip.duration),
-                ),
-              ),
-            ],
+          Padding(
+            padding: const EdgeInsets.all(CaptainDesignTokens.s16),
+            child: TripHistoryBoardingBar(
+              boarded: trip.boardedCount,
+              total: trip.passengerCount,
+            ),
           ),
         ],
       ),
@@ -136,36 +107,134 @@ class _TripSummaryCard extends StatelessWidget {
   }
 }
 
-class _Fact extends StatelessWidget {
-  const _Fact({required this.icon, required this.label, required this.value});
+/// The bus the trip ran on.
+///
+/// The plate is new here — the entity always carried it and the screen never
+/// showed it, which is the one identifier a captain would come back to a
+/// finished trip to check.
+class _VehicleCard extends StatelessWidget {
+  const _VehicleCard({required this.trip});
 
-  final IconData icon;
-  final String label;
-  final String value;
+  final TripHistoryItem trip;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final vehicle = trip.vehicleNumber.isEmpty ? '—' : trip.vehicleNumber;
+    final plate = trip.plateNumber.isEmpty ? '—' : trip.plateNumber;
+
+    return CaptainCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const _SectionTitle(title: 'المركبة'),
+          const SizedBox(height: CaptainDesignTokens.s12),
+          CaptainDetailRow(
+            icon: Icons.directions_bus_rounded,
+            label: 'رقم المركبة',
+            value: vehicle,
+            valueIsIdentifier: true,
+          ),
+          CaptainDetailRow(
+            icon: Icons.confirmation_number_rounded,
+            label: 'لوحة الترخيص',
+            value: plate,
+            valueIsIdentifier: true,
+            bottomSpacing: 0,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StopsSection extends StatelessWidget {
+  const _StopsSection({required this.tripId});
+
+  final String tripId;
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TripHistoryDetailCubit, TripHistoryDetailState>(
+      builder: (context, state) {
+        final stops = switch (state) {
+          TripHistoryDetailLoaded(:final stops) => stops,
+          _ => const <TripHistoryStop>[],
+        };
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: CaptainDesignTokens.s4,
+              ),
+              child: _SectionTitle(
+                title: 'مسار الرحلة',
+                trailing: stops.isEmpty
+                    ? null
+                    : TripHistoryLabels.stops(stops.length),
+              ),
+            ),
+            const SizedBox(height: CaptainDesignTokens.s12),
+            switch (state) {
+              TripHistoryDetailLoading() => const _StopsSkeleton(),
+              TripHistoryDetailError(:final message) => AsyncStateView(
+                status: AsyncViewStatus.error,
+                errorMessage: message,
+                onRetry: () =>
+                    context.read<TripHistoryDetailCubit>().load(tripId),
+                child: const SizedBox.shrink(),
+              ),
+              TripHistoryDetailLoaded() =>
+                stops.isEmpty
+                    ? const _NoStopsRecorded()
+                    : CaptainCard(child: _StopsTimeline(stops: stops)),
+            },
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle({required this.title, this.trailing});
+
+  final String title;
+  final String? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
       children: [
-        Icon(icon, size: 18, color: CaptainColors.primary),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          style: CaptainTypography.labelLarge(
-            context,
-          ).copyWith(fontWeight: FontWeight.w900),
+        Expanded(
+          child: Text(
+            title,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: CaptainTypography.titleSmall(
+              context,
+            ).copyWith(fontWeight: FontWeight.w900),
+          ),
         ),
-        Text(
-          label,
-          style: CaptainTypography.labelSmall(
-            context,
-          ).copyWith(color: CaptainColors.textSecondaryFor(context)),
-        ),
+        if (trailing != null)
+          Text(
+            trailing!,
+            style: CaptainTypography.labelMedium(
+              context,
+            ).copyWith(color: TripHistoryPalette.neutral(context)),
+          ),
       ],
     );
   }
 }
 
+/// The stations in the order the trip drove them.
+///
+/// The ends of the line are what a captain looks for first, so they carry the
+/// filled marks and the icons; the stations between them are steps on the way
+/// and are drawn as hollow marks, in the same family, so the line reads as one
+/// journey instead of a stack of equal rows.
 class _StopsTimeline extends StatelessWidget {
   const _StopsTimeline({required this.stops});
 
@@ -177,8 +246,7 @@ class _StopsTimeline extends StatelessWidget {
       children: [
         for (var i = 0; i < stops.length; i++)
           _TimelineRow(
-            name: stops[i].name,
-            scheduledTime: stops[i].scheduledTime,
+            stop: stops[i],
             isFirst: i == 0,
             isLast: i == stops.length - 1,
           ),
@@ -189,71 +257,44 @@ class _StopsTimeline extends StatelessWidget {
 
 class _TimelineRow extends StatelessWidget {
   const _TimelineRow({
-    required this.name,
-    required this.scheduledTime,
+    required this.stop,
     required this.isFirst,
     required this.isLast,
   });
 
-  final String name;
-  final String? scheduledTime;
+  final TripHistoryStop stop;
   final bool isFirst;
   final bool isLast;
 
   @override
   Widget build(BuildContext context) {
+    final isEnd = isFirst || isLast;
+
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(
-            width: 24,
-            child: Column(
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: isFirst || isLast
-                        ? CaptainColors.primary
-                        : CaptainColors.success,
-                  ),
-                ),
-                if (!isLast)
-                  Expanded(
-                    child: Container(
-                      width: 2,
-                      color: CaptainColors.dividerFor(context),
-                    ),
-                  ),
-              ],
-            ),
-          ),
+          _Rail(isFirst: isFirst, isLast: isLast),
           const SizedBox(width: CaptainDesignTokens.s12),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(bottom: CaptainDesignTokens.s20),
+              padding: EdgeInsetsDirectional.only(
+                bottom: isLast ? 0 : CaptainDesignTokens.s20,
+              ),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      name,
+                      stop.name,
                       style: CaptainTypography.bodyMedium(context).copyWith(
-                        fontWeight: isFirst || isLast
-                            ? FontWeight.w800
-                            : FontWeight.w600,
+                        fontWeight: isEnd ? FontWeight.w800 : FontWeight.w600,
                       ),
                     ),
                   ),
-                  if (scheduledTime != null)
-                    Text(
-                      scheduledTime!,
-                      style: CaptainTypography.labelMedium(context).copyWith(
-                        color: CaptainColors.textSecondaryFor(context),
-                      ),
-                    ),
+                  if (stop.scheduledTime != null) ...[
+                    const SizedBox(width: CaptainDesignTokens.s8),
+                    _StopTime(time: stop.scheduledTime!, isEnd: isEnd),
+                  ],
                 ],
               ),
             ),
@@ -264,34 +305,146 @@ class _TimelineRow extends StatelessWidget {
   }
 }
 
-class _NoStopsRecorded extends StatelessWidget {
-  const _NoStopsRecorded();
+class _Rail extends StatelessWidget {
+  const _Rail({required this.isFirst, required this.isLast});
+
+  final bool isFirst;
+  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: CaptainDesignTokens.s24),
-      child: Center(
-        child: Text(
-          'لا توجد محطات مسجلة لهذه الرحلة',
-          style: CaptainTypography.bodyMedium(
-            context,
-          ).copyWith(color: CaptainColors.textSecondaryFor(context)),
+    final isEnd = isFirst || isLast;
+
+    return SizedBox(
+      width: 24,
+      child: Column(
+        children: [
+          Container(
+            width: isEnd ? 22 : 12,
+            height: isEnd ? 22 : 12,
+            margin: const EdgeInsets.symmetric(vertical: 2),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: isEnd
+                  ? TripHistoryPalette.accent
+                  : CaptainColors.surfaceFor(context),
+              border: isEnd
+                  ? null
+                  : Border.all(
+                      color: TripHistoryPalette.accent.withValues(alpha: 0.45),
+                      width: 2,
+                    ),
+            ),
+            child: isEnd
+                ? Icon(
+                    isFirst ? Icons.my_location_rounded : Icons.flag_rounded,
+                    size: 12,
+                    color: CaptainColors.onPrimary,
+                  )
+                : null,
+          ),
+          if (!isLast)
+            Expanded(
+              child: Container(
+                width: 2,
+                color: TripHistoryPalette.accent.withValues(alpha: 0.20),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _StopTime extends StatelessWidget {
+  const _StopTime({required this.time, required this.isEnd});
+
+  final String time;
+  final bool isEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: CaptainDesignTokens.s8,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: isEnd
+            ? TripHistoryPalette.accent.withValues(alpha: 0.10)
+            : Colors.transparent,
+        borderRadius: CaptainDesignTokens.brPill,
+      ),
+      child: Text(
+        time,
+        style: CaptainTypography.labelMedium(context).copyWith(
+          color: isEnd
+              ? TripHistoryPalette.accent
+              : TripHistoryPalette.neutral(context),
+          fontWeight: isEnd ? FontWeight.w800 : FontWeight.w700,
         ),
       ),
     );
   }
 }
 
+class _NoStopsRecorded extends StatelessWidget {
+  const _NoStopsRecorded();
+
+  @override
+  Widget build(BuildContext context) {
+    return CaptainCard(
+      child: Row(
+        children: [
+          Icon(
+            Icons.wrong_location_rounded,
+            size: 18,
+            color: TripHistoryPalette.neutral(context),
+          ),
+          const SizedBox(width: CaptainDesignTokens.s12),
+          Expanded(
+            child: Text(
+              'لا توجد محطات مسجلة لهذه الرحلة',
+              style: CaptainTypography.bodyMedium(
+                context,
+              ).copyWith(color: TripHistoryPalette.neutral(context)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Placeholder rows shaped like the timeline they stand in for, rather than a
+/// spinner: the stops arrive in one shot, and a bare spinner here made a fast
+/// load flash an empty page between two full ones.
 class _StopsSkeleton extends StatelessWidget {
   const _StopsSkeleton();
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: Padding(
-        padding: EdgeInsets.symmetric(vertical: CaptainDesignTokens.s32),
-        child: CircularProgressIndicator(),
+    return CaptainCard(
+      child: Column(
+        children: [
+          for (var i = 0; i < 4; i++)
+            Padding(
+              padding: EdgeInsetsDirectional.only(
+                bottom: i == 3 ? 0 : CaptainDesignTokens.s20,
+              ),
+              child: Row(
+                children: [
+                  const CaptainSkeleton(
+                    width: 22,
+                    height: 22,
+                    borderRadius: CaptainDesignTokens.brPill,
+                  ),
+                  const SizedBox(width: CaptainDesignTokens.s12),
+                  CaptainSkeleton(width: 140 - (i * 20).toDouble(), height: 14),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

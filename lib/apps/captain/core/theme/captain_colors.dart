@@ -1,21 +1,37 @@
 import 'package:flutter/material.dart';
 
+/// The captain app's colours.
+///
+/// Everything that isn't a caution or a failure comes from **one blue family**
+/// anchored on [primary]. Positive states are a tint of the brand rather than
+/// the usual green: two accent hues fighting on one screen is what made the app
+/// look assembled instead of designed. Amber and red survive because a warning
+/// that shares the brand hue stops reading as a warning.
 class CaptainColors {
-  // Brand
-  static const Color primary = Color(0xFF2563EB); // Vibrant Blue
+  // Brand palette — [primary] is the anchor; the others are its shades, so an
+  // accent can never introduce a competing hue.
+  static const Color primary = Color(0xFF2563EB); // Blue 600
   static const Color onPrimary = Colors.white;
 
   /// The deep end of the brand gradient (Indigo 700). Pairs with [primary] to
   /// give the splash mark, auth lockup and profile header a shared identity.
   static const Color primaryDeep = Color(0xFF4338CA);
 
+  /// The pale end of the palette (Blue 400) — for the earliest step of a
+  /// progression, before it reaches full [primary].
+  static const Color primaryLight = Color(0xFF60A5FA);
+
+  /// The bright end of the palette (Sky 500). Reads as "done / good" while
+  /// staying inside the blue family — this is what replaced the old green.
+  static const Color primaryBright = Color(0xFF0EA5E9);
+
   // Semantic
-  static const Color online = Color(0xFF10B981); // Emerald 500
+  static const Color online = primaryBright;
   static const Color offline = Color(0xFF64748B); // Slate 500
-  static const Color tripActive = Color(0xFF2563EB); // Blue 600
+  static const Color tripActive = primary;
   static const Color error = Color(0xFFEF4444); // Red 500
   static const Color warning = Color(0xFFF59E0B); // Amber 500
-  static const Color success = Color(0xFF22C55E); // Green 500
+  static const Color success = primaryBright;
 
   /// Star/rating gold. Distinct from [warning] on purpose: a rating is not a
   /// caution state, and the two must stay independently tunable.

@@ -3,6 +3,27 @@ import '../theme/captain_design_tokens.dart';
 
 enum CaptainButtonVariant { primary, secondary, danger, outline }
 
+/// The button's leading icon, flipped when it points somewhere and the layout
+/// runs right-to-left.
+class _Icon extends StatelessWidget {
+  const _Icon({
+    required this.icon,
+    required this.color,
+    required this.mirrorInRtl,
+  });
+
+  final IconData icon;
+  final Color color;
+  final bool mirrorInRtl;
+
+  @override
+  Widget build(BuildContext context) {
+    final glyph = Icon(icon, size: 20, color: color);
+    final flip = mirrorInRtl && Directionality.of(context) == TextDirection.rtl;
+    return flip ? Transform.flip(flipX: true, child: glyph) : glyph;
+  }
+}
+
 class CaptainButton extends StatelessWidget {
   const CaptainButton({
     super.key,
@@ -12,6 +33,7 @@ class CaptainButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.isFullWidth = true,
+    this.mirrorIconInRtl = false,
   });
 
   final String label;
@@ -20,6 +42,13 @@ class CaptainButton extends StatelessWidget {
   final IconData? icon;
   final bool isLoading;
   final bool isFullWidth;
+
+  /// Set for icons that point somewhere — an arrow leaving a door, a caret
+  /// moving forward. Material ships those drawn for LTR and does not mirror
+  /// them, so in this Arabic app they end up pointing the wrong way. Leave it
+  /// off for symmetric or pictorial icons (a bus, a seat, a star), which read
+  /// the same either way and would only look wrong flipped.
+  final bool mirrorIconInRtl;
 
   @override
   Widget build(BuildContext context) {
@@ -67,7 +96,7 @@ class CaptainButton extends StatelessWidget {
           ),
           const SizedBox(width: CaptainDesignTokens.s8),
         ] else if (icon != null) ...[
-          Icon(icon, size: 20, color: fgColor),
+          _Icon(icon: icon!, color: fgColor, mirrorInRtl: mirrorIconInRtl),
           const SizedBox(width: CaptainDesignTokens.s8),
         ],
         Flexible(
@@ -92,7 +121,9 @@ class CaptainButton extends StatelessWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: CaptainDesignTokens.s16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: CaptainDesignTokens.s16,
+        ),
         decoration: BoxDecoration(
           color: bgColor,
           borderRadius: CaptainDesignTokens.br16,

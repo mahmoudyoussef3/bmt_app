@@ -10,6 +10,7 @@ class CaptainDaySummary {
     required this.passengers,
     required this.boarded,
     required this.focusTrip,
+    required this.lastArrival,
   });
 
   factory CaptainDaySummary.fromTrips(List<AssignedTrip> trips) {
@@ -29,6 +30,13 @@ class CaptainDaySummary {
       // A trip already under way outranks a scheduled one, however early that
       // scheduled one departs — the captain is driving it right now.
       focusTrip: running.firstOrNull ?? upcoming.firstOrNull,
+      // The latest arrival, not the last trip by departure: a short trip that
+      // leaves later can still finish before a long one that left earlier.
+      lastArrival: sorted.isEmpty
+          ? null
+          : sorted
+                .map((t) => t.expectedArrivalTime)
+                .reduce((a, b) => a.isAfter(b) ? a : b),
     );
   }
 
@@ -39,6 +47,10 @@ class CaptainDaySummary {
 
   /// The trip the captain should act on, or null when nothing is left to drive.
   final AssignedTrip? focusTrip;
+
+  /// When the day's last trip is expected to arrive — null only when no trip is
+  /// assigned. Lets a finished day report the hour it closed on.
+  final DateTime? lastArrival;
 
   bool get isEmpty => totalTrips == 0;
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 import '../../domain/entities/passenger.dart';
@@ -81,21 +82,21 @@ class _Actions extends StatelessWidget {
         PassengerActionButton(
           icon: Icons.edit_rounded,
           tooltip: 'تغيير الحالة',
-          color: Colors.blue,
+          color: CaptainColors.primary,
           onPressed: () => showPassengerStatusSheet(context, passenger),
         ),
         const SizedBox(height: 8),
         PassengerActionButton(
           icon: Icons.call_rounded,
           tooltip: 'اتصال',
-          color: Colors.green,
+          color: CaptainColors.primaryBright,
           onPressed: onCall,
         ),
         const SizedBox(height: 8),
         PassengerActionButton(
           icon: Icons.chat_bubble_outline_rounded,
           tooltip: 'مراسلة',
-          color: Colors.blue,
+          color: CaptainColors.primaryDeep,
           onPressed: onChat,
         ),
       ],
