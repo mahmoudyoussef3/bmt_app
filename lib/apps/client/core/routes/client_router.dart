@@ -250,9 +250,11 @@ abstract final class ClientRouter {
         ClientCubitScopes.support(const SupportCenterScreen()),
     SupportRoutes.createTicket: (_) =>
         ClientCubitScopes.support(const CreateSupportTicketScreen()),
-    SupportRoutes.ticketDetails: (context) => ClientCubitScopes.support(
-      SupportTicketDetailsScreen(ticketId: _args(context)! as String),
-    ),
+    SupportRoutes.ticketDetails: (context) =>
+        ClientCubitScopes.supportTicketDetails(
+          const SupportTicketDetailsScreen(),
+          ticketId: _args(context)! as String,
+        ),
   };
 
   // --- Engagement -----------------------------------------------------------

@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import '../utils/support_status_visuals.dart';
 import 'support_ticket_labels.dart';
 
 class SupportTicketCard extends StatelessWidget {
@@ -16,28 +17,12 @@ class SupportTicketCard extends StatelessWidget {
   final SupportTicket ticket;
   final VoidCallback onTap;
 
-  Color _getStatusColor(BuildContext context, TicketStatus status) {
-    switch (status) {
-      case TicketStatus.submitted:
-        return ClientColors.primaryFor(context);
-      case TicketStatus.underReview:
-        return ClientColors.journeyAmber;
-      case TicketStatus.contacted:
-        return ClientColors.secondary;
-      case TicketStatus.resolved:
-        return ClientColors.journeyCyan;
-      case TicketStatus.closed:
-        return ClientColors.textTertiaryFor(context);
-      case TicketStatus.rejected:
-        return ClientColors.journeyRed;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final statusColor = _getStatusColor(context, ticket.status);
-    final isUrgent = ticket.priority == TicketPriority.urgent ||
+    final statusColor = SupportStatusVisuals.colorFor(context, ticket.status);
+    final isUrgent =
+        ticket.priority == TicketPriority.urgent ||
         ticket.priority == TicketPriority.high;
 
     return PressableScale(
@@ -106,20 +91,18 @@ class SupportTicketCard extends StatelessWidget {
             const SizedBox(height: 16),
             Text(
               ticket.title,
-              style: ClientTypography.headingSmall(context).copyWith(
-                color: scheme.onSurface,
-                fontWeight: FontWeight.bold,
-              ),
+              style: ClientTypography.headingSmall(
+                context,
+              ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.bold),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 8),
             Text(
               ticket.description,
-              style: ClientTypography.bodyMedium(context).copyWith(
-                color: scheme.onSurfaceVariant,
-                height: 1.4,
-              ),
+              style: ClientTypography.bodyMedium(
+                context,
+              ).copyWith(color: scheme.onSurfaceVariant, height: 1.4),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
             ),

@@ -95,6 +95,15 @@ abstract final class ClientCubitScopes {
     child: child,
   );
 
+  /// Scopes one open ticket, loaded fresh from its id.
+  static Widget supportTicketDetails(
+    Widget child, {
+    required String ticketId,
+  }) => BlocProvider<SupportCubit>(
+    create: (_) => clientGetIt<SupportCubit>()..openTicketDetails(ticketId),
+    child: child,
+  );
+
   static Widget notifications(Widget child) => BlocProvider<NotificationsCubit>(
     create: (_) => clientGetIt<NotificationsCubit>(),
     child: child,
