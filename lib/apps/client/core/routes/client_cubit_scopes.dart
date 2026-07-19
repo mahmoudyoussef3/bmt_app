@@ -4,6 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/forgot_password_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_confirm_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_step_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/daily_booking_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/popular_routes_cubit.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/chat_thread_cubit.dart';
@@ -134,4 +138,23 @@ abstract final class ClientCubitScopes {
     create: (_) => clientGetIt<LoyaltyCubit>()..load(),
     child: child,
   );
+
+  /// The booking wizard runs on three cubits: the session of answers, the step
+  /// on screen, and the confirm attempt. They are scoped together so leaving
+  /// the wizard discards a half-finished booking with them.
+  static Widget bookingWizard(Widget child, {required RouteOptionData route}) =>
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<BookingWizardCubit>(
+            create: (_) => BookingWizardCubit(route),
+          ),
+          BlocProvider<BookingWizardStepCubit>(
+            create: (_) => BookingWizardStepCubit(),
+          ),
+          BlocProvider<BookingWizardConfirmCubit>(
+            create: (_) => clientGetIt<BookingWizardConfirmCubit>(),
+          ),
+        ],
+        child: child,
+      );
 }

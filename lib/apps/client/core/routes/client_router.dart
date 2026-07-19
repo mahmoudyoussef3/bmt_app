@@ -13,7 +13,6 @@ import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_search_cubit.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/map_pins_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_results_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/vehicle_details_cubit.dart';
@@ -184,9 +183,9 @@ abstract final class ClientRouter {
     BookingRoutes.wizard: (context) {
       final route = _args(context);
       if (route is! RouteOptionData) return const SizedBox.shrink();
-      return BlocProvider(
-        create: (_) => BookingWizardCubit(route),
-        child: const BookingWizardScreen(),
+      return ClientCubitScopes.bookingWizard(
+        const BookingWizardScreen(),
+        route: route,
       );
     },
     BookingRoutes.routeOverview: (context) {

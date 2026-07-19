@@ -44,6 +44,7 @@ import '../../features/booking/domain/usecases/get_vehicle_details_usecase.dart'
 import '../../features/booking/domain/usecases/get_vehicles_usecase.dart';
 import '../../features/booking/domain/usecases/sort_vehicles_usecase.dart';
 import '../../features/booking/presentation/cubit/booking_search_cubit.dart';
+import '../../features/booking/presentation/cubit/booking_wizard_confirm_cubit.dart';
 import '../../features/booking/presentation/cubit/daily_booking_cubit.dart';
 import '../../features/booking/presentation/cubit/map_pins_cubit.dart';
 import '../../features/booking/presentation/cubit/popular_routes_cubit.dart';
@@ -90,6 +91,7 @@ import '../../features/payments/domain/repositories/payment_repository.dart';
 import '../../features/payments/domain/usecases/apply_promo_code_usecase.dart';
 import '../../features/payments/domain/usecases/create_card_payment_session_usecase.dart';
 import '../../features/payments/domain/usecases/get_payment_methods_usecase.dart';
+import '../../features/payments/domain/usecases/start_card_checkout_usecase.dart';
 import '../../features/payments/domain/usecases/upload_payment_receipt_usecase.dart';
 import '../../features/payments/presentation/cubit/payment_cubit.dart';
 import '../../features/packages/data/datasources/packages_datasource.dart';
@@ -128,6 +130,7 @@ import '../../features/seat_selection/domain/usecases/lock_trip_seat_usecase.dar
 import '../../features/seat_selection/domain/usecases/release_trip_seat_lock_usecase.dart';
 import '../../features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
 import '../../features/seat_selection/domain/usecases/update_existing_booking_payment_usecase.dart';
+import '../../features/seat_selection/domain/usecases/place_seat_booking_usecase.dart';
 import '../../features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import '../../features/seat_release/data/datasources/supabase_seat_release_datasource.dart';
 import '../../features/seat_release/data/repositories/seat_release_repository_impl.dart';
@@ -573,6 +576,17 @@ void _registerBookingDependencies() {
       ),
     );
   }
+
+  if (!clientGetIt.isRegistered<BookingWizardConfirmCubit>()) {
+    clientGetIt.registerFactory<BookingWizardConfirmCubit>(
+      () => BookingWizardConfirmCubit(
+        placeSeatBooking: clientGetIt<PlaceSeatBookingUseCase>(),
+        updateExistingBookingPayment:
+            clientGetIt<UpdateExistingBookingPaymentUseCase>(),
+        startCardCheckout: clientGetIt<StartCardCheckoutUseCase>(),
+      ),
+    );
+  }
 }
 
 void _registerSeatSelectionDependencies() {
@@ -628,6 +642,16 @@ void _registerSeatSelectionDependencies() {
     clientGetIt.registerLazySingleton<UpdateExistingBookingPaymentUseCase>(
       () => UpdateExistingBookingPaymentUseCase(
         clientGetIt<SeatSelectionRepository>(),
+      ),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<PlaceSeatBookingUseCase>()) {
+    clientGetIt.registerLazySingleton<PlaceSeatBookingUseCase>(
+      () => PlaceSeatBookingUseCase(
+        lockTripSeat: clientGetIt<LockTripSeatUseCase>(),
+        confirmSeatBooking: clientGetIt<ConfirmSeatBookingUseCase>(),
+        releaseTripSeatLock: clientGetIt<ReleaseTripSeatLockUseCase>(),
       ),
     );
   }
@@ -699,6 +723,16 @@ void _registerPaymentDependencies() {
   if (!clientGetIt.isRegistered<CreateCardPaymentSessionUseCase>()) {
     clientGetIt.registerLazySingleton<CreateCardPaymentSessionUseCase>(
       () => CreateCardPaymentSessionUseCase(clientGetIt<PaymentRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<StartCardCheckoutUseCase>()) {
+    clientGetIt.registerLazySingleton<StartCardCheckoutUseCase>(
+      () => StartCardCheckoutUseCase(
+        getPaymentMethods: clientGetIt<GetPaymentMethodsUseCase>(),
+        createCardPaymentSession:
+            clientGetIt<CreateCardPaymentSessionUseCase>(),
+      ),
     );
   }
 

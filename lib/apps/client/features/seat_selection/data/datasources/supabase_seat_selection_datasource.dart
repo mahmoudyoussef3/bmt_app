@@ -172,6 +172,15 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
 
     final rpcParams = Map<String, dynamic>.from(params);
     rpcParams['p_client_id'] = user.id;
+    // The passenger is whoever is signed in. Callers may still name them
+    // explicitly (an operator booking on someone's behalf); this only fills the
+    // blank so no caller has to reach into the auth session itself.
+    final metadata = user.userMetadata ?? const <String, dynamic>{};
+    rpcParams['p_passenger_name'] = _orFallback(
+      params['p_passenger_name'],
+      metadata['full_name'],
+    );
+    rpcParams['p_phone'] = _orFallback(params['p_phone'], metadata['phone']);
 
     try {
       final response = await _supabase.rpc(
@@ -223,5 +232,10 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
     } on PostgrestException {
       rethrow;
     }
+  }
+
+  String _orFallback(Object? value, Object? fallback) {
+    final given = value?.toString() ?? '';
+    return given.isNotEmpty ? given : (fallback?.toString() ?? '');
   }
 }
