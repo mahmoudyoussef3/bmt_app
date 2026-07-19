@@ -1,10 +1,18 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:bmt_app/core/validation/contact_validation.dart';
+
+import 'client_account_guard.dart';
 import 'client_auth_datasource.dart';
 
+/// Supabase-backed auth for the client app. Delegates all `clients`-table
+/// bookkeeping (role guard, phone check, profile sync) to [ClientAccountGuard].
 class SupabaseClientAuthDatasource implements ClientAuthDatasource {
-  final SupabaseClient _supabase;
+  SupabaseClientAuthDatasource(this._supabase)
+    : _accounts = ClientAccountGuard(_supabase);
 
-  const SupabaseClientAuthDatasource(this._supabase);
+  final SupabaseClient _supabase;
+  final ClientAccountGuard _accounts;
 
   @override
   Future<void> signInWithEmail({
@@ -14,27 +22,12 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     try {
       await _supabase.auth.signInWithPassword(email: email, password: password);
     } on AuthException catch (e) {
-      // Surface the real reason (e.g. invalid credentials, email not
-      // confirmed) instead of a blanket message the user can't act on.
+      // Surface the real reason (bad credentials, unconfirmed email) instead of
+      // a blanket message the user can't act on.
       throw Exception(e.message);
     }
-
-    // Role guard: only users registered as clients may use this app.
-    final uid = _supabase.auth.currentUser?.id;
-    if (uid != null) {
-      final row = await _supabase
-          .from('clients')
-          .select('id')
-          .eq('id', uid)
-          .maybeSingle();
-      if (row == null) {
-        await _supabase.auth.signOut();
-        throw Exception(
-          'This account is not registered as a client.\n'
-          'Use the correct app for your account type.',
-        );
-      }
-    }
+    // Only users registered as clients may use this app.
+    await _accounts.assertRegistered();
   }
 
   @override
@@ -45,18 +38,17 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     required String password,
     String? referralCode,
   }) async {
-    final emailOk = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email.trim());
-    if (fullName.trim().length < 2 || !emailOk || phone.trim().isEmpty) {
+    final trimmedPhone = phone.trim();
+    if (fullName.trim().length < 2 ||
+        !ContactValidation.isValidEmail(email) ||
+        trimmedPhone.isEmpty) {
       throw const FormatException('Please complete all fields correctly.');
     }
-
-    final phone_ = phone.trim();
     final code = referralCode?.trim().toUpperCase() ?? '';
 
-    // Guard the phone UNIQUE constraint up front so a duplicate produces a
-    // clear, actionable message rather than an opaque trigger error. This
-    // check is thrown OUTSIDE the sign-up try/catch so its message survives.
-    if (await _phoneAlreadyRegistered(phone_)) {
+    // Guard the phone UNIQUE constraint up front, outside the sign-up try/catch,
+    // so a duplicate produces a clear message rather than an opaque trigger error.
+    if (await _accounts.phoneRegistered(trimmedPhone)) {
       throw Exception(
         'This phone number is already registered.\n'
         'Please sign in instead, or use a different number.',
@@ -69,45 +61,21 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
         password: password,
         data: {
           'full_name': fullName.trim(),
-          'phone': phone_,
-          // Captured here so the backend trigger can record a pending referral
-          // against this code once the account is created.
+          'phone': trimmedPhone,
           if (code.isNotEmpty) 'referral_code': code,
         },
       );
-
       final user = response.user;
       if (user != null) {
-        // Best-effort profile upsert; the backend trigger already inserts the
-        // row, so a failure here (e.g. RLS) does not fail the sign-up.
-        try {
-          await _supabase.from('clients').upsert({
-            'id': user.id,
-            'full_name': fullName.trim(),
-            'phone': phone_,
-            'email': email.trim(),
-            'updated_at': DateTime.now().toIso8601String(),
-          });
-        } catch (_) {}
+        await _accounts.upsertProfile(
+          user,
+          fullName: fullName.trim(),
+          phone: trimmedPhone,
+          email: email.trim(),
+        );
       }
     } on AuthException catch (e) {
-      // e.g. "User already registered" — surface it so the user can react.
       throw Exception(e.message);
-    }
-  }
-
-  /// Returns true when [phone] already belongs to a client. Fails open: if the
-  /// pre-check itself errors, sign-up still proceeds and any real failure is
-  /// surfaced by [signUpWithEmail] instead of being swallowed here.
-  Future<bool> _phoneAlreadyRegistered(String phone) async {
-    try {
-      final result = await _supabase.rpc(
-        'check_phone_exists',
-        params: {'p_phone': phone},
-      );
-      return result == true;
-    } catch (_) {
-      return false;
     }
   }
 
@@ -117,36 +85,29 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
       await _supabase.auth.signOut();
     } catch (_) {
       // A global sign-out needs the network to revoke the refresh token. When
-      // that call fails the rider is still holding a valid local session, so
-      // fall back to a local sign-out: leaving them signed in on a device they
-      // asked to sign out of is the worse outcome.
+      // that fails, fall back to a local sign-out rather than leaving the rider
+      // signed in on a device they asked to sign out of.
       await _supabase.auth.signOut(scope: SignOutScope.local);
     }
   }
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {
-    final emailOk = RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email.trim());
-    if (!emailOk) {
+    if (!ContactValidation.isValidEmail(email)) {
       throw const FormatException('Please provide a valid email address.');
     }
-
     try {
-      // Note: redirectTo should be configured based on your app's deep link setup.
-      // E.g., 'bmtapp://reset-password/' or a universal link.
-      // Here we provide a dummy default that the developer should configure in Supabase dashboard.
       await _supabase.auth.resetPasswordForEmail(
         email.trim(),
         redirectTo: 'easyway://reset-password/',
       );
     } on AuthException catch (e) {
-      // Map common Supabase errors like rate limit to generic messages
       if (e.message.contains('rate limit') ||
           e.message.contains('security purposes')) {
         throw Exception('RateLimit');
       }
       throw Exception(e.message);
-    } catch (e) {
+    } catch (_) {
       throw Exception('Unable to send reset link. Please try again later.');
     }
   }

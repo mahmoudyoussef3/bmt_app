@@ -53,63 +53,64 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
             onRetry: context.read<PackagesCubit>().load,
           );
         }
-        final plans = (packagesState as PackagesLoaded).filteredPackages;
+        // The wizard has no filter strip, so it always shows the full catalogue.
+        final plans = (packagesState as PackagesLoaded).packages;
         final featured = _featuredIndex(plans);
 
         return BlocBuilder<BookingWizardCubit, BookingWizardSession>(
           builder: (context, session) {
             final l10n = context.l10n;
             return Column(
-            children: [
-              Expanded(
-                child: ListView(
-                  padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
-                  children: [
-                    BookingStepIntro(
-                      icon: Icons.local_offer_rounded,
-                      title: l10n.booking_chooseYourFare,
-                      subtitle: l10n.booking_pricesAreForRoute(
-                        session.pickupStop?.name ??
-                            l10n.booking_yourPickupFallback,
-                        session.dropoffStop?.name ??
-                            l10n.booking_yourStopFallback,
-                      ),
-                      trailing: BookingCountPill(
-                        label: l10n.booking_optionsCount(plans.length),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    for (var i = 0; i < plans.length; i++)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: PackageOptionCard(
-                          plan: plans[i],
-                          price: session.resolvedPackagePrice(plans[i]),
-                          singleRideFare: session.tripPrice,
-                          isFeatured: i == featured,
-                          isSelected:
-                              session.selectedPackage?.id == plans[i].id,
-                          onTap: () => _select(plans[i]),
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
+                    children: [
+                      BookingStepIntro(
+                        icon: Icons.local_offer_rounded,
+                        title: l10n.booking_chooseYourFare,
+                        subtitle: l10n.booking_pricesAreForRoute(
+                          session.pickupStop?.name ??
+                              l10n.booking_yourPickupFallback,
+                          session.dropoffStop?.name ??
+                              l10n.booking_yourStopFallback,
+                        ),
+                        trailing: BookingCountPill(
+                          label: l10n.booking_optionsCount(plans.length),
                         ),
                       ),
-                    if (session.selectedPackage != null) ...[
-                      const SizedBox(height: 6),
-                      PackageStartNote(date: session.packageStartDate),
+                      const SizedBox(height: 16),
+                      for (var i = 0; i < plans.length; i++)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: PackageOptionCard(
+                            plan: plans[i],
+                            price: session.resolvedPackagePrice(plans[i]),
+                            singleRideFare: session.tripPrice,
+                            isFeatured: i == featured,
+                            isSelected:
+                                session.selectedPackage?.id == plans[i].id,
+                            onTap: () => _select(plans[i]),
+                          ),
+                        ),
+                      if (session.selectedPackage != null) ...[
+                        const SizedBox(height: 6),
+                        PackageStartNote(date: session.packageStartDate),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
-              ),
-              BookingBottomAction(
-                summary: session.selectedPackage == null
-                    ? null
-                    : PackageStepSummary(session: session),
-                child: ClientButton(
-                  label: l10n.booking_reviewBooking,
-                  icon: const DirectionalIcon(Icons.arrow_forward_rounded),
-                  onPressed: session.packageValid ? widget.onNext : null,
+                BookingBottomAction(
+                  summary: session.selectedPackage == null
+                      ? null
+                      : PackageStepSummary(session: session),
+                  child: ClientButton(
+                    label: l10n.booking_reviewBooking,
+                    icon: const DirectionalIcon(Icons.arrow_forward_rounded),
+                    onPressed: session.packageValid ? widget.onNext : null,
+                  ),
                 ),
-              ),
-            ],
+              ],
             );
           },
         );

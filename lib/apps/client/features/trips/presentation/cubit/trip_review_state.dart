@@ -1,4 +1,5 @@
 import '../../domain/entities/trip_review.dart';
+import '../../domain/entities/trip_review_failure.dart';
 
 sealed class TripReviewState {
   const TripReviewState();
@@ -12,9 +13,9 @@ class TripReviewLoading extends TripReviewState {
 /// The review could not be loaded — the passenger is offered a retry rather
 /// than a blank sheet that might silently overwrite an existing review.
 class TripReviewLoadFailure extends TripReviewState {
-  const TripReviewLoadFailure(this.message);
+  const TripReviewLoadFailure(this.failure);
 
-  final String message;
+  final TripReviewFailure failure;
 }
 
 /// The passenger is filling in (or amending) their review.
@@ -27,21 +28,28 @@ class TripReviewEditing extends TripReviewState {
 
   final TripReview draft;
   final bool isSubmitting;
-  final String? error;
+
+  /// Why the last submit failed, if it did. A reason rather than a sentence —
+  /// the widget turns it into localized copy.
+  final TripReviewFailure? error;
 
   /// Stars start unset, so an untouched sheet cannot be submitted as a silent
   /// 5-star review the passenger never actually gave.
   bool get canSubmit => draft.isValid && !isSubmitting;
 
+  /// Standard copy semantics: an omitted field is kept. Clearing [error] is
+  /// deliberate rather than incidental — pass [clearError], because silently
+  /// dropping the reason on an unrelated copy is how a failure goes missing.
   TripReviewEditing copyWith({
     TripReview? draft,
     bool? isSubmitting,
-    String? error,
+    TripReviewFailure? error,
+    bool clearError = false,
   }) {
     return TripReviewEditing(
       draft: draft ?? this.draft,
       isSubmitting: isSubmitting ?? this.isSubmitting,
-      error: error,
+      error: clearError ? null : error ?? this.error,
     );
   }
 }

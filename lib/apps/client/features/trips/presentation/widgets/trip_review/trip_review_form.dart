@@ -7,7 +7,8 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/reviewable_trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_cubit.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_state.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_rating_card.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_error_banner.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_ratings.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class TripReviewForm extends StatefulWidget {
@@ -35,7 +36,6 @@ class _TripReviewFormState extends State<TripReviewForm> {
   Widget build(BuildContext context) {
     final cubit = context.read<TripReviewCubit>();
     final state = widget.state;
-    final trip = widget.trip;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -47,32 +47,13 @@ class _TripReviewFormState extends State<TripReviewForm> {
         ),
         const SizedBox(height: 6),
         Text(
-          trip.reference,
+          widget.trip.reference,
           style: ClientTypography.bodySmall(
             context,
           ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
         const SizedBox(height: 20),
-        TripReviewRatingCard(
-          title: context.l10n.trips_ratingDriver,
-          subtitle: trip.driverName,
-          value: state.draft.driverRating,
-          onChanged: cubit.rateDriver,
-        ),
-        const SizedBox(height: 16),
-        TripReviewRatingCard(
-          title: context.l10n.trips_ratingVehicle,
-          subtitle: trip.vehicleName,
-          value: state.draft.vehicleRating,
-          onChanged: cubit.rateVehicle,
-        ),
-        const SizedBox(height: 16),
-        TripReviewRatingCard(
-          title: context.l10n.trips_ratingRoute,
-          subtitle: trip.routeLine,
-          value: state.draft.routeRating,
-          onChanged: cubit.rateRoute,
-        ),
+        TripReviewRatings(trip: widget.trip, state: state),
         const SizedBox(height: 16),
         TextField(
           controller: _comment,
@@ -83,14 +64,12 @@ class _TripReviewFormState extends State<TripReviewForm> {
           decoration: InputDecoration(
             hintText: context.l10n.trips_reviewCommentHint,
             counterText: '',
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(16)),
           ),
         ),
         if (state.error != null) ...[
           const SizedBox(height: 12),
-          _ReviewErrorBanner(message: state.error!),
+          TripReviewErrorBanner(failure: state.error!),
         ],
         const SizedBox(height: 20),
         ClientButton(
@@ -113,41 +92,6 @@ class _TripReviewFormState extends State<TripReviewForm> {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _ReviewErrorBanner extends StatelessWidget {
-  const _ReviewErrorBanner({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: ClientColors.journeyRedLight,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.error_outline_rounded,
-            size: 18,
-            color: ClientColors.journeyRed,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              message,
-              style: ClientTypography.bodySmall(
-                context,
-              ).copyWith(color: ClientColors.onJourneyRed),
-            ),
-          ),
-        ],
-      ),
     );
   }
 }

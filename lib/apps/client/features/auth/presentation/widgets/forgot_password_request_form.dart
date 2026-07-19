@@ -1,0 +1,112 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
+
+import '../cubit/forgot_password_cubit.dart';
+import '../cubit/forgot_password_state.dart';
+import 'auth_info_card.dart';
+import 'auth_security_note.dart';
+import 'auth_validators.dart';
+import 'premium_auth_button.dart';
+import 'premium_auth_text_field.dart';
+
+/// The "enter your email" request form. Owns the email controller; loading and
+/// errors come from [ForgotPasswordCubit].
+class ForgotPasswordRequestForm extends StatefulWidget {
+  const ForgotPasswordRequestForm({super.key});
+
+  @override
+  State<ForgotPasswordRequestForm> createState() =>
+      _ForgotPasswordRequestFormState();
+}
+
+class _ForgotPasswordRequestFormState extends State<ForgotPasswordRequestForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _emailFocus = FocusNode();
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _emailFocus.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    FocusScope.of(context).unfocus();
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final cubit = context.read<ForgotPasswordCubit>();
+    cubit.emailChanged(_emailController.text.trim().toLowerCase());
+    cubit.submitEmail();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return BlocBuilder<ForgotPasswordCubit, ForgotPasswordState>(
+      buildWhen: (previous, current) => previous.status != current.status,
+      builder: (context, state) {
+        final isLoading = state.status == ForgotPasswordStatus.loading;
+        return AbsorbPointer(
+          absorbing: isLoading,
+          child: Form(
+            key: _formKey,
+            autovalidateMode: AutovalidateMode.onUserInteraction,
+            child: AutofillGroup(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AuthInfoCard(
+                    icon: Icons.lock_reset_rounded,
+                    text: l10n.auth_resetInfoCard,
+                  ),
+                  const SizedBox(height: 18),
+                  PremiumAuthTextField(
+                    controller: _emailController,
+                    focusNode: _emailFocus,
+                    labelText: l10n.auth_email,
+                    prefixIcon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
+                    textInputAction: TextInputAction.done,
+                    autofillHints: const [AutofillHints.email],
+                    onChanged: (value) => context
+                        .read<ForgotPasswordCubit>()
+                        .emailChanged(value.trim().toLowerCase()),
+                    onFieldSubmitted: (_) => _submit(),
+                    validator: (value) => AuthValidators.email(value, l10n),
+                  ),
+                  const SizedBox(height: 24),
+                  PremiumAuthButton(
+                    text: isLoading
+                        ? l10n.auth_sendingLink
+                        : l10n.auth_sendResetLink,
+                    onPressed: isLoading ? null : _submit,
+                    isLoading: isLoading,
+                  ),
+                  const SizedBox(height: 16),
+                  TextButton.icon(
+                    onPressed: isLoading
+                        ? null
+                        : () => Navigator.of(context).pop(),
+                    icon: const DirectionalIcon(
+                      Icons.arrow_forward_rounded,
+                      size: 18,
+                    ),
+                    label: Text(l10n.auth_backToLogin),
+                    style: TextButton.styleFrom(
+                      textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  AuthSecurityNote(text: l10n.auth_forgotSecurityNote),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}

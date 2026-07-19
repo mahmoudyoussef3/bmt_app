@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/models/route_filter_criteria.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/utils/apply_route_filters.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/active_filters_row.dart';
@@ -12,16 +11,20 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/routes
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/show_route_filter_sheet.dart';
 
 /// The routes discovery/results content: search + filters header, active
-/// filters, and the result grid, sized to whichever [BookingState] arrives.
+/// filters, and the result grid.
 class PopularRoutesBody extends StatefulWidget {
   const PopularRoutesBody({
     super.key,
-    required this.state,
+    required this.isLoading,
+    required this.errorMessage,
+    required this.routes,
     required this.onRetry,
     required this.onRouteTap,
   });
 
-  final BookingState state;
+  final bool isLoading;
+  final String? errorMessage;
+  final List<PopularRouteListData> routes;
   final VoidCallback onRetry;
   final void Function(PopularRouteListData route) onRouteTap;
 
@@ -42,17 +45,15 @@ class _PopularRoutesBodyState extends State<PopularRoutesBody> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.state is BookingLoading) return const RouteResultsSkeleton();
-    if (widget.state is BookingError) {
+    if (widget.isLoading) return const RouteResultsSkeleton();
+    if (widget.errorMessage != null) {
       return ClientErrorCard.fullScreen(
-        message: (widget.state as BookingError).message,
+        message: widget.errorMessage!,
         onRetry: widget.onRetry,
       );
     }
 
-    final routes = widget.state is PopularRoutesLoaded
-        ? (widget.state as PopularRoutesLoaded).routes
-        : <PopularRouteListData>[];
+    final routes = widget.routes;
     final filteredRoutes = applyRouteFilters(routes, _criteria, _query);
 
     return RefreshIndicator(

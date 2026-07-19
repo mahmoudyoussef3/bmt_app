@@ -1040,30 +1040,6 @@ abstract class AppLocalizations {
   /// **'Package Details'**
   String get packages_packageDetails;
 
-  /// No description provided for @packages_configureTravel.
-  ///
-  /// In en, this message translates to:
-  /// **'Configure Travel'**
-  String get packages_configureTravel;
-
-  /// No description provided for @packages_reviewSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Review Summary'**
-  String get packages_reviewSummary;
-
-  /// No description provided for @packages_subscribed.
-  ///
-  /// In en, this message translates to:
-  /// **'Subscribed!'**
-  String get packages_subscribed;
-
-  /// No description provided for @packages_subscribePlan.
-  ///
-  /// In en, this message translates to:
-  /// **'Subscribe Plan'**
-  String get packages_subscribePlan;
-
   /// No description provided for @packages_all.
   ///
   /// In en, this message translates to:
@@ -1088,11 +1064,23 @@ abstract class AppLocalizations {
   /// **'Quarterly'**
   String get packages_quarterly;
 
-  /// No description provided for @packages_savePercent.
+  /// No description provided for @packages_perRide.
   ///
   /// In en, this message translates to:
-  /// **'Save {percent}%'**
-  String packages_savePercent(int percent);
+  /// **'Per ride'**
+  String get packages_perRide;
+
+  /// No description provided for @packages_emptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No packages in this range'**
+  String get packages_emptyTitle;
+
+  /// No description provided for @packages_emptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another duration, or pull to refresh to load the latest plans.'**
+  String get packages_emptyBody;
 
   /// No description provided for @packages_duration.
   ///
@@ -1112,23 +1100,11 @@ abstract class AppLocalizations {
   /// **'{count} Rides'**
   String packages_ridesCount(int count);
 
-  /// No description provided for @packages_totalSavings.
-  ///
-  /// In en, this message translates to:
-  /// **'Total Savings'**
-  String get packages_totalSavings;
-
   /// No description provided for @packages_egpAmount.
   ///
   /// In en, this message translates to:
   /// **'EGP {amount}'**
   String packages_egpAmount(String amount);
-
-  /// No description provided for @packages_originalPrice.
-  ///
-  /// In en, this message translates to:
-  /// **'Original: EGP {price}'**
-  String packages_originalPrice(String price);
 
   /// No description provided for @packages_startingPrice.
   ///
@@ -1165,18 +1141,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Adjust your ride booking times anytime without cancellation fees.'**
   String get packages_flexibleTimingDesc;
-
-  /// No description provided for @packages_vipBoarding.
-  ///
-  /// In en, this message translates to:
-  /// **'Priority VIP Boarding'**
-  String get packages_vipBoarding;
-
-  /// No description provided for @packages_vipBoardingDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'First access onboarding and customer concierge helpline.'**
-  String get packages_vipBoardingDesc;
 
   /// No description provided for @packages_routeLimits.
   ///
@@ -1244,155 +1208,17 @@ abstract class AppLocalizations {
   /// **'3. Package holds up to {count} reservations for the selected route.'**
   String packages_termsText3(int count);
 
-  /// No description provided for @packages_chooseRouteConfig.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose Route & Configure'**
-  String get packages_chooseRouteConfig;
-
-  /// No description provided for @packages_basePrice.
-  ///
-  /// In en, this message translates to:
-  /// **'Base Price'**
-  String get packages_basePrice;
-
-  /// No description provided for @packages_packageDiscount.
-  ///
-  /// In en, this message translates to:
-  /// **'Package Discount'**
-  String get packages_packageDiscount;
-
-  /// No description provided for @packages_percentOff.
-  ///
-  /// In en, this message translates to:
-  /// **'{percent}% Off'**
-  String packages_percentOff(int percent);
-
   /// No description provided for @packages_subscriptionCost.
   ///
   /// In en, this message translates to:
   /// **'Subscription Cost'**
   String get packages_subscriptionCost;
 
-  /// No description provided for @packages_selectTargetRoute.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Target Route'**
-  String get packages_selectTargetRoute;
-
-  /// No description provided for @packages_pickupPoint.
-  ///
-  /// In en, this message translates to:
-  /// **'Pickup Point'**
-  String get packages_pickupPoint;
-
-  /// No description provided for @packages_destination.
-  ///
-  /// In en, this message translates to:
-  /// **'Destination'**
-  String get packages_destination;
-
-  /// No description provided for @packages_selectVehicleCategory.
-  ///
-  /// In en, this message translates to:
-  /// **'Select Vehicle Category'**
-  String get packages_selectVehicleCategory;
-
-  /// No description provided for @packages_reviewActivation.
-  ///
-  /// In en, this message translates to:
-  /// **'Review & Activation'**
-  String get packages_reviewActivation;
-
-  /// No description provided for @packages_selectedPackage.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected Package'**
-  String get packages_selectedPackage;
-
   /// No description provided for @packages_route.
   ///
   /// In en, this message translates to:
   /// **'Route'**
   String get packages_route;
-
-  /// No description provided for @packages_vehicle.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle'**
-  String get packages_vehicle;
-
-  /// No description provided for @packages_billingDetails.
-  ///
-  /// In en, this message translates to:
-  /// **'Billing Details'**
-  String get packages_billingDetails;
-
-  /// No description provided for @packages_paymentMethod.
-  ///
-  /// In en, this message translates to:
-  /// **'Payment Method'**
-  String get packages_paymentMethod;
-
-  /// No description provided for @packages_walletBalance.
-  ///
-  /// In en, this message translates to:
-  /// **'Wallet Balance'**
-  String get packages_walletBalance;
-
-  /// No description provided for @packages_currentBalance.
-  ///
-  /// In en, this message translates to:
-  /// **'Current Balance: EGP {balance}'**
-  String packages_currentBalance(String balance);
-
-  /// No description provided for @packages_sufficient.
-  ///
-  /// In en, this message translates to:
-  /// **'Sufficient'**
-  String get packages_sufficient;
-
-  /// No description provided for @packages_payActivate.
-  ///
-  /// In en, this message translates to:
-  /// **'Pay & Activate'**
-  String get packages_payActivate;
-
-  /// No description provided for @packages_processing.
-  ///
-  /// In en, this message translates to:
-  /// **'Processing'**
-  String get packages_processing;
-
-  /// No description provided for @packages_subscriptionActive.
-  ///
-  /// In en, this message translates to:
-  /// **'Subscription Active!'**
-  String get packages_subscriptionActive;
-
-  /// No description provided for @packages_subId.
-  ///
-  /// In en, this message translates to:
-  /// **'Subscription ID: {id}'**
-  String packages_subId(String id);
-
-  /// No description provided for @packages_successDesc.
-  ///
-  /// In en, this message translates to:
-  /// **'Your commute package is now active. You can start booking rides immediately from your dashboard.'**
-  String get packages_successDesc;
-
-  /// No description provided for @packages_returnHome.
-  ///
-  /// In en, this message translates to:
-  /// **'Return to Home'**
-  String get packages_returnHome;
-
-  /// No description provided for @packages_bookFirstRide.
-  ///
-  /// In en, this message translates to:
-  /// **'Book First Ride'**
-  String get packages_bookFirstRide;
 
   /// No description provided for @error_timeout.
   ///
@@ -6344,29 +6170,65 @@ abstract class AppLocalizations {
   /// **'Active logs'**
   String get loyalty_activeLogs;
 
-  /// No description provided for @loyalty_expiringOn.
-  ///
-  /// In en, this message translates to:
-  /// **'Expiring on {date}'**
-  String loyalty_expiringOn(String date);
-
   /// No description provided for @loyalty_redeemableBalance.
   ///
   /// In en, this message translates to:
   /// **'Redeemable points balance'**
   String get loyalty_redeemableBalance;
 
-  /// No description provided for @loyalty_goldLevelMember.
+  /// No description provided for @loyalty_tierLevelMember.
   ///
   /// In en, this message translates to:
-  /// **'Gold Level Member'**
-  String get loyalty_goldLevelMember;
+  /// **'{tier} Level Member'**
+  String loyalty_tierLevelMember(String tier);
 
   /// No description provided for @loyalty_catalogRewards.
   ///
   /// In en, this message translates to:
   /// **'Catalog Rewards'**
   String get loyalty_catalogRewards;
+
+  /// No description provided for @loyalty_tiersUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Membership levels aren\'t available right now.'**
+  String get loyalty_tiersUnavailable;
+
+  /// No description provided for @loyalty_historyEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No points activity yet'**
+  String get loyalty_historyEmptyTitle;
+
+  /// No description provided for @loyalty_historyEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Book a trip to start earning points.'**
+  String get loyalty_historyEmptyBody;
+
+  /// No description provided for @loyalty_rewardsEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No rewards available'**
+  String get loyalty_rewardsEmptyTitle;
+
+  /// No description provided for @loyalty_rewardsEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Check back soon for new ways to spend your points.'**
+  String get loyalty_rewardsEmptyBody;
+
+  /// No description provided for @loyalty_transactionFallbackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Points activity'**
+  String get loyalty_transactionFallbackTitle;
+
+  /// No description provided for @loyalty_redeemFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Redemption failed. {reason}'**
+  String loyalty_redeemFailed(String reason);
 
   /// No description provided for @loyalty_categoryDiscount.
   ///
@@ -6536,245 +6398,11 @@ abstract class AppLocalizations {
   /// **'Continue to Payment'**
   String get packages_continueToPayment;
 
-  /// No description provided for @packages_free.
-  ///
-  /// In en, this message translates to:
-  /// **'Free'**
-  String get packages_free;
-
-  /// No description provided for @packages_extraFeeAmount.
-  ///
-  /// In en, this message translates to:
-  /// **'+{amount}'**
-  String packages_extraFeeAmount(String amount);
-
-  /// No description provided for @packages_chooseYourSeat.
-  ///
-  /// In en, this message translates to:
-  /// **'Choose Your Seat'**
-  String get packages_chooseYourSeat;
-
-  /// No description provided for @packages_seatTapInstructions.
-  ///
-  /// In en, this message translates to:
-  /// **'Tap to reserve seat. Reserving more seats multiplies the package.'**
-  String get packages_seatTapInstructions;
-
-  /// No description provided for @packages_noOptionsAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'No options available'**
-  String get packages_noOptionsAvailable;
-
-  /// No description provided for @packages_selectOption.
-  ///
-  /// In en, this message translates to:
-  /// **'Select option'**
-  String get packages_selectOption;
-
-  /// No description provided for @packages_frontDriverCabin.
-  ///
-  /// In en, this message translates to:
-  /// **'Front / Driver Cabin'**
-  String get packages_frontDriverCabin;
-
-  /// No description provided for @packages_aisle.
-  ///
-  /// In en, this message translates to:
-  /// **'Aisle'**
-  String get packages_aisle;
-
-  /// No description provided for @packages_seatAvailable.
-  ///
-  /// In en, this message translates to:
-  /// **'Available'**
-  String get packages_seatAvailable;
-
-  /// No description provided for @packages_seatSelected.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected'**
-  String get packages_seatSelected;
-
-  /// No description provided for @packages_seatOccupied.
-  ///
-  /// In en, this message translates to:
-  /// **'Occupied'**
-  String get packages_seatOccupied;
-
-  /// No description provided for @packages_seatsSelectedCount.
-  ///
-  /// In en, this message translates to:
-  /// **'Seats Selected: {count}'**
-  String packages_seatsSelectedCount(int count);
-
-  /// No description provided for @packages_costLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Cost: {amount}'**
-  String packages_costLabel(String amount);
-
-  /// No description provided for @packages_savingsLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Savings: {amount}'**
-  String packages_savingsLabel(String amount);
-
-  /// No description provided for @packages_continueToSummary.
-  ///
-  /// In en, this message translates to:
-  /// **'Continue to Summary'**
-  String get packages_continueToSummary;
-
-  /// No description provided for @packages_targetRouteLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Target Route'**
-  String get packages_targetRouteLabel;
-
-  /// No description provided for @packages_pickupStopLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Pickup Stop'**
-  String get packages_pickupStopLabel;
-
-  /// No description provided for @packages_destinationStopLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Destination Stop'**
-  String get packages_destinationStopLabel;
-
-  /// No description provided for @packages_vehicleCategoryLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle Category'**
-  String get packages_vehicleCategoryLabel;
-
-  /// No description provided for @packages_selectedSeatsLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Selected Seats'**
-  String get packages_selectedSeatsLabel;
-
   /// No description provided for @packages_daysCount.
   ///
   /// In en, this message translates to:
   /// **'{days} Days'**
   String packages_daysCount(int days);
-
-  /// No description provided for @packages_tripsAllocatedLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Trips Allocated'**
-  String get packages_tripsAllocatedLabel;
-
-  /// No description provided for @packages_packageValidityLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Package Validity'**
-  String get packages_packageValidityLabel;
-
-  /// No description provided for @packages_agreeTermsText.
-  ///
-  /// In en, this message translates to:
-  /// **'I agree to the recurring commuter subscription terms and conditions policy.'**
-  String get packages_agreeTermsText;
-
-  /// No description provided for @packages_submitForPaymentReview.
-  ///
-  /// In en, this message translates to:
-  /// **'Submit for Payment Review'**
-  String get packages_submitForPaymentReview;
-
-  /// No description provided for @packages_agreeTermsRequired.
-  ///
-  /// In en, this message translates to:
-  /// **'Please agree to the terms before submitting.'**
-  String get packages_agreeTermsRequired;
-
-  /// No description provided for @packages_requestSubmittedTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Request Submitted'**
-  String get packages_requestSubmittedTitle;
-
-  /// No description provided for @packages_requestSubmittedSubtitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Your subscription is pending payment confirmation. It will become usable only after finance approval.'**
-  String get packages_requestSubmittedSubtitle;
-
-  /// No description provided for @packages_subscriptionRequestLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Subscription Request'**
-  String get packages_subscriptionRequestLabel;
-
-  /// No description provided for @packages_copiedIdMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Copied ID: {id}'**
-  String packages_copiedIdMessage(String id);
-
-  /// No description provided for @packages_commuterPackageLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Commuter Package'**
-  String get packages_commuterPackageLabel;
-
-  /// No description provided for @packages_durationLimitLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Duration Limit'**
-  String get packages_durationLimitLabel;
-
-  /// No description provided for @packages_totalTripsScopeLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Total Trips Scope'**
-  String get packages_totalTripsScopeLabel;
-
-  /// No description provided for @packages_travelRouteLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Travel Route'**
-  String get packages_travelRouteLabel;
-
-  /// No description provided for @packages_vehicleStandardLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Vehicle Standard'**
-  String get packages_vehicleStandardLabel;
-
-  /// No description provided for @packages_amountDueLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Amount Due'**
-  String get packages_amountDueLabel;
-
-  /// No description provided for @packages_backToHome.
-  ///
-  /// In en, this message translates to:
-  /// **'Back to Home'**
-  String get packages_backToHome;
-
-  /// No description provided for @packages_activatingPackage.
-  ///
-  /// In en, this message translates to:
-  /// **'Activating Package...'**
-  String get packages_activatingPackage;
-
-  /// No description provided for @packages_confirmingCredentials.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirming commuter credentials and reserving seats.'**
-  String get packages_confirmingCredentials;
-
-  /// No description provided for @packages_activateSubscriptionError.
-  ///
-  /// In en, this message translates to:
-  /// **'Could not activate subscription: {error}'**
-  String packages_activateSubscriptionError(String error);
 
   /// No description provided for @trips_reviewFormTitle.
   ///
@@ -6853,6 +6481,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'We could not open your review'**
   String get trips_reviewOpenError;
+
+  /// No description provided for @trips_reviewErrorSignIn.
+  ///
+  /// In en, this message translates to:
+  /// **'Please sign in to review your trip.'**
+  String get trips_reviewErrorSignIn;
+
+  /// No description provided for @trips_reviewErrorBookingMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking no longer exists.'**
+  String get trips_reviewErrorBookingMissing;
+
+  /// No description provided for @trips_reviewErrorNotYourTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only review your own trips.'**
+  String get trips_reviewErrorNotYourTrip;
+
+  /// No description provided for @trips_reviewErrorCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking was cancelled, so there is nothing to review.'**
+  String get trips_reviewErrorCancelled;
+
+  /// No description provided for @trips_reviewErrorNotCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'You can only review a trip once it has been completed.'**
+  String get trips_reviewErrorNotCompleted;
+
+  /// No description provided for @trips_reviewErrorInvalidRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Please give the driver, vehicle, and route 1–5 stars.'**
+  String get trips_reviewErrorInvalidRating;
+
+  /// No description provided for @trips_reviewErrorUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not submit your review. Please try again.'**
+  String get trips_reviewErrorUnknown;
 
   /// No description provided for @booking_price.
   ///
@@ -7520,36 +7190,6 @@ abstract class AppLocalizations {
   /// **'Refresh'**
   String get communication_refresh;
 
-  /// No description provided for @communication_simulateIncomingCall.
-  ///
-  /// In en, this message translates to:
-  /// **'Simulate Incoming Call'**
-  String get communication_simulateIncomingCall;
-
-  /// No description provided for @communication_online.
-  ///
-  /// In en, this message translates to:
-  /// **'Online'**
-  String get communication_online;
-
-  /// No description provided for @communication_offline.
-  ///
-  /// In en, this message translates to:
-  /// **'Offline'**
-  String get communication_offline;
-
-  /// No description provided for @communication_missedCallFrom.
-  ///
-  /// In en, this message translates to:
-  /// **'Missed call from {name}'**
-  String communication_missedCallFrom(String name);
-
-  /// No description provided for @communication_callEnded.
-  ///
-  /// In en, this message translates to:
-  /// **'Call ended'**
-  String get communication_callEnded;
-
   /// No description provided for @communication_searchHint.
   ///
   /// In en, this message translates to:
@@ -7610,95 +7250,11 @@ abstract class AppLocalizations {
   /// **'Group'**
   String get communication_categoryGroup;
 
-  /// No description provided for @communication_ticketReference.
-  ///
-  /// In en, this message translates to:
-  /// **'Support Ticket Reference: {ticketId}'**
-  String communication_ticketReference(String ticketId);
-
   /// No description provided for @communication_statusOpenFallback.
   ///
   /// In en, this message translates to:
   /// **'Open'**
   String get communication_statusOpenFallback;
-
-  /// No description provided for @communication_demoRoute.
-  ///
-  /// In en, this message translates to:
-  /// **'Banha → Smart Village'**
-  String get communication_demoRoute;
-
-  /// No description provided for @communication_demoVehicle.
-  ///
-  /// In en, this message translates to:
-  /// **'Comfort Van'**
-  String get communication_demoVehicle;
-
-  /// No description provided for @communication_demoEta.
-  ///
-  /// In en, this message translates to:
-  /// **'8 mins'**
-  String get communication_demoEta;
-
-  /// No description provided for @communication_demoRating.
-  ///
-  /// In en, this message translates to:
-  /// **'4.9 ★'**
-  String get communication_demoRating;
-
-  /// No description provided for @communication_callAction.
-  ///
-  /// In en, this message translates to:
-  /// **'📞 Call'**
-  String get communication_callAction;
-
-  /// No description provided for @communication_shareLocationAction.
-  ///
-  /// In en, this message translates to:
-  /// **'📍 Share Location'**
-  String get communication_shareLocationAction;
-
-  /// No description provided for @communication_late5mAction.
-  ///
-  /// In en, this message translates to:
-  /// **'⏰ Late 5m'**
-  String get communication_late5mAction;
-
-  /// No description provided for @communication_you.
-  ///
-  /// In en, this message translates to:
-  /// **'You'**
-  String get communication_you;
-
-  /// No description provided for @communication_sharedLocationMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'📍 Shared Live Location'**
-  String get communication_sharedLocationMessage;
-
-  /// No description provided for @communication_lateMessageText.
-  ///
-  /// In en, this message translates to:
-  /// **'I will be late by 5 minutes, please hold for me.'**
-  String get communication_lateMessageText;
-
-  /// No description provided for @communication_demoGroupRoute.
-  ///
-  /// In en, this message translates to:
-  /// **'Route Info'**
-  String get communication_demoGroupRoute;
-
-  /// No description provided for @communication_demoMembersCount.
-  ///
-  /// In en, this message translates to:
-  /// **'10 members'**
-  String get communication_demoMembersCount;
-
-  /// No description provided for @communication_isTyping.
-  ///
-  /// In en, this message translates to:
-  /// **'{name} is typing...'**
-  String communication_isTyping(String name);
 
   /// No description provided for @communication_messageInputHint.
   ///
@@ -7706,89 +7262,11 @@ abstract class AppLocalizations {
   /// **'Type your message...'**
   String get communication_messageInputHint;
 
-  /// No description provided for @communication_attachedImageMessage.
-  ///
-  /// In en, this message translates to:
-  /// **'Attached image'**
-  String get communication_attachedImageMessage;
-
-  /// No description provided for @communication_userSenderFallback.
-  ///
-  /// In en, this message translates to:
-  /// **'User'**
-  String get communication_userSenderFallback;
-
   /// No description provided for @communication_justNow.
   ///
   /// In en, this message translates to:
   /// **'Just now'**
   String get communication_justNow;
-
-  /// No description provided for @communication_voiceMessageText.
-  ///
-  /// In en, this message translates to:
-  /// **'🎙️ Voice Message'**
-  String get communication_voiceMessageText;
-
-  /// No description provided for @communication_incomingCallRole.
-  ///
-  /// In en, this message translates to:
-  /// **'Shuttle Driver • Active Trip'**
-  String get communication_incomingCallRole;
-
-  /// No description provided for @communication_shuttleDriverRole.
-  ///
-  /// In en, this message translates to:
-  /// **'Shuttle Driver'**
-  String get communication_shuttleDriverRole;
-
-  /// No description provided for @communication_ringing.
-  ///
-  /// In en, this message translates to:
-  /// **'Ringing...'**
-  String get communication_ringing;
-
-  /// No description provided for @communication_incomingShuttleCall.
-  ///
-  /// In en, this message translates to:
-  /// **'Incoming Shuttle Call...'**
-  String get communication_incomingShuttleCall;
-
-  /// No description provided for @communication_decline.
-  ///
-  /// In en, this message translates to:
-  /// **'Decline'**
-  String get communication_decline;
-
-  /// No description provided for @communication_accept.
-  ///
-  /// In en, this message translates to:
-  /// **'Accept'**
-  String get communication_accept;
-
-  /// No description provided for @communication_mute.
-  ///
-  /// In en, this message translates to:
-  /// **'Mute'**
-  String get communication_mute;
-
-  /// No description provided for @communication_speaker.
-  ///
-  /// In en, this message translates to:
-  /// **'Speaker'**
-  String get communication_speaker;
-
-  /// No description provided for @communication_hangUp.
-  ///
-  /// In en, this message translates to:
-  /// **'Hang Up'**
-  String get communication_hangUp;
-
-  /// No description provided for @communication_missedCallText.
-  ///
-  /// In en, this message translates to:
-  /// **'📞 Missed Call'**
-  String get communication_missedCallText;
 
   /// No description provided for @booking_pickYourSeat.
   ///

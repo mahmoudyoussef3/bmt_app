@@ -1,161 +1,146 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/conversation_model.dart';
+import 'communication_datasource.dart';
 
-class SupabaseCommunicationDatasource {
-  final SupabaseClient _supabase;
-
+/// Reads and writes the client's support threads in `operation_complaints`.
+class SupabaseCommunicationDatasource implements CommunicationDatasource {
   const SupabaseCommunicationDatasource(this._supabase);
 
+  final SupabaseClient _supabase;
+
+  static const _table = 'operation_complaints';
+  static const _columns =
+      'id, category, status, priority, description, assigned_to, '
+      'conversation, created_at, updated_at';
+
+  /// How many compare-and-set rounds to attempt before giving up and asking
+  /// the client to send again.
+  static const _maxAppendAttempts = 3;
+
+  @override
   Future<List<ConversationModel>> getConversations() async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) return const [];
+    final userId = _requireUserId();
 
     try {
-      final response = await _supabase
-          .from('operation_complaints')
-          .select(
-            'id, category, status, priority, description, assigned_to, conversation, created_at, updated_at',
-          )
+      final rows = await _supabase
+          .from(_table)
+          .select(_columns)
           .eq('client_id', userId)
           .order('updated_at', ascending: false);
 
-      return response
-          .map((row) => _mapComplaint(Map<String, dynamic>.from(row)))
+      return rows
+          .map(
+            (row) => ConversationModel.fromJson(Map<String, dynamic>.from(row)),
+          )
           .toList();
     } on PostgrestException catch (error) {
-      if (error.code == 'PGRST205' || error.code == '42P01') {
-        return const <ConversationModel>[];
-      }
-      throw Exception(
-        error.message.isEmpty
-            ? 'Unable to load support conversations.'
-            : error.message,
-      );
+      _fail(error, 'Unable to load support conversations.');
     }
   }
 
-  /// Appends a client message to a support conversation's `conversation`
-  /// JSONB array and bumps `updated_at`. Scoped to the authenticated client.
+  @override
+  Future<ConversationModel> getConversation(String conversationId) async {
+    final userId = _requireUserId();
+
+    try {
+      final row = await _supabase
+          .from(_table)
+          .select(_columns)
+          .eq('id', conversationId)
+          .eq('client_id', userId)
+          .single();
+
+      return ConversationModel.fromJson(Map<String, dynamic>.from(row));
+    } on PostgrestException catch (error) {
+      _fail(error, 'Unable to load this conversation.');
+    }
+  }
+
+  /// Appends a client message to a thread's `conversation` JSONB array.
+  ///
+  /// PostgREST cannot express `conversation || $1`, so the array is read,
+  /// extended, and written back. The write is guarded by the `updated_at` we
+  /// read, making it a compare-and-set: if anyone wrote in between — an agent
+  /// replying, or this client on another device — the update matches no row and
+  /// we retry against the fresh thread rather than silently overwriting them.
+  @override
   Future<void> appendClientMessage({
     required String conversationId,
     required String text,
   }) async {
-    final userId = _supabase.auth.currentUser?.id;
-    if (userId == null) {
-      throw Exception('You must be signed in to send a message.');
-    }
-
-    final row = await _supabase
-        .from('operation_complaints')
-        .select('conversation')
-        .eq('id', conversationId)
-        .eq('client_id', userId)
-        .single();
-
-    final messages = row['conversation'] is List
-        ? List<dynamic>.from(row['conversation'] as List)
-        : <dynamic>[];
-
-    messages.add({
+    final userId = _requireUserId();
+    final message = {
       'id': DateTime.now().microsecondsSinceEpoch.toString(),
       'sender': 'client',
-      'sender_name': 'You',
       'message': text,
       'type': 'text',
       'is_read': true,
       'created_at': DateTime.now().toUtc().toIso8601String(),
-    });
+    };
 
-    await _supabase
-        .from('operation_complaints')
+    try {
+      for (var attempt = 0; attempt < _maxAppendAttempts; attempt++) {
+        if (await _tryAppend(conversationId, userId, message)) return;
+      }
+    } on PostgrestException catch (error) {
+      _fail(error, 'Unable to send your message.');
+    }
+
+    // A zero-row update means either a competing write or a policy that
+    // refused ours — PostgREST reports both the same way, so the message
+    // stays neutral about which it was.
+    throw Exception('Your message could not be sent. Please try again.');
+  }
+
+  /// One compare-and-set round. Returns whether the write landed.
+  Future<bool> _tryAppend(
+    String conversationId,
+    String userId,
+    Map<String, Object?> message,
+  ) async {
+    final row = await _supabase
+        .from(_table)
+        .select('conversation, updated_at')
+        .eq('id', conversationId)
+        .eq('client_id', userId)
+        .single();
+
+    final previousUpdatedAt = row['updated_at'];
+    if (previousUpdatedAt == null) {
+      throw Exception('Support conversation is missing its update timestamp.');
+    }
+
+    final conversation = row['conversation'];
+    final messages = conversation is List
+        ? List<dynamic>.from(conversation)
+        : <dynamic>[];
+
+    final written = await _supabase
+        .from(_table)
         .update({
-          'conversation': messages,
+          'conversation': [...messages, message],
           'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', conversationId)
-        .eq('client_id', userId);
+        .eq('client_id', userId)
+        .eq('updated_at', previousUpdatedAt)
+        .select('id');
+
+    return written.isNotEmpty;
   }
 
-  ConversationModel _mapComplaint(Map<String, dynamic> row) {
-    final category = row['category']?.toString() ?? 'Support';
-    final assignedTo = row['assigned_to']?.toString();
-    final title = assignedTo == null || assignedTo.trim().isEmpty
-        ? 'Support Team'
-        : assignedTo;
-    final conversation = row['conversation'] is List
-        ? row['conversation'] as List
-        : const [];
-    final messages = conversation
-        .whereType<Map>()
-        .map((item) => _mapMessage(Map<String, dynamic>.from(item)))
-        .toList();
-    final fallbackMessage = row['description']?.toString() ?? '';
-    final lastMessage = messages.isEmpty ? fallbackMessage : messages.last.text;
-
-    return ConversationModel(
-      id: row['id']?.toString() ?? '',
-      name: title,
-      category: category,
-      lastMessage: lastMessage,
-      time: _relativeTime(row['updated_at'] ?? row['created_at']),
-      initials: _initials(title),
-      isOnline: false,
-      unreadCount: 0,
-      messages: messages,
-      meta: {
-        'Status': row['status']?.toString() ?? 'newlyCreated',
-        'Priority': row['priority']?.toString() ?? 'low',
-      },
-    );
+  /// Surfaces a Postgrest failure as a plain message, since the raw exception
+  /// string reads as internals to the client.
+  Never _fail(PostgrestException error, String fallback) {
+    throw Exception(error.message.isEmpty ? fallback : error.message);
   }
 
-  ChatMessageModel _mapMessage(Map<String, dynamic> json) {
-    final sender =
-        json['sender']?.toString() ??
-        json['author_role']?.toString() ??
-        json['role']?.toString() ??
-        'support';
-    return ChatMessageModel(
-      id:
-          json['id']?.toString() ??
-          DateTime.now().microsecondsSinceEpoch.toString(),
-      sender: sender,
-      senderName:
-          json['sender_name']?.toString() ??
-          json['author_name']?.toString() ??
-          (sender == 'client' ? 'You' : 'Support Team'),
-      text:
-          json['message']?.toString() ??
-          json['text']?.toString() ??
-          json['body']?.toString() ??
-          '',
-      time: _relativeTime(json['created_at'] ?? json['timestamp']),
-      type: json['type']?.toString() ?? 'text',
-      attachmentName: json['attachment_name']?.toString(),
-      attachmentSize: json['attachment_size']?.toString(),
-      duration: json['duration']?.toString(),
-      isRead: json['is_read'] != false,
-    );
-  }
-
-  String _initials(String value) {
-    final parts = value
-        .trim()
-        .split(RegExp(r'\s+'))
-        .where((part) => part.isNotEmpty)
-        .toList();
-    if (parts.isEmpty) return 'ST';
-    return parts.take(2).map((part) => part[0].toUpperCase()).join();
-  }
-
-  /// Returns the raw ISO timestamp. Relative-time phrasing ("5 min ago",
-  /// "Yesterday"...) is computed in the presentation layer, which has the
-  /// `BuildContext` this data layer must stay free of — see `_displayTime`
-  /// in `communication_screen.dart`.
-  String _relativeTime(Object? value) {
-    final parsed = DateTime.tryParse(value?.toString() ?? '');
-    if (parsed == null) return '';
-    return parsed.toIso8601String();
+  String _requireUserId() {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) {
+      throw Exception('You must be signed in to use support chat.');
+    }
+    return userId;
   }
 }

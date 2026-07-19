@@ -1,3 +1,4 @@
+/// A commute package a rider can subscribe to, as published by the Dashboard.
 class PackagePlan {
   const PackagePlan({
     required this.id,
@@ -21,60 +22,12 @@ class PackagePlan {
   /// Arabic name otherwise — never a blank plan on a checkout screen.
   String get displayName => nameEn.trim().isEmpty ? nameAr : nameEn;
 
-  // Helper getters for compatibility
-  String get name => nameAr;
-  String get durationLabel => '$durationDays يوم';
-  int get days => durationDays;
-  int get tripsCount => rideCount;
-  int get discountPercent => 0; 
-  int get startingPrice => price.toInt();
-  int get savingsAmount => 0;
-  int get basePrice => price.toInt();
-  String get description => '';
-}
+  /// Whole-pound price. The Dashboard publishes packages at pound precision,
+  /// so the fractional part is always zero in practice.
+  int get priceInPounds => price.round();
 
-class PackageVehicleType {
-  const PackageVehicleType({
-    required this.name,
-    required this.iconKey,
-    required this.extraFee,
-    required this.description,
-  });
-
-  final String name;
-  final String iconKey;
-  final int extraFee;
-  final String description;
-}
-
-class PackageSelectionData {
-  const PackageSelectionData({
-    required this.packages,
-    required this.routes,
-    required this.pickupPoints,
-    required this.destinations,
-    required this.vehicles,
-    required this.occupiedSeats,
-  });
-
-  final List<PackagePlan> packages;
-  final List<String> routes;
-  final List<String> pickupPoints;
-  final List<String> destinations;
-  final List<PackageVehicleType> vehicles;
-  final Set<int> occupiedSeats;
-}
-
-class PackagePricing {
-  const PackagePricing({
-    required this.rawSubtotal,
-    required this.discountValue,
-    required this.finalPrice,
-    required this.totalSavings,
-  });
-
-  final int rawSubtotal;
-  final int discountValue;
-  final int finalPrice;
-  final int totalSavings;
+  /// What one ride inside the package costs — the figure that actually shows a
+  /// rider the package is worth buying. Guards a malformed zero-ride package.
+  int get pricePerRide =>
+      rideCount <= 0 ? priceInPounds : priceInPounds ~/ rideCount;
 }

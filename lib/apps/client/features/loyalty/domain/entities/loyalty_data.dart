@@ -1,55 +1,8 @@
-class LoyaltyTier {
-  const LoyaltyTier({
-    required this.name,
-    required this.pointsRequired,
-    required this.perks,
-    required this.gradientColors,
-    required this.iconKey,
-  });
+import 'loyalty_tier.dart';
+import 'points_transaction.dart';
+import 'redeemable_reward.dart';
 
-  final String name;
-  final String pointsRequired;
-  final List<String> perks;
-  final List<int> gradientColors;
-  final String iconKey;
-}
-
-class PointsTransaction {
-  const PointsTransaction({
-    required this.title,
-    required this.date,
-    required this.points,
-    required this.isEarned,
-    this.expirationDate,
-  });
-
-  final String title;
-  final String date;
-  final int points;
-  final bool isEarned;
-  final String? expirationDate;
-}
-
-class RedeemableReward {
-  const RedeemableReward({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.pointsCost,
-    required this.valueLabel,
-    required this.category,
-    required this.couponCode,
-  });
-
-  final String id;
-  final String title;
-  final String description;
-  final int pointsCost;
-  final String valueLabel;
-  final String category;
-  final String couponCode;
-}
-
+/// Everything the loyalty hub renders, fetched as one snapshot.
 class LoyaltyData {
   const LoyaltyData({
     required this.currentPoints,
@@ -60,18 +13,29 @@ class LoyaltyData {
   });
 
   final int currentPoints;
+
+  /// Derived from [currentPoints] via `LoyaltyTierLadder`, not read from the
+  /// account row — the ladder is the authority on which tier a balance earns.
   final String currentTierName;
+
   final List<LoyaltyTier> tiers;
   final List<PointsTransaction> transactions;
   final List<RedeemableReward> rewards;
 
-  LoyaltyData copyWith({int? currentPoints, String? currentTierName}) {
-    return LoyaltyData(
-      currentPoints: currentPoints ?? this.currentPoints,
-      currentTierName: currentTierName ?? this.currentTierName,
-      tiers: tiers,
-      transactions: transactions,
-      rewards: rewards,
-    );
+  /// The tier matching [currentTierName], or `null` when the operator has not
+  /// provisioned `loyalty_tiers` (the datasource degrades a missing catalog
+  /// table to an empty list) or has no row for the earned tier.
+  ///
+  /// Callers must handle `null`. Reaching for `firstWhere` here is what used to
+  /// throw a `StateError` on exactly the degraded path the fetch was written to
+  /// survive.
+  LoyaltyTier? get activeTier {
+    for (final tier in tiers) {
+      if (tier.name == currentTierName) return tier;
+    }
+    return null;
   }
+
+  /// Whether [reward] is within the rider's current balance.
+  bool canAfford(RedeemableReward reward) => currentPoints >= reward.pointsCost;
 }

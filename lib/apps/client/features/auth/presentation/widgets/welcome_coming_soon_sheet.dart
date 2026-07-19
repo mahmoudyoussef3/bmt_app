@@ -60,9 +60,9 @@ class _ComingSoonBody extends StatelessWidget {
           Text(
             l10n.welcome_comingSoonBody,
             textAlign: TextAlign.center,
-            style: ClientTypography.bodyMedium(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-            ),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
           const SizedBox(height: ClientSpacing.lg),
           ClientButton(

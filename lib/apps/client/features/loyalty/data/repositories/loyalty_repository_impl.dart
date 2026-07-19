@@ -1,6 +1,8 @@
 import '../../domain/entities/loyalty_data.dart';
+import '../../domain/entities/redeemable_reward.dart';
 import '../../domain/repositories/loyalty_repository.dart';
 import '../datasources/loyalty_datasource.dart';
+import '../mappers/loyalty_mappers.dart';
 
 class LoyaltyRepositoryImpl implements LoyaltyRepository {
   const LoyaltyRepositoryImpl(this._datasource);
@@ -8,16 +10,14 @@ class LoyaltyRepositoryImpl implements LoyaltyRepository {
   final LoyaltyDatasource _datasource;
 
   @override
-  Future<LoyaltyData> getLoyaltyData() => _datasource.getLoyaltyData();
+  Future<LoyaltyData> getLoyaltyData() async {
+    final snapshot = await _datasource.fetchSnapshot();
+    return snapshot.toEntity();
+  }
 
   @override
-  Future<void> redeemReward({
-    required String rewardId,
-    required String rewardTitle,
-    required int pointsCost,
-  }) => _datasource.redeemReward(
-    rewardId: rewardId,
-    rewardTitle: rewardTitle,
-    pointsCost: pointsCost,
+  Future<void> redeemReward(RedeemableReward reward) => _datasource.redeemReward(
+    rewardTitle: reward.title,
+    pointsCost: reward.pointsCost,
   );
 }

@@ -1,24 +1,10 @@
 import 'reviewable_trip.dart';
 import 'trip_seat.dart';
+import 'trip_status.dart';
 
 export 'reviewable_trip.dart';
-
-enum TripStatus { upcoming, inProgress, completed, cancelled }
-
-enum TripFilter { upcoming, active, completed, cancelled }
-
-extension TripFilterLabel on TripFilter {
-  TripStatus get statusMatch {
-    return switch (this) {
-      TripFilter.upcoming => TripStatus.upcoming,
-      TripFilter.active => TripStatus.inProgress,
-      TripFilter.completed => TripStatus.completed,
-      TripFilter.cancelled => TripStatus.cancelled,
-    };
-  }
-}
-
-enum PaymentStatus { paid, pending, underReview, refunded, failed, cancelled }
+export 'trip_policies.dart';
+export 'trip_status.dart';
 
 class TripData {
   const TripData({
@@ -105,7 +91,8 @@ class TripData {
 
   int get vehicleCapacity => seatMap.length;
 
-  int get availableSeatCount => seatMap.where((seat) => seat.isAvailable).length;
+  int get availableSeatCount =>
+      seatMap.where((seat) => seat.isAvailable).length;
 
   /// The passenger's own seats — from the live layout when available, else the
   /// booking's seat labels (so the summary never goes blank).
@@ -117,34 +104,4 @@ class TripData {
     if (fromMap.isNotEmpty) return fromMap;
     return seats.where((seat) => seat.trim().isNotEmpty).toList();
   }
-
-  /// A booking may only be cancelled by the client while its payment is still
-  /// waiting on the dashboard. Once the dashboard approves the payment the seat
-  /// is paid for and final — cancelling then goes through support, not a
-  /// self-service button. Mirrors `cancel_booking_by_client`, which enforces
-  /// the same rule on the seat and the money.
-  bool get canBeCancelled {
-    if (status != TripStatus.upcoming) return false;
-    return paymentStatus == PaymentStatus.pending ||
-        paymentStatus == PaymentStatus.underReview;
-  }
-
-  /// A completed or cancelled trip is a record of a journey, not a journey.
-  bool get isFinished =>
-      status == TripStatus.completed || status == TripStatus.cancelled;
-
-  /// Calling or messaging the captain only makes sense while the journey is
-  /// still ahead of the passenger or under way. Once it is finished there is no
-  /// captain on duty for this booking to reach.
-  bool get canContactDriver => !isFinished;
-
-  /// The vehicle must stay untrackable until this booking's own payment is
-  /// approved — a trip can be in progress for other passengers while this
-  /// client's payment is still under review — and there is nothing left to
-  /// follow on a map once the trip has ended.
-  bool get canBeTracked =>
-      status == TripStatus.inProgress && paymentStatus == PaymentStatus.paid;
-
-  /// Rating is offered on a completed trip the passenger has not rated yet.
-  bool get canBeReviewed => status == TripStatus.completed && !isReviewed;
 }

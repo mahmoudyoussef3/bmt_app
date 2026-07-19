@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_review.dart';
+import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_review_failure.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/repositories/trip_reviews_repository.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/usecases/get_trip_review_usecase.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/usecases/submit_trip_review_usecase.dart';
@@ -12,7 +13,7 @@ class _FakeTripReviewsRepository implements TripReviewsRepository {
   _FakeTripReviewsRepository({this.existing, this.submitFails = false});
 
   final TripReview? existing;
-  final bool submitFails;
+  bool submitFails;
 
   TripReview? submitted;
 
@@ -120,6 +121,62 @@ void main() {
       expect(cubit.state, isA<TripReviewSubmitted>());
     });
 
+    test(
+      'a stored review is timestamped, not left looking unsubmitted',
+      () async {
+        final repo = _FakeTripReviewsRepository();
+        final cubit = _cubit(repo);
+        await cubit.load(_trip().reviewable);
+
+        cubit.rateDriver(5);
+        cubit.rateVehicle(5);
+        cubit.rateRoute(5);
+        await cubit.submit();
+
+        // The entity documents submittedAt as null only until the review is
+        // stored, so a submitted review must carry one.
+        expect(
+          (cubit.state as TripReviewSubmitted).review.submittedAt,
+          isNotNull,
+        );
+      },
+    );
+
+    test('retrying a failed submit clears the previous error', () async {
+      final repo = _FakeTripReviewsRepository(submitFails: true);
+      final cubit = _cubit(repo);
+      await cubit.load(_trip().reviewable);
+
+      cubit.rateDriver(5);
+      cubit.rateVehicle(5);
+      cubit.rateRoute(5);
+      await cubit.submit();
+      expect((cubit.state as TripReviewEditing).error, isNotNull);
+
+      repo.submitFails = false;
+      await cubit.submit();
+
+      expect(cubit.state, isA<TripReviewSubmitted>());
+    });
+
+    test('an unrelated edit does not silently drop a pending error', () async {
+      final repo = _FakeTripReviewsRepository(submitFails: true);
+      final cubit = _cubit(repo);
+      await cubit.load(_trip().reviewable);
+
+      cubit.rateDriver(5);
+      cubit.rateVehicle(5);
+      cubit.rateRoute(5);
+      await cubit.submit();
+
+      final failed = cubit.state as TripReviewEditing;
+      expect(failed.error, isNotNull);
+
+      // copyWith keeps an omitted field: only an explicit clearError drops it.
+      expect(failed.copyWith(isSubmitting: true).error, failed.error);
+      expect(failed.copyWith(clearError: true).error, isNull);
+    });
+
     test('keeps the ratings on screen when the submit fails', () async {
       final repo = _FakeTripReviewsRepository(submitFails: true);
       final cubit = _cubit(repo);
@@ -131,7 +188,9 @@ void main() {
       await cubit.submit();
 
       final state = cubit.state as TripReviewEditing;
-      expect(state.error, 'network down');
+      // A bare exception from the repository is not a named review failure, so
+      // the passenger is told something generic rather than shown Dart's text.
+      expect(state.error, TripReviewFailure.unknown);
       expect(state.isSubmitting, isFalse);
       // The passenger does not have to re-enter what they already chose.
       expect(state.draft.driverRating, 5);
@@ -151,7 +210,7 @@ void main() {
       expect(repo.submitted, isNull);
       expect(
         (cubit.state as TripReviewEditing).error,
-        contains('completed'),
+        TripReviewFailure.tripNotCompleted,
       );
     });
   });

@@ -1,5 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../domain/entities/booking_hub_data.dart';
 import '../../domain/entities/daily_booking_data.dart';
 import 'daily_booking_datasource.dart';
 
@@ -7,38 +6,6 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
   final SupabaseClient _supabase;
 
   const SupabaseDailyBookingDatasource(this._supabase);
-
-  @override
-  Future<BookingHubData> getBookingHubData() async {
-    final routesResponse = await _supabase
-        .from('operation_routes')
-        .select('id');
-    final packagesResponse = await _supabase.from('packages').select('id');
-    final tripsResponse = await _supabase
-        .from('operation_trips')
-        .select('id')
-        .eq('status', 'open_for_booking');
-
-    final user = _supabase.auth.currentUser;
-    List<dynamic> upcomingBookings = [];
-    if (user != null) {
-      upcomingBookings = await _supabase
-          .from('operation_bookings')
-          .select('id')
-          .eq('client_id', user.id)
-          .inFilter('status', const ['reserved', 'confirmed', 'boarded']);
-    }
-    // A booking holds exactly one seat, so the seats held is the booking count.
-    final reservedSeats = upcomingBookings.length;
-
-    return BookingHubData(
-      todayRoutes: '${routesResponse.length} routes',
-      monthPlans: '${packagesResponse.length} plans',
-      activeTrips: tripsResponse.length.toString(),
-      upcomingBookings: upcomingBookings.length.toString(),
-      reservedSeats: reservedSeats.toString(),
-    );
-  }
 
   @override
   Future<DailyBookingData> getDailyBookingData() async {

@@ -39,7 +39,33 @@ class ClientAuthState {
       signOutStatus: signOutStatus ?? this.signOutStatus,
       signInError: clearSignInError ? null : signInError ?? this.signInError,
       signUpError: clearSignUpError ? null : signUpError ?? this.signUpError,
-      signOutError: clearSignOutError ? null : signOutError ?? this.signOutError,
+      signOutError: clearSignOutError
+          ? null
+          : signOutError ?? this.signOutError,
     );
   }
+
+  // Intent-named transitions, so the cubit reads as `emit(state.signInLoading())`.
+  static const _loading = AuthSubmissionStatus.loading;
+  static const _failure = AuthSubmissionStatus.failure;
+  static const _initial = AuthSubmissionStatus.initial;
+
+  ClientAuthState signInLoading() =>
+      copyWith(signInStatus: _loading, clearSignInError: true);
+  ClientAuthState signInFailure(String error) =>
+      copyWith(signInStatus: _failure, signInError: error);
+  ClientAuthState signInDismissed() =>
+      copyWith(signInStatus: _initial, clearSignInError: true);
+
+  ClientAuthState signUpLoading() =>
+      copyWith(signUpStatus: _loading, clearSignUpError: true);
+  ClientAuthState signUpFailure(String error) =>
+      copyWith(signUpStatus: _failure, signUpError: error);
+  ClientAuthState signUpDismissed() =>
+      copyWith(signUpStatus: _initial, clearSignUpError: true);
+
+  ClientAuthState signOutLoading() =>
+      copyWith(signOutStatus: _loading, clearSignOutError: true);
+  ClientAuthState signOutFailure(String error) =>
+      copyWith(signOutStatus: _failure, signOutError: error);
 }

@@ -4,8 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/forgot_password_cubit.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/cubit/phone_auth_cubit.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/daily_booking_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/popular_routes_cubit.dart';
+import 'package:bmt_app/apps/client/features/communication/presentation/cubit/chat_thread_cubit.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/communication_cubit.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/cubit/notifications_cubit.dart';
@@ -24,8 +25,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubi
 /// locator.
 ///
 /// Each scope hands the route a *fresh* cubit (`registerFactory`), so revisiting
-/// a screen starts from a clean state. The one exception is [phoneAuth], which
-/// shares a single instance across the multi-step OTP flow.
+/// a screen starts from a clean state.
 abstract final class ClientCubitScopes {
   const ClientCubitScopes._();
 
@@ -40,19 +40,24 @@ abstract final class ClientCubitScopes {
         child: child,
       );
 
-  /// The phone sign-in flow spans several screens (phone → OTP → profile) and
-  /// must observe one cubit's state throughout, so this shares the instance
-  /// provided at the app root rather than creating a new one.
-  static Widget phoneAuth(Widget child) =>
-      BlocProvider.value(value: clientGetIt<PhoneAuthCubit>(), child: child);
-
   static Widget trips(Widget child) => BlocProvider<TripsCubit>(
-    create: (_) => clientGetIt<TripsCubit>(),
+    create: (_) => clientGetIt<TripsCubit>()..loadTrips(),
     child: child,
   );
 
-  static Widget booking(Widget child) => BlocProvider<BookingCubit>(
-    create: (_) => clientGetIt<BookingCubit>(),
+  static Widget tripDetails(Widget child, {String? tripId}) =>
+      BlocProvider<TripsCubit>(
+        create: (_) => clientGetIt<TripsCubit>()..loadTripDetails(tripId),
+        child: child,
+      );
+
+  static Widget dailyBooking(Widget child) => BlocProvider<DailyBookingCubit>(
+    create: (_) => clientGetIt<DailyBookingCubit>()..load(),
+    child: child,
+  );
+
+  static Widget popularRoutes(Widget child) => BlocProvider<PopularRoutesCubit>(
+    create: (_) => clientGetIt<PopularRoutesCubit>()..load(),
     child: child,
   );
 
@@ -72,7 +77,7 @@ abstract final class ClientCubitScopes {
   );
 
   static Widget packages(Widget child) => BlocProvider<PackagesCubit>(
-    create: (_) => clientGetIt<PackagesCubit>(),
+    create: (_) => clientGetIt<PackagesCubit>()..load(),
     child: child,
   );
 
@@ -108,9 +113,16 @@ abstract final class ClientCubitScopes {
   );
 
   static Widget communication(Widget child) => BlocProvider<CommunicationCubit>(
-    create: (_) => clientGetIt<CommunicationCubit>(),
+    create: (_) => clientGetIt<CommunicationCubit>()..load(),
     child: child,
   );
+
+  /// Scopes one open conversation, loaded fresh from its id.
+  static Widget chatThread(Widget child, {required String conversationId}) =>
+      BlocProvider<ChatThreadCubit>(
+        create: (_) => clientGetIt<ChatThreadCubit>()..load(conversationId),
+        child: child,
+      );
 
   static Widget referralRewards(Widget child) =>
       BlocProvider<ReferralRewardsCubit>(
@@ -119,7 +131,7 @@ abstract final class ClientCubitScopes {
       );
 
   static Widget loyalty(Widget child) => BlocProvider<LoyaltyCubit>(
-    create: (_) => clientGetIt<LoyaltyCubit>(),
+    create: (_) => clientGetIt<LoyaltyCubit>()..load(),
     child: child,
   );
 }

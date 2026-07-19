@@ -24,15 +24,9 @@ import '../../features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import '../../features/auth/domain/usecases/send_password_reset_email_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/cubit/forgot_password_cubit.dart';
+import '../../features/auth/presentation/cubit/remember_me_coordinator.dart';
 import '../storage/remember_me_store.dart';
 
-import '../../features/auth/data/datasources/mock_auth_datasource.dart';
-import '../../features/auth/data/repositories/auth_repository_impl.dart';
-import '../../features/auth/domain/repositories/auth_repository.dart';
-import '../../features/auth/domain/usecases/complete_profile_usecase.dart';
-import '../../features/auth/domain/usecases/verify_otp_usecase.dart';
-import '../../features/auth/domain/usecases/verify_phone_usecase.dart';
-import '../../features/auth/presentation/cubit/phone_auth_cubit.dart';
 import '../../features/booking/data/datasources/booking_search_datasource.dart';
 import '../../features/booking/data/datasources/daily_booking_datasource.dart';
 import '../../features/booking/data/datasources/supabase_booking_search_datasource.dart';
@@ -41,8 +35,6 @@ import '../../features/booking/data/datasources/supabase_vehicle_booking_datasou
 import '../../features/booking/data/datasources/vehicle_booking_datasource.dart';
 import '../../features/booking/data/repositories/booking_repository_impl.dart';
 import '../../features/booking/domain/repositories/booking_repository.dart';
-import '../../features/booking/domain/usecases/get_available_trips_usecase.dart';
-import '../../features/booking/domain/usecases/get_booking_hub_data_usecase.dart';
 import '../../features/booking/domain/usecases/get_booking_routes_usecase.dart';
 import '../../features/booking/domain/usecases/get_daily_booking_data_usecase.dart';
 import '../../features/booking/domain/usecases/get_map_pins_usecase.dart';
@@ -51,13 +43,21 @@ import '../../features/booking/domain/usecases/get_search_options_usecase.dart';
 import '../../features/booking/domain/usecases/get_vehicle_details_usecase.dart';
 import '../../features/booking/domain/usecases/get_vehicles_usecase.dart';
 import '../../features/booking/domain/usecases/sort_vehicles_usecase.dart';
-import '../../features/booking/presentation/cubit/booking_cubit.dart';
+import '../../features/booking/presentation/cubit/booking_search_cubit.dart';
+import '../../features/booking/presentation/cubit/daily_booking_cubit.dart';
+import '../../features/booking/presentation/cubit/map_pins_cubit.dart';
+import '../../features/booking/presentation/cubit/popular_routes_cubit.dart';
+import '../../features/booking/presentation/cubit/route_results_cubit.dart';
+import '../../features/booking/presentation/cubit/vehicle_details_cubit.dart';
+import '../../features/booking/presentation/cubit/vehicle_listing_cubit.dart';
+import '../../features/communication/data/datasources/communication_datasource.dart';
 import '../../features/communication/data/datasources/supabase_communication_datasource.dart';
 import '../../features/communication/data/repositories/communication_repository_impl.dart';
 import '../../features/communication/domain/repositories/communication_repository.dart';
-import '../../features/communication/domain/usecases/add_conversation_message_usecase.dart';
+import '../../features/communication/domain/usecases/get_conversation_usecase.dart';
 import '../../features/communication/domain/usecases/get_conversations_usecase.dart';
 import '../../features/communication/domain/usecases/send_conversation_message_usecase.dart';
+import '../../features/communication/presentation/cubit/chat_thread_cubit.dart';
 import '../../features/communication/presentation/cubit/communication_cubit.dart';
 import '../../features/home/data/datasources/home_datasource.dart';
 import '../../features/home/data/datasources/supabase_home_datasource.dart';
@@ -96,10 +96,8 @@ import '../../features/packages/data/datasources/packages_datasource.dart';
 import '../../features/packages/data/datasources/supabase_packages_datasource.dart';
 import '../../features/packages/data/repositories/packages_repository_impl.dart';
 import '../../features/packages/domain/repositories/packages_repository.dart';
-import '../../features/packages/domain/usecases/calculate_package_pricing_usecase.dart';
-import '../../features/packages/domain/usecases/create_subscription_usecase.dart';
 import '../../features/packages/domain/usecases/filter_packages_usecase.dart';
-import '../../features/packages/domain/usecases/get_package_selection_data_usecase.dart';
+import '../../features/packages/domain/usecases/get_packages_usecase.dart';
 import '../../features/packages/presentation/cubit/packages_cubit.dart';
 import '../../features/profile/data/datasources/profile_datasource.dart';
 import '../../features/profile/data/datasources/supabase_profile_datasource.dart';
@@ -282,19 +280,23 @@ void _registerAuthDependencies() {
 
   if (!clientGetIt.isRegistered<SaveRememberedCredentialsUseCase>()) {
     clientGetIt.registerLazySingleton<SaveRememberedCredentialsUseCase>(
-      () => SaveRememberedCredentialsUseCase(clientGetIt<RememberMeRepository>()),
+      () =>
+          SaveRememberedCredentialsUseCase(clientGetIt<RememberMeRepository>()),
     );
   }
 
   if (!clientGetIt.isRegistered<GetRememberedCredentialsUseCase>()) {
     clientGetIt.registerLazySingleton<GetRememberedCredentialsUseCase>(
-      () => GetRememberedCredentialsUseCase(clientGetIt<RememberMeRepository>()),
+      () =>
+          GetRememberedCredentialsUseCase(clientGetIt<RememberMeRepository>()),
     );
   }
 
   if (!clientGetIt.isRegistered<ClearRememberedCredentialsUseCase>()) {
     clientGetIt.registerLazySingleton<ClearRememberedCredentialsUseCase>(
-      () => ClearRememberedCredentialsUseCase(clientGetIt<RememberMeRepository>()),
+      () => ClearRememberedCredentialsUseCase(
+        clientGetIt<RememberMeRepository>(),
+      ),
     );
   }
 
@@ -304,12 +306,11 @@ void _registerAuthDependencies() {
         signInWithEmail: clientGetIt<SignInWithEmailUseCase>(),
         signUpWithEmail: clientGetIt<SignUpWithEmailUseCase>(),
         signOut: clientGetIt<SignOutUseCase>(),
-        saveRememberedCredentials:
-            clientGetIt<SaveRememberedCredentialsUseCase>(),
-        getRememberedCredentials:
-            clientGetIt<GetRememberedCredentialsUseCase>(),
-        clearRememberedCredentials:
-            clientGetIt<ClearRememberedCredentialsUseCase>(),
+        rememberMe: RememberMeCoordinator(
+          save: clientGetIt<SaveRememberedCredentialsUseCase>(),
+          get: clientGetIt<GetRememberedCredentialsUseCase>(),
+          clear: clientGetIt<ClearRememberedCredentialsUseCase>(),
+        ),
       ),
     );
   }
@@ -323,47 +324,6 @@ void _registerAuthDependencies() {
   if (!clientGetIt.isRegistered<ForgotPasswordCubit>()) {
     clientGetIt.registerFactory<ForgotPasswordCubit>(
       () => ForgotPasswordCubit(clientGetIt<SendPasswordResetEmailUseCase>()),
-    );
-  }
-
-  // --- Phone Auth Dependencies (Mock) ---
-  if (!clientGetIt.isRegistered<MockAuthDatasource>()) {
-    clientGetIt.registerLazySingleton<MockAuthDatasource>(
-      () => MockAuthDatasource(),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<AuthRepository>()) {
-    clientGetIt.registerLazySingleton<AuthRepository>(
-      () => AuthRepositoryImpl(clientGetIt<MockAuthDatasource>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<VerifyPhoneUseCase>()) {
-    clientGetIt.registerLazySingleton<VerifyPhoneUseCase>(
-      () => VerifyPhoneUseCase(clientGetIt<AuthRepository>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<VerifyOtpUseCase>()) {
-    clientGetIt.registerLazySingleton<VerifyOtpUseCase>(
-      () => VerifyOtpUseCase(clientGetIt<AuthRepository>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<CompleteProfileUseCase>()) {
-    clientGetIt.registerLazySingleton<CompleteProfileUseCase>(
-      () => CompleteProfileUseCase(clientGetIt<AuthRepository>()),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<PhoneAuthCubit>()) {
-    clientGetIt.registerFactory<PhoneAuthCubit>(
-      () => PhoneAuthCubit(
-        verifyPhoneUseCase: clientGetIt<VerifyPhoneUseCase>(),
-        verifyOtpUseCase: clientGetIt<VerifyOtpUseCase>(),
-        completeProfileUseCase: clientGetIt<CompleteProfileUseCase>(),
-      ),
     );
   }
 }
@@ -518,12 +478,6 @@ void _registerBookingDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<GetBookingHubDataUseCase>()) {
-    clientGetIt.registerLazySingleton<GetBookingHubDataUseCase>(
-      () => GetBookingHubDataUseCase(clientGetIt<BookingRepository>()),
-    );
-  }
-
   if (!clientGetIt.isRegistered<GetDailyBookingDataUseCase>()) {
     clientGetIt.registerLazySingleton<GetDailyBookingDataUseCase>(
       () => GetDailyBookingDataUseCase(clientGetIt<BookingRepository>()),
@@ -554,12 +508,6 @@ void _registerBookingDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<GetAvailableTripsUseCase>()) {
-    clientGetIt.registerLazySingleton<GetAvailableTripsUseCase>(
-      () => GetAvailableTripsUseCase(clientGetIt<BookingRepository>()),
-    );
-  }
-
   if (!clientGetIt.isRegistered<GetVehiclesUseCase>()) {
     clientGetIt.registerLazySingleton<GetVehiclesUseCase>(
       () => GetVehiclesUseCase(clientGetIt<BookingRepository>()),
@@ -578,18 +526,50 @@ void _registerBookingDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<BookingCubit>()) {
-    clientGetIt.registerFactory<BookingCubit>(
-      () => BookingCubit(
-        getBookingHubData: clientGetIt<GetBookingHubDataUseCase>(),
-        getDailyBookingData: clientGetIt<GetDailyBookingDataUseCase>(),
-        getRoutes: clientGetIt<GetBookingRoutesUseCase>(),
-        getPopularRoutes: clientGetIt<GetPopularRoutesUseCase>(),
-        getMapPins: clientGetIt<GetMapPinsUseCase>(),
-        getSearchOptions: clientGetIt<GetSearchOptionsUseCase>(),
-        getVehicles: clientGetIt<GetVehiclesUseCase>(),
-        getVehicleDetails: clientGetIt<GetVehicleDetailsUseCase>(),
-        sortVehicles: clientGetIt<SortVehiclesUseCase>(),
+  if (!clientGetIt.isRegistered<DailyBookingCubit>()) {
+    clientGetIt.registerFactory<DailyBookingCubit>(
+      () => DailyBookingCubit(clientGetIt<GetDailyBookingDataUseCase>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<RouteResultsCubit>()) {
+    clientGetIt.registerFactory<RouteResultsCubit>(
+      () => RouteResultsCubit(clientGetIt<GetBookingRoutesUseCase>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<PopularRoutesCubit>()) {
+    clientGetIt.registerFactory<PopularRoutesCubit>(
+      () => PopularRoutesCubit(clientGetIt<GetPopularRoutesUseCase>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<MapPinsCubit>()) {
+    clientGetIt.registerFactory<MapPinsCubit>(
+      () => MapPinsCubit(clientGetIt<GetMapPinsUseCase>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<BookingSearchCubit>()) {
+    clientGetIt.registerFactory<BookingSearchCubit>(
+      () => BookingSearchCubit(clientGetIt<GetSearchOptionsUseCase>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<VehicleListingCubit>()) {
+    clientGetIt.registerFactory<VehicleListingCubit>(
+      () => VehicleListingCubit(
+        clientGetIt<GetVehiclesUseCase>(),
+        clientGetIt<SortVehiclesUseCase>(),
+      ),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<VehicleDetailsCubit>()) {
+    clientGetIt.registerFactory<VehicleDetailsCubit>(
+      () => VehicleDetailsCubit(
+        clientGetIt<GetVehicleDetailsUseCase>(),
+        clientGetIt<GetVehiclesUseCase>(),
       ),
     );
   }
@@ -751,9 +731,9 @@ void _registerPackagesDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<GetPackageSelectionDataUseCase>()) {
-    clientGetIt.registerLazySingleton<GetPackageSelectionDataUseCase>(
-      () => GetPackageSelectionDataUseCase(clientGetIt<PackagesRepository>()),
+  if (!clientGetIt.isRegistered<GetPackagesUseCase>()) {
+    clientGetIt.registerLazySingleton<GetPackagesUseCase>(
+      () => GetPackagesUseCase(clientGetIt<PackagesRepository>()),
     );
   }
 
@@ -763,25 +743,11 @@ void _registerPackagesDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<CalculatePackagePricingUseCase>()) {
-    clientGetIt.registerLazySingleton<CalculatePackagePricingUseCase>(
-      () => const CalculatePackagePricingUseCase(),
-    );
-  }
-
-  if (!clientGetIt.isRegistered<CreateSubscriptionUseCase>()) {
-    clientGetIt.registerLazySingleton<CreateSubscriptionUseCase>(
-      () => CreateSubscriptionUseCase(clientGetIt<PackagesRepository>()),
-    );
-  }
-
   if (!clientGetIt.isRegistered<PackagesCubit>()) {
     clientGetIt.registerFactory<PackagesCubit>(
       () => PackagesCubit(
-        getSelectionData: clientGetIt<GetPackageSelectionDataUseCase>(),
+        getPackages: clientGetIt<GetPackagesUseCase>(),
         filterPackages: clientGetIt<FilterPackagesUseCase>(),
-        calculatePricing: clientGetIt<CalculatePackagePricingUseCase>(),
-        createSubscription: clientGetIt<CreateSubscriptionUseCase>(),
       ),
     );
   }
@@ -997,17 +963,15 @@ void _registerRoutesHubDependencies() {
 }
 
 void _registerCommunicationDependencies() {
-  if (!clientGetIt.isRegistered<SupabaseCommunicationDatasource>()) {
-    clientGetIt.registerLazySingleton<SupabaseCommunicationDatasource>(
+  if (!clientGetIt.isRegistered<CommunicationDatasource>()) {
+    clientGetIt.registerLazySingleton<CommunicationDatasource>(
       () => SupabaseCommunicationDatasource(Supabase.instance.client),
     );
   }
 
   if (!clientGetIt.isRegistered<CommunicationRepository>()) {
     clientGetIt.registerLazySingleton<CommunicationRepository>(
-      () => CommunicationRepositoryImpl(
-        clientGetIt<SupabaseCommunicationDatasource>(),
-      ),
+      () => CommunicationRepositoryImpl(clientGetIt<CommunicationDatasource>()),
     );
   }
 
@@ -1017,9 +981,9 @@ void _registerCommunicationDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<AddConversationMessageUseCase>()) {
-    clientGetIt.registerLazySingleton<AddConversationMessageUseCase>(
-      () => const AddConversationMessageUseCase(),
+  if (!clientGetIt.isRegistered<GetConversationUseCase>()) {
+    clientGetIt.registerLazySingleton<GetConversationUseCase>(
+      () => GetConversationUseCase(clientGetIt<CommunicationRepository>()),
     );
   }
 
@@ -1033,9 +997,14 @@ void _registerCommunicationDependencies() {
 
   if (!clientGetIt.isRegistered<CommunicationCubit>()) {
     clientGetIt.registerFactory<CommunicationCubit>(
-      () => CommunicationCubit(
-        getConversations: clientGetIt<GetConversationsUseCase>(),
-        addMessage: clientGetIt<AddConversationMessageUseCase>(),
+      () => CommunicationCubit(clientGetIt<GetConversationsUseCase>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<ChatThreadCubit>()) {
+    clientGetIt.registerFactory<ChatThreadCubit>(
+      () => ChatThreadCubit(
+        getConversation: clientGetIt<GetConversationUseCase>(),
         sendMessage: clientGetIt<SendConversationMessageUseCase>(),
       ),
     );

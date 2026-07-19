@@ -3,9 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_cubit.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_state.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_route_arguments.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_results_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_results_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_flow_scaffold.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_booking_action.dart';
@@ -13,107 +12,52 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Route details and decision screen for the current search.
-class RouteSelectionScreen extends StatefulWidget {
-  const RouteSelectionScreen({super.key});
+class RouteSelectionScreen extends StatelessWidget {
+  const RouteSelectionScreen({super.key, required this.query});
 
-  @override
-  State<RouteSelectionScreen> createState() => _RouteSelectionScreenState();
-}
-
-class _RouteSelectionScreenState extends State<RouteSelectionScreen> {
-  late BookingSearchQuery _query;
-  String? _selectedRouteId;
-  String? _selectedTripId;
-  String? _loadedQueryKey;
-
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    _query = bookingQueryFromContext(context);
-    final queryKey = _queryKey(_query);
-    if (_loadedQueryKey == queryKey) return;
-    _loadedQueryKey = queryKey;
-    context.read<BookingCubit>().loadRoutes(_query);
-  }
-
-  void _continueToBooking(RouteOptionData route) {
-    Navigator.pushNamed(context, BookingRoutes.wizard, arguments: route);
-  }
+  final BookingSearchQuery query;
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<BookingCubit, BookingState>(
+    final cubit = context.read<RouteResultsCubit>();
+    return BlocBuilder<RouteResultsCubit, RouteResultsState>(
       builder: (context, state) {
-        final routes = state is BookingRoutesLoaded
-            ? state.routes
-            : <RouteOptionData>[];
-        if (routes.isNotEmpty) {
-          final queryRouteId = _query.routeId;
-          _selectedRouteId ??=
-              queryRouteId != null &&
-                  routes.any((route) => route.id == queryRouteId)
-              ? queryRouteId
-              : routes.first.id;
-        }
-        final selectedRoute = _selectedRoute(routes);
-
+        final loaded = state is RouteResultsLoaded ? state : null;
         return BookingFlowScaffold(
           title: context.l10n.booking_routeDetails,
-          query: _query,
+          query: query,
           actions: [
             IconButton(
               tooltip: context.l10n.tracking_refresh,
               icon: const Icon(Icons.refresh_rounded),
-              onPressed: () =>
-                  context.read<BookingCubit>().loadRoutes(_query, force: true),
+              onPressed: () => cubit.load(query),
             ),
           ],
           bottomBar: RouteBookingAction(
-            route: selectedRoute,
-            onContinue: _continueToBooking,
+            route: loaded?.selectedRoute,
+            onContinue: (route) => _continueToBooking(context, route),
           ),
           body: RouteDetailsBody(
-            state: state,
-            routes: routes,
-            selectedRoute: selectedRoute,
-            selectedTripId: _selectedTripId,
-            onRetry: () =>
-                context.read<BookingCubit>().loadRoutes(_query, force: true),
-            onMap: () {
-              Navigator.pushNamed(
-                context,
-                BookingRoutes.mapSelection,
-                arguments: _query.toArguments(),
-              );
-            },
-            onSelectRoute: (route) {
-              setState(() {
-                _selectedRouteId = route.id;
-                _selectedTripId = null;
-              });
-            },
-            onSelectTrip: (trip) => setState(() => _selectedTripId = trip.id),
+            isLoading: state is RouteResultsLoading,
+            errorMessage: state is RouteResultsError ? state.message : null,
+            routes: loaded?.routes ?? const <RouteOptionData>[],
+            selectedRoute: loaded?.selectedRoute,
+            selectedTripId: loaded?.selectedTripId,
+            onRetry: () => cubit.load(query),
+            onMap: () => Navigator.pushNamed(
+              context,
+              BookingRoutes.mapSelection,
+              arguments: query.toArguments(),
+            ),
+            onSelectRoute: (route) => cubit.selectRoute(route.id),
+            onSelectTrip: (trip) => cubit.selectTrip(trip.id),
           ),
         );
       },
     );
   }
 
-  RouteOptionData? _selectedRoute(List<RouteOptionData> routes) {
-    if (routes.isEmpty) return null;
-    return routes.firstWhere(
-      (route) => route.id == _selectedRouteId,
-      orElse: () => routes.first,
-    );
-  }
-
-  String _queryKey(BookingSearchQuery query) {
-    return [
-      query.routeId ?? '',
-      query.pickup,
-      query.destination,
-      query.date,
-      query.time,
-    ].join('|');
+  void _continueToBooking(BuildContext context, RouteOptionData route) {
+    Navigator.pushNamed(context, BookingRoutes.wizard, arguments: route);
   }
 }

@@ -1,5 +1,4 @@
-import '../../domain/entities/trip_review.dart';
-
+/// Wire shape of a row in the `trip_reviews` table.
 class TripReviewModel {
   const TripReviewModel({
     required this.bookingId,
@@ -25,17 +24,6 @@ class TripReviewModel {
       routeRating: (json['route_rating'] as num?)?.toInt() ?? 0,
       comment: json['comment']?.toString() ?? '',
       submittedAt: DateTime.tryParse(json['created_at']?.toString() ?? ''),
-    );
-  }
-
-  TripReview toEntity() {
-    return TripReview(
-      bookingId: bookingId,
-      driverRating: driverRating,
-      vehicleRating: vehicleRating,
-      routeRating: routeRating,
-      comment: comment,
-      submittedAt: submittedAt,
     );
   }
 }

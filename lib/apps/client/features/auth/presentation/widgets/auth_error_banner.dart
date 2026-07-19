@@ -32,7 +32,9 @@ class AuthErrorBanner extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: scheme.errorContainer.withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: scheme.error.withValues(alpha: 0.4)),
+                    border: Border.all(
+                      color: scheme.error.withValues(alpha: 0.4),
+                    ),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,

@@ -5,18 +5,20 @@ import 'package:bmt_app/apps/client/core/routes/client_cubit_scopes.dart';
 import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/auth_success_screen.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/screens/complete_profile_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/forgot_password_screen.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/screens/otp_verification_screen.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/screens/phone_login_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
+import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_search_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/map_pins_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_results_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/vehicle_details_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/vehicle_listing_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/screens/available_trips_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_wizard_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/daily_booking_flow_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/map_route_selection_screen.dart';
@@ -25,14 +27,18 @@ import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_selection_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/search_trip_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/vehicle_details_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/search_date_options.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/vehicle_listing_screen.dart';
+import 'package:bmt_app/apps/client/features/communication/presentation/routes/chat_thread_arguments.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/routes/communication_routes.dart';
+import 'package:bmt_app/apps/client/features/communication/presentation/screens/chat_thread_screen.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/screens/communication_screen.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/screens/client_shell_screen.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/routes/loyalty_routes.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/screens/loyalty_screen.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/routes/subscription_arguments.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/screens/subscription_screen.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/routes/payment_routes.dart';
@@ -115,14 +121,6 @@ abstract final class ClientRouter {
     AuthRoutes.signUp: (_) => ClientCubitScopes.auth(const SignUpScreen()),
     AuthRoutes.forgotPassword: (_) =>
         ClientCubitScopes.forgotPassword(const ForgotPasswordScreen()),
-    AuthRoutes.phoneLogin: (_) =>
-        ClientCubitScopes.phoneAuth(const PhoneLoginScreen()),
-    AuthRoutes.otp: (context) => ClientCubitScopes.phoneAuth(
-      OtpVerificationScreen(phoneNumber: _args(context) as String? ?? ''),
-    ),
-    AuthRoutes.completeProfile: (context) => ClientCubitScopes.phoneAuth(
-      CompleteProfileScreen(phoneNumber: _args(context) as String? ?? ''),
-    ),
     AuthRoutes.success: (context) {
       final args = _args(context);
       return AuthSuccessScreen(
@@ -134,31 +132,52 @@ abstract final class ClientRouter {
   // --- Booking --------------------------------------------------------------
 
   static Map<String, WidgetBuilder> get _booking => <String, WidgetBuilder>{
-    BookingRoutes.search: (context) => ClientCubitScopes.booking(
-      SearchTripScreen(
-        initialQuery: BookingSearchQuery.fromArguments(_args(context)),
+    BookingRoutes.search: (context) {
+      final query = BookingSearchQuery.fromArguments(_args(context));
+      return BlocProvider(
+        create: (_) =>
+            clientGetIt<BookingSearchCubit>()
+              ..init(query, todayDate: todaySearchDateLabel(context)),
+        child: const SearchTripScreen(),
+      );
+    },
+    BookingRoutes.routeSelection: (context) {
+      final query = BookingSearchQuery.fromArguments(_args(context));
+      return BlocProvider(
+        create: (_) => clientGetIt<RouteResultsCubit>()..load(query),
+        child: RouteSelectionScreen(query: query),
+      );
+    },
+    BookingRoutes.popularRoutes: (context) => ClientCubitScopes.popularRoutes(
+      PopularRoutesScreen(
+        query: BookingSearchQuery.fromArguments(_args(context)),
       ),
     ),
-    BookingRoutes.routeSelection: (_) =>
-        ClientCubitScopes.booking(const RouteSelectionScreen()),
-    BookingRoutes.popularRoutes: (_) =>
-        ClientCubitScopes.booking(const PopularRoutesScreen()),
-    BookingRoutes.mapSelection: (_) =>
-        ClientCubitScopes.booking(const MapRouteSelectionScreen()),
-    BookingRoutes.availableTrips: (_) =>
-        ClientCubitScopes.booking(const AvailableTripsScreen()),
-    BookingRoutes.vehicleListing: (_) =>
-        ClientCubitScopes.booking(const VehicleListingScreen()),
+    BookingRoutes.mapSelection: (context) {
+      final query = BookingSearchQuery.fromArguments(_args(context));
+      return BlocProvider(
+        create: (_) => clientGetIt<MapPinsCubit>()..load(query),
+        child: const MapRouteSelectionScreen(),
+      );
+    },
+    BookingRoutes.vehicleListing: (context) {
+      final query = BookingSearchQuery.fromArguments(_args(context));
+      return BlocProvider(
+        create: (_) =>
+            clientGetIt<VehicleListingCubit>()..load(routeId: query.routeId),
+        child: VehicleListingScreen(query: query),
+      );
+    },
     BookingRoutes.vehicleDetails: (context) {
       final args = _args(context);
-      return ClientCubitScopes.booking(
-        VehicleDetailsScreen(
-          vehicleId: args is Map ? args['vehicleId']?.toString() : null,
-        ),
+      final vehicleId = args is Map ? args['vehicleId']?.toString() : null;
+      return BlocProvider(
+        create: (_) => clientGetIt<VehicleDetailsCubit>()..load(vehicleId),
+        child: VehicleDetailsScreen(vehicleId: vehicleId),
       );
     },
     BookingRoutes.dailyBooking: (_) =>
-        ClientCubitScopes.booking(const DailyBookingFlowScreen()),
+        ClientCubitScopes.dailyBooking(const DailyBookingFlowScreen()),
 
     // The wizard and overview are driven by a route object rather than a cubit
     // fetch, so they render nothing if handed the wrong argument type.
@@ -194,19 +213,11 @@ abstract final class ClientRouter {
         checkoutData: PaymentCheckoutData.fromArguments(_args(context)),
       ),
     ),
-    PackagesRoutes.subscription: (context) {
-      final args = _args(context);
-      // The seat flow forwards the booked trip (driver, vehicle, route, fare)
-      // through here so the payment step can show a real ticket instead of
-      // empty placeholders.
-      return ClientCubitScopes.packages(
-        SubscriptionScreen(
-          hasActiveSubscription:
-              args is Map && args['hasActiveSubscription'] == true,
-          bookingData: args is Map ? Map<String, dynamic>.from(args) : null,
-        ),
-      );
-    },
+    PackagesRoutes.subscription: (context) => ClientCubitScopes.packages(
+      SubscriptionScreen(
+        arguments: SubscriptionArguments.fromArguments(_args(context)),
+      ),
+    ),
   };
 
   // --- Trips & tracking -----------------------------------------------------
@@ -216,10 +227,10 @@ abstract final class ClientRouter {
         ClientCubitScopes.trips(MyTripsScreen(onOpenRoute: _opener(context))),
     TripsRoutes.tripDetails: (context) {
       final args = _args(context);
-      return ClientCubitScopes.trips(
-        TripDetailsScreen(
-          tripId: args is Map ? args['tripId']?.toString() : null,
-        ),
+      final tripId = args is Map ? args['tripId']?.toString() : null;
+      return ClientCubitScopes.tripDetails(
+        TripDetailsScreen(tripId: tripId),
+        tripId: tripId,
       );
     },
     TrackingRoutes.tracking: (context) {
@@ -250,6 +261,14 @@ abstract final class ClientRouter {
   static Map<String, WidgetBuilder> get _engagement => <String, WidgetBuilder>{
     CommunicationRoutes.communication: (_) =>
         ClientCubitScopes.communication(const CommunicationScreen()),
+    CommunicationRoutes.chatThread: (context) {
+      final args = ChatThreadArguments.fromArguments(_args(context));
+      if (!args.isValid) return const SizedBox.shrink();
+      return ClientCubitScopes.chatThread(
+        const ChatThreadScreen(),
+        conversationId: args.conversationId,
+      );
+    },
     ReferralRoutes.rewards: (_) =>
         ClientCubitScopes.referralRewards(const ReferralRewardsScreen()),
     LoyaltyRoutes.loyalty: (_) =>

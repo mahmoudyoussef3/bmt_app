@@ -1,196 +1,65 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/package_filter.dart';
 import '../../domain/entities/package_plan.dart';
-import '../../domain/entities/subscription_request.dart';
-import '../../domain/usecases/calculate_package_pricing_usecase.dart';
-import '../../domain/usecases/create_subscription_usecase.dart';
 import '../../domain/usecases/filter_packages_usecase.dart';
-import '../../domain/usecases/get_package_selection_data_usecase.dart';
+import '../../domain/usecases/get_packages_usecase.dart';
 import 'packages_state.dart';
 
 class PackagesCubit extends Cubit<PackagesState> {
   PackagesCubit({
-    required GetPackageSelectionDataUseCase getSelectionData,
+    required GetPackagesUseCase getPackages,
     required FilterPackagesUseCase filterPackages,
-    required CalculatePackagePricingUseCase calculatePricing,
-    required CreateSubscriptionUseCase createSubscription,
-  }) : _getSelectionData = getSelectionData,
+  }) : _getPackages = getPackages,
        _filterPackages = filterPackages,
-       _calculatePricing = calculatePricing,
-       _createSubscription = createSubscription,
        super(const PackagesLoading());
 
-  final GetPackageSelectionDataUseCase _getSelectionData;
+  final GetPackagesUseCase _getPackages;
   final FilterPackagesUseCase _filterPackages;
-  final CalculatePackagePricingUseCase _calculatePricing;
-  final CreateSubscriptionUseCase _createSubscription;
 
   Future<void> load() async {
     emit(const PackagesLoading());
     try {
-      final data = await _getSelectionData();
-      final firstVehicleFee = data.vehicles.isEmpty
-          ? 0
-          : data.vehicles.first.extraFee;
-      emit(
-        PackagesLoaded(
-          data: data,
-          selectedRoute: data.routes.isEmpty ? '' : data.routes.first,
-          selectedPickup: data.pickupPoints.isEmpty
-              ? ''
-              : data.pickupPoints.first,
-          selectedDestination: data.destinations.isEmpty
-              ? ''
-              : data.destinations.first,
-          filteredPackages: _filterPackages(
-            packages: data.packages,
-            filter: 'All',
-          ),
-          pricing: _calculatePricing(
-            package: null,
-            vehicleAddonFee: firstVehicleFee,
-            selectedSeatCount: 0,
-          ),
-        ),
-      );
+      final packages = await _getPackages();
+      emit(PackagesLoaded(packages: packages, visiblePackages: packages));
     } catch (error) {
       emit(PackagesError(error.toString()));
     }
   }
 
-  void selectFilter(String filter) {
+  void selectFilter(PackageFilter filter) {
     final current = state;
     if (current is! PackagesLoaded) return;
     emit(
       current.copyWith(
-        selectedCategoryFilter: filter,
-        filteredPackages: _filterPackages(
-          packages: current.data.packages,
+        filter: filter,
+        visiblePackages: _filterPackages(
+          packages: current.packages,
           filter: filter,
         ),
       ),
     );
   }
 
-  void selectPackage(PackagePlan package) {
+  /// Opens the detail pane for [package].
+  void openDetails(PackagePlan package) {
     final current = state;
     if (current is! PackagesLoaded) return;
     emit(
       current.copyWith(
         selectedPackage: package,
-        pricing: _pricingFor(
-          current,
-          package: package,
-          selectedSeatCount: 1, // hardcoded single seat for pricing
-        ),
+        step: SubscriptionStep.details,
       ),
     );
   }
 
-  void selectRoute(String route) => _updateSelection(selectedRoute: route);
-
-  void selectPickup(String pickup) => _updateSelection(selectedPickup: pickup);
-
-  void selectDestination(String destination) {
-    _updateSelection(selectedDestination: destination);
-  }
-
-  void selectVehicle(int index) {
+  /// Steps back to the listing. Returns false when already at the first pane,
+  /// which tells the screen to pop the route instead.
+  bool goBack() {
     final current = state;
-    if (current is! PackagesLoaded) return;
-    if (index < 0 || index >= current.data.vehicles.length) return;
-    emit(
-      current.copyWith(
-        selectedVehicleIndex: index,
-        pricing: _pricingFor(current, selectedVehicleIndex: index),
-      ),
-    );
-  }
-
-
-
-  void setAgreeTerms(bool value) {
-    final current = state;
-    if (current is! PackagesLoaded) return;
-    emit(current.copyWith(agreeTerms: value));
-  }
-
-  void setProcessing(bool value) {
-    final current = state;
-    if (current is! PackagesLoaded) return;
-    emit(current.copyWith(isProcessing: value));
-  }
-
-  /// Activates the selected package by persisting a real `subscriptions` row.
-  Future<void> subscribe() async {
-    final current = state;
-    if (current is! PackagesLoaded) return;
-    final package = current.selectedPackage;
-    if (package == null) return;
-
-    emit(current.copyWith(isProcessing: true, subscribeError: null));
-    try {
-      final id = await _createSubscription(
-        SubscriptionRequest(
-          packageId: package.id,
-          packageName: package.name,
-          routeName: current.selectedRoute,
-          days: package.days,
-          tripsCount: package.tripsCount,
-          totalPrice: current.pricing.finalPrice,
-        ),
-      );
-      emit(
-        current.copyWith(
-          isProcessing: false,
-          subscriptionId: id,
-          subscribed: true,
-        ),
-      );
-    } catch (error) {
-      emit(
-        current.copyWith(isProcessing: false, subscribeError: error.toString()),
-      );
-    }
-  }
-
-  /// Clears a surfaced activation error after the UI has shown it.
-  void clearSubscribeError() {
-    final current = state;
-    if (current is! PackagesLoaded) return;
-    emit(current.copyWith(subscribeError: null));
-  }
-
-  void _updateSelection({
-    String? selectedRoute,
-    String? selectedPickup,
-    String? selectedDestination,
-  }) {
-    final current = state;
-    if (current is! PackagesLoaded) return;
-    emit(
-      current.copyWith(
-        selectedRoute: selectedRoute,
-        selectedPickup: selectedPickup,
-        selectedDestination: selectedDestination,
-      ),
-    );
-  }
-
-  PackagePricing _pricingFor(
-    PackagesLoaded current, {
-    PackagePlan? package,
-    int? selectedVehicleIndex,
-    int? selectedSeatCount,
-  }) {
-    final index = selectedVehicleIndex ?? current.selectedVehicleIndex;
-    final vehicleAddonFee = index >= 0 && index < current.data.vehicles.length
-        ? current.data.vehicles[index].extraFee
-        : 0;
-    return _calculatePricing(
-      package: package ?? current.selectedPackage,
-      vehicleAddonFee: vehicleAddonFee,
-      selectedSeatCount: selectedSeatCount ?? 1,
-    );
+    if (current is! PackagesLoaded) return false;
+    if (current.step == SubscriptionStep.listing) return false;
+    emit(current.copyWith(step: SubscriptionStep.listing));
+    return true;
   }
 }

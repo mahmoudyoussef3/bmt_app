@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/trip.dart';
@@ -7,6 +5,7 @@ import '../../domain/usecases/cancel_booking_usecase.dart';
 import '../../domain/usecases/get_trip_details_usecase.dart';
 import '../../domain/usecases/get_trips_usecase.dart';
 import '../../domain/usecases/watch_trips_usecase.dart';
+import 'trips_realtime_refresher.dart';
 import 'trips_state.dart';
 
 class TripsCubit extends Cubit<TripsState> {
@@ -17,66 +16,62 @@ class TripsCubit extends Cubit<TripsState> {
     required CancelBookingUseCase cancelBooking,
   }) : _getTrips = getTrips,
        _getTripDetails = getTripDetails,
-       _watchTrips = watchTrips,
        _cancelBooking = cancelBooking,
-       super(const TripsLoading());
+       super(const TripsLoading()) {
+    _realtime = TripsRealtimeRefresher(
+      watch: watchTrips.call,
+      onChange: _refreshFromRealtime,
+    );
+  }
 
   final GetTripsUseCase _getTrips;
   final GetTripDetailsUseCase _getTripDetails;
-  final WatchTripsUseCase _watchTrips;
   final CancelBookingUseCase _cancelBooking;
-  StreamSubscription<void>? _tripChangesSubscription;
-  Timer? _refreshDebounce;
-  bool _refreshing = false;
+  late final TripsRealtimeRefresher _realtime;
 
-  Future<void> loadTrips() async {
+  Future<void> loadTrips() => _load(details: false);
+
+  Future<void> loadTripDetails(String? id) => _load(id: id, details: true);
+
+  Future<void> _load({String? id, required bool details}) async {
     emit(const TripsLoading());
     try {
       final trips = await _getTrips();
+      final selected = details ? await _select(id, trips) : null;
       if (isClosed) return;
-      emit(TripsLoaded(trips: trips));
-      _subscribeToChanges();
+      emit(TripsLoaded(trips: trips, selectedTrip: selected));
+      _realtime.start();
     } catch (error) {
-      if (isClosed) return;
-      emit(TripsError(error.toString()));
+      if (!isClosed) emit(TripsError(error.toString()));
     }
   }
 
-  Future<void> loadTripDetails(String? id) async {
-    emit(const TripsLoading());
-    try {
-      final trips = await _getTrips();
-      final selectedTrip = id == null || id.isEmpty
-          ? trips.firstOrNull
-          : await _getTripDetails(id);
-      if (isClosed) return;
-      emit(TripsLoaded(trips: trips, selectedTrip: selectedTrip));
-      _subscribeToChanges();
-    } catch (error) {
-      if (isClosed) return;
-      emit(TripsError(error.toString()));
-    }
+  Future<TripData?> _select(String? id, List<TripData> trips) {
+    if (id == null || id.isEmpty) return Future.value(trips.firstOrNull);
+    return _getTripDetails(id);
   }
 
-  /// Re-reads the open trip in place — used after a review is submitted, so the
-  /// "Rate Trip" call to action disappears without throwing the whole screen
-  /// back through its loading skeleton. Best-effort: a failure keeps the last
-  /// usable state, and the passenger's review is already stored either way.
+  void setFilter(TripFilter filter) {
+    final current = state;
+    if (current is TripsLoaded) emit(current.copyWith(filter: filter));
+  }
+
+  /// Re-reads the open trip after a review is submitted so the "Rate Trip" CTA
+  /// disappears without flashing the loading skeleton. Best-effort.
   Future<void> refreshSelectedTrip(String id) async {
     final current = state;
     if (current is! TripsLoaded || id.isEmpty) return;
     try {
       final trip = await _getTripDetails(id);
       if (isClosed || trip == null) return;
-      emit(TripsLoaded(trips: current.trips, selectedTrip: trip));
+      emit(current.copyWith(selectedTrip: trip));
     } catch (_) {
       // Keep the trip on screen; the next refresh will pick the review up.
     }
   }
 
-  /// Cancels an unapproved booking, then reloads so the trip moves to
-  /// "Cancelled" and its seat shows as free — the realtime refresh would do it
-  /// too, but the client must not have to wait on it to see the outcome.
+  /// Cancels an unapproved booking, then reloads so the trip flips to
+  /// "Cancelled" and frees its seat without waiting on the realtime refresh.
   Future<void> cancelTrip(TripData trip, String reason) async {
     final current = state;
     if (current is! TripsLoaded || current.cancelInFlight) return;
@@ -86,66 +81,29 @@ class TripsCubit extends Cubit<TripsState> {
       await _cancelBooking(trip, reason);
       final trips = await _getTrips();
       if (isClosed) return;
-      emit(
-        TripsLoaded(
-          trips: trips,
-          selectedTrip: trips.where((t) => t.id == trip.id).firstOrNull,
-          cancelledReference: trip.reference,
-        ),
-      );
+      emit(current.withTrips(trips, cancelledReference: trip.reference));
     } catch (error) {
       if (isClosed) return;
-      emit(current.copyWith(cancelFailure: _readableError(error)));
+      final message = error.toString().replaceFirst('Exception: ', '');
+      emit(current.copyWith(cancelFailure: message));
     }
   }
 
-  String _readableError(Object error) {
-    return error.toString().replaceFirst('Exception: ', '');
-  }
-
-  List<TripData> tripsForFilter(TripFilter filter, List<TripData> trips) {
-    return trips.where((trip) => trip.status == filter.statusMatch).toList();
-  }
-
-  int countForFilter(TripFilter filter, List<TripData> trips) {
-    return tripsForFilter(filter, trips).length;
-  }
-
-  void _subscribeToChanges() {
-    if (_tripChangesSubscription != null) return;
-    _tripChangesSubscription = _watchTrips().listen((_) {
-      _refreshDebounce?.cancel();
-      _refreshDebounce = Timer(
-        const Duration(milliseconds: 250),
-        _refreshFromRealtime,
-      );
-    }, onError: (_) {});
-  }
-
   Future<void> _refreshFromRealtime() async {
-    if (_refreshing || isClosed) return;
-    _refreshing = true;
+    if (isClosed) return;
     try {
       final trips = await _getTrips();
-      if (isClosed) return;
       final current = state;
-      if (current is! TripsLoaded) return;
-      final selectedId = current.selectedTrip?.id;
-      final selectedTrip = selectedId == null
-          ? null
-          : trips.where((trip) => trip.id == selectedId).firstOrNull;
-      emit(TripsLoaded(trips: trips, selectedTrip: selectedTrip));
+      if (isClosed || current is! TripsLoaded) return;
+      emit(current.withTrips(trips));
     } catch (_) {
       // A realtime refresh is best-effort; keep the last usable state.
-    } finally {
-      _refreshing = false;
     }
   }
 
   @override
   Future<void> close() {
-    _refreshDebounce?.cancel();
-    _tripChangesSubscription?.cancel();
+    _realtime.dispose();
     return super.close();
   }
 }

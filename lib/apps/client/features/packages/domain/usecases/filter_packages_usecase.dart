@@ -1,3 +1,4 @@
+import '../entities/package_filter.dart';
 import '../entities/package_plan.dart';
 
 class FilterPackagesUseCase {
@@ -5,14 +6,11 @@ class FilterPackagesUseCase {
 
   List<PackagePlan> call({
     required List<PackagePlan> packages,
-    required String filter,
+    required PackageFilter filter,
   }) {
-    return packages.where((package) {
-      if (filter == 'All') return true;
-      if (filter == 'Weekly' && package.days <= 14) return true;
-      if (filter == 'Monthly' && package.days == 30) return true;
-      if (filter == 'Quarterly' && package.days == 90) return true;
-      return false;
-    }).toList();
+    if (filter == PackageFilter.all) return packages;
+    return packages
+        .where((package) => filter.matches(package.durationDays))
+        .toList();
   }
 }

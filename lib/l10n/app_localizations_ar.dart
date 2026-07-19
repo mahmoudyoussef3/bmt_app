@@ -504,18 +504,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get packages_packageDetails => 'تفاصيل الباقة';
 
   @override
-  String get packages_configureTravel => 'ضبط الرحلة';
-
-  @override
-  String get packages_reviewSummary => 'مراجعة الملخص';
-
-  @override
-  String get packages_subscribed => 'تم الاشتراك!';
-
-  @override
-  String get packages_subscribePlan => 'الاشتراك في الخطة';
-
-  @override
   String get packages_all => 'الكل';
 
   @override
@@ -528,9 +516,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get packages_quarterly => 'ربع سنوية';
 
   @override
-  String packages_savePercent(int percent) {
-    return 'وفر $percent%';
-  }
+  String get packages_perRide => 'سعر الرحلة';
+
+  @override
+  String get packages_emptyTitle => 'لا توجد باقات بهذه المدة';
+
+  @override
+  String get packages_emptyBody =>
+      'جرّب مدة أخرى، أو حدّث الصفحة لتحميل أحدث الباقات.';
 
   @override
   String get packages_duration => 'المدة';
@@ -544,16 +537,8 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get packages_totalSavings => 'إجمالي التوفير';
-
-  @override
   String packages_egpAmount(String amount) {
     return 'ج.م $amount';
-  }
-
-  @override
-  String packages_originalPrice(String price) {
-    return 'السعر الأصلي: $price ج.م';
   }
 
   @override
@@ -575,13 +560,6 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get packages_flexibleTimingDesc =>
       'تعديل أوقات حجز الرحلة في أي وقت بدون رسوم إلغاء.';
-
-  @override
-  String get packages_vipBoarding => 'أولوية صعود VIP';
-
-  @override
-  String get packages_vipBoardingDesc =>
-      'أولوية في الصعود ورقم خدمة عملاء خاص.';
 
   @override
   String get packages_routeLimits => 'حدود المسار والحجز';
@@ -625,86 +603,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get packages_chooseRouteConfig => 'اختيار المسار والإعدادات';
-
-  @override
-  String get packages_basePrice => 'السعر الأساسي';
-
-  @override
-  String get packages_packageDiscount => 'خصم الباقة';
-
-  @override
-  String packages_percentOff(int percent) {
-    return 'خصم $percent%';
-  }
-
-  @override
   String get packages_subscriptionCost => 'تكلفة الاشتراك';
 
   @override
-  String get packages_selectTargetRoute => 'اختيار المسار المستهدف';
-
-  @override
-  String get packages_pickupPoint => 'نقطة التحرك';
-
-  @override
-  String get packages_destination => 'نقطة الوصول';
-
-  @override
-  String get packages_selectVehicleCategory => 'اختيار فئة العربية';
-
-  @override
-  String get packages_reviewActivation => 'المراجعة والتفعيل';
-
-  @override
-  String get packages_selectedPackage => 'الباقة المختارة';
-
-  @override
   String get packages_route => 'المسار';
-
-  @override
-  String get packages_vehicle => 'العربية';
-
-  @override
-  String get packages_billingDetails => 'تفاصيل الدفع';
-
-  @override
-  String get packages_paymentMethod => 'طريقة الدفع';
-
-  @override
-  String get packages_walletBalance => 'رصيد المحفظة';
-
-  @override
-  String packages_currentBalance(String balance) {
-    return 'الرصيد الحالي: $balance ج.م';
-  }
-
-  @override
-  String get packages_sufficient => 'رصيد كافِ';
-
-  @override
-  String get packages_payActivate => 'دفع وتفعيل';
-
-  @override
-  String get packages_processing => 'جاري المعالجة';
-
-  @override
-  String get packages_subscriptionActive => 'تم التفعيل!';
-
-  @override
-  String packages_subId(String id) {
-    return 'رقم الاشتراك: $id';
-  }
-
-  @override
-  String get packages_successDesc =>
-      'باقتك الآن مفعلة. يمكنك البدء في حجز رحلاتك فوراً من لوحة التحكم الخاصة بك.';
-
-  @override
-  String get packages_returnHome => 'العودة للرئيسية';
-
-  @override
-  String get packages_bookFirstRide => 'احجز أول رحلة';
 
   @override
   String get error_timeout => 'انتهى وقت الاتصال، يرجى المحاولة مرة أخرى.';
@@ -3470,18 +3372,39 @@ class AppLocalizationsAr extends AppLocalizations {
   String get loyalty_activeLogs => 'سجلات نشطة';
 
   @override
-  String loyalty_expiringOn(String date) {
-    return 'تنتهي في $date';
-  }
-
-  @override
   String get loyalty_redeemableBalance => 'رصيد النقاط القابل للاستبدال';
 
   @override
-  String get loyalty_goldLevelMember => 'عضو المستوى الذهبي';
+  String loyalty_tierLevelMember(String tier) {
+    return 'عضو فئة $tier';
+  }
 
   @override
   String get loyalty_catalogRewards => 'مكافآت الكتالوج';
+
+  @override
+  String get loyalty_tiersUnavailable => 'مستويات العضوية غير متاحة حاليًا.';
+
+  @override
+  String get loyalty_historyEmptyTitle => 'لا توجد عمليات نقاط بعد';
+
+  @override
+  String get loyalty_historyEmptyBody => 'احجز رحلة لتبدأ في جمع النقاط.';
+
+  @override
+  String get loyalty_rewardsEmptyTitle => 'لا توجد مكافآت متاحة';
+
+  @override
+  String get loyalty_rewardsEmptyBody =>
+      'تابعنا قريبًا لاكتشاف طرق جديدة لاستخدام نقاطك.';
+
+  @override
+  String get loyalty_transactionFallbackTitle => 'عملية نقاط';
+
+  @override
+  String loyalty_redeemFailed(String reason) {
+    return 'فشل الاستبدال. $reason';
+  }
 
   @override
   String get loyalty_categoryDiscount => 'خصم';
@@ -3575,142 +3498,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get packages_continueToPayment => 'متابعة للدفع';
 
   @override
-  String get packages_free => 'مجانًا';
-
-  @override
-  String packages_extraFeeAmount(String amount) {
-    return '+$amount';
-  }
-
-  @override
-  String get packages_chooseYourSeat => 'اختار مقعدك';
-
-  @override
-  String get packages_seatTapInstructions =>
-      'دوس عشان تحجز مقعد. حجز مقاعد أكتر بيضاعف قيمة الباقة.';
-
-  @override
-  String get packages_noOptionsAvailable => 'مفيش خيارات متاحة';
-
-  @override
-  String get packages_selectOption => 'اختار خيار';
-
-  @override
-  String get packages_frontDriverCabin => 'مقدمة العربية / كابينة السواق';
-
-  @override
-  String get packages_aisle => 'الممر';
-
-  @override
-  String get packages_seatAvailable => 'متاح';
-
-  @override
-  String get packages_seatSelected => 'مختار';
-
-  @override
-  String get packages_seatOccupied => 'محجوز';
-
-  @override
-  String packages_seatsSelectedCount(int count) {
-    return 'عدد المقاعد المختارة: $count';
-  }
-
-  @override
-  String packages_costLabel(String amount) {
-    return 'التكلفة: $amount';
-  }
-
-  @override
-  String packages_savingsLabel(String amount) {
-    return 'التوفير: $amount';
-  }
-
-  @override
-  String get packages_continueToSummary => 'متابعة للملخص';
-
-  @override
-  String get packages_targetRouteLabel => 'المسار المستهدف';
-
-  @override
-  String get packages_pickupStopLabel => 'محطة الانطلاق';
-
-  @override
-  String get packages_destinationStopLabel => 'محطة الوصول';
-
-  @override
-  String get packages_vehicleCategoryLabel => 'فئة المركبة';
-
-  @override
-  String get packages_selectedSeatsLabel => 'المقاعد المختارة';
-
-  @override
   String packages_daysCount(int days) {
     return '$days يوم';
-  }
-
-  @override
-  String get packages_tripsAllocatedLabel => 'عدد الرحلات المخصصة';
-
-  @override
-  String get packages_packageValidityLabel => 'مدة صلاحية الباقة';
-
-  @override
-  String get packages_agreeTermsText =>
-      'موافق على شروط وأحكام سياسة اشتراك الركاب الدائمين.';
-
-  @override
-  String get packages_submitForPaymentReview => 'إرسال لمراجعة الدفع';
-
-  @override
-  String get packages_agreeTermsRequired =>
-      'من فضلك وافق على الشروط قبل الإرسال.';
-
-  @override
-  String get packages_requestSubmittedTitle => 'تم إرسال الطلب';
-
-  @override
-  String get packages_requestSubmittedSubtitle =>
-      'اشتراكك في انتظار تأكيد الدفع. هيبقى قابل للاستخدام بعد موافقة الحسابات.';
-
-  @override
-  String get packages_subscriptionRequestLabel => 'طلب الاشتراك';
-
-  @override
-  String packages_copiedIdMessage(String id) {
-    return 'تم نسخ الرقم: $id';
-  }
-
-  @override
-  String get packages_commuterPackageLabel => 'باقة التنقل';
-
-  @override
-  String get packages_durationLimitLabel => 'حد المدة';
-
-  @override
-  String get packages_totalTripsScopeLabel => 'إجمالي نطاق الرحلات';
-
-  @override
-  String get packages_travelRouteLabel => 'مسار الرحلة';
-
-  @override
-  String get packages_vehicleStandardLabel => 'فئة المركبة';
-
-  @override
-  String get packages_amountDueLabel => 'المبلغ المستحق';
-
-  @override
-  String get packages_backToHome => 'الرجوع للرئيسية';
-
-  @override
-  String get packages_activatingPackage => 'جاري تفعيل الباقة...';
-
-  @override
-  String get packages_confirmingCredentials =>
-      'بنأكد بيانات الاشتراك ونحجز المقاعد.';
-
-  @override
-  String packages_activateSubscriptionError(String error) {
-    return 'تعذّر تفعيل الاشتراك: $error';
   }
 
   @override
@@ -3754,6 +3543,30 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get trips_reviewOpenError => 'تعذّر فتح تقييمك';
+
+  @override
+  String get trips_reviewErrorSignIn => 'سجّل الدخول لتقييم رحلتك.';
+
+  @override
+  String get trips_reviewErrorBookingMissing => 'هذا الحجز لم يعد موجودًا.';
+
+  @override
+  String get trips_reviewErrorNotYourTrip => 'يمكنك تقييم رحلاتك أنت فقط.';
+
+  @override
+  String get trips_reviewErrorCancelled =>
+      'تم إلغاء هذا الحجز، لذا لا يوجد ما يمكن تقييمه.';
+
+  @override
+  String get trips_reviewErrorNotCompleted =>
+      'يمكنك تقييم الرحلة بعد اكتمالها فقط.';
+
+  @override
+  String get trips_reviewErrorInvalidRating =>
+      'من فضلك قيّم السائق والمركبة والمسار من ١ إلى ٥ نجوم.';
+
+  @override
+  String get trips_reviewErrorUnknown => 'تعذّر إرسال تقييمك. حاول مرة أخرى.';
 
   @override
   String get booking_price => 'السعر';
@@ -4152,23 +3965,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get communication_refresh => 'تحديث';
 
   @override
-  String get communication_simulateIncomingCall => 'محاكاة مكالمة واردة';
-
-  @override
-  String get communication_online => 'متصل';
-
-  @override
-  String get communication_offline => 'غير متصل';
-
-  @override
-  String communication_missedCallFrom(String name) {
-    return 'مكالمة فائتة من $name';
-  }
-
-  @override
-  String get communication_callEnded => 'انتهت المكالمة';
-
-  @override
   String get communication_searchHint =>
       'ابحث في المحادثات وجهات الاتصال والرسائل...';
 
@@ -4201,100 +3997,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get communication_categoryGroup => 'مجموعة';
 
   @override
-  String communication_ticketReference(String ticketId) {
-    return 'رقم تذكرة الدعم: $ticketId';
-  }
-
-  @override
   String get communication_statusOpenFallback => 'مفتوحة';
-
-  @override
-  String get communication_demoRoute => 'بنها ← سمارت فيليدج';
-
-  @override
-  String get communication_demoVehicle => 'فان مريح';
-
-  @override
-  String get communication_demoEta => '8 دقائق';
-
-  @override
-  String get communication_demoRating => '4.9 ★';
-
-  @override
-  String get communication_callAction => '📞 اتصال';
-
-  @override
-  String get communication_shareLocationAction => '📍 مشاركة الموقع';
-
-  @override
-  String get communication_late5mAction => '⏰ تأخير 5 دقائق';
-
-  @override
-  String get communication_you => 'أنت';
-
-  @override
-  String get communication_sharedLocationMessage =>
-      '📍 تمت مشاركة الموقع المباشر';
-
-  @override
-  String get communication_lateMessageText =>
-      'سأتأخر 5 دقائق، من فضلك انتظرني.';
-
-  @override
-  String get communication_demoGroupRoute => 'معلومات المسار';
-
-  @override
-  String get communication_demoMembersCount => '10 أعضاء';
-
-  @override
-  String communication_isTyping(String name) {
-    return '$name يكتب الآن...';
-  }
 
   @override
   String get communication_messageInputHint => 'اكتب رسالتك...';
 
   @override
-  String get communication_attachedImageMessage => 'صورة مرفقة';
-
-  @override
-  String get communication_userSenderFallback => 'المستخدم';
-
-  @override
   String get communication_justNow => 'الآن';
-
-  @override
-  String get communication_voiceMessageText => '🎙️ رسالة صوتية';
-
-  @override
-  String get communication_incomingCallRole => 'سائق الباص • رحلة نشطة';
-
-  @override
-  String get communication_shuttleDriverRole => 'سائق الباص';
-
-  @override
-  String get communication_ringing => 'جارٍ الاتصال...';
-
-  @override
-  String get communication_incomingShuttleCall => 'مكالمة واردة من السائق...';
-
-  @override
-  String get communication_decline => 'رفض';
-
-  @override
-  String get communication_accept => 'قبول';
-
-  @override
-  String get communication_mute => 'كتم';
-
-  @override
-  String get communication_speaker => 'مكبر الصوت';
-
-  @override
-  String get communication_hangUp => 'إنهاء';
-
-  @override
-  String get communication_missedCallText => '📞 مكالمة فائتة';
 
   @override
   String get booking_pickYourSeat => 'اختر مقعدك';

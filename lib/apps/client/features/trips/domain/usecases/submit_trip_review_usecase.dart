@@ -1,5 +1,6 @@
 import '../entities/reviewable_trip.dart';
 import '../entities/trip_review.dart';
+import '../entities/trip_review_failure.dart';
 import '../repositories/trip_reviews_repository.dart';
 
 /// Records a passenger's review of a trip they actually took.
@@ -15,10 +16,10 @@ class SubmitTripReviewUseCase {
 
   Future<void> call(ReviewableTrip trip, TripReview review) {
     if (!trip.isCompleted) {
-      throw Exception('You can only review a trip once it has been completed.');
+      throw const TripReviewException(TripReviewFailure.tripNotCompleted);
     }
     if (!review.isValid) {
-      throw Exception('Please give the driver, vehicle, and route 1–5 stars.');
+      throw const TripReviewException(TripReviewFailure.invalidRating);
     }
     return _repository.submitReview(review);
   }

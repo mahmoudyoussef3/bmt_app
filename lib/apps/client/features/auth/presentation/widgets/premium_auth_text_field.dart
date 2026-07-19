@@ -1,5 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'auth_field_decoration.dart';
+import 'password_visibility_toggle.dart';
+
+/// The auth-flow text field: a focus-aware container with a themed
+/// [InputDecoration] and, for passwords, a show/hide toggle.
 class PremiumAuthTextField extends StatefulWidget {
   final TextEditingController controller;
   final FocusNode? focusNode;
@@ -42,67 +47,34 @@ class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
   @override
   void initState() {
     super.initState();
-
     _useExternalFocusNode = widget.focusNode != null;
     _focusNode = widget.focusNode ?? FocusNode();
     _obscureText = widget.isPassword;
-
     _focusNode.addListener(_handleFocusChange);
   }
 
   void _handleFocusChange() {
     if (!mounted) return;
-    setState(() {
-      _isFocused = _focusNode.hasFocus;
-    });
+    setState(() => _isFocused = _focusNode.hasFocus);
   }
 
   @override
   void dispose() {
     _focusNode.removeListener(_handleFocusChange);
-
-    if (!_useExternalFocusNode) {
-      _focusNode.dispose();
-    }
-
+    if (!_useExternalFocusNode) _focusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-
-    final fillColor = _isFocused
-        ? isDark
-              ? const Color(0xFF0F172A)
-              : Colors.white
-        : isDark
-        ? const Color(0xFF1E293B)
-        : const Color(0xFFF8FAFC);
+    final scheme = Theme.of(context).colorScheme;
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 220),
       curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        color: fillColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: _isFocused
-            ? [
-                BoxShadow(
-                  color: scheme.primary.withValues(alpha: 0.16),
-                  blurRadius: 18,
-                  offset: const Offset(0, 8),
-                ),
-              ]
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
+      decoration: authFieldContainerDecoration(
+        context: context,
+        isFocused: _isFocused,
       ),
       child: TextFormField(
         controller: widget.controller,
@@ -116,60 +88,20 @@ class _PremiumAuthTextFieldState extends State<PremiumAuthTextField> {
         onFieldSubmitted: widget.onFieldSubmitted,
         cursorColor: scheme.primary,
         style: TextStyle(fontWeight: FontWeight.w700, color: scheme.onSurface),
-        decoration: InputDecoration(
+        decoration: authFieldInputDecoration(
+          context: context,
+          isFocused: _isFocused,
           labelText: widget.labelText,
-          labelStyle: TextStyle(
-            color: _isFocused
-                ? scheme.primary
-                : scheme.onSurfaceVariant.withValues(alpha: 0.75),
-            fontWeight: _isFocused ? FontWeight.w800 : FontWeight.w600,
-          ),
-          prefixIcon: Icon(
-            widget.prefixIcon,
-            color: _isFocused
-                ? scheme.primary
-                : scheme.onSurfaceVariant.withValues(alpha: 0.65),
-          ),
+          prefixIcon: widget.prefixIcon,
           suffixIcon: widget.isPassword
-              ? IconButton(
-                  splashRadius: 22,
-                  icon: Icon(
-                    _obscureText
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: _isFocused
-                        ? scheme.primary
-                        : scheme.onSurfaceVariant.withValues(alpha: 0.65),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _obscureText = !_obscureText;
-                    });
-                  },
+              ? PasswordVisibilityToggle(
+                  obscured: _obscureText,
+                  isFocused: _isFocused,
+                  onToggle: () => setState(() => _obscureText = !_obscureText),
                 )
               : null,
-          filled: true,
-          fillColor: Colors.transparent,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 18,
-          ),
-          border: _border(Colors.transparent),
-          enabledBorder: _border(
-            isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
-          ),
-          focusedBorder: _border(scheme.primary, width: 2),
-          errorBorder: _border(scheme.error),
-          focusedErrorBorder: _border(scheme.error, width: 2),
         ),
       ),
-    );
-  }
-
-  OutlineInputBorder _border(Color color, {double width = 1}) {
-    return OutlineInputBorder(
-      borderRadius: BorderRadius.circular(16),
-      borderSide: BorderSide(color: color, width: width),
     );
   }
 }

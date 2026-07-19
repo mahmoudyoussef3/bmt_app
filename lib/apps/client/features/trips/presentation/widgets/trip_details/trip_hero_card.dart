@@ -6,6 +6,8 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/hero_chips.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/hero_fact_strip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/hero_journey.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_hero_facts.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_hero_glow.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_schedule_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -43,7 +45,11 @@ class TripHeroCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(28),
         child: Stack(
           children: [
-            const PositionedDirectional(top: -70, end: -50, child: _HeroGlow()),
+            const PositionedDirectional(
+              top: -70,
+              end: -50,
+              child: TripHeroGlow(),
+            ),
             Padding(
               padding: const EdgeInsets.all(22),
               child: Column(
@@ -74,25 +80,7 @@ class TripHeroCard extends StatelessWidget {
                     departureLabel: tripTimeLabel(context, trip),
                   ),
                   const SizedBox(height: 22),
-                  HeroFactStrip(
-                    facts: [
-                      HeroFact(
-                        icon: Icons.calendar_today_rounded,
-                        label: context.l10n.common_date.toUpperCase(),
-                        value: tripDayLabel(context, trip),
-                      ),
-                      HeroFact(
-                        icon: Icons.schedule_rounded,
-                        label: context.l10n.trips_factDeparts.toUpperCase(),
-                        value: tripTimeLabel(context, trip),
-                      ),
-                      HeroFact(
-                        icon: Icons.event_seat_rounded,
-                        label: _seatsLabel(context, trip),
-                        value: _seatsValue(context, trip),
-                      ),
-                    ],
-                  ),
+                  HeroFactStrip(facts: tripHeroFacts(context, trip)),
                   if (trip.completedAt != null) ...[
                     const SizedBox(height: 14),
                     Text(
@@ -106,38 +94,6 @@ class TripHeroCard extends StatelessWidget {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  String _seatsLabel(BuildContext context, TripData trip) =>
-      (trip.mySeatLabels.length > 1
-              ? context.l10n.common_seats
-              : context.l10n.trips_factSeat)
-          .toUpperCase();
-
-  String _seatsValue(BuildContext context, TripData trip) {
-    final seats = trip.mySeatLabels;
-    if (seats.isEmpty) return context.l10n.trips_seatNotAssigned;
-    return seats.join(', ');
-  }
-}
-
-/// A soft off-canvas light source — calmer than the oversized bus glyph the
-/// hero used to stamp across its corner.
-class _HeroGlow extends StatelessWidget {
-  const _HeroGlow();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 200,
-      height: 200,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [Colors.white.withAlpha(46), Colors.white.withAlpha(0)],
         ),
       ),
     );

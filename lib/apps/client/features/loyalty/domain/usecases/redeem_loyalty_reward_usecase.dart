@@ -1,4 +1,4 @@
-import '../entities/loyalty_data.dart';
+import '../entities/redeemable_reward.dart';
 import '../repositories/loyalty_repository.dart';
 
 class RedeemLoyaltyRewardUseCase {
@@ -6,9 +6,6 @@ class RedeemLoyaltyRewardUseCase {
 
   final LoyaltyRepository _repository;
 
-  Future<void> call(RedeemableReward reward) => _repository.redeemReward(
-    rewardId: reward.id,
-    rewardTitle: reward.title,
-    pointsCost: reward.pointsCost,
-  );
+  Future<void> call(RedeemableReward reward) =>
+      _repository.redeemReward(reward);
 }

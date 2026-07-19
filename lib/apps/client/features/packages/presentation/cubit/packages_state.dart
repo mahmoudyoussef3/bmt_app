@@ -1,6 +1,10 @@
+import '../../domain/entities/package_filter.dart';
 import '../../domain/entities/package_plan.dart';
 
-const Object _noUpdate = Object();
+/// Which pane of the subscription flow is showing. The rider picks a package on
+/// [listing] and reviews it on [details] before continuing to payment, which is
+/// a separate feature and route.
+enum SubscriptionStep { listing, details }
 
 sealed class PackagesState {
   const PackagesState();
@@ -12,78 +16,35 @@ class PackagesLoading extends PackagesState {
 
 class PackagesLoaded extends PackagesState {
   const PackagesLoaded({
-    required this.data,
-    required this.filteredPackages,
-    required this.pricing,
-    this.selectedCategoryFilter = 'All',
+    required this.packages,
+    required this.visiblePackages,
+    this.filter = PackageFilter.all,
     this.selectedPackage,
-    this.selectedRoute = '',
-    this.selectedPickup = '',
-    this.selectedDestination = '',
-    this.selectedVehicleIndex = 0,
-    this.agreeTerms = false,
-    this.isProcessing = false,
-    this.subscriptionId,
-    this.subscribed = false,
-    this.subscribeError,
+    this.step = SubscriptionStep.listing,
   });
 
-  final PackageSelectionData data;
-  final List<PackagePlan> filteredPackages;
-  final PackagePricing pricing;
-  final String selectedCategoryFilter;
+  /// The full catalogue, kept so re-filtering never needs another round trip.
+  final List<PackagePlan> packages;
+
+  /// [packages] narrowed by [filter] — what the listing renders.
+  final List<PackagePlan> visiblePackages;
+
+  final PackageFilter filter;
   final PackagePlan? selectedPackage;
-  final String selectedRoute;
-  final String selectedPickup;
-  final String selectedDestination;
-  final int selectedVehicleIndex;
-  final bool agreeTerms;
-  final bool isProcessing;
-
-  /// Id of the persisted subscription once activation succeeds.
-  final String? subscriptionId;
-
-  /// True after a subscription has been successfully created.
-  final bool subscribed;
-
-  /// Non-null when the last activation attempt failed.
-  final String? subscribeError;
-
-  PackageVehicleType get selectedVehicle => data.vehicles[selectedVehicleIndex];
+  final SubscriptionStep step;
 
   PackagesLoaded copyWith({
-    List<PackagePlan>? filteredPackages,
-    PackagePricing? pricing,
-    String? selectedCategoryFilter,
+    List<PackagePlan>? visiblePackages,
+    PackageFilter? filter,
     PackagePlan? selectedPackage,
-    String? selectedRoute,
-    String? selectedPickup,
-    String? selectedDestination,
-    int? selectedVehicleIndex,
-    bool? agreeTerms,
-    bool? isProcessing,
-    String? subscriptionId,
-    bool? subscribed,
-    Object? subscribeError = _noUpdate,
+    SubscriptionStep? step,
   }) {
     return PackagesLoaded(
-      data: data,
-      filteredPackages: filteredPackages ?? this.filteredPackages,
-      pricing: pricing ?? this.pricing,
-      selectedCategoryFilter:
-          selectedCategoryFilter ?? this.selectedCategoryFilter,
+      packages: packages,
+      visiblePackages: visiblePackages ?? this.visiblePackages,
+      filter: filter ?? this.filter,
       selectedPackage: selectedPackage ?? this.selectedPackage,
-      selectedRoute: selectedRoute ?? this.selectedRoute,
-      selectedPickup: selectedPickup ?? this.selectedPickup,
-      selectedDestination: selectedDestination ?? this.selectedDestination,
-      selectedVehicleIndex: selectedVehicleIndex ?? this.selectedVehicleIndex,
-      agreeTerms: agreeTerms ?? this.agreeTerms,
-      isProcessing: isProcessing ?? this.isProcessing,
-      subscriptionId: subscriptionId ?? this.subscriptionId,
-      subscribed: subscribed ?? this.subscribed,
-      subscribeError: identical(subscribeError, _noUpdate)
-          ? this.subscribeError
-          : subscribeError as String?,
+      step: step ?? this.step,
     );
   }
 }

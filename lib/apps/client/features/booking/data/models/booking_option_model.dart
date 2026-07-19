@@ -154,38 +154,6 @@ class PopularRouteListModel {
   }
 }
 
-class AvailableTripModel {
-  const AvailableTripModel({
-    required this.vehicleType,
-    required this.driverName,
-    required this.estimatedArrival,
-    required this.routeDuration,
-    required this.availableSeats,
-    required this.startingPrice,
-    required this.vehicleId,
-  });
-
-  final String vehicleType;
-  final String driverName;
-  final String estimatedArrival;
-  final String routeDuration;
-  final int availableSeats;
-  final String startingPrice;
-  final String vehicleId;
-
-  AvailableTripData toEntity() {
-    return AvailableTripData(
-      vehicleType: vehicleType,
-      driverName: driverName,
-      estimatedArrival: estimatedArrival,
-      routeDuration: routeDuration,
-      availableSeats: availableSeats,
-      startingPrice: startingPrice,
-      vehicleId: vehicleId,
-    );
-  }
-}
-
 class MapPinOptionModel {
   const MapPinOptionModel({
     required this.label,

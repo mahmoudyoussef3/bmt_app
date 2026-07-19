@@ -10,8 +10,6 @@ import 'package:bmt_app/apps/client/core/routes/client_router.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme_store.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/cubit/phone_auth_cubit.dart';
-import 'package:bmt_app/apps/client/features/auth/presentation/cubit/phone_auth_state.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/screens/client_splash_gate.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
@@ -99,15 +97,8 @@ class _ClientAppState extends State<ClientApp> {
       setThemeMode: _setThemeMode,
       child: BlocBuilder<LocaleCubit, Locale>(
         builder: (context, locale) {
-          return MultiBlocProvider(
-            providers: [
-              BlocProvider<OnboardingCubit>(
-                create: (_) => clientGetIt<OnboardingCubit>()..checkStatus(),
-              ),
-              BlocProvider<PhoneAuthCubit>(
-                create: (_) => clientGetIt<PhoneAuthCubit>(),
-              ),
-            ],
+          return BlocProvider<OnboardingCubit>(
+            create: (_) => clientGetIt<OnboardingCubit>()..checkStatus(),
             child: MaterialApp(
               navigatorKey: _navigatorKey,
               debugShowCheckedModeBanner: false,
@@ -165,25 +156,17 @@ class _LandingScreen extends StatelessWidget {
       return const OnboardingScreen();
     }
 
-    return BlocBuilder<PhoneAuthCubit, PhoneAuthState>(
-      builder: (context, phoneAuthState) {
-        if (phoneAuthState is AuthAuthenticated) {
+    return StreamBuilder<AuthState>(
+      stream: Supabase.instance.client.auth.onAuthStateChange,
+      builder: (context, snapshot) {
+        // currentSession covers the case where the stream has not emitted yet.
+        final session =
+            snapshot.data?.session ??
+            Supabase.instance.client.auth.currentSession;
+        if (session != null) {
           return ClientRouter.buildShell();
         }
-
-        return StreamBuilder<AuthState>(
-          stream: Supabase.instance.client.auth.onAuthStateChange,
-          builder: (context, snapshot) {
-            // currentSession covers the case where the stream has not emitted yet.
-            final session =
-                snapshot.data?.session ??
-                Supabase.instance.client.auth.currentSession;
-            if (session != null) {
-              return ClientRouter.buildShell();
-            }
-            return ClientCubitScopes.auth(const WelcomeScreen());
-          },
-        );
+        return ClientCubitScopes.auth(const WelcomeScreen());
       },
     );
   }

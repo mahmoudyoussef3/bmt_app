@@ -7,9 +7,4 @@ class AuthRoutes {
   static const String signUp = '/auth/sign-up';
   static const String forgotPassword = '/auth/forgot-password';
   static const String success = '/auth/success';
-
-  // Phone (OTP) sign-in flow.
-  static const String phoneLogin = '/phone-login';
-  static const String otp = '/otp';
-  static const String completeProfile = '/complete-profile';
 }

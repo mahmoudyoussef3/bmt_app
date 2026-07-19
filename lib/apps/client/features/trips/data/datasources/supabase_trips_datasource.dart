@@ -1,135 +1,29 @@
 import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../domain/entities/trip.dart';
+
 import '../../domain/entities/trip_seat.dart';
+import '../mappers/trip_mapper.dart';
+import '../mappers/trip_seat_mapper.dart';
 import '../models/trip_model.dart';
 import 'trips_datasource.dart';
 
 class SupabaseTripsDatasource implements TripsDatasource {
-  final SupabaseClient _supabase;
-
   const SupabaseTripsDatasource(this._supabase);
 
-  TripStatus _mapStatus(String tripStatusStr, String bookingStatusStr) {
-    if (bookingStatusStr == 'cancelled') {
-      return TripStatus.cancelled;
-    }
+  final SupabaseClient _supabase;
 
-    switch (tripStatusStr.toLowerCase()) {
-      case 'scheduled':
-      case 'open_for_booking':
-        return TripStatus.upcoming;
-      case 'boarding':
-      case 'in_progress':
-        return TripStatus.inProgress;
-      case 'completed':
-        return TripStatus.completed;
-      case 'cancelled':
-        return TripStatus.cancelled;
-      default:
-        return TripStatus.upcoming;
-    }
-  }
-
-  PaymentStatus _mapPayment(String statusStr) {
-    switch (statusStr.toLowerCase()) {
-      case 'paid':
-      case 'approved':
-        return PaymentStatus.paid;
-      case 'refunded':
-        return PaymentStatus.refunded;
-      case 'cancelled':
-        return PaymentStatus.cancelled;
-      case 'rejected':
-      case 'failed':
-        return PaymentStatus.failed;
-      case 'underreview':
-      case 'under_review':
-      case 'submitted':
-        return PaymentStatus.underReview;
-      default:
-        return PaymentStatus.pending;
-    }
-  }
-
-  String _reference(String id) {
-    final clean = id.replaceAll('-', '');
-    final take = clean.length >= 8 ? clean.substring(0, 8) : clean;
-    return 'BMT-${take.toUpperCase()}';
-  }
-
-  /// Whether the passenger already reviewed this booking. RLS shows them only
-  /// their own review rows, so an embedded row existing at all means "rated".
-  /// `booking_id` is unique, so PostgREST embeds it as an object — a list is
-  /// tolerated in case an older schema cache still reports it as to-many.
-  bool _hasReview(Object? embedded) {
-    if (embedded is Map) return embedded.isNotEmpty;
-    if (embedded is List) return embedded.isNotEmpty;
-    return false;
-  }
-
-  String _initials(String? name) {
-    final trimmed = (name ?? '').trim();
-    if (trimmed.length >= 2) return trimmed.substring(0, 2).toUpperCase();
-    if (trimmed.isNotEmpty) return trimmed.toUpperCase();
-    return 'DP';
-  }
-
-  TripModel _mapBookingToTripModel(
-    Map<String, dynamic> data, {
-    List<TripSeat> seatMap = const [],
-  }) {
-    final tripObj = data['operation_trips'] as Map<String, dynamic>?;
-    final vehicleObj = tripObj?['vehicles'] as Map<String, dynamic>?;
-    final driverObj = tripObj?['drivers'] as Map<String, dynamic>?;
-
-    final routeParts = (data['route'] as String? ?? '').split(
-      RegExp(r'\s*(?:→|-)\s*'),
-    );
-    final pickup = routeParts.isNotEmpty ? routeParts[0] : 'Unknown';
-    final destination = routeParts.length > 1 ? routeParts[1] : 'Unknown';
-
-    final paymentDetails =
-        data['payment_details'] as Map<String, dynamic>? ?? {};
-    final fare = data['payment_amount']?.toString() ??
-        paymentDetails['amount']?.toString() ??
-        '0';
-    final paymentStatusStr = paymentDetails['status']?.toString() ?? 'pending';
-    final tripStatusStr = tripObj?['status']?.toString() ?? 'scheduled';
-    final bookingStatusStr = data['status']?.toString() ?? 'draft';
-    final dbPaymentStatus = data['payment_status']?.toString() ?? paymentStatusStr;
-
-    return TripModel(
-      id: data['id']?.toString() ?? '',
-      tripId: tripObj?['id']?.toString() ?? '',
-      seatMap: seatMap,
-      reference:
-          data['booking_number']?.toString() ??
-          _reference(data['id']?.toString() ?? ''),
-      status: _mapStatus(tripStatusStr, bookingStatusStr),
-      pickup: pickup,
-      destination: destination,
-      dateLabel: data['trip_date']?.toString() ?? '',
-      timeLabel: data['trip_time']?.toString() ?? '',
-      driverName: driverObj?['full_name']?.toString() ?? 'Driver Pending',
-      driverPhone: driverObj?['phone']?.toString() ?? 'Not available',
-      driverInitials: _initials(driverObj?['full_name']?.toString()),
-      driverRating: (driverObj?['rating'] as num?)?.toDouble() ?? 0.0,
-      driverRatingCount: (driverObj?['rating_count'] as num?)?.toInt() ?? 0,
-      vehicleName: vehicleObj?['brand']?.toString() ?? 'Vehicle Pending',
-      vehicleType: vehicleObj?['vehicle_type']?.toString() ?? 'Vehicle',
-      vehicleId: vehicleObj?['id']?.toString() ?? '',
-      seats: [data['seat']?.toString() ?? 'Seat Pending'],
-      paymentStatus: _mapPayment(dbPaymentStatus),
-      fare: 'EGP $fare',
-      isReviewed: _hasReview(data['trip_reviews']),
-      cancellationReason:
-          data['cancellation_reason']?.toString() ??
-          data['payment_rejection_reason']?.toString() ??
-          data['rejection_reason']?.toString(),
-    );
-  }
+  /// The booking row plus its embedded trip, vehicle, driver and (RLS-scoped)
+  /// review marker — the full shape [TripMapper] expects.
+  static const _bookingSelect = '''
+    *,
+    operation_trips (
+      *,
+      vehicles (*),
+      drivers (*)
+    ),
+    trip_reviews ( booking_id )
+  ''';
 
   @override
   Future<List<TripModel>> getTrips() async {
@@ -138,19 +32,11 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
     final response = await _supabase
         .from('operation_bookings')
-        .select('''
-          *,
-          operation_trips (
-            *,
-            vehicles (*),
-            drivers (*)
-          ),
-          trip_reviews ( booking_id )
-        ''')
+        .select(_bookingSelect)
         .eq('client_id', user.id)
         .order('created_at', ascending: false);
 
-    return response.map((e) => _mapBookingToTripModel(e)).toList();
+    return response.map(TripMapper.fromBookingRow).toList();
   }
 
   @override
@@ -160,15 +46,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
     final response = await _supabase
         .from('operation_bookings')
-        .select('''
-          *,
-          operation_trips (
-            *,
-            vehicles (*),
-            drivers (*)
-          ),
-          trip_reviews ( booking_id )
-        ''')
+        .select(_bookingSelect)
         .eq('client_id', user.id)
         .eq('id', id)
         .limit(1)
@@ -185,7 +63,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       mySeatLabel: response['seat']?.toString() ?? '',
     );
 
-    return _mapBookingToTripModel(response, seatMap: seatMap);
+    return TripMapper.fromBookingRow(response, seatMap: seatMap);
   }
 
   /// Cancels the booking and hands its seat back to the trip. The RPC — not
@@ -217,9 +95,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
     return 'Could not cancel the booking. Please try again.';
   }
 
-  /// Loads the trip's real seat layout from `trip_seats` and flags the
-  /// passenger's own seat. Best-effort: a seat-map failure must never block
-  /// the whole Trip Details screen, so it degrades to an empty layout.
+  /// Loads the trip's real seat layout from `trip_seats`, flagging the
+  /// passenger's own seat. Best-effort: a seat-map failure must never block the
+  /// whole Trip Details screen, so it degrades to an empty layout.
   Future<List<TripSeat>> _loadSeatMap({
     required String tripId,
     required String mySeatLabel,
@@ -233,31 +111,14 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .order('seat_row', ascending: true)
           .order('seat_column', ascending: true);
 
-      final mine = mySeatLabel.trim().toLowerCase();
-      final seats = <TripSeat>[];
-      for (var index = 0; index < rows.length; index++) {
-        final row = rows[index];
-        final label = row['seat_label']?.toString() ?? '';
-        final number =
-            int.tryParse(label.replaceAll(RegExp(r'[^0-9]'), '')) ?? index + 1;
-        final state = row['state']?.toString().toLowerCase() ?? 'reserved';
-        final isMine =
-            mine.isNotEmpty && label.trim().toLowerCase() == mine;
-        seats.add(
-          TripSeat(
-            label: label,
-            number: number,
-            row: (row['seat_row'] as num?)?.toInt() ?? 0,
-            column: (row['seat_column'] as num?)?.toInt() ?? 0,
-            state: isMine
-                ? TripSeatState.mine
-                : state == 'available'
-                ? TripSeatState.available
-                : TripSeatState.occupied,
+      return [
+        for (var index = 0; index < rows.length; index++)
+          TripSeatMapper.fromRow(
+            rows[index],
+            index: index,
+            mySeatLabel: mySeatLabel,
           ),
-        );
-      }
-      return seats;
+      ];
     } catch (_) {
       return const [];
     }

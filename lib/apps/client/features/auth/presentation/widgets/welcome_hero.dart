@@ -5,6 +5,8 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
+import 'welcome_value_props.dart';
+
 /// The branded hero block on the welcome screen: app mark, "EasyWay" wordmark,
 /// a supporting tagline, and three quick value props.
 class WelcomeHero extends StatelessWidget {
@@ -41,9 +43,9 @@ class WelcomeHero extends StatelessWidget {
             children: [
               TextSpan(
                 text: 'Easy',
-                style: ClientTypography.displayMedium(context).copyWith(
-                  color: ClientColors.textPrimaryFor(context),
-                ),
+                style: ClientTypography.displayMedium(
+                  context,
+                ).copyWith(color: ClientColors.textPrimaryFor(context)),
               ),
               TextSpan(
                 text: 'Way',
@@ -64,66 +66,7 @@ class WelcomeHero extends StatelessWidget {
           ),
         ),
         const SizedBox(height: ClientSpacing.xl),
-        const _ValueProps(),
-      ],
-    );
-  }
-}
-
-class _ValueProps extends StatelessWidget {
-  const _ValueProps();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _ValueProp(
-          icon: Icons.event_seat_rounded,
-          label: l10n.welcome_valueSeats,
-        ),
-        _ValueProp(
-          icon: Icons.my_location_rounded,
-          label: l10n.welcome_valueTracking,
-        ),
-        _ValueProp(
-          icon: Icons.card_membership_rounded,
-          label: l10n.welcome_valuePasses,
-        ),
-      ],
-    );
-  }
-}
-
-class _ValueProp extends StatelessWidget {
-  const _ValueProp({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 52,
-          height: 52,
-          decoration: BoxDecoration(
-            color: ClientColors.primary.withAlpha(20),
-            borderRadius: BorderRadius.circular(ClientRadius.md),
-          ),
-          child: Icon(icon, color: ClientColors.primaryFor(context), size: 24),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          label,
-          textAlign: TextAlign.center,
-          style: ClientTypography.labelSmall(context).copyWith(
-            color: ClientColors.textSecondaryFor(context),
-            height: 1.3,
-          ),
-        ),
+        const WelcomeValueProps(),
       ],
     );
   }

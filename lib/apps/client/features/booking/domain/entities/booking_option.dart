@@ -114,26 +114,6 @@ class PopularRouteListData {
   final String distance;
 }
 
-class AvailableTripData {
-  const AvailableTripData({
-    required this.vehicleType,
-    required this.driverName,
-    required this.estimatedArrival,
-    required this.routeDuration,
-    required this.availableSeats,
-    required this.startingPrice,
-    required this.vehicleId,
-  });
-
-  final String vehicleType;
-  final String driverName;
-  final String estimatedArrival;
-  final String routeDuration;
-  final int availableSeats;
-  final String startingPrice;
-  final String vehicleId;
-}
-
 class MapPinOption {
   const MapPinOption({
     required this.label,

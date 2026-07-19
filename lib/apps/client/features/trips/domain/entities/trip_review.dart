@@ -35,8 +35,18 @@ class TripReview {
       isValidRating(vehicleRating) &&
       isValidRating(routeRating);
 
-  double get averageRating =>
-      (driverRating + vehicleRating + routeRating) / 3;
+  double get averageRating => (driverRating + vehicleRating + routeRating) / 3;
+
+  /// The same review, now recorded. [at] is this device's clock; the server's
+  /// own `created_at` replaces it the next time the review is read back.
+  TripReview markSubmitted(DateTime at) => TripReview(
+    bookingId: bookingId,
+    driverRating: driverRating,
+    vehicleRating: vehicleRating,
+    routeRating: routeRating,
+    comment: comment,
+    submittedAt: at,
+  );
 
   TripReview copyWith({
     int? driverRating,

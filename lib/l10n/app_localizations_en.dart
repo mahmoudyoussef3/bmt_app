@@ -507,18 +507,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packages_packageDetails => 'Package Details';
 
   @override
-  String get packages_configureTravel => 'Configure Travel';
-
-  @override
-  String get packages_reviewSummary => 'Review Summary';
-
-  @override
-  String get packages_subscribed => 'Subscribed!';
-
-  @override
-  String get packages_subscribePlan => 'Subscribe Plan';
-
-  @override
   String get packages_all => 'All';
 
   @override
@@ -531,9 +519,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packages_quarterly => 'Quarterly';
 
   @override
-  String packages_savePercent(int percent) {
-    return 'Save $percent%';
-  }
+  String get packages_perRide => 'Per ride';
+
+  @override
+  String get packages_emptyTitle => 'No packages in this range';
+
+  @override
+  String get packages_emptyBody =>
+      'Try another duration, or pull to refresh to load the latest plans.';
 
   @override
   String get packages_duration => 'Duration';
@@ -547,16 +540,8 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get packages_totalSavings => 'Total Savings';
-
-  @override
   String packages_egpAmount(String amount) {
     return 'EGP $amount';
-  }
-
-  @override
-  String packages_originalPrice(String price) {
-    return 'Original: EGP $price';
   }
 
   @override
@@ -578,13 +563,6 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get packages_flexibleTimingDesc =>
       'Adjust your ride booking times anytime without cancellation fees.';
-
-  @override
-  String get packages_vipBoarding => 'Priority VIP Boarding';
-
-  @override
-  String get packages_vipBoardingDesc =>
-      'First access onboarding and customer concierge helpline.';
 
   @override
   String get packages_routeLimits => 'Route & Booking Limits';
@@ -629,86 +607,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get packages_chooseRouteConfig => 'Choose Route & Configure';
-
-  @override
-  String get packages_basePrice => 'Base Price';
-
-  @override
-  String get packages_packageDiscount => 'Package Discount';
-
-  @override
-  String packages_percentOff(int percent) {
-    return '$percent% Off';
-  }
-
-  @override
   String get packages_subscriptionCost => 'Subscription Cost';
 
   @override
-  String get packages_selectTargetRoute => 'Select Target Route';
-
-  @override
-  String get packages_pickupPoint => 'Pickup Point';
-
-  @override
-  String get packages_destination => 'Destination';
-
-  @override
-  String get packages_selectVehicleCategory => 'Select Vehicle Category';
-
-  @override
-  String get packages_reviewActivation => 'Review & Activation';
-
-  @override
-  String get packages_selectedPackage => 'Selected Package';
-
-  @override
   String get packages_route => 'Route';
-
-  @override
-  String get packages_vehicle => 'Vehicle';
-
-  @override
-  String get packages_billingDetails => 'Billing Details';
-
-  @override
-  String get packages_paymentMethod => 'Payment Method';
-
-  @override
-  String get packages_walletBalance => 'Wallet Balance';
-
-  @override
-  String packages_currentBalance(String balance) {
-    return 'Current Balance: EGP $balance';
-  }
-
-  @override
-  String get packages_sufficient => 'Sufficient';
-
-  @override
-  String get packages_payActivate => 'Pay & Activate';
-
-  @override
-  String get packages_processing => 'Processing';
-
-  @override
-  String get packages_subscriptionActive => 'Subscription Active!';
-
-  @override
-  String packages_subId(String id) {
-    return 'Subscription ID: $id';
-  }
-
-  @override
-  String get packages_successDesc =>
-      'Your commute package is now active. You can start booking rides immediately from your dashboard.';
-
-  @override
-  String get packages_returnHome => 'Return to Home';
-
-  @override
-  String get packages_bookFirstRide => 'Book First Ride';
 
   @override
   String get error_timeout => 'Connection timed out. Please try again.';
@@ -3495,18 +3397,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get loyalty_activeLogs => 'Active logs';
 
   @override
-  String loyalty_expiringOn(String date) {
-    return 'Expiring on $date';
-  }
-
-  @override
   String get loyalty_redeemableBalance => 'Redeemable points balance';
 
   @override
-  String get loyalty_goldLevelMember => 'Gold Level Member';
+  String loyalty_tierLevelMember(String tier) {
+    return '$tier Level Member';
+  }
 
   @override
   String get loyalty_catalogRewards => 'Catalog Rewards';
+
+  @override
+  String get loyalty_tiersUnavailable =>
+      'Membership levels aren\'t available right now.';
+
+  @override
+  String get loyalty_historyEmptyTitle => 'No points activity yet';
+
+  @override
+  String get loyalty_historyEmptyBody => 'Book a trip to start earning points.';
+
+  @override
+  String get loyalty_rewardsEmptyTitle => 'No rewards available';
+
+  @override
+  String get loyalty_rewardsEmptyBody =>
+      'Check back soon for new ways to spend your points.';
+
+  @override
+  String get loyalty_transactionFallbackTitle => 'Points activity';
+
+  @override
+  String loyalty_redeemFailed(String reason) {
+    return 'Redemption failed. $reason';
+  }
 
   @override
   String get loyalty_categoryDiscount => 'Discount';
@@ -3600,142 +3524,8 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packages_continueToPayment => 'Continue to Payment';
 
   @override
-  String get packages_free => 'Free';
-
-  @override
-  String packages_extraFeeAmount(String amount) {
-    return '+$amount';
-  }
-
-  @override
-  String get packages_chooseYourSeat => 'Choose Your Seat';
-
-  @override
-  String get packages_seatTapInstructions =>
-      'Tap to reserve seat. Reserving more seats multiplies the package.';
-
-  @override
-  String get packages_noOptionsAvailable => 'No options available';
-
-  @override
-  String get packages_selectOption => 'Select option';
-
-  @override
-  String get packages_frontDriverCabin => 'Front / Driver Cabin';
-
-  @override
-  String get packages_aisle => 'Aisle';
-
-  @override
-  String get packages_seatAvailable => 'Available';
-
-  @override
-  String get packages_seatSelected => 'Selected';
-
-  @override
-  String get packages_seatOccupied => 'Occupied';
-
-  @override
-  String packages_seatsSelectedCount(int count) {
-    return 'Seats Selected: $count';
-  }
-
-  @override
-  String packages_costLabel(String amount) {
-    return 'Cost: $amount';
-  }
-
-  @override
-  String packages_savingsLabel(String amount) {
-    return 'Savings: $amount';
-  }
-
-  @override
-  String get packages_continueToSummary => 'Continue to Summary';
-
-  @override
-  String get packages_targetRouteLabel => 'Target Route';
-
-  @override
-  String get packages_pickupStopLabel => 'Pickup Stop';
-
-  @override
-  String get packages_destinationStopLabel => 'Destination Stop';
-
-  @override
-  String get packages_vehicleCategoryLabel => 'Vehicle Category';
-
-  @override
-  String get packages_selectedSeatsLabel => 'Selected Seats';
-
-  @override
   String packages_daysCount(int days) {
     return '$days Days';
-  }
-
-  @override
-  String get packages_tripsAllocatedLabel => 'Trips Allocated';
-
-  @override
-  String get packages_packageValidityLabel => 'Package Validity';
-
-  @override
-  String get packages_agreeTermsText =>
-      'I agree to the recurring commuter subscription terms and conditions policy.';
-
-  @override
-  String get packages_submitForPaymentReview => 'Submit for Payment Review';
-
-  @override
-  String get packages_agreeTermsRequired =>
-      'Please agree to the terms before submitting.';
-
-  @override
-  String get packages_requestSubmittedTitle => 'Request Submitted';
-
-  @override
-  String get packages_requestSubmittedSubtitle =>
-      'Your subscription is pending payment confirmation. It will become usable only after finance approval.';
-
-  @override
-  String get packages_subscriptionRequestLabel => 'Subscription Request';
-
-  @override
-  String packages_copiedIdMessage(String id) {
-    return 'Copied ID: $id';
-  }
-
-  @override
-  String get packages_commuterPackageLabel => 'Commuter Package';
-
-  @override
-  String get packages_durationLimitLabel => 'Duration Limit';
-
-  @override
-  String get packages_totalTripsScopeLabel => 'Total Trips Scope';
-
-  @override
-  String get packages_travelRouteLabel => 'Travel Route';
-
-  @override
-  String get packages_vehicleStandardLabel => 'Vehicle Standard';
-
-  @override
-  String get packages_amountDueLabel => 'Amount Due';
-
-  @override
-  String get packages_backToHome => 'Back to Home';
-
-  @override
-  String get packages_activatingPackage => 'Activating Package...';
-
-  @override
-  String get packages_confirmingCredentials =>
-      'Confirming commuter credentials and reserving seats.';
-
-  @override
-  String packages_activateSubscriptionError(String error) {
-    return 'Could not activate subscription: $error';
   }
 
   @override
@@ -3779,6 +3569,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get trips_reviewOpenError => 'We could not open your review';
+
+  @override
+  String get trips_reviewErrorSignIn => 'Please sign in to review your trip.';
+
+  @override
+  String get trips_reviewErrorBookingMissing =>
+      'This booking no longer exists.';
+
+  @override
+  String get trips_reviewErrorNotYourTrip =>
+      'You can only review your own trips.';
+
+  @override
+  String get trips_reviewErrorCancelled =>
+      'This booking was cancelled, so there is nothing to review.';
+
+  @override
+  String get trips_reviewErrorNotCompleted =>
+      'You can only review a trip once it has been completed.';
+
+  @override
+  String get trips_reviewErrorInvalidRating =>
+      'Please give the driver, vehicle, and route 1–5 stars.';
+
+  @override
+  String get trips_reviewErrorUnknown =>
+      'Could not submit your review. Please try again.';
 
   @override
   String get booking_price => 'Price';
@@ -4178,23 +3995,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communication_refresh => 'Refresh';
 
   @override
-  String get communication_simulateIncomingCall => 'Simulate Incoming Call';
-
-  @override
-  String get communication_online => 'Online';
-
-  @override
-  String get communication_offline => 'Offline';
-
-  @override
-  String communication_missedCallFrom(String name) {
-    return 'Missed call from $name';
-  }
-
-  @override
-  String get communication_callEnded => 'Call ended';
-
-  @override
   String get communication_searchHint => 'Search chats, contacts, messages...';
 
   @override
@@ -4226,99 +4026,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communication_categoryGroup => 'Group';
 
   @override
-  String communication_ticketReference(String ticketId) {
-    return 'Support Ticket Reference: $ticketId';
-  }
-
-  @override
   String get communication_statusOpenFallback => 'Open';
-
-  @override
-  String get communication_demoRoute => 'Banha → Smart Village';
-
-  @override
-  String get communication_demoVehicle => 'Comfort Van';
-
-  @override
-  String get communication_demoEta => '8 mins';
-
-  @override
-  String get communication_demoRating => '4.9 ★';
-
-  @override
-  String get communication_callAction => '📞 Call';
-
-  @override
-  String get communication_shareLocationAction => '📍 Share Location';
-
-  @override
-  String get communication_late5mAction => '⏰ Late 5m';
-
-  @override
-  String get communication_you => 'You';
-
-  @override
-  String get communication_sharedLocationMessage => '📍 Shared Live Location';
-
-  @override
-  String get communication_lateMessageText =>
-      'I will be late by 5 minutes, please hold for me.';
-
-  @override
-  String get communication_demoGroupRoute => 'Route Info';
-
-  @override
-  String get communication_demoMembersCount => '10 members';
-
-  @override
-  String communication_isTyping(String name) {
-    return '$name is typing...';
-  }
 
   @override
   String get communication_messageInputHint => 'Type your message...';
 
   @override
-  String get communication_attachedImageMessage => 'Attached image';
-
-  @override
-  String get communication_userSenderFallback => 'User';
-
-  @override
   String get communication_justNow => 'Just now';
-
-  @override
-  String get communication_voiceMessageText => '🎙️ Voice Message';
-
-  @override
-  String get communication_incomingCallRole => 'Shuttle Driver • Active Trip';
-
-  @override
-  String get communication_shuttleDriverRole => 'Shuttle Driver';
-
-  @override
-  String get communication_ringing => 'Ringing...';
-
-  @override
-  String get communication_incomingShuttleCall => 'Incoming Shuttle Call...';
-
-  @override
-  String get communication_decline => 'Decline';
-
-  @override
-  String get communication_accept => 'Accept';
-
-  @override
-  String get communication_mute => 'Mute';
-
-  @override
-  String get communication_speaker => 'Speaker';
-
-  @override
-  String get communication_hangUp => 'Hang Up';
-
-  @override
-  String get communication_missedCallText => '📞 Missed Call';
 
   @override
   String get booking_pickYourSeat => 'Pick your seat';

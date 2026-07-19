@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/widgets/directional_icon.dart';
 
+import 'auth_scaffold_header.dart';
+
 class PremiumAuthScaffold extends StatelessWidget {
   final String title;
   final String? subtitle;
@@ -70,33 +72,10 @@ class PremiumAuthScaffold extends StatelessWidget {
                   ),
                 ),
 
-                // Header Area
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (logo != null) ...[logo!, const SizedBox(height: 24)],
-                      Text(
-                        title,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: -0.5,
-                          height: 1.2,
-                        ),
-                      ),
-                      if (subtitle != null) ...[
-                        const SizedBox(height: 12),
-                        Text(
-                          subtitle!,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            color: theme.colorScheme.onSurfaceVariant,
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
+                AuthScaffoldHeader(
+                  title: title,
+                  subtitle: subtitle,
+                  logo: logo,
                 ),
                 const SizedBox(height: 32),
 

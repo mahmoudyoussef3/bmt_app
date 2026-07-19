@@ -522,42 +522,6 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
   }
 
   @override
-  Future<List<AvailableTripModel>> getAvailableTrips(
-    BookingSearchQuery query,
-  ) async {
-    final response = await _supabase
-        .from('operation_trips')
-        .select('''
-          *,
-          vehicles (vehicle_type, capacity),
-          drivers (full_name),
-          operation_routes(id, start_city, end_city, duration),
-          trip_pricing(one_time_price, currency),
-          trip_seats(state)
-        ''')
-        .eq('status', 'open_for_booking')
-        .limit(5);
-
-    return response.where(_isBookableTrip).map((data) {
-      final vehicle = (data['vehicles'] as Map<String, dynamic>?) ?? {};
-      final driver = (data['drivers'] as Map<String, dynamic>?) ?? {};
-      final route = (data['operation_routes'] as Map<String, dynamic>?) ?? {};
-
-      final basePrice = _startingPriceLabel([data]);
-
-      return AvailableTripModel(
-        vehicleId: data['id']?.toString() ?? '', // Actually trip_id
-        vehicleType: vehicle['vehicle_type']?.toString() ?? 'Standard',
-        driverName: driver['full_name']?.toString() ?? 'Driver',
-        estimatedArrival: data['arrival_time']?.toString() ?? 'N/A',
-        routeDuration: route['duration']?.toString() ?? 'N/A',
-        availableSeats: _remainingSeats(data),
-        startingPrice: basePrice,
-      );
-    }).toList();
-  }
-
-  @override
   Future<List<MapPinOptionModel>> getPickupMapPins() async {
     final response = await _supabase
         .from('route_stations')

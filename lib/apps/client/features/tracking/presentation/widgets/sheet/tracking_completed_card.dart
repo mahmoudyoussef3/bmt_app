@@ -86,7 +86,10 @@ class TrackingCompletedCard extends StatelessWidget {
       context,
       trip: ReviewableTrip(
         bookingId: bookingId,
-        isCompleted: true,
+        // Derived, not asserted: this card is only shown for a finished trip,
+        // but that guard lives in tracking_sheet_body, so reading the state
+        // here keeps the two from drifting apart.
+        isCompleted: trip.tripState.isFinished,
         reference: trip.tripCode ?? '',
         driverName: trip.captain.displayName ?? '',
         vehicleName: trip.vehicle.displayName ?? '',

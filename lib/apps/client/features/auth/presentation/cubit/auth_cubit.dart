@@ -1,88 +1,50 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/remembered_credentials.dart';
-import '../../domain/usecases/clear_remembered_credentials_usecase.dart';
-import '../../domain/usecases/get_remembered_credentials_usecase.dart';
-import '../../domain/usecases/save_remembered_credentials_usecase.dart';
 import '../../domain/usecases/sign_in_with_email_usecase.dart';
 import '../../domain/usecases/sign_out_usecase.dart';
 import '../../domain/usecases/sign_up_with_email_usecase.dart';
+import 'auth_error_message.dart';
 import 'auth_state.dart';
+import 'remember_me_coordinator.dart';
 
+/// Drives the email/password auth flows (sign-in, sign-up, sign-out) plus the
+/// "Remember Me" prefill. Each flow reports through its own status field so the
+/// sign-in, sign-up and profile screens observe only what concerns them.
 class ClientAuthCubit extends Cubit<ClientAuthState> {
   ClientAuthCubit({
     required SignInWithEmailUseCase signInWithEmail,
     required SignUpWithEmailUseCase signUpWithEmail,
     required SignOutUseCase signOut,
-    required SaveRememberedCredentialsUseCase saveRememberedCredentials,
-    required GetRememberedCredentialsUseCase getRememberedCredentials,
-    required ClearRememberedCredentialsUseCase clearRememberedCredentials,
+    required RememberMeCoordinator rememberMe,
   }) : _signInWithEmail = signInWithEmail,
        _signUpWithEmail = signUpWithEmail,
        _signOut = signOut,
-       _saveRememberedCredentials = saveRememberedCredentials,
-       _getRememberedCredentials = getRememberedCredentials,
-       _clearRememberedCredentials = clearRememberedCredentials,
+       _rememberMe = rememberMe,
        super(const ClientAuthState());
 
   final SignInWithEmailUseCase _signInWithEmail;
   final SignUpWithEmailUseCase _signUpWithEmail;
   final SignOutUseCase _signOut;
-  final SaveRememberedCredentialsUseCase _saveRememberedCredentials;
-  final GetRememberedCredentialsUseCase _getRememberedCredentials;
-  final ClearRememberedCredentialsUseCase _clearRememberedCredentials;
+  final RememberMeCoordinator _rememberMe;
 
-  /// Prefills the login form: reads whatever "Remember Me" previously saved.
-  /// A read failure (corrupted keystore entry) must render as "nothing
-  /// remembered" rather than block the login screen from opening.
-  Future<RememberedCredentials?> loadRememberedCredentials() async {
-    try {
-      return await _getRememberedCredentials();
-    } catch (_) {
-      return null;
-    }
-  }
+  /// Prefills the login form with whatever "Remember Me" previously saved.
+  Future<RememberedCredentials?> loadRememberedCredentials() =>
+      _rememberMe.load();
 
   Future<void> signIn({
     required String email,
     required String password,
     required bool rememberMe,
   }) async {
-    emit(
-      state.copyWith(
-        signInStatus: AuthSubmissionStatus.loading,
-        clearSignInError: true,
-      ),
-    );
+    emit(state.signInLoading());
     try {
       await _signInWithEmail(email: email, password: password);
-      await _applyRememberMe(rememberMe, email: email, password: password);
+      await _rememberMe.apply(rememberMe, email: email, password: password);
       emit(state.copyWith(signInStatus: AuthSubmissionStatus.success));
     } catch (error) {
-      emit(
-        state.copyWith(
-          signInStatus: AuthSubmissionStatus.failure,
-          signInError: _messageFor(error),
-        ),
-      );
+      emit(state.signInFailure(authErrorMessage(error)));
     }
-  }
-
-  /// Persisting (or clearing) the remembered pair is a device-storage
-  /// side-effect, not part of authentication proper — a write failure here
-  /// must never turn a successful sign-in into a reported failure.
-  Future<void> _applyRememberMe(
-    bool rememberMe, {
-    required String email,
-    required String password,
-  }) async {
-    try {
-      if (rememberMe) {
-        await _saveRememberedCredentials(email: email, password: password);
-      } else {
-        await _clearRememberedCredentials();
-      }
-    } catch (_) {}
   }
 
   Future<void> signUp({
@@ -92,12 +54,7 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
     required String password,
     String? referralCode,
   }) async {
-    emit(
-      state.copyWith(
-        signUpStatus: AuthSubmissionStatus.loading,
-        clearSignUpError: true,
-      ),
-    );
+    emit(state.signUpLoading());
     try {
       await _signUpWithEmail(
         fullName: fullName,
@@ -108,66 +65,33 @@ class ClientAuthCubit extends Cubit<ClientAuthState> {
       );
       emit(state.copyWith(signUpStatus: AuthSubmissionStatus.success));
     } catch (error) {
-      emit(
-        state.copyWith(
-          signUpStatus: AuthSubmissionStatus.failure,
-          signUpError: _messageFor(error),
-        ),
-      );
+      emit(state.signUpFailure(authErrorMessage(error)));
     }
   }
 
-  /// Ends the session. The UI waits on [ClientAuthState.signOutStatus] before
-  /// it resets the navigation stack, so the rider is never dropped on the
-  /// welcome screen while they are in fact still signed in.
+  /// Ends the session. The profile hub waits on [ClientAuthState.signOutStatus]
+  /// before it resets navigation, so the rider is never dropped on the welcome
+  /// screen while still signed in.
   Future<void> signOut() async {
     if (state.signOutStatus == AuthSubmissionStatus.loading) return;
-
-    emit(
-      state.copyWith(
-        signOutStatus: AuthSubmissionStatus.loading,
-        clearSignOutError: true,
-      ),
-    );
+    emit(state.signOutLoading());
     try {
       await _signOut();
       emit(state.copyWith(signOutStatus: AuthSubmissionStatus.success));
     } catch (error) {
-      emit(
-        state.copyWith(
-          signOutStatus: AuthSubmissionStatus.failure,
-          signOutError: _messageFor(error),
-        ),
-      );
+      emit(state.signOutFailure(authErrorMessage(error)));
     }
   }
 
   void dismissSignInError() {
     if (state.signInStatus == AuthSubmissionStatus.failure) {
-      emit(
-        state.copyWith(
-          signInStatus: AuthSubmissionStatus.initial,
-          clearSignInError: true,
-        ),
-      );
+      emit(state.signInDismissed());
     }
   }
 
   void dismissSignUpError() {
     if (state.signUpStatus == AuthSubmissionStatus.failure) {
-      emit(
-        state.copyWith(
-          signUpStatus: AuthSubmissionStatus.initial,
-          clearSignUpError: true,
-        ),
-      );
+      emit(state.signUpDismissed());
     }
-  }
-
-  String _messageFor(Object error) {
-    if (error is FormatException) {
-      return error.message;
-    }
-    return error.toString().replaceAll('Exception: ', '');
   }
 }

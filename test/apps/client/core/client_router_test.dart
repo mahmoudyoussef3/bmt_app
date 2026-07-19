@@ -57,6 +57,7 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'SupportRoutes.createTicket': SupportRoutes.createTicket,
   'SupportRoutes.ticketDetails': SupportRoutes.ticketDetails,
   'CommunicationRoutes.communication': CommunicationRoutes.communication,
+  'CommunicationRoutes.chatThread': CommunicationRoutes.chatThread,
   'ReferralRoutes.rewards': ReferralRoutes.rewards,
   'LoyaltyRoutes.loyalty': LoyaltyRoutes.loyalty,
   'ProfileRoutes.profile': ProfileRoutes.profile,

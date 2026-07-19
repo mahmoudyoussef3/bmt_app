@@ -1,4 +1,3 @@
-import '../../domain/entities/booking_hub_data.dart';
 import '../../domain/entities/booking_option.dart';
 import '../../domain/entities/booking_search_query.dart';
 import '../../domain/entities/daily_booking_data.dart';
@@ -23,11 +22,6 @@ class BookingRepositoryImpl implements BookingRepository {
   final VehicleBookingDatasource _vehicleDatasource;
 
   @override
-  Future<BookingHubData> getBookingHubData() {
-    return _dailyBookingDatasource.getBookingHubData();
-  }
-
-  @override
   Future<DailyBookingData> getDailyBookingData() {
     return _dailyBookingDatasource.getDailyBookingData();
   }
@@ -42,14 +36,6 @@ class BookingRepositoryImpl implements BookingRepository {
   Future<List<PopularRouteListData>> getPopularRoutes() async {
     final models = await _searchDatasource.getPopularRoutes();
     return models.map((route) => route.toEntity()).toList();
-  }
-
-  @override
-  Future<List<AvailableTripData>> getAvailableTrips(
-    BookingSearchQuery query,
-  ) async {
-    final models = await _searchDatasource.getAvailableTrips(query);
-    return models.map((trip) => trip.toEntity()).toList();
   }
 
   @override

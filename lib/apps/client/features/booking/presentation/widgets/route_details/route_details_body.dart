@@ -2,23 +2,20 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_state.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/easyway_route_map_view.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/no_map_placeholder.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_map_background.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_sheet_content.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_sheet_surface.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_skeleton.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_empty_state.dart';
-import 'package:bmt_app/core/theme/motion_preference.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Route Details' body: full-bleed map (with a graceful fallback when no
 /// stop has coordinates — spec FR-007) behind a draggable sheet of section
-/// cards, sized to whichever [BookingState] arrives.
+/// cards.
 class RouteDetailsBody extends StatelessWidget {
   const RouteDetailsBody({
     super.key,
-    required this.state,
+    required this.isLoading,
+    required this.errorMessage,
     required this.routes,
     required this.selectedRoute,
     required this.selectedTripId,
@@ -28,7 +25,8 @@ class RouteDetailsBody extends StatelessWidget {
     required this.onSelectTrip,
   });
 
-  final BookingState state;
+  final bool isLoading;
+  final String? errorMessage;
   final List<RouteOptionData> routes;
   final RouteOptionData? selectedRoute;
   final String? selectedTripId;
@@ -39,10 +37,10 @@ class RouteDetailsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state is BookingLoading) return const RouteDetailsSkeleton();
-    if (state is BookingError) {
+    if (isLoading) return const RouteDetailsSkeleton();
+    if (errorMessage != null) {
       return ClientErrorCard.fullScreen(
-        message: (state as BookingError).message,
+        message: errorMessage!,
         onRetry: onRetry,
       );
     }
@@ -63,33 +61,10 @@ class RouteDetailsBody extends StatelessWidget {
         )
         .toList();
 
-    final mapDuration = AppMotion.reduceMotion
-        ? Duration.zero
-        : AppTokens.motionBase;
-
     return Stack(
       children: [
         Positioned.fill(
-          child: AnimatedSwitcher(
-            duration: mapDuration,
-            child: KeyedSubtree(
-              key: ValueKey(route.id),
-              child: mapPins.isNotEmpty
-                  ? EasyWayRouteMapView(
-                      // Top clears the facts card + legend pill, bottom the
-                      // details sheet, so no pin fits the camera underneath an
-                      // overlay it can never be tapped through.
-                      waypoints: mapPins,
-                      cameraPadding: const EdgeInsets.fromLTRB(
-                        44,
-                        132,
-                        44,
-                        220,
-                      ),
-                    )
-                  : const NoMapPlaceholder(),
-            ),
-          ),
+          child: RouteDetailsMapBackground(routeId: route.id, mapPins: mapPins),
         ),
         DraggableScrollableSheet(
           initialChildSize: 0.48,

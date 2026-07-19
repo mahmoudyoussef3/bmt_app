@@ -2,6 +2,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/reviewable_trip.dart';
 import '../../domain/entities/trip_review.dart';
+import '../../domain/entities/trip_review_failure.dart';
 import '../../domain/usecases/get_trip_review_usecase.dart';
 import '../../domain/usecases/submit_trip_review_usecase.dart';
 import 'trip_review_state.dart';
@@ -34,7 +35,7 @@ class TripReviewCubit extends Cubit<TripReviewState> {
       emit(TripReviewEditing(draft: _emptyDraft(trip.bookingId)));
     } catch (error) {
       if (isClosed) return;
-      emit(TripReviewLoadFailure(_message(error)));
+      emit(TripReviewLoadFailure(_failureOf(error)));
     }
   }
 
@@ -53,14 +54,14 @@ class TripReviewCubit extends Cubit<TripReviewState> {
     if (current is! TripReviewEditing || trip == null) return;
     if (!current.canSubmit) return;
 
-    emit(current.copyWith(isSubmitting: true));
+    emit(current.copyWith(isSubmitting: true, clearError: true));
     try {
       await _submitReview(trip, current.draft);
       if (isClosed) return;
-      emit(TripReviewSubmitted(current.draft));
+      emit(TripReviewSubmitted(current.draft.markSubmitted(DateTime.now())));
     } catch (error) {
       if (isClosed) return;
-      emit(current.copyWith(isSubmitting: false, error: _message(error)));
+      emit(current.copyWith(isSubmitting: false, error: _failureOf(error)));
     }
   }
 
@@ -89,6 +90,9 @@ class TripReviewCubit extends Cubit<TripReviewState> {
     emit(TripReviewEditing(draft: draft));
   }
 
-  String _message(Object error) =>
-      error.toString().replaceAll('Exception: ', '');
+  /// Anything that is not a named review failure — a dropped connection, a
+  /// bug — is [TripReviewFailure.unknown]; the passenger gets one honest
+  /// sentence rather than a Dart exception string.
+  TripReviewFailure _failureOf(Object error) =>
+      error is TripReviewException ? error.failure : TripReviewFailure.unknown;
 }

@@ -215,22 +215,13 @@
   "booking_availableSeats": "Available Seats",
   "packages_commutePackages": "Commute Packages",
   "packages_packageDetails": "Package Details",
-  "packages_configureTravel": "Configure Travel",
-  "packages_reviewSummary": "Review Summary",
-  "packages_subscribed": "Subscribed!",
-  "packages_subscribePlan": "Subscribe Plan",
   "packages_all": "All",
   "packages_weekly": "Weekly",
   "packages_monthly": "Monthly",
   "packages_quarterly": "Quarterly",
-  "packages_savePercent": "Save {percent}%",
-  "@packages_savePercent": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
+  "packages_perRide": "Per ride",
+  "packages_emptyTitle": "No packages in this range",
+  "packages_emptyBody": "Try another duration, or pull to refresh to load the latest plans.",
   "packages_duration": "Duration",
   "packages_totalTrips": "Total Trips",
   "packages_ridesCount": "{count} Rides",
@@ -241,19 +232,10 @@
       }
     }
   },
-  "packages_totalSavings": "Total Savings",
   "packages_egpAmount": "EGP {amount}",
   "@packages_egpAmount": {
     "placeholders": {
       "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "packages_originalPrice": "Original: EGP {price}",
-  "@packages_originalPrice": {
-    "placeholders": {
-      "price": {
         "type": "String"
       }
     }
@@ -264,8 +246,6 @@
   "packages_reservedSeatDesc": "Your preferred seat is locked for every daily shuttle ride.",
   "packages_flexibleTiming": "Flexible Ride Timing",
   "packages_flexibleTimingDesc": "Adjust your ride booking times anytime without cancellation fees.",
-  "packages_vipBoarding": "Priority VIP Boarding",
-  "packages_vipBoardingDesc": "First access onboarding and customer concierge helpline.",
   "packages_routeLimits": "Route & Booking Limits",
   "packages_routeScope": "Route Scope",
   "packages_routeScopeDesc": "Fixed designated route selected upon checkout.",
@@ -298,52 +278,8 @@
       }
     }
   },
-  "packages_chooseRouteConfig": "Choose Route & Configure",
-  "packages_basePrice": "Base Price",
-  "packages_packageDiscount": "Package Discount",
-  "packages_percentOff": "{percent}% Off",
-  "@packages_percentOff": {
-    "placeholders": {
-      "percent": {
-        "type": "int"
-      }
-    }
-  },
   "packages_subscriptionCost": "Subscription Cost",
-  "packages_selectTargetRoute": "Select Target Route",
-  "packages_pickupPoint": "Pickup Point",
-  "packages_destination": "Destination",
-  "packages_selectVehicleCategory": "Select Vehicle Category",
-  "packages_reviewActivation": "Review & Activation",
-  "packages_selectedPackage": "Selected Package",
   "packages_route": "Route",
-  "packages_vehicle": "Vehicle",
-  "packages_billingDetails": "Billing Details",
-  "packages_paymentMethod": "Payment Method",
-  "packages_walletBalance": "Wallet Balance",
-  "packages_currentBalance": "Current Balance: EGP {balance}",
-  "@packages_currentBalance": {
-    "placeholders": {
-      "balance": {
-        "type": "String"
-      }
-    }
-  },
-  "packages_sufficient": "Sufficient",
-  "packages_payActivate": "Pay & Activate",
-  "packages_processing": "Processing",
-  "packages_subscriptionActive": "Subscription Active!",
-  "packages_subId": "Subscription ID: {id}",
-  "@packages_subId": {
-    "placeholders": {
-      "id": {
-        "type": "String"
-      }
-    }
-  },
-  "packages_successDesc": "Your commute package is now active. You can start booking rides immediately from your dashboard.",
-  "packages_returnHome": "Return to Home",
-  "packages_bookFirstRide": "Book First Ride",
   "error_timeout": "Connection timed out. Please try again.",
   "error_cancelled": "Request was cancelled.",
   "error_noInternet": "No internet connection.",
@@ -1741,17 +1677,30 @@
   },
   "loyalty_transactionLedger": "Points Transaction Ledger",
   "loyalty_activeLogs": "Active logs",
-  "loyalty_expiringOn": "Expiring on {date}",
-  "@loyalty_expiringOn": {
+  "loyalty_redeemableBalance": "Redeemable points balance",
+  "loyalty_tierLevelMember": "{tier} Level Member",
+  "@loyalty_tierLevelMember": {
     "placeholders": {
-      "date": {
+      "tier": {
         "type": "String"
       }
     }
   },
-  "loyalty_redeemableBalance": "Redeemable points balance",
-  "loyalty_goldLevelMember": "Gold Level Member",
   "loyalty_catalogRewards": "Catalog Rewards",
+  "loyalty_tiersUnavailable": "Membership levels aren't available right now.",
+  "loyalty_historyEmptyTitle": "No points activity yet",
+  "loyalty_historyEmptyBody": "Book a trip to start earning points.",
+  "loyalty_rewardsEmptyTitle": "No rewards available",
+  "loyalty_rewardsEmptyBody": "Check back soon for new ways to spend your points.",
+  "loyalty_transactionFallbackTitle": "Points activity",
+  "loyalty_redeemFailed": "Redemption failed. {reason}",
+  "@loyalty_redeemFailed": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "loyalty_categoryDiscount": "Discount",
   "loyalty_categoryFreeRide": "FreeRide",
   "loyalty_categoryCashback": "Cashback",
@@ -1801,92 +1750,11 @@
   "seatRelease_mockTripDateJun2": "Jun 2",
   "packages_refreshTooltip": "Refresh",
   "packages_continueToPayment": "Continue to Payment",
-  "packages_free": "Free",
-  "packages_extraFeeAmount": "+{amount}",
-  "@packages_extraFeeAmount": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "packages_chooseYourSeat": "Choose Your Seat",
-  "packages_seatTapInstructions": "Tap to reserve seat. Reserving more seats multiplies the package.",
-  "packages_noOptionsAvailable": "No options available",
-  "packages_selectOption": "Select option",
-  "packages_frontDriverCabin": "Front / Driver Cabin",
-  "packages_aisle": "Aisle",
-  "packages_seatAvailable": "Available",
-  "packages_seatSelected": "Selected",
-  "packages_seatOccupied": "Occupied",
-  "packages_seatsSelectedCount": "Seats Selected: {count}",
-  "@packages_seatsSelectedCount": {
-    "placeholders": {
-      "count": {
-        "type": "int"
-      }
-    }
-  },
-  "packages_costLabel": "Cost: {amount}",
-  "@packages_costLabel": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "packages_savingsLabel": "Savings: {amount}",
-  "@packages_savingsLabel": {
-    "placeholders": {
-      "amount": {
-        "type": "String"
-      }
-    }
-  },
-  "packages_continueToSummary": "Continue to Summary",
-  "packages_targetRouteLabel": "Target Route",
-  "packages_pickupStopLabel": "Pickup Stop",
-  "packages_destinationStopLabel": "Destination Stop",
-  "packages_vehicleCategoryLabel": "Vehicle Category",
-  "packages_selectedSeatsLabel": "Selected Seats",
   "packages_daysCount": "{days} Days",
   "@packages_daysCount": {
     "placeholders": {
       "days": {
         "type": "int"
-      }
-    }
-  },
-  "packages_tripsAllocatedLabel": "Trips Allocated",
-  "packages_packageValidityLabel": "Package Validity",
-  "packages_agreeTermsText": "I agree to the recurring commuter subscription terms and conditions policy.",
-  "packages_submitForPaymentReview": "Submit for Payment Review",
-  "packages_agreeTermsRequired": "Please agree to the terms before submitting.",
-  "packages_requestSubmittedTitle": "Request Submitted",
-  "packages_requestSubmittedSubtitle": "Your subscription is pending payment confirmation. It will become usable only after finance approval.",
-  "packages_subscriptionRequestLabel": "Subscription Request",
-  "packages_copiedIdMessage": "Copied ID: {id}",
-  "@packages_copiedIdMessage": {
-    "placeholders": {
-      "id": {
-        "type": "String"
-      }
-    }
-  },
-  "packages_commuterPackageLabel": "Commuter Package",
-  "packages_durationLimitLabel": "Duration Limit",
-  "packages_totalTripsScopeLabel": "Total Trips Scope",
-  "packages_travelRouteLabel": "Travel Route",
-  "packages_vehicleStandardLabel": "Vehicle Standard",
-  "packages_amountDueLabel": "Amount Due",
-  "packages_backToHome": "Back to Home",
-  "packages_activatingPackage": "Activating Package...",
-  "packages_confirmingCredentials": "Confirming commuter credentials and reserving seats.",
-  "packages_activateSubscriptionError": "Could not activate subscription: {error}",
-  "@packages_activateSubscriptionError": {
-    "placeholders": {
-      "error": {
-        "type": "String"
       }
     }
   },
@@ -1910,6 +1778,13 @@
   "trips_reviewYourFeedbackLabel": "Your feedback",
   "trips_reviewOpening": "Opening your review…",
   "trips_reviewOpenError": "We could not open your review",
+  "trips_reviewErrorSignIn": "Please sign in to review your trip.",
+  "trips_reviewErrorBookingMissing": "This booking no longer exists.",
+  "trips_reviewErrorNotYourTrip": "You can only review your own trips.",
+  "trips_reviewErrorCancelled": "This booking was cancelled, so there is nothing to review.",
+  "trips_reviewErrorNotCompleted": "You can only review a trip once it has been completed.",
+  "trips_reviewErrorInvalidRating": "Please give the driver, vehicle, and route 1–5 stars.",
+  "trips_reviewErrorUnknown": "Could not submit your review. Please try again.",
   "booking_price": "Price",
   "booking_mapCoordinatesUnavailable": "Map coordinates unavailable",
   "booking_saveDiscountPercent": "Save {percent}%",
@@ -2197,18 +2072,6 @@
   },
   "communication_chatHubTitle": "Chat Hub",
   "communication_refresh": "Refresh",
-  "communication_simulateIncomingCall": "Simulate Incoming Call",
-  "communication_online": "Online",
-  "communication_offline": "Offline",
-  "communication_missedCallFrom": "Missed call from {name}",
-  "@communication_missedCallFrom": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
-  "communication_callEnded": "Call ended",
   "communication_searchHint": "Search chats, contacts, messages...",
   "communication_filterAll": "All",
   "communication_filterDrivers": "Drivers",
@@ -2219,50 +2082,9 @@
   "communication_categoryDriver": "Driver",
   "communication_categorySupport": "Support",
   "communication_categoryGroup": "Group",
-  "communication_ticketReference": "Support Ticket Reference: {ticketId}",
-  "@communication_ticketReference": {
-    "placeholders": {
-      "ticketId": {
-        "type": "String"
-      }
-    }
-  },
   "communication_statusOpenFallback": "Open",
-  "communication_demoRoute": "Banha → Smart Village",
-  "communication_demoVehicle": "Comfort Van",
-  "communication_demoEta": "8 mins",
-  "communication_demoRating": "4.9 ★",
-  "communication_callAction": "📞 Call",
-  "communication_shareLocationAction": "📍 Share Location",
-  "communication_late5mAction": "⏰ Late 5m",
-  "communication_you": "You",
-  "communication_sharedLocationMessage": "📍 Shared Live Location",
-  "communication_lateMessageText": "I will be late by 5 minutes, please hold for me.",
-  "communication_demoGroupRoute": "Route Info",
-  "communication_demoMembersCount": "10 members",
-  "communication_isTyping": "{name} is typing...",
-  "@communication_isTyping": {
-    "placeholders": {
-      "name": {
-        "type": "String"
-      }
-    }
-  },
   "communication_messageInputHint": "Type your message...",
-  "communication_attachedImageMessage": "Attached image",
-  "communication_userSenderFallback": "User",
   "communication_justNow": "Just now",
-  "communication_voiceMessageText": "🎙️ Voice Message",
-  "communication_incomingCallRole": "Shuttle Driver • Active Trip",
-  "communication_shuttleDriverRole": "Shuttle Driver",
-  "communication_ringing": "Ringing...",
-  "communication_incomingShuttleCall": "Incoming Shuttle Call...",
-  "communication_decline": "Decline",
-  "communication_accept": "Accept",
-  "communication_mute": "Mute",
-  "communication_speaker": "Speaker",
-  "communication_hangUp": "Hang Up",
-  "communication_missedCallText": "📞 Missed Call",
   "booking_pickYourSeat": "Pick your seat",
   "booking_frontSeatsNote": "Front seats are nearest to the driver.",
   "booking_freeCount": "{count} free",
