@@ -62,7 +62,9 @@ class PackageCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(ClientRadius.xl),
           child: Stack(
             children: [
-              const PackageCardBackdrop(),
+              // Decoration only — must not size the card, or the all-positioned
+              // Stack inside it would take the list's unbounded height.
+              const Positioned.fill(child: PackageCardBackdrop()),
               Material(
                 color: Colors.transparent,
                 child: Padding(

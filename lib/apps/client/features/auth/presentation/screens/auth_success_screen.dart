@@ -10,13 +10,10 @@ import '../widgets/auth_success_badge.dart';
 import '../widgets/auth_success_content.dart';
 import '../widgets/auth_success_cta.dart';
 
-/// Shown right after account creation. Adapts to the two Supabase outcomes:
-/// a live session (auto sign-in) → celebratory "You're all set"; or no session
-/// (email confirmation required) → "Verify your email".
+
 class AuthSuccessScreen extends StatefulWidget {
   const AuthSuccessScreen({super.key, this.email});
 
-  /// Email used for the "verify your email" message when there is no session.
   final String? email;
 
   @override

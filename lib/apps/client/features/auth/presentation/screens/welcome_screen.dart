@@ -6,11 +6,7 @@ import '../widgets/welcome_actions.dart';
 import '../widgets/welcome_hero.dart';
 import '../widgets/welcome_language_toggle.dart';
 
-/// The entry screen after onboarding. Email/password is the only real path;
-/// Google, Apple and Phone are presented but mocked ("coming soon").
-///
-/// The direction follows the app locale (RTL for Arabic) — the screen no longer
-/// forces LTR, so the Arabic layout mirrors correctly.
+
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 

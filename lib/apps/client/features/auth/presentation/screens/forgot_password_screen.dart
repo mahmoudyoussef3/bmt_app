@@ -11,8 +11,6 @@ import '../widgets/forgot_password_request_form.dart';
 import '../widgets/forgot_password_success_body.dart';
 import '../widgets/premium_auth_scaffold.dart';
 
-/// Password recovery. A stateless shell that swaps between the request form and
-/// the "check your email" success view; errors surface via a dialog listener.
 class ForgotPasswordScreen extends StatelessWidget {
   const ForgotPasswordScreen({super.key});
 

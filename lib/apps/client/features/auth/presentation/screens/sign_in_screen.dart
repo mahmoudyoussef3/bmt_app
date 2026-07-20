@@ -7,8 +7,6 @@ import '../widgets/premium_auth_scaffold.dart';
 import '../widgets/sign_in_bloc_listener.dart';
 import '../widgets/sign_in_form.dart';
 
-/// Email + password sign-in. A thin, stateless shell: the [SignInBlocListener]
-/// handles navigation side effects and [SignInForm] owns the form itself.
 class SignInScreen extends StatelessWidget {
   const SignInScreen({super.key});
 

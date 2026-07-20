@@ -6,8 +6,6 @@ import '../widgets/auth_brand_logo.dart';
 import '../widgets/premium_auth_scaffold.dart';
 import '../widgets/sign_up_form.dart';
 
-/// Create-account screen. A thin, stateless shell: [SignUpForm] owns the form
-/// and its own success/error handling.
 class SignUpScreen extends StatelessWidget {
   const SignUpScreen({super.key});
 
