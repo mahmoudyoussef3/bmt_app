@@ -16,7 +16,6 @@ extension PassengerStatusPresentation on PassengerBoardingStatus {
   String get label => switch (this) {
     PassengerBoardingStatus.boarded => 'صعد',
     PassengerBoardingStatus.pending => 'بانتظار',
-    PassengerBoardingStatus.late => 'متأخر',
     PassengerBoardingStatus.absent => 'غائب',
     PassengerBoardingStatus.cancelled => 'ملغي',
   };
@@ -24,7 +23,6 @@ extension PassengerStatusPresentation on PassengerBoardingStatus {
   Color get color => switch (this) {
     PassengerBoardingStatus.boarded => CaptainColors.success,
     PassengerBoardingStatus.pending => CaptainColors.primary,
-    PassengerBoardingStatus.late => CaptainColors.warning,
     PassengerBoardingStatus.absent => CaptainColors.error,
     PassengerBoardingStatus.cancelled => CaptainColors.offline,
   };
@@ -32,29 +30,37 @@ extension PassengerStatusPresentation on PassengerBoardingStatus {
   IconData get icon => switch (this) {
     PassengerBoardingStatus.boarded => Icons.check_circle_rounded,
     PassengerBoardingStatus.pending => Icons.hourglass_top_rounded,
-    PassengerBoardingStatus.late => Icons.timer_rounded,
     PassengerBoardingStatus.absent => Icons.person_off_rounded,
     PassengerBoardingStatus.cancelled => Icons.cancel_rounded,
   };
+
+  /// What tapping this status is about to do, spelled out before it happens.
+  String get confirmation => switch (this) {
+    PassengerBoardingStatus.boarded => 'تأكيد صعود الراكب إلى المركبة.',
+    PassengerBoardingStatus.pending => 'إرجاع الراكب إلى قائمة الانتظار.',
+    PassengerBoardingStatus.absent =>
+      'تسجيل الراكب كغائب. استخدمها بعد انتظاره عند نقطة التجميع.',
+    PassengerBoardingStatus.cancelled => '',
+  };
 }
 
-/// The statuses a captain can assign, in the order they are offered.
+/// The statuses a captain can assign at the boarding door, in the order they
+/// are offered — by how often they're actually used, not by declaration order.
 ///
-/// Ordered by how often they're actually used on a boarding door, not by the
-/// enum's declaration order.
+/// `cancelled` is **not** among them: cancelling a booking releases the seat
+/// and settles the payment, which the trip's own flows do properly. Writing
+/// the status straight from here would strand a paid seat as unavailable, so
+/// a cancellation made elsewhere still *displays* here, but the captain
+/// cannot make one.
 const kAssignablePassengerStatuses = <PassengerBoardingStatus>[
   PassengerBoardingStatus.boarded,
   PassengerBoardingStatus.pending,
-  PassengerBoardingStatus.late,
   PassengerBoardingStatus.absent,
-  PassengerBoardingStatus.cancelled,
 ];
 
-/// The statuses offered as list filters — every assignable one except
-/// `cancelled`, which is not a state the captain filters a live manifest by.
+/// The statuses offered as list filters.
 const kFilterablePassengerStatuses = <PassengerBoardingStatus>[
   PassengerBoardingStatus.boarded,
   PassengerBoardingStatus.pending,
-  PassengerBoardingStatus.late,
   PassengerBoardingStatus.absent,
 ];

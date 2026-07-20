@@ -155,25 +155,43 @@ class CaptainTripRemoteDataSource {
     );
   }
 
+  /// Combines `trip_date` (a `date`) with `departure_time`/`arrival_time` (a
+  /// `time`) into one local wall-clock instant.
+  ///
+  /// Both halves are validated rather than silently defaulted to zero: an
+  /// unparseable time used to land the trip at midnight, which the home
+  /// screen then rendered as a countdown that disagreed with the departure
+  /// clock shown right beside it. Falling back to the *date's* midnight only
+  /// when the time is genuinely absent keeps that failure visible instead of
+  /// dressing it up as a plausible-looking hour.
   DateTime _dateTime(String date, Object? time) {
     final parsedDate = DateTime.tryParse(date) ?? DateTime.now();
     final parts = time?.toString().split(':') ?? const [];
-    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) ?? 0 : 0;
-    final minute = parts.length > 1 ? int.tryParse(parts[1]) ?? 0 : 0;
+
+    final hour = parts.isNotEmpty ? int.tryParse(parts[0]) : null;
+    final minute = parts.length > 1 ? int.tryParse(parts[1]) : null;
+    final validHour = (hour != null && hour >= 0 && hour <= 23) ? hour : 0;
+    final validMinute = (minute != null && minute >= 0 && minute <= 59)
+        ? minute
+        : 0;
+
     return DateTime(
       parsedDate.year,
       parsedDate.month,
       parsedDate.day,
-      hour,
-      minute,
+      validHour,
+      validMinute,
     );
   }
 
   AssignedTripStatus _status(String? value) {
     return switch (value) {
+      'open_for_booking' => AssignedTripStatus.openForBooking,
       'boarding' => AssignedTripStatus.boarding,
       'in_progress' => AssignedTripStatus.inProgress,
       'completed' => AssignedTripStatus.completed,
+      // Anything else — including 'scheduled' — is a trip operations has not
+      // published yet. Never assume bookable on an unknown value.
       _ => AssignedTripStatus.scheduled,
     };
   }

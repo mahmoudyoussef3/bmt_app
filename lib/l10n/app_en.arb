@@ -873,6 +873,33 @@
   "booking_referenceNotCreated": "The booking reference was not created.",
   "booking_cardPaymentUnavailable": "Card payment is not available right now.",
   "booking_cardPaymentNotCompleted": "Card payment was not completed. Your booking remains pending.",
+  "booking_cardPaymentDeclined": "Your card was declined and you have not been charged. Your seat is still held — try another card or payment method.",
+  "booking_viewVehicleAndPhotos": "Vehicle & photos",
+  "booking_vehiclePhotosUnavailable": "No photos of this vehicle yet",
+  "booking_noRatingsYet": "Not rated yet",
+  "booking_ratingWithCount": "{rating} ({count})",
+  "@booking_ratingWithCount": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "booking_vehicleCapacityLabel": "Capacity",
+  "booking_vehicleSeatsCount": "{count} seats",
+  "@booking_vehicleSeatsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "booking_vehiclePlate": "Plate",
+  "booking_vehicleYear": "Year",
+  "booking_vehicleColor": "Colour",
   "trips_statusInProgress": "In progress",
   "trips_paymentPaid": "Paid",
   "trips_paymentPending": "Pending",
@@ -2356,5 +2383,34 @@
         "type": "String"
       }
     }
-  }
+  },
+  "mySubscription_title": "My Subscription",
+  "mySubscription_statusActive": "Active",
+  "mySubscription_statusExpired": "Expired",
+  "mySubscription_statusPending": "Pending",
+  "mySubscription_started": "Started",
+  "mySubscription_expires": "Expires",
+  "mySubscription_tripsUsedOfTotal": "{used} of {total} trips used",
+  "@mySubscription_tripsUsedOfTotal": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "mySubscription_tripsRemaining": "{count} trips remaining",
+  "@mySubscription_tripsRemaining": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mySubscription_unlimitedTrips": "Unlimited trips",
+  "mySubscription_emptyTitle": "No active subscription",
+  "mySubscription_emptyBody": "Browse packages to find one that fits your commute.",
+  "mySubscription_browsePackages": "Browse Packages"
 }

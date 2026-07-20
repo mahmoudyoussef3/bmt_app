@@ -53,22 +53,19 @@ void main() {
     },
   );
 
-  test(
-    'markStationArrived does not disturb the board/start/complete state '
-    'machine — it is an independent per-stop action',
-    () async {
-      await cubit.board('trip-1');
-      final before = cubit.state;
+  test('markStationArrived does not disturb the board/start/complete state '
+      'machine — it is an independent per-stop action', () async {
+    await cubit.board('trip-1');
+    final before = cubit.state;
 
-      await cubit.markStationArrived(
-        tripId: 'trip-1',
-        pointId: 'point-1',
-        pointName: 'محطة',
-      );
+    await cubit.markStationArrived(
+      tripId: 'trip-1',
+      pointId: 'point-1',
+      pointName: 'محطة',
+    );
 
-      expect(cubit.state, same(before));
-    },
-  );
+    expect(cubit.state, same(before));
+  });
 
   test('markStationArrived rethrows repository failures to the caller', () {
     repository.failure = Exception('فشل الاتصال');

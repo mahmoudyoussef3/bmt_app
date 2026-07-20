@@ -20,7 +20,10 @@ class PassengerCard extends StatelessWidget {
   });
 
   final Passenger passenger;
-  final VoidCallback onCall;
+
+  /// Null when the booking carries no phone number — the button then renders
+  /// disabled instead of pretending a call is possible.
+  final VoidCallback? onCall;
   final VoidCallback onChat;
 
   @override
@@ -71,11 +74,17 @@ class _Actions extends StatelessWidget {
   });
 
   final Passenger passenger;
-  final VoidCallback onCall;
+  final VoidCallback? onCall;
   final VoidCallback onChat;
 
   @override
   Widget build(BuildContext context) {
+    // A cancelled booking is a record, not a passenger to board — offering a
+    // status change on it invites the captain to un-cancel a seat the booking
+    // flow has already released.
+    final canChangeStatus =
+        passenger.status != PassengerBoardingStatus.cancelled;
+
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -83,12 +92,14 @@ class _Actions extends StatelessWidget {
           icon: Icons.edit_rounded,
           tooltip: 'تغيير الحالة',
           color: CaptainColors.primary,
-          onPressed: () => showPassengerStatusSheet(context, passenger),
+          onPressed: canChangeStatus
+              ? () => showPassengerStatusSheet(context, passenger)
+              : null,
         ),
         const SizedBox(height: 8),
         PassengerActionButton(
           icon: Icons.call_rounded,
-          tooltip: 'اتصال',
+          tooltip: onCall == null ? 'لا يوجد رقم هاتف' : 'اتصال',
           color: CaptainColors.primaryBright,
           onPressed: onCall,
         ),

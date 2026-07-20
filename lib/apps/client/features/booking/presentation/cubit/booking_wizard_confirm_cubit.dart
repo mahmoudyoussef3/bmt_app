@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../payments/domain/usecases/await_card_settlement_usecase.dart';
 import '../../../payments/domain/usecases/start_card_checkout_usecase.dart';
 import '../../../seat_selection/domain/usecases/place_seat_booking_usecase.dart';
 import '../../../seat_selection/domain/usecases/update_existing_booking_payment_usecase.dart';
@@ -16,14 +17,17 @@ class BookingWizardConfirmCubit extends Cubit<BookingWizardConfirmState> {
     required PlaceSeatBookingUseCase placeSeatBooking,
     required UpdateExistingBookingPaymentUseCase updateExistingBookingPayment,
     required StartCardCheckoutUseCase startCardCheckout,
+    required AwaitCardSettlementUseCase awaitCardSettlement,
   }) : _placeSeatBooking = placeSeatBooking,
        _updateExistingBookingPayment = updateExistingBookingPayment,
        _startCardCheckout = startCardCheckout,
+       _awaitCardSettlement = awaitCardSettlement,
        super(const BookingWizardConfirmIdle());
 
   final PlaceSeatBookingUseCase _placeSeatBooking;
   final UpdateExistingBookingPaymentUseCase _updateExistingBookingPayment;
   final StartCardCheckoutUseCase _startCardCheckout;
+  final AwaitCardSettlementUseCase _awaitCardSettlement;
 
   WizardBookingRecord? _record;
   bool _requiresVerification = false;
@@ -81,20 +85,57 @@ class BookingWizardConfirmCubit extends Cubit<BookingWizardConfirmState> {
     }
   }
 
-  /// The gateway webview closed. A seat whose card payment never completed
-  /// keeps its five-minute hold, so the rider can pick another method and
-  /// settle the booking that already exists.
-  void cardPaymentFinished(bool paid) {
+  /// The gateway webview closed.
+  ///
+  /// [reportedPaid] is only what the redirect URL claimed on the way back —
+  /// a value the rider's own device could have written — so it decides
+  /// nothing. The verdict comes from our database, where the HMAC-verified
+  /// Paymob callback settles the booking.
+  ///
+  /// A seat whose card payment never completed keeps its hold, so the rider
+  /// can pick another method and settle the booking that already exists.
+  Future<void> cardPaymentFinished(bool reportedPaid) async {
     final record = _record;
     if (state is! BookingWizardCardCheckout || record == null) return;
-    _emit(
-      paid
-          ? BookingWizardConfirmed(
-              record: record,
-              requiresVerification: _requiresVerification,
-            )
-          : const BookingWizardConfirmFailed('card_payment_not_completed'),
+
+    final bookingId = record.id;
+    if (bookingId == null || bookingId.isEmpty) {
+      _emit(const BookingWizardConfirmFailed('booking_reference_missing'));
+      return;
+    }
+
+    _emit(const BookingWizardVerifyingPayment());
+    // A rider who walked away from the gateway gets one check, not a wait:
+    // there is no callback coming to wait for. Only a claimed success is
+    // worth holding the screen for while Paymob's callback catches up.
+    final settlement = await _awaitCardSettlement(
+      bookingId,
+      timeout: reportedPaid ? null : Duration.zero,
     );
+
+    if (settlement.settled) {
+      _emit(
+        BookingWizardConfirmed(record: record, requiresVerification: false),
+      );
+      return;
+    }
+
+    if (settlement.failed) {
+      _emit(const BookingWizardConfirmFailed('card_payment_declined'));
+      return;
+    }
+
+    // Neither settled nor declined. If the rider was sent back on a success
+    // redirect, their card may well have been charged and Paymob's callback is
+    // simply late — telling them the payment failed would be a lie that costs
+    // them their seat. Confirm the booking as pending verification instead,
+    // and let the callback finish the job.
+    if (reportedPaid) {
+      _emit(BookingWizardConfirmed(record: record, requiresVerification: true));
+      return;
+    }
+
+    _emit(const BookingWizardConfirmFailed('card_payment_not_completed'));
   }
 
   /// Re-arms the pay button once the rider has read why the attempt failed.

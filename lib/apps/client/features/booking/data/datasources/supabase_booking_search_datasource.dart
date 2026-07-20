@@ -65,6 +65,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       final priceRange = _priceRangeLabel(trips);
       final availableTrips = trips.map((trip) {
         final vehicle = trip['vehicles'] as Map<String, dynamic>? ?? {};
+        final driver = trip['drivers'] as Map<String, dynamic>? ?? {};
 
         return RouteTripOptionModel(
           id: trip['id']?.toString() ?? '',
@@ -77,6 +78,10 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           stopPricing: tripStopPairPricesFromJson(
             trip['trip_pricing'],
             stationIds: routeStationIdsFromJson(trip['trip_route_points']),
+          ),
+          vehicle: TripVehicleProfileModel.fromJson(
+            vehicle: vehicle,
+            driver: driver,
           ),
         );
       }).toList();
@@ -174,7 +179,10 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         .select('''
           id, trip_date, departure_time, arrival_time, capacity, passenger_count, booked_seats,
           ticket_price, currency, status, route_id,
-          vehicles(vehicle_type),
+          vehicles(vehicle_type, brand, model, plate_number, color,
+                   manufacture_year, capacity, seat_layout_type, features,
+                   image_url, rating, rating_count),
+          drivers(full_name, profile_image_url, rating, rating_count),
           trip_pricing(from_point_id, to_point_id, one_time_price, five_days_price, ten_days_price, monthly_price, three_months_price, currency, is_active),
           trip_route_points(id, route_point_id),
           trip_seats(state)

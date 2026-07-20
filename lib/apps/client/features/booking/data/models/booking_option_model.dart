@@ -62,6 +62,7 @@ class RouteTripOptionModel {
     required this.price,
     this.tripDate = '',
     this.stopPricing = const [],
+    this.vehicle = const TripVehicleProfileModel(),
   });
 
   final String id;
@@ -72,6 +73,7 @@ class RouteTripOptionModel {
   final String vehicleType;
   final String price;
   final List<TripStopPairPrice> stopPricing;
+  final TripVehicleProfileModel vehicle;
 
   RouteTripOptionData toEntity() {
     return RouteTripOptionData(
@@ -83,6 +85,127 @@ class RouteTripOptionModel {
       vehicleType: vehicleType,
       price: price,
       stopPricing: stopPricing,
+      vehicle: vehicle.toEntity(),
+    );
+  }
+}
+
+/// The joined `vehicles` / `drivers` rows for a trip.
+class TripVehicleProfileModel {
+  const TripVehicleProfileModel({
+    this.brand = '',
+    this.model = '',
+    this.plateNumber = '',
+    this.vehicleType = '',
+    this.color = '',
+    this.manufactureYear = 0,
+    this.capacity = 0,
+    this.seatLayoutType = '',
+    this.features = const [],
+    this.imageUrls = const [],
+    this.vehicleRating = 0,
+    this.vehicleRatingCount = 0,
+    this.driverName = '',
+    this.driverImageUrl = '',
+    this.driverRating = 0,
+    this.driverRatingCount = 0,
+  });
+
+  final String brand;
+  final String model;
+  final String plateNumber;
+  final String vehicleType;
+  final String color;
+  final int manufactureYear;
+  final int capacity;
+  final String seatLayoutType;
+  final List<String> features;
+  final List<String> imageUrls;
+  final double vehicleRating;
+  final int vehicleRatingCount;
+  final String driverName;
+  final String driverImageUrl;
+  final double driverRating;
+  final int driverRatingCount;
+
+  /// Reads the `vehicles` and `drivers` rows embedded in a trip select.
+  ///
+  /// `vehicles.image_url` holds the gallery as one comma-joined string — the
+  /// shape the Dashboard's fleet form writes — so it is split back apart here.
+  factory TripVehicleProfileModel.fromJson({
+    Map<String, dynamic>? vehicle,
+    Map<String, dynamic>? driver,
+  }) {
+    final vehicleJson = vehicle ?? const <String, dynamic>{};
+    final driverJson = driver ?? const <String, dynamic>{};
+
+    return TripVehicleProfileModel(
+      brand: vehicleJson['brand']?.toString().trim() ?? '',
+      model: vehicleJson['model']?.toString().trim() ?? '',
+      plateNumber: vehicleJson['plate_number']?.toString().trim() ?? '',
+      vehicleType: vehicleJson['vehicle_type']?.toString().trim() ?? '',
+      color: vehicleJson['color']?.toString().trim() ?? '',
+      manufactureYear: _toInt(vehicleJson['manufacture_year']),
+      capacity: _toInt(vehicleJson['capacity']),
+      seatLayoutType: vehicleJson['seat_layout_type']?.toString().trim() ?? '',
+      features: _toStringList(vehicleJson['features']),
+      imageUrls: _splitImageUrls(vehicleJson['image_url']),
+      vehicleRating: _toDouble(vehicleJson['rating']),
+      vehicleRatingCount: _toInt(vehicleJson['rating_count']),
+      driverName: driverJson['full_name']?.toString().trim() ?? '',
+      driverImageUrl:
+          driverJson['profile_image_url']?.toString().trim() ?? '',
+      driverRating: _toDouble(driverJson['rating']),
+      driverRatingCount: _toInt(driverJson['rating_count']),
+    );
+  }
+
+  static List<String> _splitImageUrls(Object? value) {
+    final raw = value?.toString() ?? '';
+    if (raw.trim().isEmpty) return const [];
+    return raw
+        .split(',')
+        .map((url) => url.trim())
+        .where((url) => url.isNotEmpty)
+        .toList();
+  }
+
+  static List<String> _toStringList(Object? value) {
+    if (value is! List) return const [];
+    return value
+        .map((item) => item?.toString().trim() ?? '')
+        .where((item) => item.isNotEmpty)
+        .toList();
+  }
+
+  static int _toInt(Object? value) {
+    if (value is num) return value.toInt();
+    return int.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  static double _toDouble(Object? value) {
+    if (value is num) return value.toDouble();
+    return double.tryParse(value?.toString() ?? '') ?? 0;
+  }
+
+  TripVehicleProfile toEntity() {
+    return TripVehicleProfile(
+      brand: brand,
+      model: model,
+      plateNumber: plateNumber,
+      vehicleType: vehicleType,
+      color: color,
+      manufactureYear: manufactureYear,
+      capacity: capacity,
+      seatLayoutType: seatLayoutType,
+      features: features,
+      imageUrls: imageUrls,
+      vehicleRating: vehicleRating,
+      vehicleRatingCount: vehicleRatingCount,
+      driverName: driverName,
+      driverImageUrl: driverImageUrl,
+      driverRating: driverRating,
+      driverRatingCount: driverRatingCount,
     );
   }
 }

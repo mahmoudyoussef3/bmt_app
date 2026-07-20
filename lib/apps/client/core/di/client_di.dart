@@ -89,6 +89,7 @@ import '../../features/payments/data/datasources/supabase_payment_datasource.dar
 import '../../features/payments/data/repositories/payment_repository_impl.dart';
 import '../../features/payments/domain/repositories/payment_repository.dart';
 import '../../features/payments/domain/usecases/apply_promo_code_usecase.dart';
+import '../../features/payments/domain/usecases/await_card_settlement_usecase.dart';
 import '../../features/payments/domain/usecases/create_card_payment_session_usecase.dart';
 import '../../features/payments/domain/usecases/get_payment_methods_usecase.dart';
 import '../../features/payments/domain/usecases/start_card_checkout_usecase.dart';
@@ -99,7 +100,9 @@ import '../../features/packages/data/datasources/supabase_packages_datasource.da
 import '../../features/packages/data/repositories/packages_repository_impl.dart';
 import '../../features/packages/domain/repositories/packages_repository.dart';
 import '../../features/packages/domain/usecases/filter_packages_usecase.dart';
+import '../../features/packages/domain/usecases/get_my_subscription_usecase.dart';
 import '../../features/packages/domain/usecases/get_packages_usecase.dart';
+import '../../features/packages/presentation/cubit/my_subscription_cubit.dart';
 import '../../features/packages/presentation/cubit/packages_cubit.dart';
 import '../../features/profile/data/datasources/profile_datasource.dart';
 import '../../features/profile/data/datasources/supabase_profile_datasource.dart';
@@ -584,6 +587,7 @@ void _registerBookingDependencies() {
         updateExistingBookingPayment:
             clientGetIt<UpdateExistingBookingPaymentUseCase>(),
         startCardCheckout: clientGetIt<StartCardCheckoutUseCase>(),
+        awaitCardSettlement: clientGetIt<AwaitCardSettlementUseCase>(),
       ),
     );
   }
@@ -726,6 +730,12 @@ void _registerPaymentDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<AwaitCardSettlementUseCase>()) {
+    clientGetIt.registerLazySingleton<AwaitCardSettlementUseCase>(
+      () => AwaitCardSettlementUseCase(clientGetIt<PaymentRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<StartCardCheckoutUseCase>()) {
     clientGetIt.registerLazySingleton<StartCardCheckoutUseCase>(
       () => StartCardCheckoutUseCase(
@@ -783,6 +793,18 @@ void _registerPackagesDependencies() {
         getPackages: clientGetIt<GetPackagesUseCase>(),
         filterPackages: clientGetIt<FilterPackagesUseCase>(),
       ),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<GetMySubscriptionUseCase>()) {
+    clientGetIt.registerLazySingleton<GetMySubscriptionUseCase>(
+      () => GetMySubscriptionUseCase(clientGetIt<PackagesRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<MySubscriptionCubit>()) {
+    clientGetIt.registerFactory<MySubscriptionCubit>(
+      () => MySubscriptionCubit(clientGetIt<GetMySubscriptionUseCase>()),
     );
   }
 }

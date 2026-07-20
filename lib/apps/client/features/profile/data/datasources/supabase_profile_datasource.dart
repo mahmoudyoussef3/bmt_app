@@ -14,7 +14,6 @@ class SupabaseProfileDatasource implements ProfileDatasource {
   @override
   Future<ClientProfileModel> getProfile() async {
     final user = _requireUser();
-    final today = DateTime.now().toIso8601String().split('T').first;
 
     // The four reads are independent, so they go out together rather than
     // stacking four round-trips on a screen the rider is already looking at.
@@ -23,12 +22,11 @@ class SupabaseProfileDatasource implements ProfileDatasource {
       _queries.activePackageRow(user.id),
       _queries.bookingCount(
         user.id,
-        statuses: ProfileQueries.completedStatuses,
+        tripStatuses: ProfileQueries.completedTripStatuses,
       ),
       _queries.bookingCount(
         user.id,
-        statuses: ProfileQueries.liveStatuses,
-        fromDate: today,
+        tripStatuses: ProfileQueries.upcomingTripStatuses,
       ),
     ]);
 

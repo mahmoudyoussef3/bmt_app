@@ -27,7 +27,9 @@ void main() {
     await tester.pumpAndSettle();
 
     final navTop = tester.getTopLeft(find.byType(CaptainBottomNav)).dy;
-    final lastAction = find.widgetWithText(CaptainButton, 'بدء الرحلة').last;
+    final lastAction = find
+        .widgetWithText(CaptainButton, 'بدء صعود الركاب')
+        .last;
 
     expect(
       tester.getBottomLeft(lastAction).dy,
@@ -97,8 +99,11 @@ class _ShellHarness extends StatelessWidget {
     );
   }
 
+  /// Published trips departing in the past, so every card resolves to
+  /// `readyToBoard` and carries the actionable label the assertion looks for —
+  /// independent of when the suite runs.
   AssignedTrip _trip(int index) {
-    final departure = DateTime(2026, 7, 14, 8 + index);
+    final departure = DateTime(2020, 7, 14, 8 + index);
     return AssignedTrip(
       id: 'trip-$index',
       route: 'القاهرة - الإسكندرية',
@@ -109,6 +114,7 @@ class _ShellHarness extends StatelessWidget {
       stops: const [],
       passengerCount: 20,
       boardedCount: 4,
+      status: AssignedTripStatus.openForBooking,
     );
   }
 }

@@ -23,7 +23,12 @@ class WizardConfirmListener extends StatelessWidget {
         BookingWizardCardCheckout() => _openCardCheckout(context, state),
         BookingWizardConfirmed() => _openConfirmation(context, state),
         BookingWizardConfirmFailed() => _explainFailure(context, state),
-        BookingWizardConfirmIdle() || BookingWizardConfirming() => null,
+        BookingWizardConfirmIdle() ||
+        BookingWizardConfirming() ||
+        // Verification draws itself in the pay bar rather than over the
+        // screen: the rider has just come back from the gateway and a modal
+        // would hide the booking they are waiting on.
+        BookingWizardVerifyingPayment() => null,
       },
       child: child,
     );
@@ -56,8 +61,10 @@ class WizardConfirmListener extends StatelessWidget {
       MaterialPageRoute(
         builder: (_) => BookingConfirmationScreen(
           seat: session.selectedSeatLabel ?? '',
-          vehicleId: session.selectedTrip?.vehicleType ?? '',
-          driver: '',
+          vehicleId: session.selectedTrip?.vehicle.displayName.isNotEmpty == true
+              ? session.selectedTrip!.vehicle.displayName
+              : session.selectedTrip?.vehicleType ?? '',
+          driver: session.selectedTrip?.vehicle.driverName ?? '',
           departureTime: session.selectedTrip?.departureTime ?? '',
           destination: session.dropoffStop?.name ?? '',
           bookingReference: state.record.reference,

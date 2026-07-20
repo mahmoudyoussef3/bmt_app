@@ -1,9 +1,40 @@
+import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage.dart';
+
+/// Mirrors `operation_trips.status`.
+///
+/// [scheduled] (ops draft, invisible to clients) and [openForBooking]
+/// (published, clients are booking) are separate states in the backend's
+/// transition machine — `scheduled → open_for_booking → boarding` — and the
+/// captain can only act on the second. Collapsing them let the execution
+/// screen offer "بدء صعود الركاب" on a trip whose next legal transition was
+/// operations publishing it, so the tap could only ever fail.
 enum TripExecutionStatus {
   scheduled,
+  openForBooking,
   boarding,
   inProgress,
   completed,
   cancelled,
+}
+
+extension TripExecutionStatusX on TripExecutionStatus {
+  /// Where the captain stands, combining this status with the departure clock.
+  CaptainTripStage stageAt({
+    required DateTime departureTime,
+    required DateTime now,
+  }) {
+    return switch (this) {
+      TripExecutionStatus.scheduled => CaptainTripStage.awaitingRelease,
+      TripExecutionStatus.openForBooking => resolvePublishedStage(
+        departureTime: departureTime,
+        now: now,
+      ),
+      TripExecutionStatus.boarding => CaptainTripStage.boarding,
+      TripExecutionStatus.inProgress => CaptainTripStage.underway,
+      TripExecutionStatus.completed => CaptainTripStage.finished,
+      TripExecutionStatus.cancelled => CaptainTripStage.cancelled,
+    };
+  }
 }
 
 class TripExecutionStateData {
@@ -13,11 +44,13 @@ class TripExecutionStateData {
   final TripExecutionStatus status;
 }
 
-/// The captain's last one-shot location send for this trip (see
-/// `live_location` — continuous/background tracking is not used). Never
-/// treat [recordedAt] as current; the GPS status card shows its age
-/// explicitly so a captain who hasn't sent a fresh fix in a while sees that,
-/// rather than a number that quietly goes stale.
+/// The captain's most recently stored position for this trip.
+///
+/// A running trip reports automatically every minute (see
+/// `TripLocationAutoShare`), but never treat [recordedAt] as current: the
+/// send can fail on a dead signal or a denied permission. The GPS status card
+/// shows its age explicitly so a fix that stopped updating is visible as
+/// exactly that, rather than a number that quietly goes stale.
 class TripLastLocationFix {
   const TripLastLocationFix({
     required this.latitude,

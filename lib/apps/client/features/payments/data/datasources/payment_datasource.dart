@@ -20,4 +20,8 @@ abstract class PaymentDatasource {
     required String bookingId,
     required int amount,
   });
+
+  /// What our database says about a card booking, independent of whatever the
+  /// gateway's WebView claimed on its way back.
+  Future<CardPaymentState> getCardPaymentState(String bookingId);
 }

@@ -65,6 +65,9 @@ String _messageFor(BuildContext context, String reason) {
   if (reason.contains('card_payment_unavailable')) {
     return l10n.booking_cardPaymentUnavailable;
   }
+  if (reason.contains('card_payment_declined')) {
+    return l10n.booking_cardPaymentDeclined;
+  }
   if (reason.contains('card_payment_not_completed')) {
     return l10n.booking_cardPaymentNotCompleted;
   }

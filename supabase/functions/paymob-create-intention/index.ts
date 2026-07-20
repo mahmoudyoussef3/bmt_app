@@ -71,6 +71,11 @@ Deno.serve(async (req) => {
       customer: normalized.customer,
     });
 
+    // Record the order against the booking before handing the rider over.
+    // The transaction callback knows only the Paymob order id, so without
+    // this link a successful payment has no booking to settle.
+    await linkOrderToBooking(normalized.bookingId, orderId);
+
     const checkoutUrl =
       `${paymobBaseUrl}/api/acceptance/iframes/${checkoutConfig.iframeId}` +
       `?payment_token=${encodeURIComponent(paymentKey)}`;
@@ -87,6 +92,43 @@ Deno.serve(async (req) => {
     );
   }
 });
+
+/// Stamps the Paymob order id onto the booking's payment row via the
+/// service-role-only RPC. A failure here is fatal on purpose: sending the
+/// rider to a checkout whose result could never be matched back to their
+/// booking would take their money and lose their seat.
+async function linkOrderToBooking(bookingId: string, orderId: number) {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceKey) {
+    throw new Error(
+      "SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not available to this function.",
+    );
+  }
+
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/rpc/link_paymob_order`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({
+        p_booking_id: bookingId,
+        p_order_id: orderId.toString(),
+      }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Could not link Paymob order to booking (${response.status}): ${detail}`,
+    );
+  }
+}
 
 function readPaymobConfig() {
   const apiKey =

@@ -4,21 +4,24 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/assigned_trip.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/domain/entities/trip_execution_state.dart';
 import 'package:bmt_app/core/tracking/geo_math.dart';
 
-/// GPS status, distance remaining, and expected arrival — all honestly
-/// scoped to what a one-shot location send can actually support (see
-/// `live_location`): no continuous tracking, so this shows the age of the
-/// last sent fix explicitly rather than implying a live position.
+/// GPS status, distance remaining, and expected arrival.
+///
+/// Reports the age of the last *stored* fix rather than implying a live
+/// position: a running trip reports automatically every minute (see
+/// `TripLocationAutoShare`), but a tunnel, a denied permission or a dead
+/// signal all show up here as a fix going stale — which is exactly what the
+/// captain needs to see before operations calls to ask where they are.
 class TripGpsStatusCard extends StatelessWidget {
   const TripGpsStatusCard({
     super.key,
     required this.lastLocation,
     required this.destination,
     required this.expectedArrivalTime,
-    required this.onSendLocation,
   });
 
   final TripLastLocationFix? lastLocation;
@@ -27,7 +30,6 @@ class TripGpsStatusCard extends StatelessWidget {
   /// the route point has no saved coordinates.
   final AssignedTripStop? destination;
   final DateTime expectedArrivalTime;
-  final VoidCallback onSendLocation;
 
   @override
   Widget build(BuildContext context) {
@@ -44,24 +46,18 @@ class TripGpsStatusCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Text(
-                'الموقع والوصول',
-                style: CaptainTypography.titleSmall(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w900),
-              ),
-              const Spacer(),
-              TextButton.icon(
-                onPressed: onSendLocation,
-                icon: const Icon(Icons.my_location_rounded, size: 16),
-                label: const Text('تحديث'),
-              ),
-            ],
+          Text(
+            'الموقع والوصول',
+            style: CaptainTypography.titleSmall(
+              context,
+            ).copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: CaptainDesignTokens.s12),
-          _GpsFreshnessRow(fix: fix),
+          // Ticked, not sampled at build: "منذ 3 دقائق" has to keep counting
+          // while the captain looks at it.
+          CaptainTicker(
+            builder: (context, now) => _GpsFreshnessRow(fix: fix, now: now),
+          ),
           const SizedBox(height: CaptainDesignTokens.s12),
           Row(
             children: [
@@ -100,9 +96,10 @@ class TripGpsStatusCard extends StatelessWidget {
 }
 
 class _GpsFreshnessRow extends StatelessWidget {
-  const _GpsFreshnessRow({required this.fix});
+  const _GpsFreshnessRow({required this.fix, required this.now});
 
   final TripLastLocationFix? fix;
+  final DateTime now;
 
   @override
   Widget build(BuildContext context) {
@@ -127,13 +124,16 @@ class _GpsFreshnessRow extends StatelessWidget {
       );
     }
 
-    final age = DateTime.now().difference(fix!.recordedAt);
+    final age = now.difference(fix!.recordedAt);
+    // Thresholds are tighter than the old one-shot model warranted: automatic
+    // reporting runs every minute, so anything past a few minutes means the
+    // sends are actually failing, not that the captain simply hasn't tapped.
     final (color, label) = switch (age) {
-      Duration(inMinutes: < 10) => (
+      Duration(inMinutes: < 3) => (
         CaptainColors.success,
         'محدّث — منذ ${_ageLabel(age)}',
       ),
-      Duration(inMinutes: < 30) => (
+      Duration(inMinutes: < 10) => (
         CaptainColors.warning,
         'قد يكون قديماً — منذ ${_ageLabel(age)}',
       ),

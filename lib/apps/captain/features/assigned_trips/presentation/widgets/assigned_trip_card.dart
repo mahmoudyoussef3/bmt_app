@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage_labels.dart';
 import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 
 import '../../domain/entities/assigned_trip.dart';
 import 'assigned_trip_card_parts.dart';
@@ -69,11 +71,14 @@ class AssignedTripCard extends StatelessWidget {
           const SizedBox(height: CaptainDesignTokens.s12),
           _BoardingBar(trip: trip),
           const SizedBox(height: CaptainDesignTokens.s16),
-          _Actions(
-            isDone: isDone,
-            isRunning: trip.status.isRunning,
-            onOpen: onOpen,
-            onManifest: onManifest,
+          CaptainTicker(
+            builder: (context, now) => _Actions(
+              isDone: isDone,
+              openLabel: CaptainTripStageLabels.openAction(trip.stageAt(now)),
+              isRunning: trip.status.isRunning,
+              onOpen: onOpen,
+              onManifest: onManifest,
+            ),
           ),
         ],
       ),
@@ -126,12 +131,17 @@ class _BoardingBar extends StatelessWidget {
 class _Actions extends StatelessWidget {
   const _Actions({
     required this.isDone,
+    required this.openLabel,
     required this.isRunning,
     required this.onOpen,
     required this.onManifest,
   });
 
   final bool isDone;
+
+  /// Named for the stage the trip is actually in, so a card for an unreleased
+  /// trip stops promising "بدء الرحلة".
+  final String openLabel;
   final bool isRunning;
   final VoidCallback onOpen;
   final VoidCallback onManifest;
@@ -153,10 +163,10 @@ class _Actions extends StatelessWidget {
         Expanded(
           flex: 2,
           child: CaptainButton(
-            label: isRunning ? 'متابعة' : 'بدء الرحلة',
+            label: openLabel,
             icon: isRunning
                 ? Icons.play_arrow_rounded
-                : Icons.navigation_rounded,
+                : Icons.info_outline_rounded,
             onPressed: onOpen,
           ),
         ),

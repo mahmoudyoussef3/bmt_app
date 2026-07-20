@@ -153,6 +153,18 @@ class SupabasePaymentDatasource implements PaymentDatasource {
     }
   }
 
+  @override
+  Future<CardPaymentState> getCardPaymentState(String bookingId) async {
+    final response = await _supabase.rpc(
+      'card_payment_state',
+      params: {'p_booking_id': bookingId},
+    );
+    if (response is! Map) {
+      throw Exception('Unable to read the payment status for this booking.');
+    }
+    return CardPaymentState.fromJson(Map<String, dynamic>.from(response));
+  }
+
   PaymentMethodData? _mapPaymentMethod(Map<String, dynamic> json) {
     final type = _parseType(
       json['type']?.toString() ??

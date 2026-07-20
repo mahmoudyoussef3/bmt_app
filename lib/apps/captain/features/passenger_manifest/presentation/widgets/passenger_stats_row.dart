@@ -43,14 +43,14 @@ class PassengerStatsRow extends StatelessWidget {
                   color: CaptainColors.primary,
                 ),
                 _Stat(
-                  label: 'متأخر',
-                  value: counts.late,
-                  color: CaptainColors.warning,
-                ),
-                _Stat(
                   label: 'غائب',
                   value: counts.absent,
                   color: CaptainColors.error,
+                ),
+                _Stat(
+                  label: 'المتوقعون',
+                  value: counts.expected,
+                  color: CaptainColors.textSecondaryFor(context),
                 ),
               ],
             ),

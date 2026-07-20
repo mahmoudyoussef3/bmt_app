@@ -157,9 +157,10 @@ class TripExecutionDataSource {
     );
   }
 
-  /// The captain's most recent one-shot location send for this trip, if
-  /// any — `live_location` sends a single fix at a time rather than a
-  /// continuous stream, so this is simply the newest row, not a live feed.
+  /// The newest stored position for this trip, if any. Each automatic or
+  /// manual send inserts its own row, so this reads the latest rather than
+  /// subscribing to a feed — the realtime insert trigger above is what makes
+  /// it refresh.
   Future<TripLastLocationFix?> _fetchLastLocation(String tripId) async {
     final row = await _supabase
         .from('trip_live_locations')
@@ -219,10 +220,12 @@ class TripExecutionDataSource {
 
   TripExecutionStatus? _mapStatus(String? status) {
     return switch (status) {
-      'scheduled' || 'open_for_booking' => TripExecutionStatus.scheduled,
+      'scheduled' => TripExecutionStatus.scheduled,
+      'open_for_booking' => TripExecutionStatus.openForBooking,
       'boarding' => TripExecutionStatus.boarding,
       'in_progress' => TripExecutionStatus.inProgress,
       'completed' => TripExecutionStatus.completed,
+      'cancelled' => TripExecutionStatus.cancelled,
       _ => null,
     };
   }

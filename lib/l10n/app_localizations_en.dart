@@ -1924,6 +1924,42 @@ class AppLocalizationsEn extends AppLocalizations {
       'Card payment was not completed. Your booking remains pending.';
 
   @override
+  String get booking_cardPaymentDeclined =>
+      'Your card was declined and you have not been charged. Your seat is still held — try another card or payment method.';
+
+  @override
+  String get booking_viewVehicleAndPhotos => 'Vehicle & photos';
+
+  @override
+  String get booking_vehiclePhotosUnavailable =>
+      'No photos of this vehicle yet';
+
+  @override
+  String get booking_noRatingsYet => 'Not rated yet';
+
+  @override
+  String booking_ratingWithCount(String rating, int count) {
+    return '$rating ($count)';
+  }
+
+  @override
+  String get booking_vehicleCapacityLabel => 'Capacity';
+
+  @override
+  String booking_vehicleSeatsCount(int count) {
+    return '$count seats';
+  }
+
+  @override
+  String get booking_vehiclePlate => 'Plate';
+
+  @override
+  String get booking_vehicleYear => 'Year';
+
+  @override
+  String get booking_vehicleColor => 'Colour';
+
+  @override
   String get trips_statusInProgress => 'In progress';
 
   @override
@@ -4526,4 +4562,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String referral_inviteMessage(String code, String link) {
     return 'Join me on EasyWay and book your daily commute! Use my referral code $code to get a welcome reward.\n$link';
   }
+
+  @override
+  String get mySubscription_title => 'My Subscription';
+
+  @override
+  String get mySubscription_statusActive => 'Active';
+
+  @override
+  String get mySubscription_statusExpired => 'Expired';
+
+  @override
+  String get mySubscription_statusPending => 'Pending';
+
+  @override
+  String get mySubscription_started => 'Started';
+
+  @override
+  String get mySubscription_expires => 'Expires';
+
+  @override
+  String mySubscription_tripsUsedOfTotal(int used, int total) {
+    return '$used of $total trips used';
+  }
+
+  @override
+  String mySubscription_tripsRemaining(int count) {
+    return '$count trips remaining';
+  }
+
+  @override
+  String get mySubscription_unlimitedTrips => 'Unlimited trips';
+
+  @override
+  String get mySubscription_emptyTitle => 'No active subscription';
+
+  @override
+  String get mySubscription_emptyBody =>
+      'Browse packages to find one that fits your commute.';
+
+  @override
+  String get mySubscription_browsePackages => 'Browse Packages';
 }

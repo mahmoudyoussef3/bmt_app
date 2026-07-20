@@ -14,9 +14,14 @@ class TripExecutionStatusBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (label, variant, icon) = switch (status) {
       TripExecutionStatus.scheduled => (
-        'مجدولة',
+        'لم تُفتح',
+        CaptainStatusVariant.neutral,
+        Icons.lock_clock_rounded,
+      ),
+      TripExecutionStatus.openForBooking => (
+        'الحجز مفتوح',
         CaptainStatusVariant.info,
-        Icons.event_rounded,
+        Icons.event_available_rounded,
       ),
       TripExecutionStatus.boarding => (
         'صعود',

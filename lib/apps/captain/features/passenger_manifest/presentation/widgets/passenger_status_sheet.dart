@@ -158,16 +158,32 @@ class _StatusOption extends StatelessWidget {
                   size: 24,
                 ),
                 const SizedBox(width: CaptainDesignTokens.s12),
-                Text(
-                  status.label,
-                  style: CaptainTypography.labelLarge(context).copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: isActive
-                        ? color
-                        : CaptainColors.textPrimaryFor(context),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        status.label,
+                        style: CaptainTypography.labelLarge(context).copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: isActive
+                              ? color
+                              : CaptainColors.textPrimaryFor(context),
+                        ),
+                      ),
+                      if (status.confirmation.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          status.confirmation,
+                          style: CaptainTypography.bodySmall(context).copyWith(
+                            color: CaptainColors.textSecondaryFor(context),
+                            height: 1.4,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                const Spacer(),
                 if (isActive) Icon(Icons.check_rounded, color: color, size: 20),
               ],
             ),

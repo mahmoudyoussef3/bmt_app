@@ -10,14 +10,9 @@ import 'package:bmt_app/l10n/app_localizations.dart';
 /// The identity card at the top of the hub: who the rider is, on the brand's
 /// hero gradient — the same canvas Home uses, so the two tabs read as one app.
 class ProfileHeaderCard extends StatelessWidget {
-  const ProfileHeaderCard({
-    super.key,
-    required this.profile,
-    required this.onEdit,
-  });
+  const ProfileHeaderCard({super.key, required this.profile});
 
   final ClientProfile profile;
-  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
@@ -73,15 +68,6 @@ class ProfileHeaderCard extends StatelessWidget {
                   ),
                 ],
               ],
-            ),
-          ),
-          IconButton(
-            onPressed: onEdit,
-            tooltip: l10n.profile_editProfile,
-            icon: const Icon(Icons.edit_outlined),
-            color: ClientColors.textInverse,
-            style: IconButton.styleFrom(
-              backgroundColor: ClientColors.textInverse.withAlpha(38),
             ),
           ),
         ],

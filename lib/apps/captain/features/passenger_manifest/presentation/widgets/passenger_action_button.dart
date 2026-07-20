@@ -16,10 +16,18 @@ class PassengerActionButton extends StatelessWidget {
   final IconData icon;
   final String tooltip;
   final Color color;
-  final VoidCallback onPressed;
+
+  /// Null renders the button visibly unavailable. The affordance stays in
+  /// place so the row of actions doesn't reflow from card to card.
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
+    final enabled = onPressed != null;
+    final resolved = enabled
+        ? color
+        : Theme.of(context).colorScheme.onSurface.withAlpha(60);
+
     return Tooltip(
       message: tooltip,
       child: Material(
@@ -37,11 +45,11 @@ class PassengerActionButton extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: color.withAlpha(20),
+                color: resolved.withAlpha(20),
                 borderRadius: CaptainDesignTokens.br12,
-                border: Border.all(color: color.withAlpha(50)),
+                border: Border.all(color: resolved.withAlpha(50)),
               ),
-              child: Icon(icon, size: 20, color: color),
+              child: Icon(icon, size: 20, color: resolved),
             ),
           ),
         ),

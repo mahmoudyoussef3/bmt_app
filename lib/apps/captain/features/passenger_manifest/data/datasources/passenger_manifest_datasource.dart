@@ -78,10 +78,12 @@ class PassengerManifestDataSource {
         .eq('id', tripPassengerId);
   }
 
+  /// Maps onto `trip_passengers.status`'s check constraint. Every value here
+  /// round-trips: writing one and re-reading it yields the same enum back,
+  /// which is what makes the optimistic update in the cubit safe to keep.
   String _statusToString(PassengerBoardingStatus status) => switch (status) {
     PassengerBoardingStatus.boarded => 'confirmed',
     PassengerBoardingStatus.absent => 'no_show',
-    PassengerBoardingStatus.late => 'reserved',
     PassengerBoardingStatus.pending => 'reserved',
     PassengerBoardingStatus.cancelled => 'cancelled',
   };

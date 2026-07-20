@@ -62,11 +62,6 @@ import '../../features/assigned_trips/domain/usecases/get_seen_trip_ids_usecase.
 import '../../features/assigned_trips/domain/usecases/mark_trips_seen_usecase.dart';
 import '../../features/assigned_trips/domain/usecases/watch_assigned_trips_usecase.dart';
 import '../../features/assigned_trips/presentation/cubit/assigned_trips_cubit.dart';
-import '../../features/check_in/data/datasources/check_in_datasource.dart';
-import '../../features/check_in/data/repositories/check_in_repository_impl.dart';
-import '../../features/check_in/domain/repositories/check_in_repository.dart';
-import '../../features/check_in/domain/usecases/check_passenger_usecase.dart';
-import '../../features/check_in/presentation/cubit/check_in_cubit.dart';
 import '../../features/communication/data/datasources/chat_datasource.dart';
 import '../../features/communication/data/datasources/supabase_chat_datasource.dart';
 import '../../features/communication/data/repositories/communication_repository_impl.dart';
@@ -127,7 +122,6 @@ void registerCaptainDependencies() {
   _registerTripExecutionDependencies();
   _registerCommunicationDependencies();
   _registerIncidentsDependencies();
-  _registerCheckInDependencies();
   _registerTripStatusUpdateDependencies();
   _registerNotificationsDependencies();
   _registerProfileDependencies();
@@ -499,32 +493,6 @@ void _registerIncidentsDependencies() {
   if (!captainGetIt.isRegistered<IncidentCubit>()) {
     captainGetIt.registerFactory<IncidentCubit>(
       () => IncidentCubit(captainGetIt<ReportIncidentUseCase>()),
-    );
-  }
-}
-
-void _registerCheckInDependencies() {
-  if (!captainGetIt.isRegistered<CheckInDataSource>()) {
-    captainGetIt.registerLazySingleton<CheckInDataSource>(
-      () => CheckInDataSource(captainGetIt<SupabaseClient>()),
-    );
-  }
-  if (!captainGetIt.isRegistered<CheckInRepository>()) {
-    captainGetIt.registerLazySingleton<CheckInRepository>(
-      () => CheckInRepositoryImpl(captainGetIt<CheckInDataSource>()),
-    );
-  }
-  if (!captainGetIt.isRegistered<CheckPassengerUseCase>()) {
-    captainGetIt.registerLazySingleton<CheckPassengerUseCase>(
-      () => CheckPassengerUseCase(captainGetIt<CheckInRepository>()),
-    );
-  }
-  if (!captainGetIt.isRegistered<CheckInCubit>()) {
-    captainGetIt.registerFactory<CheckInCubit>(
-      () => CheckInCubit(
-        captainGetIt<CheckPassengerUseCase>(),
-        captainGetIt<CheckInRepository>(),
-      ),
     );
   }
 }

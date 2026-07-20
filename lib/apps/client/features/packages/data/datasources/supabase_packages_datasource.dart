@@ -20,4 +20,22 @@ class SupabasePackagesDatasource implements PackagesDatasource {
         .map((row) => PackagePlanModel.fromJson(row))
         .toList(growable: false);
   }
+
+  @override
+  Future<Map<String, dynamic>?> getMySubscription() {
+    final userId = _supabase.auth.currentUser?.id;
+    if (userId == null) return Future.value(null);
+
+    return _supabase
+        .from('subscriptions')
+        .select(
+          'id, package_name, route_name, status, start_date, end_date, '
+          'trips_count, trips_used',
+        )
+        .eq('client_id', userId)
+        .eq('status', 'active')
+        .order('created_at', ascending: false)
+        .limit(1)
+        .maybeSingle();
+  }
 }

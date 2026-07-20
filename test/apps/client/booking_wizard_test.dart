@@ -17,6 +17,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/wizard
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/wizard_stop_step.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/repositories/payment_repository.dart';
+import 'package:bmt_app/apps/client/features/payments/domain/usecases/await_card_settlement_usecase.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/create_card_payment_session_usecase.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/get_payment_methods_usecase.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/start_card_checkout_usecase.dart';
@@ -87,13 +88,35 @@ class _FakeSeatRepository implements SeatSelectionRepository {
       throw UnimplementedError();
 }
 
+const _cardMethod = PaymentMethodData(
+  type: PaymentMethodType.creditCard,
+  title: 'Card',
+  subtitle: 'Visa / Mastercard',
+);
+
 class _FakePaymentRepository implements PaymentRepository {
-  _FakePaymentRepository({this.methods = const []});
+  _FakePaymentRepository({
+    this.methods = const [],
+    this.settlement = const CardPaymentState(
+      settled: false,
+      failed: false,
+      bookingStatus: 'reserved',
+      paymentStatus: 'pending',
+    ),
+  });
 
   final List<PaymentMethodData> methods;
 
+  /// What the backend says the gateway settled on — the only thing the cubit
+  /// is allowed to believe about whether money moved.
+  final CardPaymentState settlement;
+
   @override
   Future<List<PaymentMethodData>> getPaymentMethods() async => methods;
+
+  @override
+  Future<CardPaymentState> getCardPaymentState(String bookingId) async =>
+      settlement;
 
   @override
   Future<CardPaymentSession> createCardPaymentSession({
@@ -130,6 +153,12 @@ BookingWizardConfirmCubit _cubit({
       releaseTripSeatLock: ReleaseTripSeatLockUseCase(seats),
     ),
     updateExistingBookingPayment: UpdateExistingBookingPaymentUseCase(seats),
+    // A real 20-second wait proves nothing a 60-millisecond one does not.
+    awaitCardSettlement: AwaitCardSettlementUseCase(
+      paymentRepository,
+      pollTimeout: const Duration(milliseconds: 60),
+      pollInterval: const Duration(milliseconds: 10),
+    ),
     startCardCheckout: StartCardCheckoutUseCase(
       getPaymentMethods: GetPaymentMethodsUseCase(paymentRepository),
       createCardPaymentSession: CreateCardPaymentSessionUseCase(
@@ -282,13 +311,14 @@ void main() {
       final cubit = _cubit(
         seats: seats,
         payments: _FakePaymentRepository(
-          methods: const [
-            PaymentMethodData(
-              type: PaymentMethodType.creditCard,
-              title: 'Card',
-              subtitle: 'Visa / Mastercard',
-            ),
-          ],
+          methods: const [_cardMethod],
+          // The gateway's signed callback has landed and settled the booking.
+          settlement: const CardPaymentState(
+            settled: true,
+            failed: false,
+            bookingStatus: 'confirmed',
+            paymentStatus: 'approved',
+          ),
         ),
       );
 
@@ -298,11 +328,53 @@ void main() {
       expect(checkout.checkoutUrl, 'https://pay.test/checkout');
       expect(checkout.record.reference, 'BMT-77');
 
-      cubit.cardPaymentFinished(true);
+      await cubit.cardPaymentFinished(true);
       final done = cubit.state as BookingWizardConfirmed;
       expect(done.requiresVerification, isFalse);
       expect(done.record.reference, 'BMT-77');
     });
+
+    test('a card the gateway declined is reported as declined', () async {
+      final cubit = _cubit(
+        seats: _FakeSeatRepository(),
+        payments: _FakePaymentRepository(
+          methods: const [_cardMethod],
+          settlement: const CardPaymentState(
+            settled: false,
+            failed: true,
+            bookingStatus: 'reserved',
+            paymentStatus: 'failed',
+          ),
+        ),
+      );
+
+      await cubit.confirm(_session(paymentMethod: 'credit_card'));
+      await cubit.cardPaymentFinished(true);
+
+      expect(
+        (cubit.state as BookingWizardConfirmFailed).reason,
+        'card_payment_declined',
+      );
+    });
+
+    test(
+      'a success redirect the backend has not settled yet is held for '
+      'verification, never reported as paid or as failed',
+      () async {
+        final cubit = _cubit(
+          seats: _FakeSeatRepository(),
+          payments: _FakePaymentRepository(methods: const [_cardMethod]),
+        );
+
+        await cubit.confirm(_session(paymentMethod: 'credit_card'));
+        await cubit.cardPaymentFinished(true);
+
+        // The rider may well have been charged — Paymob's callback is simply
+        // late. Calling that a failure would cost them the seat they paid for.
+        final done = cubit.state as BookingWizardConfirmed;
+        expect(done.requiresVerification, isTrue);
+      },
+    );
 
     test(
       'an abandoned card payment keeps the booking and explains why',
@@ -310,19 +382,11 @@ void main() {
         final seats = _FakeSeatRepository();
         final cubit = _cubit(
           seats: seats,
-          payments: _FakePaymentRepository(
-            methods: const [
-              PaymentMethodData(
-                type: PaymentMethodType.creditCard,
-                title: 'Card',
-                subtitle: 'Visa / Mastercard',
-              ),
-            ],
-          ),
+          payments: _FakePaymentRepository(methods: const [_cardMethod]),
         );
 
         await cubit.confirm(_session(paymentMethod: 'credit_card'));
-        cubit.cardPaymentFinished(false);
+        await cubit.cardPaymentFinished(false);
 
         expect(
           (cubit.state as BookingWizardConfirmFailed).reason,

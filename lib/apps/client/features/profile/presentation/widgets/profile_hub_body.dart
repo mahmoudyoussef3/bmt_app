@@ -47,7 +47,7 @@ class ProfileHubBody extends StatelessWidget {
       physics: const AlwaysScrollableScrollPhysics(),
       padding: AppLayout.pagePaddingWithTop,
       children: [
-        ProfileHeaderCard(profile: profile, onEdit: onEdit),
+        ProfileHeaderCard(profile: profile),
         const SizedBox(height: AppLayout.spaceLg),
         ProfileStatsRow(profile: profile),
 

@@ -38,6 +38,7 @@ import 'package:bmt_app/apps/client/features/loyalty/presentation/screens/loyalt
 import 'package:bmt_app/apps/client/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/subscription_arguments.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/screens/my_subscription_screen.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/screens/subscription_screen.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/routes/payment_routes.dart';
@@ -217,13 +218,16 @@ abstract final class ClientRouter {
         arguments: SubscriptionArguments.fromArguments(_args(context)),
       ),
     ),
+    PackagesRoutes.mySubscription: (_) =>
+        ClientCubitScopes.mySubscription(const MySubscriptionScreen()),
   };
 
   // --- Trips & tracking -----------------------------------------------------
 
   static Map<String, WidgetBuilder> get _trips => <String, WidgetBuilder>{
-    TripsRoutes.myTrips: (context) =>
-        ClientCubitScopes.trips(MyTripsScreen(onOpenRoute: _opener(context))),
+    TripsRoutes.myTrips: (context) => ClientCubitScopes.trips(
+      MyTripsScreen(onOpenRoute: _opener(context), showBackButton: true),
+    ),
     TripsRoutes.tripDetails: (context) {
       final args = _args(context);
       final tripId = args is Map ? args['tripId']?.toString() : null;

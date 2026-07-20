@@ -4,12 +4,27 @@ import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage.dart';
 
-/// Everything else the captain can do on this trip.
+/// Everything else the captain can do on this trip, scoped to its [stage].
+///
+/// Boarding passengers is done from the manifest ("الركاب"), where a captain
+/// taps a name and sets it to صعد. There is no ticket QR to scan — clients are
+/// never issued one — so the scanner tile that used to sit here opened a
+/// camera that could not succeed at anything.
+///
+/// The rest follow the stage: reporting a position or a status update before
+/// operations has even released the trip describes a journey that isn't
+/// happening.
 class TripExecutionActionsGrid extends StatelessWidget {
-  const TripExecutionActionsGrid({super.key, required this.tripId});
+  const TripExecutionActionsGrid({
+    super.key,
+    required this.tripId,
+    required this.stage,
+  });
 
   final String tripId;
+  final CaptainTripStage stage;
 
   @override
   Widget build(BuildContext context) {
@@ -22,37 +37,37 @@ class TripExecutionActionsGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       childAspectRatio: 1.2,
       children: [
+        // The manifest is the boarding door: available from the moment there
+        // are bookings to look at.
         _ActionTile(
           label: 'الركاب',
           icon: Icons.people_alt_rounded,
           onTap: () => context.openPassengerManifest(tripId),
         ),
         _ActionTile(
-          label: 'تسجيل الدخول',
-          icon: Icons.qr_code_scanner_rounded,
-          onTap: () => context.openCheckIn(tripId),
-        ),
-        _ActionTile(
-          label: 'إرسال الموقع',
-          icon: Icons.my_location_rounded,
-          onTap: () => context.openLocationUpdate(tripId),
-        ),
-        _ActionTile(
           label: 'التواصل',
           icon: Icons.chat_bubble_outline_rounded,
           onTap: () => context.openChats(tripId),
         ),
-        _ActionTile(
-          label: 'تحديث الحالة',
-          icon: Icons.sync_rounded,
-          onTap: () => context.openStatusUpdate(tripId),
-        ),
-        _ActionTile(
-          label: 'بلاغ طارئ',
-          icon: Icons.report_problem_outlined,
-          destructive: true,
-          onTap: () => context.openReportIncident(tripId),
-        ),
+        if (stage.isLive) ...[
+          _ActionTile(
+            label: 'إرسال الموقع',
+            icon: Icons.my_location_rounded,
+            onTap: () => context.openLocationUpdate(tripId),
+          ),
+          _ActionTile(
+            label: 'تحديث الحالة',
+            icon: Icons.sync_rounded,
+            onTap: () => context.openStatusUpdate(tripId),
+          ),
+        ],
+        if (!stage.isWaiting)
+          _ActionTile(
+            label: 'بلاغ طارئ',
+            icon: Icons.report_problem_outlined,
+            destructive: true,
+            onTap: () => context.openReportIncident(tripId),
+          ),
       ],
     );
   }

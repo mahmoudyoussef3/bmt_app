@@ -19,17 +19,23 @@ class PassengerCounts {
     required this.boarded,
     required this.pending,
     required this.absent,
-    required this.late,
+    required this.cancelled,
     required this.total,
   });
 
   final int boarded;
   final int pending;
   final int absent;
-  final int late;
+  final int cancelled;
   final int total;
 
-  double get boardedRatio => total == 0 ? 0 : boarded / total;
+  /// Cancelled bookings are not passengers the captain is waiting for, so
+  /// boarding progress is measured against those actually expected. A trip
+  /// whose only no-shows are cancellations reads as fully boarded, which is
+  /// what it is.
+  int get expected => total - cancelled;
+
+  double get boardedRatio => expected == 0 ? 0 : boarded / expected;
 }
 
 class PassengerManifestLoaded extends PassengerManifestState {

@@ -7,11 +7,16 @@ class ProfileQueries {
 
   final SupabaseClient _supabase;
 
-  /// Seats the rider still holds on a departure that has not run.
-  static const liveStatuses = <String>['reserved', 'confirmed', 'boarded'];
+  /// A trip's real lifecycle lives on `operation_trips.status`, not on the
+  /// booking. `operation_bookings.status` only tracks payment/boarding
+  /// (`draft | reserved | confirmed | boarded | completed | cancelled`) and
+  /// never actually reaches `boarded` or `completed` in practice — completion
+  /// stamps the trip, not the booking — so counting by the booking's own
+  /// status always reads zero.
+  static const upcomingTripStatuses = <String>['scheduled', 'open_for_booking'];
 
   /// Trips the rider actually travelled.
-  static const completedStatuses = <String>['completed'];
+  static const completedTripStatuses = <String>['completed'];
 
   Future<Map<String, dynamic>?> clientRow(String userId) {
     return _supabase
@@ -33,21 +38,20 @@ class ProfileQueries {
         .maybeSingle();
   }
 
-  /// Counts bookings server-side: the hub needs the number, not the rows.
+  /// Counts bookings server-side by their trip's real status: the hub needs
+  /// the number, not the rows. A cancelled booking never counts, whatever
+  /// state its trip ended up in.
   Future<int> bookingCount(
     String userId, {
-    required List<String> statuses,
-    String? fromDate,
+    required List<String> tripStatuses,
   }) async {
-    var query = _supabase
+    final response = await _supabase
         .from('operation_bookings')
-        .select('id')
+        .select('id, operation_trips!inner(status)')
         .eq('client_id', userId)
-        .inFilter('status', statuses);
-
-    if (fromDate != null) query = query.gte('trip_date', fromDate);
-
-    final response = await query.count(CountOption.exact);
+        .neq('status', 'cancelled')
+        .inFilter('operation_trips.status', tripStatuses)
+        .count(CountOption.exact);
     return response.count;
   }
 

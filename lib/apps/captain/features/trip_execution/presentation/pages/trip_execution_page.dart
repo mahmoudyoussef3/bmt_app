@@ -2,13 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
-import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_connectivity_banner.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/assigned_trip.dart';
+import 'package:bmt_app/apps/captain/features/live_location/presentation/widgets/trip_location_auto_share.dart';
 
 import '../../domain/entities/trip_execution_state.dart';
 import '../cubit/trip_execution_cubit.dart';
@@ -45,6 +46,7 @@ class TripExecutionPage extends StatelessWidget {
     return TripExecutionSnapshot(
       status: switch (trip.status) {
         AssignedTripStatus.scheduled => TripExecutionStatus.scheduled,
+        AssignedTripStatus.openForBooking => TripExecutionStatus.openForBooking,
         AssignedTripStatus.boarding => TripExecutionStatus.boarding,
         AssignedTripStatus.inProgress => TripExecutionStatus.inProgress,
         AssignedTripStatus.completed => TripExecutionStatus.completed,
@@ -63,55 +65,72 @@ class _TripExecutionView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<TripExecutionCubit, TripExecutionCubitState>(
-      builder: (context, state) {
-        final snapshot = state.snapshot;
-        final isUnderway = snapshot.status == TripExecutionStatus.inProgress;
-
-        return Scaffold(
-          backgroundColor: CaptainColors.backgroundFor(context),
-          floatingActionButton: isUnderway
-              ? TripExecutionSosButton(tripId: trip.id)
-              : null,
-          body: CustomScrollView(
-            slivers: [
-              const CaptainSliverHeader(title: 'تنفيذ الرحلة'),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                    CaptainDesignTokens.s24,
-                    CaptainDesignTokens.s16,
-                    CaptainDesignTokens.s24,
-                    CaptainDesignTokens.s32,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const CaptainConnectivityBanner(),
-                      TripExecutionHeaderCard(
-                        trip: trip,
-                        snapshot: snapshot,
-                        state: state,
-                      ),
-                      const SizedBox(height: CaptainDesignTokens.s24),
-                      if (isUnderway && trip.stops.isNotEmpty)
-                        _UnderwaySection(trip: trip, snapshot: snapshot),
-                      Text(
-                        'إجراءات الرحلة',
-                        style: CaptainTypography.titleLarge(
-                          context,
-                        ).copyWith(fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: CaptainDesignTokens.s16),
-                      TripExecutionActionsGrid(tripId: trip.id),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+    return CaptainTicker(
+      builder: (context, now) =>
+          BlocBuilder<TripExecutionCubit, TripExecutionCubitState>(
+            builder: (context, state) => _buildScaffold(context, state, now),
           ),
-        );
-      },
+    );
+  }
+
+  Widget _buildScaffold(
+    BuildContext context,
+    TripExecutionCubitState state,
+    DateTime now,
+  ) {
+    final snapshot = state.snapshot;
+    final isUnderway = snapshot.status == TripExecutionStatus.inProgress;
+    final stage = snapshot.status.stageAt(
+      departureTime: trip.departureTime,
+      now: now,
+    );
+
+    return Scaffold(
+      backgroundColor: CaptainColors.backgroundFor(context),
+      floatingActionButton: isUnderway
+          ? TripExecutionSosButton(tripId: trip.id)
+          : null,
+      body: CustomScrollView(
+        slivers: [
+          const CaptainSliverHeader(title: 'تنفيذ الرحلة'),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(
+                CaptainDesignTokens.s24,
+                CaptainDesignTokens.s16,
+                CaptainDesignTokens.s24,
+                CaptainDesignTokens.s32,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const CaptainConnectivityBanner(),
+                  TripExecutionHeaderCard(
+                    trip: trip,
+                    snapshot: snapshot,
+                    state: state,
+                  ),
+                  const SizedBox(height: CaptainDesignTokens.s24),
+                  // Kept mounted across the whole trip so the transition into
+                  // and out of `inProgress` is an explicit start/stop rather
+                  // than a widget disposal the timer happens to ride on.
+                  TripLocationAutoShare(tripId: trip.id, enabled: isUnderway),
+                  if (isUnderway && trip.stops.isNotEmpty)
+                    _UnderwaySection(trip: trip, snapshot: snapshot),
+                  Text(
+                    'إجراءات الرحلة',
+                    style: CaptainTypography.titleLarge(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: CaptainDesignTokens.s16),
+                  TripExecutionActionsGrid(tripId: trip.id, stage: stage),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -144,7 +163,6 @@ class _UnderwaySection extends StatelessWidget {
           lastLocation: snapshot.lastLocation,
           destination: trip.stops.last,
           expectedArrivalTime: trip.expectedArrivalTime,
-          onSendLocation: () => context.openLocationUpdate(trip.id),
         ),
         const SizedBox(height: CaptainDesignTokens.s16),
         NavigateToStopButton(stop: _nextStop),

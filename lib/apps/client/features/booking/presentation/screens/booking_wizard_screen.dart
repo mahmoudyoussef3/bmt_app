@@ -34,7 +34,11 @@ class BookingWizardScreen extends StatelessWidget {
               // until the payment resolves rather than only while the RPC runs.
               final busy =
                   confirmState is BookingWizardConfirming ||
-                  confirmState is BookingWizardCardCheckout;
+                  confirmState is BookingWizardCardCheckout ||
+                  // Still asking the backend whether the card actually cleared.
+                  // Letting the rider edit the booking mid-verification would
+                  // let them change what they are about to be told they bought.
+                  confirmState is BookingWizardVerifyingPayment;
 
               return Stack(
                 children: [

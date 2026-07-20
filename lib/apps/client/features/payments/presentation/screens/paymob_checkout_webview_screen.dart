@@ -34,26 +34,12 @@ class _PaymobCheckoutWebViewScreenState
       ..setNavigationDelegate(
         NavigationDelegate(
           onNavigationRequest: (request) {
-            final uri = Uri.tryParse(request.url);
-            if (uri == null) return NavigationDecision.navigate;
-            final success = uri.queryParameters['success']?.toLowerCase();
-            final responseCode = uri.queryParameters['txn_response_code']
-                ?.toUpperCase();
-            if (success == 'true' || responseCode == 'APPROVED') {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) Navigator.of(context).pop(true);
-              });
-              return NavigationDecision.prevent;
-            }
-            if (success == 'false' ||
-                responseCode == 'DECLINED' ||
-                responseCode == 'CANCELLED') {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted) Navigator.of(context).pop(false);
-              });
-              return NavigationDecision.prevent;
-            }
-            return NavigationDecision.navigate;
+            final outcome = _readOutcome(request.url);
+            if (outcome == null) return NavigationDecision.navigate;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted) Navigator.of(context).pop(outcome);
+            });
+            return NavigationDecision.prevent;
           },
           onProgress: (progress) {
             if (!mounted) return;
@@ -70,6 +56,41 @@ class _PaymobCheckoutWebViewScreenState
         ),
       )
       ..loadRequest(Uri.parse(widget.checkoutUrl));
+  }
+
+  /// Reads Paymob's redirect for the outcome it is claiming, or null while the
+  /// rider is still inside the payment flow.
+  ///
+  /// What comes back here is only a claim — the redirect is a URL, and the
+  /// booking is settled from Paymob's signed server-to-server callback, not
+  /// from this. It decides when to close the sheet, never whether the rider
+  /// was charged.
+  bool? _readOutcome(String url) {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return null;
+
+    final params = uri.queryParameters;
+    final success = params['success']?.trim().toLowerCase();
+    final pending = params['pending']?.trim().toLowerCase() == 'true';
+    final responseCode = params['txn_response_code']?.trim().toUpperCase();
+
+    // No verdict fields at all: still somewhere inside the gateway's own flow.
+    if (success == null && responseCode == null) return null;
+
+    if (success == 'true' || responseCode == 'APPROVED') return true;
+
+    // A payment left pending (3-D Secure still finishing) is not a refusal.
+    // Reporting it as paid hands the wait to the settlement check, which
+    // asks our own backend rather than guessing here.
+    if (pending) return true;
+
+    if (success == 'false' ||
+        responseCode == 'DECLINED' ||
+        responseCode == 'CANCELLED') {
+      return false;
+    }
+
+    return null;
   }
 
   @override

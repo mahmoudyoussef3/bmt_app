@@ -9,7 +9,7 @@ import 'captain_routes.dart';
 
 /// Typed navigation for the captain app.
 ///
-/// Call sites say `context.openCheckIn(tripId)` rather than building a
+/// Call sites say `context.openPassengerManifest(tripId)` rather than building a
 /// `MaterialPageRoute` by hand, so a screen never imports the screen it opens
 /// and the argument types are checked at compile time — the cast back to a
 /// type happens once, in `CaptainAppRouter`.
@@ -22,9 +22,6 @@ extension CaptainNav on BuildContext {
 
   Future<void> openPassengerManifest(String tripId) =>
       _push<void>(CaptainRoutes.passengerManifest, tripId);
-
-  Future<void> openCheckIn(String tripId) =>
-      _push<void>(CaptainRoutes.checkIn, tripId);
 
   Future<void> openLocationUpdate(String tripId) =>
       _push<void>(CaptainRoutes.locationUpdate, tripId);

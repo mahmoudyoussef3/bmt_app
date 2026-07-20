@@ -4,44 +4,58 @@ import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage.dart';
 
 /// Fast shortcuts to the focus trip's most time-critical actions, so the
-/// captain doesn't have to open the trip first to reach them. A subset of
-/// the full action grid inside trip execution — not a duplicate of it, a
-/// shortcut to it.
+/// captain doesn't have to open the trip first to reach them.
+///
+/// Scoped to the trip's [stage]: these are in-trip tools, and offering
+/// "إرسال الموقع" on a trip that hasn't left — or that operations hasn't even
+/// published — asks the captain to broadcast a position for a journey that
+/// isn't happening. Before boarding, the only thing worth a shortcut is who
+/// has booked a seat.
 class HomeQuickActions extends StatelessWidget {
-  const HomeQuickActions({super.key, required this.tripId});
+  const HomeQuickActions({
+    super.key,
+    required this.tripId,
+    required this.stage,
+  });
 
   final String tripId;
+  final CaptainTripStage stage;
 
   @override
   Widget build(BuildContext context) {
+    final tiles = <Widget>[
+      _QuickActionTile(
+        icon: Icons.people_alt_rounded,
+        label: 'كشف الركاب',
+        onTap: () => context.openPassengerManifest(tripId),
+      ),
+      // Location matters once the vehicle is actually moving passengers.
+      if (stage == CaptainTripStage.underway)
+        _QuickActionTile(
+          icon: Icons.my_location_rounded,
+          label: 'إرسال الموقع',
+          onTap: () => context.openLocationUpdate(tripId),
+        ),
+      // From the moment the captain is at the stop, a breakdown or a delay is
+      // reportable — it doesn't wait for departure.
+      if (!stage.isWaiting)
+        _QuickActionTile(
+          icon: Icons.report_problem_outlined,
+          label: 'بلاغ طارئ',
+          destructive: true,
+          onTap: () => context.openReportIncident(tripId),
+        ),
+    ];
+
     return Row(
       children: [
-        Expanded(
-          child: _QuickActionTile(
-            icon: Icons.qr_code_scanner_rounded,
-            label: 'تسجيل الدخول',
-            onTap: () => context.openCheckIn(tripId),
-          ),
-        ),
-        const SizedBox(width: CaptainDesignTokens.s12),
-        Expanded(
-          child: _QuickActionTile(
-            icon: Icons.my_location_rounded,
-            label: 'إرسال الموقع',
-            onTap: () => context.openLocationUpdate(tripId),
-          ),
-        ),
-        const SizedBox(width: CaptainDesignTokens.s12),
-        Expanded(
-          child: _QuickActionTile(
-            icon: Icons.report_problem_outlined,
-            label: 'بلاغ طارئ',
-            destructive: true,
-            onTap: () => context.openReportIncident(tripId),
-          ),
-        ),
+        for (var i = 0; i < tiles.length; i++) ...[
+          if (i > 0) const SizedBox(width: CaptainDesignTokens.s12),
+          Expanded(child: tiles[i]),
+        ],
       ],
     );
   }

@@ -32,7 +32,6 @@ void main() {
               lastLocation: lastLocation,
               destination: destination,
               expectedArrivalTime: DateTime(2026, 7, 16, 14, 30),
-              onSendLocation: () {},
             ),
           ),
         ),
@@ -89,11 +88,14 @@ void main() {
     },
   );
 
-  testWidgets('a fresh fix (<10 min) reads as up to date', (tester) async {
+  // Freshness thresholds are calibrated to the one-minute automatic reporting
+  // interval: a running trip should never be more than a minute or two behind,
+  // so a fix older than that means the sends themselves are failing.
+  testWidgets('a fix from the last minute reads as up to date', (tester) async {
     final fix = TripLastLocationFix(
       latitude: nearLat,
       longitude: nearLng,
-      recordedAt: DateTime.now().subtract(const Duration(minutes: 2)),
+      recordedAt: DateTime.now().subtract(const Duration(minutes: 1)),
     );
 
     await pump(tester, lastLocation: fix, destination: destination);
@@ -101,11 +103,12 @@ void main() {
     expect(find.textContaining('محدّث'), findsOneWidget);
   });
 
-  testWidgets('a 20-minute-old fix reads as possibly stale', (tester) async {
+  testWidgets('a 5-minute-old fix reads as possibly stale — several '
+      'automatic sends have been missed', (tester) async {
     final fix = TripLastLocationFix(
       latitude: nearLat,
       longitude: nearLng,
-      recordedAt: DateTime.now().subtract(const Duration(minutes: 20)),
+      recordedAt: DateTime.now().subtract(const Duration(minutes: 5)),
     );
 
     await pump(tester, lastLocation: fix, destination: destination);
@@ -113,11 +116,11 @@ void main() {
     expect(find.textContaining('قد يكون قديماً'), findsOneWidget);
   });
 
-  testWidgets('a 45-minute-old fix reads as stale', (tester) async {
+  testWidgets('a 20-minute-old fix reads as stale', (tester) async {
     final fix = TripLastLocationFix(
       latitude: nearLat,
       longitude: nearLng,
-      recordedAt: DateTime.now().subtract(const Duration(minutes: 45)),
+      recordedAt: DateTime.now().subtract(const Duration(minutes: 20)),
     );
 
     await pump(tester, lastLocation: fix, destination: destination);

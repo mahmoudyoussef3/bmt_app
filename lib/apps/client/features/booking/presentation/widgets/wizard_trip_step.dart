@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_opt
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/trip_vehicle/trip_vehicle_sheet.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
 
@@ -53,6 +54,11 @@ class WizardTripStep extends StatelessWidget {
                         onTap: () => context
                             .read<BookingWizardCubit>()
                             .selectTrip(entry.$2),
+                        onViewDetails: () => _openVehicleSheet(
+                          context,
+                          trip: entry.$2,
+                          isSelected: session.selectedTrip?.id == entry.$2.id,
+                        ),
                       ),
                     ),
                   ),
@@ -101,6 +107,24 @@ class WizardTripStep extends StatelessWidget {
   }
 }
 
+/// Opens the vehicle sheet, and selects the trip if the rider chose it from
+/// inside. Inspecting the bus and picking it is one decision to the rider, so
+/// the sheet is allowed to complete it rather than sending them back to tap
+/// the card again.
+Future<void> _openVehicleSheet(
+  BuildContext context, {
+  required RouteTripOptionData trip,
+  required bool isSelected,
+}) async {
+  final cubit = context.read<BookingWizardCubit>();
+  final chose = await showTripVehicleSheet(
+    context,
+    trip: trip,
+    isSelected: isSelected,
+  );
+  if (chose == true) cubit.selectTrip(trip);
+}
+
 /// "Departs Tomorrow · 8:00 AM" — the day is part of the commitment, not just
 /// the clock, so it travels with the summary the rider confirms on.
 String _departureSummary(BuildContext context, RouteTripOptionData trip) {
@@ -116,11 +140,13 @@ class _TripCard extends StatelessWidget {
     required this.index,
     required this.isSelected,
     required this.onTap,
+    required this.onViewDetails,
   });
   final RouteTripOptionData trip;
   final int index;
   final bool isSelected;
   final VoidCallback onTap;
+  final VoidCallback onViewDetails;
 
   @override
   Widget build(BuildContext context) {
@@ -229,7 +255,9 @@ class _TripCard extends StatelessWidget {
                   child: _chip(
                     context,
                     Icons.airline_seat_recline_extra_rounded,
-                    trip.vehicleType,
+                    trip.vehicle.displayName.isNotEmpty
+                        ? trip.vehicle.displayName
+                        : trip.vehicleType,
                   ),
                 ),
                 Expanded(
@@ -263,6 +291,17 @@ class _TripCard extends StatelessWidget {
                 ),
               ],
             ),
+            // Riders commit more readily to a bus they have seen and a captain
+            // they can name, so the card offers both before the seat step —
+            // even when the route runs a single vehicle and there is nothing
+            // to compare it against.
+            const SizedBox(height: 14),
+            Divider(height: 1, color: ClientColors.borderFor(context)),
+            const SizedBox(height: 12),
+            _VehicleFooter(
+              vehicle: trip.vehicle,
+              onViewDetails: onViewDetails,
+            ),
           ],
         ),
       ),
@@ -295,6 +334,111 @@ class _TripCard extends StatelessWidget {
       ),
     ],
   );
+}
+
+/// The captain's face and name on the left, the way into the photos on the
+/// right. When the operator has filed nothing about the bus, the row collapses
+/// to the button alone rather than showing empty labels.
+class _VehicleFooter extends StatelessWidget {
+  const _VehicleFooter({required this.vehicle, required this.onViewDetails});
+
+  final TripVehicleProfile vehicle;
+  final VoidCallback onViewDetails;
+
+  @override
+  Widget build(BuildContext context) {
+    final driver = vehicle.driverName.trim();
+
+    return Row(
+      children: [
+        if (driver.isNotEmpty) ...[
+          _DriverThumb(imageUrl: vehicle.driverImageUrl, name: driver),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  context.l10n.booking_driver,
+                  style: ClientTypography.labelSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textTertiaryFor(context)),
+                ),
+                Text(
+                  driver,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: ClientTypography.bodySmall(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w800),
+                ),
+              ],
+            ),
+          ),
+        ] else
+          const Spacer(),
+        TextButton.icon(
+          onPressed: onViewDetails,
+          style: TextButton.styleFrom(
+            foregroundColor: ClientColors.primaryFor(context),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            visualDensity: VisualDensity.compact,
+            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          ),
+          icon: Icon(
+            vehicle.hasImages
+                ? Icons.photo_library_rounded
+                : Icons.info_outline_rounded,
+            size: 16,
+          ),
+          label: Text(
+            context.l10n.booking_viewVehicleAndPhotos,
+            style: ClientTypography.labelMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _DriverThumb extends StatelessWidget {
+  const _DriverThumb({required this.imageUrl, required this.name});
+
+  final String imageUrl;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final placeholder = ColoredBox(
+      color: ClientColors.primaryLight,
+      child: Center(
+        child: Text(
+          name.isEmpty ? '?' : name[0].toUpperCase(),
+          style: ClientTypography.labelMedium(
+            context,
+          ).copyWith(fontWeight: FontWeight.w800, color: ClientColors.primary),
+        ),
+      ),
+    );
+
+    return ClipOval(
+      child: SizedBox(
+        width: 30,
+        height: 30,
+        child: imageUrl.trim().isEmpty
+            ? placeholder
+            : Image.network(
+                imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => placeholder,
+                loadingBuilder: (_, child, progress) =>
+                    progress == null ? child : placeholder,
+              ),
+      ),
+    );
+  }
 }
 
 class _EmptyTrips extends StatelessWidget {

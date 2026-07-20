@@ -1913,6 +1913,41 @@ class AppLocalizationsAr extends AppLocalizations {
       'لم تكتمل عملية الدفع بالبطاقة. يظل حجزك معلّقًا.';
 
   @override
+  String get booking_cardPaymentDeclined =>
+      'تم رفض البطاقة ولم يتم خصم أي مبلغ. مقعدك ما زال محجوزًا — جرّب بطاقة أخرى أو وسيلة دفع مختلفة.';
+
+  @override
+  String get booking_viewVehicleAndPhotos => 'المركبة والصور';
+
+  @override
+  String get booking_vehiclePhotosUnavailable => 'لا توجد صور لهذه المركبة بعد';
+
+  @override
+  String get booking_noRatingsYet => 'لا توجد تقييمات بعد';
+
+  @override
+  String booking_ratingWithCount(String rating, int count) {
+    return '$rating ($count)';
+  }
+
+  @override
+  String get booking_vehicleCapacityLabel => 'السعة';
+
+  @override
+  String booking_vehicleSeatsCount(int count) {
+    return '$count مقعدًا';
+  }
+
+  @override
+  String get booking_vehiclePlate => 'رقم اللوحة';
+
+  @override
+  String get booking_vehicleYear => 'سنة الصنع';
+
+  @override
+  String get booking_vehicleColor => 'اللون';
+
+  @override
   String get trips_statusInProgress => 'جارية الآن';
 
   @override
@@ -4492,4 +4527,45 @@ class AppLocalizationsAr extends AppLocalizations {
   String referral_inviteMessage(String code, String link) {
     return 'انضم إليّ على EasyWay واحجز تنقلاتك اليومية! استخدم كود الإحالة الخاص بي $code للحصول على مكافأة ترحيبية.\n$link';
   }
+
+  @override
+  String get mySubscription_title => 'اشتراكي';
+
+  @override
+  String get mySubscription_statusActive => 'نشط';
+
+  @override
+  String get mySubscription_statusExpired => 'منتهي';
+
+  @override
+  String get mySubscription_statusPending => 'قيد الانتظار';
+
+  @override
+  String get mySubscription_started => 'بدأ في';
+
+  @override
+  String get mySubscription_expires => 'ينتهي في';
+
+  @override
+  String mySubscription_tripsUsedOfTotal(int used, int total) {
+    return 'تم استخدام $used من $total رحلة';
+  }
+
+  @override
+  String mySubscription_tripsRemaining(int count) {
+    return 'متبقي $count رحلة';
+  }
+
+  @override
+  String get mySubscription_unlimitedTrips => 'رحلات غير محدودة';
+
+  @override
+  String get mySubscription_emptyTitle => 'لا يوجد اشتراك نشط';
+
+  @override
+  String get mySubscription_emptyBody =>
+      'تصفح الباقات لتجد ما يناسب تنقلك اليومي.';
+
+  @override
+  String get mySubscription_browsePackages => 'تصفح الباقات';
 }

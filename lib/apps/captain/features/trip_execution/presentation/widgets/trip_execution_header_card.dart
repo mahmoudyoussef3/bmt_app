@@ -90,6 +90,7 @@ class TripExecutionHeaderCard extends StatelessWidget {
             TripExecutionPrimaryAction(
               status: snapshot.status,
               tripId: trip.id,
+              departureTime: trip.departureTime,
             ),
         ],
       ),

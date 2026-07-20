@@ -3596,6 +3596,66 @@ abstract class AppLocalizations {
   /// **'Card payment was not completed. Your booking remains pending.'**
   String get booking_cardPaymentNotCompleted;
 
+  /// No description provided for @booking_cardPaymentDeclined.
+  ///
+  /// In en, this message translates to:
+  /// **'Your card was declined and you have not been charged. Your seat is still held — try another card or payment method.'**
+  String get booking_cardPaymentDeclined;
+
+  /// No description provided for @booking_viewVehicleAndPhotos.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle & photos'**
+  String get booking_viewVehicleAndPhotos;
+
+  /// No description provided for @booking_vehiclePhotosUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No photos of this vehicle yet'**
+  String get booking_vehiclePhotosUnavailable;
+
+  /// No description provided for @booking_noRatingsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'Not rated yet'**
+  String get booking_noRatingsYet;
+
+  /// No description provided for @booking_ratingWithCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{rating} ({count})'**
+  String booking_ratingWithCount(String rating, int count);
+
+  /// No description provided for @booking_vehicleCapacityLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get booking_vehicleCapacityLabel;
+
+  /// No description provided for @booking_vehicleSeatsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} seats'**
+  String booking_vehicleSeatsCount(int count);
+
+  /// No description provided for @booking_vehiclePlate.
+  ///
+  /// In en, this message translates to:
+  /// **'Plate'**
+  String get booking_vehiclePlate;
+
+  /// No description provided for @booking_vehicleYear.
+  ///
+  /// In en, this message translates to:
+  /// **'Year'**
+  String get booking_vehicleYear;
+
+  /// No description provided for @booking_vehicleColor.
+  ///
+  /// In en, this message translates to:
+  /// **'Colour'**
+  String get booking_vehicleColor;
+
   /// No description provided for @trips_statusInProgress.
   ///
   /// In en, this message translates to:
@@ -8137,6 +8197,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Join me on EasyWay and book your daily commute! Use my referral code {code} to get a welcome reward.\n{link}'**
   String referral_inviteMessage(String code, String link);
+
+  /// No description provided for @mySubscription_title.
+  ///
+  /// In en, this message translates to:
+  /// **'My Subscription'**
+  String get mySubscription_title;
+
+  /// No description provided for @mySubscription_statusActive.
+  ///
+  /// In en, this message translates to:
+  /// **'Active'**
+  String get mySubscription_statusActive;
+
+  /// No description provided for @mySubscription_statusExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'Expired'**
+  String get mySubscription_statusExpired;
+
+  /// No description provided for @mySubscription_statusPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Pending'**
+  String get mySubscription_statusPending;
+
+  /// No description provided for @mySubscription_started.
+  ///
+  /// In en, this message translates to:
+  /// **'Started'**
+  String get mySubscription_started;
+
+  /// No description provided for @mySubscription_expires.
+  ///
+  /// In en, this message translates to:
+  /// **'Expires'**
+  String get mySubscription_expires;
+
+  /// No description provided for @mySubscription_tripsUsedOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {total} trips used'**
+  String mySubscription_tripsUsedOfTotal(int used, int total);
+
+  /// No description provided for @mySubscription_tripsRemaining.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} trips remaining'**
+  String mySubscription_tripsRemaining(int count);
+
+  /// No description provided for @mySubscription_unlimitedTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Unlimited trips'**
+  String get mySubscription_unlimitedTrips;
+
+  /// No description provided for @mySubscription_emptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No active subscription'**
+  String get mySubscription_emptyTitle;
+
+  /// No description provided for @mySubscription_emptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse packages to find one that fits your commute.'**
+  String get mySubscription_emptyBody;
+
+  /// No description provided for @mySubscription_browsePackages.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse Packages'**
+  String get mySubscription_browsePackages;
 }
 
 class _AppLocalizationsDelegate

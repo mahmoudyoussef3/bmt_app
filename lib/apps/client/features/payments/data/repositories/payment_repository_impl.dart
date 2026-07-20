@@ -48,4 +48,9 @@ class PaymentRepositoryImpl implements PaymentRepository {
       amount: amount,
     );
   }
+
+  @override
+  Future<CardPaymentState> getCardPaymentState(String bookingId) {
+    return _datasource.getCardPaymentState(bookingId);
+  }
 }

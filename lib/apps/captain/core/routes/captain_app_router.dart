@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/assigned_trip.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/screens/captain_request_access_screen.dart';
-import 'package:bmt_app/apps/captain/features/check_in/presentation/pages/check_in_page.dart';
 import 'package:bmt_app/apps/captain/features/communication/presentation/pages/chat_details_page.dart';
 import 'package:bmt_app/apps/captain/features/communication/presentation/pages/chats_page.dart';
 import 'package:bmt_app/apps/captain/features/incidents/presentation/pages/report_incident_page.dart';
@@ -56,11 +55,6 @@ class CaptainAppRouter {
       CaptainRoutes.passengerManifest => _page(
         settings,
         PassengerListPage(tripId: args! as String),
-      ),
-
-      CaptainRoutes.checkIn => _page(
-        settings,
-        CheckInPage(tripId: args! as String),
       ),
 
       CaptainRoutes.locationUpdate => _page(

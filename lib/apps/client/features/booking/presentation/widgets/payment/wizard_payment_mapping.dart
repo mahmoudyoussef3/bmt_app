@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -10,18 +11,30 @@ import 'package:bmt_app/core/localization/l10n_context.dart';
 /// two different sets of numbers.
 PaymentCheckoutData wizardCheckoutData(BookingWizardSession session) {
   final trip = session.selectedTrip;
+  final vehicle = trip?.vehicle ?? const TripVehicleProfile();
 
   return PaymentCheckoutData(
     tripId: trip?.id ?? '',
     pickupPoint: session.pickupStop?.name ?? '',
     destination: session.dropoffStop?.name ?? '',
-    vehicleNumber: trip?.vehicleType ?? '',
+    // The plate identifies the bus at the kerb; the generic type is the
+    // fallback so the ticket's vehicle fact is never blank — and never
+    // reports the booking as incomplete over a thin fleet record.
+    vehicleNumber: vehicle.plateNumber.isNotEmpty
+        ? vehicle.plateNumber
+        : (trip?.vehicleType ?? ''),
+    vehicleName: vehicle.displayName,
+    vehicleImageUrl: vehicle.hasImages ? vehicle.imageUrls.first : '',
     tripDate: trip?.tripDate ?? '',
     departureTime: trip?.departureTime ?? '',
     arrivalTime: trip?.arrivalTime ?? '',
     selectedSeatId: session.selectedSeatId ?? '',
     selectedSeat: session.selectedSeatLabel ?? '',
-    driverName: '',
+    // The captain is on the trip the rider picked, so the ticket they pay on
+    // names the same person as the card they picked it from.
+    driverName: vehicle.driverName,
+    driverImageUrl: vehicle.driverImageUrl,
+    driverRating: vehicle.hasDriverRating ? vehicle.driverRating : 0,
     baseFare: session.totalPrice.round(),
   );
 }

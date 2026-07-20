@@ -194,3 +194,39 @@ class CardPaymentSession {
   final String checkoutUrl;
   final String gatewayReference;
 }
+
+/// Where a card booking stands according to our own database.
+///
+/// The gateway's WebView reports its own outcome on the way back, but that
+/// redirect is a URL the rider's device can rewrite. Money is only ever
+/// believed from here: the row the HMAC-verified Paymob callback settles.
+class CardPaymentState {
+  const CardPaymentState({
+    required this.settled,
+    required this.failed,
+    required this.bookingStatus,
+    required this.paymentStatus,
+  });
+
+  /// The gateway callback confirmed payment and the seat is now held as paid.
+  final bool settled;
+
+  /// The gateway declined, or the operator rejected the payment.
+  final bool failed;
+
+  final String bookingStatus;
+  final String paymentStatus;
+
+  /// Still waiting on the callback — the usual state for the first moments
+  /// after the WebView closes.
+  bool get pending => !settled && !failed;
+
+  static CardPaymentState fromJson(Map<String, dynamic> json) {
+    return CardPaymentState(
+      settled: json['settled'] == true,
+      failed: json['failed'] == true,
+      bookingStatus: json['booking_status']?.toString() ?? '',
+      paymentStatus: json['payment_status']?.toString() ?? '',
+    );
+  }
+}

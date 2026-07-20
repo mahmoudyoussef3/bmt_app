@@ -5,16 +5,23 @@ import 'package:bmt_app/apps/captain/features/trip_execution/domain/repositories
 import 'package:bmt_app/apps/captain/features/trip_execution/domain/usecases/mark_station_arrived_usecase.dart';
 
 void main() {
-  test('delegates the arrival to the repository with the right arguments', () async {
-    final repository = _FakeTripExecutionRepository();
-    final useCase = MarkStationArrivedUseCase(repository);
+  test(
+    'delegates the arrival to the repository with the right arguments',
+    () async {
+      final repository = _FakeTripExecutionRepository();
+      final useCase = MarkStationArrivedUseCase(repository);
 
-    await useCase(tripId: 'trip-1', pointId: 'point-2', pointName: 'محطة بنها');
+      await useCase(
+        tripId: 'trip-1',
+        pointId: 'point-2',
+        pointName: 'محطة بنها',
+      );
 
-    expect(repository.markedTripId, 'trip-1');
-    expect(repository.markedPointId, 'point-2');
-    expect(repository.markedPointName, 'محطة بنها');
-  });
+      expect(repository.markedTripId, 'trip-1');
+      expect(repository.markedPointId, 'point-2');
+      expect(repository.markedPointName, 'محطة بنها');
+    },
+  );
 
   test('propagates repository failures instead of swallowing them', () {
     final repository = _FakeTripExecutionRepository()

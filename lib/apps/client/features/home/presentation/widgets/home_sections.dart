@@ -27,9 +27,9 @@ class HomeSections extends StatelessWidget {
   final bool isTablet;
   final void Function(String route, [Object? arguments]) onOpenRoute;
 
-  void _openSubscription() => onOpenRoute(PackagesRoutes.subscription, {
-    'hasActiveSubscription': data.activePackage != null,
-  });
+  /// The subscription the rider already holds — its own usage detail, not
+  /// the plan catalogue [PackagesRoutes.subscription] sells.
+  void _openMySubscription() => onOpenRoute(PackagesRoutes.mySubscription);
 
   void _trackBooking(HomeBookingData booking) =>
       onOpenRoute(TrackingRoutes.tracking, {'bookingId': booking.id});
@@ -98,11 +98,11 @@ class HomeSections extends StatelessWidget {
                 eyebrow: l10n.home_yourPackage,
                 title: l10n.home_activeSubscription,
                 actionLabel: l10n.common_manage,
-                onAction: _openSubscription,
+                onAction: _openMySubscription,
               ),
               child: HomeActivePackageCard(
                 package: data.activePackage!,
-                onTap: _openSubscription,
+                onTap: _openMySubscription,
               ),
             ),
           ),

@@ -23,6 +23,13 @@ class BookingWizardCardCheckout extends BookingWizardConfirmState {
   final WizardBookingRecord record;
 }
 
+/// The rider is back from the gateway and the app is asking its own backend
+/// whether the money actually moved. The redirect the webview came back on is
+/// not evidence, so this state covers the wait for Paymob's signed callback.
+class BookingWizardVerifyingPayment extends BookingWizardConfirmState {
+  const BookingWizardVerifyingPayment();
+}
+
 class BookingWizardConfirmed extends BookingWizardConfirmState {
   const BookingWizardConfirmed({
     required this.record,

@@ -65,7 +65,15 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
     required String tripPassengerId,
     required PassengerBoardingStatus status,
   }) async {
-    if (state is! PassengerManifestLoaded) return;
+    // Guarded on the manifest being *loaded*, not on the state being exactly
+    // `PassengerManifestLoaded`: a previous failed write leaves
+    // `PassengerManifestUpdateError` on top of a perfectly good manifest, and
+    // testing for the concrete type there meant one failure silently froze
+    // every subsequent status change until a realtime refresh happened to
+    // land.
+    if (state is PassengerManifestLoading || state is PassengerManifestError) {
+      return;
+    }
     final rollback = _allPassengers;
 
     // Optimistic: reflect the tap immediately, reconcile with the server after.
@@ -86,11 +94,16 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
       emit(
         PassengerManifestUpdateError(
           loaded: _buildLoaded(),
-          message: e.toString(),
+          message: _readableError(e),
         ),
       );
     }
   }
+
+  /// Strips Dart's `Exception: ` prefix so a captain reading a snackbar at a
+  /// boarding door sees the message, not the wrapper type.
+  String _readableError(Object error) =>
+      error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
 
   Future<void> _reload() async {
     final tripId = _tripId;
@@ -149,7 +162,7 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
     var boarded = 0;
     var pending = 0;
     var absent = 0;
-    var late = 0;
+    var cancelled = 0;
     for (final p in _allPassengers) {
       switch (p.status) {
         case PassengerBoardingStatus.boarded:
@@ -158,17 +171,15 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
           pending++;
         case PassengerBoardingStatus.absent:
           absent++;
-        case PassengerBoardingStatus.late:
-          late++;
         case PassengerBoardingStatus.cancelled:
-          break;
+          cancelled++;
       }
     }
     return PassengerCounts(
       boarded: boarded,
       pending: pending,
       absent: absent,
-      late: late,
+      cancelled: cancelled,
       total: _allPassengers.length,
     );
   }

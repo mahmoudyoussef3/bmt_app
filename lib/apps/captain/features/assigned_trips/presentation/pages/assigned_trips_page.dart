@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_awaiting_trips_view.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_dev_mode_sheet.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 
 import '../../domain/entities/assigned_trip.dart';
 import '../../domain/entities/captain_day_summary.dart';
@@ -171,7 +172,14 @@ class _DaySlivers extends StatelessWidget {
                 onOpen: () => context.openTripExecution(focusTrip),
               ),
               const SizedBox(height: CaptainDesignTokens.s16),
-              HomeQuickActions(tripId: focusTrip.id),
+              // Rebuilt on the ticker so the shortcut set follows the trip
+              // into boarding without waiting for a realtime trip change.
+              CaptainTicker(
+                builder: (context, now) => HomeQuickActions(
+                  tripId: focusTrip.id,
+                  stage: focusTrip.stageAt(now),
+                ),
+              ),
               const SizedBox(height: CaptainDesignTokens.s16),
               // The finished day states these numbers in its own hero, so the
               // strip would only repeat them.

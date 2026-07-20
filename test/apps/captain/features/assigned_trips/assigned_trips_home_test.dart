@@ -61,6 +61,14 @@ void main() {
       expect(tester.takeException(), isNull);
       expect(find.text('متابعة الرحلة'), findsOneWidget);
       expect(find.text('رحلتك الحالية'), findsOneWidget);
+
+      // The completed trip sits below the fold at larger text scales, so it
+      // has to be scrolled to rather than assumed built — and scrolling also
+      // puts the lower cards through the same overflow check as the hero.
+      await tester.scrollUntilVisible(find.text('كشف الركاب'), 200);
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
       // Completed trips offer the manifest, never a "start the trip" action.
       expect(find.text('كشف الركاب'), findsOneWidget);
     });

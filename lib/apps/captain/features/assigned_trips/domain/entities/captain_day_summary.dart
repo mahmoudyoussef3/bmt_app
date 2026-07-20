@@ -18,9 +18,10 @@ class CaptainDaySummary {
       ..sort((a, b) => a.departureTime.compareTo(b.departureTime));
 
     final running = sorted.where((t) => t.status.isRunning).toList();
-    final upcoming = sorted
-        .where((t) => t.status == AssignedTripStatus.scheduled)
-        .toList();
+    // Both pre-departure states count as upcoming work: a trip operations
+    // hasn't published yet is still the captain's next trip, and hiding it
+    // would report an empty day to a captain who has one.
+    final upcoming = sorted.where((t) => t.status.isUpcoming).toList();
 
     return CaptainDaySummary(
       totalTrips: sorted.length,

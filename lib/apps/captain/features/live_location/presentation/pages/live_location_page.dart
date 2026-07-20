@@ -53,14 +53,16 @@ class LocationUpdatePage extends StatelessWidget {
                         ),
                         const SizedBox(height: 20),
                         Text(
-                          'أرسل موقعك الحالي مرة واحدة',
+                          'أرسل موقعك الحالي',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.titleLarge
                               ?.copyWith(fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'عند الضغط، سيُحفظ موقع واحد مع وقت الإرسال ليظهر لفريق العمليات والعملاء. لا يوجد تتبع مستمر ولا تشغيل في الخلفية.',
+                          'أثناء سير الرحلة يُرسل موقعك تلقائياً كل دقيقة من شاشة تنفيذ '
+                          'الرحلة. استخدم هذا الزر لإرسال موقع فوري في أي وقت. '
+                          'لا يعمل التتبع في الخلفية.',
                           textAlign: TextAlign.center,
                           style: Theme.of(context).textTheme.bodyMedium
                               ?.copyWith(color: scheme.onSurfaceVariant),

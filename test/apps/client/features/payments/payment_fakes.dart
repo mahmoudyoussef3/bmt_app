@@ -86,6 +86,10 @@ class FakePaymentRepository implements PaymentRepository {
     required String bookingId,
     required int amount,
   }) => throw UnimplementedError();
+
+  @override
+  Future<CardPaymentState> getCardPaymentState(String bookingId) =>
+      throw UnimplementedError();
 }
 
 PaymentCubit cubitFor(FakePaymentRepository repository) => PaymentCubit(

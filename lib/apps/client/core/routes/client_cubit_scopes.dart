@@ -14,6 +14,7 @@ import 'package:bmt_app/apps/client/features/communication/presentation/cubit/ch
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/communication_cubit.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/cubit/notifications_cubit.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/cubit/my_subscription_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_cubit.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_cubit.dart';
@@ -84,6 +85,12 @@ abstract final class ClientCubitScopes {
     create: (_) => clientGetIt<PackagesCubit>()..load(),
     child: child,
   );
+
+  static Widget mySubscription(Widget child) =>
+      BlocProvider<MySubscriptionCubit>(
+        create: (_) => clientGetIt<MySubscriptionCubit>()..load(),
+        child: child,
+      );
 
   static Widget tracking(Widget child) => BlocProvider<TrackingCubit>(
     create: (_) => clientGetIt<TrackingCubit>(),

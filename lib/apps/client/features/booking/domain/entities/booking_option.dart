@@ -76,6 +76,7 @@ class RouteTripOptionData {
     required this.price,
     this.tripDate = '',
     this.stopPricing = const [],
+    this.vehicle = const TripVehicleProfile(),
   });
 
   final String id;
@@ -90,6 +91,88 @@ class RouteTripOptionData {
   /// truth for resolving the fare/package price for the rider's exact
   /// pickup -> dropoff selection (see [TripPricingResolver]).
   final List<TripStopPairPrice> stopPricing;
+
+  /// The bus and captain this trip actually runs with. It travels with the
+  /// trip so the rider can inspect it before committing, and so the ticket
+  /// they pay on names the same vehicle and captain they were shown.
+  final TripVehicleProfile vehicle;
+}
+
+/// The vehicle and captain assigned to a trip.
+///
+/// Riders decide with their eyes: a photo of the bus and the captain's name
+/// does more to make a booking feel safe than any list of specs. Every field
+/// is optional because the operator fills the fleet record in over time — a
+/// missing photo must degrade to a placeholder, never to a blocked booking.
+class TripVehicleProfile {
+  const TripVehicleProfile({
+    this.brand = '',
+    this.model = '',
+    this.plateNumber = '',
+    this.vehicleType = '',
+    this.color = '',
+    this.manufactureYear = 0,
+    this.capacity = 0,
+    this.seatLayoutType = '',
+    this.features = const [],
+    this.imageUrls = const [],
+    this.vehicleRating = 0,
+    this.vehicleRatingCount = 0,
+    this.driverName = '',
+    this.driverImageUrl = '',
+    this.driverRating = 0,
+    this.driverRatingCount = 0,
+  });
+
+  final String brand;
+  final String model;
+  final String plateNumber;
+  final String vehicleType;
+  final String color;
+  final int manufactureYear;
+  final int capacity;
+  final String seatLayoutType;
+  final List<String> features;
+
+  /// Photos of this exact bus, in the order the operator uploaded them.
+  final List<String> imageUrls;
+
+  final double vehicleRating;
+  final int vehicleRatingCount;
+  final String driverName;
+  final String driverImageUrl;
+  final double driverRating;
+  final int driverRatingCount;
+
+  bool get hasImages => imageUrls.isNotEmpty;
+
+  /// A count of zero means nobody has reviewed this bus/captain yet — which is
+  /// not the same as being rated badly, and must not render as zero stars.
+  bool get hasVehicleRating => vehicleRatingCount > 0 && vehicleRating > 0;
+
+  bool get hasDriverRating => driverRatingCount > 0 && driverRating > 0;
+
+  /// What to call the bus on screen: brand and model when the fleet record has
+  /// them, falling back through the plate to the generic type, so the label is
+  /// never blank.
+  String get displayName {
+    final named = [brand.trim(), model.trim()].where((p) => p.isNotEmpty);
+    if (named.isNotEmpty) return named.join(' ');
+    if (plateNumber.trim().isNotEmpty) return plateNumber.trim();
+    return vehicleType.trim();
+  }
+
+  bool get hasAirConditioning => features.any((feature) {
+    final normalized = feature.toLowerCase();
+    return normalized == 'ac' || normalized.contains('air condition');
+  });
+
+  /// Whether there is anything worth opening a details sheet for.
+  bool get hasDetails =>
+      hasImages ||
+      displayName.isNotEmpty ||
+      driverName.trim().isNotEmpty ||
+      features.isNotEmpty;
 }
 
 class PopularRouteListData {

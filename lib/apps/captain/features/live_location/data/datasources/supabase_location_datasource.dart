@@ -24,7 +24,9 @@ class SupabaseLocationDatasource implements LocationDatasource {
     final driverId = trip?['driver_id'] as String?;
     final vehicleId = trip?['vehicle_id'] as String?;
     if (driverId == null || vehicleId == null) {
-      throw Exception('لا يمكن إرسال الموقع: لم يتم تعيين سائق ومركبة لهذه الرحلة.');
+      throw Exception(
+        'لا يمكن إرسال الموقع: لم يتم تعيين سائق ومركبة لهذه الرحلة.',
+      );
     }
 
     final position = await Geolocator.getCurrentPosition(

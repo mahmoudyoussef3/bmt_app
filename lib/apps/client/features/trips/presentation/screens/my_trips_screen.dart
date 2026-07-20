@@ -8,14 +8,26 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_lis
 
 /// My Trips hub with filter tabs for upcoming, active, completed, cancelled.
 class MyTripsScreen extends StatelessWidget {
-  const MyTripsScreen({super.key, required this.onOpenRoute});
+  const MyTripsScreen({
+    super.key,
+    required this.onOpenRoute,
+    this.showBackButton = false,
+  });
 
   final void Function(String route, [Object? arguments]) onOpenRoute;
+
+  /// True when this screen is pushed as a standalone destination (e.g. from
+  /// the Profile hub) rather than hosted as the Trips tab, which already sits
+  /// at the root of the bottom navigation and needs no way back.
+  final bool showBackButton;
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: Scaffold(
+        appBar: showBackButton
+            ? AppBar(backgroundColor: Colors.transparent, elevation: 0)
+            : null,
         body: BlocBuilder<TripsCubit, TripsState>(
           builder: (context, state) {
             final loaded = state is TripsLoaded ? state : null;
