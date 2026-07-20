@@ -180,7 +180,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           id, trip_date, departure_time, arrival_time, capacity, passenger_count, booked_seats,
           ticket_price, currency, status, route_id,
           vehicles(vehicle_type, brand, model, plate_number, color,
-                   manufacture_year, capacity, seat_layout_type, features,
+                   manufacture_year, capacity, seat_layout_type,
                    image_url, rating, rating_count),
           drivers(full_name, profile_image_url, rating, rating_count),
           trip_pricing(from_point_id, to_point_id, one_time_price, five_days_price, ten_days_price, monthly_price, three_months_price, currency, is_active),

@@ -43,14 +43,16 @@ create unique index if not exists idx_booking_payments_gateway_order
   where gateway_order_id is not null;
 
 -- A card attempt that the gateway declined is 'failed' — distinct from
--- 'rejected', which means a human looked at a receipt and said no.
+-- 'rejected', which means a human looked at a receipt and said no. 'cancelled'
+-- is kept from the prior vocabulary (client_cancel_before_approval): it is
+-- what cancel_booking_by_client writes and existing rows already carry it.
 alter table public.booking_payments
   drop constraint if exists booking_payments_status_check;
 alter table public.booking_payments
   add constraint booking_payments_status_check check (
     status in (
       'pending', 'submitted', 'under_review', 'approved', 'rejected',
-      'refunded', 'failed'
+      'refunded', 'failed', 'cancelled'
     )
   );
 

@@ -13,7 +13,18 @@ class ProfileQueries {
   /// never actually reaches `boarded` or `completed` in practice — completion
   /// stamps the trip, not the booking — so counting by the booking's own
   /// status always reads zero.
-  static const upcomingTripStatuses = <String>['scheduled', 'open_for_booking'];
+  ///
+  /// This is every trip status short of `completed`/`cancelled`. The rider
+  /// only sees two buckets on the hub, so a trip that has started boarding or
+  /// is already in progress must still count as "upcoming" for them — it
+  /// hasn't happened yet from their seat, even though the dashboard's own
+  /// filters label that window "active" rather than "upcoming".
+  static const upcomingTripStatuses = <String>[
+    'scheduled',
+    'open_for_booking',
+    'boarding',
+    'in_progress',
+  ];
 
   /// Trips the rider actually travelled.
   static const completedTripStatuses = <String>['completed'];
