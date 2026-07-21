@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../domain/entities/related_booking_option.dart';
 import '../../domain/usecases/get_my_support_tickets_usecase.dart';
 import '../../domain/usecases/create_support_ticket_usecase.dart';
+import '../../domain/usecases/get_related_booking_options_usecase.dart';
 import '../../domain/usecases/get_ticket_details_usecase.dart';
 import '../../domain/repositories/support_repository.dart';
 import 'support_state.dart';
@@ -9,19 +11,46 @@ import 'support_state.dart';
 class SupportCubit extends Cubit<SupportState> {
   final GetMySupportTicketsUseCase _getMySupportTickets;
   final CreateSupportTicketUseCase _createSupportTicket;
+  final GetRelatedBookingOptionsUseCase _getRelatedBookingOptions;
   final GetTicketDetailsUseCase _getTicketDetails;
   final SupportRepository _supportRepository; // To get attachments
 
   SupportCubit({
     required GetMySupportTicketsUseCase getMySupportTickets,
     required CreateSupportTicketUseCase createSupportTicket,
+    required GetRelatedBookingOptionsUseCase getRelatedBookingOptions,
     required GetTicketDetailsUseCase getTicketDetails,
     required SupportRepository supportRepository,
   }) : _getMySupportTickets = getMySupportTickets,
        _createSupportTicket = createSupportTicket,
+       _getRelatedBookingOptions = getRelatedBookingOptions,
        _getTicketDetails = getTicketDetails,
        _supportRepository = supportRepository,
        super(SupportInitial());
+
+  List<RelatedBookingOption> _relatedBookingOptions = const [];
+
+  /// Read by the create form; loaded via [loadRelatedBookingOptions]. Kept on
+  /// the cubit rather than in a state so transient submit/error states can't
+  /// wipe the picker mid-edit.
+  List<RelatedBookingOption> get relatedBookingOptions =>
+      _relatedBookingOptions;
+
+  /// Loads the client's recent bookings for the optional "related booking"
+  /// picker. A linked ticket is routed to the operating office server-side;
+  /// an unlinked one goes to platform support — so this failing must never
+  /// block filing: on error the picker simply stays hidden.
+  Future<void> loadRelatedBookingOptions() async {
+    if (_relatedBookingOptions.isNotEmpty) return;
+    try {
+      _relatedBookingOptions = await _getRelatedBookingOptions();
+      if (_relatedBookingOptions.isNotEmpty && !isClosed) {
+        emit(const SupportRelatedBookingsLoaded());
+      }
+    } catch (_) {
+      // Optional nicety — the ticket form works without it.
+    }
+  }
 
   Future<void> loadTickets() async {
     emit(SupportLoading());

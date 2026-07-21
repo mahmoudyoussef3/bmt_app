@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/apps/client/features/support/domain/entities/related_booking_option.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_category.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -11,6 +12,7 @@ import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'support_attachment_picker.dart';
 import 'support_category_dropdown.dart';
 import 'support_field_label.dart';
+import 'support_related_booking_dropdown.dart';
 import 'support_text_field.dart';
 
 /// The create-ticket form: topic, subject, details, optional attachment.
@@ -30,7 +32,14 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
   final _descController = TextEditingController();
 
   String _category = defaultSupportCategory;
+  RelatedBookingOption? _relatedBooking;
   File? _attachment;
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<SupportCubit>().loadRelatedBookingOptions();
+  }
 
   @override
   void dispose() {
@@ -57,12 +66,16 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
       category: _category,
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
+      relatedBookingId: _relatedBooking?.bookingId,
+      relatedTripId: _relatedBooking?.tripId,
       attachment: _attachment,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final bookingOptions = context.read<SupportCubit>().relatedBookingOptions;
+
     return Form(
       key: _formKey,
       child: ListView(
@@ -77,6 +90,20 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
             onChanged: (value) => setState(() => _category = value),
           ),
           const SizedBox(height: 24),
+          // Hidden entirely when the client has no bookings: an empty picker
+          // would only add noise to a form that must stay easy to file.
+          if (bookingOptions.isNotEmpty) ...[
+            SupportFieldLabel(
+              label: context.l10n.support_relatedBookingLabel,
+              hint: context.l10n.support_relatedBookingHint,
+            ),
+            SupportRelatedBookingDropdown(
+              options: bookingOptions,
+              value: _relatedBooking,
+              onChanged: (option) => setState(() => _relatedBooking = option),
+            ),
+            const SizedBox(height: 24),
+          ],
           SupportTextField(
             label: context.l10n.support_subjectLabel,
             labelHint: context.l10n.support_subjectHint,

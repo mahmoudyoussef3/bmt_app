@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/support/domain/usecases/create_support_ticket_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_my_support_tickets_usecase.dart';
+import 'package:bmt_app/apps/client/features/support/domain/usecases/get_related_booking_options_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_ticket_details_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/widgets/create_ticket_form.dart';
@@ -25,6 +26,7 @@ Future<FakeSupportRepository> _pumpForm(WidgetTester tester) async {
         create: (_) => SupportCubit(
           getMySupportTickets: GetMySupportTicketsUseCase(repository),
           createSupportTicket: CreateSupportTicketUseCase(repository),
+          getRelatedBookingOptions: GetRelatedBookingOptionsUseCase(repository),
           getTicketDetails: GetTicketDetailsUseCase(repository),
           supportRepository: repository,
         ),

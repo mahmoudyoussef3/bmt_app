@@ -26,6 +26,13 @@ class SupportLoaded extends SupportState {
   }
 }
 
+/// Signals that the related-booking picker options finished loading. Carries
+/// no data — the options live on the cubit — it exists only so the create
+/// screen rebuilds its form once the picker has something to show.
+class SupportRelatedBookingsLoaded extends SupportState {
+  const SupportRelatedBookingsLoaded();
+}
+
 class SupportError extends SupportState {
   final String message;
 

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:bmt_app/apps/client/features/support/domain/entities/related_booking_option.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_attachment.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
 import 'package:bmt_app/apps/client/features/support/domain/repositories/support_repository.dart';
@@ -26,10 +27,16 @@ SupportTicket supportTicketFixture({
 /// Hand-rolled test double — the project pulls in no mocking package, so the
 /// support tests drive the cubit through a repository they control directly.
 class FakeSupportRepository implements SupportRepository {
-  FakeSupportRepository({List<SupportTicket>? tickets, this.throwOnLoad})
-    : tickets = tickets ?? [];
+  FakeSupportRepository({
+    List<SupportTicket>? tickets,
+    this.relatedBookingOptions = const [],
+    this.throwOnLoad,
+  }) : tickets = tickets ?? [];
 
   List<SupportTicket> tickets;
+
+  /// Bookings offered to the create form's optional "related booking" picker.
+  final List<RelatedBookingOption> relatedBookingOptions;
 
   /// When set, [getMyTickets] throws it instead of returning [tickets].
   final Object? throwOnLoad;
@@ -75,6 +82,11 @@ class FakeSupportRepository implements SupportRepository {
   @override
   Future<SupportTicket> getTicketDetails(String ticketId) async {
     return tickets.firstWhere((ticket) => ticket.id == ticketId);
+  }
+
+  @override
+  Future<List<RelatedBookingOption>> getRelatedBookingOptions() async {
+    return relatedBookingOptions;
   }
 
   @override

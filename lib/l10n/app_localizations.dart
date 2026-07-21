@@ -3998,6 +3998,24 @@ abstract class AppLocalizations {
   /// **'Details are required'**
   String get support_detailsRequired;
 
+  /// No description provided for @support_relatedBookingLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Related booking'**
+  String get support_relatedBookingLabel;
+
+  /// No description provided for @support_relatedBookingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional — pick the booking this is about so it reaches the right office.'**
+  String get support_relatedBookingHint;
+
+  /// No description provided for @support_relatedBookingNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Not about a specific booking'**
+  String get support_relatedBookingNone;
+
   /// No description provided for @support_attachmentLabel.
   ///
   /// In en, this message translates to:

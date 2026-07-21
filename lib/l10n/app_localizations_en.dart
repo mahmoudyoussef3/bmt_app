@@ -2142,6 +2142,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get support_detailsRequired => 'Details are required';
 
   @override
+  String get support_relatedBookingLabel => 'Related booking';
+
+  @override
+  String get support_relatedBookingHint =>
+      'Optional — pick the booking this is about so it reaches the right office.';
+
+  @override
+  String get support_relatedBookingNone => 'Not about a specific booking';
+
+  @override
   String get support_attachmentLabel => 'Attachment';
 
   @override

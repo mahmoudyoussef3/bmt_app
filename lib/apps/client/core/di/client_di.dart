@@ -145,6 +145,7 @@ import '../../features/support/data/repositories/support_repository_impl.dart';
 import '../../features/support/domain/repositories/support_repository.dart';
 import '../../features/support/domain/usecases/create_support_ticket_usecase.dart';
 import '../../features/support/domain/usecases/get_my_support_tickets_usecase.dart';
+import '../../features/support/domain/usecases/get_related_booking_options_usecase.dart';
 import '../../features/support/domain/usecases/get_ticket_details_usecase.dart';
 
 import '../../features/support/presentation/cubit/support_cubit.dart';
@@ -882,11 +883,18 @@ void _registerSupportDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<GetRelatedBookingOptionsUseCase>()) {
+    clientGetIt.registerLazySingleton<GetRelatedBookingOptionsUseCase>(
+      () => GetRelatedBookingOptionsUseCase(clientGetIt<SupportRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<SupportCubit>()) {
     clientGetIt.registerFactory<SupportCubit>(
       () => SupportCubit(
         getMySupportTickets: clientGetIt<GetMySupportTicketsUseCase>(),
         createSupportTicket: clientGetIt<CreateSupportTicketUseCase>(),
+        getRelatedBookingOptions: clientGetIt<GetRelatedBookingOptionsUseCase>(),
         getTicketDetails: clientGetIt<GetTicketDetailsUseCase>(),
         supportRepository: clientGetIt<SupportRepository>(),
       ),

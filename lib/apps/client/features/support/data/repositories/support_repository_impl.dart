@@ -1,4 +1,5 @@
 import 'dart:io';
+import '../../domain/entities/related_booking_option.dart';
 import '../../domain/entities/support_ticket.dart';
 import '../../domain/entities/support_attachment.dart';
 import '../../domain/repositories/support_repository.dart';
@@ -29,6 +30,11 @@ class SupportRepositoryImpl implements SupportRepository {
       relatedBookingId: relatedBookingId,
       relatedTripId: relatedTripId,
     );
+  }
+
+  @override
+  Future<List<RelatedBookingOption>> getRelatedBookingOptions() {
+    return _remoteDataSource.getRelatedBookingOptions();
   }
 
   @override

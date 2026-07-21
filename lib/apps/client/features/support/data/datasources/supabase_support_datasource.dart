@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
+import '../models/related_booking_option_model.dart';
 import '../models/support_ticket_model.dart';
 import '../models/support_attachment_model.dart';
 
@@ -59,6 +60,24 @@ class SupabaseSupportDatasource {
         .single();
 
     return SupportTicketModel.fromJson(response);
+  }
+
+  /// The client's most recent bookings, for the optional "related booking"
+  /// picker on the create-ticket form. RLS already restricts the table to the
+  /// caller's own rows; the explicit filter just keeps the query honest. The
+  /// list is deliberately short — a complaint is about a recent trip, not
+  /// booking history.
+  Future<List<RelatedBookingOptionModel>> getRelatedBookingOptions() async {
+    final response = await _supabase
+        .from('operation_bookings')
+        .select('id, trip_id, route, trip_date, seat')
+        .eq('client_id', _currentUserId)
+        .order('created_at', ascending: false)
+        .limit(10);
+
+    return response
+        .map((e) => RelatedBookingOptionModel.fromJson(e))
+        .toList();
   }
 
   Future<SupportTicketModel> getTicketDetails(String ticketId) async {

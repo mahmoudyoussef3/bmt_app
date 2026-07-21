@@ -5,10 +5,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_attachment.dart';
+import 'package:bmt_app/apps/client/features/support/domain/entities/related_booking_option.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
 import 'package:bmt_app/apps/client/features/support/domain/repositories/support_repository.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/create_support_ticket_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_my_support_tickets_usecase.dart';
+import 'package:bmt_app/apps/client/features/support/domain/usecases/get_related_booking_options_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_ticket_details_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/screens/support_ticket_details_screen.dart';
@@ -33,6 +35,10 @@ class _StaticRepository implements SupportRepository {
 
   @override
   Future<List<SupportTicket>> getMyTickets() async => const [];
+
+  @override
+  Future<List<RelatedBookingOption>> getRelatedBookingOptions() async =>
+      const [];
 
   @override
   Future<SupportTicket> createTicket({
@@ -77,6 +83,7 @@ Future<SupportCubit> _pumpDetails(
   final cubit = SupportCubit(
     getMySupportTickets: GetMySupportTicketsUseCase(repo),
     createSupportTicket: CreateSupportTicketUseCase(repo),
+    getRelatedBookingOptions: GetRelatedBookingOptionsUseCase(repo),
     getTicketDetails: GetTicketDetailsUseCase(repo),
     supportRepository: repo,
   );

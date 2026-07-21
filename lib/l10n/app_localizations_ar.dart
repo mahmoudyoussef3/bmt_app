@@ -2128,6 +2128,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get support_detailsRequired => 'التفاصيل مطلوبة';
 
   @override
+  String get support_relatedBookingLabel => 'الحجز المتعلق';
+
+  @override
+  String get support_relatedBookingHint =>
+      'اختياري — اختر الحجز الذي يخصه بلاغك ليصل إلى المكتب الصحيح.';
+
+  @override
+  String get support_relatedBookingNone => 'لا يخص حجزًا معينًا';
+
+  @override
   String get support_attachmentLabel => 'المرفق';
 
   @override
