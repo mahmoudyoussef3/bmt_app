@@ -1,6 +1,8 @@
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../core/session/dashboard_session.dart';
+
 // Datasources
 import 'trip_management/data/datasources/trips_datasource.dart';
 import 'trip_management/data/datasources/supabase_trips_datasource.dart';
@@ -28,7 +30,7 @@ import 'trip_passengers/presentation/cubit/trip_passengers_cubit.dart';
 void registerTripsDependencies(GetIt di) {
   // 1. Datasource
   di.registerLazySingleton<TripsDatasource>(
-    () => SupabaseTripsDatasource(di<SupabaseClient>()),
+    () => SupabaseTripsDatasource(di<SupabaseClient>(), di<DashboardSession>()),
   );
 
   // 2. Repository

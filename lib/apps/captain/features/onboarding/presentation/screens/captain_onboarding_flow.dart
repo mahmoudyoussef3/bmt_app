@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/captain/core/session/captain_session_store.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 
+import '../../domain/entities/captain_onboarding_models.dart';
 import '../../../auth/presentation/widgets/captain_auth_header.dart';
 import '../../../auth/presentation/widgets/captain_auth_scaffold.dart';
 import '../cubit/captain_onboarding_cubit.dart';
@@ -52,11 +53,23 @@ class _CaptainOnboardingFlowState extends State<CaptainOnboardingFlow> {
     return CaptainAuthScaffold(
       child: BlocBuilder<CaptainOnboardingCubit, CaptainOnboardingState>(
         builder: (context, state) => switch (state) {
-          OnboardingForm(:final error) => _form(
-            submitting: false,
-            error: error,
+          OnboardingForm(
+            :final error,
+            :final offices,
+            :final loadingOffices,
+          ) =>
+            _form(
+              submitting: false,
+              error: error,
+              offices: _remember(offices),
+              loadingOffices: loadingOffices,
+            ),
+          // Submitting carries no office list of its own; reuse the last one
+          // so the picker doesn't blink out from under the applicant.
+          OnboardingSubmitting() => _form(
+            submitting: true,
+            offices: _lastOffices,
           ),
-          OnboardingSubmitting() => _form(submitting: true),
           OnboardingPending(:final phone) => CaptainRequestPendingView(
             phone: phone,
             onRefresh: _cubit.refreshNow,
@@ -82,15 +95,34 @@ class _CaptainOnboardingFlowState extends State<CaptainOnboardingFlow> {
     );
   }
 
-  Widget _form({required bool submitting, String? error}) {
+  List<OnboardingOffice> _lastOffices = const [];
+
+  /// Caches the office list so the transient submitting state can reuse it.
+  List<OnboardingOffice> _remember(List<OnboardingOffice> offices) {
+    if (offices.isNotEmpty) _lastOffices = offices;
+    return offices.isEmpty ? _lastOffices : offices;
+  }
+
+  Widget _form({
+    required bool submitting,
+    String? error,
+    List<OnboardingOffice> offices = const [],
+    bool loadingOffices = false,
+  }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         CaptainRequestForm(
           submitting: submitting,
           error: error,
-          onSubmit: (name, phone) =>
-              _cubit.submit(fullName: name, phone: phone),
+          offices: offices,
+          loadingOffices: loadingOffices,
+          onSubmit: (name, phone, officeId, officeCode) => _cubit.submit(
+            fullName: name,
+            phone: phone,
+            officeId: officeId,
+            officeCode: officeCode,
+          ),
         ),
         const SizedBox(height: 12),
         TextButton(

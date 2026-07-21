@@ -10,6 +10,7 @@ import 'captain_onboarding_state.dart';
 class CaptainOnboardingCubit extends Cubit<CaptainOnboardingState> {
   final SubmitCaptainRequestUseCase _submit;
   final GetCaptainRequestStatusUseCase _getStatus;
+  final GetActiveOfficesUseCase _getOffices;
   final CaptainSessionStore _store;
 
   Timer? _poll;
@@ -18,26 +19,50 @@ class CaptainOnboardingCubit extends Cubit<CaptainOnboardingState> {
   CaptainOnboardingCubit({
     required SubmitCaptainRequestUseCase submit,
     required GetCaptainRequestStatusUseCase getStatus,
+    required GetActiveOfficesUseCase getOffices,
     required CaptainSessionStore store,
   }) : _submit = submit,
        _getStatus = getStatus,
+       _getOffices = getOffices,
        _store = store,
        super(const OnboardingForm());
 
   /// Resumes into the pending/poll state when a request was already submitted
-  /// on this device; otherwise starts at the form.
+  /// on this device; otherwise starts at the form and loads the office list.
   void init(String? pendingPhone) {
     if (pendingPhone != null && pendingPhone.isNotEmpty) {
       _beginPolling(pendingPhone);
     } else {
-      emit(const OnboardingForm());
+      emit(const OnboardingForm(loadingOffices: true));
+      _loadOffices();
     }
   }
 
-  Future<void> submit({required String fullName, required String phone}) async {
+  Future<void> _loadOffices() async {
+    final offices = await _getOffices();
+    if (isClosed || state is! OnboardingForm) return;
+    final current = state as OnboardingForm;
+    emit(OnboardingForm(error: current.error, offices: offices));
+  }
+
+  Future<void> submit({
+    required String fullName,
+    required String phone,
+    String? officeId,
+    String? officeCode,
+  }) async {
+    final offices = state is OnboardingForm
+        ? (state as OnboardingForm).offices
+        : const <OnboardingOffice>[];
+
     emit(const OnboardingSubmitting());
     try {
-      final result = await _submit(fullName: fullName, phone: phone);
+      final result = await _submit(
+        fullName: fullName,
+        phone: phone,
+        officeId: officeId,
+        officeCode: officeCode,
+      );
       switch (result.outcome) {
         case SubmitOutcome.alreadyActive:
           emit(const OnboardingAlreadyActive());
@@ -47,7 +72,14 @@ class CaptainOnboardingCubit extends Cubit<CaptainOnboardingState> {
           _beginPolling(result.phone);
       }
     } catch (e) {
-      emit(OnboardingForm(error: e.toString().replaceFirst('Exception: ', '')));
+      // Carry the office list back into the form: re-fetching it would clear
+      // the picker under the applicant while they read the error.
+      emit(
+        OnboardingForm(
+          error: e.toString().replaceFirst('Exception: ', ''),
+          offices: offices,
+        ),
+      );
     }
   }
 

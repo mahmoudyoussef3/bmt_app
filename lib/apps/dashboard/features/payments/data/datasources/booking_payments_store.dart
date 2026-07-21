@@ -37,12 +37,12 @@ class BookingPaymentsStore {
   ) async {
     if (status == PaymentReviewStatus.accepted) {
       await _client.rpc(
-        'approve_booking',
+        'office_approve_booking',
         params: {'p_booking_id': id, 'p_reviewer_name': 'فريق المالية'},
       );
     } else if (status == PaymentReviewStatus.rejected) {
       await _client.rpc(
-        'reject_booking',
+        'office_reject_booking',
         params: {
           'p_booking_id': id,
           'p_rejection_reason': 'رُفضت الدفعة من فريق المالية',
@@ -87,7 +87,7 @@ class BookingPaymentsStore {
 
   Future<void> reassign(String bookingId, String newTripId) {
     return _client.rpc(
-      'reassign_booking',
+      'office_reassign_booking',
       params: {'p_booking_id': bookingId, 'p_new_trip_id': newTripId},
     );
   }

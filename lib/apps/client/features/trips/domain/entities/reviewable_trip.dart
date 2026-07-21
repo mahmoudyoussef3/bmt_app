@@ -11,6 +11,7 @@ class ReviewableTrip {
     required this.bookingId,
     required this.isCompleted,
     required this.reference,
+    this.officeName = '',
     this.driverName = '',
     this.vehicleName = '',
     this.routeLine = '',
@@ -29,6 +30,7 @@ class ReviewableTrip {
 
   /// Labels the sheet echoes back to the passenger. Empty when the caller
   /// genuinely doesn't know — the sheet omits the line rather than filling it.
+  final String officeName;
   final String driverName;
   final String vehicleName;
   final String routeLine;

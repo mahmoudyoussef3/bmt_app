@@ -78,7 +78,7 @@ void main() {
           Scaffold(
             body: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: CaptainRequestForm(submitting: false, onSubmit: (_, _) {}),
+              child: CaptainRequestForm(submitting: false, onSubmit: (_, _, _, _) {}),
             ),
           ),
         ),
@@ -121,7 +121,7 @@ void main() {
       _host(
         Scaffold(
           body: SingleChildScrollView(
-            child: CaptainRequestForm(submitting: false, onSubmit: (_, _) {}),
+            child: CaptainRequestForm(submitting: false, onSubmit: (_, _, _, _) {}),
           ),
         ),
       ),

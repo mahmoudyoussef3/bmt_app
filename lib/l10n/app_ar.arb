@@ -1133,6 +1133,7 @@
   "packages_continueToPayment": "متابعة للدفع",
   "packages_daysCount": "{days} يوم",
   "trips_reviewFormTitle": "قيّم رحلتك",
+  "trips_ratingOffice": "تقييم المكتب",
   "trips_ratingDriver": "تقييم السائق",
   "trips_ratingVehicle": "تقييم المركبة",
   "trips_ratingRoute": "تقييم المسار",

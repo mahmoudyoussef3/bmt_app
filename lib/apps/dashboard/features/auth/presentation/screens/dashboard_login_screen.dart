@@ -12,13 +12,13 @@ class DashboardLoginScreen extends StatefulWidget {
 
 class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailCtrl = TextEditingController();
+  final _nameCtrl = TextEditingController();
   final _passCtrl = TextEditingController();
   bool _obscure = true;
 
   @override
   void dispose() {
-    _emailCtrl.dispose();
+    _nameCtrl.dispose();
     _passCtrl.dispose();
     super.dispose();
   }
@@ -27,7 +27,7 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
     FocusScope.of(context).unfocus();
     if (!(_formKey.currentState?.validate() ?? false)) return;
     context.read<DashboardAuthCubit>().signIn(
-      email: _emailCtrl.text.trim().toLowerCase(),
+      username: _nameCtrl.text.trim().toLowerCase(),
       password: _passCtrl.text,
     );
   }
@@ -105,16 +105,16 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                         ),
                         const SizedBox(height: 36),
                         TextFormField(
-                          controller: _emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: _nameCtrl,
+                          keyboardType: TextInputType.name,
                           textInputAction: TextInputAction.next,
+                          autofillHints: const [AutofillHints.username],
                           decoration: const InputDecoration(
-                            labelText: 'البريد الإلكتروني',
-                            prefixIcon: Icon(Icons.email_outlined),
+                            labelText: 'الاسم',
+                            prefixIcon: Icon(Icons.person_outline_rounded),
                           ),
-                          validator: (v) => (v?.trim().isEmpty ?? true)
-                              ? 'أدخل البريد الإلكتروني'
-                              : null,
+                          validator: (v) =>
+                              (v?.trim().isEmpty ?? true) ? 'أدخل الاسم' : null,
                         ),
                         const SizedBox(height: 14),
                         TextFormField(

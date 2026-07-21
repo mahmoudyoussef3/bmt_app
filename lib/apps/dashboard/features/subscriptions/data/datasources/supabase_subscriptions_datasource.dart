@@ -1,12 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../core/session/dashboard_session.dart';
 import '../../domain/entities/user_subscription.dart';
 import '../models/user_subscription_model.dart';
 import 'subscriptions_datasource.dart';
 
 class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
   final SupabaseClient _client;
+  final DashboardSession _session;
 
-  const SupabaseSubscriptionsDatasource(this._client);
+  const SupabaseSubscriptionsDatasource(this._client, this._session);
 
   // Join packages to recover title + days for renewals, even on old rows.
   static const _select = '''
@@ -17,7 +19,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
   @override
   Future<List<UserSubscription>> fetchSubscriptions() async {
-    await _client.rpc('expire_overdue_subscriptions');
+    await _client.rpc('office_expire_overdue_subscriptions');
     final rows = await _client
         .from('subscriptions')
         .select(_select)
@@ -27,7 +29,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
   @override
   Future<UserSubscription> fetchSubscriptionDetails(String id) async {
-    await _client.rpc('expire_overdue_subscriptions');
+    await _client.rpc('office_expire_overdue_subscriptions');
     final row = await _client
         .from('subscriptions')
         .select(_select)
@@ -41,6 +43,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     UserSubscription subscription,
   ) async {
     final payload = <String, dynamic>{
+      'office_id': _session.officeId,
       if (subscription.userId.isNotEmpty) 'client_id': subscription.userId,
       'customer_name': subscription.userName,
       'customer_phone': subscription.userPhone,
@@ -83,7 +86,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
   @override
   Future<UserSubscription> renewSubscription(String id) async {
     final created = await _client.rpc(
-      'request_subscription_renewal',
+      'office_request_subscription_renewal',
       params: {'p_subscription_id': id},
     );
     final createdId = (created as Map<String, dynamic>)['id'].toString();
@@ -98,7 +101,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
   @override
   Future<UserSubscription> markRideUsed(String id) async {
     await _client.rpc(
-      'consume_subscription_ride',
+      'office_consume_subscription_ride',
       params: {'p_subscription_id': id},
     );
     final updated = await _client
@@ -112,7 +115,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
   @override
   Future<UserSubscription> confirmPayment(String id) async {
     await _client.rpc(
-      'confirm_subscription_payment',
+      'office_confirm_subscription_payment',
       params: {'p_subscription_id': id},
     );
     final row = await _client

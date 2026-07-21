@@ -8,7 +8,21 @@ class SubmitCaptainRequestUseCase {
   Future<SubmitResult> call({
     required String fullName,
     required String phone,
-  }) => _repository.submit(fullName: fullName, phone: phone);
+    String? officeId,
+    String? officeCode,
+  }) => _repository.submit(
+    fullName: fullName,
+    phone: phone,
+    officeId: officeId,
+    officeCode: officeCode,
+  );
+}
+
+class GetActiveOfficesUseCase {
+  final CaptainOnboardingRepository _repository;
+  const GetActiveOfficesUseCase(this._repository);
+
+  Future<List<OnboardingOffice>> call() => _repository.fetchActiveOffices();
 }
 
 class GetCaptainRequestStatusUseCase {

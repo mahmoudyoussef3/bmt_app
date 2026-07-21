@@ -1,4 +1,5 @@
 import 'package:bmt_app/core/pricing/trip_stop_pair_price.dart';
+import '../../domain/entities/transport_office.dart';
 
 import '../../domain/entities/booking_option.dart';
 
@@ -17,6 +18,7 @@ class RouteOptionModel {
     this.points = const [],
     this.isFastest = false,
     this.matchQuality = RouteMatchQuality.exact,
+    this.office = TransportOffice.unknown,
   });
 
   final String id;
@@ -32,6 +34,7 @@ class RouteOptionModel {
   final List<RoutePointModel> points;
   final bool isFastest;
   final RouteMatchQuality matchQuality;
+  final TransportOffice office;
 
   RouteOptionData toEntity() {
     return RouteOptionData(
@@ -48,6 +51,7 @@ class RouteOptionModel {
       points: points.map((point) => point.toEntity()).toList(),
       isFastest: isFastest,
       matchQuality: matchQuality,
+      office: office,
     );
   }
 }
@@ -244,6 +248,7 @@ class RoutePointModel {
 
 class PopularRouteListModel {
   const PopularRouteListModel({
+    this.office = TransportOffice.unknown,
     required this.id,
     required this.routeName,
     required this.dailyTrips,
@@ -262,6 +267,7 @@ class PopularRouteListModel {
   final String pickup;
   final String destination;
   final String distance;
+  final TransportOffice office;
 
   PopularRouteListData toEntity() {
     return PopularRouteListData(
@@ -273,6 +279,7 @@ class PopularRouteListModel {
       pickup: pickup,
       destination: destination,
       distance: distance,
+      office: office,
     );
   }
 }

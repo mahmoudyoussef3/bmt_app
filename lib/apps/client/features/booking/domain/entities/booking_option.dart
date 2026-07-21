@@ -1,4 +1,5 @@
 import 'package:bmt_app/core/pricing/trip_stop_pair_price.dart';
+import 'transport_office.dart';
 
 /// How closely a route matches the user's pickup/destination search.
 enum RouteMatchQuality {
@@ -27,6 +28,7 @@ class RouteOptionData {
     this.points = const [],
     this.isFastest = false,
     this.matchQuality = RouteMatchQuality.exact,
+    this.office = TransportOffice.unknown,
   });
 
   final String id;
@@ -42,6 +44,11 @@ class RouteOptionData {
   final List<RoutePointData> points;
   final bool isFastest;
   final RouteMatchQuality matchQuality;
+
+  /// Who operates this route. Carried on the route rather than looked up later so it
+  /// travels with the object into the booking wizard, which seeds its whole session
+  /// from this instance — the office context then survives the entire flow for free.
+  final TransportOffice office;
 
   bool get isExactMatch => matchQuality == RouteMatchQuality.exact;
 }
@@ -177,6 +184,7 @@ class TripVehicleProfile {
 
 class PopularRouteListData {
   const PopularRouteListData({
+    this.office = TransportOffice.unknown,
     required this.id,
     required this.routeName,
     required this.dailyTrips,
@@ -195,6 +203,9 @@ class PopularRouteListData {
   final String pickup;
   final String destination;
   final String distance;
+
+  /// The office operating this route — see [RouteOptionData.office].
+  final TransportOffice office;
 }
 
 class MapPinOption {

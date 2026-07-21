@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/session/dashboard_session.dart';
 import '../../domain/entities/operation_route.dart';
 import '../models/operation_route_model.dart';
 import 'routes_datasource.dart';
@@ -12,9 +13,10 @@ import 'routes_datasource.dart';
 /// - No local fallback.
 /// - Any Supabase/database error is thrown clearly so you can fix the real issue.
 class SupabaseRoutesDatasource implements RoutesDatasource {
-  SupabaseRoutesDatasource(this._client);
+  SupabaseRoutesDatasource(this._client, this._session);
 
   final SupabaseClient _client;
+  final DashboardSession _session;
 
   // ── Fetch ────────────────────────────────────────────────────────────
 
@@ -26,12 +28,19 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
       final routesData = await _client
           .from('operation_routes')
           .select()
+          .eq('office_id', _session.officeId)
           .order('created_at', ascending: false);
 
-      final stationsData = await _client
-          .from('route_stations')
-          .select()
-          .order('sort_order');
+      // Stations carry no office of their own; they are fetched through the routes we
+      // just loaded rather than as a full-table read that would span every office.
+      final routeIds = routesData.map((r) => r['id'] as String).toList();
+      final stationsData = routeIds.isEmpty
+          ? const <Map<String, dynamic>>[]
+          : await _client
+                .from('route_stations')
+                .select()
+                .inFilter('route_id', routeIds)
+                .order('sort_order');
 
       final stationsByRouteId = <String, List<RouteStationModel>>{};
       for (final json in stationsData) {
@@ -67,7 +76,8 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
   @override
   Future<OperationRouteModel> createRoute(OperationRoute route) async {
     try {
-      final routePayload = OperationRouteModel.fromEntity(route).toJson();
+      final routePayload = OperationRouteModel.fromEntity(route).toJson()
+        ..['office_id'] = _session.officeId;
 
       final response = await _client
           .from('operation_routes')

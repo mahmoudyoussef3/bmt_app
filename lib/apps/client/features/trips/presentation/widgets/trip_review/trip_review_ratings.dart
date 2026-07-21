@@ -7,7 +7,10 @@ import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_revie
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_rating_card.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
-/// The driver / vehicle / route star cards a passenger fills in to rate a trip.
+/// The office / driver / vehicle / route star cards a passenger fills in.
+///
+/// The office is rated first and explicitly: it is the marketplace entity the
+/// passenger chose, and its reputation is never inferred from the other three.
 class TripReviewRatings extends StatelessWidget {
   const TripReviewRatings({super.key, required this.trip, required this.state});
 
@@ -21,6 +24,13 @@ class TripReviewRatings extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        TripReviewRatingCard(
+          title: context.l10n.trips_ratingOffice,
+          subtitle: trip.officeName,
+          value: state.draft.officeRating,
+          onChanged: cubit.rateOffice,
+        ),
+        const SizedBox(height: 16),
         TripReviewRatingCard(
           title: context.l10n.trips_ratingDriver,
           subtitle: trip.driverName,

@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../domain/entities/transport_office.dart';
 import 'package:bmt_app/core/pricing/trip_stop_pair_price_mapper.dart';
 import '../../domain/entities/booking_option.dart';
 import '../../domain/entities/booking_search_query.dart';
@@ -13,11 +14,27 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
   const SupabaseBookingSearchDatasource(this._supabase);
 
+  /// Reads the embedded office off a route row. Rows that predate office attribution
+  /// degrade to [TransportOffice.unknown] rather than throwing.
+  TransportOffice _officeOf(Map<String, dynamic> row) {
+    final raw = row['office'];
+    if (raw is Map) {
+      return TransportOffice.fromJson(Map<String, dynamic>.from(raw));
+    }
+    if (raw is List && raw.isNotEmpty && raw.first is Map) {
+      return TransportOffice.fromJson(Map<String, dynamic>.from(raw.first as Map));
+    }
+    return TransportOffice.unknown;
+  }
+
   @override
   Future<List<RouteOptionModel>> getRoutes(BookingSearchQuery query) async {
+    // EWT is a marketplace: this deliberately spans every ACTIVE office rather than
+    // filtering to one. The embedded office is what lets the UI tell providers apart
+    // — two offices may run the same corridor at different times and prices.
     var routesQuery = _supabase
         .from('operation_routes')
-        .select()
+        .select('*, office:public_offices(*)')
         .eq('status', 'active');
     if (query.routeId != null && query.routeId!.isNotEmpty) {
       routesQuery = routesQuery.eq('id', query.routeId!);
@@ -152,6 +169,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
             availableTrips: availableTrips,
             points: routePoints,
             matchQuality: quality,
+            office: _officeOf(data),
           ),
         ),
       );
@@ -270,7 +288,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
   Future<List<PopularRouteListModel>> getPopularRoutes() async {
     final response = await _supabase
         .from('operation_routes')
-        .select('*, route_stations(name, sort_order)')
+        .select('*, route_stations(name, sort_order), office:public_offices(*)')
         .eq('status', 'active')
         .limit(10);
 
@@ -310,6 +328,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
             pickup: data['start_city']?.toString() ?? '',
             destination: data['end_city']?.toString() ?? '',
             distance: data['distance']?.toString() ?? 'Not set',
+            office: _officeOf(data),
           );
         })
         .where((route) => route.dailyTrips > 0)

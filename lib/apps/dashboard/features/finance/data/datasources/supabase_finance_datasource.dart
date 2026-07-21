@@ -240,12 +240,12 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     switch (action) {
       case ReceiptReviewStatus.accepted:
         await _client.rpc(
-          'approve_payment',
+          'office_approve_payment',
           params: {'p_booking_id': id, 'p_note': note},
         );
       case ReceiptReviewStatus.rejected:
         await _client.rpc(
-          'reject_payment',
+          'office_reject_payment',
           params: {
             'p_booking_id': id,
             'p_reason': note.isEmpty ? 'رُفض إثبات الدفع' : note,
@@ -253,7 +253,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
         );
       case ReceiptReviewStatus.reuploadRequested:
         await _client.rpc(
-          'request_payment_review',
+          'office_request_payment_review',
           params: {'p_booking_id': id, 'p_note': note},
         );
       case ReceiptReviewStatus.pending:

@@ -199,12 +199,13 @@ class TripExecutionDataSource {
     });
   }
 
-  /// Calls the update_trip_status RPC which enforces the valid transition
-  /// machine and logs a trip_events entry — all in one transaction.
+  /// Calls the driver-scoped wrapper around update_trip_status, which asserts
+  /// the caller is this trip's assigned driver before delegating. The raw RPC
+  /// carries no such check and is no longer granted to `authenticated`.
   Future<void> _transitionStatus(String tripId, String newStatus) async {
     try {
       await _supabase.rpc(
-        'update_trip_status',
+        'captain_update_trip_status',
         params: {'p_trip_id': tripId, 'p_new_status': newStatus},
       );
     } on PostgrestException catch (e) {
@@ -213,6 +214,10 @@ class TripExecutionDataSource {
       }
       if (e.message.contains('trip_not_found')) {
         throw Exception('الرحلة غير موجودة');
+      }
+      if (e.message.contains('not_your_trip') ||
+          e.message.contains('not_a_captain')) {
+        throw Exception('غير مصرح لك بتعديل هذه الرحلة');
       }
       rethrow;
     }

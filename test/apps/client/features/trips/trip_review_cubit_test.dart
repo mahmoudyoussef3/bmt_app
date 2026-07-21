@@ -60,6 +60,7 @@ void main() {
       await cubit.load(_trip().reviewable);
 
       final state = cubit.state as TripReviewEditing;
+      expect(state.draft.officeRating, 0);
       expect(state.draft.driverRating, 0);
       expect(state.draft.vehicleRating, 0);
       expect(state.draft.routeRating, 0);
@@ -71,6 +72,7 @@ void main() {
     test('shows the existing review back instead of a blank form', () async {
       final existing = const TripReview(
         bookingId: 'booking-1',
+        officeRating: 5,
         driverRating: 5,
         vehicleRating: 4,
         routeRating: 3,
@@ -87,14 +89,21 @@ void main() {
   });
 
   group('TripReviewCubit.submit', () {
-    test('is refused until all three ratings are set', () async {
+    test('is refused until all four ratings are set', () async {
       final repo = _FakeTripReviewsRepository();
       final cubit = _cubit(repo);
       await cubit.load(_trip().reviewable);
 
+      cubit.rateOffice(5);
       cubit.rateDriver(5);
       cubit.rateVehicle(4);
       // Route still unrated.
+      expect((cubit.state as TripReviewEditing).canSubmit, isFalse);
+
+      // The office is its own dimension, not a derived average: rating the driver,
+      // vehicle and route still leaves the form incomplete without it.
+      cubit.rateRoute(3);
+      cubit.rateOffice(0);
       expect((cubit.state as TripReviewEditing).canSubmit, isFalse);
 
       await cubit.submit();
@@ -108,12 +117,14 @@ void main() {
       final cubit = _cubit(repo);
       await cubit.load(_trip().reviewable);
 
+      cubit.rateOffice(5);
       cubit.rateDriver(5);
       cubit.rateVehicle(4);
       cubit.rateRoute(3);
       cubit.writeComment('Smooth ride');
       await cubit.submit();
 
+      expect(repo.submitted?.officeRating, 5);
       expect(repo.submitted?.driverRating, 5);
       expect(repo.submitted?.vehicleRating, 4);
       expect(repo.submitted?.routeRating, 3);
@@ -128,6 +139,7 @@ void main() {
         final cubit = _cubit(repo);
         await cubit.load(_trip().reviewable);
 
+        cubit.rateOffice(5);
         cubit.rateDriver(5);
         cubit.rateVehicle(5);
         cubit.rateRoute(5);
@@ -147,6 +159,7 @@ void main() {
       final cubit = _cubit(repo);
       await cubit.load(_trip().reviewable);
 
+      cubit.rateOffice(5);
       cubit.rateDriver(5);
       cubit.rateVehicle(5);
       cubit.rateRoute(5);
@@ -164,6 +177,7 @@ void main() {
       final cubit = _cubit(repo);
       await cubit.load(_trip().reviewable);
 
+      cubit.rateOffice(5);
       cubit.rateDriver(5);
       cubit.rateVehicle(5);
       cubit.rateRoute(5);
@@ -182,6 +196,7 @@ void main() {
       final cubit = _cubit(repo);
       await cubit.load(_trip().reviewable);
 
+      cubit.rateOffice(5);
       cubit.rateDriver(5);
       cubit.rateVehicle(5);
       cubit.rateRoute(5);
@@ -202,6 +217,7 @@ void main() {
       final cubit = _cubit(repo);
       await cubit.load(_trip(status: TripStatus.upcoming).reviewable);
 
+      cubit.rateOffice(5);
       cubit.rateDriver(5);
       cubit.rateVehicle(5);
       cubit.rateRoute(5);

@@ -5,6 +5,8 @@ import 'package:bmt_app/core/network/dio_factory.dart';
 import 'package:bmt_app/core/network/supabase_dio_adapter.dart';
 import 'core/di/dashboard_di.dart';
 import 'core/routes/dashboard_shell.dart';
+import 'features/auth/presentation/cubit/dashboard_auth_cubit.dart';
+import 'features/auth/presentation/screens/dashboard_login_screen.dart';
 import 'core/theme/dashboard_app_theme.dart';
 import 'core/theme/dashboard_theme_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
@@ -28,6 +30,48 @@ Future<void> main() async {
   registerDashboardDependencies();
 
   runApp(const DashboardWebApp());
+}
+
+/// Decides between the login screen and the workspace.
+///
+/// The dashboard previously mounted [DashboardShell] unconditionally and talked to
+/// Postgres as the anon role. With multiple offices that is no longer merely missing
+/// a login — it would be every office sharing one unauthenticated workspace, so the
+/// gate is mandatory rather than cosmetic.
+class _DashboardAuthGate extends StatefulWidget {
+  const _DashboardAuthGate();
+
+  @override
+  State<_DashboardAuthGate> createState() => _DashboardAuthGateState();
+}
+
+class _DashboardAuthGateState extends State<_DashboardAuthGate> {
+  late final DashboardAuthCubit _cubit;
+
+  @override
+  void initState() {
+    super.initState();
+    _cubit = dashboardDi<DashboardAuthCubit>()..restore();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider<DashboardAuthCubit>.value(
+      value: _cubit,
+      child: BlocBuilder<DashboardAuthCubit, DashboardAuthState>(
+        builder: (context, state) => switch (state) {
+          DashboardAuthChecking() => const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          ),
+          DashboardAuthSignedIn(:final context) => DashboardShell(
+            key: ValueKey(context.officeId),
+            office: context,
+          ),
+          _ => const DashboardLoginScreen(),
+        },
+      ),
+    );
+  }
 }
 
 class DashboardWebApp extends StatelessWidget {
@@ -57,7 +101,7 @@ class DashboardWebApp extends StatelessWidget {
               textDirection: TextDirection.rtl,
               child: child ?? const SizedBox.shrink(),
             ),
-            home: const DashboardShell(),
+            home: const _DashboardAuthGate(),
           );
         },
       ),

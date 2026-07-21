@@ -56,7 +56,7 @@ class SupabaseBookingPaymentVerificationDatasource
   ) async {
     try {
       await _client.rpc(
-        'approve_payment',
+        'office_approve_payment',
         params: {'p_booking_id': verificationId, 'p_note': note.trim()},
       );
       return _refetch(verificationId);
@@ -72,7 +72,7 @@ class SupabaseBookingPaymentVerificationDatasource
   ) async {
     try {
       await _client.rpc(
-        'reject_payment',
+        'office_reject_payment',
         params: {'p_booking_id': verificationId, 'p_reason': note.trim()},
       );
       return _refetch(verificationId);
@@ -88,7 +88,7 @@ class SupabaseBookingPaymentVerificationDatasource
   ) async {
     try {
       await _client.rpc(
-        'request_payment_review',
+        'office_request_payment_review',
         params: {'p_booking_id': verificationId, 'p_note': note.trim()},
       );
       return _refetch(verificationId);

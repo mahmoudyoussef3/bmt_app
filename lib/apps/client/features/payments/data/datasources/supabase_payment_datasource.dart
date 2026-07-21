@@ -118,8 +118,10 @@ class SupabasePaymentDatasource implements PaymentDatasource {
           'trip_id': checkoutData.tripId,
           'route': checkoutData.route,
           'seat': checkoutData.selectedSeat,
-          'integration_id': paymentMethod.integrationId,
-          'iframe_id': paymentMethod.iframeId,
+          // Merchant credentials are deliberately NOT sent. Each office collects its
+          // own money, and the Edge Function resolves that office's integration and
+          // iframe ids from the booking with the service-role key. A client-supplied
+          // integration id would let a rider route the payment to any merchant.
           'customer': {
             'email': user?.email,
             'name':

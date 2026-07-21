@@ -41,11 +41,11 @@ import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/tickets/presentation/screens/tickets_screen.dart';
 import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
 import '../../features/trips/presentation/screens/trips_screen.dart';
-import '../../features/users/domain/usecases/get_current_user_role_usecase.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
 import '../di/dashboard_di.dart';
 import '../permissions/dashboard_permission.dart';
 import '../permissions/dashboard_role.dart';
+import '../session/office_context.dart';
 import '../theme/dashboard_theme_cubit.dart';
 import 'dashboard_routes.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
@@ -68,30 +68,21 @@ const List<String> _navGroupOrder = [
 ];
 
 class DashboardShell extends StatefulWidget {
-  const DashboardShell({super.key});
+  const DashboardShell({super.key, required this.office});
+
+  /// The signed-in operator's office. The shell is only ever mounted behind the auth
+  /// gate, so this is always present — there is no "no office" fallback to default to.
+  final OfficeContext office;
 
   @override
   State<DashboardShell> createState() => _DashboardShellState();
 }
 
 class _DashboardShellState extends State<DashboardShell> {
-  // Single-owner dashboard with no login gate: default to full access. When an
-  // auth session exists, _loadRole() still refines this from user_roles.
-  DashboardRole _role = DashboardRole.admin;
+  // Role comes from the authenticated office context. It is no longer defaulted to
+  // admin: with multiple offices, guessing full access is exactly the wrong default.
+  late DashboardRole _role = widget.office.role;
   String _route = DashboardRoutes.home;
-
-  @override
-  void initState() {
-    super.initState();
-    _loadRole();
-  }
-
-  Future<void> _loadRole() async {
-    try {
-      final role = await dashboardDi<GetCurrentUserRoleUseCase>()();
-      if (mounted && role != null) setState(() => _role = role);
-    } catch (_) {}
-  }
 
   late final List<_DashboardNavItem> _items = [
     _DashboardNavItem(

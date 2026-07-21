@@ -6470,6 +6470,12 @@ abstract class AppLocalizations {
   /// **'Rate your trip'**
   String get trips_reviewFormTitle;
 
+  /// No description provided for @trips_ratingOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'Office rating'**
+  String get trips_ratingOffice;
+
   /// No description provided for @trips_ratingDriver.
   ///
   /// In en, this message translates to:

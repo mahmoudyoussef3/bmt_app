@@ -2,6 +2,7 @@
 class TripReviewModel {
   const TripReviewModel({
     required this.bookingId,
+    required this.officeRating,
     required this.driverRating,
     required this.vehicleRating,
     required this.routeRating,
@@ -10,6 +11,7 @@ class TripReviewModel {
   });
 
   final String bookingId;
+  final int officeRating;
   final int driverRating;
   final int vehicleRating;
   final int routeRating;
@@ -19,6 +21,7 @@ class TripReviewModel {
   factory TripReviewModel.fromJson(Map<String, dynamic> json) {
     return TripReviewModel(
       bookingId: json['booking_id']?.toString() ?? '',
+      officeRating: (json['office_rating'] as num?)?.toInt() ?? 0,
       driverRating: (json['driver_rating'] as num?)?.toInt() ?? 0,
       vehicleRating: (json['vehicle_rating'] as num?)?.toInt() ?? 0,
       routeRating: (json['route_rating'] as num?)?.toInt() ?? 0,

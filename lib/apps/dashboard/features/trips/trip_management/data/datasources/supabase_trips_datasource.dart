@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../../core/session/dashboard_session.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../shared/data/models/operation_trip_model.dart';
@@ -10,8 +11,9 @@ import 'trips_datasource.dart';
 
 class SupabaseTripsDatasource implements TripsDatasource {
   final SupabaseClient _client;
+  final DashboardSession _session;
 
-  const SupabaseTripsDatasource(this._client);
+  const SupabaseTripsDatasource(this._client, this._session);
 
   @override
   Future<List<OperationTripModel>> fetchTrips() async {
@@ -28,6 +30,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
             passengers:trip_passengers(*),
             events:trip_events(*)
           ''')
+          .eq('office_id', _session.officeId)
           .order('trip_date', ascending: false)
           .order('departure_time', ascending: false);
 
@@ -155,12 +158,14 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
       // 4. Single atomic RPC call — all inserts in one transaction.
       //    If any insert fails the entire trip creation rolls back.
-      final tripCode = 'TR-${DateTime.now().millisecondsSinceEpoch % 1000000}';
-
+      //
+      //    office_create_trip validates that the route, driver and vehicle all belong
+      //    to this office, and mints the trip code server-side. The code used to be
+      //    generated here as 'TR-<millis>', which collides once a second office exists
+      //    and is no longer unique per office.
       final rpcResult = await _client.rpc(
-        'create_trip',
+        'office_create_trip',
         params: {
-          'p_trip_code': tripCode,
           'p_route_id': input.routeId,
           'p_driver_id': input.driverId,
           'p_vehicle_id': input.vehicleId,
@@ -230,7 +235,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
   ) async {
     try {
       await _client.rpc(
-        'update_trip_status',
+        'office_update_trip_status',
         params: {'p_trip_id': tripId, 'p_new_status': status.dbValue},
       );
 
@@ -541,6 +546,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       final response = await _client
           .from('drivers')
           .select('id, full_name, phone, status, license_expiry_date')
+          .eq('office_id', _session.officeId)
           .eq('status', 'active')
           .gte(
             'license_expiry_date',
@@ -560,6 +566,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .select(
             'id, plate_number, vehicle_code, brand, model, capacity, vehicle_type, status, seat_configuration',
           )
+          .eq('office_id', _session.officeId)
           .eq('status', 'active');
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
@@ -573,6 +580,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       final response = await _client
           .from('operation_routes')
           .select('*, route_stations(*)')
+          .eq('office_id', _session.officeId)
           .eq('status', 'active');
       return List<Map<String, dynamic>>.from(response);
     } catch (e) {
@@ -590,6 +598,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       final response = await _client
           .from('operation_trips')
           .select('id')
+          .eq('office_id', _session.officeId)
           .eq('vehicle_id', vehicleId)
           .eq('trip_date', date)
           .eq('departure_time', departureTime)
@@ -610,6 +619,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       final response = await _client
           .from('operation_trips')
           .select('id')
+          .eq('office_id', _session.officeId)
           .eq('driver_id', driverId)
           .eq('trip_date', date)
           .eq('departure_time', departureTime)
@@ -674,7 +684,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
 
     var channel = _client
-        .channel('dashboard_trip_management')
+        .channel('dashboard_trip_management_${_session.officeId}')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',

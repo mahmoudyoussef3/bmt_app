@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/transport_office.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_office_chip.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
@@ -15,6 +17,7 @@ class RouteCardHeader extends StatelessWidget {
     required this.dailyTrips,
     required this.startingPrice,
     required this.pricePending,
+    this.office = TransportOffice.unknown,
   });
 
   final String routeName;
@@ -22,6 +25,7 @@ class RouteCardHeader extends StatelessWidget {
   final int dailyTrips;
   final String startingPrice;
   final bool pricePending;
+  final TransportOffice office;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +59,10 @@ class RouteCardHeader extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: ClientTypography.headingSmall(context),
               ),
+              const SizedBox(height: 4),
+              // Which office runs this corridor — without it, two providers'
+              // departures read as one operator's timetable.
+              RouteOfficeChip(office: office),
               const SizedBox(height: 6),
               RouteAvailabilityBadge(
                 label: hasTrips

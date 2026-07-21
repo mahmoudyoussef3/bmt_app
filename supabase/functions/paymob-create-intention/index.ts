@@ -9,12 +9,15 @@ declare const Deno: {
   serve(handler: (req: Request) => Response | Promise<Response>): void;
 };
 
+/// Merchant credentials are deliberately absent here. Each office collects its own
+/// money, so integration_id / iframe_id are resolved server-side from the booking's
+/// office (see fetchOfficePaymentConfig). A client that still sends them is ignored:
+/// trusting a caller-supplied integration id would let a rider route another office's
+/// payment — or their own — to a merchant account of their choosing.
 type CheckoutRequest = {
   booking_id?: string;
   amount?: number | string;
   currency?: string;
-  integration_id?: number | string;
-  iframe_id?: number | string;
   route?: string;
   trip_id?: string;
   seat?: string;
@@ -50,9 +53,12 @@ Deno.serve(async (req) => {
     const config = readPaymobConfig();
     const payload = await req.json() as CheckoutRequest;
     const normalized = normalizeCheckoutRequest(payload);
-    const checkoutConfig = resolveCheckoutConfig(config, payload);
 
-    const authToken = await getAuthToken(config.apiKey);
+    // Which office is being paid decides which merchant account receives the money.
+    const officeConfig = await fetchOfficePaymentConfig(normalized.bookingId);
+    const checkoutConfig = resolveCheckoutConfig(config, officeConfig);
+
+    const authToken = await getAuthToken(checkoutConfig.apiKey);
     const orderId = await createPaymobOrder({
       authToken,
       amountCents: normalized.amountCents,
@@ -157,20 +163,74 @@ function readPaymobConfig() {
   };
 }
 
-function resolveCheckoutConfig(
-  config: { integrationId: number; iframeId: string },
-  payload: CheckoutRequest,
-) {
-  const integrationId = payload.integration_id == null ||
-      String(payload.integration_id).trim().length === 0
-    ? config.integrationId
-    : Number(payload.integration_id);
-  if (!Number.isFinite(integrationId) || integrationId <= 0) {
-    throw new Error("Paymob card integration id must be a valid number.");
+type OfficePaymentConfig = {
+  office_id?: string;
+  office_name?: string;
+  integration_id?: string | null;
+  iframe_id?: string | null;
+  api_key?: string | null;
+  configured?: boolean;
+};
+
+/// Reads the owning office's merchant wiring with the service-role key. The RPC has
+/// EXECUTE granted to nobody — service_role bypasses that, so this is the only path.
+async function fetchOfficePaymentConfig(
+  bookingId: string,
+): Promise<OfficePaymentConfig> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!supabaseUrl || !serviceKey) {
+    throw new Error(
+      "SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY are not available to this function.",
+    );
   }
 
-  const iframeId = sanitizeText(payload.iframe_id, config.iframeId);
-  return { integrationId, iframeId };
+  const response = await fetch(
+    `${supabaseUrl}/rest/v1/rpc/resolve_booking_payment_config`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        apikey: serviceKey,
+        Authorization: `Bearer ${serviceKey}`,
+      },
+      body: JSON.stringify({ p_booking_id: bookingId }),
+    },
+  );
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(
+      `Could not resolve the office payment configuration (${response.status}): ${detail}`,
+    );
+  }
+
+  return await response.json() as OfficePaymentConfig;
+}
+
+/// Office configuration wins; the platform env vars are the fallback so the incumbent
+/// office keeps working before anyone fills in office_payment_configs.
+function resolveCheckoutConfig(
+  config: { apiKey: string; integrationId: number; iframeId: string },
+  office: OfficePaymentConfig,
+) {
+  const rawIntegration = office.integration_id;
+  const integrationId = rawIntegration == null ||
+      String(rawIntegration).trim().length === 0
+    ? config.integrationId
+    : Number(rawIntegration);
+  if (!Number.isFinite(integrationId) || integrationId <= 0) {
+    throw new Error(
+      `Paymob card integration id is invalid for office ${
+        office.office_name ?? office.office_id ?? "unknown"
+      }.`,
+    );
+  }
+
+  const iframeId = sanitizeText(office.iframe_id, config.iframeId);
+  const apiKey = sanitizeText(office.api_key, config.apiKey);
+
+  return { integrationId, iframeId, apiKey };
 }
 
 function normalizeCheckoutRequest(payload: CheckoutRequest) {

@@ -2,6 +2,8 @@ import '../../../../core/network/network_di.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../session/captain_office_session.dart';
+
 import '../session/captain_session_store.dart';
 import '../theme/captain_theme_cubit.dart';
 import '../theme/captain_theme_repository.dart';
@@ -114,6 +116,14 @@ void registerCaptainDependencies() {
   }
 
   // Register Core Networking (Dio, Retrofit ApiService)
+  // Registered before every datasource: they are lazy singletons built before
+  // sign-in, so they hold this and read the office per query.
+  if (!captainGetIt.isRegistered<CaptainOfficeSession>()) {
+    captainGetIt.registerLazySingleton<CaptainOfficeSession>(
+      CaptainOfficeSession.new,
+    );
+  }
+
   registerNetworkDependencies(captainGetIt);
 
   _registerAssignedTripsDependencies();
@@ -178,11 +188,19 @@ void _registerOnboardingDependencies() {
       ),
     );
   }
+  if (!captainGetIt.isRegistered<GetActiveOfficesUseCase>()) {
+    captainGetIt.registerLazySingleton<GetActiveOfficesUseCase>(
+      () => GetActiveOfficesUseCase(
+        captainGetIt<CaptainOnboardingRepository>(),
+      ),
+    );
+  }
   if (!captainGetIt.isRegistered<CaptainOnboardingCubit>()) {
     captainGetIt.registerFactory<CaptainOnboardingCubit>(
       () => CaptainOnboardingCubit(
         submit: captainGetIt<SubmitCaptainRequestUseCase>(),
         getStatus: captainGetIt<GetCaptainRequestStatusUseCase>(),
+        getOffices: captainGetIt<GetActiveOfficesUseCase>(),
         store: captainGetIt<CaptainSessionStore>(),
       ),
     );
@@ -198,7 +216,10 @@ void _registerOnboardingDependencies() {
 void _registerAuthDependencies() {
   if (!captainGetIt.isRegistered<CaptainAuthDatasource>()) {
     captainGetIt.registerLazySingleton<CaptainAuthDatasource>(
-      () => CaptainAuthDatasource(captainGetIt<SupabaseClient>()),
+      () => CaptainAuthDatasource(
+        captainGetIt<SupabaseClient>(),
+        captainGetIt<CaptainOfficeSession>(),
+      ),
     );
   }
   if (!captainGetIt.isRegistered<CaptainAuthRepository>()) {

@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/session/dashboard_session.dart';
 import '../../shared/domain/entities/fleet_workspace.dart';
 import '../models/fleet_models.dart';
 import 'fleet_datasource.dart';
@@ -12,10 +13,15 @@ import 'fleet_datasource.dart';
 /// - No local fallback.
 /// - Any Supabase/database error is thrown clearly so you can fix the real issue.
 /// - Payloads are filtered to match the current Supabase tables.
+/// - Every read is scoped to the signed-in operator's office, and every create stamps
+///   it. `office_id` is applied at the insert call sites rather than inside
+///   [_driverPayload] / [_vehiclePayload], because [_onlyAllowed] would silently drop
+///   any key that is not in the column whitelist — an easy way to create unowned rows.
 class SupabaseFleetDatasource implements FleetDatasource {
-  SupabaseFleetDatasource(this._client);
+  SupabaseFleetDatasource(this._client, this._session);
 
   final SupabaseClient _client;
+  final DashboardSession _session;
 
   static const Set<String> _driverColumns = {
     'employee_code',
@@ -55,26 +61,46 @@ class SupabaseFleetDatasource implements FleetDatasource {
     try {
       debugPrint('[SupabaseFleetDatasource] Loading real fleet workspace...');
 
+      final officeId = _session.officeId;
+
       final driversData = await _client
           .from('drivers')
           .select()
+          .eq('office_id', officeId)
           .neq('status', 'archived')
           .order('full_name');
 
       final vehiclesData = await _client
           .from('vehicles')
           .select()
+          .eq('office_id', officeId)
           .neq('status', 'archived')
           .order('vehicle_code');
 
       final assignmentsData = await _client
           .from('assignments')
           .select()
+          .eq('office_id', officeId)
           .order('assigned_at', ascending: false);
 
-      final driverDocsData = await _client.from('driver_documents').select();
+      // Documents have no office_id of their own — they inherit it from the driver or
+      // vehicle they belong to, so they are filtered through that owner.
+      final driverIds = driversData.map((d) => d['id'] as String).toList();
+      final vehicleIds = vehiclesData.map((v) => v['id'] as String).toList();
 
-      final vehicleDocsData = await _client.from('vehicle_documents').select();
+      final driverDocsData = driverIds.isEmpty
+          ? const <Map<String, dynamic>>[]
+          : await _client
+                .from('driver_documents')
+                .select()
+                .inFilter('driver_id', driverIds);
+
+      final vehicleDocsData = vehicleIds.isEmpty
+          ? const <Map<String, dynamic>>[]
+          : await _client
+                .from('vehicle_documents')
+                .select()
+                .inFilter('vehicle_id', vehicleIds);
 
       final assignments = assignmentsData
           .map<FleetAssignmentModel>(
@@ -198,7 +224,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
   @override
   Future<FleetDriverModel> createDriver(FleetDriver driver) async {
     try {
-      final payload = _driverPayload(driver);
+      final payload = _driverPayload(driver)..['office_id'] = _session.officeId;
 
       final response = await _client
           .from('drivers')
@@ -295,7 +321,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
   @override
   Future<FleetVehicleModel> createVehicle(FleetVehicle vehicle) async {
     try {
-      final payload = _vehiclePayload(vehicle);
+      final payload = _vehiclePayload(vehicle)..['office_id'] = _session.officeId;
 
       final response = await _client
           .from('vehicles')
@@ -400,6 +426,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
       final response = await _client
           .from('assignments')
           .insert({
+            'office_id': _session.officeId,
             'driver_id': driverId,
             'vehicle_id': vehicleId,
             'assigned_at': DateTime.now().toIso8601String(),

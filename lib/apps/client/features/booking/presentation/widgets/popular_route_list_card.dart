@@ -37,6 +37,7 @@ class PopularRouteListCard extends StatelessWidget {
             dailyTrips: route.dailyTrips,
             startingPrice: route.startingPrice,
             pricePending: pricePending,
+            office: route.office,
           ),
           const SizedBox(height: 16),
           RouteEndpointLine(

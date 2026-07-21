@@ -8,13 +8,29 @@ class CaptainOnboardingDatasource {
   final SupabaseClient _client;
   const CaptainOnboardingDatasource(this._client);
 
+  /// The offices currently accepting applications. Reads the anon-safe
+  /// directory view, which excludes each office's join code.
+  Future<List<OnboardingOffice>> fetchActiveOffices() async {
+    final rows = await _client.from('public_offices').select().order('name');
+    return (rows as List)
+        .map((r) => OnboardingOffice.fromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
+  }
+
   Future<SubmitResult> submit({
     required String fullName,
     required String phone,
+    String? officeId,
+    String? officeCode,
   }) async {
     final res = await _client.rpc(
       'submit_captain_request',
-      params: {'p_full_name': fullName, 'p_phone': phone},
+      params: {
+        'p_full_name': fullName,
+        'p_phone': phone,
+        'p_office_id': officeId,
+        'p_office_code': officeCode,
+      },
     );
     final map = Map<String, dynamic>.from(res as Map);
     final outcome = switch (map['outcome'] as String?) {

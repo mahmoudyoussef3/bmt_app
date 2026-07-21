@@ -6,6 +6,7 @@ import '../models/trip_review_model.dart';
 extension TripReviewMapper on TripReviewModel {
   TripReview toEntity() => TripReview(
     bookingId: bookingId,
+    officeRating: officeRating,
     driverRating: driverRating,
     vehicleRating: vehicleRating,
     routeRating: routeRating,

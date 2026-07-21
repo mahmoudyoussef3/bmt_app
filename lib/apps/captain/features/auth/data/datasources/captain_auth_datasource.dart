@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/session/captain_office_session.dart';
 import '../../domain/exceptions/captain_auth_exceptions.dart';
 
 /// Passwordless captain login: the phone is checked server-side against
@@ -8,9 +9,10 @@ import '../../domain/exceptions/captain_auth_exceptions.dart';
 /// up, the first time a phone is seen — then bind the resulting session to
 /// the driver record via link_current_captain_driver.
 class CaptainAuthDatasource {
-  const CaptainAuthDatasource(this._supabase);
+  const CaptainAuthDatasource(this._supabase, this._session);
 
   final SupabaseClient _supabase;
+  final CaptainOfficeSession _session;
 
   Future<void> signInWithPhone(String phone) async {
     final resolved = await _supabase.rpc(
@@ -44,13 +46,22 @@ class CaptainAuthDatasource {
       }
     }
 
-    await _supabase.rpc(
+    // Binds auth.uid() to the drivers row and hands back the captain's office, so
+    // the app never has to ask which office they belong to — or trust an answer.
+    final linked = await _supabase.rpc(
       'link_current_captain_driver',
       params: {'p_phone': phone},
     );
+
+    _session.start(
+      CaptainIdentity.fromRpc(Map<String, dynamic>.from(linked as Map)),
+    );
   }
 
-  Future<void> signOut() => _supabase.auth.signOut();
+  Future<void> signOut() async {
+    await _supabase.auth.signOut();
+    _session.clear();
+  }
 
   bool _isInvalidCredentials(AuthException e) =>
       e.message.toLowerCase().contains('invalid login credentials');

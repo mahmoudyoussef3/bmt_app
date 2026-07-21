@@ -3541,6 +3541,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trips_reviewFormTitle => 'قيّم رحلتك';
 
   @override
+  String get trips_ratingOffice => 'تقييم المكتب';
+
+  @override
   String get trips_ratingDriver => 'تقييم السائق';
 
   @override

@@ -3568,6 +3568,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trips_reviewFormTitle => 'Rate your trip';
 
   @override
+  String get trips_ratingOffice => 'Office rating';
+
+  @override
   String get trips_ratingDriver => 'Driver rating';
 
   @override

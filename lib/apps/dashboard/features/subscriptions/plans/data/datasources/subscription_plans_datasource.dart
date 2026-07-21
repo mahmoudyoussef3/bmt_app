@@ -1,12 +1,14 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../../core/session/dashboard_session.dart';
 import '../../domain/entities/subscription_plan.dart';
 
 /// Real Supabase datasource for the packages used by the booking flow.
 class SubscriptionPlansDatasource {
   final SupabaseClient _client;
+  final DashboardSession _session;
 
-  const SubscriptionPlansDatasource(this._client);
+  const SubscriptionPlansDatasource(this._client, this._session);
 
   static const _columns =
       'id, name_ar, name_en, package_type, price, duration_days, ride_count, active, display_order';
@@ -15,6 +17,7 @@ class SubscriptionPlansDatasource {
     final rows = await _client
         .from('transport_packages')
         .select(_columns)
+        .eq('office_id', _session.officeId)
         .order('display_order', ascending: true);
     return (rows as List)
         .map((r) => _fromRow(r as Map<String, dynamic>))
@@ -24,6 +27,7 @@ class SubscriptionPlansDatasource {
   Future<void> createPlan(SubscriptionPlan plan) async {
     await _client.from('transport_packages').insert({
       ...plan.toTransportPackage(),
+      'office_id': _session.officeId,
       'display_order': await _nextDisplayOrder(),
     });
   }

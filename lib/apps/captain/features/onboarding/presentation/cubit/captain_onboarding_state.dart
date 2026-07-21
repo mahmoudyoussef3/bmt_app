@@ -1,11 +1,28 @@
+import '../../domain/entities/captain_onboarding_models.dart';
+
 sealed class CaptainOnboardingState {
   const CaptainOnboardingState();
 }
 
-/// Showing the name + phone request form. [error] is a non-fatal submit error.
+/// Showing the request form. [error] is a non-fatal submit error.
+///
+/// [offices] drives the picker. When more than one office is active the
+/// applicant must choose one and enter that office's join code — the server
+/// refuses an uncoded request in that case, so the picker is not a
+/// convenience, it is how the request becomes valid at all.
 class OnboardingForm extends CaptainOnboardingState {
   final String? error;
-  const OnboardingForm({this.error});
+  final List<OnboardingOffice> offices;
+  final bool loadingOffices;
+
+  const OnboardingForm({
+    this.error,
+    this.offices = const [],
+    this.loadingOffices = false,
+  });
+
+  /// A single active office needs neither a picker nor a code.
+  bool get requiresOfficeChoice => offices.length > 1;
 }
 
 class OnboardingSubmitting extends CaptainOnboardingState {

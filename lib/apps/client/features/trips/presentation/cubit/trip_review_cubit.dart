@@ -39,6 +39,8 @@ class TripReviewCubit extends Cubit<TripReviewState> {
     }
   }
 
+  void rateOffice(int stars) => _edit((d) => d.copyWith(officeRating: stars));
+
   void rateDriver(int stars) => _edit((d) => d.copyWith(driverRating: stars));
 
   void rateVehicle(int stars) => _edit((d) => d.copyWith(vehicleRating: stars));
@@ -72,6 +74,7 @@ class TripReviewCubit extends Cubit<TripReviewState> {
 
   TripReview _emptyDraft(String bookingId) => TripReview(
     bookingId: bookingId,
+    officeRating: 0,
     driverRating: 0,
     vehicleRating: 0,
     routeRating: 0,

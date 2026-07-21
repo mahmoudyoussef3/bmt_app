@@ -28,7 +28,7 @@ class SubscriptionPaymentsStore {
   ) async {
     if (status == PaymentReviewStatus.accepted) {
       await _client.rpc(
-        'confirm_subscription_payment',
+        'office_confirm_subscription_payment',
         params: {'p_subscription_id': id},
       );
     } else {

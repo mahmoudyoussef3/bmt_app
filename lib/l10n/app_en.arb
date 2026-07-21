@@ -1786,6 +1786,7 @@
     }
   },
   "trips_reviewFormTitle": "Rate your trip",
+  "trips_ratingOffice": "Office rating",
   "trips_ratingDriver": "Driver rating",
   "trips_ratingVehicle": "Vehicle rating",
   "trips_ratingRoute": "Route rating",

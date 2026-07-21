@@ -1,4 +1,5 @@
 import '../../../../core/network/network_di.dart';
+import '../session/dashboard_session.dart';
 import '../../features/auth/data/datasources/dashboard_auth_datasource.dart';
 import '../../features/auth/presentation/cubit/dashboard_auth_cubit.dart';
 import '../../features/captain_requests/data/datasources/supabase_captain_requests_datasource.dart';
@@ -200,6 +201,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  // Registered first: office-scoped datasources are lazy singletons built before
+  // anyone signs in, so they hold this and read the office id per query.
+  if (!dashboardDi.isRegistered<DashboardSession>()) {
+    dashboardDi.registerLazySingleton<DashboardSession>(DashboardSession.new);
+  }
+
   registerNetworkDependencies(dashboardDi);
   if (!dashboardDi.isRegistered<DashboardThemeRepository>()) {
     dashboardDi.registerLazySingleton<DashboardThemeRepository>(
@@ -260,7 +267,10 @@ void registerDashboardDependencies() {
 
   if (!dashboardDi.isRegistered<FleetDatasource>()) {
     dashboardDi.registerLazySingleton<FleetDatasource>(
-      () => SupabaseFleetDatasource(dashboardDi<SupabaseClient>()),
+      () => SupabaseFleetDatasource(
+        dashboardDi<SupabaseClient>(),
+        dashboardDi<DashboardSession>(),
+      ),
     );
   }
 
@@ -709,7 +719,10 @@ void registerDashboardDependencies() {
 
   if (!dashboardDi.isRegistered<RoutesDatasource>()) {
     dashboardDi.registerLazySingleton<RoutesDatasource>(
-      () => SupabaseRoutesDatasource(dashboardDi<SupabaseClient>()),
+      () => SupabaseRoutesDatasource(
+        dashboardDi<SupabaseClient>(),
+        dashboardDi<DashboardSession>(),
+      ),
     );
   }
 
@@ -800,7 +813,10 @@ void registerDashboardDependencies() {
 
   if (!dashboardDi.isRegistered<SubscriptionsDatasource>()) {
     dashboardDi.registerLazySingleton<SubscriptionsDatasource>(
-      () => SupabaseSubscriptionsDatasource(dashboardDi<SupabaseClient>()),
+      () => SupabaseSubscriptionsDatasource(
+        dashboardDi<SupabaseClient>(),
+        dashboardDi<DashboardSession>(),
+      ),
     );
   }
 
@@ -882,7 +898,10 @@ void registerDashboardDependencies() {
   // Subscription Plans (packages) CRUD
   if (!dashboardDi.isRegistered<SubscriptionPlansDatasource>()) {
     dashboardDi.registerLazySingleton(
-      () => SubscriptionPlansDatasource(dashboardDi<SupabaseClient>()),
+      () => SubscriptionPlansDatasource(
+        dashboardDi<SupabaseClient>(),
+        dashboardDi<DashboardSession>(),
+      ),
     );
   }
   if (!dashboardDi.isRegistered<SubscriptionPlansRepository>()) {
@@ -1384,9 +1403,14 @@ void _registerNotificationsDispatchDependencies() {
       () => DashboardAuthDatasource(dashboardDi<SupabaseClient>()),
     );
   }
+  // Singleton, not a factory: the auth gate and the sign-out button must act on the
+  // same instance, and the session it owns is read by every office-scoped datasource.
   if (!dashboardDi.isRegistered<DashboardAuthCubit>()) {
-    dashboardDi.registerFactory<DashboardAuthCubit>(
-      () => DashboardAuthCubit(dashboardDi<DashboardAuthDatasource>()),
+    dashboardDi.registerLazySingleton<DashboardAuthCubit>(
+      () => DashboardAuthCubit(
+        dashboardDi<DashboardAuthDatasource>(),
+        dashboardDi<DashboardSession>(),
+      ),
     );
   }
 }
