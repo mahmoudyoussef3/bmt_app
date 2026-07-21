@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -97,7 +98,12 @@ class _Content extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           AssignedTripsHeader(
-            onAvatarTap: () => showCaptainDevModeSheet(context),
+            // The app-mode switcher is a development affordance: in a release
+            // build a captain tapping their own avatar must not be able to
+            // hop into the client or dashboard app.
+            onAvatarTap: kDebugMode
+                ? () => showCaptainDevModeSheet(context)
+                : null,
             onNotificationsTap: () => context.openNotifications(),
           ),
           SliverPadding(

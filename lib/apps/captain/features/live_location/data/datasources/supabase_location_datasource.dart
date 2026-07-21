@@ -1,29 +1,42 @@
 import 'package:geolocator/geolocator.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/apps/captain/core/session/captain_identity_provider.dart';
+
 import '../models/location_sharing_model.dart';
 import 'location_datasource.dart';
 
 class SupabaseLocationDatasource implements LocationDatasource {
-  const SupabaseLocationDatasource(this._supabase);
+  const SupabaseLocationDatasource(this._supabase, this._identity);
 
   final SupabaseClient _supabase;
+  final CaptainIdentityProvider _identity;
 
   @override
   Future<LocationUpdateModel> sendLocation(String tripId) async {
     await _ensureLocationAvailable();
 
-    // trip_live_locations requires driver_id and vehicle_id (both NOT NULL).
-    // The trip is the source of truth for who/what is assigned to it.
+    // The driver stamped on the fix is the signed-in captain, not whoever the
+    // trip row names — `trip_live_locations` has no RLS (it is kept open so
+    // realtime delivery works), so the row's own driver_id was the only thing
+    // tying a fix to a captain, and it was read from the target trip itself.
+    final driverId = await _identity.driverId();
+    if (driverId == null) {
+      throw Exception('لا يمكن إرسال الموقع: لم يتم التعرف على السائق.');
+    }
+
+    // Scoping the lookup by driver is also the ownership check: a trip that is
+    // not this captain's returns nothing, so they cannot push positions onto
+    // another captain's — or another office's — trip.
     final trip = await _supabase
         .from('operation_trips')
-        .select('driver_id, vehicle_id')
+        .select('vehicle_id')
         .eq('id', tripId)
+        .eq('driver_id', driverId)
         .maybeSingle();
 
-    final driverId = trip?['driver_id'] as String?;
     final vehicleId = trip?['vehicle_id'] as String?;
-    if (driverId == null || vehicleId == null) {
+    if (vehicleId == null) {
       throw Exception(
         'لا يمكن إرسال الموقع: لم يتم تعيين سائق ومركبة لهذه الرحلة.',
       );

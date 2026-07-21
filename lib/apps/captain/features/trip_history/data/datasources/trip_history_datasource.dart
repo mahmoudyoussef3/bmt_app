@@ -1,14 +1,15 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:bmt_app/apps/captain/core/session/captain_driver_id_resolver.dart';
+import 'package:bmt_app/apps/captain/core/session/captain_identity_provider.dart';
 
 import '../../domain/entities/trip_history_item.dart';
 import '../../domain/entities/trip_history_stop.dart';
 
 class TripHistoryDataSource {
-  const TripHistoryDataSource(this._supabase);
+  const TripHistoryDataSource(this._supabase, this._identity);
 
   final SupabaseClient _supabase;
+  final CaptainIdentityProvider _identity;
 
   Future<List<TripHistoryStop>> getTripStops(String tripId) async {
     final response = await _supabase
@@ -31,10 +32,7 @@ class TripHistoryDataSource {
   }
 
   Future<List<TripHistoryItem>> getTripHistory() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return const [];
-
-    final driverId = await resolveCaptainDriverId(_supabase, user);
+    final driverId = await _identity.driverId();
     if (driverId == null) return const [];
 
     final response = await _supabase

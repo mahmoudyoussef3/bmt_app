@@ -19,6 +19,7 @@ class DriverProfile {
     this.vehicleModel,
     this.vehicleCapacity,
     this.employeeCode,
+    this.officeName = '',
     this.licenseExpiryDate,
     this.hireDate,
     this.accountStatus = DriverAccountStatus.active,
@@ -37,6 +38,12 @@ class DriverProfile {
   final String? vehicleModel;
   final int? vehicleCapacity;
   final String? employeeCode;
+
+  /// The office this captain drives for. Resolved server-side from their own
+  /// driver row at sign-in — a captain belongs to exactly one office and never
+  /// chooses it in the app.
+  final String officeName;
+
   final DateTime? licenseExpiryDate;
   final DateTime? hireDate;
   final DriverAccountStatus accountStatus;

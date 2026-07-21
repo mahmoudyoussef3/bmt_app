@@ -26,6 +26,13 @@ class DriverProfileInfoCard extends StatelessWidget {
             value: profile.phone.isNotEmpty ? profile.phone : '—',
             isIdentifier: profile.phone.isNotEmpty,
           ),
+          if (profile.officeName.isNotEmpty)
+            (
+              icon: Icons.storefront_rounded,
+              label: 'المكتب',
+              value: profile.officeName,
+              isIdentifier: false,
+            ),
           if (profile.employeeCode != null)
             (
               icon: Icons.badge_outlined,

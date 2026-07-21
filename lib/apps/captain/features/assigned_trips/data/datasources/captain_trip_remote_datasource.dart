@@ -2,20 +2,23 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:bmt_app/apps/captain/core/session/captain_driver_id_resolver.dart';
+import 'package:bmt_app/apps/captain/core/session/captain_identity_provider.dart';
 import 'package:bmt_app/core/tracking/progress/arrival_events.dart';
 
 import '../../domain/entities/assigned_trip.dart';
 import '../models/assigned_trip_model.dart';
 
 class CaptainTripRemoteDataSource {
-  CaptainTripRemoteDataSource(this._supabase);
+  CaptainTripRemoteDataSource(this._supabase, this._identity);
 
   final SupabaseClient _supabase;
-  String? _cachedDriverId;
+  final CaptainIdentityProvider _identity;
 
+  /// Reads the driver from the session rather than a field of its own. This is a
+  /// lazy singleton, so a locally cached id outlived sign-out — the next captain
+  /// on the same device would subscribe with the previous captain's id.
   Stream<void> watchTripUpdates() {
-    final driverId = _cachedDriverId;
+    final driverId = _identity.driverIdOrNull;
     if (driverId == null) return const Stream.empty();
 
     final controller = StreamController<void>.broadcast();
@@ -58,11 +61,7 @@ class CaptainTripRemoteDataSource {
   }
 
   Future<List<AssignedTripModel>> getAssignedTrips() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) return const [];
-
-    _cachedDriverId = await resolveCaptainDriverId(_supabase, user);
-    final driverId = _cachedDriverId;
+    final driverId = await _identity.driverId();
     if (driverId == null) return const [];
 
     final today = _isoDate(DateTime.now());

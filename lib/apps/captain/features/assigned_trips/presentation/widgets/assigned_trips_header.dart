@@ -26,7 +26,10 @@ class AssignedTripsHeader extends StatelessWidget {
     required this.onNotificationsTap,
   });
 
-  final VoidCallback onAvatarTap;
+  /// Null in release builds: the avatar's only action is the development
+  /// app-mode switcher, so outside debug it is an emblem, not a button.
+  final VoidCallback? onAvatarTap;
+
   final VoidCallback onNotificationsTap;
 
   @override
@@ -55,10 +58,12 @@ class AssignedTripsHeader extends StatelessWidget {
         // Centred because `AppBar` stretches its actions to the full toolbar
         // height, which would leave the avatar's ring off-centre in the slot.
         Center(
-          child: GestureDetector(
-            onTap: onAvatarTap,
-            child: const _HeaderAvatar(),
-          ),
+          child: onAvatarTap == null
+              ? const _HeaderAvatar()
+              : GestureDetector(
+                  onTap: onAvatarTap,
+                  child: const _HeaderAvatar(),
+                ),
         ),
         const SizedBox(width: CaptainDesignTokens.s20),
       ],

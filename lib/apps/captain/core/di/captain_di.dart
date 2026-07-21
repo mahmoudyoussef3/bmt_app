@@ -2,6 +2,7 @@ import '../../../../core/network/network_di.dart';
 import 'package:get_it/get_it.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../session/captain_identity_provider.dart';
 import '../session/captain_office_session.dart';
 
 import '../session/captain_session_store.dart';
@@ -121,6 +122,17 @@ void registerCaptainDependencies() {
   if (!captainGetIt.isRegistered<CaptainOfficeSession>()) {
     captainGetIt.registerLazySingleton<CaptainOfficeSession>(
       CaptainOfficeSession.new,
+    );
+  }
+
+  // The single resolution point for "who is this captain". Registered next to the
+  // session it fills, and before every datasource that reads it.
+  if (!captainGetIt.isRegistered<CaptainIdentityProvider>()) {
+    captainGetIt.registerLazySingleton<CaptainIdentityProvider>(
+      () => CaptainIdentityProvider(
+        captainGetIt<SupabaseClient>(),
+        captainGetIt<CaptainOfficeSession>(),
+      ),
     );
   }
 
@@ -286,7 +298,10 @@ void _registerAuthDependencies() {
 void _registerAssignedTripsDependencies() {
   if (!captainGetIt.isRegistered<CaptainTripRemoteDataSource>()) {
     captainGetIt.registerLazySingleton<CaptainTripRemoteDataSource>(
-      () => CaptainTripRemoteDataSource(captainGetIt<SupabaseClient>()),
+      () => CaptainTripRemoteDataSource(
+        captainGetIt<SupabaseClient>(),
+        captainGetIt<CaptainIdentityProvider>(),
+      ),
     );
   }
   if (!captainGetIt.isRegistered<CaptainTripRepository>()) {
@@ -437,7 +452,10 @@ void _registerTripExecutionDependencies() {
 void _registerLiveLocationDependencies() {
   if (!captainGetIt.isRegistered<LocationDatasource>()) {
     captainGetIt.registerLazySingleton<LocationDatasource>(
-      () => SupabaseLocationDatasource(captainGetIt<SupabaseClient>()),
+      () => SupabaseLocationDatasource(
+        captainGetIt<SupabaseClient>(),
+        captainGetIt<CaptainIdentityProvider>(),
+      ),
     );
   }
   if (!captainGetIt.isRegistered<LocationRepository>()) {
@@ -610,7 +628,10 @@ void _registerNotificationsDependencies() {
 void _registerProfileDependencies() {
   if (!captainGetIt.isRegistered<DriverProfileDataSource>()) {
     captainGetIt.registerLazySingleton<DriverProfileDataSource>(
-      () => DriverProfileDataSource(captainGetIt<SupabaseClient>()),
+      () => DriverProfileDataSource(
+        captainGetIt<SupabaseClient>(),
+        captainGetIt<CaptainIdentityProvider>(),
+      ),
     );
   }
   if (!captainGetIt.isRegistered<DriverProfileRepository>()) {
@@ -634,7 +655,10 @@ void _registerProfileDependencies() {
 void _registerTripHistoryDependencies() {
   if (!captainGetIt.isRegistered<TripHistoryDataSource>()) {
     captainGetIt.registerLazySingleton<TripHistoryDataSource>(
-      () => TripHistoryDataSource(captainGetIt<SupabaseClient>()),
+      () => TripHistoryDataSource(
+        captainGetIt<SupabaseClient>(),
+        captainGetIt<CaptainIdentityProvider>(),
+      ),
     );
   }
   if (!captainGetIt.isRegistered<TripHistoryRepository>()) {

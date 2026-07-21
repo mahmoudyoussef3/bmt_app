@@ -1,24 +1,27 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:bmt_app/apps/captain/core/session/captain_driver_id_resolver.dart';
+import 'package:bmt_app/apps/captain/core/session/captain_identity_provider.dart';
 
 import '../../domain/entities/driver_profile.dart';
 
 class DriverProfileDataSource {
-  const DriverProfileDataSource(this._supabase);
+  const DriverProfileDataSource(this._supabase, this._identity);
 
   final SupabaseClient _supabase;
+  final CaptainIdentityProvider _identity;
 
   Future<DriverProfile> getProfile() async {
-    final user = _supabase.auth.currentUser;
-    if (user == null) throw Exception('المستخدم غير مسجّل الدخول');
+    if (_supabase.auth.currentUser == null) {
+      throw Exception('المستخدم غير مسجّل الدخول');
+    }
 
-    final driverId = await resolveCaptainDriverId(_supabase, user);
-    if (driverId == null) {
+    final identity = await _identity.ensure();
+    if (identity == null) {
       throw Exception(
         'لم يتم العثور على ملف السائق، حاول تسجيل الدخول مرة أخرى',
       );
     }
+    final driverId = identity.driverId;
 
     final driverRow = await _supabase
         .from('drivers')
@@ -72,6 +75,7 @@ class DriverProfileDataSource {
       vehicleModel: vehicle?['model'] as String?,
       vehicleCapacity: (vehicle?['capacity'] as num?)?.toInt(),
       employeeCode: driver['employee_code'] as String?,
+      officeName: identity.officeName,
       licenseExpiryDate: DateTime.tryParse(
         driver['license_expiry_date']?.toString() ?? '',
       ),
