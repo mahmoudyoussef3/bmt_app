@@ -9,13 +9,11 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
 
   @override
   Future<DailyBookingData> getDailyBookingData() async {
+    // `public_trips` carries sanitised `drivers` / `vehicles` jsonb columns in
+    // its `*`, replacing the table embeds the base table used to serve.
     final tripsResponse = await _supabase
-        .from('operation_trips')
-        .select('''
-          *,
-          vehicles (vehicle_type, capacity),
-          drivers (full_name)
-        ''')
+        .from('public_trips')
+        .select()
         .inFilter('status', ['open_for_booking', 'boarding']);
 
     final routesResponse = await _supabase
@@ -36,7 +34,7 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
       final vehicle = data['vehicles'] as Map<String, dynamic>?;
       final driver = data['drivers'] as Map<String, dynamic>?;
       final capacity = vehicle?['capacity'] as int? ?? 14;
-      final passengers = data['passenger_count'] as int? ?? 0;
+      final passengers = data['booked_seats'] as int? ?? 0;
 
       return DailyBookingVehicle(
         id: data['id']?.toString() ?? '',

@@ -14,14 +14,13 @@ class SupabaseTripsDatasource implements TripsDatasource {
   final SupabaseClient _supabase;
 
   /// The booking row plus its embedded trip, vehicle, driver and (RLS-scoped)
-  /// review marker — the full shape [TripMapper] expects.
+  /// review marker — the full shape [TripMapper] expects. The trip comes from
+  /// `public_trips` (aliased to the key the mapper reads); its `*` already
+  /// carries the sanitised `drivers` / `vehicles` jsonb columns, and the base
+  /// table itself is closed to clients.
   static const _bookingSelect = '''
     *,
-    operation_trips (
-      *,
-      vehicles (*),
-      drivers (*)
-    ),
+    operation_trips:public_trips (*),
     trip_reviews ( booking_id )
   ''';
 
@@ -147,10 +146,14 @@ class SupabaseTripsDatasource implements TripsDatasource {
           ),
           callback: notify,
         )
+        // Clients hold no read policy on `operation_trips`, so its events
+        // never reach them. Lifecycle flips of a booked trip are mirrored into
+        // `trip_events` (update_trip_status writes one per transition) and RLS
+        // delivers those only for trips the rider actually booked.
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
-          table: 'operation_trips',
+          table: 'trip_events',
           callback: notify,
         )
         .subscribe();

@@ -16,8 +16,9 @@ class SupabaseHomeDatasource implements HomeDatasource {
       'trip_time, route, payment_amount, pickup_point_name, dropoff_point_name, '
       // The trip's own status tells Home when a booking has run its course:
       // completion stamps the trip, not the booking, so without this a finished
-      // seat lingers as "Confirmed".
-      'operation_trips(status)';
+      // seat lingers as "Confirmed". Aliased so mappers keep reading the
+      // `operation_trips` key; the base table itself is closed to clients.
+      'operation_trips:public_trips(status)';
 
   @override
   Stream<void> watchHomeChanges() {
@@ -26,12 +27,23 @@ class SupabaseHomeDatasource implements HomeDatasource {
       if (!controller.isClosed) controller.add(null);
     }
 
+    // Clients hold no read policy on `operation_trips` any more, so its
+    // postgres_changes never reach them. `trip_seats` is the marketplace-
+    // readable signal that fires for both a new trip (its seats are inserted
+    // with it) and any booking; `trip_events` covers lifecycle flips of trips
+    // the rider actually booked (RLS scopes delivery to those).
     final channel = _supabase
         .channel('client_home_trips')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
-          table: 'operation_trips',
+          table: 'trip_seats',
+          callback: notify,
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'trip_events',
           callback: notify,
         )
         // A booking changing state — approved, rejected, boarded — changes what
@@ -59,7 +71,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
           .select('id, name, start_city, end_city, duration, status')
           .eq('status', 'active'),
       _supabase
-          .from('operation_trips')
+          .from('public_trips')
           .select('''
             *,
             route:operation_routes(id, name, start_city, end_city, duration),

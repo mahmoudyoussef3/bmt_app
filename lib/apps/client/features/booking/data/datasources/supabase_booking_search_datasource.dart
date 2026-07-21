@@ -192,15 +192,14 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     List<String> routeIds,
   ) async {
     if (routeIds.isEmpty) return const {};
+    // `public_trips` is the only trip surface the Client may query; its
+    // `drivers` / `vehicles` are sanitised jsonb columns, not table embeds.
     final response = await _supabase
-        .from('operation_trips')
+        .from('public_trips')
         .select('''
-          id, trip_date, departure_time, arrival_time, capacity, passenger_count, booked_seats,
+          id, trip_date, departure_time, arrival_time, capacity, booked_seats,
           ticket_price, currency, status, route_id,
-          vehicles(vehicle_type, brand, model, plate_number, color,
-                   manufacture_year, capacity, seat_layout_type,
-                   image_url, rating, rating_count),
-          drivers(full_name, profile_image_url, rating, rating_count),
+          drivers, vehicles,
           trip_pricing(from_point_id, to_point_id, one_time_price, five_days_price, ten_days_price, monthly_price, three_months_price, currency, is_active),
           trip_route_points(id, route_point_id),
           trip_seats(state)
@@ -299,10 +298,10 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     final trips = routeIds.isEmpty
         ? const <dynamic>[]
         : await _supabase
-              .from('operation_trips')
+              .from('public_trips')
               .select('''
           route_id, ticket_price, currency, status, trip_date,
-          capacity, passenger_count, booked_seats,
+          capacity, booked_seats,
           trip_pricing(one_time_price, currency, is_active),
           trip_seats(state)
         ''')
@@ -458,9 +457,9 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           .eq('operation_routes.status', 'active')
           .eq('dropoff_allowed', true),
       _supabase
-          .from('operation_trips')
+          .from('public_trips')
           .select('''
-            departure_time, status, trip_date, capacity, passenger_count,
+            departure_time, status, trip_date, capacity,
             booked_seats, ticket_price, currency,
             trip_pricing(one_time_price, currency, is_active),
             trip_seats(state)
@@ -530,8 +529,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       }).length;
     }
     final capacity = trip['capacity'] as int? ?? 0;
-    final used =
-        trip['passenger_count'] as int? ?? trip['booked_seats'] as int? ?? 0;
+    final used = trip['booked_seats'] as int? ?? 0;
     return (capacity - used).clamp(0, capacity).toInt();
   }
 

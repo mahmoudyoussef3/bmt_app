@@ -9,12 +9,11 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
 
   @override
   Future<List<VehicleDetailModel>> getVehicles({String? routeId}) async {
+    // `public_trips` carries sanitised `drivers` / `vehicles` jsonb in its `*`.
     var query = _supabase
-        .from('operation_trips')
+        .from('public_trips')
         .select('''
       *,
-      vehicles (*),
-      drivers (*),
       operation_routes (*),
       trip_pricing (*)
     ''')
@@ -35,11 +34,9 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
   @override
   Future<VehicleDetailModel?> getVehicleById(String id) async {
     final response = await _supabase
-        .from('operation_trips')
+        .from('public_trips')
         .select('''
       *,
-      vehicles (*),
-      drivers (*),
       operation_routes (*),
       trip_pricing (*)
     ''')
@@ -67,8 +64,7 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
     final vehicle = data['vehicles'] as Map<String, dynamic>? ?? {};
     final capacity =
         data['capacity'] as int? ?? vehicle['capacity'] as int? ?? 0;
-    final used =
-        data['passenger_count'] as int? ?? data['booked_seats'] as int? ?? 0;
+    final used = data['booked_seats'] as int? ?? 0;
     return (capacity - used).clamp(0, capacity).toInt();
   }
 
@@ -102,7 +98,7 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
         : 'D';
 
     final capacity = vehicle['capacity'] as int? ?? 14;
-    final passengerCount = data['passenger_count'] as int? ?? 0;
+    final passengerCount = data['booked_seats'] as int? ?? 0;
 
     return VehicleDetailModel(
       id: data['id']?.toString() ?? '',

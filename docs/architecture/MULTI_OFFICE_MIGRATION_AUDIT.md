@@ -598,20 +598,44 @@ returns empty, so read assertions must accept either.
 `offices.join_code` is unreadable by anon **and** authenticated via column privileges —
 `public_offices` and `office_join_code()` are the only doors.
 
-## Remaining blocker (1)
+## Remaining blocker — RESOLVED (2026-07-21, migration 20260721110000)
 
-**`operation_trips` exposes whole rows cross-office.** The `trips_marketplace_read`
-policy from 090200 permits reading any trip in a marketplace-visible status from any
-active office. That is required — the client app queries `operation_trips` directly
-([supabase_booking_search_datasource.dart:196](../../lib/apps/client/features/booking/data/datasources/supabase_booking_search_datasource.dart#L196))
-— but RLS is row-level, so it also hands out `revenue`, `driver_id`, `vehicle_id`,
-`booked_seats` and `occupancy_rate`.
+**Was:** `operation_trips` exposed whole rows cross-office. The `trips_marketplace_read`
+policy from 090200 permitted reading any trip in a marketplace-visible status from any
+active office, and — RLS being row-level — handed out `revenue`, `driver_id`,
+`vehicle_id`, `passenger_count`, `occupancy_rate` and `notes` with it. Two pre-office
+SELECT policies ("Clients can read bookable/active trips", "Drivers can read their
+assigned trips") had additionally survived 090200's drop list under their older names.
 
-Column privileges cannot separate the two consumers here the way they did for
-`offices`: a client and a dashboard operator are both the `authenticated` role, and
-several dashboard/captain call sites `select()` every column.
+**Fix (`20260721110000_public_trips_marketplace_surface.sql`):**
 
-Recommended fix: add a `public_trips` view exposing only booking-relevant columns,
-repoint the three client query sites at it, then narrow `trips_marketplace_read` to
-office and captain scope. This needs the client booking flow re-tested end to end, so it
-was not attempted blind.
+- `public_trips` view (`security_invoker = false`, same mechanism as
+  `public_offices`/`public_driver_profiles`): id, trip_code, office_id, route_id,
+  dates/times, status, capacity, booked_seats, available_seats, ticket_price,
+  currency, plus sanitised `drivers` / `vehicles` **jsonb** columns carrying exactly
+  the public-profile field set (no phone, no plate, no ids). Column names match the
+  old table embeds, so response shapes stayed byte-compatible.
+- All three client-facing SELECT policies dropped from `operation_trips`; the base
+  table now answers only to office operators and captains.
+- `trip_seats` / `trip_pricing` / `trip_route_points` marketplace policies re-founded
+  on the SECURITY DEFINER helper `trip_office_is_active(trip_id)` — their old
+  predicates subqueried `operation_trips` under the caller's RLS, which would have
+  evaluated empty once clients lost the base-table policy.
+- Every client call site repointed to `public_trips` (booking search ×3, daily +
+  vehicle booking, home, seat selection, tracking, My-Trips/profile booking embeds via
+  the `operation_trips:public_trips(...)` alias). Client realtime invalidation moved
+  off `operation_trips` (whose events no longer reach clients) onto `trip_seats` +
+  `trip_events`; tracking already listened to `trip_events`, which
+  `update_trip_status` writes on every transition.
+
+**Verified 2026-07-21** with a 32-check REST-level E2E run as anon / signed-in client /
+operator A / operator B (two active offices, disposable fixtures, since deleted):
+discovery, multi-office marketplace, trip detail + seat map, lock → book →
+`office_approve_payment` → confirmed, availability updates, My-Trips + profile shapes,
+office A↮B isolation on trips/bookings/approvals, and column-probing denial of
+`revenue`/`driver_id`/`vehicle_id`/`passenger_count`/`occupancy_rate`/`notes` for
+clients. Full test suite unchanged at the pre-existing 78-failure baseline.
+
+Known acceptable degradation: marketplace lists no longer receive realtime nudges for
+pure status flips of unbooked trips (`trip_seats`/`trip_events` cover creation,
+bookings and booked-trip lifecycle); the next screen entry refetches.

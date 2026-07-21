@@ -51,15 +51,11 @@ class TrackingRealtime {
       if (!controller.isClosed) controller.add(null);
     }
 
-    var channel = _client
-        .channel('client_tracking:$tripId')
-        .onPostgresChanges(
-          event: PostgresChangeEvent.all,
-          schema: 'public',
-          table: 'operation_trips',
-          filter: _tripFilter('id', tripId),
-          callback: notify,
-        );
+    // No listener on `operation_trips`: clients hold no read policy on it, so
+    // its events would never be delivered. Status flips reach the rider
+    // through `trip_events` — update_trip_status writes one per transition —
+    // which is already in [_tripScopedTables].
+    var channel = _client.channel('client_tracking:$tripId');
 
     for (final table in _tripScopedTables) {
       channel = channel.onPostgresChanges(

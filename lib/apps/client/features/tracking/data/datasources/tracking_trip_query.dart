@@ -60,14 +60,16 @@ class TrackingTripQuery {
   /// `drivers.rating` / `vehicles.rating` are the real averages maintained by
   /// the `trip_reviews` triggers — the screen shows those, or nothing.
   Future<Map<String, dynamic>?> trip(String tripId) {
+    // `driver` / `vehicle` are the view's sanitised jsonb columns (no phone,
+    // no plate number — those never reach the Client app), aliased to the
+    // keys the assembler already reads.
     return _client
-        .from('operation_trips')
+        .from('public_trips')
         .select('''
           id, trip_code, status, trip_date, departure_time, arrival_time,
           route:operation_routes(name),
-          driver:drivers(full_name, phone, rating, rating_count),
-          vehicle:vehicles(plate_number, vehicle_type, brand, model,
-                           rating, rating_count)
+          driver:drivers,
+          vehicle:vehicles
         ''')
         .eq('id', tripId)
         .maybeSingle();

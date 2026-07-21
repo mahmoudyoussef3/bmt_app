@@ -58,7 +58,8 @@ class ProfileQueries {
   }) async {
     final response = await _supabase
         .from('operation_bookings')
-        .select('id, operation_trips!inner(status)')
+        // Aliased view embed: clients read trips through `public_trips` only.
+        .select('id, operation_trips:public_trips!inner(status)')
         .eq('client_id', userId)
         .neq('status', 'cancelled')
         .inFilter('operation_trips.status', tripStatuses)

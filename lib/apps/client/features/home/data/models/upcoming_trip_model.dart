@@ -17,7 +17,7 @@ abstract final class UpcomingTripMapper {
     final endCity = route['end_city']?.toString() ?? '';
     final routeName = route['name']?.toString().trim() ?? '';
     final capacity = trip['capacity'] as int? ?? 0;
-    final passengerCount = trip['passenger_count'] as int? ?? 0;
+    final passengerCount = trip['booked_seats'] as int? ?? 0;
 
     return UpcomingTripData(
       tripId: trip['id']?.toString() ?? '',

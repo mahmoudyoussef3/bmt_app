@@ -41,12 +41,11 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
       }
 
       // 2. Fetch trip details, vehicle details and driver.
+      // `public_trips` carries sanitised `drivers` / `vehicles` jsonb in `*`.
       final tripResponse = await _supabase
-          .from('operation_trips')
+          .from('public_trips')
           .select('''
           *,
-          vehicles (*),
-          drivers (*),
           operation_routes (*),
           trip_pricing (*)
         ''')
