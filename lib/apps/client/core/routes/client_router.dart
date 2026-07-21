@@ -36,6 +36,10 @@ import 'package:bmt_app/apps/client/features/home/presentation/screens/client_sh
 import 'package:bmt_app/apps/client/features/loyalty/presentation/routes/loyalty_routes.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/screens/loyalty_screen.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:bmt_app/apps/client/features/offices/domain/entities/office_summary.dart';
+import 'package:bmt_app/apps/client/features/offices/presentation/routes/offices_routes.dart';
+import 'package:bmt_app/apps/client/features/offices/presentation/screens/office_profile_screen.dart';
+import 'package:bmt_app/apps/client/features/offices/presentation/screens/offices_directory_screen.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/subscription_arguments.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/screens/my_subscription_screen.dart';
@@ -272,6 +276,16 @@ abstract final class ClientRouter {
       return ClientCubitScopes.chatThread(
         const ChatThreadScreen(),
         conversationId: args.conversationId,
+      );
+    },
+    OfficesRoutes.directory: (_) =>
+        ClientCubitScopes.officesDirectory(const OfficesDirectoryScreen()),
+    OfficesRoutes.profile: (context) {
+      final office = OfficeSummary.fromArguments(_args(context));
+      if (office == null) return const SizedBox.shrink();
+      return ClientCubitScopes.officeProfile(
+        OfficeProfileScreen(office: office),
+        officeId: office.id,
       );
     },
     ReferralRoutes.rewards: (_) =>

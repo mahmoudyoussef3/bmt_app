@@ -2194,6 +2194,19 @@
       }
     }
   },
+  "offices_directoryTitle": "Transport offices",
+  "offices_directoryEmpty": "No offices are open for booking right now.",
+  "offices_routesHeader": "Routes this office runs",
+  "offices_noRoutes": "This office has no bookable routes right now.",
+  "offices_noRatingsYet": "No ratings yet",
+  "offices_ratingsCount": "{count, plural, =1{1 review} other{{count} reviews}}",
+  "@offices_ratingsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "routes_officesCardTitle": "Transport offices",
+  "routes_officesCardSubtitle": "Browse operators, compare ratings, and see the routes each one runs.",
   "routes_heroSubtitle": "Search, compare, and book your commute",
   "routes_searchDescription": "Enter pickup, destination, date and time to see available trips.",
   "routes_step1Title": "Search",

@@ -7532,6 +7532,54 @@ abstract class AppLocalizations {
   /// **'No trips found for {route} today.'**
   String booking_noTripsFoundForRoute(String route);
 
+  /// No description provided for @offices_directoryTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport offices'**
+  String get offices_directoryTitle;
+
+  /// No description provided for @offices_directoryEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No offices are open for booking right now.'**
+  String get offices_directoryEmpty;
+
+  /// No description provided for @offices_routesHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Routes this office runs'**
+  String get offices_routesHeader;
+
+  /// No description provided for @offices_noRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'This office has no bookable routes right now.'**
+  String get offices_noRoutes;
+
+  /// No description provided for @offices_noRatingsYet.
+  ///
+  /// In en, this message translates to:
+  /// **'No ratings yet'**
+  String get offices_noRatingsYet;
+
+  /// No description provided for @offices_ratingsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 review} other{{count} reviews}}'**
+  String offices_ratingsCount(int count);
+
+  /// No description provided for @routes_officesCardTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport offices'**
+  String get routes_officesCardTitle;
+
+  /// No description provided for @routes_officesCardSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse operators, compare ratings, and see the routes each one runs.'**
+  String get routes_officesCardSubtitle;
+
   /// No description provided for @routes_heroSubtitle.
   ///
   /// In en, this message translates to:

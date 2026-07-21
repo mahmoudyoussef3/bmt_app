@@ -99,6 +99,7 @@ class RouteDetailsSheetContent extends StatelessWidget {
         const SizedBox(height: 14),
         RouteAvailableTripsSection(
           trips: route.availableTrips,
+          office: route.office,
           hasRoutePricing:
               route.startingPrice.trim().toLowerCase() != 'price pending',
           selectedTripId: selectedTripId,

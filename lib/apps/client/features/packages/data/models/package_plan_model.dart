@@ -11,6 +11,7 @@ class PackagePlanModel {
     required this.durationDays,
     required this.rideCount,
     required this.price,
+    this.officeName = '',
   });
 
   final String id;
@@ -20,6 +21,7 @@ class PackagePlanModel {
   final int durationDays;
   final int rideCount;
   final double price;
+  final String officeName;
 
   factory PackagePlanModel.fromJson(Map<String, dynamic> json) {
     return PackagePlanModel(
@@ -30,6 +32,8 @@ class PackagePlanModel {
       durationDays: (json['duration_days'] as num?)?.toInt() ?? 1,
       rideCount: (json['ride_count'] as num?)?.toInt() ?? 1,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      officeName:
+          (json['office'] as Map<String, dynamic>?)?['name']?.toString() ?? '',
     );
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/transport_office.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/models/trip_filter_criteria.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/available_trips_header.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_inline_empty.dart';
@@ -19,12 +20,16 @@ class RouteAvailableTripsSection extends StatefulWidget {
     required this.hasRoutePricing,
     required this.selectedTripId,
     required this.onSelectTrip,
+    this.office = TransportOffice.unknown,
   });
 
   final List<RouteTripOptionData> trips;
   final bool hasRoutePricing;
   final String? selectedTripId;
   final ValueChanged<RouteTripOptionData> onSelectTrip;
+
+  /// The route's operator, stamped onto every departure tile.
+  final TransportOffice office;
 
   @override
   State<RouteAvailableTripsSection> createState() =>
@@ -81,6 +86,7 @@ class _RouteAvailableTripsSectionState
                   trip: trip,
                   selected: widget.selectedTripId == trip.id,
                   onTap: () => widget.onSelectTrip(trip),
+                  office: widget.office,
                 ),
               ),
             ),

@@ -46,6 +46,7 @@ class UpcomingTripData {
     required this.price,
     required this.seatsLeft,
     required this.isLive,
+    this.officeName = '',
     this.bookedStatus,
     this.bookedSeats = 0,
   });
@@ -69,6 +70,9 @@ class UpcomingTripData {
 
   final int seatsLeft;
   final bool isLive;
+
+  /// The transport office running this departure — empty when unattributed.
+  final String officeName;
 
   /// Where the rider's own booking on this departure stands, or `null` when
   /// they have not booked it. A booked trip stays in the feed and stays

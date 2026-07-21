@@ -4190,6 +4190,41 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get offices_directoryTitle => 'Transport offices';
+
+  @override
+  String get offices_directoryEmpty =>
+      'No offices are open for booking right now.';
+
+  @override
+  String get offices_routesHeader => 'Routes this office runs';
+
+  @override
+  String get offices_noRoutes =>
+      'This office has no bookable routes right now.';
+
+  @override
+  String get offices_noRatingsYet => 'No ratings yet';
+
+  @override
+  String offices_ratingsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count reviews',
+      one: '1 review',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routes_officesCardTitle => 'Transport offices';
+
+  @override
+  String get routes_officesCardSubtitle =>
+      'Browse operators, compare ratings, and see the routes each one runs.';
+
+  @override
   String get routes_heroSubtitle => 'Search, compare, and book your commute';
 
   @override

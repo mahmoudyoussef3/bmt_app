@@ -55,6 +55,9 @@ abstract final class TripMapper {
       seats: [data['seat']?.toString() ?? 'Seat Pending'],
       paymentStatus: TripStatusMapper.paymentStatus(dbPaymentStatus),
       fare: 'EGP $fare',
+      officeName:
+          (tripObj?['office'] as Map<String, dynamic>?)?['name']?.toString() ??
+          '',
       isReviewed: _hasReview(data['trip_reviews']),
       cancellationReason:
           data['cancellation_reason']?.toString() ??

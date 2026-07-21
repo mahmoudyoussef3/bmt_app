@@ -75,6 +75,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
           .select('''
             *,
             route:operation_routes(id, name, start_city, end_city, duration),
+            office:public_offices(name),
             trip_pricing(one_time_price, currency, is_active)
           ''')
           .gte('trip_date', today)

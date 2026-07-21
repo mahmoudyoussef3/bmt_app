@@ -10,9 +10,11 @@ class SupabasePackagesDatasource implements PackagesDatasource {
 
   @override
   Future<List<PackagePlanModel>> getPackages() async {
+    // Packages are per-office offers competing in one catalogue, so each row
+    // carries its seller's public name.
     final rows = await _supabase
         .from('transport_packages')
-        .select()
+        .select('*, office:public_offices(name)')
         .eq('active', true)
         .order('display_order', ascending: true);
 

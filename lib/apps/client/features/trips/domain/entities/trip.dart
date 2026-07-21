@@ -28,12 +28,18 @@ class TripData {
     required this.fare,
     this.tripId = '',
     this.seatMap = const [],
+    this.officeName = '',
     this.cancellationReason,
     this.completedAt,
     this.isReviewed = false,
   });
 
   final String id;
+
+  /// The transport office operating this trip — empty for rows that predate
+  /// office attribution. On a marketplace the rider booked with an office,
+  /// so their ticket history says which one.
+  final String officeName;
 
   /// The `operation_trips` id (distinct from the booking [id]) — needed to
   /// resolve the trip's real seat layout.

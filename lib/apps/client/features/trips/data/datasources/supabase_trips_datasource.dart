@@ -20,7 +20,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
   /// table itself is closed to clients.
   static const _bookingSelect = '''
     *,
-    operation_trips:public_trips (*),
+    operation_trips:public_trips (*, office:public_offices(name)),
     trip_reviews ( booking_id )
   ''';
 

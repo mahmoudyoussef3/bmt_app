@@ -10,6 +10,7 @@ extension PackagePlanMapper on PackagePlanModel {
     durationDays: durationDays,
     rideCount: rideCount,
     price: price,
+    officeName: officeName,
   );
 }
 

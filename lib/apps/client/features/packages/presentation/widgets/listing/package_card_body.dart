@@ -24,6 +24,32 @@ class PackageCardBody extends StatelessWidget {
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
         ),
+        if (package.officeName.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Icon(
+                Icons.storefront_rounded,
+                size: 13,
+                color: Theme.of(context).colorScheme.onSurface.withAlpha(150),
+              ),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  package.officeName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withAlpha(150),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
         const SizedBox(height: 12),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,

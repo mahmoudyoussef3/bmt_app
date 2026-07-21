@@ -111,6 +111,14 @@ import '../../features/profile/domain/repositories/profile_repository.dart';
 import '../../features/profile/domain/usecases/get_profile_data_usecase.dart';
 import '../../features/profile/domain/usecases/update_profile_usecase.dart';
 import '../../features/profile/presentation/cubit/profile_cubit.dart';
+import '../../features/offices/data/datasources/offices_datasource.dart';
+import '../../features/offices/data/datasources/supabase_offices_datasource.dart';
+import '../../features/offices/data/repositories/offices_repository_impl.dart';
+import '../../features/offices/domain/repositories/offices_repository.dart';
+import '../../features/offices/domain/usecases/get_office_routes_usecase.dart';
+import '../../features/offices/domain/usecases/get_offices_usecase.dart';
+import '../../features/offices/presentation/cubit/office_profile_cubit.dart';
+import '../../features/offices/presentation/cubit/offices_directory_cubit.dart';
 import '../../features/routes/data/datasources/supabase_routes_hub_datasource.dart';
 import '../../features/routes/data/repositories/routes_hub_repository_impl.dart';
 import '../../features/routes/domain/repositories/routes_hub_repository.dart';
@@ -196,6 +204,7 @@ void registerClientDependencies() {
   _registerNotificationsDependencies();
   _registerProfileDependencies();
   _registerRoutesHubDependencies();
+  _registerOfficesDependencies();
   _registerCommunicationDependencies();
   _registerReferralRewardsDependencies();
   _registerLoyaltyDependencies();
@@ -996,6 +1005,44 @@ void _registerProfileDependencies() {
         clientGetIt<GetProfileDataUseCase>(),
         clientGetIt<UpdateProfileUseCase>(),
       ),
+    );
+  }
+}
+
+void _registerOfficesDependencies() {
+  if (!clientGetIt.isRegistered<OfficesDatasource>()) {
+    clientGetIt.registerLazySingleton<OfficesDatasource>(
+      () => SupabaseOfficesDatasource(Supabase.instance.client),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<OfficesRepository>()) {
+    clientGetIt.registerLazySingleton<OfficesRepository>(
+      () => OfficesRepositoryImpl(clientGetIt<OfficesDatasource>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<GetOfficesUseCase>()) {
+    clientGetIt.registerLazySingleton<GetOfficesUseCase>(
+      () => GetOfficesUseCase(clientGetIt<OfficesRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<GetOfficeRoutesUseCase>()) {
+    clientGetIt.registerLazySingleton<GetOfficeRoutesUseCase>(
+      () => GetOfficeRoutesUseCase(clientGetIt<OfficesRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<OfficesDirectoryCubit>()) {
+    clientGetIt.registerFactory<OfficesDirectoryCubit>(
+      () => OfficesDirectoryCubit(clientGetIt<GetOfficesUseCase>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<OfficeProfileCubit>()) {
+    clientGetIt.registerFactory<OfficeProfileCubit>(
+      () => OfficeProfileCubit(clientGetIt<GetOfficeRoutesUseCase>()),
     );
   }
 }

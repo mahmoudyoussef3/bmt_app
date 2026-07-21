@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/transport_office.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_office_chip.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// A single selectable departure in Route Details' available-trips list.
@@ -11,11 +13,16 @@ class TripOptionTile extends StatelessWidget {
     required this.trip,
     required this.selected,
     required this.onTap,
+    this.office = TransportOffice.unknown,
   });
 
   final RouteTripOptionData trip;
   final bool selected;
   final VoidCallback onTap;
+
+  /// The operator of the route this departure belongs to. A trip always runs
+  /// under its route's office, so the route-level value is authoritative here.
+  final TransportOffice office;
 
   @override
   Widget build(BuildContext context) {
@@ -62,6 +69,12 @@ class TripOptionTile extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                  // Two offices can run the same corridor at the same times, so
+                  // every selectable departure says who operates it.
+                  if (office.isKnown) ...[
+                    const SizedBox(height: 4),
+                    RouteOfficeChip(office: office, compact: true),
+                  ],
                 ],
               ),
             ),

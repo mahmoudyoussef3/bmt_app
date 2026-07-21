@@ -6,8 +6,10 @@ import 'package:bmt_app/apps/client/core/widgets/client_section_header.dart';
 import 'package:bmt_app/apps/client/features/routes/domain/entities/routes_hub_data.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_hub_cubit.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_hub_state.dart';
+import 'package:bmt_app/apps/client/features/offices/presentation/routes/offices_routes.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/widgets/routes_hub_flow_steps.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/widgets/routes_hub_hero.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/widgets/routes_hub_offices_card.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/widgets/routes_hub_search_card.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/widgets/routes_hub_skeleton.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -129,6 +131,11 @@ class _LoadedBody extends StatelessWidget {
             title: l10n.home_whereAreYouGoing,
             description: l10n.routes_searchDescription,
             onSearch: () => onOpenAction(data.searchAction),
+          ),
+          const SizedBox(height: 16),
+          RoutesHubOfficesCard(
+            onTap: () =>
+                onOpenAction(const RoutesHubAction(route: OfficesRoutes.directory)),
           ),
           const SizedBox(height: 32),
           ClientSectionHeader(title: l10n.routes_howItWorks),

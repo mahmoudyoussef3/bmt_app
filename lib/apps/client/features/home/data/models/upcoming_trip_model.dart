@@ -31,6 +31,8 @@ abstract final class UpcomingTripMapper {
       price: tripFareLabel(trip),
       seatsLeft: (capacity - passengerCount).clamp(0, capacity),
       isLive: trip['status'] == 'boarding' || trip['status'] == 'in_progress',
+      officeName:
+          (trip['office'] as Map<String, dynamic>?)?['name']?.toString() ?? '',
       bookedStatus: bookedStatus,
       bookedSeats: bookedSeats,
     );

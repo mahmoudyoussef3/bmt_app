@@ -90,6 +90,27 @@ class TripCard extends StatelessWidget {
                   ),
                 ),
               ),
+              // Who ran this trip — the office the rider actually booked with.
+              if (trip.officeName.isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Icon(
+                  Icons.storefront_rounded,
+                  size: 13,
+                  color: scheme.onSurface.withAlpha(150),
+                ),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    trip.officeName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurface.withAlpha(150),
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
           const SizedBox(height: 10),

@@ -8,6 +8,7 @@ class PackagePlan {
     required this.durationDays,
     required this.rideCount,
     required this.price,
+    this.officeName = '',
   });
 
   final String id;
@@ -17,6 +18,10 @@ class PackagePlan {
   final int durationDays;
   final int rideCount;
   final double price;
+
+  /// The office selling this package. Packages are per-office (offices compete
+  /// on price), so a mixed catalogue must say whose offer each card is.
+  final String officeName;
 
   /// The name to show riders: English when the Dashboard has set one, and the
   /// Arabic name otherwise — never a blank plan on a checkout screen.

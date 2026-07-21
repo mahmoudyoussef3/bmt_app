@@ -4158,6 +4158,42 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get offices_directoryTitle => 'مكاتب النقل';
+
+  @override
+  String get offices_directoryEmpty => 'لا توجد مكاتب متاحة للحجز حاليًا.';
+
+  @override
+  String get offices_routesHeader => 'خطوط هذا المكتب';
+
+  @override
+  String get offices_noRoutes =>
+      'لا توجد خطوط متاحة للحجز لدى هذا المكتب حاليًا.';
+
+  @override
+  String get offices_noRatingsYet => 'لا توجد تقييمات بعد';
+
+  @override
+  String offices_ratingsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count تقييمًا',
+      few: '$count تقييمات',
+      two: 'تقييمان',
+      one: 'تقييم واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routes_officesCardTitle => 'مكاتب النقل';
+
+  @override
+  String get routes_officesCardSubtitle =>
+      'استعرض المكاتب وقارن التقييمات واطّلع على خطوط كل مكتب.';
+
+  @override
   String get routes_heroSubtitle => 'ابحث وقارن واحجز رحلتك اليومية';
 
   @override

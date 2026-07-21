@@ -123,7 +123,11 @@ class _Schedule extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          trip.routeName,
+          // The feed lists several operators' departures side by side, so the
+          // route line also names whose bus this is.
+          trip.officeName.isEmpty
+              ? trip.routeName
+              : '${trip.routeName} · ${trip.officeName}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: ClientTypography.bodySmall(
