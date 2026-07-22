@@ -1,13 +1,18 @@
+# Native launch screen for the dashboard flavor (BMT Dashboard).
+#
+# Deliberately identical to the client and captain configs — see
+# flutter_native_splash_client.yaml for why the OS frame is shared across
+# flavors and where the generated assets come from.
 flutter_native_splash:
-  color: "#F8FAFC"
-  color_dark: "#111827"
-  image: "assets/images/app_icon.png"
-  image_dark: "assets/images/app_icon.png"
+  color: "#F9FAFB"
+  color_dark: "#0F172A"
+  image: "assets/branding/splash_mark.png"
+  image_dark: "assets/branding/splash_mark.png"
   android: true
   ios: true
   web: false
   android_12:
-    image: "assets/images/app_icon.png"
-    image_dark: "assets/images/app_icon.png"
-    icon_background_color: "#F8FAFC"
-    icon_background_color_dark: "#111827"
+    image: "assets/branding/splash_mark_android12.png"
+    image_dark: "assets/branding/splash_mark_android12.png"
+    color: "#F9FAFB"
+    color_dark: "#0F172A"

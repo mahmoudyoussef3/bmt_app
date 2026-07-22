@@ -89,35 +89,50 @@ class _TripExecutionNextStopBannerState
 
     return Container(
       decoration: BoxDecoration(
-        color: CaptainColors.primary.withValues(alpha: 0.1),
-        borderRadius: CaptainDesignTokens.br24,
-        border: Border.all(color: CaptainColors.primary.withValues(alpha: 0.2)),
+        color: CaptainColors.surfaceFor(context),
+        borderRadius: CaptainDesignTokens.br20,
+        boxShadow: CaptainDesignTokens.softShadow(context),
       ),
-      padding: const EdgeInsets.all(CaptainDesignTokens.s24),
+      clipBehavior: Clip.antiAlias,
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _BannerHeader(
-            isLast: isLast,
-            remaining: widget.stops.length - currentIndex,
+          Container(
+            color: CaptainColors.primary.withValues(alpha: 0.10),
+            padding: const EdgeInsets.symmetric(
+              horizontal: CaptainDesignTokens.s20,
+              vertical: CaptainDesignTokens.s12,
+            ),
+            child: _BannerHeader(
+              isLast: isLast,
+              remaining: widget.stops.length - currentIndex,
+            ),
           ),
-          if (!isLast) ...[
-            const SizedBox(height: CaptainDesignTokens.s16),
-            Text(
-              widget.stops[currentIndex].name,
-              style: CaptainTypography.titleLarge(context).copyWith(
-                fontWeight: FontWeight.w800,
-                color: CaptainColors.textPrimaryFor(context),
+          if (!isLast)
+            Padding(
+              padding: const EdgeInsets.all(CaptainDesignTokens.s20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    widget.stops[currentIndex].name,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: CaptainTypography.titleLarge(context).copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: CaptainColors.textPrimaryFor(context),
+                    ),
+                  ),
+                  const SizedBox(height: CaptainDesignTokens.s16),
+                  CaptainButton(
+                    label: 'تم الوصول للمحطة',
+                    icon: Icons.check_rounded,
+                    isLoading: _isSubmitting,
+                    onPressed: _isSubmitting ? null : _markCurrentStopArrived,
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: CaptainDesignTokens.s24),
-            CaptainButton(
-              label: 'تم الوصول للمحطة',
-              icon: Icons.check_rounded,
-              isLoading: _isSubmitting,
-              onPressed: _isSubmitting ? null : _markCurrentStopArrived,
-            ),
-          ],
         ],
       ),
     );
@@ -167,10 +182,10 @@ class _RemainingCount extends StatelessWidget {
       ),
       decoration: const BoxDecoration(
         color: CaptainColors.primary,
-        borderRadius: CaptainDesignTokens.br16,
+        borderRadius: CaptainDesignTokens.brPill,
       ),
       child: Text(
-        '$remaining',
+        '$remaining محطة',
         style: CaptainTypography.labelSmall(
           context,
         ).copyWith(color: Colors.white, fontWeight: FontWeight.w800),

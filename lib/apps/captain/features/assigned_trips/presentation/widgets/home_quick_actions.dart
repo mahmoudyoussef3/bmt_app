@@ -9,8 +9,14 @@ import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage.dart';
 /// Fast shortcuts to the focus trip's most time-critical actions, so the
 /// captain doesn't have to open the trip first to reach them.
 ///
+/// Rendered as the focus card's footer strip. These were three standalone
+/// bordered tiles sitting under the card — a third tier of floating boxes on a
+/// screen that already had too many, and visually detached from the trip they
+/// act on. As a footer they are unmistakably *this trip's* shortcuts, and they
+/// cost the layout one divider instead of a whole row of cards.
+///
 /// Scoped to the trip's [stage]: these are in-trip tools, and offering
-/// "إرسال الموقع" on a trip that hasn't left — or that operations hasn't even
+/// "الموقع" on a trip that hasn't left — or that operations hasn't even
 /// published — asks the captain to broadcast a position for a journey that
 /// isn't happening. Before boarding, the only thing worth a shortcut is who
 /// has booked a seat.
@@ -27,22 +33,22 @@ class HomeQuickActions extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tiles = <Widget>[
-      _QuickActionTile(
+      _QuickAction(
         icon: Icons.people_alt_rounded,
-        label: 'كشف الركاب',
+        label: 'الركاب',
         onTap: () => context.openPassengerManifest(tripId),
       ),
       // Location matters once the vehicle is actually moving passengers.
       if (stage == CaptainTripStage.underway)
-        _QuickActionTile(
+        _QuickAction(
           icon: Icons.my_location_rounded,
-          label: 'إرسال الموقع',
+          label: 'الموقع',
           onTap: () => context.openLocationUpdate(tripId),
         ),
       // From the moment the captain is at the stop, a breakdown or a delay is
       // reportable — it doesn't wait for departure.
       if (!stage.isWaiting)
-        _QuickActionTile(
+        _QuickAction(
           icon: Icons.report_problem_outlined,
           label: 'بلاغ طارئ',
           destructive: true,
@@ -50,19 +56,38 @@ class HomeQuickActions extends StatelessWidget {
         ),
     ];
 
-    return Row(
-      children: [
-        for (var i = 0; i < tiles.length; i++) ...[
-          if (i > 0) const SizedBox(width: CaptainDesignTokens.s12),
-          Expanded(child: tiles[i]),
+    return IntrinsicHeight(
+      child: Row(
+        children: [
+          for (var i = 0; i < tiles.length; i++) ...[
+            if (i > 0) const _Separator(),
+            Expanded(child: tiles[i]),
+          ],
         ],
-      ],
+      ),
     );
   }
 }
 
-class _QuickActionTile extends StatelessWidget {
-  const _QuickActionTile({
+class _Separator extends StatelessWidget {
+  const _Separator();
+
+  @override
+  Widget build(BuildContext context) {
+    return VerticalDivider(
+      width: 1,
+      thickness: 1,
+      indent: CaptainDesignTokens.s12,
+      endIndent: CaptainDesignTokens.s12,
+      color: CaptainColors.dividerFor(context).withValues(alpha: 0.7),
+    );
+  }
+}
+
+/// A footer shortcut: icon beside label on one line, so the strip stays short
+/// enough to be a footer rather than a fourth block of content.
+class _QuickAction extends StatelessWidget {
+  const _QuickAction({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -76,41 +101,39 @@ class _QuickActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = destructive ? CaptainColors.error : CaptainColors.primary;
+    final color = destructive
+        ? CaptainColors.error
+        : CaptainColors.textPrimaryFor(context);
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
-        borderRadius: CaptainDesignTokens.br16,
-        child: Container(
+        child: Padding(
           padding: const EdgeInsets.symmetric(
-            vertical: CaptainDesignTokens.s12,
+            vertical: CaptainDesignTokens.s16,
+            horizontal: CaptainDesignTokens.s8,
           ),
-          decoration: BoxDecoration(
-            color: CaptainColors.surfaceFor(context),
-            borderRadius: CaptainDesignTokens.br16,
-            border: Border.all(
-              color: destructive
-                  ? CaptainColors.error.withValues(alpha: 0.15)
-                  : CaptainColors.dividerFor(context),
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: color, size: 22),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: CaptainTypography.labelSmall(context).copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: destructive
-                      ? CaptainColors.error
-                      : CaptainColors.textPrimaryFor(context),
+              Icon(
+                icon,
+                size: 18,
+                color: destructive
+                    ? CaptainColors.error
+                    : CaptainColors.primary,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: CaptainTypography.labelMedium(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w800, color: color),
                 ),
               ),
             ],

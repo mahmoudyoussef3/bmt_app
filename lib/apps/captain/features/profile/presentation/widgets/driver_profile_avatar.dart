@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
-
 import 'driver_profile_metrics.dart';
 
 /// The captain's photo on the header gradient, falling back to their initial.
@@ -23,12 +21,12 @@ class DriverProfileAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: Colors.white.withAlpha(40),
-        border: Border.all(color: Colors.white.withAlpha(140), width: 2.5),
+        border: Border.all(color: Colors.white.withAlpha(150), width: 3),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha(30),
-            blurRadius: 16,
-            offset: const Offset(0, 6),
+            color: Colors.black.withAlpha(40),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
           ),
         ],
       ),
@@ -58,9 +56,9 @@ class _Initials extends StatelessWidget {
       child: Text(
         trimmed.isNotEmpty ? trimmed[0].toUpperCase() : '؟',
         style: const TextStyle(
-          fontSize: 16,
+          fontSize: 36,
           fontWeight: FontWeight.w900,
-          color: CaptainColors.primary,
+          color: Colors.white,
         ),
       ),
     );

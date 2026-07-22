@@ -3,16 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 
 import '../../domain/entities/driver_profile.dart';
+import 'driver_profile_metrics.dart';
 
-/// The captain's lifetime totals.
+/// The captain's lifetime totals, carried at the foot of the identity hero.
 ///
-/// These used to sit on glass tiles inside the header, which is what forced the
-/// header tall. On a surface card they carry full-contrast text instead of
-/// white-on-gradient, and they match the stats strip the trips tab already
-/// uses — the same numbers should look the same wherever the captain meets them.
+/// They belong to the person, so they ride the hero rather than sitting below
+/// it as yet another framed card — and stating them as two glass tiles instead
+/// of stat columns split by vertical rules is what stops the profile opening on
+/// an analytics panel.
 class DriverProfileStatsCard extends StatelessWidget {
   const DriverProfileStatsCard({super.key, required this.profile});
 
@@ -20,90 +20,84 @@ class DriverProfileStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return CaptainCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: CaptainDesignTokens.s16,
-        vertical: CaptainDesignTokens.s20,
-      ),
-      child: Row(
-        children: [
-          _Stat(
-            icon: Icons.route_rounded,
-            value: '${profile.totalTrips}',
-            label: 'رحلة مكتملة',
-            color: CaptainColors.primary,
-          ),
-          const _Divider(),
-          _Stat(
-            icon: Icons.people_alt_rounded,
-            value: '${profile.totalPassengers}',
-            label: 'راكب نُقلوا',
-            color: CaptainColors.primaryBright,
-          ),
-        ],
-      ),
+    return Row(
+      children: [
+        _Tile(
+          icon: Icons.route_rounded,
+          value: '${profile.totalTrips}',
+          label: 'رحلة مكتملة',
+        ),
+        const SizedBox(width: CaptainDesignTokens.s12),
+        _Tile(
+          icon: Icons.people_alt_rounded,
+          value: '${profile.totalPassengers}',
+          label: 'راكب نُقلوا',
+        ),
+      ],
     );
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({
-    required this.icon,
-    required this.value,
-    required this.label,
-    required this.color,
-  });
+class _Tile extends StatelessWidget {
+  const _Tile({required this.icon, required this.value, required this.label});
 
   final IconData icon;
   final String value;
   final String label;
-  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(CaptainDesignTokens.s8),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
+      child: Container(
+        constraints: const BoxConstraints(
+          minHeight: DriverProfileMetrics.statTileHeight,
+        ),
+        padding: const EdgeInsets.symmetric(
+          horizontal: CaptainDesignTokens.s12,
+          vertical: CaptainDesignTokens.s12,
+        ),
+        decoration: BoxDecoration(
+          color: Colors.white.withAlpha(36),
+          borderRadius: CaptainDesignTokens.br20,
+          border: Border.all(color: Colors.white.withAlpha(46)),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(icon, size: 15, color: Colors.white.withAlpha(200)),
+                const SizedBox(width: 6),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: CaptainTypography.labelSmall(context).copyWith(
+                      color: Colors.white.withAlpha(215),
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
             ),
-            child: Icon(icon, size: 18, color: color),
-          ),
-          const SizedBox(height: CaptainDesignTokens.s8),
-          Text(
-            value,
-            maxLines: 1,
-            style: CaptainTypography.headlineSmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w900, color: color),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: CaptainTypography.labelSmall(
-              context,
-            ).copyWith(color: CaptainColors.textSecondaryFor(context)),
-          ),
-        ],
+            const SizedBox(height: 4),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: AlignmentDirectional.centerStart,
+              child: Text(
+                value,
+                maxLines: 1,
+                style: CaptainTypography.headlineSmall(context).copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: CaptainColors.onPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
-    );
-  }
-}
-
-class _Divider extends StatelessWidget {
-  const _Divider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 1,
-      height: 48,
-      color: CaptainColors.dividerFor(context),
     );
   }
 }

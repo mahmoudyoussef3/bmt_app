@@ -6,7 +6,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_connectivity_banner.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/assigned_trip.dart';
 import 'package:bmt_app/apps/captain/features/live_location/presentation/widgets/trip_location_auto_share.dart';
@@ -16,10 +16,10 @@ import '../cubit/trip_execution_cubit.dart';
 import '../cubit/trip_execution_state.dart';
 import '../widgets/navigate_to_stop_button.dart';
 import '../widgets/route_progress_timeline.dart';
-import '../widgets/trip_execution_actions_grid.dart';
-import '../widgets/trip_execution_header_card.dart';
+import '../widgets/trip_execution_action_bar.dart';
+import '../widgets/trip_execution_canopy.dart';
 import '../widgets/trip_execution_next_stop_banner.dart';
-import '../widgets/trip_execution_sos_button.dart';
+import '../widgets/trip_execution_tools.dart';
 import '../widgets/trip_gps_status_card.dart';
 
 class TripExecutionPage extends StatelessWidget {
@@ -58,6 +58,14 @@ class TripExecutionPage extends StatelessWidget {
   }
 }
 
+/// The trip, as a stage-coloured canopy over a scrolling body, with the one
+/// action that matters docked at the bottom.
+///
+/// The action used to live inside a card a third of the way down this page,
+/// under the route and above a timeline, a GPS panel and a grid of square
+/// tiles — a layout that asks a captain at the wheel to scroll before they can
+/// start or end a trip. Everything below the canopy is now reference material
+/// the captain reads at a stop; everything they *do* is in the docked bar.
 class _TripExecutionView extends StatelessWidget {
   const _TripExecutionView({required this.trip});
 
@@ -87,96 +95,114 @@ class _TripExecutionView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: CaptainColors.backgroundFor(context),
-      floatingActionButton: isUnderway
-          ? TripExecutionSosButton(tripId: trip.id)
-          : null,
       body: CustomScrollView(
         slivers: [
-          const CaptainSliverHeader(title: 'تنفيذ الرحلة'),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(
-                CaptainDesignTokens.s24,
-                CaptainDesignTokens.s16,
-                CaptainDesignTokens.s24,
-                CaptainDesignTokens.s32,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const CaptainConnectivityBanner(),
-                  TripExecutionHeaderCard(
-                    trip: trip,
-                    snapshot: snapshot,
-                    state: state,
-                  ),
+          TripExecutionCanopy(trip: trip, snapshot: snapshot, stage: stage),
+          SliverPadding(
+            padding: const EdgeInsets.fromLTRB(
+              CaptainDesignTokens.s20,
+              CaptainDesignTokens.s24,
+              CaptainDesignTokens.s20,
+              CaptainDesignTokens.s32,
+            ),
+            sliver: SliverList.list(
+              children: [
+                const CaptainConnectivityBanner(),
+                if (state case TripExecutionError(:final message)) ...[
+                  _InlineError(message: message),
                   const SizedBox(height: CaptainDesignTokens.s24),
-                  // Kept mounted across the whole trip so the transition into
-                  // and out of `inProgress` is an explicit start/stop rather
-                  // than a widget disposal the timer happens to ride on.
-                  TripLocationAutoShare(tripId: trip.id, enabled: isUnderway),
-                  if (isUnderway && trip.stops.isNotEmpty)
-                    _UnderwaySection(trip: trip, snapshot: snapshot),
-                  Text(
-                    'إجراءات الرحلة',
-                    style: CaptainTypography.titleLarge(
-                      context,
-                    ).copyWith(fontWeight: FontWeight.w800),
+                ],
+                // Kept mounted across the whole trip so the transition into
+                // and out of `inProgress` is an explicit start/stop rather
+                // than a widget disposal the timer happens to ride on.
+                TripLocationAutoShare(tripId: trip.id, enabled: isUnderway),
+                if (isUnderway && trip.stops.isNotEmpty) ...[
+                  const CaptainSectionLabel('المحطة القادمة'),
+                  TripExecutionNextStopBanner(
+                    tripId: trip.id,
+                    stops: trip.stops,
+                    arrivedStationsCount: snapshot.arrivedStationsCount,
                   ),
                   const SizedBox(height: CaptainDesignTokens.s16),
-                  TripExecutionActionsGrid(tripId: trip.id, stage: stage),
+                  NavigateToStopButton(stop: _nextStop(snapshot)),
+                  const SizedBox(height: CaptainDesignTokens.s24),
                 ],
-              ),
+                // The route is worth showing before departure too: a captain
+                // checking which stops they are due to call at should not have
+                // to start the trip to find out.
+                if (trip.stops.isNotEmpty) ...[
+                  const CaptainSectionLabel('مسار الرحلة'),
+                  RouteProgressTimeline(
+                    stops: trip.stops,
+                    arrivedStationsCount: snapshot.arrivedStationsCount,
+                  ),
+                  const SizedBox(height: CaptainDesignTokens.s24),
+                ],
+                if (isUnderway) ...[
+                  const CaptainSectionLabel('الموقع والوصول'),
+                  TripGpsStatusCard(
+                    lastLocation: snapshot.lastLocation,
+                    destination: trip.stops.isEmpty ? null : trip.stops.last,
+                    expectedArrivalTime: trip.expectedArrivalTime,
+                  ),
+                  const SizedBox(height: CaptainDesignTokens.s24),
+                ],
+                const CaptainSectionLabel('أدوات الرحلة'),
+                TripExecutionTools(tripId: trip.id, stage: stage),
+              ],
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-/// The live-navigation block: only meaningful once the trip is actually
-/// underway and there is a route to run.
-class _UnderwaySection extends StatelessWidget {
-  const _UnderwaySection({required this.trip, required this.snapshot});
-
-  final AssignedTrip trip;
-  final TripExecutionSnapshot snapshot;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TripExecutionNextStopBanner(
-          tripId: trip.id,
-          stops: trip.stops,
-          arrivedStationsCount: snapshot.arrivedStationsCount,
-        ),
-        const SizedBox(height: CaptainDesignTokens.s24),
-        RouteProgressTimeline(
-          stops: trip.stops,
-          arrivedStationsCount: snapshot.arrivedStationsCount,
-        ),
-        const SizedBox(height: CaptainDesignTokens.s24),
-        TripGpsStatusCard(
-          lastLocation: snapshot.lastLocation,
-          destination: trip.stops.last,
-          expectedArrivalTime: trip.expectedArrivalTime,
-        ),
-        const SizedBox(height: CaptainDesignTokens.s16),
-        NavigateToStopButton(stop: _nextStop),
-        const SizedBox(height: CaptainDesignTokens.s24),
-      ],
+      bottomNavigationBar: TripExecutionActionBar(
+        stage: stage,
+        state: state,
+        tripId: trip.id,
+        departureTime: trip.departureTime,
+      ),
     );
   }
 
   /// The next stop the captain hasn't reported arrived yet, or null once
   /// every station on the route has been reported (nothing left to
   /// navigate to).
-  AssignedTripStop? get _nextStop {
+  AssignedTripStop? _nextStop(TripExecutionSnapshot snapshot) {
     final index = snapshot.arrivedStationsCount;
     if (index >= trip.stops.length) return null;
     return trip.stops[index];
+  }
+}
+
+class _InlineError extends StatelessWidget {
+  const _InlineError({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(CaptainDesignTokens.s16),
+      decoration: BoxDecoration(
+        color: CaptainColors.error.withValues(alpha: 0.1),
+        borderRadius: CaptainDesignTokens.br16,
+        border: Border.all(color: CaptainColors.error.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: CaptainColors.error),
+          const SizedBox(width: CaptainDesignTokens.s12),
+          Expanded(
+            child: Text(
+              message,
+              style: CaptainTypography.bodyMedium(context).copyWith(
+                color: CaptainColors.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

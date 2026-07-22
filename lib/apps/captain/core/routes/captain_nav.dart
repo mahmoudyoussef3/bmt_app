@@ -17,6 +17,10 @@ extension CaptainNav on BuildContext {
   Future<T?> _push<T>(String route, [Object? arguments]) =>
       Navigator.of(this).pushNamed<T>(route, arguments: arguments);
 
+  /// Closes the current screen. Here rather than at the call site so a screen
+  /// drawing its own back control still never reaches for `Navigator` itself.
+  void closeScreen() => Navigator.of(this).maybePop();
+
   Future<void> openTripExecution(AssignedTrip trip) =>
       _push<void>(CaptainRoutes.tripExecution, trip);
 

@@ -15,7 +15,6 @@ import '../widgets/driver_profile_info_card.dart';
 import '../widgets/driver_profile_settings_card.dart';
 import '../widgets/driver_profile_sign_out_button.dart';
 import '../widgets/driver_profile_skeleton.dart';
-import '../widgets/driver_profile_stats_card.dart';
 import '../widgets/driver_profile_vehicle_card.dart';
 import '../widgets/verification_card.dart';
 
@@ -47,31 +46,34 @@ class _ProfileBody extends StatelessWidget {
     return RefreshIndicator(
       onRefresh: () => context.read<DriverProfileCubit>().refresh(),
       child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           DriverProfileHeader(profile: profile),
           SliverPadding(
+            // Groups sit closer to the screen edge than the old framed cards
+            // did: they read as full-width list sections, not as objects
+            // floating on a page.
             padding: EdgeInsetsDirectional.fromSTEB(
+              CaptainDesignTokens.s20,
               CaptainDesignTokens.s24,
-              CaptainDesignTokens.s24,
-              CaptainDesignTokens.s24,
+              CaptainDesignTokens.s20,
               // Cleared for the shell's floating nav bar.
               CaptainBottomNav.reservedSpace(context),
             ),
             sliver: SliverList.list(
               children: [
-                DriverProfileStatsCard(profile: profile),
-                const SizedBox(height: CaptainDesignTokens.s16),
-                VerificationCard(profile: profile),
-                const SizedBox(height: CaptainDesignTokens.s16),
+                // The vehicle leads: it is the one thing a captain opens this
+                // screen mid-shift to check.
                 if (profile.hasVehicle) ...[
                   DriverProfileVehicleCard(profile: profile),
-                  const SizedBox(height: CaptainDesignTokens.s16),
+                  const SizedBox(height: CaptainDesignTokens.s24),
                 ],
+                VerificationCard(profile: profile),
+                const SizedBox(height: CaptainDesignTokens.s24),
                 DriverProfileInfoCard(profile: profile),
-                const SizedBox(height: CaptainDesignTokens.s16),
+                const SizedBox(height: CaptainDesignTokens.s24),
+                // Sign-out is the last row of this group.
                 const DriverProfileSettingsCard(),
-                const SizedBox(height: CaptainDesignTokens.s32),
-                const DriverProfileSignOutButton(),
               ],
             ),
           ),

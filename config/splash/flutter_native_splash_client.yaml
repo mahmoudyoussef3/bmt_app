@@ -1,13 +1,31 @@
+# Native launch screen for the client flavor (EasyWay).
+#
+# The generated Android drawables and the iOS LaunchImage set are shared by all
+# three flavors (one android/app/src/main/res, one LaunchScreen.storyboard), so
+# every config in this folder intentionally describes the SAME launch frame —
+# regenerating any flavor then produces identical output instead of silently
+# overwriting another flavor's branding. Per-app personality starts at the
+# Flutter splash the OS frame hands off to.
+#
+# Colors track the Flutter splash backgrounds (ClientColors.surfaceSubtle /
+# CaptainColors.backgroundLight and their dark counterparts) so that handoff is
+# invisible.
+#
+# Assets come from `python3 tool/generate_splash_assets.py`. Never point this at
+# assets/images/app_icon.png: it is a full-bleed 1024px square and the generator
+# reads the source as 4x artwork, so it lands at 256dp — two thirds of a phone.
 flutter_native_splash:
-  color: "#FAFAF5"
-  color_dark: "#1F1F1F"
-  image: "assets/images/app_icon.png"
-  image_dark: "assets/images/app_icon.png"
+  color: "#F9FAFB"
+  color_dark: "#0F172A"
+  image: "assets/branding/splash_mark.png"
+  image_dark: "assets/branding/splash_mark.png"
   android: true
   ios: true
   web: false
   android_12:
-    image: "assets/images/app_icon.png"
-    image_dark: "assets/images/app_icon.png"
-    icon_background_color: "#FAFAF5"
-    icon_background_color_dark: "#1F1F1F"
+    # 1152x1152 canvas with the tile inside the 768px circle Android 12+ clips
+    # the splash icon to. No icon_background_color — the tile carries its own.
+    image: "assets/branding/splash_mark_android12.png"
+    image_dark: "assets/branding/splash_mark_android12.png"
+    color: "#F9FAFB"
+    color_dark: "#0F172A"

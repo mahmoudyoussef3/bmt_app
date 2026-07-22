@@ -3,7 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 
+/// Names the trip list below it, and says how long it is.
+///
+/// Deliberately quiet — it is a divider between the focus card and the rest of
+/// the day, not a competing headline. It shares [CaptainSectionLabel] with the
+/// profile screen so a section heading looks the same wherever the captain
+/// meets one.
 class AssignedTripsSectionTitle extends StatelessWidget {
   const AssignedTripsSectionTitle({
     super.key,
@@ -16,34 +23,32 @@ class AssignedTripsSectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: CaptainTypography.titleSmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w900),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: CaptainDesignTokens.s12,
-            vertical: 4,
-          ),
-          decoration: BoxDecoration(
-            color: CaptainColors.primary.withValues(alpha: 0.1),
-            borderRadius: CaptainDesignTokens.br32,
-          ),
-          child: Text(
-            '$count',
-            style: CaptainTypography.labelMedium(context).copyWith(
-              color: CaptainColors.primary,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ),
-      ],
+    return CaptainSectionLabel(title, trailing: _Count(count: count));
+  }
+}
+
+class _Count extends StatelessWidget {
+  const _Count({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: CaptainDesignTokens.s8,
+        vertical: 2,
+      ),
+      decoration: BoxDecoration(
+        color: CaptainColors.primary.withValues(alpha: 0.10),
+        borderRadius: CaptainDesignTokens.brPill,
+      ),
+      child: Text(
+        '$count',
+        style: CaptainTypography.labelSmall(
+          context,
+        ).copyWith(color: CaptainColors.primary, fontWeight: FontWeight.w900),
+      ),
     );
   }
 }

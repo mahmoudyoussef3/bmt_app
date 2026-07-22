@@ -31,20 +31,12 @@ class RouteProgressTimeline extends StatelessWidget {
       padding: const EdgeInsets.all(CaptainDesignTokens.s20),
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
-        borderRadius: CaptainDesignTokens.br24,
-        border: Border.all(color: CaptainColors.dividerFor(context)),
+        borderRadius: CaptainDesignTokens.br20,
         boxShadow: CaptainDesignTokens.softShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'مسار الرحلة',
-            style: CaptainTypography.titleSmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: CaptainDesignTokens.s16),
           for (var i = 0; i < stops.length; i++)
             _StopRow(
               name: stops[i].name,
@@ -128,13 +120,19 @@ class _StopRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: CaptainDesignTokens.s12),
-          Padding(
-            padding: const EdgeInsets.only(bottom: CaptainDesignTokens.s16),
-            child: Text(
-              name,
-              style: CaptainTypography.bodyMedium(
-                context,
-              ).copyWith(fontWeight: fontWeight, color: textColor),
+          Expanded(
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: isLast ? 0 : CaptainDesignTokens.s16,
+              ),
+              child: Text(
+                name,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: CaptainTypography.bodyMedium(
+                  context,
+                ).copyWith(fontWeight: fontWeight, color: textColor),
+              ),
             ),
           ),
         ],

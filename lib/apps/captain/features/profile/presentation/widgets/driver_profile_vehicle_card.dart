@@ -4,17 +4,18 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/utils/captain_text_direction.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_list_group.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 
 import '../../domain/entities/driver_profile.dart';
-import 'driver_profile_section_card.dart';
 
 /// The vehicle assigned to this captain. Only rendered when one exists.
 ///
 /// The plate leads, because it's the one field a captain actually looks this
 /// screen up for — matching the bus in front of them to the one they're meant
-/// to be driving. It gets a plate-shaped block instead of a label/value row so
-/// it can be read at a glance from arm's length; the specs that follow are
-/// reference detail and stay quiet.
+/// to be driving. It gets a plate-shaped block at the top of the group so it
+/// can be read at a glance from arm's length; the specs that follow are
+/// reference detail and stay as quiet list rows.
 class DriverProfileVehicleCard extends StatelessWidget {
   const DriverProfileVehicleCard({super.key, required this.profile});
 
@@ -25,44 +26,34 @@ class DriverProfileVehicleCard extends StatelessWidget {
     final model = profile.vehicleModel;
     final capacity = profile.vehicleCapacity;
 
-    return DriverProfileSectionCard(
-      title: 'المركبة المخصصة',
-      icon: Icons.directions_bus_rounded,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PlateBlock(plate: profile.plateNumber),
-          const SizedBox(height: CaptainDesignTokens.s16),
-          Row(
-            children: [
-              _Spec(
-                icon: Icons.confirmation_number_outlined,
-                label: 'كود المركبة',
-                value: profile.vehicleCode ?? '—',
-                isIdentifier: true,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const CaptainSectionLabel('المركبة المخصصة'),
+        CaptainListGroup(
+          children: [
+            _PlateBlock(plate: profile.plateNumber),
+            CaptainListRow(
+              icon: Icons.confirmation_number_outlined,
+              label: 'كود المركبة',
+              value: profile.vehicleCode ?? '—',
+              valueIsIdentifier: true,
+            ),
+            if (model != null)
+              CaptainListRow(
+                icon: Icons.directions_car_outlined,
+                label: 'الموديل',
+                value: model,
               ),
-              if (model != null) ...[
-                const SizedBox(width: CaptainDesignTokens.s12),
-                _Spec(
-                  icon: Icons.directions_car_outlined,
-                  label: 'الموديل',
-                  value: model,
-                ),
-              ],
-              if (capacity != null) ...[
-                const SizedBox(width: CaptainDesignTokens.s12),
-                _Spec(
-                  icon: Icons.event_seat_outlined,
-                  label: 'السعة',
-                  value: '$capacity راكب',
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: CaptainDesignTokens.s16),
-          const _ReadyBanner(),
-        ],
-      ),
+            if (capacity != null)
+              CaptainListRow(
+                icon: Icons.event_seat_outlined,
+                label: 'السعة',
+                value: '$capacity راكب',
+              ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -82,146 +73,38 @@ class _PlateBlock extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: CaptainDesignTokens.s16,
-        vertical: CaptainDesignTokens.s12,
-      ),
-      decoration: BoxDecoration(
-        color: CaptainColors.primary.withValues(alpha: 0.06),
-        borderRadius: CaptainDesignTokens.br12,
-        border: Border.all(
-          color: CaptainColors.primary.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'لوحة الترخيص',
-            style: CaptainTypography.labelSmall(
-              context,
-            ).copyWith(color: CaptainColors.textSecondaryFor(context)),
-          ),
-          const SizedBox(height: CaptainDesignTokens.s4),
-          Directionality(
-            textDirection: CaptainTextDirection.ofIdentifier(value),
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: CaptainTypography.headlineSmall(context).copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2,
-                color: CaptainColors.textPrimaryFor(context),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// One vehicle spec, stacked label-over-value so several fit across a phone
-/// without any of them truncating to nothing.
-class _Spec extends StatelessWidget {
-  const _Spec({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.isIdentifier = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  /// Set for values that are identifiers rather than prose, so they lay out in
-  /// their own direction. See [CaptainTextDirection].
-  final bool isIdentifier;
-
-  @override
-  Widget build(BuildContext context) {
-    final valueText = Text(
-      value,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: CaptainTypography.bodyMedium(context).copyWith(
-        fontWeight: FontWeight.w800,
-        color: CaptainColors.textPrimaryFor(context),
-      ),
-    );
-
-    return Expanded(
+      padding: const EdgeInsets.all(CaptainDesignTokens.s20),
+      color: CaptainColors.primary.withValues(alpha: 0.06),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
               Icon(
-                icon,
-                size: 13,
+                Icons.directions_bus_rounded,
+                size: 15,
                 color: CaptainColors.textSecondaryFor(context),
               ),
-              const SizedBox(width: CaptainDesignTokens.s4),
-              Flexible(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: CaptainTypography.labelSmall(
-                    context,
-                  ).copyWith(color: CaptainColors.textSecondaryFor(context)),
-                ),
+              const SizedBox(width: 6),
+              Text(
+                'لوحة الترخيص',
+                style: CaptainTypography.labelSmall(
+                  context,
+                ).copyWith(color: CaptainColors.textSecondaryFor(context)),
               ),
             ],
           ),
-          const SizedBox(height: CaptainDesignTokens.s4),
-          if (isIdentifier)
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Directionality(
-                textDirection: CaptainTextDirection.ofIdentifier(value),
-                child: valueText,
-              ),
-            )
-          else
-            valueText,
-        ],
-      ),
-    );
-  }
-}
-
-class _ReadyBanner extends StatelessWidget {
-  const _ReadyBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: CaptainDesignTokens.s12,
-        vertical: CaptainDesignTokens.s8,
-      ),
-      decoration: BoxDecoration(
-        color: CaptainColors.primaryBright.withValues(alpha: 0.1),
-        borderRadius: CaptainDesignTokens.br12,
-      ),
-      child: Row(
-        children: [
-          const Icon(
-            Icons.verified_rounded,
-            size: 16,
-            color: CaptainColors.primaryBright,
-          ),
-          const SizedBox(width: CaptainDesignTokens.s8),
-          Expanded(
+          const SizedBox(height: CaptainDesignTokens.s8),
+          Directionality(
+            textDirection: CaptainTextDirection.ofIdentifier(value),
             child: Text(
-              'مركبة جاهزة للتشغيل',
-              style: CaptainTypography.labelMedium(context).copyWith(
-                color: CaptainColors.primaryBright,
-                fontWeight: FontWeight.w700,
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: CaptainTypography.headlineMedium(context).copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 3,
+                color: CaptainColors.textPrimaryFor(context),
               ),
             ),
           ),

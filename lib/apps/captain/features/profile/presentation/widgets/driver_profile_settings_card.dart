@@ -2,30 +2,47 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
-import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_theme_cubit.dart';
-import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_list_group.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 
 import 'captain_appearance_sheet.dart';
-import 'driver_profile_section_card.dart';
+import 'driver_profile_sign_out_button.dart';
 
-/// Captain-facing settings. Appearance is the only one today, so this reads as
-/// a single row rather than a list.
+/// Captain-facing settings, closing with the way out of the app.
+///
+/// Sign-out lives here as a destructive row rather than as the full-width red
+/// button that used to sit alone under the last card. Ending a shift is not the
+/// profile screen's headline action, and giving it the loudest control on the
+/// page invited exactly the mis-tap the confirmation dialog then had to catch.
 class DriverProfileSettingsCard extends StatelessWidget {
   const DriverProfileSettingsCard({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return DriverProfileSectionCard(
-      title: 'الإعدادات',
-      icon: Icons.settings_rounded,
-      // Scoped to themeMode: nothing else on this card reads the theme state,
-      // so an unrelated emission must not rebuild the row.
-      child: BlocBuilder<CaptainThemeCubit, CaptainThemeState>(
-        buildWhen: (previous, current) =>
-            previous.themeMode != current.themeMode,
-        builder: (context, state) => _AppearanceRow(themeMode: state.themeMode),
-      ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const CaptainSectionLabel('الإعدادات'),
+        CaptainListGroup(
+          children: [
+            // Scoped to themeMode: nothing else on this card reads the theme
+            // state, so an unrelated emission must not rebuild the row.
+            BlocBuilder<CaptainThemeCubit, CaptainThemeState>(
+              buildWhen: (previous, current) =>
+                  previous.themeMode != current.themeMode,
+              builder: (context, state) =>
+                  _AppearanceRow(themeMode: state.themeMode),
+            ),
+            CaptainListRow(
+              icon: Icons.logout_rounded,
+              label: 'تسجيل الخروج',
+              accentColor: CaptainColors.error,
+              onTap: () => confirmAndSignOut(context),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
@@ -37,43 +54,12 @@ class _AppearanceRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return CaptainListRow(
+      icon: Icons.dark_mode_outlined,
+      label: 'المظهر',
+      value: _themeModeLabel(themeMode),
+      showChevron: true,
       onTap: () => showCaptainAppearanceSheet(context),
-      borderRadius: CaptainDesignTokens.br12,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: CaptainDesignTokens.s4),
-        child: Row(
-          children: [
-            Icon(
-              Icons.dark_mode_outlined,
-              size: 18,
-              color: CaptainColors.textSecondaryFor(context),
-            ),
-            const SizedBox(width: CaptainDesignTokens.s12),
-            Text(
-              'المظهر',
-              style: CaptainTypography.bodyMedium(context).copyWith(
-                color: CaptainColors.textSecondaryFor(context),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-            const Spacer(),
-            Text(
-              _themeModeLabel(themeMode),
-              style: CaptainTypography.bodyMedium(context).copyWith(
-                color: CaptainColors.textPrimaryFor(context),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(width: CaptainDesignTokens.s4),
-            Icon(
-              Icons.chevron_left_rounded,
-              size: 20,
-              color: CaptainColors.textSecondaryFor(context),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

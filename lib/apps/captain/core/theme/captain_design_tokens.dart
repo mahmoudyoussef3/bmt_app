@@ -25,6 +25,12 @@ class CaptainDesignTokens {
   static const Radius r8 = Radius.circular(8);
   static const Radius r12 = Radius.circular(12);
   static const Radius r16 = Radius.circular(16);
+
+  /// The grouped-list radius. Sits between the inline [r16] used by chips and
+  /// panels and the [r24] reserved for heroes, so a screen's list groups read
+  /// as one tier of surface rather than competing with its hero card.
+  static const Radius r20 = Radius.circular(20);
+
   static const Radius r24 = Radius.circular(24);
   static const Radius r32 = Radius.circular(32);
 
@@ -34,6 +40,7 @@ class CaptainDesignTokens {
   static const BorderRadius br8 = BorderRadius.all(r8);
   static const BorderRadius br12 = BorderRadius.all(r12);
   static const BorderRadius br16 = BorderRadius.all(r16);
+  static const BorderRadius br20 = BorderRadius.all(r20);
   static const BorderRadius br24 = BorderRadius.all(r24);
   static const BorderRadius br32 = BorderRadius.all(r32);
   static const BorderRadius brPill = BorderRadius.all(rPill);

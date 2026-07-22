@@ -7,12 +7,12 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_loading_state.dart';
 
 import 'driver_profile_metrics.dart';
 
-/// Mirrors the loaded profile layout: identity header, then stats,
-/// verification, vehicle and info cards — the same shimmer treatment the home
-/// and history screens already use, instead of a bare spinner over an
+/// Mirrors the loaded profile layout: the identity hero, then the vehicle,
+/// verification, account and settings groups — the same shimmer treatment the
+/// home and history screens already use, instead of a bare spinner over an
 /// otherwise-blank screen.
 ///
-/// The header's gradient is chrome, not data, so it paints at full fidelity
+/// The hero's gradient is chrome, not data, so it paints at full fidelity
 /// straight away and only the captain's own details shimmer. That keeps the
 /// load→loaded transition to a cross-fade of the details rather than a jump
 /// from a grey block to a coloured one.
@@ -24,32 +24,32 @@ class DriverProfileSkeleton extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const _HeaderSkeleton(),
+        const _HeroSkeleton(),
         Expanded(
           child: ListView(
             padding: EdgeInsetsDirectional.fromSTEB(
+              CaptainDesignTokens.s20,
               CaptainDesignTokens.s24,
-              CaptainDesignTokens.s24,
-              CaptainDesignTokens.s24,
+              CaptainDesignTokens.s20,
               CaptainBottomNav.reservedSpace(context),
             ),
             children: const [
               CaptainSkeleton(
-                height: 120,
-                width: double.infinity,
-                borderRadius: CaptainDesignTokens.br24,
-              ),
-              SizedBox(height: CaptainDesignTokens.s16),
-              CaptainSkeleton(
                 height: 180,
                 width: double.infinity,
-                borderRadius: CaptainDesignTokens.br24,
+                borderRadius: CaptainDesignTokens.br20,
               ),
-              SizedBox(height: CaptainDesignTokens.s16),
+              SizedBox(height: CaptainDesignTokens.s24),
               CaptainSkeleton(
                 height: 200,
                 width: double.infinity,
-                borderRadius: CaptainDesignTokens.br24,
+                borderRadius: CaptainDesignTokens.br20,
+              ),
+              SizedBox(height: CaptainDesignTokens.s24),
+              CaptainSkeleton(
+                height: 160,
+                width: double.infinity,
+                borderRadius: CaptainDesignTokens.br20,
               ),
             ],
           ),
@@ -59,44 +59,55 @@ class DriverProfileSkeleton extends StatelessWidget {
   }
 }
 
-/// Mirrors `DriverProfileHeader`'s identity row: avatar leading, name beside
-/// it, standing trailing — at the same toolbar height, so the load→loaded
+/// Mirrors `DriverProfileHeader`: portrait, name, standing, then the two
+/// lifetime-total tiles — at the same sizes and paddings, so the load→loaded
 /// transition is a cross-fade rather than a jump.
-class _HeaderSkeleton extends StatelessWidget {
-  const _HeaderSkeleton();
+class _HeroSkeleton extends StatelessWidget {
+  const _HeroSkeleton();
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         gradient: CaptainColors.primaryGradient(context),
+        borderRadius: DriverProfileMetrics.heroRadius,
       ),
       child: SafeArea(
         bottom: false,
-        child: SizedBox(
-          height: DriverProfileMetrics.toolbarHeight(context),
-          child: const Padding(
-            padding: EdgeInsetsDirectional.symmetric(
-              horizontal: CaptainDesignTokens.s24,
-            ),
-            child: Row(
-              children: [
-                // Tinted to sit on the gradient — the shared shimmer is tuned
-                // for the app's neutral surfaces and disappears against the
-                // brand.
-                _OnGradientSkeleton(
-                  width: DriverProfileMetrics.avatarSize,
-                  height: DriverProfileMetrics.avatarSize,
-                  radius: DriverProfileMetrics.avatarSize / 2,
-                ),
-                SizedBox(width: CaptainDesignTokens.s12),
-                Expanded(
-                  child: _OnGradientSkeleton(width: 150, height: 18, radius: 9),
-                ),
-                SizedBox(width: CaptainDesignTokens.s8),
-                _OnGradientSkeleton(width: 96, height: 26, radius: 13),
-              ],
-            ),
+        child: Padding(
+          padding: DriverProfileMetrics.heroPadding,
+          child: Column(
+            children: const [
+              // Tinted to sit on the gradient — the shared shimmer is tuned for
+              // the app's neutral surfaces and disappears against the brand.
+              _OnGradient(
+                width: DriverProfileMetrics.avatarSize,
+                height: DriverProfileMetrics.avatarSize,
+                radius: DriverProfileMetrics.avatarSize / 2,
+              ),
+              SizedBox(height: CaptainDesignTokens.s16),
+              _OnGradient(width: 190, height: 24, radius: 12),
+              SizedBox(height: CaptainDesignTokens.s12),
+              _OnGradient(width: 130, height: 26, radius: 13),
+              SizedBox(height: CaptainDesignTokens.s24),
+              Row(
+                children: [
+                  Expanded(
+                    child: _OnGradient(
+                      height: DriverProfileMetrics.statTileHeight,
+                      radius: 20,
+                    ),
+                  ),
+                  SizedBox(width: CaptainDesignTokens.s12),
+                  Expanded(
+                    child: _OnGradient(
+                      height: DriverProfileMetrics.statTileHeight,
+                      radius: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -104,14 +115,10 @@ class _HeaderSkeleton extends StatelessWidget {
   }
 }
 
-class _OnGradientSkeleton extends StatelessWidget {
-  const _OnGradientSkeleton({
-    required this.width,
-    required this.height,
-    required this.radius,
-  });
+class _OnGradient extends StatelessWidget {
+  const _OnGradient({this.width, required this.height, required this.radius});
 
-  final double width;
+  final double? width;
   final double height;
   final double radius;
 

@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage.dart';
 import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage_labels.dart';
+import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage_palette.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_confirm_dialog.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 
@@ -60,25 +61,31 @@ class TripExecutionPrimaryAction extends StatelessWidget {
                 : Icons.hourglass_top_rounded,
           ),
 
+          // All three take the shared stage palette rather than a local
+          // literal: this button used to be `Colors.orange` for boarding and
+          // `CaptainColors.success` for underway, while the same trip was drawn
+          // amber and sky by every other screen. The palette's colours are also
+          // the ones dark enough to carry a legible label — see
+          // `CaptainTripStagePalette.accent`.
           CaptainTripStage.readyToBoard => _ActionButton(
             onPressed: () => context.read<TripExecutionCubit>().board(tripId),
             icon: Icons.people_alt_rounded,
             label: CaptainTripStageLabels.action(stage),
-            color: CaptainColors.primary,
+            color: CaptainTripStagePalette.accent(stage),
           ),
 
           CaptainTripStage.boarding => _ActionButton(
             onPressed: () => context.read<TripExecutionCubit>().start(tripId),
             icon: Icons.play_circle_fill_rounded,
             label: CaptainTripStageLabels.action(stage),
-            color: Colors.orange,
+            color: CaptainTripStagePalette.accent(stage),
           ),
 
           CaptainTripStage.underway => _ActionButton(
             onPressed: () => _confirmAndComplete(context),
             icon: Icons.check_circle_rounded,
             label: CaptainTripStageLabels.action(stage),
-            color: CaptainColors.success,
+            color: CaptainTripStagePalette.accent(stage),
           ),
 
           // A terminal state, not an action — disabled (not a live button that
@@ -113,6 +120,9 @@ class TripExecutionPrimaryAction extends StatelessWidget {
 
 /// A gate the captain cannot open, stated plainly. Deliberately not a greyed
 /// button: there is nothing to press, and the reason is the useful part.
+///
+/// Sized to the same 56 as the live button so the docked bar keeps one height
+/// across every stage and the page above it never reflows on a transition.
 class _WaitingPanel extends StatelessWidget {
   const _WaitingPanel({
     required this.title,
@@ -128,33 +138,46 @@ class _WaitingPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(CaptainDesignTokens.s20),
+      constraints: const BoxConstraints(minHeight: 56),
+      padding: const EdgeInsets.symmetric(
+        horizontal: CaptainDesignTokens.s16,
+        vertical: CaptainDesignTokens.s8,
+      ),
       decoration: BoxDecoration(
         color: CaptainColors.primary.withValues(alpha: 0.06),
-        borderRadius: CaptainDesignTokens.br24,
-        border: Border.all(color: CaptainColors.dividerFor(context)),
+        borderRadius: CaptainDesignTokens.br16,
       ),
       child: Row(
         children: [
-          Icon(icon, size: 28, color: CaptainColors.textSecondaryFor(context)),
-          const SizedBox(width: CaptainDesignTokens.s16),
+          Icon(icon, size: 22, color: CaptainColors.textSecondaryFor(context)),
+          const SizedBox(width: CaptainDesignTokens.s12),
           Expanded(
             child: Column(
+              mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: CaptainTypography.titleSmall(context).copyWith(
                     fontWeight: FontWeight.w900,
                     color: CaptainColors.textPrimaryFor(context),
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
+                // One line, so the bar keeps the same height as the live
+                // button it alternates with — a docked bar that changes height
+                // on a stage transition reflows the whole page under the
+                // captain's thumb.
                 Text(
                   message,
-                  style: CaptainTypography.bodySmall(context).copyWith(
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: CaptainTypography.labelSmall(context).copyWith(
                     color: CaptainColors.textSecondaryFor(context),
-                    height: 1.5,
+                    fontWeight: FontWeight.w600,
+                    height: 1.4,
                   ),
                 ),
               ],
@@ -173,22 +196,38 @@ class _TerminalLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return OutlinedButton(
-      onPressed: null,
-      style: OutlinedButton.styleFrom(
-        padding: const EdgeInsets.symmetric(vertical: CaptainDesignTokens.s16),
-        shape: const RoundedRectangleBorder(
-          borderRadius: CaptainDesignTokens.br16,
-        ),
+    return Container(
+      width: double.infinity,
+      height: 56,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: CaptainColors.offline.withValues(alpha: 0.10),
+        borderRadius: CaptainDesignTokens.br16,
       ),
-      child: Text(
-        CaptainTripStageLabels.action(stage),
-        style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            CaptainTripStagePalette.icon(stage),
+            size: 20,
+            color: CaptainColors.textSecondaryFor(context),
+          ),
+          const SizedBox(width: CaptainDesignTokens.s8),
+          Text(
+            CaptainTripStageLabels.action(stage),
+            style: CaptainTypography.titleSmall(context).copyWith(
+              fontWeight: FontWeight.w800,
+              color: CaptainColors.textSecondaryFor(context),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
+/// The live control. Full-bleed inside the docked bar, at the height every
+/// other primary control in the app uses.
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.onPressed,
@@ -204,36 +243,38 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // Measured against the fill: boarding is amber, and a white label on it is
+    // 2:1. See `CaptainTripStagePalette.onAccent`.
+    final foreground = CaptainTripStagePalette.onAccent(color);
+
+    return SizedBox(
       width: double.infinity,
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 16,
-            offset: const Offset(0, 8),
+      height: 56,
+      child: Material(
+        color: color,
+        borderRadius: CaptainDesignTokens.br16,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: CaptainDesignTokens.br16,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 24, color: foreground),
+              const SizedBox(width: CaptainDesignTokens.s8),
+              Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    style: CaptainTypography.titleMedium(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w900, color: foreground),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
-      child: FilledButton.icon(
-        onPressed: onPressed,
-        style: FilledButton.styleFrom(
-          backgroundColor: color,
-          foregroundColor: Colors.white,
-          padding: const EdgeInsets.symmetric(
-            vertical: CaptainDesignTokens.s20,
-          ),
-          shape: const RoundedRectangleBorder(
-            borderRadius: CaptainDesignTokens.br24,
-          ),
-          elevation: 0,
-        ),
-        icon: Icon(icon, size: 28),
-        label: Text(
-          label,
-          style: CaptainTypography.titleMedium(
-            context,
-          ).copyWith(fontWeight: FontWeight.w900, color: Colors.white),
         ),
       ),
     );

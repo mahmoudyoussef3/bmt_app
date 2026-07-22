@@ -79,16 +79,14 @@ class _HeaderBackground extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The app's one brand gradient, shared with the splash mark, the auth
+    // lockup and the profile hero. It used to fade primary into a paler primary
+    // so it wouldn't clash with the (then also blue) focus card sitting right
+    // under it; now that the card is a surface, the bar can carry the full
+    // identity and read as chrome rather than as more content.
     return DecoratedBox(
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            CaptainColors.primary,
-            CaptainColors.primary.withValues(alpha: 0.82),
-          ],
-          begin: AlignmentDirectional.topStart,
-          end: AlignmentDirectional.bottomEnd,
-        ),
+        gradient: CaptainColors.primaryGradient(context),
       ),
     );
   }

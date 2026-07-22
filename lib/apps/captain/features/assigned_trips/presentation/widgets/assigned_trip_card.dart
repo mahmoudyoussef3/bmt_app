@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage_labels.dart';
+import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage_palette.dart';
 import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
@@ -11,6 +12,17 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 import '../../domain/entities/assigned_trip.dart';
 import 'assigned_trip_card_parts.dart';
 
+/// One of the day's remaining trips.
+///
+/// Laid out around a leading time rail — departure over arrival, joined by a
+/// short track — which is how a timetable is read: the captain scans the column
+/// of clock times for the one that is next, then reads across. The card used to
+/// bury both times inside a row of small grey facts, so finding "the 13:00" in
+/// a list meant reading every card in full.
+///
+/// It is also a plain surface: no outline. Six outlined-and-shadowed rectangles
+/// down a page is a dashboard's widget grid; a phone list separates its rows
+/// with space and a soft lift.
 class AssignedTripCard extends StatelessWidget {
   const AssignedTripCard({
     super.key,
@@ -27,72 +39,183 @@ class AssignedTripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final isDone = trip.status == AssignedTripStatus.completed;
 
-    return Container(
-      padding: const EdgeInsets.all(CaptainDesignTokens.s16),
-      decoration: BoxDecoration(
-        color: CaptainColors.surfaceFor(context),
-        borderRadius: CaptainDesignTokens.br24,
-        border: Border.all(color: CaptainColors.dividerFor(context)),
-        boxShadow: CaptainDesignTokens.softShadow(context),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Text(
-                  trip.route,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: CaptainTypography.titleSmall(
-                    context,
-                  ).copyWith(fontWeight: FontWeight.w800, height: 1.3),
-                ),
-              ),
-              const SizedBox(width: CaptainDesignTokens.s8),
-              TripStatusBadge(status: trip.status),
-            ],
+    return CaptainTicker(
+      builder: (context, now) {
+        final stage = trip.stageAt(now);
+        final accent = CaptainTripStagePalette.accent(stage);
+
+        return Container(
+          decoration: BoxDecoration(
+            color: CaptainColors.surfaceFor(context),
+            borderRadius: CaptainDesignTokens.br20,
+            boxShadow: CaptainDesignTokens.softShadow(context),
           ),
-          const SizedBox(height: CaptainDesignTokens.s12),
-          Row(
-            children: [
-              TripFact(icon: Icons.schedule_rounded, text: _timeRange()),
-              const SizedBox(width: CaptainDesignTokens.s12),
-              TripFact(
-                icon: Icons.directions_bus_rounded,
-                text: trip.vehicleNumber.isEmpty
-                    ? 'مركبة غير محددة'
-                    : trip.vehicleNumber,
+          clipBehavior: Clip.antiAlias,
+          child: Opacity(
+            // A finished trip stays legible but stops competing with the ones
+            // the captain still has to drive.
+            opacity: isDone ? 0.72 : 1,
+            child: Padding(
+              padding: const EdgeInsets.all(CaptainDesignTokens.s16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _TimeRail(trip: trip, accent: accent),
+                        const SizedBox(width: CaptainDesignTokens.s16),
+                        Expanded(child: _Summary(trip: trip)),
+                      ],
+                    ),
+                  ),
+                  if (trip.passengerCount > 0) ...[
+                    const SizedBox(height: CaptainDesignTokens.s16),
+                    _BoardingBar(trip: trip, accent: accent),
+                  ],
+                  const SizedBox(height: CaptainDesignTokens.s16),
+                  _Actions(
+                    isDone: isDone,
+                    openLabel: CaptainTripStageLabels.openAction(stage),
+                    isRunning: trip.status.isRunning,
+                    onOpen: onOpen,
+                    onManifest: onManifest,
+                  ),
+                ],
               ),
-            ],
-          ),
-          const SizedBox(height: CaptainDesignTokens.s12),
-          _BoardingBar(trip: trip),
-          const SizedBox(height: CaptainDesignTokens.s16),
-          CaptainTicker(
-            builder: (context, now) => _Actions(
-              isDone: isDone,
-              openLabel: CaptainTripStageLabels.openAction(trip.stageAt(now)),
-              isRunning: trip.status.isRunning,
-              onOpen: onOpen,
-              onManifest: onManifest,
             ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
+}
 
-  String _timeRange() =>
-      CaptainFormats.timeRange(trip.departureTime, trip.expectedArrivalTime);
+/// Departure over arrival, joined by a track — the timetable column a captain
+/// scans down to find the trip they are looking for.
+class _TimeRail extends StatelessWidget {
+  const _TimeRail({required this.trip, required this.accent});
+
+  final AssignedTrip trip;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Spread to the rail's full height so each time sits beside its own
+        // marker on the track, the way a timetable pairs them.
+        Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              CaptainFormats.clock(trip.departureTime),
+              style: CaptainTypography.titleMedium(context).copyWith(
+                fontWeight: FontWeight.w900,
+                color: CaptainColors.textPrimaryFor(context),
+                height: 1.1,
+              ),
+            ),
+            Text(
+              CaptainFormats.clock(trip.expectedArrivalTime),
+              style: CaptainTypography.labelMedium(context).copyWith(
+                color: CaptainColors.textSecondaryFor(context),
+                fontWeight: FontWeight.w700,
+                height: 1.1,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(width: CaptainDesignTokens.s12),
+        _Track(accent: accent),
+      ],
+    );
+  }
+}
+
+/// The dot–line–ring that ties the two clock times together.
+class _Track extends StatelessWidget {
+  const _Track({required this.accent});
+
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final line = CaptainColors.dividerFor(context);
+
+    return Column(
+      children: [
+        Container(
+          width: 9,
+          height: 9,
+          margin: const EdgeInsets.only(top: 6),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: accent),
+        ),
+        Expanded(child: Container(width: 2, color: line)),
+        Container(
+          width: 9,
+          height: 9,
+          margin: const EdgeInsets.only(bottom: 2),
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: line, width: 2),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// The route and its status — everything that isn't a time.
+class _Summary extends StatelessWidget {
+  const _Summary({required this.trip});
+
+  final AssignedTrip trip;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                trip.route,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: CaptainTypography.titleSmall(context).copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: CaptainColors.textPrimaryFor(context),
+                  height: 1.3,
+                ),
+              ),
+            ),
+            const SizedBox(width: CaptainDesignTokens.s8),
+            TripStatusBadge(status: trip.status),
+          ],
+        ),
+        const SizedBox(height: 6),
+        TripFact(
+          icon: Icons.directions_bus_rounded,
+          text: trip.vehicleNumber.isEmpty
+              ? 'مركبة غير محددة'
+              : trip.vehicleNumber,
+        ),
+      ],
+    );
+  }
 }
 
 class _BoardingBar extends StatelessWidget {
-  const _BoardingBar({required this.trip});
+  const _BoardingBar({required this.trip, required this.accent});
 
   final AssignedTrip trip;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
@@ -104,14 +227,12 @@ class _BoardingBar extends StatelessWidget {
       children: [
         Expanded(
           child: ClipRRect(
-            borderRadius: CaptainDesignTokens.br8,
+            borderRadius: CaptainDesignTokens.brPill,
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: CaptainColors.primary.withValues(alpha: 0.12),
-              valueColor: AlwaysStoppedAnimation<Color>(
-                progress >= 1 ? CaptainColors.success : CaptainColors.primary,
-              ),
+              backgroundColor: accent.withValues(alpha: 0.14),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
             ),
           ),
         ),
@@ -120,7 +241,7 @@ class _BoardingBar extends StatelessWidget {
           '${trip.boardedCount}/${trip.passengerCount} صعدوا',
           style: CaptainTypography.labelMedium(context).copyWith(
             color: CaptainColors.textSecondaryFor(context),
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ],

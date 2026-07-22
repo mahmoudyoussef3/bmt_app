@@ -1,15 +1,18 @@
+# Default native launch screen, used when the generator runs without --path.
+# Kept in sync with config/splash/*.yaml, which is where the per-flavor configs
+# live and where the reasoning is documented.
 flutter_native_splash:
-  color: "#FAFAF5"
-  color_dark: "#1F1F1F"
-  image: "assets/images/app_icon.png"
-  image_dark: "assets/images/app_icon.png"
-  
+  color: "#F9FAFB"
+  color_dark: "#0F172A"
+  image: "assets/branding/splash_mark.png"
+  image_dark: "assets/branding/splash_mark.png"
+
   android: true
   ios: true
   web: false
 
   android_12:
-    image: "assets/images/app_icon.png"
-    image_dark: "assets/images/app_icon.png"
-    icon_background_color: "#FAFAF5"
-    icon_background_color_dark: "#1F1F1F"
+    image: "assets/branding/splash_mark_android12.png"
+    image_dark: "assets/branding/splash_mark_android12.png"
+    color: "#F9FAFB"
+    color_dark: "#0F172A"

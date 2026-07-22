@@ -10,7 +10,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_awaiting_trips_view.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_dev_mode_sheet.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 
 import '../../domain/entities/assigned_trip.dart';
 import '../../domain/entities/captain_day_summary.dart';
@@ -23,7 +22,6 @@ import '../widgets/assigned_trips_skeleton.dart';
 import '../widgets/assigned_trips_stats_strip.dart';
 import '../widgets/captain_day_complete_view.dart';
 import '../widgets/captain_focus_card.dart';
-import '../widgets/home_quick_actions.dart';
 import '../widgets/new_assignments_banner.dart';
 
 class AssignedTripsPage extends StatelessWidget {
@@ -173,20 +171,14 @@ class _DaySlivers extends StatelessWidget {
               const SizedBox(height: CaptainDesignTokens.s16),
             ],
             if (focusTrip != null) ...[
+              // The card carries the day's shortcuts in its own footer — they
+              // act on this trip, so they travel with it rather than floating
+              // underneath as a separate row of tiles.
               CaptainFocusCard(
                 trip: focusTrip,
                 onOpen: () => context.openTripExecution(focusTrip),
               ),
-              const SizedBox(height: CaptainDesignTokens.s16),
-              // Rebuilt on the ticker so the shortcut set follows the trip
-              // into boarding without waiting for a realtime trip change.
-              CaptainTicker(
-                builder: (context, now) => HomeQuickActions(
-                  tripId: focusTrip.id,
-                  stage: focusTrip.stageAt(now),
-                ),
-              ),
-              const SizedBox(height: CaptainDesignTokens.s16),
+              const SizedBox(height: CaptainDesignTokens.s20),
               // The finished day states these numbers in its own hero, so the
               // strip would only repeat them.
               AssignedTripsStatsStrip(summary: summary),

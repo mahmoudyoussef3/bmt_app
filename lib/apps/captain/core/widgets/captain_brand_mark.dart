@@ -8,13 +8,11 @@ import '../theme/captain_colors.dart';
 /// mark greets the captain from cold start through to sign-in, rather than
 /// each screen rolling its own gradient tile.
 class CaptainBrandMark extends StatelessWidget {
-  const CaptainBrandMark({
-    super.key,
-    this.icon = Icons.directions_bus_rounded,
-    this.size = 84,
-  });
+  const CaptainBrandMark({super.key, this.icon, this.size = 84});
 
-  final IconData icon;
+  /// Glyph drawn inside the tile. When null the EasyWay logo mark is used —
+  /// the same glyph the launcher icon and the native launch frame carry.
+  final IconData? icon;
   final double size;
 
   @override
@@ -36,7 +34,20 @@ class CaptainBrandMark extends StatelessWidget {
           ),
         ],
       ),
-      child: Icon(icon, size: size * 0.5, color: scheme.onPrimary),
+      child: icon != null
+          ? Icon(icon, size: size * 0.5, color: scheme.onPrimary)
+          : Padding(
+              padding: EdgeInsets.all(size * 0.19),
+              child: Image.asset(
+                'assets/branding/brand_glyph.png',
+                fit: BoxFit.contain,
+                errorBuilder: (_, _, _) => Icon(
+                  Icons.directions_bus_rounded,
+                  size: size * 0.5,
+                  color: scheme.onPrimary,
+                ),
+              ),
+            ),
     );
   }
 }
