@@ -19,6 +19,8 @@ class DashboardRoutes {
   static const reviews = '/reviews';
   static const reports = '/reports';
   static const ownerOverview = '/owner-overview';
+  static const officeProfile = '/office-profile';
+  static const platformOffices = '/platform-offices';
   static const settings = '/settings';
   static const permissions = '/permissions';
   static const notifications = '/notifications';

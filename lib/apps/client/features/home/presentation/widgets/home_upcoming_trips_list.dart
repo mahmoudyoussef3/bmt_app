@@ -7,37 +7,40 @@ import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_upcoming_trip_card.dart';
 
-/// The single trip feed on Home. A vertical stack, not a carousel: riders
-/// compare departures against each other, and hidden cards do not get booked.
+/// The departure board on Home: every trip a rider can take a seat on, soonest
+/// first.
+///
+/// A sliver rather than a boxed column — Home carries the whole board, not a
+/// teaser slice, so cards are built as they scroll into view instead of all at
+/// once. A vertical stack, not a carousel: riders compare departures against
+/// each other, and hidden cards do not get booked.
 class HomeUpcomingTripsList extends StatelessWidget {
   const HomeUpcomingTripsList({
     super.key,
     required this.trips,
-    required this.previewCount,
     required this.onBook,
     required this.onBrowseRoutes,
   });
 
   final List<UpcomingTripData> trips;
-  final int previewCount;
   final ValueChanged<UpcomingTripData> onBook;
   final VoidCallback onBrowseRoutes;
 
   @override
   Widget build(BuildContext context) {
     if (trips.isEmpty) {
-      return _NoDepartures(onBrowseRoutes: onBrowseRoutes);
+      return SliverToBoxAdapter(
+        child: _NoDepartures(onBrowseRoutes: onBrowseRoutes),
+      );
     }
 
-    final visible = trips.take(previewCount).toList();
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        for (final trip in visible) ...[
-          HomeUpcomingTripCard(trip: trip, onBook: () => onBook(trip)),
-          if (trip != visible.last) const SizedBox(height: ClientSpacing.sm),
-        ],
-      ],
+    return SliverList.separated(
+      itemCount: trips.length,
+      separatorBuilder: (_, _) => const SizedBox(height: ClientSpacing.sm),
+      itemBuilder: (context, index) {
+        final trip = trips[index];
+        return HomeUpcomingTripCard(trip: trip, onBook: () => onBook(trip));
+      },
     );
   }
 }
@@ -87,9 +90,9 @@ class _NoDepartures extends StatelessWidget {
                     const SizedBox(height: 3),
                     Text(
                       context.l10n.home_noDeparturesBody,
-                      style: ClientTypography.bodySmall(context).copyWith(
-                        color: ClientColors.textSecondaryFor(context),
-                      ),
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
                     ),
                   ],
                 ),

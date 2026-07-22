@@ -1,0 +1,96 @@
+import 'package:bmt_app/apps/dashboard/core/permissions/dashboard_permission.dart';
+import 'package:bmt_app/apps/dashboard/core/permissions/dashboard_role.dart';
+import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+/// Who may reach platform administration.
+///
+/// Two independent conditions, and the second is the one that matters: the
+/// office role gates the *menu*, but `isPlatformAdmin` gates the module, because
+/// every other dashboard permission acts inside the operator's own office and
+/// this one does not.
+void main() {
+  group('current_office_context parsing', () {
+    test('reads the platform-admin flag and the listing status', () {
+      final context = OfficeContext.fromRpc(const {
+        'office_id': 'office-a',
+        'office_name': 'مكتب الإسكندرية',
+        'office_slug': 'alex-office',
+        'role': 'dashboard_admin',
+        'username': 'ops.alex',
+        'full_name': 'أحمد',
+        'listing_status': 'draft',
+        'is_platform_admin': true,
+      });
+
+      expect(context.isPlatformAdmin, isTrue);
+      expect(context.listingStatus, 'draft');
+      expect(context.isListed, isFalse);
+      expect(context.role, DashboardRole.admin);
+    });
+
+    test('defaults to not-a-platform-admin when the key is absent', () {
+      // Older sessions and any response shape that predates the flag must not
+      // be read as permission.
+      final context = OfficeContext.fromRpc(const {
+        'office_id': 'office-a',
+        'office_name': 'مكتب',
+        'office_slug': 'office',
+        'role': 'support_agent',
+        'username': 'ops',
+      });
+
+      expect(context.isPlatformAdmin, isFalse);
+      // Absent listing status means an office that predates the column, which
+      // the migration backfilled to listed.
+      expect(context.listingStatus, 'listed');
+      expect(context.isListed, isTrue);
+    });
+
+    test('a non-boolean flag is not permission', () {
+      for (final value in ['true', 1, null, 'yes']) {
+        final context = OfficeContext.fromRpc({
+          'office_id': 'office-a',
+          'office_name': 'مكتب',
+          'office_slug': 'office',
+          'role': 'dashboard_admin',
+          'username': 'ops',
+          'is_platform_admin': value,
+        });
+        expect(context.isPlatformAdmin, isFalse, reason: 'value: $value');
+      }
+    });
+  });
+
+  group('DashboardPermissions', () {
+    test('platform offices is in the owner set only', () {
+      expect(
+        DashboardPermissions.canAccess(
+          DashboardRole.admin,
+          DashboardPermission.platformOffices,
+        ),
+        isTrue,
+      );
+      expect(
+        DashboardPermissions.canAccess(
+          DashboardRole.supportAgent,
+          DashboardPermission.platformOffices,
+        ),
+        isFalse,
+      );
+    });
+
+    test('the support-agent set gained nothing', () {
+      expect(
+        DashboardPermissions.permissionsFor(DashboardRole.supportAgent),
+        const {
+          DashboardPermission.bookings,
+          DashboardPermission.tickets,
+          DashboardPermission.reports,
+          DashboardPermission.paymentVerification,
+          DashboardPermission.notifications,
+        },
+      );
+    });
+  });
+}

@@ -1,4 +1,4 @@
-import 'package:bmt_app/apps/client/features/home/data/models/home_money.dart';
+import 'package:bmt_app/apps/client/core/utils/client_money.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 
 /// Maps `operation_bookings` rows into the seats Home shows back to the rider.

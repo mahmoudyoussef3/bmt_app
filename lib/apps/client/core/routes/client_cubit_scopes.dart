@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/daily_bo
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/popular_routes_cubit.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/chat_thread_cubit.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/communication_cubit.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/cubit/home_cubit.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/cubit/notifications_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/my_subscription_cubit.dart';
@@ -139,6 +140,19 @@ abstract final class ClientCubitScopes {
         create: (_) => clientGetIt<OfficesDirectoryCubit>()..load(),
         child: child,
       );
+
+  /// Home runs on two independent loads: its own data, and the marketplace
+  /// directory behind the companies rail. They are scoped together so a slow
+  /// or failed directory never holds up the departure board.
+  static Widget home(Widget child) => MultiBlocProvider(
+    providers: [
+      BlocProvider<HomeCubit>(create: (_) => clientGetIt<HomeCubit>()..load()),
+      BlocProvider<OfficesDirectoryCubit>(
+        create: (_) => clientGetIt<OfficesDirectoryCubit>()..load(),
+      ),
+    ],
+    child: child,
+  );
 
   /// Scopes one office's profile, loading its routes fresh from its id.
   static Widget officeProfile(Widget child, {required String officeId}) =>

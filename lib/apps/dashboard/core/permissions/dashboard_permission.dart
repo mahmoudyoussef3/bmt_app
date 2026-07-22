@@ -21,6 +21,14 @@ enum DashboardPermission {
   reports,
   ownerOverview,
   notifications,
+  // The office's own marketplace record. Owner-only to match the
+  // `offices_operator_update` policy, which requires `dashboard_admin`.
+  officeProfile,
+  // Onboarding new offices onto the platform. Being in the owner's set is
+  // necessary but NOT sufficient: the module is additionally gated on
+  // `OfficeContext.isPlatformAdmin`, because this is the one permission that
+  // reaches outside the signed-in office. See `_DashboardNavItem.platformOnly`.
+  platformOffices,
   settings,
   permissions,
 }

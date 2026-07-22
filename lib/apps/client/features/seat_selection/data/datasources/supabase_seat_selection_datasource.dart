@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bmt_app/apps/client/core/utils/bookable_trip.dart';
 import '../../domain/entities/seat_option.dart';
 import '../models/seat_selection_model.dart';
 import 'seat_selection_datasource.dart';
@@ -54,6 +55,13 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
 
       if (tripResponse == null) {
         throw Exception('Trip details could not be found.');
+      }
+
+      // The seat map is the last screen before money moves, and a trip can flip
+      // out of `open_for_booking` while a rider sits on it. Refuse here rather
+      // than let them pick a seat the booking RPC will reject at checkout.
+      if (!BookableTrip.isOffered(tripResponse)) {
+        throw Exception('This trip is no longer open for booking.');
       }
 
       final vehicle = tripResponse['vehicles'] as Map<String, dynamic>? ?? {};

@@ -695,6 +695,17 @@
   "home_noDepartures": "No departures scheduled",
   "home_noDeparturesBody": "Nothing is open for booking right now. Browse the routes to see what runs and when.",
   "home_browseRoutes": "Browse routes",
+  "home_travelWith": "Travel with",
+  "home_companies": "Transport companies",
+  "home_companiesSubtitle": "Pick an operator to see everything it runs.",
+  "home_departuresOpenCount": "{count, plural, =1{1 trip open for booking} other{{count} trips open for booking}}",
+  "@home_departuresOpenCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "home_searchTripTitle": "Search Trip",
   "home_searchTripSubtitle": "Find your next commute in seconds",
   "home_pickupLocation": "Pickup Location",
@@ -2198,6 +2209,8 @@
   "offices_directoryEmpty": "No offices are open for booking right now.",
   "offices_routesHeader": "Routes this office runs",
   "offices_noRoutes": "This office has no bookable routes right now.",
+  "offices_departuresHeader": "Departures on sale",
+  "offices_noDepartures": "This office has no departures on sale right now.",
   "offices_noRatingsYet": "No ratings yet",
   "offices_ratingsCount": "{count, plural, =1{1 review} other{{count} reviews}}",
   "@offices_ratingsCount": {

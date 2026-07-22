@@ -16,6 +16,8 @@ class OfficeContext {
     required this.username,
     this.fullName = '',
     this.logoUrl,
+    this.listingStatus = 'listed',
+    this.isPlatformAdmin = false,
   });
 
   final String officeId;
@@ -25,6 +27,23 @@ class OfficeContext {
   final String username;
   final String fullName;
   final String? logoUrl;
+
+  /// The office's marketplace visibility: `draft`, `listed` or `unlisted`.
+  ///
+  /// Separate from the office's operational status, which is always `active` by the
+  /// time this context exists — `current_office_context` refuses to build one
+  /// otherwise. A freshly onboarded office is `draft`: fully workable by its own
+  /// staff, invisible to passengers until the platform publishes it.
+  final String listingStatus;
+
+  /// Whether this operator also administers the EWT platform itself.
+  ///
+  /// A hint for the shell, nothing more. It decides whether the onboarding module is
+  /// offered; every platform RPC behind it re-checks `is_platform_admin()` server-side,
+  /// so a forged `true` reaches a screen whose every action is refused.
+  final bool isPlatformAdmin;
+
+  bool get isListed => listingStatus == 'listed';
 
   /// The operator's display name, falling back to the login name when the account
   /// has no full name recorded.
@@ -39,6 +58,8 @@ class OfficeContext {
       username: (row['username'] as String?) ?? '',
       fullName: (row['full_name'] as String?) ?? '',
       logoUrl: row['logo_url'] as String?,
+      listingStatus: (row['listing_status'] as String?) ?? 'listed',
+      isPlatformAdmin: row['is_platform_admin'] == true,
     );
   }
 }

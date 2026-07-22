@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_upcoming_trip_card.dart';
@@ -40,15 +41,20 @@ Future<void> _pumpList(
 }) {
   return tester.pumpWidget(
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(brightness: brightness),
       home: Scaffold(
-        body: SingleChildScrollView(
-          child: HomeUpcomingTripsList(
-            trips: trips,
-            previewCount: 3,
-            onBook: onBook ?? (_) {},
-            onBrowseRoutes: () {},
-          ),
+        // The feed is a sliver so Home can build its cards lazily; it only
+        // renders inside a scroll view that accepts slivers.
+        body: CustomScrollView(
+          slivers: [
+            HomeUpcomingTripsList(
+              trips: trips,
+              onBook: onBook ?? (_) {},
+              onBrowseRoutes: () {},
+            ),
+          ],
         ),
       ),
     ),
@@ -109,6 +115,9 @@ void main() {
       final today = DateTime.now().toIso8601String().split('T').first;
       await tester.pumpWidget(
         MaterialApp(
+          // "Today" is a localized label, so this needs the real delegates.
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Builder(
             builder: (context) {
               day = formatTripDay(context, today);

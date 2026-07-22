@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bmt_app/apps/client/core/utils/bookable_trip.dart';
 import '../../domain/entities/daily_booking_data.dart';
 import 'daily_booking_datasource.dart';
 
@@ -11,10 +12,15 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
   Future<DailyBookingData> getDailyBookingData() async {
     // `public_trips` carries sanitised `drivers` / `vehicles` jsonb columns in
     // its `*`, replacing the table embeds the base table used to serve.
+    //
+    // This screen sells same-day seats, so it asks for exactly what can be
+    // sold: `open_for_booking`, not yet departed. A `boarding` bus has closed
+    // its manifest and a yesterday-dated one has left.
     final tripsResponse = await _supabase
         .from('public_trips')
-        .select()
-        .inFilter('status', ['open_for_booking', 'boarding']);
+        .select('*, ${BookableTrip.seatsEmbed}')
+        .eq('status', BookableTrip.status)
+        .gte('trip_date', BookableTrip.today());
 
     final routesResponse = await _supabase
         .from('operation_routes')
@@ -33,15 +39,19 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
     final vehicles = tripsResponse.map((data) {
       final vehicle = data['vehicles'] as Map<String, dynamic>?;
       final driver = data['drivers'] as Map<String, dynamic>?;
-      final capacity = vehicle?['capacity'] as int? ?? 14;
-      final passengers = data['booked_seats'] as int? ?? 0;
+      final capacity =
+          (data['capacity'] as num?)?.toInt() ??
+          (vehicle?['capacity'] as num?)?.toInt() ??
+          14;
+      final seatsLeft = BookableTrip.seatsLeft(data);
+      final taken = (capacity - seatsLeft).clamp(0, capacity);
 
       return DailyBookingVehicle(
         id: data['id']?.toString() ?? '',
         driver: driver?['full_name']?.toString() ?? 'Unknown Driver',
         time: data['departure_time']?.toString() ?? '',
-        seatsLeft: capacity - passengers,
-        occupancy: capacity > 0 ? passengers / capacity : 0,
+        seatsLeft: seatsLeft,
+        occupancy: capacity > 0 ? taken / capacity : 0,
       );
     }).toList();
 

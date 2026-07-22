@@ -116,6 +116,7 @@ import '../../features/offices/data/datasources/supabase_offices_datasource.dart
 import '../../features/offices/data/repositories/offices_repository_impl.dart';
 import '../../features/offices/domain/repositories/offices_repository.dart';
 import '../../features/offices/domain/usecases/get_office_routes_usecase.dart';
+import '../../features/offices/domain/usecases/get_office_trips_usecase.dart';
 import '../../features/offices/domain/usecases/get_offices_usecase.dart';
 import '../../features/offices/presentation/cubit/office_profile_cubit.dart';
 import '../../features/offices/presentation/cubit/offices_directory_cubit.dart';
@@ -903,7 +904,8 @@ void _registerSupportDependencies() {
       () => SupportCubit(
         getMySupportTickets: clientGetIt<GetMySupportTicketsUseCase>(),
         createSupportTicket: clientGetIt<CreateSupportTicketUseCase>(),
-        getRelatedBookingOptions: clientGetIt<GetRelatedBookingOptionsUseCase>(),
+        getRelatedBookingOptions:
+            clientGetIt<GetRelatedBookingOptionsUseCase>(),
         getTicketDetails: clientGetIt<GetTicketDetailsUseCase>(),
         supportRepository: clientGetIt<SupportRepository>(),
       ),
@@ -1034,6 +1036,12 @@ void _registerOfficesDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<GetOfficeTripsUseCase>()) {
+    clientGetIt.registerLazySingleton<GetOfficeTripsUseCase>(
+      () => GetOfficeTripsUseCase(clientGetIt<OfficesRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<OfficesDirectoryCubit>()) {
     clientGetIt.registerFactory<OfficesDirectoryCubit>(
       () => OfficesDirectoryCubit(clientGetIt<GetOfficesUseCase>()),
@@ -1042,7 +1050,10 @@ void _registerOfficesDependencies() {
 
   if (!clientGetIt.isRegistered<OfficeProfileCubit>()) {
     clientGetIt.registerFactory<OfficeProfileCubit>(
-      () => OfficeProfileCubit(clientGetIt<GetOfficeRoutesUseCase>()),
+      () => OfficeProfileCubit(
+        clientGetIt<GetOfficeRoutesUseCase>(),
+        clientGetIt<GetOfficeTripsUseCase>(),
+      ),
     );
   }
 }

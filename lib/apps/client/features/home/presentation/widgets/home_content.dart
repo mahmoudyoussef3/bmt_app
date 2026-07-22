@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:flutter/material.dart';
@@ -13,11 +15,16 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_entr
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_hero_header.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_quick_actions.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_sections.dart';
+import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_cubit.dart';
+import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_state.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
 /// Loaded home layout: pinned status-bar strip, hero canvas with the
 /// quick-action tiles overlapping its lower edge, then the content sections.
+///
+/// Everything below the hero is a sliver, so the full departure board scrolls
+/// lazily instead of building every card up front.
 class HomeContent extends StatelessWidget {
   const HomeContent({
     super.key,
@@ -44,13 +51,22 @@ class HomeContent extends StatelessWidget {
     final isTablet = width >= 720;
     final horizontalPadding = isTablet ? ClientSpacing.xl : ClientSpacing.md;
     final maxWidth = AppLayout.maxContentWidth(width);
+    // One inset for every sliver below the hero: it centres the content column
+    // on a wide screen the way a ConstrainedBox would, while leaving the list
+    // slivers free to build lazily.
+    final sideInset = math.max(horizontalPadding, (width - maxWidth) / 2);
 
     return ColoredBox(
       color: ClientColors.backgroundFor(context),
       child: RefreshIndicator(
         color: ClientColors.primaryFor(context),
         edgeOffset: MediaQuery.paddingOf(context).top,
-        onRefresh: () => context.read<HomeCubit>().load(),
+        onRefresh: () async {
+          await Future.wait([
+            context.read<HomeCubit>().load(),
+            context.read<OfficesDirectoryCubit>().refresh(),
+          ]);
+        },
         child: CustomScrollView(
           clipBehavior: Clip.none,
           physics: const BouncingScrollPhysics(
@@ -74,23 +90,24 @@ class HomeContent extends StatelessWidget {
                 maxWidth,
               ),
             ),
-            SliverToBoxAdapter(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      ClientSpacing.lg,
-                      horizontalPadding,
-                      ClientSpacing.section,
-                    ),
-                    child: HomeSections(
-                      data: data,
-                      isTablet: isTablet,
-                      onOpenRoute: onOpenRoute,
-                    ),
-                  ),
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(
+                sideInset,
+                ClientSpacing.lg,
+                sideInset,
+                ClientSpacing.section,
+              ),
+              sliver: BlocBuilder<OfficesDirectoryCubit, OfficesDirectoryState>(
+                builder: (context, state) => HomeSections(
+                  data: data,
+                  offices: switch (state) {
+                    OfficesDirectoryLoaded(:final offices) => offices,
+                    // A directory that failed is silently absent: it is a
+                    // shortcut into the marketplace, not what Home is for.
+                    _ => const [],
+                  },
+                  officesLoading: state is OfficesDirectoryLoading,
+                  onOpenRoute: onOpenRoute,
                 ),
               ),
             ),

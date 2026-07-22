@@ -1,4 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bmt_app/apps/client/core/utils/bookable_trip.dart';
 import '../models/vehicle_detail_model.dart';
 import 'vehicle_booking_datasource.dart';
 
@@ -15,9 +16,11 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
         .select('''
       *,
       operation_routes (*),
-      trip_pricing (*)
+      trip_pricing (*),
+      ${BookableTrip.seatsEmbed}
     ''')
-        .eq('status', 'open_for_booking');
+        .eq('status', BookableTrip.status)
+        .gte('trip_date', BookableTrip.today());
 
     if (routeId != null) {
       query = query.eq('route_id', routeId);
@@ -38,7 +41,8 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
         .select('''
       *,
       operation_routes (*),
-      trip_pricing (*)
+      trip_pricing (*),
+      ${BookableTrip.seatsEmbed}
     ''')
         .eq('id', id)
         .maybeSingle();
@@ -48,25 +52,10 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
     return _mapToModel(response);
   }
 
-  bool _isBookableTrip(Map<String, dynamic> data) {
-    final status = data['status']?.toString();
-    final tripDate = data['trip_date']?.toString();
-    final today = DateTime.now().toIso8601String().split('T').first;
-    final isUpcoming = tripDate == null || tripDate.compareTo(today) >= 0;
-
-    return status == 'open_for_booking' &&
-        isUpcoming &&
-        _remainingSeats(data) > 0 &&
-        _hasPositivePrice(data);
-  }
-
-  int _remainingSeats(Map<String, dynamic> data) {
-    final vehicle = data['vehicles'] as Map<String, dynamic>? ?? {};
-    final capacity =
-        data['capacity'] as int? ?? vehicle['capacity'] as int? ?? 0;
-    final used = data['booked_seats'] as int? ?? 0;
-    return (capacity - used).clamp(0, capacity).toInt();
-  }
+  /// A vehicle is only listed when its trip can actually be sold *and* priced —
+  /// this screen's whole content is a fare and a "book" button.
+  bool _isBookableTrip(Map<String, dynamic> data) =>
+      BookableTrip.isBookable(data) && _hasPositivePrice(data);
 
   bool _hasPositivePrice(Map<String, dynamic> data) {
     final ticketPrice = (data['ticket_price'] as num?)?.toDouble();
@@ -98,7 +87,6 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
         : 'D';
 
     final capacity = vehicle['capacity'] as int? ?? 14;
-    final passengerCount = data['booked_seats'] as int? ?? 0;
 
     return VehicleDetailModel(
       id: data['id']?.toString() ?? '',
@@ -112,7 +100,7 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
       price:
           '${data['currency'] ?? pricing['currency'] ?? 'EGP'} ${data['ticket_price'] ?? pricing['one_time_price'] ?? 0}',
       capacity: capacity,
-      availableSeats: capacity - passengerCount,
+      availableSeats: BookableTrip.seatsLeft(data),
       estimatedArrival: data['arrival_time']?.toString() ?? 'N/A',
       routeDuration: route['duration']?.toString() ?? 'N/A',
       departureTime: data['departure_time']?.toString() ?? 'N/A',

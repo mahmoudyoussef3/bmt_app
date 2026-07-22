@@ -1,7 +1,9 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/apps/client/core/utils/bookable_trip.dart';
 import '../models/office_route_model.dart';
 import '../models/office_summary_model.dart';
+import '../models/office_trip_model.dart';
 import 'offices_datasource.dart';
 
 class SupabaseOfficesDatasource implements OfficesDatasource {
@@ -39,6 +41,39 @@ class SupabaseOfficesDatasource implements OfficesDatasource {
 
     return rows
         .map((row) => OfficeRouteModel.fromJson(row))
+        .toList(growable: false);
+  }
+
+  /// The seats this office is selling right now, soonest first.
+  ///
+  /// `public_trips` also carries this office's boarding, running and finished
+  /// trips — a rider must be able to read a trip they booked while it runs —
+  /// but a shop window only lists what is for sale, so this asks for exactly
+  /// the status the booking RPC accepts.
+  @override
+  Future<List<OfficeTripModel>> fetchOfficeTrips(String officeId) async {
+    final rows = await _supabase
+        .from('public_trips')
+        .select('''
+          id, route_id, trip_date, departure_time, capacity, booked_seats,
+          ticket_price, currency, status,
+          route:operation_routes(id, name, start_city, end_city, duration),
+          trip_pricing(one_time_price, currency, is_active),
+          ${BookableTrip.seatsEmbed}
+        ''')
+        .eq('office_id', officeId)
+        .eq('status', BookableTrip.status)
+        .gte('trip_date', BookableTrip.today())
+        .order('trip_date')
+        .order('departure_time')
+        .limit(30);
+
+    // Re-applied client-side like every other trip surface: the server filter
+    // is the fast path, the predicate is the guarantee. A row whose status
+    // drifted between the query and the render can never reach a tile.
+    return rows
+        .where(BookableTrip.isOffered)
+        .map((row) => OfficeTripModel.fromJson(row))
         .toList(growable: false);
   }
 }

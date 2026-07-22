@@ -1,5 +1,6 @@
 import '../../domain/entities/office_route.dart';
 import '../../domain/entities/office_summary.dart';
+import '../../domain/entities/office_trip.dart';
 import '../../domain/repositories/offices_repository.dart';
 import '../datasources/offices_datasource.dart';
 
@@ -14,4 +15,8 @@ class OfficesRepositoryImpl implements OfficesRepository {
   @override
   Future<List<OfficeRoute>> getOfficeRoutes(String officeId) =>
       _datasource.fetchOfficeRoutes(officeId);
+
+  @override
+  Future<List<OfficeTrip>> getOfficeTrips(String officeId) =>
+      _datasource.fetchOfficeTrips(officeId);
 }

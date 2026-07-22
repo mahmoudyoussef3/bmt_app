@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/apps/client/core/utils/bookable_trip.dart';
 import '../../domain/entities/home_data.dart';
 import '../models/home_data_model.dart';
 import 'home_datasource.dart';
@@ -62,7 +63,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
 
   @override
   Future<HomeDataModel> getHomeData() async {
-    final today = DateTime.now().toIso8601String().split('T').first;
+    final today = BookableTrip.today();
     final user = _supabase.auth.currentUser;
 
     final responses = await Future.wait<dynamic>([
@@ -70,16 +71,20 @@ class SupabaseHomeDatasource implements HomeDatasource {
           .from('operation_routes')
           .select('id, name, start_city, end_city, duration, status')
           .eq('status', 'active'),
+      // The departures feed sells seats, so it carries only trips the booking
+      // RPC will accept — never a `boarding`, `in_progress` or `completed` one
+      // that `public_trips` also exposes for riders reading their own bookings.
       _supabase
           .from('public_trips')
           .select('''
             *,
             route:operation_routes(id, name, start_city, end_city, duration),
-            office:public_offices(name),
-            trip_pricing(one_time_price, currency, is_active)
+            office:public_offices(id, name),
+            trip_pricing(one_time_price, currency, is_active),
+            ${BookableTrip.seatsEmbed}
           ''')
           .gte('trip_date', today)
-          .inFilter('status', ['open_for_booking', 'boarding'])
+          .eq('status', BookableTrip.status)
           .order('trip_date')
           .order('departure_time')
           .limit(50),
@@ -141,9 +146,10 @@ class SupabaseHomeDatasource implements HomeDatasource {
         .maybeSingle();
   }
 
-  /// Trips arrive ordered by date then departure time, so the first few are the
-  /// next seats a rider can actually take. Each is tagged with the rider's own
-  /// booking on it, when they have one.
+  /// Trips arrive ordered by date then departure time, so the feed reads as a
+  /// departure board — soonest first. Every bookable departure is carried, not
+  /// a teaser slice: Home is where riders browse. Each is tagged with the
+  /// rider's own booking on it, when they have one.
   List<UpcomingTripData> _upcomingTrips(
     List<dynamic> tripsData,
     List<HomeBookingData> bookings,
@@ -162,7 +168,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
       );
     }
 
-    return tripsData.whereType<Map<String, dynamic>>().take(4).map((trip) {
+    return tripsData.whereType<Map<String, dynamic>>().map((trip) {
       final tripId = trip['id']?.toString() ?? '';
       return UpcomingTripMapper.fromRow(
         trip,

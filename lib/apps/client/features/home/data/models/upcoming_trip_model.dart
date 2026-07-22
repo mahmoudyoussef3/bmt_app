@@ -1,8 +1,9 @@
-import 'package:bmt_app/apps/client/features/home/data/models/home_money.dart';
+import 'package:bmt_app/apps/client/core/utils/bookable_trip.dart';
+import 'package:bmt_app/apps/client/core/utils/client_money.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 
-/// Maps `operation_trips` rows (joined to their route and pricing) into the
-/// departures feed.
+/// Maps `public_trips` rows (joined to their route, office, seats and pricing)
+/// into the departures feed.
 abstract final class UpcomingTripMapper {
   /// [bookedStatus] and [bookedSeats] carry what the rider already holds on
   /// this departure, so the feed can mark it as booked while still offering it
@@ -16,8 +17,7 @@ abstract final class UpcomingTripMapper {
     final startCity = route['start_city']?.toString() ?? '';
     final endCity = route['end_city']?.toString() ?? '';
     final routeName = route['name']?.toString().trim() ?? '';
-    final capacity = trip['capacity'] as int? ?? 0;
-    final passengerCount = trip['booked_seats'] as int? ?? 0;
+    final office = trip['office'] as Map<String, dynamic>? ?? const {};
 
     return UpcomingTripData(
       tripId: trip['id']?.toString() ?? '',
@@ -29,10 +29,10 @@ abstract final class UpcomingTripMapper {
       departureTime: trip['departure_time']?.toString() ?? '',
       duration: route['duration']?.toString() ?? '',
       price: tripFareLabel(trip),
-      seatsLeft: (capacity - passengerCount).clamp(0, capacity),
+      seatsLeft: BookableTrip.seatsLeft(trip),
       isLive: trip['status'] == 'boarding' || trip['status'] == 'in_progress',
-      officeName:
-          (trip['office'] as Map<String, dynamic>?)?['name']?.toString() ?? '',
+      officeId: office['id']?.toString() ?? '',
+      officeName: office['name']?.toString() ?? '',
       bookedStatus: bookedStatus,
       bookedSeats: bookedSeats,
     );

@@ -22,6 +22,10 @@ import '../../features/notifications/presentation/cubit/operational_alerts_cubit
 import '../../features/notifications/presentation/screens/notifications_center_screen.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
 import '../../features/finance/presentation/screens/finance_screen.dart';
+import '../../features/office_profile/presentation/cubit/office_profile_cubit.dart';
+import '../../features/office_profile/presentation/screens/office_profile_screen.dart';
+import '../../features/platform_admin/presentation/cubit/platform_admin_cubit.dart';
+import '../../features/platform_admin/presentation/screens/platform_offices_screen.dart';
 import '../../features/owner_overview/presentation/cubit/owner_overview_cubit.dart';
 import '../../features/owner_overview/presentation/screens/owner_overview_screen.dart';
 import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
@@ -196,6 +200,25 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navSystem,
     ),
     _DashboardNavItem(
+      label: 'ملف المكتب',
+      route: DashboardRoutes.officeProfile,
+      icon: Icons.storefront_outlined,
+      selectedIcon: Icons.storefront_rounded,
+      permission: DashboardPermission.officeProfile,
+      group: _navSystem,
+    ),
+    _DashboardNavItem(
+      label: 'مكاتب المنصة',
+      route: DashboardRoutes.platformOffices,
+      icon: Icons.apartment_outlined,
+      selectedIcon: Icons.apartment_rounded,
+      permission: DashboardPermission.platformOffices,
+      // The only item in the shell that is not about the signed-in office, so
+      // the office role alone cannot authorise it — see [_DashboardNavItem.platformOnly].
+      platformOnly: true,
+      group: _navSystem,
+    ),
+    _DashboardNavItem(
       label: 'الصلاحيات',
       route: DashboardRoutes.permissions,
       icon: Icons.admin_panel_settings_outlined,
@@ -227,6 +250,7 @@ class _DashboardShellState extends State<DashboardShell> {
               child: SafeArea(
                 child: _DashboardSidebar(
                   items: visibleItems,
+                  office: widget.office,
                   role: _role,
                   route: _route,
                   onRoleChanged: _setRole,
@@ -263,6 +287,7 @@ class _DashboardShellState extends State<DashboardShell> {
               children: [
                 _DashboardSidebar(
                   items: visibleItems,
+                  office: widget.office,
                   role: _role,
                   route: _route,
                   onRoleChanged: _setRole,
@@ -290,11 +315,14 @@ class _DashboardShellState extends State<DashboardShell> {
   }
 
   List<_DashboardNavItem> get _visibleItems {
-    return _items.where((item) {
-      final permission = item.permission;
-      if (permission == null) return true;
-      return DashboardPermissions.canAccess(_role, permission);
-    }).toList();
+    return _items.where(_isItemAllowed).toList();
+  }
+
+  bool _isItemAllowed(_DashboardNavItem item) {
+    if (item.platformOnly && !widget.office.isPlatformAdmin) return false;
+    final permission = item.permission;
+    if (permission == null) return true;
+    return DashboardPermissions.canAccess(_role, permission);
   }
 
   String get _activeTitle {
@@ -331,9 +359,7 @@ class _DashboardShellState extends State<DashboardShell> {
       (item) => item.route == route,
       orElse: () => _items.first,
     );
-    final permission = item.permission;
-    return permission == null ||
-        DashboardPermissions.canAccess(_role, permission);
+    return _isItemAllowed(item);
   }
 
   Widget _buildContent() {
@@ -413,6 +439,18 @@ class _DashboardShellState extends State<DashboardShell> {
         ],
         child: NotificationsCenterScreen(onOpenRoute: _openRoute),
       ),
+      DashboardRoutes.officeProfile => BlocProvider(
+        create: (_) => dashboardDi<OfficeProfileCubit>()..load(),
+        child: OfficeProfileScreen(
+          // The signed-in role, not the locally switched `_role`: only the
+          // former is what RLS will actually honour on the update.
+          canEdit: widget.office.role == DashboardRole.admin,
+        ),
+      ),
+      DashboardRoutes.platformOffices => BlocProvider(
+        create: (_) => dashboardDi<PlatformAdminCubit>()..load(),
+        child: const PlatformOfficesScreen(),
+      ),
       DashboardRoutes.settings => _workspace(
         'settings',
         const SettingsScreen(),
@@ -444,6 +482,17 @@ class _DashboardNavItem {
   /// (rendered above all groups, e.g. the command center home).
   final String? group;
 
+  /// Requires the signed-in operator to be an EWT **platform** admin, on top of
+  /// whatever [permission] asks for.
+  ///
+  /// [permission] is evaluated against `_role`, which is the office role and is
+  /// switchable in debug builds by the role selector. That is fine for every
+  /// other item — they all act inside the operator's own office, and the server
+  /// scopes them to it regardless. Platform administration is the exception: it
+  /// reaches across offices, so it is gated on the authenticated identity itself
+  /// rather than on a role a debug switch can change.
+  final bool platformOnly;
+
   const _DashboardNavItem({
     required this.label,
     required this.route,
@@ -451,11 +500,13 @@ class _DashboardNavItem {
     required this.selectedIcon,
     this.permission,
     this.group,
+    this.platformOnly = false,
   });
 }
 
 class _DashboardSidebar extends StatelessWidget {
   final List<_DashboardNavItem> items;
+  final OfficeContext office;
   final DashboardRole role;
   final String route;
   final ValueChanged<DashboardRole> onRoleChanged;
@@ -463,6 +514,7 @@ class _DashboardSidebar extends StatelessWidget {
 
   const _DashboardSidebar({
     required this.items,
+    required this.office,
     required this.role,
     required this.route,
     required this.onRoleChanged,
@@ -487,17 +539,7 @@ class _DashboardSidebar extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(
-                AppLocalizations.of(context)!.dashboard_panel,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: AppSpacing.xSmall),
-              Text(
-                AppLocalizations.of(context)!.dashboard_system,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
+              _OfficeIdentityHeader(office: office),
               const SizedBox(height: AppSpacing.medium),
               if (kDebugMode) ...[
                 _RoleSelector(role: role, onChanged: onRoleChanged),
@@ -561,6 +603,97 @@ class _NavSectionHeader extends StatelessWidget {
           letterSpacing: 0.4,
         ),
       ),
+    );
+  }
+}
+
+/// Which office this workspace belongs to, and who is signed in.
+///
+/// Replaces the generic "لوحة التحكم / النظام" title the sidebar carried while
+/// there was only ever one office. With a marketplace, an operator has to be
+/// able to tell at a glance whose data is on screen — every list below is
+/// filtered to this office and nothing else on the page says which one it is.
+class _OfficeIdentityHeader extends StatelessWidget {
+  const _OfficeIdentityHeader({required this.office});
+
+  final OfficeContext office;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final name = office.officeName.trim().isEmpty
+        ? AppLocalizations.of(context)!.dashboard_panel
+        : office.officeName.trim();
+
+    return Row(
+      children: [
+        _OfficeAvatar(logoUrl: office.logoUrl, name: name),
+        const SizedBox(width: AppSpacing.small),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '${office.displayName} · ${office.role.label}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _OfficeAvatar extends StatelessWidget {
+  const _OfficeAvatar({required this.logoUrl, required this.name});
+
+  final String? logoUrl;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final url = logoUrl?.trim() ?? '';
+    final initial = name.characters.isEmpty ? '؟' : name.characters.first;
+
+    final fallback = Center(
+      child: Text(
+        initial,
+        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+          color: scheme.onPrimaryContainer,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+
+    return Container(
+      width: 40,
+      height: 40,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: scheme.primaryContainer,
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      ),
+      child: url.isEmpty
+          ? fallback
+          : Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => fallback,
+            ),
     );
   }
 }

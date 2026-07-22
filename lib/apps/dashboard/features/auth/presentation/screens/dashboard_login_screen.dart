@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../cubit/dashboard_auth_cubit.dart';
 
 class DashboardLoginScreen extends StatefulWidget {
-  const DashboardLoginScreen({super.key});
+  const DashboardLoginScreen({super.key, required this.onCreateOffice});
+
+  final VoidCallback onCreateOffice;
 
   @override
   State<DashboardLoginScreen> createState() => _DashboardLoginScreenState();
@@ -110,11 +112,15 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                           textInputAction: TextInputAction.next,
                           autofillHints: const [AutofillHints.username],
                           decoration: const InputDecoration(
-                            labelText: 'الاسم',
+                            // Self-registered owners never chose a name — the server
+                            // derived one from their email — so the address they signed
+                            // up with is also a valid login.
+                            labelText: 'الاسم أو البريد الإلكتروني',
                             prefixIcon: Icon(Icons.person_outline_rounded),
                           ),
-                          validator: (v) =>
-                              (v?.trim().isEmpty ?? true) ? 'أدخل الاسم' : null,
+                          validator: (v) => (v?.trim().isEmpty ?? true)
+                              ? 'أدخل الاسم أو البريد الإلكتروني'
+                              : null,
                         ),
                         const SizedBox(height: 14),
                         TextFormField(
@@ -156,6 +162,11 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                                         fontWeight: FontWeight.w700),
                                   ),
                           ),
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton(
+                          onPressed: loading ? null : widget.onCreateOffice,
+                          child: const Text('ليس لديك مكتب؟ سجّل مكتباً جديداً'),
                         ),
                       ],
                     ),

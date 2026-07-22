@@ -83,6 +83,54 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
     }
   }
 
+  /// Registers a new office and signs its owner straight into it.
+  ///
+  /// Shares [DashboardAuthLoading] and [DashboardAuthError] with [signIn] rather than
+  /// adding a parallel pair: the auth gate treats both screens the same way, and the
+  /// sign-up screen is only ever mounted while the gate is in a signed-out state.
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String officeName,
+  }) async {
+    emit(const DashboardAuthLoading());
+    try {
+      final context = await _datasource.signUp(
+        email: email,
+        password: password,
+        officeName: officeName,
+      );
+      _session.start(context);
+      emit(DashboardAuthSignedIn(context));
+    } on DashboardAuthFailure catch (e) {
+      _session.clear();
+      emit(DashboardAuthError(e.message));
+    } catch (_) {
+      _session.clear();
+      emit(const DashboardAuthError('تعذر إنشاء الحساب. حاول مرة أخرى.'));
+    }
+  }
+
+  /// Re-reads the office context for an already signed-in operator.
+  ///
+  /// Used after the office edits its own profile: the name and logo in the
+  /// shell come from the context captured at sign-in, so without this they
+  /// would stay stale until the next login. Deliberately never emits
+  /// [DashboardAuthChecking] — that would tear the workspace down and drop the
+  /// operator back to the home route mid-session. A failure is swallowed for
+  /// the same reason: a refresh that could not run is not a reason to sign
+  /// someone out of a session that is still valid.
+  Future<void> refreshContext() async {
+    if (state is! DashboardAuthSignedIn) return;
+    try {
+      final context = await _datasource.loadContext();
+      _session.start(context);
+      emit(DashboardAuthSignedIn(context));
+    } catch (_) {
+      // Keep the existing context.
+    }
+  }
+
   Future<void> signOut() async {
     await _datasource.signOut();
     _session.clear();

@@ -1555,6 +1555,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get home_browseRoutes => 'تصفّح المسارات';
 
   @override
+  String get home_travelWith => 'سافر مع';
+
+  @override
+  String get home_companies => 'شركات النقل';
+
+  @override
+  String get home_companiesSubtitle => 'اختر شركة لتشاهد كل رحلاتها.';
+
+  @override
+  String home_departuresOpenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count رحلة متاحة للحجز',
+      few: '$count رحلات متاحة للحجز',
+      two: 'رحلتان متاحتان للحجز',
+      one: 'رحلة واحدة متاحة للحجز',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get home_searchTripTitle => 'ابحث عن رحلة';
 
   @override
@@ -4169,6 +4191,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get offices_noRoutes =>
       'لا توجد خطوط متاحة للحجز لدى هذا المكتب حاليًا.';
+
+  @override
+  String get offices_departuresHeader => 'الرحلات المتاحة للحجز';
+
+  @override
+  String get offices_noDepartures =>
+      'لا توجد رحلات متاحة للحجز لدى هذا المكتب حاليًا.';
 
   @override
   String get offices_noRatingsYet => 'لا توجد تقييمات بعد';

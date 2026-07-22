@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_active_package_card.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_sections.dart';
@@ -19,13 +20,18 @@ HomeData _data({HomeActivePackageData? activePackage}) => HomeData(
 Future<void> _pumpSections(WidgetTester tester, HomeData data) async {
   await tester.pumpWidget(
     MaterialApp(
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
-        body: SingleChildScrollView(
-          child: HomeSections(
-            data: data,
-            isTablet: false,
-            onOpenRoute: (_, [_]) {},
-          ),
+        body: CustomScrollView(
+          slivers: [
+            HomeSections(
+              data: data,
+              offices: const [],
+              officesLoading: false,
+              onOpenRoute: (_, [_]) {},
+            ),
+          ],
         ),
       ),
     ),

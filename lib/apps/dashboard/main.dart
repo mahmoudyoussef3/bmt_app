@@ -7,6 +7,7 @@ import 'core/di/dashboard_di.dart';
 import 'core/routes/dashboard_shell.dart';
 import 'features/auth/presentation/cubit/dashboard_auth_cubit.dart';
 import 'features/auth/presentation/screens/dashboard_login_screen.dart';
+import 'features/auth/presentation/screens/dashboard_sign_up_screen.dart';
 import 'core/theme/dashboard_app_theme.dart';
 import 'core/theme/dashboard_theme_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
@@ -48,6 +49,12 @@ class _DashboardAuthGate extends StatefulWidget {
 class _DashboardAuthGateState extends State<_DashboardAuthGate> {
   late final DashboardAuthCubit _cubit;
 
+  /// Which of the two signed-out screens to show. Held here rather than pushed as a
+  /// route because the dashboard has no navigator above the gate — `main` mounts it as
+  /// `home:` — and because a successful sign-up must land on the shell, not on a screen
+  /// with the sign-up form still underneath it.
+  bool _registering = false;
+
   @override
   void initState() {
     super.initState();
@@ -67,7 +74,12 @@ class _DashboardAuthGateState extends State<_DashboardAuthGate> {
             key: ValueKey(context.officeId),
             office: context,
           ),
-          _ => const DashboardLoginScreen(),
+          _ when _registering => DashboardSignUpScreen(
+            onBackToLogin: () => setState(() => _registering = false),
+          ),
+          _ => DashboardLoginScreen(
+            onCreateOffice: () => setState(() => _registering = true),
+          ),
         },
       ),
     );

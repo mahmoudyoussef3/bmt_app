@@ -2966,6 +2966,30 @@ abstract class AppLocalizations {
   /// **'Browse routes'**
   String get home_browseRoutes;
 
+  /// No description provided for @home_travelWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Travel with'**
+  String get home_travelWith;
+
+  /// No description provided for @home_companies.
+  ///
+  /// In en, this message translates to:
+  /// **'Transport companies'**
+  String get home_companies;
+
+  /// No description provided for @home_companiesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick an operator to see everything it runs.'**
+  String get home_companiesSubtitle;
+
+  /// No description provided for @home_departuresOpenCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 trip open for booking} other{{count} trips open for booking}}'**
+  String home_departuresOpenCount(int count);
+
   /// No description provided for @home_searchTripTitle.
   ///
   /// In en, this message translates to:
@@ -7555,6 +7579,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This office has no bookable routes right now.'**
   String get offices_noRoutes;
+
+  /// No description provided for @offices_departuresHeader.
+  ///
+  /// In en, this message translates to:
+  /// **'Departures on sale'**
+  String get offices_departuresHeader;
+
+  /// No description provided for @offices_noDepartures.
+  ///
+  /// In en, this message translates to:
+  /// **'This office has no departures on sale right now.'**
+  String get offices_noDepartures;
 
   /// No description provided for @offices_noRatingsYet.
   ///

@@ -42,6 +42,18 @@ import '../../features/bookings/domain/usecases/reject_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/request_reupload_usecase.dart';
 import '../../features/bookings/domain/usecases/watch_bookings_usecase.dart';
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
+import '../../features/office_profile/data/datasources/office_profile_datasource.dart';
+import '../../features/office_profile/data/datasources/supabase_office_profile_datasource.dart';
+import '../../features/office_profile/data/repositories/office_profile_repository_impl.dart';
+import '../../features/office_profile/domain/repositories/office_profile_repository.dart';
+import '../../features/office_profile/domain/usecases/office_profile_usecases.dart';
+import '../../features/office_profile/presentation/cubit/office_profile_cubit.dart';
+import '../../features/platform_admin/data/datasources/platform_admin_datasource.dart';
+import '../../features/platform_admin/data/datasources/supabase_platform_admin_datasource.dart';
+import '../../features/platform_admin/data/repositories/platform_admin_repository_impl.dart';
+import '../../features/platform_admin/domain/repositories/platform_admin_repository.dart';
+import '../../features/platform_admin/domain/usecases/platform_admin_usecases.dart';
+import '../../features/platform_admin/presentation/cubit/platform_admin_cubit.dart';
 import '../../features/referrals/data/datasources/referral_datasource.dart';
 import '../../features/referrals/data/datasources/supabase_referral_datasource.dart';
 import '../../features/referrals/data/repositories/referral_repository_impl.dart';
@@ -1286,6 +1298,88 @@ void registerDashboardDependencies() {
   _registerNotificationsDispatchDependencies();
   _registerCaptainRequestsDependencies();
   _registerReviewsDependencies();
+  _registerOfficeProfileDependencies();
+  _registerPlatformAdminDependencies();
+}
+
+void _registerPlatformAdminDependencies() {
+  if (!dashboardDi.isRegistered<PlatformAdminDatasource>()) {
+    dashboardDi.registerLazySingleton<PlatformAdminDatasource>(
+      // No DashboardSession here, unlike every other datasource: these calls act
+      // across offices, and the RPCs resolve the caller's platform-admin
+      // identity server-side. There is nothing office-scoped to inject.
+      () => SupabasePlatformAdminDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<PlatformAdminRepository>()) {
+    dashboardDi.registerLazySingleton<PlatformAdminRepository>(
+      () => PlatformAdminRepositoryImpl(dashboardDi<PlatformAdminDatasource>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetPlatformOfficesUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetPlatformOfficesUseCase(dashboardDi<PlatformAdminRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<OnboardOfficeUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => OnboardOfficeUseCase(dashboardDi<PlatformAdminRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<SetOfficeListingUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => SetOfficeListingUseCase(dashboardDi<PlatformAdminRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<SetOfficeStatusUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => SetOfficeStatusUseCase(dashboardDi<PlatformAdminRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<PlatformAdminCubit>()) {
+    dashboardDi.registerFactory(
+      () => PlatformAdminCubit(
+        getOffices: dashboardDi<GetPlatformOfficesUseCase>(),
+        onboardOffice: dashboardDi<OnboardOfficeUseCase>(),
+        setListing: dashboardDi<SetOfficeListingUseCase>(),
+        setStatus: dashboardDi<SetOfficeStatusUseCase>(),
+      ),
+    );
+  }
+}
+
+void _registerOfficeProfileDependencies() {
+  if (!dashboardDi.isRegistered<OfficeProfileDatasource>()) {
+    dashboardDi.registerLazySingleton<OfficeProfileDatasource>(
+      () => SupabaseOfficeProfileDatasource(
+        dashboardDi<SupabaseClient>(),
+        dashboardDi<DashboardSession>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<OfficeProfileRepository>()) {
+    dashboardDi.registerLazySingleton<OfficeProfileRepository>(
+      () => OfficeProfileRepositoryImpl(dashboardDi<OfficeProfileDatasource>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<GetOfficeProfileUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetOfficeProfileUseCase(dashboardDi<OfficeProfileRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<UpdateOfficeProfileUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UpdateOfficeProfileUseCase(dashboardDi<OfficeProfileRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<OfficeProfileCubit>()) {
+    dashboardDi.registerFactory(
+      () => OfficeProfileCubit(
+        getProfile: dashboardDi<GetOfficeProfileUseCase>(),
+        updateProfile: dashboardDi<UpdateOfficeProfileUseCase>(),
+      ),
+    );
+  }
 }
 
 void _registerReviewsDependencies() {

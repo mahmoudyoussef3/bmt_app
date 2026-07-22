@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/di/client_di.dart';
-import 'package:bmt_app/apps/client/features/home/presentation/cubit/home_cubit.dart';
+import 'package:bmt_app/apps/client/core/routes/client_cubit_scopes.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/screens/home_screen.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/client_bottom_navigation.dart';
 
@@ -55,9 +53,8 @@ class _ClientShellScreenState extends State<ClientShellScreen> {
     final pages = <Widget>[
       AnnotatedRegion<SystemUiOverlayStyle>(
         value: SystemUiOverlayStyle.light,
-        child: BlocProvider<HomeCubit>(
-          create: (_) => clientGetIt<HomeCubit>()..load(),
-          child: HomeScreen(
+        child: ClientCubitScopes.home(
+          HomeScreen(
             onOpenRoute: _openRoute,
             onOpenNotifications: _openNotifications,
           ),

@@ -1,0 +1,46 @@
+-- =====================================================================================
+-- Close the last two pre-multi-office blanket policies
+-- -------------------------------------------------------------------------------------
+-- 20260721090200 §4 rebuilt operation_routes and route_stations on office scoping, and
+-- dropped the legacy policies it knew about by name:
+--
+--   operation_routes   "Admins have full access to operation_routes"
+--                      "Anyone can view operation_routes"
+--                      "Admins can manage routes"
+--                      "Clients can read active routes"
+--   route_stations     "Admins have full access to route_stations"
+--                      "Anyone can view route_stations"
+--
+-- Two more existed that appear in no migration in this repository — they were applied by
+-- hand against the project before the migration history was kept, so the enumeration
+-- above could not have named them:
+--
+--   "Dashboard can manage operation routes"  on operation_routes
+--   "Dashboard can manage route stations"    on route_stations
+--
+-- Both are `for all to authenticated using (true) with check (true)`. Written when
+-- "authenticated" meant "the operator sitting at the dashboard", they now mean every
+-- signed-in passenger: RLS is a UNION of permissive policies, so a single `using (true)`
+-- overrides every office-scoped policy beside it. Any client account could read, insert,
+-- update and delete any office's routes and stations.
+--
+-- This surfaced as a failing assertion in the platform-onboarding regression suite —
+-- "Office A cannot see office B's routes" — which is the check doing exactly its job.
+--
+-- Nothing legitimate depends on them. 090200 already installed the full replacement set,
+-- which stays in place and is what every real caller has been matching on anyway:
+--
+--   routes_office_manage          all    · office_id = current_office_id()
+--   routes_captain_read           select · office_id = captain_office_id()
+--   routes_marketplace_read       select · status = 'active' and office_is_listed(...)
+--   route_stations_office_manage  all    · parent route belongs to current_office_id()
+--   route_stations_captain_read   select · parent route belongs to captain_office_id()
+--   route_stations_marketplace_read select· parent route active and office listed
+--
+-- So an office keeps full management of its own routes and stations, captains keep read
+-- access to their office's, and passengers keep the marketplace read they already had.
+-- The only access this removes is cross-office access, which was never intended.
+-- =====================================================================================
+
+drop policy if exists "Dashboard can manage operation routes" on public.operation_routes;
+drop policy if exists "Dashboard can manage route stations"   on public.route_stations;

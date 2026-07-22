@@ -1560,6 +1560,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_browseRoutes => 'Browse routes';
 
   @override
+  String get home_travelWith => 'Travel with';
+
+  @override
+  String get home_companies => 'Transport companies';
+
+  @override
+  String get home_companiesSubtitle =>
+      'Pick an operator to see everything it runs.';
+
+  @override
+  String home_departuresOpenCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count trips open for booking',
+      one: '1 trip open for booking',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get home_searchTripTitle => 'Search Trip';
 
   @override
@@ -4202,6 +4223,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get offices_noRoutes =>
       'This office has no bookable routes right now.';
+
+  @override
+  String get offices_departuresHeader => 'Departures on sale';
+
+  @override
+  String get offices_noDepartures =>
+      'This office has no departures on sale right now.';
 
   @override
   String get offices_noRatingsYet => 'No ratings yet';

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/transport_office.dart';
+import 'package:bmt_app/apps/client/core/utils/bookable_trip.dart';
 import 'package:bmt_app/core/pricing/trip_stop_pair_price_mapper.dart';
 import '../../domain/entities/booking_option.dart';
 import '../../domain/entities/booking_search_query.dart';
@@ -22,7 +23,9 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
       return TransportOffice.fromJson(Map<String, dynamic>.from(raw));
     }
     if (raw is List && raw.isNotEmpty && raw.first is Map) {
-      return TransportOffice.fromJson(Map<String, dynamic>.from(raw.first as Map));
+      return TransportOffice.fromJson(
+        Map<String, dynamic>.from(raw.first as Map),
+      );
     }
     return TransportOffice.unknown;
   }
@@ -194,6 +197,8 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     if (routeIds.isEmpty) return const {};
     // `public_trips` is the only trip surface the Client may query; its
     // `drivers` / `vehicles` are sanitised jsonb columns, not table embeds.
+    // The bookable predicate is applied here rather than only in Dart so a
+    // route's departed and in-flight trips never cross the wire at all.
     final response = await _supabase
         .from('public_trips')
         .select('''
@@ -202,9 +207,11 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           drivers, vehicles,
           trip_pricing(from_point_id, to_point_id, one_time_price, five_days_price, ten_days_price, monthly_price, three_months_price, currency, is_active),
           trip_route_points(id, route_point_id),
-          trip_seats(state)
+          ${BookableTrip.seatsEmbed}
         ''')
-        .inFilter('route_id', routeIds);
+        .inFilter('route_id', routeIds)
+        .eq('status', BookableTrip.status)
+        .gte('trip_date', BookableTrip.today());
 
     final grouped = <String, List<dynamic>>{};
     for (final trip in response) {
@@ -303,10 +310,11 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           route_id, ticket_price, currency, status, trip_date,
           capacity, booked_seats,
           trip_pricing(one_time_price, currency, is_active),
-          trip_seats(state)
+          ${BookableTrip.seatsEmbed}
         ''')
               .inFilter('route_id', routeIds)
-              .eq('status', 'open_for_booking');
+              .eq('status', BookableTrip.status)
+              .gte('trip_date', BookableTrip.today());
 
     return response
         .map((data) {
@@ -443,7 +451,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
   @override
   Future<TripSearchOptions> getSearchOptions() async {
-    final today = DateTime.now().toIso8601String().split('T').first;
+    final today = BookableTrip.today();
 
     final results = await Future.wait([
       _supabase
@@ -462,9 +470,9 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
             departure_time, status, trip_date, capacity,
             booked_seats, ticket_price, currency,
             trip_pricing(one_time_price, currency, is_active),
-            trip_seats(state)
+            ${BookableTrip.seatsEmbed}
           ''')
-          .eq('status', 'open_for_booking')
+          .eq('status', BookableTrip.status)
           .gte('trip_date', today),
     ]);
 
@@ -522,27 +530,14 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
   int _remainingSeats(dynamic trip) {
     if (trip is! Map<String, dynamic>) return 0;
-    final seats = trip['trip_seats'];
-    if (seats is List) {
-      return seats.where((seat) {
-        return seat is Map && seat['state']?.toString() == 'available';
-      }).length;
-    }
-    final capacity = trip['capacity'] as int? ?? 0;
-    final used = trip['booked_seats'] as int? ?? 0;
-    return (capacity - used).clamp(0, capacity).toInt();
+    return BookableTrip.seatsLeft(trip);
   }
 
+  /// Search only ever offers a departure a rider can complete: sellable status,
+  /// not departed, seats free, and a published fare to show them.
   bool _isBookableTrip(dynamic trip) {
     if (trip is! Map<String, dynamic>) return false;
-    final status = trip['status']?.toString();
-    final tripDate = trip['trip_date']?.toString();
-    final today = DateTime.now().toIso8601String().split('T').first;
-    final isUpcoming = tripDate == null || tripDate.compareTo(today) >= 0;
-
-    return status == 'open_for_booking' &&
-        isUpcoming &&
-        _remainingSeats(trip) > 0 &&
+    return BookableTrip.isBookable(trip) &&
         _priceCandidatesFromTrip(trip).isNotEmpty;
   }
 

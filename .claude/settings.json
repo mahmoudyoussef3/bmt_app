@@ -3,7 +3,36 @@
     "allow": [
       "Bash(curl -s -H 'apikey: sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z' 'https://nbwzourpbnmewwklewyr.supabase.co/rest/v1/transport_packages?select=id,office:public_offices\\(name\\)&limit=1')",
       "Bash(git add *)",
-      "Bash(git commit -m ' *)"
+      "Bash(git commit -m ' *)",
+      "Bash(curl -s -H 'apikey: sb_publishable_EHODbNyFC_qJI1fZuETNKA_uu9hUU8Z' 'https://nbwzourpbnmewwklewyr.supabase.co/rest/v1/drivers?select=id,office:public_offices\\(name\\)&limit=1')",
+      "Bash(python3 q.py \"select grantee, privilege_type from information_schema.role_table_grants where table_name='captain_messages' and grantee in \\('anon','authenticated'\\) order by grantee, privilege_type\")",
+      "Bash(python3 q.py ' *)",
+      "Bash(python3 q.py \"select policyname, cmd, roles::text, qual from pg_policies where tablename='captain_messages'\")",
+      "Bash(python3 q.py \"select prosrc from pg_proc where proname='link_current_captain_driver'\")",
+      "Bash(supabase db *)",
+      "Bash(python3 q.py \"select version, name from supabase_migrations.schema_migrations order by version desc limit 3\")",
+      "Bash(python3 q.py \"delete from supabase_migrations.schema_migrations where version='20260721130000'; drop function if exists public.captain_link_current_driver\\(\\);\")",
+      "Bash(python3 q.py -f /Users/mahmoud/bmt_app/supabase/tests/captain_session_and_messages_regression.sql)",
+      "Bash(git commit -q -m ' *)",
+      "Bash(git restore *)",
+      "Bash(git commit *)",
+      "Bash(grep -n '^#\\\\{1,3\\\\} ' docs/architecture/MULTI_OFFICE_MIGRATION_AUDIT.md)",
+      "Bash(cd /Users/mahmoud/bmt_app && ls test/apps/dashboard/features/office_profile/ && sed -n 1,80p test/apps/dashboard/features/office_profile/*.dart | head -100)",
+      "Bash(deno check *)",
+      "Bash(xargs sed -n 160,195p)",
+      "Bash(env)",
+      "Bash(flutter --version)",
+      "Bash(awk '{print $2}')",
+      "Bash(supabase --help)",
+      "Bash(security dump-keychain *)",
+      "Bash(chmod +x /private/tmp/claude-501/-Users-mahmoud-bmt-app/b83b1ca3-487e-4b96-80f1-21202bc6a663/scratchpad/q.sh)",
+      "Bash(/private/tmp/claude-501/-Users-mahmoud-bmt-app/b83b1ca3-487e-4b96-80f1-21202bc6a663/scratchpad/q.sh \"select count\\(*\\) as n from public.offices\")",
+      "Bash(/private/tmp/claude-501/-Users-mahmoud-bmt-app/b83b1ca3-487e-4b96-80f1-21202bc6a663/scratchpad/q.sh 'select jsonb_pretty\\(jsonb_build_object\\( *)",
+      "Bash(python3 -c \"import json,sys;print\\(json.load\\(sys.stdin\\)[0]['i']\\)\")",
+      "Bash(supabase db query --linked ' *)"
+    ],
+    "additionalDirectories": [
+      "/Users/mahmoud/bmt_app/lib/apps/dashboard/features/office_profile/presentation/test/apps/dashboard/features/office_profile"
     ]
   },
   "hooks": {
