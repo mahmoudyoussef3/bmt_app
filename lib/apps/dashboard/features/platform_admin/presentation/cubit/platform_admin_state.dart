@@ -1,4 +1,5 @@
 import '../../domain/entities/office_onboarding.dart';
+import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
 import '../../domain/entities/platform_office_details.dart';
 import '../../domain/entities/platform_office_filter.dart';
@@ -28,10 +29,24 @@ class PlatformAdminLoaded extends PlatformAdminState {
     this.fieldErrors = const {},
     this.filter = const PlatformOfficeFilter(),
     this.selection,
+    this.analytics,
+    this.isAnalyticsLoading = false,
+    this.analyticsError,
   });
 
   final List<PlatformOffice> offices;
   final bool isSubmitting;
+
+  /// The activity numbers behind [offices], or null when they have not loaded.
+  ///
+  /// Nullable rather than defaulted to [PlatformAnalytics.empty] on purpose: an
+  /// empty analytics object claims every office has zero bookings, which is a
+  /// statement about the platform, not an admission that nothing was fetched.
+  /// The screen shows the office list either way — a failed analytics call must
+  /// not take the office list down with it.
+  final PlatformAnalytics? analytics;
+  final bool isAnalyticsLoading;
+  final String? analyticsError;
 
   /// Per-field validation errors from the last rejected submission, keyed the
   /// way [OfficeOnboardingRequest.validate] keys them, so the form can mark the
@@ -47,7 +62,8 @@ class PlatformAdminLoaded extends PlatformAdminState {
   /// beside it so the summary counts keep describing the platform rather than
   /// the current search — a header that changed with every keystroke would stop
   /// being a platform overview.
-  List<PlatformOffice> get visibleOffices => filter.apply(offices);
+  List<PlatformOffice> get visibleOffices =>
+      filter.apply(offices, metrics: analytics?.offices ?? const {});
 
   int get listedCount => offices.where((o) => o.isListed).length;
   int get draftCount => offices.where((o) => o.isDraft).length;
@@ -58,6 +74,13 @@ class PlatformAdminLoaded extends PlatformAdminState {
       .where((o) => o.status == 'active' && o.listingStatus != 'listed')
       .length;
 
+  /// Everything wrong across the platform right now, worst first. Computed over
+  /// the *unfiltered* office list for the same reason the summary counts are:
+  /// a queue that hid problems because the operator was searching for something
+  /// else would be worse than no queue.
+  List<OfficeAttention> get attention =>
+      analytics?.attentionFor(offices) ?? const [];
+
   PlatformAdminLoaded copyWith({
     List<PlatformOffice>? offices,
     bool? isSubmitting,
@@ -65,12 +88,21 @@ class PlatformAdminLoaded extends PlatformAdminState {
     PlatformOfficeFilter? filter,
     PlatformOfficeSelection? selection,
     bool clearSelection = false,
+    PlatformAnalytics? analytics,
+    bool? isAnalyticsLoading,
+    String? analyticsError,
+    bool clearAnalyticsError = false,
   }) => PlatformAdminLoaded(
     offices ?? this.offices,
     isSubmitting: isSubmitting ?? this.isSubmitting,
     fieldErrors: fieldErrors ?? this.fieldErrors,
     filter: filter ?? this.filter,
     selection: clearSelection ? null : (selection ?? this.selection),
+    analytics: analytics ?? this.analytics,
+    isAnalyticsLoading: isAnalyticsLoading ?? this.isAnalyticsLoading,
+    analyticsError: clearAnalyticsError
+        ? null
+        : (analyticsError ?? this.analyticsError),
   );
 }
 

@@ -76,7 +76,8 @@ class OfficeOnboardingRequest {
     }
 
     final trimmedLogo = logoUrl.trim();
-    if (trimmedLogo.isNotEmpty && !trimmedLogo.toLowerCase().startsWith('https://')) {
+    if (trimmedLogo.isNotEmpty &&
+        !trimmedLogo.toLowerCase().startsWith('https://')) {
       errors['logoUrl'] = 'يجب أن يبدأ الرابط بـ https://';
     }
 

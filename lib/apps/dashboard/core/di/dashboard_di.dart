@@ -1321,6 +1321,11 @@ void _registerPlatformAdminDependencies() {
       () => GetPlatformOfficesUseCase(dashboardDi<PlatformAdminRepository>()),
     );
   }
+  if (!dashboardDi.isRegistered<GetPlatformAnalyticsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetPlatformAnalyticsUseCase(dashboardDi<PlatformAdminRepository>()),
+    );
+  }
   if (!dashboardDi.isRegistered<GetPlatformOfficeDetailsUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => GetPlatformOfficeDetailsUseCase(
@@ -1347,6 +1352,7 @@ void _registerPlatformAdminDependencies() {
     dashboardDi.registerFactory(
       () => PlatformAdminCubit(
         getOffices: dashboardDi<GetPlatformOfficesUseCase>(),
+        getAnalytics: dashboardDi<GetPlatformAnalyticsUseCase>(),
         getOfficeDetails: dashboardDi<GetPlatformOfficeDetailsUseCase>(),
         onboardOffice: dashboardDi<OnboardOfficeUseCase>(),
         setListing: dashboardDi<SetOfficeListingUseCase>(),

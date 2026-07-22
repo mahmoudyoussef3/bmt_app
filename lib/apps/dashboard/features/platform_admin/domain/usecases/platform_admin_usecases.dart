@@ -1,4 +1,5 @@
 import '../entities/office_onboarding.dart';
+import '../entities/platform_analytics.dart';
 import '../entities/platform_office.dart';
 import '../entities/platform_office_details.dart';
 import '../repositories/platform_admin_repository.dart';
@@ -7,6 +8,21 @@ class GetPlatformOfficesUseCase {
   const GetPlatformOfficesUseCase(this._repository);
   final PlatformAdminRepository _repository;
   Future<List<PlatformOffice>> call() => _repository.getOffices();
+}
+
+/// The activity numbers behind the office list.
+///
+/// Clamps the window rather than rejecting it, matching the RPC, which does the
+/// same server-side: the window is a lens the operator picks, not an input that
+/// can be wrong in a way worth an exception.
+class GetPlatformAnalyticsUseCase {
+  const GetPlatformAnalyticsUseCase(this._repository);
+  final PlatformAdminRepository _repository;
+
+  static const windowChoices = [7, 30, 90];
+
+  Future<PlatformAnalytics> call({int windowDays = 30}) =>
+      _repository.getAnalytics(windowDays: windowDays.clamp(1, 365));
 }
 
 class GetPlatformOfficeDetailsUseCase {

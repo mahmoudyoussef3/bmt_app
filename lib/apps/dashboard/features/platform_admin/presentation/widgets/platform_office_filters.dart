@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
+import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office_filter.dart';
 
 /// Search and the two status axes, kept as separate controls.
@@ -21,7 +22,10 @@ class PlatformOfficeFilters extends StatefulWidget {
     required this.onSearch,
     required this.onStatus,
     required this.onListingStatus,
+    required this.onActivity,
+    required this.onSort,
     required this.onClear,
+    this.hasMetrics = true,
   });
 
   final PlatformOfficeFilter filter;
@@ -30,7 +34,14 @@ class PlatformOfficeFilters extends StatefulWidget {
   final ValueChanged<String> onSearch;
   final ValueChanged<String?> onStatus;
   final ValueChanged<String?> onListingStatus;
+  final ValueChanged<ActivityLevel?> onActivity;
+  final ValueChanged<PlatformOfficeSort> onSort;
   final VoidCallback onClear;
+
+  /// Whether analytics has loaded. The activity facet and the metric-based
+  /// sorts are hidden without it rather than shown inert: a control that
+  /// silently does nothing is worse than one that is not there yet.
+  final bool hasMetrics;
 
   @override
   State<PlatformOfficeFilters> createState() => _PlatformOfficeFiltersState();
@@ -123,6 +134,53 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
                 options: _listingOptions,
                 onChanged: widget.onListingStatus,
               ),
+              if (widget.hasMetrics) ...[
+                // The third axis: how the office is actually behaving, as
+                // opposed to how it is configured.
+                SizedBox(
+                  width: 180,
+                  child: DropdownButtonFormField<ActivityLevel?>(
+                    initialValue: widget.filter.activity,
+                    isDense: true,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      labelText: 'النشاط التجاري',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      const DropdownMenuItem<ActivityLevel?>(
+                        value: null,
+                        child: Text('الكل'),
+                      ),
+                      for (final level in ActivityLevel.values)
+                        DropdownMenuItem<ActivityLevel?>(
+                          value: level,
+                          child: Text(level.label),
+                        ),
+                    ],
+                    onChanged: widget.onActivity,
+                  ),
+                ),
+                SizedBox(
+                  width: 200,
+                  child: DropdownButtonFormField<PlatformOfficeSort>(
+                    initialValue: widget.filter.sort,
+                    isDense: true,
+                    decoration: const InputDecoration(
+                      isDense: true,
+                      labelText: 'الترتيب',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: [
+                      for (final sort in PlatformOfficeSort.values)
+                        DropdownMenuItem(value: sort, child: Text(sort.label)),
+                    ],
+                    onChanged: (sort) {
+                      if (sort != null) widget.onSort(sort);
+                    },
+                  ),
+                ),
+              ],
               if (isFiltered)
                 TextButton.icon(
                   onPressed: widget.onClear,

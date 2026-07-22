@@ -42,7 +42,11 @@ class OnboardingCredentialsPanel extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Icon(Icons.check_circle_rounded, color: scheme.primary, size: 28),
+                  Icon(
+                    Icons.check_circle_rounded,
+                    color: scheme.primary,
+                    size: 28,
+                  ),
                   const SizedBox(width: AppSpacing.small),
                   Expanded(
                     child: Column(
@@ -191,9 +195,9 @@ class _SecretRow extends StatelessWidget {
             icon: const Icon(Icons.copy_rounded),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: value));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('تم نسخ $label')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('تم نسخ $label')));
             },
           ),
         ],

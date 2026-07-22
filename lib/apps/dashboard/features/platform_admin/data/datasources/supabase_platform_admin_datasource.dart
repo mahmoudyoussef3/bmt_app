@@ -1,6 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/office_onboarding.dart';
+import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
 import '../../domain/entities/platform_office_details.dart';
 import 'platform_admin_datasource.dart';
@@ -35,6 +36,22 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
         for (final row in rows)
           _mapOffice(Map<String, dynamic>.from(row as Map)),
       ];
+    } on PostgrestException catch (error) {
+      throw Exception(_messageForCode(error.message));
+    }
+  }
+
+  @override
+  Future<PlatformAnalytics> getAnalytics({int windowDays = 30}) async {
+    try {
+      final row = await _client.rpc(
+        'platform_office_analytics',
+        params: {'p_window_days': windowDays},
+      );
+      if (row is! Map) {
+        throw Exception('تعذر قراءة تحليلات المنصة.');
+      }
+      return _mapAnalytics(Map<String, dynamic>.from(row));
     } on PostgrestException catch (error) {
       throw Exception(_messageForCode(error.message));
     }
@@ -282,6 +299,117 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
       marketplace: marketplace is Map
           ? _mapMarketplace(Map<String, dynamic>.from(marketplace))
           : null,
+    );
+  }
+
+  /// `platform_office_analytics` returns one jsonb document: a totals object, a
+  /// day-by-day trend array, and one entry per office. The office entries are
+  /// keyed by id here rather than kept as a list, because every consumer looks
+  /// them up by the office they are already rendering.
+  PlatformAnalytics _mapAnalytics(Map<String, dynamic> row) {
+    final totals = row['totals'] is Map
+        ? Map<String, dynamic>.from(row['totals'] as Map)
+        : const <String, dynamic>{};
+
+    return PlatformAnalytics(
+      windowDays: _toInt(row['window_days']) == 0
+          ? 30
+          : _toInt(row['window_days']),
+      generatedAt: _parseDate(row['generated_at']),
+      totals: PlatformTotals(
+        offices: _toInt(totals['offices']),
+        active: _toInt(totals['active']),
+        paused: _toInt(totals['paused']),
+        suspended: _toInt(totals['suspended']),
+        archived: _toInt(totals['archived']),
+        listed: _toInt(totals['listed']),
+        draft: _toInt(totals['draft']),
+        unlisted: _toInt(totals['unlisted']),
+        trading: _toInt(totals['trading']),
+        idle: _toInt(totals['idle']),
+        neverTraded: _toInt(totals['never_traded']),
+        onboardedInWindow: _toInt(totals['onboarded_in_window']),
+        withoutAdmin: _toInt(totals['without_admin']),
+        listedWithoutTrips: _toInt(totals['listed_without_trips']),
+        tripsTotal: _toInt(totals['trips_total']),
+        tripsRecent: _toInt(totals['trips_recent']),
+        tripsUpcoming: _toInt(totals['trips_upcoming']),
+        tripsStale: _toInt(totals['trips_stale']),
+        bookingsTotal: _toInt(totals['bookings_total']),
+        bookingsRecent: _toInt(totals['bookings_recent']),
+        revenueTotal: _toDouble(totals['revenue_total']),
+        revenueRecent: _toDouble(totals['revenue_recent']),
+        paymentsAwaitingReview: _toInt(totals['payments_awaiting_review']),
+        paymentsAwaitingAmount: _toDouble(totals['payments_awaiting_amount']),
+        ticketsOpen: _toInt(totals['tickets_open']),
+        captainRequestsPending: _toInt(totals['captain_requests_pending']),
+        seatsOffered: _toInt(totals['seats_offered']),
+        seatsSold: _toInt(totals['seats_sold']),
+      ),
+      trend: [
+        if (row['trend'] is List)
+          for (final item in row['trend'] as List)
+            if (item is Map) _mapTrendPoint(Map<String, dynamic>.from(item)),
+      ],
+      offices: {
+        for (final metrics in [
+          if (row['offices'] is List)
+            for (final item in row['offices'] as List)
+              if (item is Map) _mapMetrics(Map<String, dynamic>.from(item)),
+        ])
+          metrics.officeId: metrics,
+      },
+    );
+  }
+
+  PlatformTrendPoint _mapTrendPoint(Map<String, dynamic> row) {
+    return PlatformTrendPoint(
+      // A `date` column, so it arrives without a time. Parsed as-is rather than
+      // localised: shifting a calendar day by a timezone offset would move a
+      // day's bookings onto the day before it.
+      day: DateTime.tryParse(row['day']?.toString() ?? '') ?? DateTime.now(),
+      bookings: _toInt(row['bookings']),
+      revenue: _toDouble(row['revenue']),
+    );
+  }
+
+  PlatformOfficeMetrics _mapMetrics(Map<String, dynamic> row) {
+    return PlatformOfficeMetrics(
+      officeId: row['office_id']?.toString() ?? '',
+      totalTrips: _toInt(row['trips_total']),
+      recentTrips: _toInt(row['trips_recent']),
+      upcomingTrips: _toInt(row['trips_upcoming']),
+      staleTrips: _toInt(row['trips_stale']),
+      completedTrips: _toInt(row['trips_completed']),
+      cancelledTrips: _toInt(row['trips_cancelled']),
+      totalBookings: _toInt(row['bookings_total']),
+      recentBookings: _toInt(row['bookings_recent']),
+      confirmedBookings: _toInt(row['bookings_confirmed']),
+      cancelledBookings: _toInt(row['bookings_cancelled']),
+      recentCancelledBookings: _toInt(row['bookings_cancelled_recent']),
+      revenueTotal: _toDouble(row['revenue_total']),
+      revenueRecent: _toDouble(row['revenue_recent']),
+      paymentsAwaitingReview: _toInt(row['payments_awaiting_review']),
+      paymentsAwaitingAmount: _toDouble(row['payments_awaiting_amount']),
+      paymentsRejected: _toInt(row['payments_rejected']),
+      seatsOffered: _toInt(row['seats_offered']),
+      seatsSold: _toInt(row['seats_sold']),
+      ticketsTotal: _toInt(row['tickets_total']),
+      openTickets: _toInt(row['tickets_open']),
+      recentTickets: _toInt(row['tickets_recent']),
+      pendingCaptainRequests: _toInt(row['captain_requests_pending']),
+      reviewsTotal: _toInt(row['reviews_total']),
+      recentReviews: _toInt(row['reviews_recent']),
+      activeOperators: _toInt(row['active_operators']),
+      activeAdmins: _toInt(row['active_admins']),
+      // Null when the office has no rated reviews. Kept null rather than
+      // defaulted to 0, which would read as "rated one star".
+      averageRating: row['avg_office_rating'] == null
+          ? null
+          : _toDouble(row['avg_office_rating']),
+      lastTripDate: _parseDate(row['last_trip_date']),
+      firstBookingAt: _parseDate(row['first_booking_at']),
+      lastBookingAt: _parseDate(row['last_booking_at']),
     );
   }
 

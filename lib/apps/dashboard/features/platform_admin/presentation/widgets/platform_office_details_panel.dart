@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
+import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
 import '../../domain/entities/platform_office_details.dart';
 
@@ -25,12 +26,20 @@ class PlatformOfficeDetailsPanel extends StatelessWidget {
     required this.onRetry,
     required this.onSetListing,
     required this.onSetStatus,
+    this.metrics,
+    this.windowDays = 30,
   });
 
   /// Shown while [details] is still null, so the panel names the office the
   /// operator picked rather than opening blank.
   final String officeName;
   final PlatformOfficeDetails? details;
+
+  /// This office's windowed activity, or null when analytics has not loaded.
+  /// The performance section is omitted entirely in that case — the rest of the
+  /// panel comes from a different RPC and does not wait on it.
+  final PlatformOfficeMetrics? metrics;
+  final int windowDays;
   final bool isLoading;
   final String? error;
   final bool isBusy;
@@ -71,6 +80,16 @@ class PlatformOfficeDetailsPanel extends StatelessWidget {
                 const SizedBox(height: AppSpacing.medium),
                 _OperationalSection(details: loaded),
                 const SizedBox(height: AppSpacing.medium),
+                // Sits directly under the inventory counts, because "6 vehicles"
+                // and "0 bookings in 30 days" only mean something read together.
+                if (metrics case final m?) ...[
+                  _PerformanceSection(
+                    metrics: m,
+                    office: loaded.office,
+                    windowDays: windowDays,
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                ],
                 _MarketplaceSection(
                   details: loaded,
                   isBusy: isBusy,
@@ -331,6 +350,178 @@ class _OperationalSection extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// What the office actually did, as against what it owns.
+///
+/// Every figure above this section is a lifetime total or a piece of
+/// configuration; every figure in it is bounded by the analytics window, and
+/// the section says so in its own subtitle so the two can never be read as the
+/// same kind of number.
+class _PerformanceSection extends StatelessWidget {
+  const _PerformanceSection({
+    required this.metrics,
+    required this.office,
+    required this.windowDays,
+  });
+
+  final PlatformOfficeMetrics metrics;
+  final PlatformOffice office;
+  final int windowDays;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final level = metrics.activityLevel;
+
+    return _Section(
+      title: 'الأداء خلال $windowDays يوم',
+      icon: Icons.query_stats_outlined,
+      trailing: StatusChip(
+        label: level.label,
+        color: switch (level) {
+          ActivityLevel.active => scheme.primary.withAlpha(18),
+          ActivityLevel.idle => scheme.tertiary.withAlpha(28),
+          ActivityLevel.never => scheme.surfaceContainerHighest,
+        },
+        textColor: switch (level) {
+          ActivityLevel.active => scheme.primary,
+          ActivityLevel.idle => scheme.tertiary,
+          ActivityLevel.never => scheme.onSurfaceVariant,
+        },
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: AppSpacing.large,
+            runSpacing: AppSpacing.medium,
+            children: [
+              _Metric(
+                label: 'الإيراد المعتمد',
+                valueText: metrics.revenueRecentLabel,
+              ),
+              _Metric(label: 'الحجوزات', value: metrics.recentBookings),
+              _Metric(label: 'الرحلات', value: metrics.recentTrips),
+              _Metric(label: 'رحلات قادمة', value: metrics.upcomingTrips),
+              if (metrics.occupancyLabel case final occupancy?)
+                _Metric(label: 'إشغال المقاعد', valueText: occupancy),
+              _Metric(label: 'تقييمات جديدة', value: metrics.recentReviews),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          _KeyValue(
+            label: 'الإيراد الإجمالي',
+            value: metrics.revenueTotalLabel,
+          ),
+          if (metrics.averageBookingValue case final average?)
+            _KeyValue(label: 'متوسط قيمة الحجز', value: formatMoney(average)),
+          _KeyValue(
+            label: 'نسبة الإلغاء',
+            value:
+                '${metrics.cancellationRateLabel} '
+                '(${metrics.cancelledBookings} من ${metrics.totalBookings})',
+          ),
+          if (metrics.averageRating case final rating?)
+            _KeyValue(
+              label: 'متوسط تقييم المكتب',
+              value:
+                  '${rating.toStringAsFixed(1)} من 5 '
+                  '(${metrics.reviewsTotal} تقييم)',
+            ),
+          _KeyValue(
+            label: 'آخر حجز',
+            value: switch (metrics.daysSinceLastBooking) {
+              null => 'لا يوجد',
+              0 => 'اليوم',
+              final days => 'منذ $days يوم',
+            },
+          ),
+          _KeyValue(label: 'أول حجز', value: _date(metrics.firstBookingAt)),
+          const SizedBox(height: AppSpacing.small),
+          // The workload the office owes someone. Grouped apart from the
+          // performance figures because these are not results — they are things
+          // still waiting on a human, and the office's own dashboard is where
+          // they get cleared.
+          Wrap(
+            spacing: AppSpacing.large,
+            runSpacing: AppSpacing.xSmall,
+            children: [
+              _Pending(
+                label: 'مدفوعات بانتظار المراجعة',
+                value:
+                    '${metrics.paymentsAwaitingReview} '
+                    '(${metrics.awaitingAmountLabel})',
+                isAlert: metrics.paymentsAwaitingReview > 0,
+              ),
+              _Pending(
+                label: 'رحلات فات موعدها',
+                value: '${metrics.staleTrips}',
+                isAlert: metrics.staleTrips > 0,
+              ),
+              _Pending(
+                label: 'تذاكر دعم مفتوحة',
+                value: '${metrics.openTickets}',
+                isAlert: metrics.openTickets > 0,
+              ),
+              _Pending(
+                label: 'طلبات كباتن معلقة',
+                value: '${metrics.pendingCaptainRequests}',
+                isAlert: metrics.pendingCaptainRequests > 0,
+              ),
+            ],
+          ),
+          if (office.isListed && metrics.upcomingTrips == 0) ...[
+            const SizedBox(height: AppSpacing.small),
+            Text(
+              'هذا المكتب معروض في سوق العملاء بلا رحلة واحدة متاحة للحجز — '
+              'كل عميل يفتحه الآن يصل إلى صفحة فارغة.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.error),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _Pending extends StatelessWidget {
+  const _Pending({
+    required this.label,
+    required this.value,
+    required this.isAlert,
+  });
+
+  final String label;
+  final String value;
+  final bool isAlert;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          isAlert
+              ? Icons.pending_actions_outlined
+              : Icons.check_circle_outline_rounded,
+          size: 16,
+          color: isAlert ? scheme.tertiary : scheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 4),
+        Text(
+          '$label: $value',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: isAlert ? scheme.tertiary : scheme.onSurfaceVariant,
+            fontWeight: isAlert ? FontWeight.bold : null,
+          ),
+        ),
+      ],
     );
   }
 }

@@ -1,4 +1,5 @@
 import '../../domain/entities/office_onboarding.dart';
+import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
 import '../../domain/entities/platform_office_details.dart';
 import '../../domain/repositories/platform_admin_repository.dart';
@@ -11,6 +12,10 @@ class PlatformAdminRepositoryImpl implements PlatformAdminRepository {
 
   @override
   Future<List<PlatformOffice>> getOffices() => _datasource.getOffices();
+
+  @override
+  Future<PlatformAnalytics> getAnalytics({int windowDays = 30}) =>
+      _datasource.getAnalytics(windowDays: windowDays);
 
   @override
   Future<PlatformOfficeDetails> getOfficeDetails(String officeId) =>

@@ -1,4 +1,5 @@
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/office_onboarding.dart';
+import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/platform_analytics.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/platform_office.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/platform_office_details.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/repositories/platform_admin_repository.dart';
@@ -43,6 +44,7 @@ void main() {
     repo = _FakeRepo()..offices = [office()];
     cubit = PlatformAdminCubit(
       getOffices: GetPlatformOfficesUseCase(repo),
+      getAnalytics: GetPlatformAnalyticsUseCase(repo),
       getOfficeDetails: GetPlatformOfficeDetailsUseCase(repo),
       onboardOffice: OnboardOfficeUseCase(repo),
       setListing: SetOfficeListingUseCase(repo),
@@ -69,6 +71,126 @@ void main() {
       await cubit.load();
 
       expect(cubit.state, isA<PlatformAdminError>());
+    });
+
+    test('loads the analytics alongside the list', () async {
+      await cubit.load();
+
+      final state = cubit.state as PlatformAdminLoaded;
+      expect(state.analytics, isNotNull);
+      expect(state.isAnalyticsLoading, isFalse);
+      expect(repo.analyticsCalls, [30]);
+    });
+  });
+
+  group('analytics', () {
+    // The whole point of two RPCs: the office list is the screen, the numbers
+    // are an ornament on it. Losing the ornament must not lose the screen.
+    test('a failed analytics call keeps the office list on screen', () async {
+      repo.failAnalytics = true;
+
+      await cubit.load();
+
+      final state = cubit.state;
+      expect(state, isA<PlatformAdminLoaded>());
+      expect((state as PlatformAdminLoaded).offices, hasLength(1));
+      expect(state.analytics, isNull);
+      expect(state.analyticsError, isNotNull);
+      expect(state.isAnalyticsLoading, isFalse);
+    });
+
+    test('retrying clears the previous error and refetches', () async {
+      repo.failAnalytics = true;
+      await cubit.load();
+      repo.failAnalytics = false;
+
+      await cubit.retryAnalytics();
+
+      final state = cubit.state as PlatformAdminLoaded;
+      expect(state.analytics, isNotNull);
+      expect(state.analyticsError, isNull);
+      expect(repo.analyticsCalls, hasLength(2));
+    });
+
+    test('changing the window refetches only the analytics', () async {
+      await cubit.load();
+      final listCallsBefore = repo.analyticsCalls.length;
+
+      await cubit.setWindow(90);
+
+      expect(repo.analyticsCalls.last, 90);
+      expect(repo.analyticsCalls, hasLength(listCallsBefore + 1));
+      expect((cubit.state as PlatformAdminLoaded).analytics?.windowDays, 90);
+    });
+
+    test('re-selecting the current window does nothing', () async {
+      await cubit.load();
+
+      await cubit.setWindow(30);
+
+      expect(repo.analyticsCalls, hasLength(1));
+    });
+
+    test('an out-of-range window is clamped rather than rejected', () async {
+      await cubit.load();
+
+      await cubit.setWindow(5000);
+
+      expect(repo.analyticsCalls.last, 365);
+    });
+
+    test('an action refreshes the numbers it invalidated', () async {
+      await cubit.load();
+
+      await cubit.setListing('office-a', 'listed');
+
+      expect(repo.analyticsCalls, hasLength(2));
+      expect(cubit.state, isA<PlatformAdminLoaded>());
+    });
+
+    // The credentials panel holds the only copy of a generated password that
+    // exists anywhere. An analytics response landing underneath it must not
+    // replace it with the office list.
+    test('analytics never emits over the credentials reveal', () async {
+      await cubit.load();
+      repo.result = const OfficeOnboardingResult(
+        officeId: 'office-b',
+        officeName: 'مكتب جديد',
+        slug: 'new-office',
+        joinCode: 'ABCD2345',
+        username: 'ops.new',
+        listingStatus: 'draft',
+        temporaryPassword: 'Str0ng!Passw0rd',
+      );
+
+      await cubit.onboard(validRequest);
+      // A refresh completing while the reveal is up.
+      await cubit.retryAnalytics();
+
+      expect(cubit.state, isA<PlatformAdminOnboarded>());
+      expect(
+        (cubit.state as PlatformAdminOnboarded).result.temporaryPassword,
+        'Str0ng!Passw0rd',
+      );
+    });
+
+    test('dismissing the reveal returns to the list and recounts', () async {
+      await cubit.load();
+      repo.result = const OfficeOnboardingResult(
+        officeId: 'office-b',
+        officeName: 'مكتب جديد',
+        slug: 'new-office',
+        joinCode: 'ABCD2345',
+        username: 'ops.new',
+        listingStatus: 'draft',
+      );
+      await cubit.onboard(validRequest);
+      final before = repo.analyticsCalls.length;
+
+      await cubit.dismissOnboardingResult();
+
+      expect(cubit.state, isA<PlatformAdminLoaded>());
+      expect(repo.analyticsCalls, hasLength(before + 1));
     });
   });
 
@@ -253,12 +375,15 @@ class _FakeRepo implements PlatformAdminRepository {
   List<PlatformOffice> offices = const [];
   OfficeOnboardingResult? result;
   PlatformOfficeDetails? details;
+  PlatformAnalytics? analytics;
   bool failRead = false;
   bool failWrite = false;
   bool failDetails = false;
+  bool failAnalytics = false;
 
   int onboardCalls = 0;
   final List<String> detailCalls = [];
+  final List<int> analyticsCalls = [];
   final List<(String, String)> listingCalls = [];
   final List<(String, String)> statusCalls = [];
 
@@ -266,6 +391,19 @@ class _FakeRepo implements PlatformAdminRepository {
   Future<List<PlatformOffice>> getOffices() async {
     if (failRead) throw Exception('read failed');
     return offices;
+  }
+
+  @override
+  Future<PlatformAnalytics> getAnalytics({int windowDays = 30}) async {
+    analyticsCalls.add(windowDays);
+    if (failAnalytics) throw Exception('analytics failed');
+    return analytics ??
+        PlatformAnalytics(
+          windowDays: windowDays,
+          totals: const PlatformTotals(),
+          trend: const [],
+          offices: const {},
+        );
   }
 
   @override

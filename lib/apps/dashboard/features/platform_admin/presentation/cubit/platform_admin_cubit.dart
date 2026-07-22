@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/office_onboarding.dart';
+import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
 import '../../domain/entities/platform_office_filter.dart';
 import '../../domain/usecases/platform_admin_usecases.dart';
@@ -9,11 +10,13 @@ import 'platform_admin_state.dart';
 class PlatformAdminCubit extends Cubit<PlatformAdminState> {
   PlatformAdminCubit({
     required GetPlatformOfficesUseCase getOffices,
+    required GetPlatformAnalyticsUseCase getAnalytics,
     required GetPlatformOfficeDetailsUseCase getOfficeDetails,
     required OnboardOfficeUseCase onboardOffice,
     required SetOfficeListingUseCase setListing,
     required SetOfficeStatusUseCase setStatus,
   }) : _getOffices = getOffices,
+       _getAnalytics = getAnalytics,
        _getOfficeDetails = getOfficeDetails,
        _onboardOffice = onboardOffice,
        _setListing = setListing,
@@ -21,6 +24,7 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
        super(const PlatformAdminInitial());
 
   final GetPlatformOfficesUseCase _getOffices;
+  final GetPlatformAnalyticsUseCase _getAnalytics;
   final GetPlatformOfficeDetailsUseCase _getOfficeDetails;
   final OnboardOfficeUseCase _onboardOffice;
   final SetOfficeListingUseCase _setListing;
@@ -34,13 +38,70 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
   PlatformOfficeFilter _filter = const PlatformOfficeFilter();
   PlatformOfficeSelection? _selection;
 
+  /// Analytics is held beside the office list for the same reason the filter is
+  /// — every action re-emits `PlatformAdminLoaded` — but it is also *separate*
+  /// from the list on purpose: the two come from different RPCs, and losing the
+  /// activity numbers must never lose the offices.
+  PlatformAnalytics? _analytics;
+  bool _isAnalyticsLoading = false;
+  String? _analyticsError;
+  int _windowDays = 30;
+
   Future<void> load() async {
     emit(const PlatformAdminLoading());
     try {
-      emit(_loaded(await _getOffices()));
+      final offices = await _getOffices();
+      // The list is emitted before the analytics call is awaited, so the screen
+      // is usable while the heavier aggregate query runs.
+      _isAnalyticsLoading = true;
+      emit(_loaded(offices));
+      await _loadAnalytics();
     } catch (error) {
       emit(PlatformAdminError(_message(error)));
     }
+  }
+
+  /// Changes the analytics window (7 / 30 / 90 days) and refetches.
+  ///
+  /// Only the analytics call is repeated — the office list does not depend on
+  /// the window, and refetching it would make a chart control flicker the whole
+  /// screen.
+  Future<void> setWindow(int days) async {
+    if (days == _windowDays) return;
+    _windowDays = days;
+    final offices = _listOffices();
+    if (offices == null) return;
+    _isAnalyticsLoading = true;
+    emit(_loaded(offices));
+    await _loadAnalytics();
+  }
+
+  /// Fetches the activity numbers. Never throws: a failure here leaves the
+  /// office list exactly as it was and records a message the header can show
+  /// beside a retry, because "we could not measure the platform" is a smaller
+  /// problem than "we could not list it" and must not be reported as the same
+  /// thing.
+  Future<void> _loadAnalytics() async {
+    try {
+      final analytics = await _getAnalytics(windowDays: _windowDays);
+      _analytics = analytics;
+      _analyticsError = null;
+    } catch (error) {
+      _analyticsError = _message(error);
+    }
+    _isAnalyticsLoading = false;
+    final offices = _listOffices();
+    if (offices == null) return;
+    emit(_loaded(offices));
+  }
+
+  Future<void> retryAnalytics() async {
+    final offices = _listOffices();
+    if (offices == null) return;
+    _isAnalyticsLoading = true;
+    _analyticsError = null;
+    emit(_loaded(offices));
+    await _loadAnalytics();
   }
 
   // ── Search and filtering ──────────────────────────────────────────────────
@@ -61,6 +122,15 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
         ? _filter.copyWith(clearListingStatus: true)
         : _filter.copyWith(listingStatus: listingStatus),
   );
+
+  void filterByActivity(ActivityLevel? activity) => _applyFilter(
+    activity == null
+        ? _filter.copyWith(clearActivity: true)
+        : _filter.copyWith(activity: activity),
+  );
+
+  void sortBy(PlatformOfficeSort sort) =>
+      _applyFilter(_filter.copyWith(sort: sort));
 
   void clearFilters() => _applyFilter(const PlatformOfficeFilter());
 
@@ -145,11 +215,16 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
 
   /// Dismisses the credentials panel and returns to the list. There is no way
   /// back: the password exists only in that state object.
-  void dismissOnboardingResult() {
+  ///
+  /// The analytics refresh happens here rather than at onboarding time because
+  /// [_loadAnalytics] deliberately refuses to emit over the credentials panel —
+  /// so this is the first moment the newly created office can be counted.
+  Future<void> dismissOnboardingResult() async {
     final current = state;
-    if (current is PlatformAdminOnboarded) {
-      emit(_loaded(current.offices));
-    }
+    if (current is! PlatformAdminOnboarded) return;
+    _isAnalyticsLoading = true;
+    emit(_loaded(current.offices));
+    await _loadAnalytics();
   }
 
   Future<void> setListing(String officeId, String listingStatus) =>
@@ -186,6 +261,11 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
       await _refreshSelection();
       emit(PlatformAdminActionSuccess(successMessage, refreshed));
       emit(_loaded(refreshed));
+      // Publishing or suspending changes the answers analytics gives — a newly
+      // listed office with no upcoming trips becomes a marketplace dead end the
+      // moment it is published — so the numbers are refetched rather than left
+      // describing the platform as it was one action ago.
+      await _loadAnalytics();
     } catch (error) {
       emit(PlatformAdminActionFailure(_message(error), offices));
       emit(_loaded(offices));
@@ -222,7 +302,23 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
     fieldErrors: fieldErrors,
     filter: _filter,
     selection: _selection,
+    analytics: _analytics,
+    isAnalyticsLoading: _isAnalyticsLoading,
+    analyticsError: _analyticsError,
   );
+
+  /// The office list, but only when the screen is actually showing one.
+  ///
+  /// Stricter than [_offices] on purpose, and the difference matters: the
+  /// credentials reveal also carries an office list, but it carries the only
+  /// copy of a generated password that exists anywhere alongside it. Every
+  /// analytics path emits `PlatformAdminLoaded`, so any of them reading
+  /// [_offices] would silently replace that reveal with the list — losing the
+  /// password to a background refresh the operator never asked for.
+  List<PlatformOffice>? _listOffices() {
+    final current = state;
+    return current is PlatformAdminLoaded ? current.offices : null;
+  }
 
   List<PlatformOffice>? _offices() {
     final current = state;

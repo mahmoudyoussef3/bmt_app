@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
+import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
 import '../../domain/entities/platform_office_filter.dart';
 import '../cubit/platform_admin_cubit.dart';
@@ -15,6 +16,7 @@ import '../widgets/onboarding_credentials_panel.dart';
 import '../widgets/platform_office_card.dart';
 import '../widgets/platform_office_details_panel.dart';
 import '../widgets/platform_office_filters.dart';
+import '../widgets/platform_overview_panel.dart';
 
 /// Platform administration: onboard an office, and decide which offices the
 /// client marketplace shows.
@@ -63,6 +65,9 @@ class PlatformOfficesScreen extends StatelessWidget {
             :final fieldErrors,
             :final filter,
             :final selection,
+            :final analytics,
+            :final isAnalyticsLoading,
+            :final analyticsError,
           ) =>
             _Body(
               offices: offices,
@@ -70,6 +75,9 @@ class PlatformOfficesScreen extends StatelessWidget {
               fieldErrors: fieldErrors,
               filter: filter,
               selection: selection,
+              analytics: analytics,
+              isAnalyticsLoading: isAnalyticsLoading,
+              analyticsError: analyticsError,
             ),
           // The transient action states carry the office list but no filter of
           // their own; they are followed immediately by a `PlatformAdminLoaded`
@@ -100,6 +108,9 @@ class _Body extends StatelessWidget {
     required this.fieldErrors,
     this.filter = const PlatformOfficeFilter(),
     this.selection,
+    this.analytics,
+    this.isAnalyticsLoading = false,
+    this.analyticsError,
   });
 
   final List<PlatformOffice> offices;
@@ -107,6 +118,9 @@ class _Body extends StatelessWidget {
   final Map<String, String> fieldErrors;
   final PlatformOfficeFilter filter;
   final PlatformOfficeSelection? selection;
+  final PlatformAnalytics? analytics;
+  final bool isAnalyticsLoading;
+  final String? analyticsError;
 
   @override
   Widget build(BuildContext context) {
@@ -116,6 +130,9 @@ class _Body extends StatelessWidget {
       fieldErrors: fieldErrors,
       filter: filter,
       selectedId: selection?.officeId,
+      analytics: analytics,
+      isAnalyticsLoading: isAnalyticsLoading,
+      analyticsError: analyticsError,
     );
 
     final open = selection;
@@ -134,6 +151,8 @@ class _Body extends StatelessWidget {
         child: PlatformOfficeDetailsPanel(
           officeName: office?.name ?? 'المكتب',
           details: open.details,
+          metrics: analytics?.metricsFor(open.officeId),
+          windowDays: analytics?.windowDays ?? 30,
           isLoading: open.isLoading,
           error: open.error,
           isBusy: isSubmitting,
@@ -160,6 +179,9 @@ class _OfficeList extends StatelessWidget {
     required this.fieldErrors,
     required this.filter,
     required this.selectedId,
+    required this.analytics,
+    required this.isAnalyticsLoading,
+    required this.analyticsError,
   });
 
   final List<PlatformOffice> offices;
@@ -167,13 +189,15 @@ class _OfficeList extends StatelessWidget {
   final Map<String, String> fieldErrors;
   final PlatformOfficeFilter filter;
   final String? selectedId;
+  final PlatformAnalytics? analytics;
+  final bool isAnalyticsLoading;
+  final String? analyticsError;
 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<PlatformAdminCubit>();
-    final visible = filter.apply(offices);
-    final listed = offices.where((o) => o.isListed).length;
-    final drafts = offices.where((o) => o.isDraft).length;
+    final metrics = analytics?.offices ?? const {};
+    final visible = filter.apply(offices, metrics: metrics);
 
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
@@ -182,8 +206,8 @@ class _OfficeList extends StatelessWidget {
           icon: Icons.apartment_outlined,
           title: 'مكاتب المنصة',
           subtitle:
-              'إنشاء مكتب نقل جديد بحساب مسؤوله الأول، والتحكم في ظهوره داخل '
-              'سوق العملاء.',
+              'أداء كل مكتب على المنصة، وإنشاء مكتب نقل جديد بحساب مسؤوله '
+              'الأول، والتحكم في ظهوره داخل سوق العملاء.',
           actions: [
             FilledButton.icon(
               onPressed: isSubmitting ? null : cubit.load,
@@ -191,13 +215,18 @@ class _OfficeList extends StatelessWidget {
               label: const Text('تحديث'),
             ),
           ],
-          // Counts describe the platform, not the current search — see
-          // [PlatformAdminLoaded.visibleOffices].
-          child: _PlatformSummary(
-            total: offices.length,
-            listed: listed,
-            drafts: drafts,
-          ),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        // Describes the platform, never the current search: the header would
+        // stop being an overview if it changed with every keystroke.
+        PlatformOverviewPanel(
+          analytics: analytics,
+          offices: offices,
+          isLoading: isAnalyticsLoading,
+          error: analyticsError,
+          onWindowChanged: cubit.setWindow,
+          onRetry: cubit.retryAnalytics,
+          onOpenOffice: cubit.openDetails,
         ),
         const SizedBox(height: AppSpacing.medium),
         OfficeOnboardingForm(
@@ -210,9 +239,12 @@ class _OfficeList extends StatelessWidget {
           filter: filter,
           resultCount: visible.length,
           totalCount: offices.length,
+          hasMetrics: metrics.isNotEmpty,
           onSearch: cubit.search,
           onStatus: cubit.filterByStatus,
           onListingStatus: cubit.filterByListingStatus,
+          onActivity: cubit.filterByActivity,
+          onSort: cubit.sortBy,
           onClear: cubit.clearFilters,
         ),
         const SizedBox(height: AppSpacing.medium),
@@ -247,6 +279,7 @@ class _OfficeList extends StatelessWidget {
           for (final office in visible) ...[
             PlatformOfficeCard(
               office: office,
+              metrics: metrics[office.id],
               isBusy: isSubmitting,
               isSelected: office.id == selectedId,
               onOpen: () => cubit.openDetails(office.id),
@@ -255,64 +288,6 @@ class _OfficeList extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.small),
           ],
-      ],
-    );
-  }
-}
-
-class _PlatformSummary extends StatelessWidget {
-  const _PlatformSummary({
-    required this.total,
-    required this.listed,
-    required this.drafts,
-  });
-
-  final int total;
-  final int listed;
-  final int drafts;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      child: Wrap(
-        spacing: AppSpacing.large,
-        runSpacing: AppSpacing.medium,
-        children: [
-          _SummaryTile(label: 'إجمالي المكاتب', value: '$total'),
-          _SummaryTile(label: 'معروضة في السوق', value: '$listed'),
-          _SummaryTile(label: 'قيد التجهيز', value: '$drafts'),
-        ],
-      ),
-    );
-  }
-}
-
-class _SummaryTile extends StatelessWidget {
-  const _SummaryTile({required this.label, required this.value});
-
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          value,
-          style: Theme.of(
-            context,
-          ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-        ),
       ],
     );
   }

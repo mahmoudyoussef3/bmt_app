@@ -1,10 +1,17 @@
 import '../entities/office_onboarding.dart';
+import '../entities/platform_analytics.dart';
 import '../entities/platform_office.dart';
 import '../entities/platform_office_details.dart';
 
 abstract class PlatformAdminRepository {
   /// Every office on the platform, including the ones no client can see.
   Future<List<PlatformOffice>> getOffices();
+
+  /// Windowed activity per office, the platform roll-up, and a daily demand
+  /// trend. Separate from [getOffices] because the two answer different
+  /// questions — configuration versus behaviour — and the office list must
+  /// still render if the analytics call fails.
+  Future<PlatformAnalytics> getAnalytics({int windowDays});
 
   /// One office in full: counts, its operators, and its marketplace preview.
   Future<PlatformOfficeDetails> getOfficeDetails(String officeId);

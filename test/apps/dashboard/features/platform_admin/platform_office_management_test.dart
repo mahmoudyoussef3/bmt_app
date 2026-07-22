@@ -1,4 +1,5 @@
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/office_onboarding.dart';
+import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/platform_analytics.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/platform_office.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/platform_office_details.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/repositories/platform_admin_repository.dart';
@@ -71,6 +72,7 @@ void main() {
     repo = _FakeRepo()..offices = [alex, cairo];
     cubit = PlatformAdminCubit(
       getOffices: GetPlatformOfficesUseCase(repo),
+      getAnalytics: GetPlatformAnalyticsUseCase(repo),
       getOfficeDetails: GetPlatformOfficeDetailsUseCase(repo),
       onboardOffice: OnboardOfficeUseCase(repo),
       setListing: SetOfficeListingUseCase(repo),
@@ -369,13 +371,28 @@ class _FakeRepo implements PlatformAdminRepository {
 
   int listCalls = 0;
   final List<String> detailCalls = [];
+  final List<int> analyticsCalls = [];
   final List<(String, String)> listingCalls = [];
   final List<(String, String)> statusCalls = [];
+
+  PlatformAnalytics? analytics;
 
   @override
   Future<List<PlatformOffice>> getOffices() async {
     listCalls++;
     return offices;
+  }
+
+  @override
+  Future<PlatformAnalytics> getAnalytics({int windowDays = 30}) async {
+    analyticsCalls.add(windowDays);
+    return analytics ??
+        PlatformAnalytics(
+          windowDays: windowDays,
+          totals: const PlatformTotals(),
+          trend: const [],
+          offices: const {},
+        );
   }
 
   @override
