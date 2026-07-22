@@ -22,11 +22,16 @@ class PlatformOffice {
     required this.operators,
     required this.drivers,
     required this.routes,
+    this.vehicles = 0,
+    this.trips = 0,
+    this.ownerName,
+    this.ownerUsername,
     this.logoUrl,
     this.phone,
     this.email,
     this.listedAt,
     this.createdAt,
+    this.updatedAt,
   });
 
   final String id;
@@ -48,12 +53,26 @@ class PlatformOffice {
   final int operators;
   final int drivers;
   final int routes;
+  final int vehicles;
+
+  /// Lifetime trips. The cheapest answer to "has this office ever traded", which
+  /// is the question that separates an office still being set up from one that
+  /// was set up and abandoned — both of which sit in `draft` looking identical.
+  final int trips;
+
+  /// The office's first active `dashboard_admin`, resolved server-side.
+  ///
+  /// Null when the office has no active admin — an office nobody can sign in to,
+  /// which is a state worth seeing rather than papering over with a blank.
+  final String? ownerName;
+  final String? ownerUsername;
 
   final String? logoUrl;
   final String? phone;
   final String? email;
   final DateTime? listedAt;
   final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   bool get isListed => status == 'active' && listingStatus == 'listed';
 
@@ -86,4 +105,42 @@ class PlatformOffice {
   ];
 
   bool get canBeListed => blockersToListing.isEmpty;
+
+  /// The marketplace-card fields, and whether each is filled.
+  ///
+  /// Deliberately wider than [blockersToListing]: the RPC refuses to publish an
+  /// office missing a description or service areas, but an office with those two
+  /// and nothing else still reaches passengers as a card with no logo and no way
+  /// to make contact. The blockers say what is *forbidden*; this says what is
+  /// *thin*, which is the more useful thing to show before pressing publish.
+  Map<String, bool> get profileFields => {
+    'الوصف': description.trim().isNotEmpty,
+    'مناطق الخدمة': serviceAreas.isNotEmpty,
+    'الشعار': (logoUrl ?? '').trim().isNotEmpty,
+    'رقم الهاتف': (phone ?? '').trim().isNotEmpty,
+    'البريد الإلكتروني': (email ?? '').trim().isNotEmpty,
+  };
+
+  int get completedProfileFields =>
+      profileFields.values.where((filled) => filled).length;
+
+  int get totalProfileFields => profileFields.length;
+
+  /// 0.0 – 1.0.
+  double get profileCompleteness =>
+      totalProfileFields == 0 ? 0 : completedProfileFields / totalProfileFields;
+
+  List<String> get missingProfileFields => [
+    for (final entry in profileFields.entries)
+      if (!entry.value) entry.key,
+  ];
+
+  /// Who to contact about this office, falling back to the login handle when the
+  /// account carries no full name.
+  String? get ownerLabel {
+    final name = ownerName?.trim() ?? '';
+    if (name.isNotEmpty) return name;
+    final username = ownerUsername?.trim() ?? '';
+    return username.isEmpty ? null : username;
+  }
 }

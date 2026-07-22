@@ -18,12 +18,19 @@ class PlatformOfficeCard extends StatelessWidget {
     super.key,
     required this.office,
     required this.isBusy,
+    required this.isSelected,
+    required this.onOpen,
     required this.onSetListing,
     required this.onSetStatus,
   });
 
   final PlatformOffice office;
   final bool isBusy;
+
+  /// Whether this office's details panel is the one currently open.
+  final bool isSelected;
+
+  final VoidCallback onOpen;
   final ValueChanged<String> onSetListing;
   final ValueChanged<String> onSetStatus;
 
@@ -32,6 +39,7 @@ class PlatformOfficeCard extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return AppCard(
+      onTap: onOpen,
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -43,11 +51,27 @@ class PlatformOfficeCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      office.name,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Row(
+                      children: [
+                        if (isSelected) ...[
+                          Icon(
+                            Icons.chevron_left_rounded,
+                            size: 18,
+                            color: scheme.primary,
+                          ),
+                          const SizedBox(width: 2),
+                        ],
+                        Flexible(
+                          child: Text(
+                            office.name,
+                            style: Theme.of(context).textTheme.titleMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isSelected ? scheme.primary : null,
+                                ),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -57,6 +81,13 @@ class PlatformOfficeCard extends StatelessWidget {
                         fontFamily: 'monospace',
                       ),
                     ),
+                    if (office.ownerLabel case final owner?)
+                      Text(
+                        'المالك: $owner',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -92,9 +123,21 @@ class PlatformOfficeCard extends StatelessWidget {
             children: [
               _Stat(label: 'مشغّلون', value: office.operators),
               _Stat(label: 'سائقون', value: office.drivers),
+              _Stat(label: 'مركبات', value: office.vehicles),
               _Stat(label: 'مسارات', value: office.routes),
+              _Stat(label: 'رحلات', value: office.trips),
             ],
           ),
+          if (office.missingProfileFields.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xSmall),
+            Text(
+              'اكتمال الملف '
+              '${office.completedProfileFields}/${office.totalProfileFields}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ],
           if (office.serviceAreas.isNotEmpty) ...[
             const SizedBox(height: AppSpacing.small),
             Text(
@@ -136,10 +179,12 @@ class PlatformOfficeCard extends StatelessWidget {
                 ),
               if (office.status == 'active')
                 TextButton.icon(
-                  onPressed: isBusy
-                      ? null
-                      : () => _confirmSuspend(context),
-                  icon: Icon(Icons.block_outlined, size: 18, color: scheme.error),
+                  onPressed: isBusy ? null : () => _confirmSuspend(context),
+                  icon: Icon(
+                    Icons.block_outlined,
+                    size: 18,
+                    color: scheme.error,
+                  ),
                   label: Text('إيقاف', style: TextStyle(color: scheme.error)),
                 )
               else

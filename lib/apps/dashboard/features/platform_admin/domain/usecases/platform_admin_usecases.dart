@@ -1,11 +1,24 @@
 import '../entities/office_onboarding.dart';
 import '../entities/platform_office.dart';
+import '../entities/platform_office_details.dart';
 import '../repositories/platform_admin_repository.dart';
 
 class GetPlatformOfficesUseCase {
   const GetPlatformOfficesUseCase(this._repository);
   final PlatformAdminRepository _repository;
   Future<List<PlatformOffice>> call() => _repository.getOffices();
+}
+
+class GetPlatformOfficeDetailsUseCase {
+  const GetPlatformOfficeDetailsUseCase(this._repository);
+  final PlatformAdminRepository _repository;
+
+  Future<PlatformOfficeDetails> call(String officeId) {
+    if (officeId.trim().isEmpty) {
+      throw ArgumentError.value(officeId, 'officeId', 'must not be empty');
+    }
+    return _repository.getOfficeDetails(officeId);
+  }
 }
 
 /// Onboards an office. Refuses locally before touching the network when the

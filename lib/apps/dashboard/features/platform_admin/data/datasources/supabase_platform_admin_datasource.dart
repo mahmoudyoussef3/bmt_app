@@ -2,15 +2,17 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/office_onboarding.dart';
 import '../../domain/entities/platform_office.dart';
+import '../../domain/entities/platform_office_details.dart';
 import 'platform_admin_datasource.dart';
 
 /// The platform administration surface.
 ///
-/// Three of the four calls are plain RPCs — `platform_list_offices`,
-/// `platform_set_office_listing`, `platform_set_office_status` — each of which
-/// re-checks `is_platform_admin()` server-side under this session's own JWT.
-/// There is no office parameter to tamper with beyond the id, and an office id
-/// alone grants nothing without the platform-admin identity behind it.
+/// Four of the five calls are plain RPCs — `platform_list_offices`,
+/// `platform_office_details`, `platform_set_office_listing`,
+/// `platform_set_office_status` — each of which re-checks `is_platform_admin()`
+/// server-side under this session's own JWT. There is no office parameter to
+/// tamper with beyond the id, and an office id alone grants nothing without the
+/// platform-admin identity behind it.
 ///
 /// Onboarding goes through an Edge Function instead, for one reason: creating
 /// the `auth.users` row needs the Supabase Auth Admin API, which needs the
@@ -30,8 +32,25 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
     try {
       final rows = await _client.rpc('platform_list_offices') as List;
       return [
-        for (final row in rows) _mapOffice(Map<String, dynamic>.from(row as Map)),
+        for (final row in rows)
+          _mapOffice(Map<String, dynamic>.from(row as Map)),
       ];
+    } on PostgrestException catch (error) {
+      throw Exception(_messageForCode(error.message));
+    }
+  }
+
+  @override
+  Future<PlatformOfficeDetails> getOfficeDetails(String officeId) async {
+    try {
+      final row = await _client.rpc(
+        'platform_office_details',
+        params: {'p_office_id': officeId},
+      );
+      if (row is! Map) {
+        throw Exception('تعذر قراءة بيانات المكتب.');
+      }
+      return _mapDetails(Map<String, dynamic>.from(row));
     } on PostgrestException catch (error) {
       throw Exception(_messageForCode(error.message));
     }
@@ -77,7 +96,8 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
       officeName: office['name']?.toString() ?? '',
       slug: office['slug']?.toString() ?? '',
       joinCode: office['join_code']?.toString() ?? '',
-      username: data['login_username']?.toString() ??
+      username:
+          data['login_username']?.toString() ??
           office['username']?.toString() ??
           '',
       listingStatus: office['listing_status']?.toString() ?? 'draft',
@@ -205,11 +225,85 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
       operators: _toInt(row['operators']),
       drivers: _toInt(row['drivers']),
       routes: _toInt(row['routes']),
+      vehicles: _toInt(row['vehicles']),
+      trips: _toInt(row['trips']),
+      ownerName: _nullIfBlank(row['owner_name']?.toString()),
+      ownerUsername: _nullIfBlank(row['owner_username']?.toString()),
       logoUrl: _nullIfBlank(row['logo_url']?.toString()),
       phone: _nullIfBlank(row['phone']?.toString()),
       email: _nullIfBlank(row['email']?.toString()),
       listedAt: _parseDate(row['listed_at']),
       createdAt: _parseDate(row['created_at']),
+      updatedAt: _parseDate(row['updated_at']),
+    );
+  }
+
+  /// `platform_office_details` returns one jsonb document rather than a row, so
+  /// the office identity is read with the same [_mapOffice] the list uses — the
+  /// key names are identical on purpose, and the counts it reads for the card
+  /// live at the top level of that document too.
+  PlatformOfficeDetails _mapDetails(Map<String, dynamic> row) {
+    final counts = row['counts'] is Map
+        ? Map<String, dynamic>.from(row['counts'] as Map)
+        : const <String, dynamic>{};
+
+    // The list card's own count fields are flattened in from `counts`, so an
+    // office rendered from a details payload and one rendered from the list are
+    // the same object with the same numbers on it.
+    final office = _mapOffice({
+      ...row,
+      'operators': counts['operators'],
+      'drivers': counts['drivers'],
+      'routes': counts['routes'],
+      'vehicles': counts['vehicles'],
+      'trips': counts['trips'],
+    });
+
+    final marketplace = row['marketplace'];
+
+    return PlatformOfficeDetails(
+      office: office,
+      counts: PlatformOfficeCounts(
+        operators: _toInt(counts['operators']),
+        drivers: _toInt(counts['drivers']),
+        vehicles: _toInt(counts['vehicles']),
+        routes: _toInt(counts['routes']),
+        trips: _toInt(counts['trips']),
+        bookings: _toInt(counts['bookings']),
+        reviews: _toInt(counts['reviews']),
+      ),
+      operators: [
+        if (row['operators'] is List)
+          for (final item in row['operators'] as List)
+            if (item is Map) _mapOperator(Map<String, dynamic>.from(item)),
+      ],
+      // Absent when the office is not on the marketplace. Kept null rather than
+      // defaulted, because "a passenger sees nothing" is the information.
+      marketplace: marketplace is Map
+          ? _mapMarketplace(Map<String, dynamic>.from(marketplace))
+          : null,
+    );
+  }
+
+  PlatformOfficeOperator _mapOperator(Map<String, dynamic> row) {
+    return PlatformOfficeOperator(
+      username: row['username']?.toString() ?? '',
+      fullName: row['full_name']?.toString() ?? '',
+      role: row['role']?.toString() ?? 'support_agent',
+      status: row['status']?.toString() ?? 'active',
+      createdAt: _parseDate(row['created_at']),
+    );
+  }
+
+  PlatformOfficeMarketplacePreview _mapMarketplace(Map<String, dynamic> row) {
+    return PlatformOfficeMarketplacePreview(
+      name: row['name']?.toString() ?? '',
+      slug: row['slug']?.toString() ?? '',
+      description: row['description']?.toString() ?? '',
+      serviceAreas: _toStringList(row['service_areas']),
+      rating: _toDouble(row['rating']),
+      ratingsCount: _toInt(row['ratings_count']),
+      logoUrl: _nullIfBlank(row['logo_url']?.toString()),
     );
   }
 

@@ -1,5 +1,6 @@
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/office_onboarding.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/platform_office.dart';
+import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/entities/platform_office_details.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/repositories/platform_admin_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/domain/usecases/platform_admin_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_admin/presentation/cubit/platform_admin_cubit.dart';
@@ -42,6 +43,7 @@ void main() {
     repo = _FakeRepo()..offices = [office()];
     cubit = PlatformAdminCubit(
       getOffices: GetPlatformOfficesUseCase(repo),
+      getOfficeDetails: GetPlatformOfficeDetailsUseCase(repo),
       onboardOffice: OnboardOfficeUseCase(repo),
       setListing: SetOfficeListingUseCase(repo),
       setStatus: SetOfficeStatusUseCase(repo),
@@ -215,7 +217,10 @@ void main() {
 
   group('PlatformOffice', () {
     test('is listed only when active AND listed', () {
-      expect(office(status: 'active', listingStatus: 'listed').isListed, isTrue);
+      expect(
+        office(status: 'active', listingStatus: 'listed').isListed,
+        isTrue,
+      );
       expect(
         office(status: 'paused', listingStatus: 'listed').isListed,
         isFalse,
@@ -247,10 +252,13 @@ void main() {
 class _FakeRepo implements PlatformAdminRepository {
   List<PlatformOffice> offices = const [];
   OfficeOnboardingResult? result;
+  PlatformOfficeDetails? details;
   bool failRead = false;
   bool failWrite = false;
+  bool failDetails = false;
 
   int onboardCalls = 0;
+  final List<String> detailCalls = [];
   final List<(String, String)> listingCalls = [];
   final List<(String, String)> statusCalls = [];
 
@@ -258,6 +266,21 @@ class _FakeRepo implements PlatformAdminRepository {
   Future<List<PlatformOffice>> getOffices() async {
     if (failRead) throw Exception('read failed');
     return offices;
+  }
+
+  @override
+  Future<PlatformOfficeDetails> getOfficeDetails(String officeId) async {
+    detailCalls.add(officeId);
+    if (failDetails) throw Exception('details failed');
+    return details ??
+        PlatformOfficeDetails(
+          office: offices.firstWhere(
+            (o) => o.id == officeId,
+            orElse: () => offices.first,
+          ),
+          counts: const PlatformOfficeCounts(),
+          operators: const [],
+        );
   }
 
   @override

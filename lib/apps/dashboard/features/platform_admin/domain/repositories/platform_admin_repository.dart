@@ -1,9 +1,13 @@
 import '../entities/office_onboarding.dart';
 import '../entities/platform_office.dart';
+import '../entities/platform_office_details.dart';
 
 abstract class PlatformAdminRepository {
   /// Every office on the platform, including the ones no client can see.
   Future<List<PlatformOffice>> getOffices();
+
+  /// One office in full: counts, its operators, and its marketplace preview.
+  Future<PlatformOfficeDetails> getOfficeDetails(String officeId);
 
   /// Creates an office and its first dashboard administrator.
   Future<OfficeOnboardingResult> onboardOffice(OfficeOnboardingRequest request);

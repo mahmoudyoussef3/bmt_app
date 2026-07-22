@@ -1,5 +1,6 @@
 import '../../domain/entities/office_onboarding.dart';
 import '../../domain/entities/platform_office.dart';
+import '../../domain/entities/platform_office_details.dart';
 import '../../domain/repositories/platform_admin_repository.dart';
 import '../datasources/platform_admin_datasource.dart';
 
@@ -10,6 +11,10 @@ class PlatformAdminRepositoryImpl implements PlatformAdminRepository {
 
   @override
   Future<List<PlatformOffice>> getOffices() => _datasource.getOffices();
+
+  @override
+  Future<PlatformOfficeDetails> getOfficeDetails(String officeId) =>
+      _datasource.getOfficeDetails(officeId);
 
   @override
   Future<OfficeOnboardingResult> onboardOffice(

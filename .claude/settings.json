@@ -29,7 +29,9 @@
       "Bash(/private/tmp/claude-501/-Users-mahmoud-bmt-app/b83b1ca3-487e-4b96-80f1-21202bc6a663/scratchpad/q.sh \"select count\\(*\\) as n from public.offices\")",
       "Bash(/private/tmp/claude-501/-Users-mahmoud-bmt-app/b83b1ca3-487e-4b96-80f1-21202bc6a663/scratchpad/q.sh 'select jsonb_pretty\\(jsonb_build_object\\( *)",
       "Bash(python3 -c \"import json,sys;print\\(json.load\\(sys.stdin\\)[0]['i']\\)\")",
-      "Bash(supabase db query --linked ' *)"
+      "Bash(supabase db query --linked ' *)",
+      "Bash(grep -inE \"service_role|eyJ[A-Za-z0-9_-]{10,}|secret|password *= *['\\\\\"]|api[_-]?key|bearer \")",
+      "Bash(awk -F'-' '/^[0-9]+:[0-9]+ \\\\+[0-9]+ -[0-9]+:/ {n=$2+0; if \\(n>prev\\) {print; prev=n}}' /private/tmp/claude-501/-Users-mahmoud-bmt-app/b6d3bb12-06f7-46a8-a599-0a1c104cf123/tasks/btnocjqea.output)"
     ],
     "additionalDirectories": [
       "/Users/mahmoud/bmt_app/lib/apps/dashboard/features/office_profile/presentation/test/apps/dashboard/features/office_profile"
