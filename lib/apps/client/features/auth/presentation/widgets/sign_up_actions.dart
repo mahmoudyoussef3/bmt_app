@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../routes/auth_routes.dart';
 import 'auth_security_note.dart';
 import 'auth_switch_link.dart';
-import 'premium_auth_button.dart';
 
 /// The submit button, "already have an account" switch and security note at the
 /// foot of the sign-up form.
@@ -25,12 +26,14 @@ class SignUpActions extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        PremiumAuthButton(
-          text: isLoading ? l10n.auth_creatingAccount : l10n.auth_createAccount,
+        ClientButton(
+          label: isLoading
+              ? l10n.auth_creatingAccount
+              : l10n.auth_createAccount,
           onPressed: isLoading ? null : onSubmit,
           isLoading: isLoading,
         ),
-        const SizedBox(height: 18),
+        const SizedBox(height: ClientSpacing.xs),
         AuthSwitchLink(
           text: l10n.auth_alreadyHaveAccount,
           actionText: l10n.auth_signIn,
@@ -40,7 +43,7 @@ class SignUpActions extends StatelessWidget {
                   context,
                 ).pushReplacementNamed(AuthRoutes.signIn),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: ClientSpacing.xs),
         AuthSecurityNote(text: l10n.auth_signUpSecurityNote),
       ],
     );

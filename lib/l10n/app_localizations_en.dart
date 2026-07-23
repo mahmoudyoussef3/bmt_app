@@ -1224,9 +1224,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get welcome_createAccount => 'Create an account';
 
   @override
-  String get welcome_orContinueWith => 'or continue with';
-
-  @override
   String get welcome_continueAsGuest => 'Continue as guest';
 
   @override
@@ -1241,21 +1238,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get welcome_valuePasses => 'Manage passes';
-
-  @override
-  String welcome_comingSoonTitle(String provider) {
-    return '$provider sign-in is coming soon';
-  }
-
-  @override
-  String get welcome_comingSoonBody =>
-      'We\'re still putting the finishing touches on it. For now, continue with your email to book trips and track buses right away.';
-
-  @override
-  String get welcome_maybeLater => 'Maybe later';
-
-  @override
-  String get welcome_providerPhone => 'Phone';
 
   @override
   String get auth_termsAndConditions => 'Terms & Conditions';
@@ -1681,6 +1663,13 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notifications_emptyBody =>
       'Trip updates, booking confirmations and reminders will appear here when they arrive.';
+
+  @override
+  String get notifications_categoryEmptyTitle => 'Nothing in this category';
+
+  @override
+  String get notifications_categoryEmptyBody =>
+      'Pick another category to see the rest of your notifications.';
 
   @override
   String get notifications_newBadge => 'New';
@@ -2198,6 +2187,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get support_ticketDetailsTitle => 'Ticket details';
+
+  @override
   String get support_failedToLoad => 'Failed to load ticket details';
 
   @override
@@ -2283,6 +2275,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get seatSelection_cabinLayout => 'Cabin layout';
+
+  @override
+  String get seatSelection_cabinDoor => 'Door';
+
+  @override
+  String get seatSelection_cabinRear => 'REAR';
 
   @override
   String get seatSelection_driverCabinNote =>
@@ -4216,6 +4214,17 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get offices_directoryEmpty =>
       'No offices are open for booking right now.';
+
+  @override
+  String get offices_searchHint => 'Search by company or city';
+
+  @override
+  String offices_noSearchResults(String query) {
+    return 'No office matches \"$query\"';
+  }
+
+  @override
+  String get offices_clearSearch => 'Clear search';
 
   @override
   String get offices_routesHeader => 'Routes this office runs';

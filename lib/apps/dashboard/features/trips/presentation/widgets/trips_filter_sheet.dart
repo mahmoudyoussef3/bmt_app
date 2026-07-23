@@ -11,13 +11,8 @@ Future<void> showTripsFilterSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    builder: (_) => BlocProvider.value(
-      value: cubit,
-      child: const Directionality(
-        textDirection: TextDirection.rtl,
-        child: _TripsFilterSheetBody(),
-      ),
-    ),
+    builder: (_) =>
+        BlocProvider.value(value: cubit, child: _TripsFilterSheetBody()),
   );
 }
 
@@ -42,8 +37,9 @@ class _TripsFilterSheetBody extends StatelessWidget {
                     children: [
                       Text(
                         'فلاتر متقدمة',
-                        style: Theme.of(context).textTheme.titleLarge
-                            ?.copyWith(fontWeight: FontWeight.w900),
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                       const Spacer(),
                       if (state.hasAdvancedFilters)
@@ -174,7 +170,8 @@ class _FilterDropdown extends StatelessWidget {
           decoration: const InputDecoration(isDense: true),
           items: options
               .map(
-                (option) => DropdownMenuItem(value: option, child: Text(option)),
+                (option) =>
+                    DropdownMenuItem(value: option, child: Text(option)),
               )
               .toList(),
           onChanged: (selected) {

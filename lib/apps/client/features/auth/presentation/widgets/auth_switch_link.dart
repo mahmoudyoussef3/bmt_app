@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+
 /// A centered "prompt + action" text link used to move between the sign-in and
 /// sign-up screens.
 class AuthSwitchLink extends StatelessWidget {
@@ -16,25 +20,17 @@ class AuthSwitchLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Wrap(
       alignment: WrapAlignment.center,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
           text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-            color: scheme.onSurfaceVariant,
-            fontWeight: FontWeight.w600,
-          ),
+          style: ClientTypography.bodyMedium(
+            context,
+          ).copyWith(color: ClientColors.textSecondaryFor(context)),
         ),
-        TextButton(
-          onPressed: onTap,
-          child: Text(
-            actionText,
-            style: const TextStyle(fontWeight: FontWeight.w900),
-          ),
-        ),
+        ClientButton.text(label: actionText, onPressed: onTap),
       ],
     );
   }

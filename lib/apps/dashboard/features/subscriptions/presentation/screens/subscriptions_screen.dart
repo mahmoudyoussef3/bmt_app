@@ -9,6 +9,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
 import '../../domain/entities/user_subscription.dart';
 import '../../plans/presentation/cubit/subscription_plans_cubit.dart';
@@ -17,6 +18,7 @@ import '../cubit/subscriptions_cubit.dart';
 import '../cubit/subscriptions_state.dart';
 import '../widgets/subscriptions_analytics.dart';
 import '../widgets/subscription_rides_widget.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class SubscriptionsScreen extends StatelessWidget {
   const SubscriptionsScreen({super.key});
@@ -141,13 +143,9 @@ class _SubscriptionsListView extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppSpacing.medium),
-              TextField(
+              DebouncedSearchField(
+                hintText: 'ابحث بالاسم أو الهاتف أو خط السير',
                 onChanged: cubit.updateSearch,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.search),
-                  labelText: 'ابحث بالاسم أو الهاتف أو خط السير',
-                  border: OutlineInputBorder(),
-                ),
               ),
               const SizedBox(height: AppSpacing.medium),
               Wrap(
@@ -685,7 +683,7 @@ class _RouteBanner extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: scheme.primary.withAlpha(20),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(color: scheme.primary.withAlpha(46)),
       ),
       child: Row(

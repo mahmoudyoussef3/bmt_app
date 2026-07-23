@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubit.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_state.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_list/my_trips_body.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// My Trips hub with filter tabs for upcoming, active, completed, cancelled.
 class MyTripsScreen extends StatelessWidget {
@@ -26,7 +28,10 @@ class MyTripsScreen extends StatelessWidget {
     return SafeArea(
       child: Scaffold(
         appBar: showBackButton
-            ? AppBar(backgroundColor: Colors.transparent, elevation: 0)
+            ? ClientAppBar(
+                title: context.l10n.nav_trips,
+                backgroundColor: Colors.transparent,
+              )
             : null,
         body: BlocBuilder<TripsCubit, TripsState>(
           builder: (context, state) {

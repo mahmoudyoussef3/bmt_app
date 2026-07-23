@@ -6,6 +6,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../../domain/usecases/search_places_usecase.dart';
 import 'place_search_field.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// A single ordered point along the route. The first point is the origin
 /// (البداية), the last is the destination (النهاية), the rest are stops.
@@ -92,7 +93,7 @@ class RoutePointRow extends StatelessWidget {
         color: selectedForMap
             ? scheme.primaryContainer.withAlpha(70)
             : scheme.surface,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(
           color: selectedForMap ? scheme.primary : scheme.outline.withAlpha(70),
           width: selectedForMap ? 1.5 : 1,
@@ -234,7 +235,7 @@ class _OffsetChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: scheme.primaryContainer,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
       ),
       child: Text(
         label,

@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_details_view.dart';
+import '../../client_test_app.dart';
+import '../../tracking_cubit_stub.dart';
 
 // Regression coverage for how Trip Details *reads*:
 //
@@ -40,11 +42,14 @@ TripData _trip({
 Future<void> _pump(WidgetTester tester, TripData trip) async {
   await tester.binding.setSurfaceSize(const Size(430, 1400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
-  await tester.pumpWidget(MaterialApp(home: TripDetailsView(trip: trip)));
+  await tester.pumpWidget(clientTestApp(TripDetailsView(trip: trip)));
   await tester.pumpAndSettle();
 }
 
 void main() {
+  setUp(registerStubTrackingCubit);
+  tearDown(unregisterStubTrackingCubit);
+
   testWidgets('departure is shown as a clock, never as a raw DB time', (
     tester,
   ) async {

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/widgets/confetti/confetti.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/referrals/domain/entities/referral_rewards.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_cubit.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_state.dart';
@@ -420,15 +420,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
 
         return Scaffold(
           backgroundColor: scheme.surfaceContainerHighest,
-          appBar: AppBar(
-            title: Text(
-              _getViewTitle(context),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            leading: IconButton(
-              onPressed: _onBackPress,
-              icon: DirectionalIcon(Icons.arrow_back_rounded),
-            ),
+          appBar: ClientAppBar(
+            title: _getViewTitle(context),
+            onBack: _onBackPress,
             actions: [
               IconButton(
                 tooltip: context.l10n.referral_refresh,
@@ -436,7 +430,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                 onPressed: () => context.read<ReferralRewardsCubit>().load(),
               ),
             ],
-            elevation: 0,
           ),
           body: SafeArea(
             child: switch (state) {

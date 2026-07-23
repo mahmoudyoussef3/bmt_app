@@ -8,6 +8,7 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
 import '../../domain/entities/platform_office_details.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// One office in full, for the platform admin deciding what to do about it.
 ///
@@ -625,7 +626,7 @@ class _MarketplacePreviewCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(90),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(color: scheme.outline.withAlpha(60)),
       ),
       child: Row(
@@ -1019,7 +1020,7 @@ class _OfficeLogo extends StatelessWidget {
     final url = (logoUrl ?? '').trim();
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       child: SizedBox(
         width: size,
         height: size,
@@ -1066,7 +1067,7 @@ class _InlineNotice extends StatelessWidget {
         color: isError
             ? scheme.errorContainer.withAlpha(60)
             : scheme.surfaceContainerHighest.withAlpha(90),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

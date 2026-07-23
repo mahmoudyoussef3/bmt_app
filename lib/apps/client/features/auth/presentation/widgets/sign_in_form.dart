@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../cubit/auth_cubit.dart';
 import '../cubit/auth_state.dart';
-import 'auth_form_header.dart';
+import '../routes/auth_routes.dart';
+import 'auth_error_banner.dart';
+import 'auth_section_card.dart';
 import 'sign_in_actions.dart';
 import 'sign_in_fields.dart';
+import 'sign_in_options_row.dart';
 
 /// The interactive sign-in form. Owns the form controllers (the one place they
 /// can be disposed) and prefills remembered credentials; everything visual is a
@@ -84,29 +88,35 @@ class _SignInFormState extends State<SignInForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AuthFormHeader(
-                    error: error,
-                    onDismissError: context
+                  AuthErrorBanner(
+                    message: error,
+                    onDismiss: context
                         .read<ClientAuthCubit>()
                         .dismissSignInError,
-                    infoIcon: Icons.route_rounded,
-                    infoText: l10n.auth_signInInfoCard,
                   ),
-                  SignInFields(
-                    emailController: _emailController,
-                    passwordController: _passwordController,
-                    emailFocus: _emailFocus,
-                    passwordFocus: _passwordFocus,
-                    onSubmit: _submit,
+                  AuthSectionCard(
+                    children: [
+                      SignInFields(
+                        emailController: _emailController,
+                        passwordController: _passwordController,
+                        emailFocus: _emailFocus,
+                        passwordFocus: _passwordFocus,
+                        onSubmit: _submit,
+                      ),
+                      const SizedBox(height: ClientSpacing.xs),
+                      SignInOptionsRow(
+                        isLoading: isLoading,
+                        rememberMe: _rememberMe,
+                        onRememberChanged: (checked) =>
+                            setState(() => _rememberMe = checked),
+                        onForgotPassword: () => Navigator.of(
+                          context,
+                        ).pushNamed(AuthRoutes.forgotPassword),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  SignInActions(
-                    isLoading: isLoading,
-                    rememberMe: _rememberMe,
-                    onRememberChanged: (checked) =>
-                        setState(() => _rememberMe = checked),
-                    onSubmit: _submit,
-                  ),
+                  const SizedBox(height: ClientSpacing.lg),
+                  SignInActions(isLoading: isLoading, onSubmit: _submit),
                 ],
               ),
             ),

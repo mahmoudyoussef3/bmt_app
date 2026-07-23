@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -15,35 +15,20 @@ class SupportCenterAppBar extends StatelessWidget
   final VoidCallback onRefresh;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(ClientAppBar.toolbarHeight);
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppBar(
-      backgroundColor: scheme.surface,
-      scrolledUnderElevation: 0,
-      elevation: 0,
-      title: Text(
-        context.l10n.support_centerTitle,
-        style: ClientTypography.headingSmall(context).copyWith(
-          color: scheme.onSurface,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-      centerTitle: true,
-      iconTheme: IconThemeData(color: scheme.onSurface),
+    return ClientAppBar(
+      title: context.l10n.support_centerTitle,
       actions: [
         BlocBuilder<SupportCubit, SupportState>(
           buildWhen: (previous, current) => current is SupportLoaded,
-          builder: (context, state) {
-            return IconButton(
-              icon: Icon(Icons.refresh_rounded, color: scheme.primary),
-              tooltip: context.l10n.support_refresh,
-              onPressed: state is SupportLoaded ? onRefresh : null,
-            );
-          },
+          builder: (context, state) => IconButton(
+            icon: const Icon(Icons.refresh_rounded),
+            tooltip: context.l10n.support_refresh,
+            onPressed: state is SupportLoaded ? onRefresh : null,
+          ),
         ),
         const SizedBox(width: 8),
       ],

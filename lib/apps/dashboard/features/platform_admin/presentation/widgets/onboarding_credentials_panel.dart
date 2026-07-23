@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
 import '../../domain/entities/office_onboarding.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// The one-time reveal after a successful onboarding.
 ///
@@ -73,7 +74,7 @@ class OnboardingCredentialsPanel extends StatelessWidget {
                 padding: const EdgeInsets.all(AppSpacing.medium),
                 decoration: BoxDecoration(
                   color: scheme.errorContainer.withAlpha(60),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                   border: Border.all(color: scheme.error.withAlpha(90)),
                 ),
                 child: Row(
@@ -164,7 +165,7 @@ class _SecretRow extends StatelessWidget {
         color: emphasise
             ? scheme.primaryContainer.withAlpha(70)
             : scheme.surfaceContainerHighest.withAlpha(70),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Row(
         children: [

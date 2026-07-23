@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_bookings_list.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 HomeBookingData _booking({
   String id = 'b1',
@@ -31,6 +32,9 @@ Future<void> _pump(
 }) {
   return tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: SingleChildScrollView(
           child: HomeBookingsList(

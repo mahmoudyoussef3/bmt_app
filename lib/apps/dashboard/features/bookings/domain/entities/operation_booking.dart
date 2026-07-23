@@ -135,6 +135,16 @@ class OperationBooking {
 
   bool get hasReceipt => (receiptUrl ?? '').isNotEmpty;
 
+  /// Whether the passenger can still be moved to another trip.
+  ///
+  /// Only bookings that have not yet travelled: once the passenger has boarded
+  /// or the trip is complete there is no seat left to release, and a cancelled
+  /// booking holds none to begin with.
+  bool get canBeReassigned =>
+      status == BookingStatus.draft ||
+      status == BookingStatus.reserved ||
+      status == BookingStatus.confirmed;
+
   String get amountLabel {
     final rounded = paymentAmount == paymentAmount.roundToDouble()
         ? paymentAmount.toStringAsFixed(0)

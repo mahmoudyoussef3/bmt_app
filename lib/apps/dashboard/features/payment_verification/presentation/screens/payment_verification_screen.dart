@@ -7,6 +7,7 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
 import '../../../../core/widgets/dashboard_module_header.dart';
 import '../../../../core/widgets/dashboard_state_views.dart';
@@ -208,9 +209,8 @@ class _VerificationToolbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final search = SearchBar(
+        final search = DebouncedSearchField(
           hintText: 'ابحث بالعميل، الهاتف، رقم الحجز، المسار أو المرجع',
-          leading: const Icon(Icons.search_rounded),
           onChanged: onQueryChanged,
         );
         final filters = SingleChildScrollView(

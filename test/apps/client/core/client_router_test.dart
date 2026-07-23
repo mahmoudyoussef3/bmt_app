@@ -14,6 +14,7 @@ import 'package:bmt_app/apps/client/features/support/presentation/routes/support
 import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bmt_app/apps/client/features/offices/presentation/routes/offices_routes.dart';
 
 /// Every route name the app declares, by the constant that owns it.
 ///
@@ -33,14 +34,10 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'AuthRoutes.signUp': AuthRoutes.signUp,
   'AuthRoutes.forgotPassword': AuthRoutes.forgotPassword,
   'AuthRoutes.success': AuthRoutes.success,
-  'AuthRoutes.phoneLogin': AuthRoutes.phoneLogin,
-  'AuthRoutes.otp': AuthRoutes.otp,
-  'AuthRoutes.completeProfile': AuthRoutes.completeProfile,
   'BookingRoutes.search': BookingRoutes.search,
   'BookingRoutes.routeSelection': BookingRoutes.routeSelection,
   'BookingRoutes.popularRoutes': BookingRoutes.popularRoutes,
   'BookingRoutes.mapSelection': BookingRoutes.mapSelection,
-  'BookingRoutes.availableTrips': BookingRoutes.availableTrips,
   'BookingRoutes.vehicleListing': BookingRoutes.vehicleListing,
   'BookingRoutes.vehicleDetails': BookingRoutes.vehicleDetails,
   'BookingRoutes.dailyBooking': BookingRoutes.dailyBooking,
@@ -50,6 +47,8 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'SeatReleaseRoutes.seatRelease': SeatReleaseRoutes.seatRelease,
   'PaymentRoutes.checkout': PaymentRoutes.checkout,
   'PackagesRoutes.subscription': PackagesRoutes.subscription,
+  'PackagesRoutes.mySubscription': PackagesRoutes.mySubscription,
+  'PackagesRoutes.legacyExpiryAlias': PackagesRoutes.legacyExpiryAlias,
   'TripsRoutes.myTrips': TripsRoutes.myTrips,
   'TripsRoutes.tripDetails': TripsRoutes.tripDetails,
   'TrackingRoutes.tracking': TrackingRoutes.tracking,
@@ -58,6 +57,8 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'SupportRoutes.ticketDetails': SupportRoutes.ticketDetails,
   'CommunicationRoutes.communication': CommunicationRoutes.communication,
   'CommunicationRoutes.chatThread': CommunicationRoutes.chatThread,
+  'OfficesRoutes.directory': OfficesRoutes.directory,
+  'OfficesRoutes.profile': OfficesRoutes.profile,
   'ReferralRoutes.rewards': ReferralRoutes.rewards,
   'LoyaltyRoutes.loyalty': LoyaltyRoutes.loyalty,
   'ProfileRoutes.profile': ProfileRoutes.profile,

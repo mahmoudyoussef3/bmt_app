@@ -44,7 +44,9 @@ class FleetVehicleImage {
 /// Tabs for fleet overview navigation.
 enum FleetTab {
   drivers('السائقون'),
-  vehicles('المركبات');
+  vehicles('المركبات'),
+  assignments('التعيينات'),
+  documents('الوثائق');
 
   final String label;
 

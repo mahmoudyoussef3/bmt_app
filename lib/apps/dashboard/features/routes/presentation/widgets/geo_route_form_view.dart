@@ -18,6 +18,7 @@ import '../cubit/routes_cubit.dart';
 import 'place_search_field.dart';
 import 'route_point_row.dart';
 import 'route_timeline.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Single-page, geo-powered route create/edit form. Replaces the old 4-step
 /// stepper. Start/destination/stops use [PlaceSearchField] autocomplete; total
@@ -429,7 +430,7 @@ class _GeoRouteFormViewState extends State<GeoRouteFormView> {
         padding: const EdgeInsets.all(AppSpacing.medium),
         decoration: BoxDecoration(
           color: scheme.tertiaryContainer.withAlpha(80),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppTokens.radius),
           border: Border.all(color: scheme.tertiary.withAlpha(90)),
         ),
         child: Row(
@@ -917,7 +918,7 @@ class _RouteMapPicker extends StatelessWidget {
         .toList();
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppTokens.radius),
       child: SizedBox(
         height: 380,
         child: Stack(
@@ -996,7 +997,7 @@ class _RouteMapPicker extends StatelessWidget {
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: scheme.surface.withAlpha(235),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
                   border: Border.all(color: scheme.outline.withAlpha(80)),
                 ),
                 child: Padding(

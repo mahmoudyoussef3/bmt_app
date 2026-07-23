@@ -9,6 +9,7 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class _Template {
   const _Template(this.title, this.body);
@@ -61,72 +62,67 @@ class _TicketDetailsDialogState extends State<TicketDetailsDialog> {
           ),
           clipBehavior: Clip.antiAlias,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(22),
+            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
           ),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 980, maxHeight: 760),
-              child: Column(
-                children: [
-                  _TicketDialogHeader(ticket: ticket),
-                  const Divider(height: 1),
-                  Expanded(
-                    child: LayoutBuilder(
-                      builder: (context, constraints) {
-                        final isNarrow = constraints.maxWidth < 780;
-                        final details = _TicketDetailsPane(
-                          ticket: ticket,
-                          attachments: state.selectedTicketAttachments,
-                        );
-                        final actions = _TicketActionPane(
-                          ticket: ticket,
-                          state: state,
-                          cubit: cubit,
-                          noteController: _noteController,
-                        );
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 980, maxHeight: 760),
+            child: Column(
+              children: [
+                _TicketDialogHeader(ticket: ticket),
+                const Divider(height: 1),
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      final isNarrow = constraints.maxWidth < 780;
+                      final details = _TicketDetailsPane(
+                        ticket: ticket,
+                        attachments: state.selectedTicketAttachments,
+                      );
+                      final actions = _TicketActionPane(
+                        ticket: ticket,
+                        state: state,
+                        cubit: cubit,
+                        noteController: _noteController,
+                      );
 
-                        if (isNarrow) {
-                          return ListView(
-                            padding: const EdgeInsets.all(AppSpacing.large),
-                            children: [
-                              details,
-                              const SizedBox(height: AppSpacing.large),
-                              actions,
-                            ],
-                          );
-                        }
-
-                        return Row(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                      if (isNarrow) {
+                        return ListView(
+                          padding: const EdgeInsets.all(AppSpacing.large),
                           children: [
-                            Expanded(
-                              flex: 6,
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.all(AppSpacing.large),
-                                child: details,
-                              ),
-                            ),
-                            VerticalDivider(
-                              width: 1,
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.outlineVariant,
-                            ),
-                            Expanded(
-                              flex: 4,
-                              child: SingleChildScrollView(
-                                padding: const EdgeInsets.all(AppSpacing.large),
-                                child: actions,
-                              ),
-                            ),
+                            details,
+                            const SizedBox(height: AppSpacing.large),
+                            actions,
                           ],
                         );
-                      },
-                    ),
+                      }
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                            flex: 6,
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(AppSpacing.large),
+                              child: details,
+                            ),
+                          ),
+                          VerticalDivider(
+                            width: 1,
+                            color: Theme.of(context).colorScheme.outlineVariant,
+                          ),
+                          Expanded(
+                            flex: 4,
+                            child: SingleChildScrollView(
+                              padding: const EdgeInsets.all(AppSpacing.large),
+                              child: actions,
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         );
@@ -158,7 +154,7 @@ class _TicketDialogHeader extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: _statusColor(ticket.status).withAlpha(24),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
             ),
             child: Icon(
               Icons.confirmation_number_outlined,
@@ -302,7 +298,7 @@ class _TicketActionPane extends StatelessWidget {
                   padding: const EdgeInsets.all(AppSpacing.medium),
                   decoration: BoxDecoration(
                     color: AppStatusColors.warningContainer.withAlpha(170),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppTokens.radius),
                     border: Border.all(
                       color: AppStatusColors.onWarningContainer.withAlpha(90),
                     ),
@@ -447,7 +443,7 @@ class _AssigneeCard extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.medium),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerHighest.withAlpha(80),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
             ),
             child: Row(
               children: [
@@ -531,7 +527,7 @@ class _SectionHeader extends StatelessWidget {
           height: 42,
           decoration: BoxDecoration(
             color: scheme.primary.withAlpha(20),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppTokens.radius),
           ),
           child: Icon(icon, color: scheme.primary),
         ),
@@ -608,7 +604,7 @@ class _InfoTile extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(62),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(color: scheme.outlineVariant.withAlpha(100)),
       ),
       child: Column(
@@ -654,7 +650,7 @@ class _ContentBlock extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: Column(

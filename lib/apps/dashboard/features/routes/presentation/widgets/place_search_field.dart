@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/geo/geo_models.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/search_places_usecase.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Debounced place-autocomplete field backed by [SearchPlacesUseCase] (ORS).
 ///
@@ -79,7 +80,7 @@ class _PlaceSearchFieldState extends State<PlaceSearchField> {
           alignment: AlignmentDirectional.topStart,
           child: Material(
             elevation: 4,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.radius),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxHeight: 260, maxWidth: 420),
               child: ListView.builder(

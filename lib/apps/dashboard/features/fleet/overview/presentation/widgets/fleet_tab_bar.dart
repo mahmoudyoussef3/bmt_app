@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class FleetTabBar extends StatelessWidget {
   final FleetTab active;
@@ -30,13 +31,28 @@ class FleetTabBar extends StatelessWidget {
         count: summary.vehiclesCount,
         subtitle: 'حالة المركبات والتراخيص',
       ),
+      _FleetNavItem(
+        tab: FleetTab.assignments,
+        icon: Icons.link_rounded,
+        count: summary.activeAssignmentsCount,
+        subtitle: 'ربط السائقين بالمركبات',
+      ),
+      _FleetNavItem(
+        tab: FleetTab.documents,
+        icon: Icons.folder_copy_outlined,
+        count: summary.documentsNeedFollowUpCount,
+        subtitle: 'الوثائق قرب انتهاء الصلاحية',
+      ),
     ];
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.small),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isCompact = constraints.maxWidth < 920;
+          // Each tab needs ~224px to show its label, subtitle and count without
+          // clipping, so the side-by-side row is only used when every tab fits.
+          const minTabWidth = 224.0;
+          final isCompact = constraints.maxWidth < minTabWidth * tabs.length;
 
           final children = tabs.map((tab) {
             final selected = tab.tab == active;
@@ -55,7 +71,7 @@ class FleetTabBar extends StatelessWidget {
                     .map(
                       (child) => Padding(
                         padding: const EdgeInsetsDirectional.only(end: 8),
-                        child: SizedBox(width: 224, child: child),
+                        child: SizedBox(width: minTabWidth, child: child),
                       ),
                     )
                     .toList(),
@@ -115,13 +131,13 @@ class _DashboardTabButton extends StatelessWidget {
       duration: const Duration(milliseconds: 180),
       decoration: BoxDecoration(
         color: selected ? color.withAlpha(22) : Colors.transparent,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(
           color: selected ? color.withAlpha(120) : scheme.outline.withAlpha(60),
         ),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         onTap: onTap,
         child: Padding(
           padding: const EdgeInsets.symmetric(
@@ -137,7 +153,7 @@ class _DashboardTabButton extends StatelessWidget {
                   color: selected
                       ? color.withAlpha(26)
                       : scheme.surfaceContainerHighest.withAlpha(90),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
                 ),
                 child: Icon(item.icon, color: color, size: 22),
               ),

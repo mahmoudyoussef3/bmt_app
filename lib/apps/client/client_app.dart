@@ -122,6 +122,13 @@ class _ClientAppState extends State<ClientApp> {
                 },
               ),
               routes: ClientRouter.routes,
+              // Notification taps (in-app and FCM) push `action_url` straight
+              // from the database, so an unrecognised value must land somewhere
+              // harmless instead of throwing on a route that does not exist.
+              onUnknownRoute: (settings) => MaterialPageRoute<void>(
+                settings: settings,
+                builder: (_) => ClientRouter.buildShell(),
+              ),
             ),
           );
         },

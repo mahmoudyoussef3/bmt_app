@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
@@ -38,7 +39,9 @@ class ChatThreadScreen extends StatelessWidget {
           ),
           ChatThreadError(:final message) => Scaffold(
             backgroundColor: scheme.surfaceContainerHighest,
-            appBar: AppBar(),
+            appBar: ClientAppBar(
+              title: context.l10n.communication_chatHubTitle,
+            ),
             body: EmptyState(
               title: context.l10n.communication_messagesUnavailable,
               subtitle: message,

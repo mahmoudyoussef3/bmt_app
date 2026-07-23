@@ -85,7 +85,7 @@ class FleetSectionTitle extends StatelessWidget {
           height: 42,
           decoration: BoxDecoration(
             color: scheme.primary.withAlpha(18),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(AppTokens.radius),
           ),
           child: Icon(icon, color: scheme.primary),
         ),
@@ -145,7 +145,7 @@ class FleetFormHeroCard extends StatelessWidget {
             height: 58,
             decoration: BoxDecoration(
               color: scheme.primary.withAlpha(18),
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
             ),
             child: Icon(icon, color: scheme.primary, size: 30),
           ),
@@ -258,7 +258,7 @@ class FleetEmptyInlineState extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(65),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         border: Border.all(color: scheme.outline.withAlpha(70)),
       ),
       child: Column(

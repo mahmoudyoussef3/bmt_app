@@ -2,20 +2,27 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_seat_map.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_driver_seat_tile.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_extra_seats.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_tile.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/vehicles/vehicles.dart';
 
-/// Lays real [TripSeat]s out in the same cabin shape the passenger picked
-/// from while booking: two driver seats up front, three-across rows split by
-/// a centre aisle, then a flush four-seat back row. Seats beyond the
-/// standard 14-seat layout spill into [TripExtraSeats] underneath.
+/// Lays real [TripSeat]s out in the cabin of the vehicle actually assigned to
+/// the trip — resolved from [vehicleType], never guessed from the seat count.
+/// Seats beyond the blueprint's capacity spill into [TripExtraSeats].
 class TripSeatMap extends StatelessWidget {
-  const TripSeatMap({super.key, required this.seats, this.seatSize = 44});
+  const TripSeatMap({
+    super.key,
+    required this.seats,
+    required this.vehicleType,
+    this.seatSize = 44,
+  });
 
   final List<TripSeat> seats;
+  final String vehicleType;
   final double seatSize;
 
   @override
@@ -24,21 +31,22 @@ class TripSeatMap extends StatelessWidget {
       final rowCompare = a.row.compareTo(b.row);
       return rowCompare != 0 ? rowCompare : a.column.compareTo(b.column);
     });
-    TripSeat? seatAt(int index) => index < ordered.length ? ordered[index] : null;
-    final gap = seatSize * 0.13;
-    final aisle = seatSize * 0.55;
+    final blueprint = VehicleSeatLayouts.resolveRaw(
+      vehicleType: vehicleType,
+      seats: [for (final seat in ordered) (row: seat.row, column: seat.column)],
+    );
 
     return Column(
       children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            TripDriverSeatTile(size: seatSize, label: 'A1'),
-            SizedBox(width: gap),
-            TripDriverSeatTile(size: seatSize, label: 'A2'),
-            SizedBox(width: aisle),
-            _SeatSlot(seat: seatAt(0), size: seatSize),
-          ],
+        ClientSeatMap(
+          blueprint: blueprint,
+          slotWidth: seatSize,
+          centerRows: true,
+          gap: seatSize * 0.13,
+          rowGap: seatSize * 0.16,
+          aisleGap: seatSize * 0.55,
+          seatBuilder: (context, slot) => _slot(ordered, slot),
+          decorationBuilder: (context, slot) => _decoration(context, slot),
         ),
         SizedBox(height: seatSize * 0.13),
         Text(
@@ -48,54 +56,56 @@ class TripSeatMap extends StatelessWidget {
             letterSpacing: 1.2,
           ),
         ),
-        SizedBox(height: seatSize * 0.23),
-        Divider(color: ClientColors.borderFor(context)),
-        SizedBox(height: seatSize * 0.1),
-        for (final start in [1, 4, 7])
-          Padding(
-            padding: EdgeInsets.only(top: seatSize * 0.16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _SeatSlot(seat: seatAt(start), size: seatSize),
-                SizedBox(width: gap),
-                _SeatSlot(seat: seatAt(start + 1), size: seatSize),
-                SizedBox(width: aisle),
-                _SeatSlot(seat: seatAt(start + 2), size: seatSize),
-              ],
-            ),
-          ),
-        Padding(
-          padding: EdgeInsets.only(top: seatSize * 0.16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              for (var i = 10; i <= 13; i++) ...[
-                if (i > 10) SizedBox(width: gap),
-                _SeatSlot(seat: seatAt(i), size: seatSize),
-              ],
-            ],
-          ),
-        ),
-        if (ordered.length > 14) ...[
+        if (ordered.length > blueprint.capacity) ...[
           SizedBox(height: seatSize * 0.23),
-          TripExtraSeats(seats: ordered.skip(14).toList(), seatSize: seatSize),
+          TripExtraSeats(
+            seats: ordered.skip(blueprint.capacity).toList(),
+            seatSize: seatSize,
+          ),
         ],
       ],
     );
   }
+
+  Widget _slot(List<TripSeat> ordered, SeatSlot slot) {
+    final index = slot.seatNumber - 1;
+    if (index < 0 || index >= ordered.length) {
+      return SizedBox(width: seatSize, height: seatSize);
+    }
+    return TripSeatTile(seat: ordered[index], size: seatSize);
+  }
+
+  Widget _decoration(BuildContext context, SeatSlot slot) {
+    if (slot.kind == SeatSlotKind.door) {
+      return _CabinDoorTile(size: seatSize);
+    }
+    return TripDriverSeatTile(
+      size: seatSize,
+      label: slot.label.isEmpty ? 'A' : slot.label,
+    );
+  }
 }
 
-class _SeatSlot extends StatelessWidget {
-  const _SeatSlot({required this.seat, required this.size});
+class _CabinDoorTile extends StatelessWidget {
+  const _CabinDoorTile({required this.size});
 
-  final TripSeat? seat;
   final double size;
 
   @override
   Widget build(BuildContext context) {
-    final resolved = seat;
-    if (resolved == null) return SizedBox(width: size, height: size);
-    return TripSeatTile(seat: resolved, size: size);
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceSubtleFor(context),
+        borderRadius: BorderRadius.circular(size * 0.28),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
+      child: Icon(
+        Icons.sensor_door_outlined,
+        size: size * 0.45,
+        color: ClientColors.textTertiaryFor(context),
+      ),
+    );
   }
 }

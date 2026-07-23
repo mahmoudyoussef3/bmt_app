@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../cubit/offices_directory_cubit.dart';
 import '../cubit/offices_directory_state.dart';
-import '../routes/offices_routes.dart';
-import '../widgets/office_card.dart';
+import '../widgets/offices_directory_list.dart';
+import '../widgets/offices_empty_view.dart';
+import '../widgets/offices_search_field.dart';
 
 /// The marketplace directory: every active transportation office, best-rated
-/// first. Tapping one opens its profile with the routes it operates.
+/// first, searchable by company name or the cities it serves. Tapping one opens
+/// its profile with the departures and routes it operates.
 class OfficesDirectoryScreen extends StatelessWidget {
   const OfficesDirectoryScreen({super.key});
 
@@ -21,19 +22,7 @@ class OfficesDirectoryScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: scheme.surface,
-      appBar: AppBar(
-        title: Text(
-          context.l10n.offices_directoryTitle,
-          style: ClientTypography.headingSmall(
-            context,
-          ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w800),
-        ),
-        backgroundColor: scheme.surface,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        iconTheme: IconThemeData(color: scheme.onSurface),
-        centerTitle: true,
-      ),
+      appBar: ClientAppBar(title: context.l10n.offices_directoryTitle),
       body: BlocBuilder<OfficesDirectoryCubit, OfficesDirectoryState>(
         builder: (context, state) => switch (state) {
           OfficesDirectoryLoading() => const _DirectorySkeleton(),
@@ -47,26 +36,21 @@ class OfficesDirectoryScreen extends StatelessWidget {
               ),
             ),
           ),
-          OfficesDirectoryLoaded(:final offices) => offices.isEmpty
-              ? Center(
-                  child: Text(
-                    context.l10n.offices_directoryEmpty,
-                    style: ClientTypography.bodyMedium(context),
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-                  itemCount: offices.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) => OfficeCard(
-                    office: offices[index],
-                    onTap: () => Navigator.pushNamed(
-                      context,
-                      OfficesRoutes.profile,
-                      arguments: offices[index],
-                    ),
-                  ),
-                ),
+          // The search box stays mounted whenever there is a directory to
+          // search, including when the query currently matches nothing —
+          // otherwise the field the rider just typed into disappears under them.
+          OfficesDirectoryLoaded(:final offices) when offices.isEmpty =>
+            const OfficesEmptyView(),
+          final OfficesDirectoryLoaded loaded => Column(
+            children: [
+              OfficesSearchField(query: loaded.query),
+              Expanded(
+                child: loaded.isFilteredEmpty
+                    ? OfficesEmptyView(query: loaded.query)
+                    : OfficesDirectoryList(offices: loaded.visibleOffices),
+              ),
+            ],
+          ),
         },
       ),
     );

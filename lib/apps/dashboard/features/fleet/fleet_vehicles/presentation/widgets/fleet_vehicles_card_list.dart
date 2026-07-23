@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class FleetVehiclesCardList extends StatelessWidget {
   final List<FleetVehicle> vehicles;
@@ -291,7 +292,7 @@ class _VehicleOperationalStrip extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(color: color.withAlpha(70)),
       ),
       child: Row(
@@ -359,7 +360,7 @@ class _VehicleAlertBanner extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(color: fg.withAlpha(90)),
       ),
       child: Row(
@@ -436,7 +437,7 @@ class _VehicleMetaTile extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.small),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(45),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(color: scheme.outlineVariant.withAlpha(80)),
       ),
       child: Row(
@@ -497,7 +498,7 @@ class _FleetCardsPagination extends StatelessWidget {
       ),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(36),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(color: scheme.outlineVariant.withAlpha(80)),
       ),
       child: Row(

@@ -13,6 +13,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/widgets/seat_legend.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/widgets/seat_widget.dart';
 
 class SeatSelectionScreen extends StatefulWidget {
@@ -462,6 +463,7 @@ class _SeatSelectionContent extends StatelessWidget {
           const SizedBox(height: 18),
           _SeatMapGrid(
             seats: data.seats,
+            vehicleType: data.vehicleType,
             selectedSeatId: selectedSeat,
             horizontalGap: horizontalGap,
             aisleGap: aisleGap,
@@ -686,9 +688,15 @@ class _SeatSelectionContent extends StatelessWidget {
   }
 }
 
+/// The trip's real seats drawn in the cabin its vehicle type resolves to.
+///
+/// This used to be a fixed fifteen-seat grid addressed by seat number, which
+/// meant a vehicle with any other layout was drawn wrong and seats missing from
+/// that numbering were invisible.
 class _SeatMapGrid extends StatelessWidget {
   const _SeatMapGrid({
     required this.seats,
+    required this.vehicleType,
     required this.selectedSeatId,
     required this.horizontalGap,
     required this.aisleGap,
@@ -696,40 +704,13 @@ class _SeatMapGrid extends StatelessWidget {
   });
 
   final List<SeatOption> seats;
+  final String vehicleType;
   final String? selectedSeatId;
   final double horizontalGap;
   final double aisleGap;
   final double rowGap;
 
-  SeatOption _seat(int seatNumber) {
-    return seats.firstWhere(
-      (seat) => seat.seatNumber == seatNumber,
-      orElse: () => SeatOption(
-        id: '',
-        seatNumber: seatNumber,
-        availability: SeatAvailability.reserved,
-      ),
-    );
-  }
-
-  Widget _seatTile(BuildContext context, int seatNumber) {
-    final spec = _seat(seatNumber);
-    if (spec.id.isEmpty) {
-      // Missing seat in DB, show it as unavailable
-      return InteractiveSeat(id: '', status: SeatStatus.reserved, onTap: null);
-    }
-    final status = _seatStatus(spec, selectedSeatId);
-    return InteractiveSeat(
-      id: spec.seatNumber
-          .toString(), // The widget shows label from ID if we want, but let's pass seatNumber string
-      status: status,
-      onTap: spec.isAvailable
-          ? () => context.read<SeatSelectionCubit>().selectSeat(spec.id)
-          : null,
-    );
-  }
-
-  SeatStatus _seatStatus(SeatOption seat, String? selectedSeatId) {
+  SeatStatus _seatStatus(SeatOption seat) {
     if (!seat.isAvailable) return SeatStatus.reserved;
     if (seat.id == selectedSeatId) return SeatStatus.selected;
     return SeatStatus.available;
@@ -737,53 +718,85 @@ class _SeatMapGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        _tripleRow(context, [1, 2, 3]),
-        SizedBox(height: rowGap),
-        _pairSingleRow(context, [4, 5], 6),
-        SizedBox(height: rowGap),
-        _pairSingleRow(context, [7, 8], 9),
-        SizedBox(height: rowGap),
-        _pairSingleRow(context, [10, 11], 12),
-        SizedBox(height: rowGap),
-        _tripleRow(context, [13, 14, 15]),
-      ],
+    final ordered = [...seats]..sort((a, b) {
+      final byRow = a.row.compareTo(b.row);
+      return byRow != 0 ? byRow : a.column.compareTo(b.column);
+    });
+    final blueprint = VehicleSeatLayouts.resolveRaw(
+      vehicleType: vehicleType,
+      seats: [for (final seat in ordered) (row: seat.row, column: seat.column)],
+    );
+
+    return ClientSeatMap(
+      blueprint: blueprint,
+      gap: horizontalGap,
+      aisleGap: aisleGap,
+      rowGap: rowGap,
+      seatBuilder: (context, slot) => _seatTile(context, ordered, slot),
+      decorationBuilder: (context, slot) => _CabinFixture(slot: slot),
     );
   }
 
-  Widget _tripleRow(BuildContext context, List<int> numbers) {
-    return Row(
-      children: [
-        Expanded(child: _seatTile(context, numbers[0])),
-        SizedBox(width: horizontalGap),
-        Expanded(child: _seatTile(context, numbers[1])),
-        SizedBox(width: horizontalGap),
-        Expanded(child: _seatTile(context, numbers[2])),
-      ],
-    );
-  }
-
-  Widget _pairSingleRow(
+  Widget _seatTile(
     BuildContext context,
-    List<int> leftSeats,
-    int rightSeat,
+    List<SeatOption> ordered,
+    SeatSlot slot,
   ) {
-    return Row(
-      children: [
-        Expanded(
-          flex: 2,
-          child: Row(
-            children: [
-              Expanded(child: _seatTile(context, leftSeats[0])),
-              SizedBox(width: horizontalGap),
-              Expanded(child: _seatTile(context, leftSeats[1])),
-            ],
+    final index = slot.seatNumber - 1;
+    if (index < 0 || index >= ordered.length) {
+      // A blueprint slot with no seat behind it — never selectable.
+      return const InteractiveSeat(
+        id: '',
+        status: SeatStatus.reserved,
+        onTap: null,
+      );
+    }
+    final seat = ordered[index];
+    return InteractiveSeat(
+      id: seat.displayLabel,
+      status: _seatStatus(seat),
+      onTap: seat.isAvailable
+          ? () => context.read<SeatSelectionCubit>().selectSeat(seat.id)
+          : null,
+    );
+  }
+}
+
+/// The driver bench and the door — never bookable.
+class _CabinFixture extends StatelessWidget {
+  const _CabinFixture({required this.slot});
+
+  final SeatSlot slot;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDoor = slot.kind == SeatSlotKind.door;
+    return Container(
+      height: 64,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceMutedFor(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ClientColors.borderFor(context)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            isDoor
+                ? Icons.sensor_door_outlined
+                : Icons.airline_seat_recline_normal_rounded,
+            size: 20,
+            color: ClientColors.textTertiaryFor(context),
           ),
-        ),
-        SizedBox(width: aisleGap),
-        Expanded(child: _seatTile(context, rightSeat)),
-      ],
+          Text(
+            isDoor ? context.l10n.seatSelection_cabinDoor : slot.label,
+            style: ClientTypography.labelSmall(
+              context,
+            ).copyWith(color: ClientColors.textTertiaryFor(context)),
+          ),
+        ],
+      ),
     );
   }
 }

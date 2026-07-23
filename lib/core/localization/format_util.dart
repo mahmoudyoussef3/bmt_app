@@ -5,19 +5,32 @@ class FormatUtil {
   const FormatUtil._();
 
   /// Formats currency based on the provided BuildContext's locale.
+  ///
+  /// Produces `EGP 100` / `ج.م ١٠٠`-style output: symbol, space, amount. This
+  /// deliberately matches `moneyLabel` in the client's `client_money.dart`,
+  /// which prices trip and office cards without a [BuildContext] — a rider who
+  /// browses a fare and then opens checkout must not see the same number
+  /// written two different ways.
+  ///
+  /// Whole amounts drop their `.00`: fares here are whole pounds far more often
+  /// than not, and a forced `EGP 100.00` reads as machine output next to the
+  /// `EGP 100` on the card the rider just tapped.
   static String currency(
     BuildContext context,
     num value, {
     String symbol = 'EGP',
   }) {
-    final locale = Localizations.localeOf(context).languageCode;
-    // Uses standard Arabic numerals (123) for standard formatting unless Eastern Arabic (١٢٣) is specifically requested later.
-    final formatter = NumberFormat.currency(
-      locale: locale == 'ar' ? 'ar_EG' : 'en_US',
-      symbol: locale == 'ar' ? 'ج.م' : symbol,
-      decimalDigits: 2,
+    final isArabic = Localizations.localeOf(context).languageCode == 'ar';
+    // Standard Arabic numerals (123) throughout, unless Eastern Arabic (١٢٣) is
+    // specifically requested later.
+    final formatter = NumberFormat.decimalPattern(
+      isArabic ? 'ar_EG' : 'en_US',
     );
-    return formatter.format(value);
+    final isWhole = value == value.roundToDouble();
+    formatter
+      ..minimumFractionDigits = isWhole ? 0 : 2
+      ..maximumFractionDigits = isWhole ? 0 : 2;
+    return '${isArabic ? 'ج.م' : symbol} ${formatter.format(value)}';
   }
 
   /// Formats date based on the provided BuildContext's locale.

@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/presentation/cubit/trip_creation_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trip_details_cubit.dart';
@@ -13,7 +14,9 @@ import 'package:bmt_app/apps/dashboard/features/trips/trip_seats/presentation/cu
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
+import '../widgets/trips_analytics.dart';
 import '../widgets/trip_creation_wizard.dart';
 import '../widgets/trip_pricing_tab.dart';
 import '../widgets/trip_row_card.dart';
@@ -22,6 +25,7 @@ import '../widgets/trips_filter_sheet.dart';
 import '../widgets/trips_grouped_view.dart';
 import '../widgets/trips_timeline_view.dart';
 import '../widgets/trips_view_mode_switch.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class TripsScreen extends StatelessWidget {
   const TripsScreen({super.key});
@@ -36,10 +40,7 @@ class TripsScreen extends StatelessWidget {
         BlocProvider(create: (_) => dashboardDi<TripPricingCubit>()),
         BlocProvider(create: (_) => dashboardDi<TripPassengersCubit>()),
       ],
-      child: const Directionality(
-        textDirection: TextDirection.rtl,
-        child: _TripsView(),
-      ),
+      child: _TripsView(),
     );
   }
 }
@@ -71,10 +72,11 @@ class _TripsView extends StatelessWidget {
       child: BlocBuilder<TripsListCubit, TripsListState>(
         builder: (context, state) {
           return switch (state) {
-            TripsListLoading() => const Center(
-              child: CircularProgressIndicator(),
+            TripsListLoading() => const DashboardLoading(),
+            TripsListError(:final message) => DashboardErrorState(
+              message: message,
+              onRetry: () => context.read<TripsListCubit>().load(),
             ),
-            TripsListError(:final message) => _ErrorView(message: message),
             TripsListLoaded() => _LoadedTrips(state: state),
             _ => const SizedBox.shrink(),
           };
@@ -108,6 +110,11 @@ class _LoadedTrips extends StatelessWidget {
           child: _SummaryStrip(state: state),
         ),
         const SizedBox(height: AppSpacing.medium),
+        // Status mix, occupancy and busiest routes — derived from the trips
+        // already in state, matching the analytics strip Bookings and Routes
+        // show in the same position.
+        TripsAnalytics(state: state),
+        const SizedBox(height: AppSpacing.medium),
         _SimpleToolbar(state: state),
         const SizedBox(height: AppSpacing.medium),
         switch (state.viewMode) {
@@ -132,10 +139,7 @@ class _LoadedTrips extends StatelessWidget {
       barrierDismissible: false,
       builder: (_) => BlocProvider(
         create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
-        child: const Directionality(
-          textDirection: TextDirection.rtl,
-          child: TripCreationWizardDialog(),
-        ),
+        child: TripCreationWizardDialog(),
       ),
     ).then((_) => listCubit.load());
   }
@@ -247,14 +251,14 @@ class _SummaryItem extends StatelessWidget {
             : alert
             ? scheme.errorContainer.withAlpha(60)
             : scheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(AppTokens.radius),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
               border: Border.all(
                 color: selected || alert ? accent : scheme.outlineVariant,
               ),
@@ -309,13 +313,9 @@ class _SimpleToolbar extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final search = TextField(
+          final search = DebouncedSearchField(
+            hintText: 'ابحث بالمسار، السائق، المركبة، أو رقم الرحلة',
             onChanged: cubit.search,
-            decoration: const InputDecoration(
-              hintText: 'ابحث بالمسار، السائق، المركبة، أو رقم الرحلة',
-              prefixIcon: Icon(Icons.search_rounded),
-              isDense: true,
-            ),
           );
           final filterButton = Stack(
             clipBehavior: Clip.none,
@@ -482,10 +482,7 @@ void _openTripDetails(BuildContext context, OperationTrip trip) {
         BlocProvider.value(value: context.read<TripPassengersCubit>()),
         BlocProvider.value(value: context.read<TripPricingCubit>()),
       ],
-      child: const Directionality(
-        textDirection: TextDirection.rtl,
-        child: _TripDetailsDialog(),
-      ),
+      child: _TripDetailsDialog(),
     ),
   ).then((_) => detailsCubit.closeDetails());
 }
@@ -573,7 +570,7 @@ class _DetailsHeader extends StatelessWidget {
                 height: 48,
                 decoration: BoxDecoration(
                   color: tripStatusColor(context, trip.status).withAlpha(22),
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
                 ),
                 child: Icon(
                   Icons.route_rounded,
@@ -841,10 +838,10 @@ class _WorkspaceNavItem extends StatelessWidget {
       ),
       child: Material(
         color: selected ? scheme.primaryContainer : Colors.transparent,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppTokens.radius),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
             child: Row(
@@ -935,7 +932,7 @@ class _OverviewTab extends StatelessWidget {
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: scheme.primaryContainer.withAlpha(70),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
               border: Border.all(color: scheme.primary.withAlpha(35)),
             ),
             child: Row(
@@ -1495,7 +1492,7 @@ class _EmptyInline extends StatelessWidget {
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
       ),
       child: Text(message, textAlign: TextAlign.center),
     );
@@ -1526,31 +1523,6 @@ class _SeatLegend extends StatelessWidget {
         const SizedBox(width: 5),
         Text(state.label, style: Theme.of(context).textTheme.labelMedium),
       ],
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.error_outline_rounded, size: 42),
-          const SizedBox(height: 12),
-          Text(message),
-          const SizedBox(height: 12),
-          FilledButton(
-            onPressed: context.read<TripsListCubit>().load,
-            child: const Text('إعادة المحاولة'),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -1596,4 +1568,3 @@ String _listTitle(String filter) {
     _ => 'كل الرحلات',
   };
 }
-

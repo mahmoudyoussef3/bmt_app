@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_progress_summary.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_soft_icon.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
 
 /// Shown for an in-progress trip: real route-completion progress from the
 /// shared [RouteProgressEngine] (via a locally-scoped [TrackingCubit], the
@@ -66,7 +67,7 @@ class _TripLiveTrackingCardBody extends StatelessWidget {
               FilledButton(
                 onPressed: () => Navigator.pushNamed(
                   context,
-                  '/tracking',
+                  TrackingRoutes.tracking,
                   arguments: {'bookingId': trip.id},
                 ),
                 style: FilledButton.styleFrom(

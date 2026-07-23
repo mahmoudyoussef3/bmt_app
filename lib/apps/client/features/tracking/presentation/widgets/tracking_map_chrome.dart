@@ -72,29 +72,3 @@ class TrackingMapChrome extends StatelessWidget {
   }
 }
 
-/// A soft top scrim so the status card and the floating app-bar buttons keep
-/// their contrast over pale basemap tiles without tinting the whole map.
-class TrackingMapTopScrim extends StatelessWidget {
-  const TrackingMapTopScrim({super.key, required this.height});
-
-  final double height;
-
-  @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
-      child: Container(
-        height: height,
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black.withAlpha(28),
-              Colors.black.withAlpha(0),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

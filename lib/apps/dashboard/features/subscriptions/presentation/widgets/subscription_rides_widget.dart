@@ -6,6 +6,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../../domain/entities/user_subscription.dart';
 import '../cubit/subscriptions_cubit.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Compact rides-balance indicator used inside list cards.
 class SubscriptionRidesBalancePill extends StatelessWidget {
@@ -47,7 +48,7 @@ class SubscriptionRidesBalancePill extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         ClipRRect(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
           child: LinearProgressIndicator(
             value: fraction,
             minHeight: 6,
@@ -106,7 +107,7 @@ class SubscriptionRidesSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.small),
         ClipRRect(
-          borderRadius: BorderRadius.circular(6),
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
           child: LinearProgressIndicator(
             value: fraction,
             minHeight: 10,
@@ -193,7 +194,7 @@ class _MarkRideUsedButton extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.small),
         decoration: BoxDecoration(
           color: AppStatusColors.neutralContainer,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         ),
         child: const Text(
           'هذا الاشتراك غير مرتبط بباقة برصيد رحلات (اشتراك قديم).',

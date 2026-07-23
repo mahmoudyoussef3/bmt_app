@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_seat_map.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
@@ -13,6 +14,7 @@ import 'package:bmt_app/apps/client/features/seat_selection/domain/entities/seat
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_state.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class WizardSeatStep extends StatefulWidget {
@@ -71,23 +73,6 @@ class _SeatBody extends StatelessWidget {
   final BookingWizardSession session;
   final VoidCallback onNext;
 
-  static const _labels = [
-    'A3',
-    'B1',
-    'B2',
-    'B3',
-    'C1',
-    'C2',
-    'C3',
-    'D1',
-    'D2',
-    'D3',
-    'E1',
-    'E2',
-    'E3',
-    'E4',
-  ];
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -96,12 +81,18 @@ class _SeatBody extends StatelessWidget {
         final rowCompare = a.row.compareTo(b.row);
         return rowCompare != 0 ? rowCompare : a.column.compareTo(b.column);
       });
+    // The vehicle on the trip decides the cabin — never the seat count, the
+    // seat labels or the trip name.
+    final blueprint = VehicleSeatLayouts.resolveRaw(
+      vehicleType: state.data.vehicleType,
+      seats: [for (final seat in seats) (row: seat.row, column: seat.column)],
+    );
     final selectedIndex = seats.indexWhere(
       (seat) => seat.id == session.selectedSeatId,
     );
     final selectedLabel = selectedIndex < 0
         ? null
-        : _labelFor(selectedIndex, seats[selectedIndex]);
+        : seats[selectedIndex].displayLabel;
 
     return Column(
       children: [
@@ -121,17 +112,17 @@ class _SeatBody extends StatelessWidget {
               const _SeatLegend(),
               const SizedBox(height: 16),
               _VehicleCabin(
+                blueprint: blueprint,
                 seats: seats,
                 selectedSeatId: session.selectedSeatId,
-                labelFor: _labelFor,
-                onSeatTap: (seat, label) => context
+                onSeatTap: (seat) => context
                     .read<BookingWizardCubit>()
-                    .selectSeat(seat.id, label),
+                    .selectSeat(seat.id, seat.displayLabel),
               ),
-              if (seats.length > _labels.length) ...[
+              if (seats.length > blueprint.capacity) ...[
                 const SizedBox(height: 14),
                 _ExtraSeats(
-                  seats: seats.skip(_labels.length).toList(),
+                  seats: seats.skip(blueprint.capacity).toList(),
                   selectedSeatId: session.selectedSeatId,
                   onSeatTap: (seat) => context
                       .read<BookingWizardCubit>()
@@ -190,29 +181,23 @@ class _SeatBody extends StatelessWidget {
     );
   }
 
-  String _labelFor(int index, SeatOption seat) {
-    if (index < _labels.length) return _labels[index];
-    return seat.displayLabel;
-  }
 }
 
 class _VehicleCabin extends StatelessWidget {
   const _VehicleCabin({
+    required this.blueprint,
     required this.seats,
     required this.selectedSeatId,
-    required this.labelFor,
     required this.onSeatTap,
   });
 
+  final SeatLayoutBlueprint blueprint;
   final List<SeatOption> seats;
   final String? selectedSeatId;
-  final String Function(int index, SeatOption seat) labelFor;
-  final void Function(SeatOption seat, String label) onSeatTap;
+  final ValueChanged<SeatOption> onSeatTap;
 
   @override
   Widget build(BuildContext context) {
-    SeatOption? seatAt(int index) => index < seats.length ? seats[index] : null;
-
     return Container(
       constraints: const BoxConstraints(maxWidth: 430),
       margin: const EdgeInsets.symmetric(horizontal: 2),
@@ -238,77 +223,41 @@ class _VehicleCabin extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
             ),
           ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              const _DriverSeat(label: 'A1'),
-              const SizedBox(width: 10),
-              const _DriverSeat(label: 'A2'),
-              const Spacer(),
-              SizedBox(width: 64, child: _seat(context, seatAt(0), 0)),
-            ],
+          const SizedBox(height: 10),
+          _CabinCaption(label: context.l10n.seatSelection_frontOfVehicle),
+          const SizedBox(height: 12),
+          ClientSeatMap(
+            blueprint: blueprint,
+            seatBuilder: _seat,
+            decorationBuilder: _decoration,
           ),
-          const SizedBox(height: 8),
-          Text(
-            context.l10n.booking_driver.toUpperCase(),
-            style: ClientTypography.labelSmall(context).copyWith(
-              color: ClientColors.textTertiaryFor(context),
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
           Divider(color: ClientColors.borderFor(context)),
-          const SizedBox(height: 8),
-          _threeSeatRow(context, 'B', 1),
-          _threeSeatRow(context, 'C', 4),
-          _threeSeatRow(context, 'D', 7),
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Row(
-              children: List.generate(4, (offset) {
-                if (offset > 0) {
-                  return Expanded(
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.only(start: 8),
-                      child: _seat(context, seatAt(10 + offset), 10 + offset),
-                    ),
-                  );
-                }
-                return Expanded(child: _seat(context, seatAt(10), 10));
-              }),
-            ),
-          ),
+          const SizedBox(height: 6),
+          _CabinCaption(label: context.l10n.seatSelection_cabinRear),
         ],
       ),
     );
   }
 
-  Widget _threeSeatRow(BuildContext context, String row, int start) {
-    SeatOption? at(int index) => index < seats.length ? seats[index] : null;
-    return Padding(
-      padding: const EdgeInsets.only(top: 10),
-      child: Row(
-        children: [
-          Expanded(child: _seat(context, at(start), start)),
-          const SizedBox(width: 8),
-          Expanded(child: _seat(context, at(start + 1), start + 1)),
-          const SizedBox(width: 34),
-          Expanded(child: _seat(context, at(start + 2), start + 2)),
-        ],
-      ),
-    );
-  }
-
-  Widget _seat(BuildContext context, SeatOption? seat, int index) {
-    if (seat == null) return const SizedBox(height: 62);
-    final label = labelFor(index, seat);
+  Widget _seat(BuildContext context, SeatSlot slot) {
+    final index = slot.seatNumber - 1;
+    if (index < 0 || index >= seats.length) {
+      return const SizedBox(height: 62);
+    }
+    final seat = seats[index];
     return _SeatCell(
       seat: seat,
-      label: label,
+      label: seat.displayLabel,
       isSelected: seat.id == selectedSeatId,
-      onTap: seat.isAvailable ? () => onSeatTap(seat, label) : null,
+      onTap: seat.isAvailable ? () => onSeatTap(seat) : null,
     );
   }
+
+  Widget _decoration(BuildContext context, SeatSlot slot) => slot.kind ==
+          SeatSlotKind.door
+      ? _CabinDoor(label: context.l10n.seatSelection_cabinDoor)
+      : _DriverSeat(label: slot.label.isEmpty ? 'A' : slot.label);
 }
 
 class _DriverSeat extends StatelessWidget {
@@ -331,6 +280,63 @@ class _DriverSeat extends StatelessWidget {
         children: [
           Icon(
             Icons.airline_seat_recline_extra_rounded,
+            color: ClientColors.textTertiaryFor(context),
+            size: 21,
+          ),
+          Text(
+            label,
+            style: ClientTypography.labelSmall(
+              context,
+            ).copyWith(color: ClientColors.textTertiaryFor(context)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The FRONT / REAR markers that orient the rider inside the cabin.
+class _CabinCaption extends StatelessWidget {
+  const _CabinCaption({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      label.toUpperCase(),
+      style: ClientTypography.labelSmall(context).copyWith(
+        color: ClientColors.textTertiaryFor(context),
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+}
+
+/// The passenger entrance, so the rider can read front from rear and see which
+/// seats sit by the door.
+class _CabinDoor extends StatelessWidget {
+  const _CabinDoor({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 62,
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceSubtleFor(context),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: ClientColors.borderFor(context),
+          style: BorderStyle.solid,
+        ),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.sensor_door_outlined,
             color: ClientColors.textTertiaryFor(context),
             size: 21,
           ),

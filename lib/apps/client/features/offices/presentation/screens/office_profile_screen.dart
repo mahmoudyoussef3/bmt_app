@@ -58,18 +58,9 @@ class OfficeProfileScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: scheme.surface,
-      appBar: AppBar(
-        title: Text(
-          office.name,
-          style: ClientTypography.headingSmall(
-            context,
-          ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w800),
-        ),
-        backgroundColor: scheme.surface,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        iconTheme: IconThemeData(color: scheme.onSurface),
-        centerTitle: true,
+      appBar: ClientAppBar(
+        title: office.name,
+        subtitle: l10n.offices_directoryTitle,
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),

@@ -1,161 +1,111 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../domain/entities/client_notification.dart';
 import '../cubit/notifications_cubit.dart';
 import '../cubit/notifications_state.dart';
 import '../widgets/notification_tile.dart';
+import '../widgets/notifications_category_bar.dart';
+import '../widgets/notifications_empty_view.dart';
 
-class NotificationsScreen extends StatefulWidget {
+/// The passenger's notification inbox.
+///
+/// The feed is a live subscription rather than a fetch, so the only thing this
+/// screen decides is which of loading / error / loaded to render.
+class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
-  @override
-  State<NotificationsScreen> createState() => _NotificationsScreenState();
-}
-
-class _NotificationsScreenState extends State<NotificationsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<NotificationsCubit>().startWatching();
+  /// `action_url` is a route name supplied by the server. Unrecognised values
+  /// are absorbed by the app's `onUnknownRoute`, so a stale row can never crash
+  /// a tap — it lands back on the shell instead.
+  void _handleTap(BuildContext context, ClientNotification notification) {
+    context.read<NotificationsCubit>().markAsRead(notification.id);
+    final target = notification.actionUrl;
+    if (target == null || target.isEmpty) return;
+    Navigator.of(context).pushNamed(target);
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-
     return Scaffold(
-      backgroundColor: cs.surface,
+      backgroundColor: ClientColors.backgroundFor(context),
       body: BlocBuilder<NotificationsCubit, NotificationsState>(
-        builder: (context, state) {
-          return CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                title: Text(context.l10n.common_notifications, style: tt.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                backgroundColor: cs.surface,
-                pinned: true,
-                floating: true,
-                elevation: 0,
-                scrolledUnderElevation: 0,
-                centerTitle: true,
-                actions: [
-                  if (state is NotificationsLoaded && state.unreadCount > 0)
-                    TextButton(
-                      onPressed: () =>
-                          context.read<NotificationsCubit>().markAllAsRead(),
-                      child: Text(context.l10n.notifications_markAllRead, style: TextStyle(color: cs.primary, fontWeight: FontWeight.w700)),
+        builder: (context, state) => CustomScrollView(
+          slivers: [
+            ClientSliverAppBar(
+              title: context.l10n.common_notifications,
+              floating: true,
+              backgroundColor: ClientColors.backgroundFor(context),
+              actions: [
+                if (state is NotificationsLoaded && state.unreadCount > 0)
+                  TextButton(
+                    onPressed: () =>
+                        context.read<NotificationsCubit>().markAllAsRead(),
+                    style: TextButton.styleFrom(
+                      foregroundColor: ClientColors.primaryFor(context),
+                      textStyle: ClientTypography.labelMedium(context),
                     ),
-                ],
+                    child: Text(context.l10n.notifications_markAllRead),
+                  ),
+              ],
+            ),
+            // The category strip only appears once there is something to
+            // filter — an empty inbox with seven filter chips over it is
+            // noise, not navigation.
+            if (state case NotificationsLoaded(:final notifications)
+                when notifications.isNotEmpty)
+              SliverToBoxAdapter(
+                child: NotificationsCategoryBar(
+                  active: state.activeCategory,
+                  onSelect: context
+                      .read<NotificationsCubit>()
+                      .filterByCategory,
+                ),
               ),
-              if (state is NotificationsLoaded) ...[
-                _buildList(context, state),
-              ] else if (state is NotificationsLoading)
-                _buildSkeletons()
-              else if (state is NotificationsError)
-                SliverFillRemaining(
-                  child: Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.error_outline_rounded,
-                            size: 48, color: cs.error),
-                        const SizedBox(height: 12),
-                        Text(state.message,
-                            style: tt.bodyMedium,
-                            textAlign: TextAlign.center),
-                        const SizedBox(height: 16),
-                        FilledButton(
-                          onPressed: () =>
-                              context.read<NotificationsCubit>().startWatching(),
-                          child: Text(context.l10n.common_retry),
-                        ),
-                      ],
-                    ),
+            switch (state) {
+              NotificationsLoaded(:final notifications)
+                  when notifications.isEmpty =>
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: NotificationsEmptyView(),
+                ),
+              NotificationsLoaded(:final filtered) when filtered.isEmpty =>
+                const SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: NotificationsEmptyView(isFiltered: true),
+                ),
+              NotificationsLoaded(:final filtered) => SliverPadding(
+                padding: const EdgeInsets.only(top: 4, bottom: 40),
+                sliver: SliverList.builder(
+                  itemCount: filtered.length,
+                  itemBuilder: (context, index) => NotificationTile(
+                    notification: filtered[index],
+                    onTap: () => _handleTap(context, filtered[index]),
+                    onMarkRead: () => context
+                        .read<NotificationsCubit>()
+                        .markAsRead(filtered[index].id),
                   ),
                 ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _buildList(BuildContext context, NotificationsLoaded state) {
-    final items = state.notifications;
-    if (items.isEmpty) {
-      return SliverFillRemaining(child: _EmptyState());
-    }
-    return SliverPadding(
-      padding: const EdgeInsets.only(top: 8, bottom: 40),
-      sliver: SliverList.builder(
-        itemCount: items.length,
-        itemBuilder: (ctx, i) => NotificationTile(
-          notification: items[i],
-          onTap: () => _handleTap(context, items[i]),
-          onMarkRead: () =>
-              context.read<NotificationsCubit>().markAsRead(items[i].id),
-        ),
-      ),
-    );
-  }
-
-  SliverList _buildSkeletons() => SliverList.builder(
-        itemCount: 5,
-        itemBuilder: (_, index) => Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 8),
-          child: Container(
-            height: 100,
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surfaceContainerHigh.withAlpha(100),
-              borderRadius: BorderRadius.circular(24),
-            ),
-          ),
-        ),
-      );
-
-  void _handleTap(BuildContext context, ClientNotification n) {
-    context.read<NotificationsCubit>().markAsRead(n.id);
-    if (n.actionUrl != null && n.actionUrl!.isNotEmpty) {
-      Navigator.of(context).pushNamed(n.actionUrl!);
-    }
-  }
-}
-
-class _EmptyState extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: cs.primary.withAlpha(20),
-                shape: BoxShape.circle,
               ),
-              child: Icon(Icons.notifications_active_rounded, size: 64,
-                  color: cs.primary),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              context.l10n.notifications_emptyTitle,
-              style: tt.headlineSmall?.copyWith(fontWeight: FontWeight.w800, color: cs.onSurface),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              context.l10n.notifications_emptyBody,
-              style: tt.bodyMedium?.copyWith(color: cs.onSurfaceVariant, height: 1.5),
-              textAlign: TextAlign.center,
-            ),
+              NotificationsError(:final message) => SliverFillRemaining(
+                hasScrollBody: false,
+                child: ClientErrorCard.fullScreen(
+                  message: message,
+                  retryLabel: context.l10n.common_retry,
+                  onRetry: () =>
+                      context.read<NotificationsCubit>().startWatching(),
+                ),
+              ),
+              _ => SliverList.builder(
+                itemCount: 6,
+                itemBuilder: (_, _) => ClientSkeleton.notificationItem(),
+              ),
+            },
           ],
         ),
       ),

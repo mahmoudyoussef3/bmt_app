@@ -2,12 +2,16 @@ import 'package:flutter/widgets.dart';
 
 /// An [Icon] that horizontally mirrors itself in RTL layouts.
 ///
-/// Material's arrow and chevron glyphs are not flagged as directional, so
-/// `Icon(Icons.arrow_back)` keeps pointing left even in an Arabic layout where
-/// "back" means "to the right". Wrap those glyphs in this widget so the arrow
-/// follows the reading direction. Universal glyphs (search, close, settings…)
-/// must keep using a plain [Icon] — only pass icons that genuinely imply a
-/// direction of travel (back/forward arrows, chevrons, send).
+/// Only pass glyphs that genuinely imply a direction of travel (back/forward
+/// arrows, chevrons, send). Universal glyphs (search, close, settings…) must
+/// keep using a plain [Icon].
+///
+/// Most Material directional glyphs — every `arrow_back*`, `arrow_forward*` and
+/// `chevron_*` variant — already declare [IconData.matchTextDirection], and
+/// [Icon] mirrors those itself under RTL. Flipping them again here would cancel
+/// that out and leave the arrow pointing the wrong way in Arabic, so this
+/// widget mirrors *only* the glyphs Flutter will not mirror on its own (for
+/// example [Icons.send], which is directional but not flagged).
 class DirectionalIcon extends StatelessWidget {
   const DirectionalIcon(
     this.icon, {
@@ -22,9 +26,9 @@ class DirectionalIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isRtl = Directionality.of(context) == TextDirection.rtl;
     final glyph = Icon(icon, size: size, color: color);
-    if (!isRtl) return glyph;
+    final isRtl = Directionality.of(context) == TextDirection.rtl;
+    if (!isRtl || icon.matchTextDirection) return glyph;
     return Transform.flip(flipX: true, child: glyph);
   }
 }

@@ -9,10 +9,15 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import 'trip_creation_wizard.dart';
 import 'trip_ui_helpers.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// A single trip summary row used by the list, grouped, and timeline views.
 class TripRowCard extends StatelessWidget {
-  const TripRowCard({super.key, required this.trip, required this.onOpenDetails});
+  const TripRowCard({
+    super.key,
+    required this.trip,
+    required this.onOpenDetails,
+  });
 
   final OperationTrip trip;
 
@@ -30,9 +35,9 @@ class TripRowCard extends StatelessWidget {
     final isStale = trip.isStaleBooking();
     return Material(
       color: scheme.surfaceContainerLowest,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppTokens.radius),
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         onTap: onOpenDetails,
         child: Padding(
           padding: const EdgeInsets.all(16),
@@ -52,7 +57,7 @@ class TripRowCard extends StatelessWidget {
                             context,
                             trip.status,
                           ).withAlpha(22),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AppTokens.radius),
                         ),
                         child: Icon(
                           Icons.route_rounded,
@@ -86,7 +91,10 @@ class TripRowCard extends StatelessWidget {
                         label: trip.status.label,
                         color: isStale
                             ? scheme.error.withAlpha(28)
-                            : tripStatusColor(context, trip.status).withAlpha(28),
+                            : tripStatusColor(
+                                context,
+                                trip.status,
+                              ).withAlpha(28),
                         textColor: isStale
                             ? scheme.error
                             : tripStatusColor(context, trip.status),
@@ -208,10 +216,7 @@ class TripRowCard extends StatelessWidget {
       barrierDismissible: false,
       builder: (_) => BlocProvider(
         create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: TripCreationWizardDialog(prefillTrip: trip),
-        ),
+        child: TripCreationWizardDialog(prefillTrip: trip),
       ),
     ).then((_) => listCubit.load());
   }
@@ -257,7 +262,7 @@ class StaleTripBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: scheme.errorContainer.withAlpha(70),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(color: scheme.error.withAlpha(60)),
       ),
       child: Column(

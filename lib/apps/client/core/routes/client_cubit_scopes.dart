@@ -114,8 +114,10 @@ abstract final class ClientCubitScopes {
     child: child,
   );
 
+  /// The inbox is a live subscription, not a fetch, so the watch starts with
+  /// the scope rather than from the screen's `initState`.
   static Widget notifications(Widget child) => BlocProvider<NotificationsCubit>(
-    create: (_) => clientGetIt<NotificationsCubit>(),
+    create: (_) => clientGetIt<NotificationsCubit>()..startWatching(),
     child: child,
   );
 

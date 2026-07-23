@@ -29,7 +29,7 @@ class TripSeatsCard extends StatelessWidget {
         ),
         if (trip.hasSeatMap) ...[
           const SizedBox(height: 16),
-          TripSeatCabin(seats: trip.seatMap),
+          TripSeatCabin(seats: trip.seatMap, vehicleType: trip.vehicleType),
           const SizedBox(height: 14),
           SizedBox(
             width: double.infinity,
@@ -39,6 +39,7 @@ class TripSeatsCard extends StatelessWidget {
                   builder: (_) => FullScreenSeatMapScreen(
                     seats: trip.seatMap,
                     vehicleName: trip.vehicleName,
+                    vehicleType: trip.vehicleType,
                   ),
                 ),
               ),

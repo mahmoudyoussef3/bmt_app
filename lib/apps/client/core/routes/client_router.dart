@@ -87,7 +87,23 @@ abstract final class ClientRouter {
     ..._support,
     ..._engagement,
     ..._profile,
+    ..._serverAliases,
   };
+
+  /// Paths the backend writes into `notifications.action_url` that do not match
+  /// this app's canonical route names.
+  ///
+  /// Tapping such a notification pushes the stored string verbatim (here and in
+  /// `FcmService`), so an unmapped value used to throw "Could not find a
+  /// generator for route". Production rows already carry these strings, so they
+  /// are resolved here rather than by rewriting historical data.
+  static Map<String, WidgetBuilder> get _serverAliases =>
+      <String, WidgetBuilder>{
+        // Sent when a package expires or is exhausted ("renew now"), which is
+        // what My Subscription is for.
+        PackagesRoutes.legacyExpiryAlias: (_) =>
+            ClientCubitScopes.mySubscription(const MySubscriptionScreen()),
+      };
 
   /// The authenticated shell hosting the bottom navigation. Also used as the
   /// landing screen once a session is restored, so it is exposed rather than

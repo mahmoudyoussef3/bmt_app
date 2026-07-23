@@ -563,23 +563,11 @@
   "profile_refreshFailed": "We couldn't refresh your profile.",
   "welcome_continueWithEmail": "Continue with Email",
   "welcome_createAccount": "Create an account",
-  "welcome_orContinueWith": "or continue with",
   "welcome_continueAsGuest": "Continue as guest",
   "welcome_heroTagline": "Smart, comfortable transport.\nBook, track, and ride — all in one place.",
   "welcome_valueSeats": "Reserve seats",
   "welcome_valueTracking": "Live bus tracking",
   "welcome_valuePasses": "Manage passes",
-  "welcome_comingSoonTitle": "{provider} sign-in is coming soon",
-  "@welcome_comingSoonTitle": {
-    "placeholders": {
-      "provider": {
-        "type": "String"
-      }
-    }
-  },
-  "welcome_comingSoonBody": "We're still putting the finishing touches on it. For now, continue with your email to book trips and track buses right away.",
-  "welcome_maybeLater": "Maybe later",
-  "welcome_providerPhone": "Phone",
   "auth_termsAndConditions": "Terms & Conditions",
   "welcome_languageName": "English",
   "auth_signInHeroSubtitle": "Log in to track your trips, manage subscriptions, and follow buses in real time.",
@@ -769,6 +757,8 @@
   "notifications_markAllRead": "Mark all read",
   "notifications_emptyTitle": "No notifications yet",
   "notifications_emptyBody": "Trip updates, booking confirmations and reminders will appear here when they arrive.",
+  "notifications_categoryEmptyTitle": "Nothing in this category",
+  "notifications_categoryEmptyBody": "Pick another category to see the rest of your notifications.",
   "notifications_newBadge": "New",
   "notifications_categoryAll": "All",
   "notifications_categoryBooking": "Booking",
@@ -999,6 +989,7 @@
       }
     }
   },
+  "support_ticketDetailsTitle": "Ticket details",
   "support_failedToLoad": "Failed to load ticket details",
   "support_reviewingNotice": "Our customer service team is reviewing your ticket and may contact you shortly.",
   "support_currentStatus": "Current Status",
@@ -1061,6 +1052,8 @@
   "seatSelection_microbusCapacity": "15-seat microbus",
   "seatSelection_frontOfVehicle": "FRONT OF VEHICLE",
   "seatSelection_cabinLayout": "Cabin layout",
+  "seatSelection_cabinDoor": "Door",
+  "seatSelection_cabinRear": "REAR",
   "seatSelection_driverCabinNote": "Seats 1 and 2 are reserved for the driver cabin",
   "seatSelection_driverCabinLabel": "Driver Cabin",
   "seatSelection_selectSeatToContinue": "Select one seat to continue",
@@ -2207,6 +2200,16 @@
   },
   "offices_directoryTitle": "Transport offices",
   "offices_directoryEmpty": "No offices are open for booking right now.",
+  "offices_searchHint": "Search by company or city",
+  "offices_noSearchResults": "No office matches \"{query}\"",
+  "@offices_noSearchResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "offices_clearSearch": "Clear search",
   "offices_routesHeader": "Routes this office runs",
   "offices_noRoutes": "This office has no bookable routes right now.",
   "offices_departuresHeader": "Departures on sale",

@@ -44,11 +44,35 @@
       "Bash(echo \"EXIT=$?\")",
       "Bash(python3 -c \"import sys,json; d=sys.stdin.read\\(\\); i=d.index\\('{'\\); print\\(json.loads\\(d[i:d.rindex\\('}'\\)+1]\\)['rows'][0]['def']\\)\")",
       "Bash(grep -n \"matchTextDirection\" -A12 /Users/mahmoud/Downloads/flutter/packages/flutter/lib/src/widgets/icon.dart | grep -A12 \"if \\(icon.matchTextDirection\\\\|icon!.matchTextDirection\" | head -20)",
-      "Read(//Users/mahmoud/Downloads/flutter/packages/flutter/lib/src/widgets/**)"
+      "Read(//Users/mahmoud/Downloads/flutter/packages/flutter/lib/src/widgets/**)",
+      "Bash(awk 'NR>=990&&NR<=1010' lib/l10n/app_en.arb)",
+      "Bash(awk 'NR>=35&&NR<=75' lib/apps/client/features/tracking/presentation/screens/tracking_screen.dart)",
+      "Bash(awk 'NR>=25&&NR<=65' lib/apps/client/features/communication/presentation/screens/chat_thread_screen.dart)",
+      "Bash(awk 'NR>=1&&NR<=50' lib/apps/client/features/trips/presentation/screens/my_trips_screen.dart)",
+      "Bash(awk 'NR>=40&&NR<=90' lib/apps/client/features/booking/presentation/screens/route_overview_screen.dart)",
+      "Bash(awk 'NR>=95&&NR<=130' test/apps/client/features/payments/payment_widgets_test.dart)",
+      "Bash(awk 'NR>=200&&NR<=220' lib/apps/client/features/payments/presentation/widgets/checkout/checkout_promo_field.dart)",
+      "Bash(awk 'NR>=75&&NR<=110' lib/apps/client/features/payments/presentation/widgets/checkout/checkout_method_tile.dart)",
+      "Bash(awk 'NR>=178&&NR<=200' lib/apps/client/features/payments/presentation/widgets/checkout/checkout_method_tile.dart)",
+      "Bash(awk 'NR>=25&&NR<=50' test/apps/client/features/trips/trip_details_view_test.dart)",
+      "Bash(awk 'NR>=118&&NR<=135' test/apps/client/features/trips/trip_details_view_test.dart)",
+      "Bash(awk 'NR>=45&&NR<=100' lib/apps/client/features/trips/presentation/widgets/trip_details/trip_driver_card.dart)",
+      "Bash(awk 'NR>=36&&NR<=100' lib/apps/client/features/trips/presentation/widgets/trip_live_tracking_card.dart)",
+      "Bash(grep -rn \"height: [0-9]\\\\{3,\\\\}\" --include='*.dart' features core)",
+      "Bash(sort -t: -k2 -rn)",
+      "Bash(cd /Users/mahmoud/bmt_app/lib/apps/dashboard/features *)",
+      "Read(//Users/mahmoud/**)",
+      "Bash(git rm *)",
+      "Bash(awk 'NR>=60&&NR<=80' test/client_auth_error_surfacing_test.dart)",
+      "Bash(python3 /private/tmp/claude-501/-Users-mahmoud-bmt-app/9933e7c4-aeb6-496a-8f4b-8d134efada0f/scratchpad/scan_overflow.py)",
+      "Bash(grep -rA2 --include='*.dart' -E \"\\\\.rpc\\\\\\($\" .)",
+      "Bash(cd /Users/mahmoud/bmt_app/lib/apps/dashboard *)",
+      "Bash(timeout 90 supabase db query --linked \"select vehicle_type, capacity, count\\(*\\) from public.vehicles group by 1,2 order by 3 desc;\")"
     ],
     "additionalDirectories": [
       "/Users/mahmoud/bmt_app/lib/apps/dashboard/features/office_profile/presentation/test/apps/dashboard/features/office_profile",
-      "/Users/mahmoud/.pub-cache/hosted/pub.dev/flutter_native_splash-2.4.4"
+      "/Users/mahmoud/.pub-cache/hosted/pub.dev/flutter_native_splash-2.4.4",
+      "/Users/mahmoud/bmt_app/lib/apps/dashboard/features/reports/data/services"
     ]
   },
   "hooks": {

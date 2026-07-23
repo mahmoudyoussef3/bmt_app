@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 
 import '../../domain/entities/referral_reward_transaction.dart';
 import 'referral_format.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class ReferralTransactionsTab extends StatefulWidget {
   const ReferralTransactionsTab({super.key, required this.transactions});
@@ -50,7 +51,7 @@ class _ReferralTransactionsTabState extends State<ReferralTransactionsTab> {
           padding: const EdgeInsets.all(AppSpacing.medium),
           decoration: BoxDecoration(
             color: scheme.surfaceContainerHighest.withAlpha(80),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.radius),
             border: Border.all(color: scheme.outline.withAlpha(60)),
           ),
           child: Row(

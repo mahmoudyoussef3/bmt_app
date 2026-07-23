@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/summary/summary_edit_strip.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/wizard_summary_step.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 const _route = RouteOptionData(
   id: 'r1',
@@ -74,6 +75,9 @@ Future<void> _pumpStep(
 
   await tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: BlocProvider<BookingWizardCubit>.value(
           value: cubit,
@@ -122,7 +126,7 @@ void main() {
     await _pumpStep(tester);
 
     expect(find.textContaining('رحلة ذهاب وعودة'), findsWidgets);
-    expect(find.textContaining('2 rides'), findsWidgets);
+    expect(find.textContaining('2 Rides'), findsWidgets);
   });
 
   testWidgets('edit chips jump back to the step that owns the choice', (

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class FleetDocumentsTable extends StatelessWidget {
   final List<FleetDocument> documents;
@@ -96,7 +97,7 @@ class _DocumentIdentityCell extends StatelessWidget {
           height: 40,
           decoration: BoxDecoration(
             color: scheme.primary.withAlpha(18),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.radius),
           ),
           child: Icon(Icons.description_outlined, color: scheme.primary),
         ),

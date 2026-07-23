@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widget
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/widgets/fleet_seat_layout_visualizer.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/widgets/fleet_document_manager.dart';
 import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -123,6 +124,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
                         const SizedBox(height: AppSpacing.medium),
                         FleetSeatLayoutVisualizer(
                           seatConfig: vehicle.seatConfiguration,
+                          vehicleType: VehicleTypeParser.fromDatabase(
+                            vehicle.vehicleType,
+                          ),
                         ),
                         const SizedBox(height: AppSpacing.medium),
                         FleetDocumentManager(
@@ -169,6 +173,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
                   const SizedBox(height: AppSpacing.medium),
                   FleetSeatLayoutVisualizer(
                     seatConfig: vehicle.seatConfiguration,
+                    vehicleType: VehicleTypeParser.fromDatabase(
+                      vehicle.vehicleType,
+                    ),
                   ),
                   const SizedBox(height: AppSpacing.medium),
                   FleetDocumentManager(
@@ -426,7 +433,7 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
               width: double.infinity,
               decoration: BoxDecoration(
                 color: scheme.surfaceContainerHighest.withAlpha(50),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppTokens.radius),
                 border: Border.all(color: scheme.outline.withAlpha(60)),
               ),
               child: Column(
@@ -455,7 +462,7 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
             )
           else ...[
             ClipRRect(
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
               child: Container(
                 height: 260,
                 width: double.infinity,
@@ -500,7 +507,7 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                             border: Border.all(
                               color: isSelected
                                   ? scheme.primary
@@ -509,7 +516,7 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                             ),
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(6),
+                            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                             child: Image.network(
                               images[index].url,
                               fit: BoxFit.cover,

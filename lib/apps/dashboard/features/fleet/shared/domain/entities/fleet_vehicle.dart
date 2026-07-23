@@ -1,6 +1,8 @@
 /// Fleet vehicle entity, status enum, and seat configuration.
 library;
 
+import 'package:bmt_app/core/vehicles/vehicles.dart';
+
 import 'fleet_common.dart';
 
 enum FleetVehicleStatus {
@@ -81,6 +83,32 @@ class SeatConfiguration {
 
   factory SeatConfiguration.empty() {
     return const SeatConfiguration(rows: 0, columns: 0, seats: []);
+  }
+
+  /// Builds the seat configuration for a vehicle type that has a predefined
+  /// cabin (Hiace, Coaster), or null for a type whose capacity the operator
+  /// enters by hand — those still go through [SeatConfiguration.generateDefault].
+  ///
+  /// The layout comes from `lib/core/vehicles`, the same blueprint the Client
+  /// App draws the seat map from, so a vehicle can never be saved with a seat
+  /// configuration that disagrees with the map a rider books from.
+  static SeatConfiguration? forVehicleType(VehicleType type) {
+    final blueprint = VehicleSeatLayouts.blueprintFor(type);
+    if (blueprint == null) return null;
+
+    return SeatConfiguration(
+      rows: blueprint.rows.length,
+      columns: blueprint.columns,
+      seats: [
+        for (final seat in blueprint.seatDefinitions())
+          SeatLayoutItem(
+            seatNumber: seat.label,
+            seatType: seat.isDriver ? 'driver' : 'passenger',
+            row: seat.row,
+            column: seat.column,
+          ),
+      ],
+    );
   }
 
   factory SeatConfiguration.generateDefault(int capacity) {

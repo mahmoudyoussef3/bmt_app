@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_donut_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_bar_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_ranked_bars.dart';
@@ -18,7 +19,6 @@ class TripsAnalytics extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final donut = DashboardPanel(
       icon: Icons.donut_large_rounded,
       title: 'توزيع حالات الرحلات',
@@ -29,13 +29,13 @@ class TripsAnalytics extends StatelessWidget {
       icon: Icons.bar_chart_rounded,
       title: 'إشغال الرحلات',
       subtitle: 'عدد الرحلات حسب نسبة الإشغال',
-      child: DashboardBarChart(data: _occupancyData(scheme)),
+      child: DashboardBarChart(data: _occupancyData()),
     );
     final routes = DashboardPanel(
       icon: Icons.leaderboard_rounded,
       title: 'أكثر المسارات تشغيلاً',
       subtitle: 'أعلى ٥ مسارات بعدد الرحلات',
-      child: DashboardRankedBars(data: _topRoutes(scheme)),
+      child: DashboardRankedBars(data: _topRoutes()),
     );
 
     return LayoutBuilder(
@@ -85,7 +85,7 @@ class TripsAnalytics extends StatelessWidget {
     ];
   }
 
-  List<ChartDatum> _occupancyData(ColorScheme scheme) {
+  List<ChartDatum> _occupancyData() {
     var empty = 0, low = 0, mid = 0, high = 0, full = 0;
     for (final trip in state.trips) {
       if (trip.capacity == 0) continue;
@@ -102,28 +102,38 @@ class TripsAnalytics extends StatelessWidget {
         high++;
       }
     }
+    // Empty seats are the revenue problem, so an empty trip reads as negative
+    // and a full one as positive — the same direction the palette uses everywhere.
     return [
-      ChartDatum(label: 'فارغة', value: empty.toDouble(), color: scheme.error),
+      ChartDatum(
+        label: 'فارغة',
+        value: empty.toDouble(),
+        color: DashboardChartPalette.negative,
+      ),
       ChartDatum(
         label: 'منخفض',
         value: low.toDouble(),
-        color: const Color(0xFFFB923C),
+        color: DashboardChartPalette.warning,
       ),
       ChartDatum(
         label: 'متوسط',
         value: mid.toDouble(),
-        color: scheme.secondary,
+        color: DashboardChartPalette.accent,
       ),
-      ChartDatum(label: 'مرتفع', value: high.toDouble(), color: scheme.primary),
+      ChartDatum(
+        label: 'مرتفع',
+        value: high.toDouble(),
+        color: DashboardChartPalette.active,
+      ),
       ChartDatum(
         label: 'ممتلئة',
         value: full.toDouble(),
-        color: const Color(0xFF16A34A),
+        color: DashboardChartPalette.positive,
       ),
     ];
   }
 
-  List<ChartDatum> _topRoutes(ColorScheme scheme) {
+  List<ChartDatum> _topRoutes() {
     final counts = <String, int>{};
     for (final trip in state.trips) {
       counts[trip.route] = (counts[trip.route] ?? 0) + 1;
@@ -131,11 +141,11 @@ class TripsAnalytics extends StatelessWidget {
     final sorted = counts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     return [
-      for (final entry in sorted.take(5))
+      for (final (index, entry) in sorted.take(5).indexed)
         ChartDatum(
           label: entry.key,
           value: entry.value.toDouble(),
-          color: scheme.primary,
+          color: DashboardChartPalette.categoryAt(index),
         ),
     ];
   }
@@ -143,11 +153,11 @@ class TripsAnalytics extends StatelessWidget {
 
 Color _statusColor(OperationTripStatus status) {
   return switch (status) {
-    OperationTripStatus.scheduled => const Color(0xFF2563EB),
-    OperationTripStatus.openForBooking => const Color(0xFF06B6D4),
-    OperationTripStatus.boarding => const Color(0xFFFB923C),
-    OperationTripStatus.inProgress => const Color(0xFF8B5CF6),
-    OperationTripStatus.completed => const Color(0xFF16A34A),
-    OperationTripStatus.cancelled => const Color(0xFFDC2626),
+    OperationTripStatus.scheduled => DashboardChartPalette.neutral,
+    OperationTripStatus.openForBooking => DashboardChartPalette.active,
+    OperationTripStatus.boarding => DashboardChartPalette.warning,
+    OperationTripStatus.inProgress => DashboardChartPalette.accent,
+    OperationTripStatus.completed => DashboardChartPalette.positive,
+    OperationTripStatus.cancelled => DashboardChartPalette.negative,
   };
 }

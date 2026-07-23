@@ -22,20 +22,21 @@ class MySubscriptionScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        title: Text(
-          context.l10n.mySubscription_title,
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-      ),
+      appBar: ClientAppBar(title: context.l10n.mySubscription_title),
       body: BlocBuilder<MySubscriptionCubit, MySubscriptionState>(
         builder: (context, state) {
           return switch (state) {
-            MySubscriptionLoading() => const Center(
-              child: CircularProgressIndicator(),
+            // A skeleton in the shape of the loaded card stack, so the screen
+            // does not jump from a centred spinner to a full list.
+            MySubscriptionLoading() => ListView(
+              padding: const EdgeInsets.all(20),
+              children: const [
+                ClientSkeleton(height: 150, borderRadius: 20),
+                SizedBox(height: 20),
+                ClientSkeleton(height: 120, borderRadius: 20),
+                SizedBox(height: 20),
+                ClientSkeleton(height: 120, borderRadius: 20),
+              ],
             ),
             MySubscriptionError(:final message) => ClientErrorCard.fullScreen(
               message: message,

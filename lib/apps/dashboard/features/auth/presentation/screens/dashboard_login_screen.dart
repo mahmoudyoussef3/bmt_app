@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../cubit/dashboard_auth_cubit.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class DashboardLoginScreen extends StatefulWidget {
   const DashboardLoginScreen({super.key, required this.onCreateOffice});
@@ -77,7 +78,7 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                               height: 52,
                               decoration: BoxDecoration(
                                 color: scheme.primary,
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(AppTokens.radius),
                               ),
                               child: Icon(
                                 Icons.dashboard_rounded,

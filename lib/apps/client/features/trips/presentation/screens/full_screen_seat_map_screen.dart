@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_cabin.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -14,26 +14,21 @@ class FullScreenSeatMapScreen extends StatelessWidget {
     super.key,
     required this.seats,
     required this.vehicleName,
+    required this.vehicleType,
   });
 
   final List<TripSeat> seats;
   final String vehicleName;
+  final String vehicleType;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ClientColors.surfaceSubtleFor(context),
-      appBar: AppBar(
-        backgroundColor: ClientColors.surfaceFor(context),
-        title: Text(
-          vehicleName.trim().isEmpty
-              ? context.l10n.trips_seatMapTitle
-              : context.l10n.trips_seatMapTitleWithVehicle(vehicleName),
-          style: ClientTypography.headingSmall(
-            context,
-          ).copyWith(color: ClientColors.textPrimaryFor(context)),
-        ),
-        centerTitle: false,
+      appBar: ClientAppBar(
+        title: vehicleName.trim().isEmpty
+            ? context.l10n.trips_seatMapTitle
+            : context.l10n.trips_seatMapTitleWithVehicle(vehicleName),
       ),
       body: Center(
         child: ConstrainedBox(
@@ -44,7 +39,11 @@ class FullScreenSeatMapScreen extends StatelessWidget {
           ),
           child: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 40),
-            child: TripSeatCabin(seats: seats, seatSize: 52),
+            child: TripSeatCabin(
+              seats: seats,
+              vehicleType: vehicleType,
+              seatSize: 52,
+            ),
           ),
         ),
       ),

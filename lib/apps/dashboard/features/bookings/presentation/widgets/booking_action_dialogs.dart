@@ -260,46 +260,43 @@ class ActionDialogShell extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
 
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: AlertDialog(
-        title: Text(title),
-        content: SizedBox(
-          width: 440,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.medium),
-                decoration: BoxDecoration(
-                  color: color.withAlpha(16),
-                  borderRadius: BorderRadius.circular(AppTokens.radius),
-                  border: Border.all(color: color.withAlpha(60)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(icon, color: color, size: 28),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(child: Text(message)),
-                  ],
-                ),
+    return AlertDialog(
+      title: Text(title),
+      content: SizedBox(
+        width: 440,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.medium),
+              decoration: BoxDecoration(
+                color: color.withAlpha(16),
+                borderRadius: BorderRadius.circular(AppTokens.radius),
+                border: Border.all(color: color.withAlpha(60)),
               ),
-              const SizedBox(height: AppSpacing.medium),
-              content,
-            ],
+              child: Row(
+                children: [
+                  Icon(icon, color: color, size: 28),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(child: Text(message)),
+                ],
+              ),
+            ),
+            const SizedBox(height: AppSpacing.medium),
+            content,
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: Navigator.of(context).pop,
+          child: Text(
+            'إلغاء',
+            style: TextStyle(color: scheme.onSurfaceVariant),
           ),
         ),
-        actions: [
-          TextButton(
-            onPressed: Navigator.of(context).pop,
-            child: Text(
-              'إلغاء',
-              style: TextStyle(color: scheme.onSurfaceVariant),
-            ),
-          ),
-          FilledButton(onPressed: onConfirm, child: Text(confirmLabel)),
-        ],
-      ),
+        FilledButton(onPressed: onConfirm, child: Text(confirmLabel)),
+      ],
     );
   }
 }

@@ -38,6 +38,7 @@ import '../../features/bookings/domain/usecases/approve_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/bulk_approve_bookings_usecase.dart';
 import '../../features/bookings/domain/usecases/bulk_reject_bookings_usecase.dart';
 import '../../features/bookings/domain/usecases/get_operation_bookings_usecase.dart';
+import '../../features/bookings/domain/usecases/reassign_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/reject_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/request_reupload_usecase.dart';
 import '../../features/bookings/domain/usecases/watch_bookings_usecase.dart';
@@ -66,10 +67,6 @@ import '../../features/dashboard_home/data/repositories/dashboard_home_repositor
 import '../../features/dashboard_home/domain/repositories/dashboard_home_repository.dart';
 import '../../features/dashboard_home/domain/usecases/get_dashboard_home_usecase.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
-import '../../features/dashboard_operations/data/repositories/dashboard_operations_repository_impl.dart';
-import '../../features/dashboard_operations/domain/repositories/dashboard_operations_repository.dart';
-import '../../features/dashboard_operations/domain/usecases/get_dashboard_workspace_usecase.dart';
-import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
 
 // ── Fleet Sub-modules ────────────────────────────────────────────────
 import '../../features/fleet/fleet_drivers/data/repositories/fleet_drivers_repository_impl.dart';
@@ -98,15 +95,6 @@ import '../../features/fleet/data/repositories/fleet_repository_impl.dart';
 import '../../features/fleet/domain/repositories/fleet_repository.dart';
 import '../../features/fleet/domain/usecases/fleet_usecases.dart';
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
-import '../../features/payments/data/datasources/payments_datasource.dart';
-import '../../features/payments/data/datasources/supabase_payments_datasource.dart';
-import '../../features/payments/data/repositories/payments_repository_impl.dart';
-import '../../features/payments/domain/repositories/payments_repository.dart';
-import '../../features/payments/domain/usecases/add_payment_note_usecase.dart';
-import '../../features/payments/domain/usecases/get_finance_payments_usecase.dart';
-import '../../features/payments/domain/usecases/reassign_booking_usecase.dart';
-import '../../features/payments/domain/usecases/update_payment_review_status_usecase.dart';
-import '../../features/payments/presentation/cubit/payments_cubit.dart';
 import '../../features/payment_verification/data/datasources/booking_payment_verification_datasource.dart';
 import '../../features/payment_verification/data/datasources/supabase_booking_payment_verification_datasource.dart';
 import '../../features/payment_verification/data/repositories/booking_payment_verification_repository_impl.dart';
@@ -253,27 +241,6 @@ void registerDashboardDependencies() {
   if (!dashboardDi.isRegistered<DashboardHomeCubit>()) {
     dashboardDi.registerFactory(
       () => DashboardHomeCubit(dashboardDi<GetDashboardHomeUseCase>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<DashboardOperationsRepository>()) {
-    dashboardDi.registerLazySingleton<DashboardOperationsRepository>(
-      () => const DashboardOperationsRepositoryImpl(),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetDashboardWorkspaceUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetDashboardWorkspaceUseCase(
-        dashboardDi<DashboardOperationsRepository>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<DashboardWorkspaceCubit>()) {
-    dashboardDi.registerFactory(
-      () =>
-          DashboardWorkspaceCubit(dashboardDi<GetDashboardWorkspaceUseCase>()),
     );
   }
 
@@ -600,66 +567,27 @@ void registerDashboardDependencies() {
         bulkApprove: dashboardDi<BulkApproveBookingsUseCase>(),
         bulkReject: dashboardDi<BulkRejectBookingsUseCase>(),
         watchBookings: dashboardDi<WatchBookingsUseCase>(),
+        reassignBooking: dashboardDi<ReassignBookingUseCase>(),
+        getReassignmentTargets: dashboardDi<GetReassignmentTargetsUseCase>(),
       ),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<ReassignBookingUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ReassignBookingUseCase(dashboardDi<BookingsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetReassignmentTargetsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetReassignmentTargetsUseCase(dashboardDi<BookingsRepository>()),
     );
   }
 
   // Mock drivers registrations removed
 
   // Mock assignments registrations removed
-
-  if (!dashboardDi.isRegistered<PaymentsDatasource>()) {
-    dashboardDi.registerLazySingleton<PaymentsDatasource>(
-      () => SupabasePaymentsDatasource(dashboardDi<SupabaseClient>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<PaymentsRepository>()) {
-    dashboardDi.registerLazySingleton<PaymentsRepository>(
-      () => PaymentsRepositoryImpl(dashboardDi<PaymentsDatasource>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetFinancePaymentsUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetFinancePaymentsUseCase(dashboardDi<PaymentsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<UpdatePaymentReviewStatusUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => UpdatePaymentReviewStatusUseCase(dashboardDi<PaymentsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<AddPaymentNoteUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => AddPaymentNoteUseCase(dashboardDi<PaymentsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetAvailableTripsUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetAvailableTripsUseCase(dashboardDi<PaymentsRepository>()),
-    );
-  }
-  if (!dashboardDi.isRegistered<ReassignBookingUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => ReassignBookingUseCase(dashboardDi<PaymentsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<PaymentsCubit>()) {
-    dashboardDi.registerFactory(
-      () => PaymentsCubit(
-        getPayments: dashboardDi<GetFinancePaymentsUseCase>(),
-        updateStatus: dashboardDi<UpdatePaymentReviewStatusUseCase>(),
-        addNote: dashboardDi<AddPaymentNoteUseCase>(),
-        getAvailableTrips: dashboardDi<GetAvailableTripsUseCase>(),
-        reassignBooking: dashboardDi<ReassignBookingUseCase>(),
-      ),
-    );
-  }
 
   if (!dashboardDi.isRegistered<BookingPaymentVerificationDatasource>()) {
     dashboardDi.registerLazySingleton<BookingPaymentVerificationDatasource>(

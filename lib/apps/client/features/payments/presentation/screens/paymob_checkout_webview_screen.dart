@@ -3,6 +3,7 @@ import 'package:webview_flutter/webview_flutter.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 class PaymobCheckoutWebViewScreen extends StatefulWidget {
@@ -97,32 +98,12 @@ class _PaymobCheckoutWebViewScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ClientColors.surfaceFor(context),
-      appBar: AppBar(
-        backgroundColor: ClientColors.surfaceFor(context),
-        foregroundColor: ClientColors.textPrimaryFor(context),
-        elevation: 0,
-        leading: IconButton(
-          tooltip: context.l10n.payments_closeCheckoutTooltip,
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => Navigator.of(context).pop(false),
-        ),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.payments_paymobCheckoutTitle,
-              style: ClientTypography.bodyMedium(
-                context,
-              ).copyWith(fontWeight: FontWeight.w900),
-            ),
-            Text(
-              widget.bookingReference,
-              style: ClientTypography.labelSmall(
-                context,
-              ).copyWith(color: ClientColors.textSecondaryFor(context)),
-            ),
-          ],
-        ),
+      appBar: ClientAppBar(
+        title: context.l10n.payments_paymobCheckoutTitle,
+        subtitle: widget.bookingReference,
+        navigationIcon: Icons.close_rounded,
+        navigationTooltip: context.l10n.payments_closeCheckoutTooltip,
+        onBack: () => Navigator.of(context).pop(false),
         actions: [
           IconButton(
             tooltip: context.l10n.payments_reloadTooltip,

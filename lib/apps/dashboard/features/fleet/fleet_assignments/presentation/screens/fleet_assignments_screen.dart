@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presenta
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presentation/widgets/fleet_assignment_dialog.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -39,41 +40,34 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
   ) {
     showDialog<void>(
       context: context,
-      builder: (_) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          title: Text(title),
-          content: SizedBox(
-            width: 520,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: items.isEmpty
-                    ? [
-                        const ListTile(
-                          title: Text('لا توجد سجلات تعيين سابقة.'),
-                        ),
-                      ]
-                    : items
-                          .map(
-                            (item) => ListTile(
-                              title: Text(item.title),
-                              subtitle: Text(
-                                '${item.date} - ${item.description}',
-                              ),
+      builder: (_) => AlertDialog(
+        title: Text(title),
+        content: SizedBox(
+          width: 520,
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: items.isEmpty
+                  ? [const ListTile(title: Text('لا توجد سجلات تعيين سابقة.'))]
+                  : items
+                        .map(
+                          (item) => ListTile(
+                            title: Text(item.title),
+                            subtitle: Text(
+                              '${item.date} - ${item.description}',
                             ),
-                          )
-                          .toList(),
-              ),
+                          ),
+                        )
+                        .toList(),
             ),
           ),
-          actions: [
-            TextButton(
-              onPressed: Navigator.of(context).pop,
-              child: const Text('إغلاق'),
-            ),
-          ],
         ),
+        actions: [
+          TextButton(
+            onPressed: Navigator.of(context).pop,
+            child: const Text('إغلاق'),
+          ),
+        ],
       ),
     );
   }
@@ -144,14 +138,11 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
       context: context,
       builder: (_) => BlocProvider.value(
         value: cubit,
-        child: Directionality(
-          textDirection: TextDirection.rtl,
-          child: FleetAssignmentDialog(
-            assignment: assignment,
-            workspace: workspace,
-            drivers: drivers,
-            vehicles: vehicles,
-          ),
+        child: FleetAssignmentDialog(
+          assignment: assignment,
+          workspace: workspace,
+          drivers: drivers,
+          vehicles: vehicles,
         ),
       ),
     ).then((_) async {
@@ -165,7 +156,7 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
   Widget build(BuildContext context) {
     final overviewState = context.watch<FleetOverviewCubit>().state;
     if (overviewState is! FleetOverviewLoaded) {
-      return const Center(child: CircularProgressIndicator());
+      return const DashboardLoading(showHeader: false, scrollable: false);
     }
 
     final workspace = overviewState.workspace;
@@ -173,29 +164,13 @@ class _FleetAssignmentsScreenState extends State<FleetAssignmentsScreen> {
     return BlocBuilder<FleetAssignmentsCubit, FleetAssignmentsState>(
       builder: (context, state) {
         if (state is FleetAssignmentsLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const DashboardLoading(showHeader: false, scrollable: false);
         }
 
         if (state is FleetAssignmentsError) {
-          return Center(
-            child: AppCard(
-              padding: const EdgeInsets.all(AppSpacing.large),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    state.message,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  FilledButton(
-                    onPressed: () =>
-                        context.read<FleetAssignmentsCubit>().load(),
-                    child: const Text('إعادة المحاولة'),
-                  ),
-                ],
-              ),
-            ),
+          return DashboardErrorState(
+            message: state.message,
+            onRetry: () => context.read<FleetAssignmentsCubit>().load(),
           );
         }
 

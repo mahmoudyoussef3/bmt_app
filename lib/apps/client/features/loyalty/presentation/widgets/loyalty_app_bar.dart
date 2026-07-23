@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
-import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 import '../cubit/loyalty_cubit.dart';
 import '../cubit/loyalty_state.dart';
@@ -16,7 +15,7 @@ class LoyaltyAppBar extends StatelessWidget implements PreferredSizeWidget {
   final LoyaltyView view;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(ClientAppBar.toolbarHeight);
 
   String _title(BuildContext context) {
     final l10n = context.l10n;
@@ -34,13 +33,9 @@ class LoyaltyAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      elevation: 0,
-      title: Text(_title(context), style: ClientTypography.headingSmall(context)),
-      leading: IconButton(
-        onPressed: () => _onBack(context),
-        icon: const DirectionalIcon(Icons.arrow_back_rounded),
-      ),
+    return ClientAppBar(
+      title: _title(context),
+      onBack: () => _onBack(context),
       actions: [
         IconButton(
           tooltip: context.l10n.loyalty_refresh,

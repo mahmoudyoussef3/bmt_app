@@ -3,10 +3,12 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/operation_booking.dart';
+import '../../domain/entities/reassignment_target.dart';
 import '../../domain/usecases/approve_booking_usecase.dart';
 import '../../domain/usecases/bulk_approve_bookings_usecase.dart';
 import '../../domain/usecases/bulk_reject_bookings_usecase.dart';
 import '../../domain/usecases/get_operation_bookings_usecase.dart';
+import '../../domain/usecases/reassign_booking_usecase.dart';
 import '../../domain/usecases/reject_booking_usecase.dart';
 import '../../domain/usecases/request_reupload_usecase.dart';
 import '../../domain/usecases/watch_bookings_usecase.dart';
@@ -21,6 +23,8 @@ class BookingsCubit extends Cubit<BookingsState> {
   final BulkApproveBookingsUseCase _bulkApprove;
   final BulkRejectBookingsUseCase _bulkReject;
   final WatchBookingsUseCase _watchBookings;
+  final ReassignBookingUseCase _reassignBooking;
+  final GetReassignmentTargetsUseCase _getReassignmentTargets;
 
   StreamSubscription<List<OperationBooking>>? _bookingsSubscription;
 
@@ -32,6 +36,8 @@ class BookingsCubit extends Cubit<BookingsState> {
     required BulkApproveBookingsUseCase bulkApprove,
     required BulkRejectBookingsUseCase bulkReject,
     required WatchBookingsUseCase watchBookings,
+    required ReassignBookingUseCase reassignBooking,
+    required GetReassignmentTargetsUseCase getReassignmentTargets,
   }) : _getBookings = getBookings,
        _approveBooking = approveBooking,
        _rejectBooking = rejectBooking,
@@ -39,6 +45,8 @@ class BookingsCubit extends Cubit<BookingsState> {
        _bulkApprove = bulkApprove,
        _bulkReject = bulkReject,
        _watchBookings = watchBookings,
+       _reassignBooking = reassignBooking,
+       _getReassignmentTargets = getReassignmentTargets,
        super(const BookingsLoading());
 
   Future<void> load() async {
@@ -128,39 +136,77 @@ class BookingsCubit extends Cubit<BookingsState> {
     await _runReview(() => _requestReupload(bookingId, reason));
   }
 
-  Future<void> _runReview(
-    Future<OperationBooking> Function() action,
-  ) async {
-    final current = state;
-    if (current is! BookingsLoaded) return;
-    try {
+  /// Moves the booking onto [newTripId]. The old seat is released and a new one
+  /// taken server-side, so the list is refreshed from the returned row.
+  Future<void> reassignBooking(String bookingId, String newTripId) async {
+    await _runReview(() => _reassignBooking(bookingId, newTripId));
+  }
+
+  /// Trips the opened booking can be moved to. Fetched on demand — the picker is
+  /// rarely opened, so this is not worth holding in the list state.
+  Future<List<ReassignmentTarget>> loadReassignmentTargets() {
+    return _getReassignmentTargets();
+  }
+
+  Future<void> _runReview(Future<OperationBooking> Function() action) async {
+    await _runAction((current) async {
       final updated = await action();
       _emitUpdated(current, [updated]);
-    } catch (error) {
-      emit(BookingsError(error.toString()));
-    }
+    });
   }
 
   Future<void> bulkApprove(String? note) async {
-    final current = state;
-    if (current is! BookingsLoaded || current.selectedIds.isEmpty) return;
-    try {
+    await _runAction((current) async {
+      if (current.selectedIds.isEmpty) return;
       final updated = await _bulkApprove(current.selectedIds.toList(), note);
       _emitUpdated(current, updated, clearSelection: true);
-    } catch (error) {
-      emit(BookingsError(error.toString()));
-    }
+    });
   }
 
   Future<void> bulkReject(String reason) async {
-    final current = state;
-    if (current is! BookingsLoaded || current.selectedIds.isEmpty) return;
-    try {
+    await _runAction((current) async {
+      if (current.selectedIds.isEmpty) return;
       final updated = await _bulkReject(current.selectedIds.toList(), reason);
       _emitUpdated(current, updated, clearSelection: true);
+    });
+  }
+
+  /// Runs a mutating action, marking the workspace busy for its duration and
+  /// reporting failures as a transient [BookingsLoaded.actionError].
+  ///
+  /// Deliberately never emits [BookingsError]: that state is for a failed
+  /// *load*, when there is nothing to show. Dropping an operator back to a blank
+  /// error page because one approval was rejected would discard their filters,
+  /// their selection and the row they were working on.
+  Future<void> _runAction(
+    Future<void> Function(BookingsLoaded current) action,
+  ) async {
+    final current = state;
+    if (current is! BookingsLoaded || current.isProcessing) return;
+    emit(current.copyWith(isProcessing: true, clearActionError: true));
+    try {
+      await action(current);
     } catch (error) {
-      emit(BookingsError(error.toString()));
+      final latest = state;
+      final base = latest is BookingsLoaded ? latest : current;
+      emit(
+        base.copyWith(
+          isProcessing: false,
+          actionError: error.toString().replaceFirst('Exception: ', ''),
+        ),
+      );
+      return;
     }
+    final latest = state;
+    if (latest is BookingsLoaded && latest.isProcessing) {
+      emit(latest.copyWith(isProcessing: false));
+    }
+  }
+
+  void clearActionError() {
+    final current = state;
+    if (current is! BookingsLoaded || current.actionError == null) return;
+    emit(current.copyWith(clearActionError: true));
   }
 
   void _emitUpdated(

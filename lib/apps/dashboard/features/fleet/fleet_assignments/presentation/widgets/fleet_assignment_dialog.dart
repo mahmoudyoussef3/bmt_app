@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fle
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presentation/cubit/fleet_assignments_cubit.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class FleetAssignmentDialog extends StatefulWidget {
   final FleetAssignment? assignment;
@@ -239,7 +240,7 @@ class _EligibilityPreview extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(75),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(color: scheme.outline.withAlpha(70)),
       ),
       child: Column(

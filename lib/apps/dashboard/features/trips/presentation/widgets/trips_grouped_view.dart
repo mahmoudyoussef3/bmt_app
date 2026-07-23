@@ -6,6 +6,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
 import 'trip_row_card.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Always-visible sections (upcoming / active / completed, plus stale /
 /// cancelled when non-empty), each independently respecting search and the
@@ -115,7 +116,7 @@ class _TripsGroupSectionState extends State<_TripsGroupSection> {
         children: [
           InkWell(
             onTap: () => setState(() => _expanded = !_expanded),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.radius),
             child: Row(
               children: [
                 Icon(widget.icon, color: widget.color, size: 20),

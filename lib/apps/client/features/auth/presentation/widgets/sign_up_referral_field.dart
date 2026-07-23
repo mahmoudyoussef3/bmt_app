@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import 'auth_section_card.dart';
-import 'premium_auth_text_field.dart';
+import 'auth_text_field.dart';
 
-/// The optional "referral code" section of the sign-up form.
+/// The optional "referral code" section of the sign-up form. It keeps its own
+/// card so the required fields above never look like they need it too.
 class SignUpReferralField extends StatelessWidget {
   const SignUpReferralField({
     super.key,
@@ -25,20 +29,20 @@ class SignUpReferralField extends StatelessWidget {
       title: l10n.auth_referralCodeSection,
       icon: Icons.card_giftcard_outlined,
       children: [
-        PremiumAuthTextField(
+        AuthTextField(
           controller: controller,
           focusNode: focusNode,
-          labelText: l10n.auth_referralCodeLabel,
-          prefixIcon: Icons.confirmation_number_outlined,
+          label: l10n.auth_referralCodeLabel,
+          icon: Icons.confirmation_number_outlined,
           textInputAction: TextInputAction.done,
           onFieldSubmitted: (_) => onSubmit(),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: ClientSpacing.sm),
         Text(
           l10n.auth_referralCodeHint,
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: Theme.of(context).colorScheme.onSurfaceVariant,
-          ),
+          style: ClientTypography.bodySmall(
+            context,
+          ).copyWith(color: ClientColors.textTertiaryFor(context)),
         ),
       ],
     );

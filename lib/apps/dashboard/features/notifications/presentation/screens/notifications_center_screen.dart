@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/core/theme/spacing.dart';
+
 import '../widgets/notification_composer.dart';
 import 'operational_alerts_view.dart';
 
@@ -15,49 +18,63 @@ class NotificationsCenterScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: DefaultTabController(
-        length: 2,
-        child: Column(
-          children: [
-            Material(
-              color: cs.surface,
-              child: TabBar(
-                tabs: const [
-                  Tab(icon: Icon(Icons.inbox_outlined), text: 'الوارد'),
-                  Tab(icon: Icon(Icons.campaign_outlined), text: 'إرسال إشعار'),
-                ],
-              ),
+    final scheme = Theme.of(context).colorScheme;
+
+    return DefaultTabController(
+      length: 2,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const Padding(
+            padding: EdgeInsets.fromLTRB(
+              AppSpacing.large,
+              AppSpacing.large,
+              AppSpacing.large,
+              AppSpacing.small,
             ),
-            Expanded(
-              child: TabBarView(
-                children: [
-                  OperationalAlertsView(onOpenRoute: onOpenRoute),
-                  _ComposerTab(),
-                ],
-              ),
+            child: DashboardModuleHeader(
+              icon: Icons.notifications_active_rounded,
+              title: 'مركز الإشعارات',
+              subtitle:
+                  'تابع تنبيهات التشغيل الواردة وأرسل إشعارات للعملاء والكباتن.',
             ),
-          ],
-        ),
+          ),
+          Material(
+            color: scheme.surface,
+            child: const TabBar(
+              tabs: [
+                Tab(icon: Icon(Icons.inbox_outlined), text: 'الوارد'),
+                Tab(icon: Icon(Icons.campaign_outlined), text: 'إرسال إشعار'),
+              ],
+            ),
+          ),
+          Expanded(
+            child: TabBarView(
+              children: [
+                OperationalAlertsView(onOpenRoute: onOpenRoute),
+                const _ComposerTab(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
 class _ComposerTab extends StatelessWidget {
+  const _ComposerTab();
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
+    // Scroll owns the padding so the composer can never be clipped on short
+    // viewports; Center only handles horizontal placement of the capped column.
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      child: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 560),
-          child: Directionality(
-            textDirection: TextDirection.rtl,
-            child: const NotificationComposer(),
-          ),
+          child: const NotificationComposer(),
         ),
       ),
     );

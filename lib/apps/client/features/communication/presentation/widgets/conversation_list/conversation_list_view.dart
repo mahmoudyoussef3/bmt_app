@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
-import 'package:bmt_app/core/widgets/directional_icon.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 import '../../cubit/communication_cubit.dart';
@@ -25,16 +24,8 @@ class ConversationListView extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: scheme.surfaceContainerHighest,
-      appBar: AppBar(
-        elevation: 0,
-        title: Text(
-          context.l10n.communication_chatHubTitle,
-          style: ClientTypography.headingSmall(context),
-        ),
-        leading: IconButton(
-          icon: DirectionalIcon(Icons.arrow_back_rounded),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
+      appBar: ClientAppBar(
+        title: context.l10n.communication_chatHubTitle,
         actions: [
           IconButton(
             tooltip: context.l10n.communication_refresh,

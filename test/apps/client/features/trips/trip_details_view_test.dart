@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_details_view.dart';
+import '../../client_test_app.dart';
+import '../../tracking_cubit_stub.dart';
 
 TripData _trip({
   required TripStatus status,
@@ -35,7 +37,7 @@ Future<void> _pump(WidgetTester tester, TripData trip) async {
   await tester.binding.setSurfaceSize(const Size(430, 1400));
   addTearDown(() => tester.binding.setSurfaceSize(null));
 
-  await tester.pumpWidget(MaterialApp(home: TripDetailsView(trip: trip)));
+  await tester.pumpWidget(clientTestApp(TripDetailsView(trip: trip)));
   await tester.pumpAndSettle();
 
   // A layout overflow from the synthetic fixture's cards is not what these
@@ -44,6 +46,9 @@ Future<void> _pump(WidgetTester tester, TripData trip) async {
 }
 
 void main() {
+  setUp(registerStubTrackingCubit);
+  tearDown(unregisterStubTrackingCubit);
+
   testWidgets(
     'Track Vehicle stays hidden on an in-progress trip whose own payment is still pending approval',
     (tester) async {
@@ -95,8 +100,8 @@ void main() {
       _trip(status: TripStatus.completed, paymentStatus: PaymentStatus.paid),
     );
 
-    expect(find.text('Rate Trip'), findsOneWidget);
-    expect(find.text('Book Again'), findsOneWidget);
+    expect(find.text('Rate this trip'), findsOneWidget);
+    expect(find.text('Book another trip'), findsOneWidget);
   });
 
   testWidgets('a completed trip that was already rated never asks again', (
@@ -111,9 +116,9 @@ void main() {
       ),
     );
 
-    expect(find.text('Rate Trip'), findsNothing);
+    expect(find.text('Rate this trip'), findsNothing);
     expect(find.textContaining('You rated this trip'), findsOneWidget);
-    expect(find.text('Book Again'), findsOneWidget);
+    expect(find.text('Book another trip'), findsOneWidget);
   });
 
   testWidgets('an in-progress paid trip keeps its live actions', (
@@ -124,8 +129,15 @@ void main() {
       _trip(status: TripStatus.inProgress, paymentStatus: PaymentStatus.paid),
     );
 
+    // Track Vehicle sits in the docked action bar; the crew controls live far
+    // enough down the (lazy) detail list that they only build once dragged
+    // into view.
+    expect(find.text('Track Vehicle'), findsOneWidget);
+
+    await tester.drag(find.byType(ListView), const Offset(0, -900));
+    await tester.pumpAndSettle();
+
     expect(find.text('Call'), findsOneWidget);
     expect(find.text('Chat'), findsOneWidget);
-    expect(find.text('Track Vehicle'), findsOneWidget);
   });
 }

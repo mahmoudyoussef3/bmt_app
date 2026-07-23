@@ -11,7 +11,6 @@ import 'package:bmt_app/apps/client/features/payments/domain/usecases/upload_pay
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_processing_screen.dart';
 import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
-import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 class ReceiptUploadScreen extends StatefulWidget {
   final PaymentCheckoutData checkoutData;
@@ -109,20 +108,7 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
 
     return Scaffold(
       backgroundColor: ClientColors.surfaceSubtleFor(context),
-      appBar: AppBar(
-        backgroundColor: ClientColors.surfaceFor(context),
-        title: Text(
-          context.l10n.payments_attachReceiptTitle,
-          style: ClientTypography.headingSmall(
-            context,
-          ).copyWith(color: ClientColors.textPrimaryFor(context)),
-        ),
-        leading: IconButton(
-          onPressed: () => Navigator.of(context).pop(),
-          icon: const DirectionalIcon(Icons.arrow_back_rounded),
-        ),
-        elevation: 0,
-      ),
+      appBar: ClientAppBar(title: context.l10n.payments_attachReceiptTitle),
       body: Column(
         children: [
           Expanded(

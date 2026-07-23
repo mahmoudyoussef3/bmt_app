@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/usecases/get_trip_details_usecase.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
 
 class BookingConfirmationScreen extends StatefulWidget {
   final String seat;
@@ -450,7 +451,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
             child: ClientButton(
               label: context.l10n.payments_trackVehicle,
               onPressed: () => Navigator.of(context).pushNamed(
-                '/tracking',
+                TrackingRoutes.tracking,
                 arguments: {
                   if (widget.bookingId != null) 'bookingId': widget.bookingId,
                 },

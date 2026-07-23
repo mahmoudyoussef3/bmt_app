@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/profile/data/datasources/legal_content.dart';
 import 'package:bmt_app/apps/client/features/profile/domain/entities/legal_document_data.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/widgets/legal_section_card.dart';
@@ -32,10 +33,9 @@ class LegalDocumentScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: ClientColors.backgroundFor(context),
-      appBar: AppBar(
-        title: Text(title, style: ClientTypography.headingSmall(context)),
+      appBar: ClientAppBar(
+        title: title,
         backgroundColor: ClientColors.backgroundFor(context),
-        elevation: 0,
       ),
       body: SafeArea(
         child: Center(

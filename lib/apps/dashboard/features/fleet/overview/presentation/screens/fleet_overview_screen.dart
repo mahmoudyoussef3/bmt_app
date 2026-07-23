@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_common.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_analytics_charts.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_summary_cards.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_tab_bar.dart';
 
@@ -13,6 +14,9 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/cubit/fleet_vehicles_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/screens/fleet_vehicles_screen.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/screens/fleet_documents_screen.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presentation/cubit/fleet_assignments_cubit.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presentation/screens/fleet_assignments_screen.dart';
 
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
@@ -72,8 +76,8 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                   const SizedBox(height: AppSpacing.large),
                   FleetSummaryCards(summary: workspace.summary),
                   const SizedBox(height: AppSpacing.large),
-                  // FleetAnalyticsCharts(workspace: workspace),
-                  // const SizedBox(height: AppSpacing.large),
+                  FleetAnalyticsCharts(workspace: workspace),
+                  const SizedBox(height: AppSpacing.large),
                   FleetTabBar(
                     active: _activeTab,
                     summary: workspace.summary,
@@ -117,6 +121,17 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                           onViewStateChanged: (isList) =>
                               setState(() => _isListMode = isList),
                         ),
+                      ),
+                      FleetTab.assignments =>
+                        BlocProvider<FleetAssignmentsCubit>(
+                          create: (_) =>
+                              dashboardDi<FleetAssignmentsCubit>()..load(),
+                          child: const FleetAssignmentsScreen(),
+                        ),
+                      FleetTab.documents => BlocProvider<FleetDocumentsCubit>(
+                        create: (_) =>
+                            dashboardDi<FleetDocumentsCubit>()..load(),
+                        child: const FleetDocumentsScreen(),
                       ),
                     },
                   ),

@@ -14,6 +14,7 @@ import 'package:bmt_app/apps/client/features/payments/presentation/widgets/check
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_ticket_card.dart';
 
 import '../../payments/payment_fakes.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 const _route = RouteOptionData(
   id: 'r1',
@@ -70,6 +71,9 @@ Future<BookingWizardCubit> _pumpStep(
 
   await tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: Scaffold(
         body: BlocProvider<BookingWizardCubit>.value(
           value: cubit,

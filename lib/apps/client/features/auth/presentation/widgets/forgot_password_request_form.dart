@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
-import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 import '../cubit/forgot_password_cubit.dart';
 import '../cubit/forgot_password_state.dart';
 import 'auth_info_card.dart';
+import 'auth_section_card.dart';
 import 'auth_security_note.dart';
+import 'auth_text_field.dart';
 import 'auth_validators.dart';
-import 'premium_auth_button.dart';
-import 'premium_auth_text_field.dart';
 
 /// The "enter your email" request form. Owns the email controller; loading and
 /// errors come from [ForgotPasswordCubit].
@@ -58,48 +59,47 @@ class _ForgotPasswordRequestFormState extends State<ForgotPasswordRequestForm> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  AuthInfoCard(
-                    icon: Icons.lock_reset_rounded,
-                    text: l10n.auth_resetInfoCard,
+                  AuthSectionCard(
+                    children: [
+                      AuthTextField(
+                        controller: _emailController,
+                        focusNode: _emailFocus,
+                        label: l10n.auth_email,
+                        icon: Icons.email_outlined,
+                        keyboardType: TextInputType.emailAddress,
+                        textInputAction: TextInputAction.done,
+                        autofillHints: const [AutofillHints.email],
+                        onChanged: (value) => context
+                            .read<ForgotPasswordCubit>()
+                            .emailChanged(value.trim().toLowerCase()),
+                        onFieldSubmitted: (_) => _submit(),
+                        validator: (value) => AuthValidators.email(value, l10n),
+                      ),
+                      const SizedBox(height: ClientSpacing.sm),
+                      AuthInfoCard(
+                        icon: Icons.lock_reset_rounded,
+                        text: l10n.auth_resetInfoCard,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 18),
-                  PremiumAuthTextField(
-                    controller: _emailController,
-                    focusNode: _emailFocus,
-                    labelText: l10n.auth_email,
-                    prefixIcon: Icons.email_outlined,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.done,
-                    autofillHints: const [AutofillHints.email],
-                    onChanged: (value) => context
-                        .read<ForgotPasswordCubit>()
-                        .emailChanged(value.trim().toLowerCase()),
-                    onFieldSubmitted: (_) => _submit(),
-                    validator: (value) => AuthValidators.email(value, l10n),
-                  ),
-                  const SizedBox(height: 24),
-                  PremiumAuthButton(
-                    text: isLoading
+                  const SizedBox(height: ClientSpacing.lg),
+                  ClientButton(
+                    label: isLoading
                         ? l10n.auth_sendingLink
                         : l10n.auth_sendResetLink,
                     onPressed: isLoading ? null : _submit,
                     isLoading: isLoading,
                   ),
-                  const SizedBox(height: 16),
-                  TextButton.icon(
-                    onPressed: isLoading
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    icon: const DirectionalIcon(
-                      Icons.arrow_forward_rounded,
-                      size: 18,
-                    ),
-                    label: Text(l10n.auth_backToLogin),
-                    style: TextButton.styleFrom(
-                      textStyle: const TextStyle(fontWeight: FontWeight.w900),
+                  const SizedBox(height: ClientSpacing.xs),
+                  Center(
+                    child: ClientButton.text(
+                      label: l10n.auth_backToLogin,
+                      onPressed: isLoading
+                          ? null
+                          : () => Navigator.of(context).pop(),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: ClientSpacing.xs),
                   AuthSecurityNote(text: l10n.auth_forgotSecurityNote),
                 ],
               ),

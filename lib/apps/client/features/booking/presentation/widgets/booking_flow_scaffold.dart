@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 
 /// App bar + optional search summary for booking flow screens.
@@ -27,11 +28,11 @@ class BookingFlowScaffold extends StatelessWidget {
       backgroundColor: extendBodyBehindAppBar
           ? Theme.of(context).colorScheme.surface
           : null,
-      appBar: AppBar(
-        title: Text(title),
+      appBar: ClientAppBar(
+        title: title,
         actions: actions,
+        // A header floating over map/photo content keeps no surface of its own.
         backgroundColor: extendBodyBehindAppBar ? Colors.transparent : null,
-        elevation: extendBodyBehindAppBar ? 0 : null,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

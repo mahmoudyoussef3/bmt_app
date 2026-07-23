@@ -23,7 +23,7 @@ class MapRouteSelectionScreen extends StatelessWidget {
       builder: (context, state) {
         if (state is! MapPinsLoaded) {
           return Scaffold(
-            appBar: AppBar(title: Text(l10n.booking_selectOnMap)),
+            appBar: ClientAppBar(title: l10n.booking_selectOnMap),
             body: state is MapPinsError
                 ? MapErrorState(message: state.message, onRetry: cubit.reload)
                 : const MapLoadingState(),
@@ -31,8 +31,8 @@ class MapRouteSelectionScreen extends StatelessWidget {
         }
         return Scaffold(
           backgroundColor: ClientColors.surfaceSubtleFor(context),
-          appBar: AppBar(
-            title: Text(l10n.booking_selectOnMap),
+          appBar: ClientAppBar(
+            title: l10n.booking_selectOnMap,
             actions: [
               IconButton(
                 tooltip: l10n.tracking_refresh,

@@ -5,8 +5,10 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 
 import '../../domain/entities/operation_booking.dart';
 import '../cubit/bookings_cubit.dart';
@@ -24,15 +26,24 @@ class BookingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
-      textDirection: TextDirection.rtl,
-      child: BlocBuilder<BookingsCubit, BookingsState>(
-        builder: (context, state) => switch (state) {
-          BookingsLoading() => const Center(child: CircularProgressIndicator()),
-          BookingsError(:final message) => _ErrorView(message: message),
-          BookingsLoaded() => _LoadedView(state: state),
-        },
-      ),
+    // Directionality is applied once for the whole dashboard in MaterialApp's
+    // builder, so screens do not re-declare it.
+    return BlocConsumer<BookingsCubit, BookingsState>(
+      listenWhen: (previous, current) =>
+          current is BookingsLoaded && current.actionError != null,
+      listener: (context, state) {
+        if (state is! BookingsLoaded || state.actionError == null) return;
+        AppSnackbar.error(context, state.actionError!);
+        context.read<BookingsCubit>().clearActionError();
+      },
+      builder: (context, state) => switch (state) {
+        BookingsLoading() => const DashboardLoading(),
+        BookingsError(:final message) => DashboardErrorState(
+          message: message,
+          onRetry: () => context.read<BookingsCubit>().load(),
+        ),
+        BookingsLoaded() => _LoadedView(state: state),
+      },
     );
   }
 }
@@ -79,8 +90,7 @@ class _LoadedView extends StatelessWidget {
           return Stack(
             children: [
               content,
-              if (opened != null)
-                _DetailsSheet(booking: opened, state: state),
+              if (opened != null) _DetailsSheet(booking: opened, state: state),
             ],
           );
         }
@@ -282,32 +292,6 @@ class _SummaryCard extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ErrorView extends StatelessWidget {
-  const _ErrorView({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: AppCard(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(
-              Icons.error_outline_rounded,
-              color: Theme.of(context).colorScheme.error,
-              size: 42,
-            ),
-            const SizedBox(height: AppSpacing.small),
-            Text(message, textAlign: TextAlign.center),
-          ],
-        ),
       ),
     );
   }

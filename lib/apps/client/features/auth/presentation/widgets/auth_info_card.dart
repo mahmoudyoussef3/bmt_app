@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
-/// A rounded, tinted reassurance banner shown at the top of an auth form:
-/// an accent icon beside a short message. Shared by sign-in and sign-up.
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+
+/// A tinted reassurance line inside an auth form: an accent icon beside a short
+/// message. Deliberately lighter than a [ClientCard] — it is context for the
+/// card next to it, not a card of its own.
 class AuthInfoCard extends StatelessWidget {
   const AuthInfoCard({super.key, required this.icon, required this.text});
 
@@ -10,34 +15,24 @@ class AuthInfoCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(ClientSpacing.sm),
       decoration: BoxDecoration(
-        color: scheme.primary.withValues(alpha: 0.055),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: scheme.primary.withValues(alpha: 0.15)),
+        color: ClientColors.primary.withAlpha(16),
+        borderRadius: BorderRadius.circular(ClientRadius.md),
+        border: Border.all(color: ClientColors.primary.withAlpha(40)),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 38,
-            width: 38,
-            decoration: BoxDecoration(
-              color: scheme.primary.withValues(alpha: 0.086),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(icon, color: scheme.primary, size: 21),
-          ),
-          const SizedBox(width: 12),
+          Icon(icon, size: 18, color: ClientColors.primaryFor(context)),
+          const SizedBox(width: ClientSpacing.sm),
           Expanded(
             child: Text(
               text,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                height: 1.55,
-                color: scheme.onSurface,
-                fontWeight: FontWeight.w700,
-              ),
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
             ),
           ),
         ],

@@ -10,6 +10,7 @@ import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 import 'tickets_shared_widgets.dart';
 import 'ticket_details_dialog.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class TicketsTable extends StatelessWidget {
   final TicketsLoaded state;
@@ -239,7 +240,7 @@ class _SlaBadgeState extends State<_SlaBadge> {
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         border: Border.all(color: fg.withValues(alpha: 0.35)),
       ),
       child: Text(

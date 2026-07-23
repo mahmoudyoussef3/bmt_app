@@ -16,15 +16,23 @@ class TripProgressSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (state is TrackingLoading) {
-      return _hint(context, context.l10n.trips_liveLoadingPosition);
-    }
-    if (state is TrackingError) {
-      return _hint(context, context.l10n.trips_livePositionUnavailable);
-    }
-    final progress = (state as TrackingLoaded).progress;
+    // Switched exhaustively over the sealed state rather than cast: this used
+    // to fall through to `state as TrackingLoaded`, so a TrackingEmpty — the
+    // ordinary "no trackable booking yet" answer — threw and took the whole
+    // trip-details list down with it.
+    final progress = switch (state) {
+      TrackingLoading() => null,
+      TrackingError() => null,
+      TrackingEmpty() => null,
+      TrackingLoaded(:final progress) => progress,
+    };
+
     if (progress == null || !progress.hasVehicleFix) {
-      return _hint(context, context.l10n.trips_liveWaitingForVehicle);
+      return _hint(context, switch (state) {
+        TrackingLoading() => context.l10n.trips_liveLoadingPosition,
+        TrackingError() => context.l10n.trips_livePositionUnavailable,
+        _ => context.l10n.trips_liveWaitingForVehicle,
+      });
     }
 
     final percent = (progress.routeFraction.clamp(0.0, 1.0) * 100).round();

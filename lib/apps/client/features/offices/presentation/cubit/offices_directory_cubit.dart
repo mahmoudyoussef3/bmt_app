@@ -14,6 +14,17 @@ class OfficesDirectoryCubit extends Cubit<OfficesDirectoryState> {
     await _fetch();
   }
 
+  /// Narrows the directory to offices whose name or service areas match.
+  ///
+  /// Filtering happens over the list already in memory: the directory is small
+  /// and fully loaded, so a round trip per keystroke would only add latency.
+  void setQuery(String query) {
+    final current = state;
+    if (current is! OfficesDirectoryLoaded) return;
+    if (current.query == query) return;
+    emit(current.copyWith(query: query));
+  }
+
   /// Refetches without dropping the directory already on screen, so a
   /// pull-to-refresh on Home does not blink the companies rail back to its
   /// skeleton. A failed refresh keeps the last usable list rather than
@@ -22,7 +33,9 @@ class OfficesDirectoryCubit extends Cubit<OfficesDirectoryState> {
     if (state is! OfficesDirectoryLoaded) return load();
     final previous = state as OfficesDirectoryLoaded;
     try {
-      emit(OfficesDirectoryLoaded(await _getOffices()));
+      // The rider's search survives a refresh — results reappearing unfiltered
+      // under a search box that still shows their text reads as a bug.
+      emit(previous.copyWith(offices: await _getOffices()));
     } catch (_) {
       if (!isClosed) emit(previous);
     }

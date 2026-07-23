@@ -48,10 +48,11 @@ class _TrackingScreenState extends State<TrackingScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: ClientColors.surfaceFor(context),
-      appBar: AppBar(
+      // The header floats over the live map, so it carries no surface of its
+      // own and lets the map show through.
+      appBar: ClientAppBar(
+        title: l10n.tracking_title,
         backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: Text(l10n.tracking_title),
         actions: [
           IconButton(
             tooltip: l10n.tracking_refresh,

@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widget
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_document_add_form.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Inline documents section embedded in the driver/vehicle create & edit forms.
 ///
@@ -104,7 +105,7 @@ class _FleetDocumentsInlineSectionState
                   padding: const EdgeInsets.all(AppSpacing.small),
                   decoration: BoxDecoration(
                     color: scheme.surface,
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppTokens.radius),
                     border: Border.all(color: scheme.outline.withAlpha(70)),
                   ),
                   child: Row(

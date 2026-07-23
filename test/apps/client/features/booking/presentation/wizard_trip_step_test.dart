@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/wizard_trip_step.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 /// The trip's date is the date the rider travels *and* the date any package
 /// they buy starts running — they are never asked to pick one. That only works
@@ -42,6 +43,9 @@ void main() {
 
     await tester.pumpWidget(
       MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: BlocProvider<BookingWizardCubit>.value(
             value: cubit,

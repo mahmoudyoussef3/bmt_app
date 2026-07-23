@@ -8,11 +8,13 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
+import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
 import '../../domain/entities/finance_entities.dart';
 import '../cubit/finance_cubit.dart';
 import '../cubit/finance_state.dart';
 import '../widgets/finance_charts_section.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class FinanceScreen extends StatefulWidget {
   const FinanceScreen({super.key});
@@ -22,11 +24,8 @@ class FinanceScreen extends StatefulWidget {
 }
 
 class _FinanceScreenState extends State<FinanceScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<FinanceCubit>().load();
-  }
+  // No load() here: the shell creates the cubit with `..load()` already applied.
+  // Calling it again from initState fired a second full fetch on every visit.
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +44,7 @@ class _FinanceScreenState extends State<FinanceScreen> {
               backgroundColor: Theme.of(context).colorScheme.primary,
               behavior: SnackBarBehavior.floating,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
               ),
             ),
           );
@@ -305,7 +304,7 @@ class _MetricCard extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.small),
               decoration: BoxDecoration(
                 color: color.withAlpha(isDark ? 40 : 25),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
               ),
               child: Icon(icon, color: color, size: 24),
             ),
@@ -544,12 +543,8 @@ class _PaymentFilters extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final searchField = TextField(
-      decoration: const InputDecoration(
-        hintText: 'بحث باسم العميل، رقم العملية، أو كود الرحلة...',
-        prefixIcon: Icon(Icons.search),
-        border: OutlineInputBorder(),
-      ),
+    final searchField = DebouncedSearchField(
+      hintText: 'بحث باسم العميل، رقم العملية، أو كود الرحلة...',
       onChanged: onSearchChanged,
     );
 
@@ -952,7 +947,7 @@ class _PaymentMethodBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Text(
         method.label,
@@ -991,7 +986,7 @@ class _PaymentStatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Text(
         status.label,
@@ -1294,7 +1289,7 @@ class _ReceiptWorkspace extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: AppStatusColors.neutralContainer,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
                       border: Border.all(
                         color: AppStatusColors.onNeutralContainer,
                       ),
@@ -1317,7 +1312,7 @@ class _ReceiptWorkspace extends StatelessWidget {
                           left: 12,
                           child: Card(
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(30),
+                              borderRadius: BorderRadius.circular(AppTokens.radiusSheet),
                             ),
                             child: Row(
                               children: [
@@ -1450,7 +1445,7 @@ class _ReceiptWorkspace extends StatelessWidget {
                             padding: const EdgeInsets.all(AppSpacing.medium),
                             decoration: BoxDecoration(
                               color: AppStatusColors.neutralContainer,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1522,7 +1517,7 @@ class _ReceiptWorkspace extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         border: Border.all(color: scheme.outlineVariant),
       ),
       child: hasImage
@@ -1625,7 +1620,7 @@ class _ReceiptStatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Text(
         status.label,
@@ -1920,7 +1915,7 @@ class _RefundStatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Text(
         status.label,
@@ -2037,7 +2032,7 @@ class _SubscriptionFilters extends StatelessWidget {
         color: Theme.of(
           context,
         ).colorScheme.surfaceContainerHighest.withAlpha(45),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(
           color: Theme.of(context).colorScheme.outlineVariant.withAlpha(100),
         ),
@@ -2307,7 +2302,7 @@ class _SubscriptionDetailPanel extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.medium),
               decoration: BoxDecoration(
                 color: AppStatusColors.neutralContainer,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
               ),
               child: const Text(
                 'الاشتراك منتهي أو تم إلغاؤه مسبقاً، ولا يمكن إجراء تعديلات عليه.',
@@ -2354,7 +2349,7 @@ class _SubscriptionStatusBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Text(
         status.label,

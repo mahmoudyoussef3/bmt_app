@@ -1,6 +1,7 @@
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/client_bottom_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 void main() {
   Future<void> pumpNav(
@@ -10,6 +11,9 @@ void main() {
   }) {
     return tester.pumpWidget(
       MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
           body: const SizedBox.expand(),
           bottomNavigationBar: ClientBottomNavigation(

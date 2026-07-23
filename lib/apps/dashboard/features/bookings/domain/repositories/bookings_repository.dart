@@ -1,4 +1,5 @@
 import '../entities/operation_booking.dart';
+import '../entities/reassignment_target.dart';
 
 abstract class BookingsRepository {
   Future<List<OperationBooking>> getBookings();
@@ -18,6 +19,10 @@ abstract class BookingsRepository {
     List<String> bookingIds,
     String reason,
   );
+
+  Future<List<ReassignmentTarget>> getReassignmentTargets();
+
+  Future<OperationBooking> reassignBooking(String bookingId, String newTripId);
 
   Stream<List<OperationBooking>> watchBookings();
 }

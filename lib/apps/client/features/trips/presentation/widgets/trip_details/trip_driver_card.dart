@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_badge.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
 
 /// The assigned captain's identity and rating — plus the live-journey actions
 /// (call, chat, track), which only exist while there is a journey to act on.
@@ -87,7 +88,7 @@ class _LiveActions extends StatelessWidget {
               label: context.l10n.trips_liveTrackButton,
               onTap: () => Navigator.pushNamed(
                 context,
-                '/tracking',
+                TrackingRoutes.tracking,
                 arguments: {'bookingId': trip.id},
               ),
             ),

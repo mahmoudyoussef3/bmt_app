@@ -11,6 +11,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentati
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class FleetDocumentManager extends StatefulWidget {
   final String ownerId;
@@ -48,24 +49,21 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
   ) async {
     final result = await showDialog<bool>(
       context: context,
-      builder: (_) => Directionality(
-        textDirection: TextDirection.rtl,
-        child: AlertDialog(
-          title: const Text('حذف الوثيقة'),
-          content: Text(
-            'هل تريد حذف "${document.type.label}"؟ سيتم حذف الملف من التخزين وسجل الوثيقة من قاعدة البيانات.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: const Text('إلغاء'),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('حذف'),
-            ),
-          ],
+      builder: (_) => AlertDialog(
+        title: const Text('حذف الوثيقة'),
+        content: Text(
+          'هل تريد حذف "${document.type.label}"؟ سيتم حذف الملف من التخزين وسجل الوثيقة من قاعدة البيانات.',
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('حذف'),
+          ),
+        ],
       ),
     );
     return result ?? false;
@@ -281,7 +279,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
             padding: const EdgeInsets.all(AppSpacing.medium),
             decoration: BoxDecoration(
               color: scheme.surfaceContainerHighest.withAlpha(70),
-              borderRadius: BorderRadius.circular(18),
+              borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
               border: Border.all(color: scheme.outline.withAlpha(70)),
             ),
             child: LayoutBuilder(
@@ -441,7 +439,7 @@ class _DocumentCard extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         border: Border.all(color: scheme.outline.withAlpha(70)),
       ),
       child: Column(

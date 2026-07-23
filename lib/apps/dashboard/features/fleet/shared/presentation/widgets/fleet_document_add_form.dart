@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/pen
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_upload_helpers.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Mini-form to queue a new [PendingFleetDocument]. Validates locally and calls
 /// [onAdd] with the completed document; the parent section holds the queue.
@@ -103,7 +104,7 @@ class _FleetDocumentAddFormState extends State<FleetDocumentAddForm> {
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(70),
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         border: Border.all(color: scheme.outline.withAlpha(70)),
       ),
       child: Column(

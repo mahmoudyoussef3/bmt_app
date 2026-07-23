@@ -1219,9 +1219,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get welcome_createAccount => 'إنشاء حساب';
 
   @override
-  String get welcome_orContinueWith => 'أو تابع باستخدام';
-
-  @override
   String get welcome_continueAsGuest => 'المتابعة كضيف';
 
   @override
@@ -1236,21 +1233,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get welcome_valuePasses => 'إدارة الاشتراكات';
-
-  @override
-  String welcome_comingSoonTitle(String provider) {
-    return 'تسجيل الدخول عبر $provider قريبًا';
-  }
-
-  @override
-  String get welcome_comingSoonBody =>
-      'ما زلنا نضع اللمسات الأخيرة عليه. في الوقت الحالي، تابع باستخدام بريدك الإلكتروني لحجز الرحلات وتتبّع الحافلات فورًا.';
-
-  @override
-  String get welcome_maybeLater => 'ربما لاحقًا';
-
-  @override
-  String get welcome_providerPhone => 'الهاتف';
 
   @override
   String get auth_termsAndConditions => 'الشروط والأحكام';
@@ -1676,6 +1658,13 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get notifications_emptyBody =>
       'ستظهر هنا تحديثات الرحلات وتأكيدات الحجز والتذكيرات فور وصولها.';
+
+  @override
+  String get notifications_categoryEmptyTitle => 'لا يوجد شيء في هذا القسم';
+
+  @override
+  String get notifications_categoryEmptyBody =>
+      'اختر قسمًا آخر لعرض باقي الإشعارات.';
 
   @override
   String get notifications_newBadge => 'جديد';
@@ -2185,6 +2174,9 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String get support_ticketDetailsTitle => 'تفاصيل التذكرة';
+
+  @override
   String get support_failedToLoad => 'تعذر تحميل تفاصيل التذكرة';
 
   @override
@@ -2267,6 +2259,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get seatSelection_cabinLayout => 'مخطط المقصورة';
+
+  @override
+  String get seatSelection_cabinDoor => 'الباب';
+
+  @override
+  String get seatSelection_cabinRear => 'المؤخرة';
 
   @override
   String get seatSelection_driverCabinNote =>
@@ -4184,6 +4182,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offices_directoryEmpty => 'لا توجد مكاتب متاحة للحجز حاليًا.';
+
+  @override
+  String get offices_searchHint => 'ابحث باسم الشركة أو المدينة';
+
+  @override
+  String offices_noSearchResults(String query) {
+    return 'لا يوجد مكتب يطابق \"$query\"';
+  }
+
+  @override
+  String get offices_clearSearch => 'مسح البحث';
 
   @override
   String get offices_routesHeader => 'خطوط هذا المكتب';

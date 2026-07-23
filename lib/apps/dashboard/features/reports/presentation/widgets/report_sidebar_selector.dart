@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import '../../domain/entities/report_entities.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class ReportSidebarSelector extends StatelessWidget {
   final ReportType selectedType;
@@ -53,12 +54,12 @@ class ReportSidebarSelector extends StatelessWidget {
                   color: isSelected
                       ? scheme.primaryContainer.withValues(alpha: 0.47)
                       : Colors.transparent, // ~120/255
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                   child: ListTile(
                     selected: isSelected,
                     onTap: () => onSelect(type),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                     ),
                     leading: Icon(
                       icons[type] ?? Icons.insert_chart_outlined,

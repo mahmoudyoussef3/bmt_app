@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../cubit/support_cubit.dart';
@@ -20,14 +20,10 @@ class TicketDetailsAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return SliverAppBar(
+    return ClientSliverAppBar(
+      title: context.l10n.support_ticketNumberTitle(ticketNumber),
       expandedHeight: 180,
-      pinned: true,
-      backgroundColor: scheme.surface,
-      surfaceTintColor: Colors.transparent,
-      iconTheme: IconThemeData(color: scheme.onSurface),
+      background: const _TicketDetailsAppBarBackground(),
       actions: [
         IconButton(
           tooltip: context.l10n.support_refresh,
@@ -36,20 +32,6 @@ class TicketDetailsAppBar extends StatelessWidget {
               context.read<SupportCubit>().openTicketDetails(ticketId),
         ),
       ],
-      flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsetsDirectional.only(
-          start: 48,
-          end: 24,
-          bottom: 16,
-        ),
-        title: Text(
-          context.l10n.support_ticketNumberTitle(ticketNumber),
-          style: ClientTypography.headingSmall(
-            context,
-          ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w900),
-        ),
-        background: const _TicketDetailsAppBarBackground(),
-      ),
     );
   }
 }

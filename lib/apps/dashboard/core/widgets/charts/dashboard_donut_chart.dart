@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'chart_models.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Donut chart with a centred total and a legend showing count + percentage.
 class DashboardDonutChart extends StatelessWidget {
@@ -99,7 +100,7 @@ class _Legend extends StatelessWidget {
                     height: 10,
                     decoration: BoxDecoration(
                       color: datum.color,
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.small),

@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_
 import 'package:bmt_app/apps/client/features/support/presentation/widgets/create_ticket_form.dart';
 
 import 'support_test_doubles.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 Future<FakeSupportRepository> _pumpForm(WidgetTester tester) async {
   final repository = FakeSupportRepository();
@@ -22,6 +23,9 @@ Future<FakeSupportRepository> _pumpForm(WidgetTester tester) async {
 
   await tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       home: BlocProvider<SupportCubit>(
         create: (_) => SupportCubit(
           getMySupportTickets: GetMySupportTicketsUseCase(repository),

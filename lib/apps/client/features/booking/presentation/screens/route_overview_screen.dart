@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/easyway_route_map_view.dart';
@@ -48,30 +49,20 @@ class RouteOverviewScreen extends StatelessWidget {
       ),
       body: CustomScrollView(
         slivers: [
-          SliverAppBar(
+          ClientSliverAppBar(
+            title: route.routeName,
             expandedHeight: 300,
-            pinned: true,
-            backgroundColor: ClientColors.surfaceFor(context),
-            leading: const BackButton(),
-            title: Text(
-              route.routeName,
-              style: ClientTypography.bodyMedium(
-                context,
-              ).copyWith(fontWeight: FontWeight.w700),
-            ),
-            flexibleSpace: FlexibleSpaceBar(
-              background: mapPins.isNotEmpty
-                  ? EasyWayRouteMapView(
-                      waypoints: mapPins,
-                      cameraPadding: const EdgeInsets.fromLTRB(42, 72, 42, 36),
-                      info: RouteMapInfoData(
-                        distance: route.distance,
-                        duration: route.duration,
-                        availableSeats: route.availableSeats,
-                      ),
-                    )
-                  : const NoMapPlaceholder(),
-            ),
+            background: mapPins.isNotEmpty
+                ? EasyWayRouteMapView(
+                    waypoints: mapPins,
+                    cameraPadding: const EdgeInsets.fromLTRB(42, 72, 42, 36),
+                    info: RouteMapInfoData(
+                      distance: route.distance,
+                      duration: route.duration,
+                      availableSeats: route.availableSeats,
+                    ),
+                  )
+                : const NoMapPlaceholder(),
           ),
           SliverToBoxAdapter(
             child: Padding(

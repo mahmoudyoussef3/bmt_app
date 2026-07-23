@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../domain/entities/operational_alert.dart';
 import 'alert_icon_resolver.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class AlertTile extends StatelessWidget {
   const AlertTile({
@@ -25,14 +26,14 @@ class AlertTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Material(
         color: alert.isRead ? cs.surface : cs.primaryContainer.withAlpha(35),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTokens.radius),
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
               border: Border.all(
                 color: alert.isRead
                     ? cs.outlineVariant.withAlpha(60)

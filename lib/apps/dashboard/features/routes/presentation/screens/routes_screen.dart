@@ -14,6 +14,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
 import '../../domain/entities/operation_route.dart';
 import '../cubit/routes_cubit.dart';
@@ -110,12 +111,9 @@ class _RoutesToolbar extends StatelessWidget {
       (sum, route) => sum + route.stations.length,
     );
 
-    final search = TextField(
+    final search = DebouncedSearchField(
+      hintText: 'ابحث بالاسم أو المدينة',
       onChanged: cubit.updateSearch,
-      decoration: const InputDecoration(
-        labelText: 'بحث',
-        prefixIcon: Icon(Icons.search_rounded),
-      ),
     );
     final filters = Wrap(
       spacing: AppSpacing.small,
@@ -2060,27 +2058,24 @@ Color _routeStatusColor(BuildContext context, OperationRouteStatus status) {
 void _confirmArchive(BuildContext context, OperationRoute route) {
   showDialog<void>(
     context: context,
-    builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
-      child: AlertDialog(
-        title: const Text('تأكيد أرشفة المسار'),
-        content: Text(
-          'سيتم تحويل "${route.name}" إلى مؤرشف، ولن يظهر ضمن فلتر المسارات النشطة. الرحلات المرتبطة ستبقى محفوظة للرجوع إليها.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: Navigator.of(context).pop,
-            child: const Text('إلغاء'),
-          ),
-          FilledButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.read<RoutesCubit>().archiveRoute(route);
-            },
-            child: const Text('تأكيد الأرشفة'),
-          ),
-        ],
+    builder: (_) => AlertDialog(
+      title: const Text('تأكيد أرشفة المسار'),
+      content: Text(
+        'سيتم تحويل "${route.name}" إلى مؤرشف، ولن يظهر ضمن فلتر المسارات النشطة. الرحلات المرتبطة ستبقى محفوظة للرجوع إليها.',
       ),
+      actions: [
+        TextButton(
+          onPressed: Navigator.of(context).pop,
+          child: const Text('إلغاء'),
+        ),
+        FilledButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+            context.read<RoutesCubit>().archiveRoute(route);
+          },
+          child: const Text('تأكيد الأرشفة'),
+        ),
+      ],
     ),
   );
 }
@@ -2121,10 +2116,7 @@ void _openStopDialog(
 }) {
   showDialog<void>(
     context: context,
-    builder: (_) => Directionality(
-      textDirection: TextDirection.rtl,
-      child: _StopDialog(station: station, onSubmit: onSubmit),
-    ),
+    builder: (_) => _StopDialog(station: station, onSubmit: onSubmit),
   );
 }
 

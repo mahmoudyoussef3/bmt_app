@@ -11,6 +11,7 @@ import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_out_useca
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_state.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/remember_me_coordinator.dart';
 
 class _FakeAuthRepository implements ClientAuthRepository {
   @override
@@ -59,10 +60,10 @@ ClientAuthCubit _cubit(_InMemoryRememberMeRepository rememberMeRepo) {
     signInWithEmail: SignInWithEmailUseCase(authRepo),
     signUpWithEmail: SignUpWithEmailUseCase(authRepo),
     signOut: SignOutUseCase(authRepo),
-    saveRememberedCredentials: SaveRememberedCredentialsUseCase(rememberMeRepo),
-    getRememberedCredentials: GetRememberedCredentialsUseCase(rememberMeRepo),
-    clearRememberedCredentials: ClearRememberedCredentialsUseCase(
-      rememberMeRepo,
+    rememberMe: RememberMeCoordinator(
+      save: SaveRememberedCredentialsUseCase(rememberMeRepo),
+      get: GetRememberedCredentialsUseCase(rememberMeRepo),
+      clear: ClearRememberedCredentialsUseCase(rememberMeRepo),
     ),
   );
 }

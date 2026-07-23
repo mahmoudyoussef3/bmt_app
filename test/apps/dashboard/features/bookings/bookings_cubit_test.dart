@@ -1,10 +1,12 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/reassignment_target.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/repositories/bookings_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/approve_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_approve_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_reject_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/get_operation_bookings_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/reassign_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/reject_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/request_reupload_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/watch_bookings_usecase.dart';
@@ -66,6 +68,28 @@ class _FakeRepo implements BookingsRepository {
   Future<List<OperationBooking>> bulkReject(List<String> ids, String r) async =>
       [for (final id in ids) await rejectBooking(id, r)];
 
+  /// Set to make the next reassignment fail, so tests can assert the workspace
+  /// survives a failed action.
+  Object? reassignError;
+
+  List<ReassignmentTarget> targets = const [
+    ReassignmentTarget(
+      tripId: 't-9',
+      routeName: 'A - B',
+      tripDate: '2026-07-11',
+      departureTime: '09:00',
+    ),
+  ];
+
+  @override
+  Future<List<ReassignmentTarget>> getReassignmentTargets() async => targets;
+
+  @override
+  Future<OperationBooking> reassignBooking(String id, String newTripId) async {
+    if (reassignError != null) throw Exception(reassignError);
+    return _booking(id, status: BookingStatus.confirmed);
+  }
+
   @override
   Stream<List<OperationBooking>> watchBookings() => const Stream.empty();
 }
@@ -79,6 +103,8 @@ BookingsCubit _cubit(_FakeRepo repo) {
     bulkApprove: BulkApproveBookingsUseCase(repo),
     bulkReject: BulkRejectBookingsUseCase(repo),
     watchBookings: WatchBookingsUseCase(repo),
+    reassignBooking: ReassignBookingUseCase(repo),
+    getReassignmentTargets: GetReassignmentTargetsUseCase(repo),
   );
 }
 
@@ -135,6 +161,70 @@ void main() {
       final state = cubit.state as BookingsLoaded;
       expect(state.bookingsForClient('c-1'), 2);
       expect(state.bookingsForClient('c-2'), 1);
+      await cubit.close();
+    });
+    test('reassignBooking moves the booking onto the chosen trip', () async {
+      final cubit = _cubit(_FakeRepo([_booking('1')]));
+      await cubit.load();
+
+      await cubit.reassignBooking('1', 't-9');
+
+      final state = cubit.state as BookingsLoaded;
+      expect(state.bookings.single.status, BookingStatus.confirmed);
+      expect(state.actionError, isNull);
+      await cubit.close();
+    });
+
+    test('loadReassignmentTargets returns only eligible trips', () async {
+      final cubit = _cubit(_FakeRepo([_booking('1')]));
+      await cubit.load();
+
+      final targets = await cubit.loadReassignmentTargets();
+      expect(targets.single.tripId, 't-9');
+      await cubit.close();
+    });
+
+    test(
+      'a failed action reports an error without discarding the workspace',
+      () async {
+        final repo = _FakeRepo([_booking('1'), _booking('2')])
+          ..reassignError = 'seat_taken';
+        final cubit = _cubit(repo);
+        await cubit.load();
+        cubit.toggleSelection('1');
+
+        await cubit.reassignBooking('1', 't-9');
+
+        // Still a loaded workspace: the list, the selection and the tab survive,
+        // and the failure is surfaced alongside them rather than replacing them.
+        final state = cubit.state;
+        expect(state, isA<BookingsLoaded>());
+        final loaded = state as BookingsLoaded;
+        expect(loaded.bookings.length, 2);
+        expect(loaded.selectedIds, {'1'});
+        expect(loaded.actionError, contains('seat_taken'));
+        expect(loaded.isProcessing, isFalse);
+
+        cubit.clearActionError();
+        expect((cubit.state as BookingsLoaded).actionError, isNull);
+        await cubit.close();
+      },
+    );
+
+    test('countByStatus tallies every status in one pass', () async {
+      final cubit = _cubit(
+        _FakeRepo([
+          _booking('1'),
+          _booking('2'),
+          _booking('3', status: BookingStatus.cancelled),
+        ]),
+      );
+      await cubit.load();
+
+      final state = cubit.state as BookingsLoaded;
+      expect(state.countByStatus(BookingStatus.reserved), 2);
+      expect(state.countByStatus(BookingStatus.cancelled), 1);
+      expect(state.countByStatus(BookingStatus.completed), 0);
       await cubit.close();
     });
   });

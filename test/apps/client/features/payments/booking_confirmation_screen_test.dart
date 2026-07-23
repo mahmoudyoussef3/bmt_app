@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/booking_confirmation_screen.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 void main() {
   testWidgets('BookingConfirmationScreen handles long destination text', (
@@ -12,6 +13,9 @@ void main() {
 
     await tester.pumpWidget(
       const MaterialApp(
+        locale: Locale('en'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
         home: BookingConfirmationScreen(
           seat: '2',
           vehicleId: '3300 ggg',
@@ -40,6 +44,9 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: BookingConfirmationScreen(
             seat: '2',
             vehicleId: '3300 ggg',

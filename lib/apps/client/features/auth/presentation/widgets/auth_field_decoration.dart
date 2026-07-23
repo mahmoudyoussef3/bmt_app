@@ -1,79 +1,54 @@
 import 'package:flutter/material.dart';
 
-/// The focus-aware fill + shadow wrapper drawn behind an auth field.
-BoxDecoration authFieldContainerDecoration({
-  required BuildContext context,
-  required bool isFocused,
-}) {
-  final theme = Theme.of(context);
-  final scheme = theme.colorScheme;
-  final isDark = theme.brightness == Brightness.dark;
-  final fillColor = isFocused
-      ? (isDark ? const Color(0xFF0F172A) : Colors.white)
-      : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC));
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
-  return BoxDecoration(
-    color: fillColor,
-    borderRadius: BorderRadius.circular(16),
-    boxShadow: [
-      isFocused
-          ? BoxShadow(
-              color: scheme.primary.withValues(alpha: 0.16),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
-            )
-          : BoxShadow(
-              color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-    ],
-  );
-}
-
-/// Builds the [InputDecoration] shared by [PremiumAuthTextField]: a themed
-/// label, prefix icon, optional [suffixIcon] and focus-aware rounded borders.
-InputDecoration authFieldInputDecoration({
+/// The [InputDecoration] shared by every auth input.
+///
+/// Flat and filled, like the search and support fields elsewhere in the client
+/// app — the old auth field floated on its own drop shadow inside an already
+/// elevated card, which is what made these screens look bolted on. Focus is
+/// carried by the border and the label colour alone.
+InputDecoration authFieldDecoration({
   required BuildContext context,
-  required bool isFocused,
-  required String labelText,
-  required IconData prefixIcon,
+  required String label,
+  required IconData icon,
   Widget? suffixIcon,
 }) {
-  final theme = Theme.of(context);
-  final scheme = theme.colorScheme;
-  final isDark = theme.brightness == Brightness.dark;
-
   OutlineInputBorder border(Color color, {double width = 1}) =>
       OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(ClientRadius.md),
         borderSide: BorderSide(color: color, width: width),
       );
 
   return InputDecoration(
-    labelText: labelText,
-    labelStyle: TextStyle(
-      color: isFocused
-          ? scheme.primary
-          : scheme.onSurfaceVariant.withValues(alpha: 0.75),
-      fontWeight: isFocused ? FontWeight.w800 : FontWeight.w600,
-    ),
+    labelText: label,
+    labelStyle: ClientTypography.bodyMedium(
+      context,
+    ).copyWith(color: ClientColors.textTertiaryFor(context)),
+    floatingLabelStyle: ClientTypography.labelMedium(
+      context,
+    ).copyWith(color: ClientColors.primaryFor(context)),
     prefixIcon: Icon(
-      prefixIcon,
-      color: isFocused
-          ? scheme.primary
-          : scheme.onSurfaceVariant.withValues(alpha: 0.65),
+      icon,
+      size: 20,
+      color: ClientColors.textTertiaryFor(context),
     ),
     suffixIcon: suffixIcon,
     filled: true,
-    fillColor: Colors.transparent,
-    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-    border: border(Colors.transparent),
-    enabledBorder: border(
-      isDark ? Colors.white10 : Colors.black.withValues(alpha: 0.06),
+    fillColor: ClientColors.surfaceSubtleFor(context),
+    contentPadding: const EdgeInsets.symmetric(
+      horizontal: ClientSpacing.md,
+      vertical: ClientSpacing.md,
     ),
-    focusedBorder: border(scheme.primary, width: 2),
-    errorBorder: border(scheme.error),
-    focusedErrorBorder: border(scheme.error, width: 2),
+    border: border(Colors.transparent),
+    enabledBorder: border(ClientColors.borderFor(context)),
+    focusedBorder: border(ClientColors.primaryFor(context), width: 1.5),
+    errorBorder: border(ClientColors.journeyRed),
+    focusedErrorBorder: border(ClientColors.journeyRed, width: 1.5),
+    errorStyle: ClientTypography.bodySmall(
+      context,
+    ).copyWith(color: ClientColors.journeyRed),
   );
 }

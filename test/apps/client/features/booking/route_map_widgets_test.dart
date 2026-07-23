@@ -7,6 +7,8 @@ import 'package:bmt_app/core/geo/geo_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
+import '../../client_test_app.dart';
 
 /// Keeps widget tests offline: road geometry resolves to "unavailable"
 /// synchronously, exercising the straight-line fallback path.
@@ -36,7 +38,7 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: EasyWayRouteMapView())),
+        clientTestApp(Scaffold(body: EasyWayRouteMapView())),
       );
 
       expect(find.text('Map coordinates unavailable'), findsOneWidget);
@@ -54,6 +56,9 @@ void main() {
 
       await tester.pumpWidget(
         const MaterialApp(
+          locale: Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
             body: SizedBox(
               width: 400,
@@ -96,9 +101,7 @@ void main() {
       ],
     );
 
-    await tester.pumpWidget(
-      const MaterialApp(home: RouteOverviewScreen(route: route)),
-    );
+    await tester.pumpWidget(clientTestApp(RouteOverviewScreen(route: route)));
 
     expect(find.text('First station'), findsNWidgets(2));
     expect(find.text('Final station'), findsNWidgets(2));

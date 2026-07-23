@@ -10,6 +10,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
 import '../../domain/usecases/platform_admin_usecases.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// How the platform is doing, above the list of what it contains.
 ///
@@ -112,7 +113,7 @@ class _AnalyticsError extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
         color: scheme.errorContainer.withAlpha(60),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Row(
         children: [
@@ -370,7 +371,7 @@ class _AttentionRow extends StatelessWidget {
 
     return InkWell(
       onTap: onOpen,
-      borderRadius: BorderRadius.circular(6),
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
         child: Row(

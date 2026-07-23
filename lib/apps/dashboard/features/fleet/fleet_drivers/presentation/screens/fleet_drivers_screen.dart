@@ -18,6 +18,8 @@ import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/async_state_view.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
+import 'package:bmt_app/core/widgets/debounced_search_field.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 enum _DriversViewState { list, details }
 
@@ -312,7 +314,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
                   vertical: 16,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
                 ),
               ),
             ),
@@ -557,7 +559,7 @@ class _DriverFilterBar extends StatelessWidget {
           tooltip: 'تصفية السائقين حسب ${filter.label}',
           onSelected: (_) => onSelected(filter),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
           ),
         );
       }).toList(),
@@ -629,21 +631,9 @@ class _DriverSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return SearchBar(
+    return DebouncedSearchField(
       hintText: 'ابحث بالاسم، الكود، أو رقم الهاتف...',
-      elevation: WidgetStateProperty.all(0),
-      padding: WidgetStateProperty.all(
-        const EdgeInsets.symmetric(horizontal: AppSpacing.large),
-      ),
-      backgroundColor: WidgetStateProperty.all(
-        scheme.surfaceContainerHighest.withAlpha(90),
-      ),
-      shape: WidgetStateProperty.all(
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
       onChanged: onChanged,
-      leading: Icon(Icons.search_rounded, color: scheme.onSurfaceVariant),
     );
   }
 }
@@ -733,7 +723,7 @@ class _DriverSortActions extends StatelessWidget {
             style: FilledButton.styleFrom(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppTokens.radius),
               ),
             ),
           ),
@@ -766,7 +756,7 @@ class _DriverSummaryTile extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(50),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         border: Border.all(color: scheme.outlineVariant.withAlpha(70)),
         boxShadow: [
           BoxShadow(

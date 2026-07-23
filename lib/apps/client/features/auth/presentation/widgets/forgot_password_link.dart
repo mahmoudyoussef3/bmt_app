@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
-/// The start-aligned "Forgot password?" link on the sign-in form.
+/// The "Forgot password?" link that sits opposite the remember-me control.
 class ForgotPasswordLink extends StatelessWidget {
   const ForgotPasswordLink({super.key, required this.onPressed});
 
@@ -10,16 +13,16 @@ class ForgotPasswordLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: TextButton.icon(
-        onPressed: onPressed,
-        icon: const Icon(Icons.help_outline_rounded, size: 18),
-        label: Text(context.l10n.auth_forgotPassword),
-        style: TextButton.styleFrom(
-          textStyle: const TextStyle(fontWeight: FontWeight.w900),
-        ),
+    return TextButton(
+      onPressed: onPressed,
+      style: TextButton.styleFrom(
+        foregroundColor: ClientColors.primaryFor(context),
+        padding: const EdgeInsets.symmetric(horizontal: ClientSpacing.xs),
+        visualDensity: VisualDensity.compact,
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        textStyle: ClientTypography.labelMedium(context),
       ),
+      child: Text(context.l10n.auth_forgotPassword),
     );
   }
 }

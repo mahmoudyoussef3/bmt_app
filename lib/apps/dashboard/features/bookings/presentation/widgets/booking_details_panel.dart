@@ -8,6 +8,7 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/operation_booking.dart';
 import '../cubit/bookings_cubit.dart';
+import 'booking_reassign_dialog.dart';
 import 'booking_review_intents.dart' as intents;
 
 /// Right-hand (or bottom-sheet) inspector showing a booking's real customer,
@@ -50,6 +51,10 @@ class BookingDetailsPanel extends StatelessWidget {
                 if (booking.awaitingReview) ...[
                   const SizedBox(height: AppSpacing.medium),
                   _ReviewButtons(booking: booking, cubit: cubit),
+                ],
+                if (booking.canBeReassigned) ...[
+                  const SizedBox(height: AppSpacing.small),
+                  _ReassignButton(booking: booking, cubit: cubit),
                 ],
                 const SizedBox(height: AppSpacing.medium),
                 _Section(
@@ -184,6 +189,38 @@ class _ReviewButtons extends StatelessWidget {
           label: const Text('إعادة رفع'),
         ),
       ],
+    );
+  }
+}
+
+/// Moves the passenger to another trip — the recovery path when a trip is
+/// cancelled, delayed, or the customer asks to travel on a different date.
+class _ReassignButton extends StatelessWidget {
+  const _ReassignButton({required this.booking, required this.cubit});
+
+  final OperationBooking booking;
+  final BookingsCubit cubit;
+
+  Future<void> _reassign(BuildContext context) async {
+    final tripId = await BookingReassignDialog.show(
+      context,
+      passengerName: booking.passengerName,
+      currentTrip: '${booking.tripDetails.route} · ${booking.tripDetails.date}',
+      loadTargets: cubit.loadReassignmentTargets,
+    );
+    if (tripId == null) return;
+    await cubit.reassignBooking(booking.id, tripId);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: OutlinedButton.icon(
+        onPressed: () => _reassign(context),
+        icon: const Icon(Icons.swap_horiz_rounded),
+        label: const Text('نقل إلى رحلة أخرى'),
+      ),
     );
   }
 }

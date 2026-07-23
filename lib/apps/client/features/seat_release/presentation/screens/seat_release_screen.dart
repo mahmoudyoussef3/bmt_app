@@ -2,7 +2,6 @@ import 'dart:math' as math;
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
-import 'package:bmt_app/core/widgets/directional_icon.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -418,15 +417,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
         return Scaffold(
           backgroundColor: scheme.surfaceContainerHighest,
-          appBar: AppBar(
-            title: Text(
-              _getViewTitle(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            leading: IconButton(
-              onPressed: _onBackPress,
-              icon: const DirectionalIcon(Icons.arrow_back_rounded),
-            ),
+          appBar: ClientAppBar(
+            title: _getViewTitle(),
+            onBack: _onBackPress,
             actions: [
               IconButton(
                 tooltip: context.l10n.tracking_refresh,
@@ -434,7 +427,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                 onPressed: () => context.read<SeatReleaseCubit>().load(),
               ),
             ],
-            elevation: 0,
           ),
           body: SafeArea(
             child: Stack(

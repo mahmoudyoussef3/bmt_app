@@ -75,9 +75,9 @@ class CaptainRequestCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.small),
             Text(
               'سبب الرفض: ${request.rejectionReason}',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.error,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.error),
             ),
           ],
           if (request.isPending) ...[

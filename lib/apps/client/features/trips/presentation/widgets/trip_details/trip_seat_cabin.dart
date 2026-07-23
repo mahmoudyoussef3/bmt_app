@@ -12,11 +12,15 @@ class TripSeatCabin extends StatelessWidget {
   const TripSeatCabin({
     super.key,
     required this.seats,
+    required this.vehicleType,
     this.seatSize = 44,
     this.showLegend = true,
   });
 
   final List<TripSeat> seats;
+
+  /// The trip's vehicle type, which decides the cabin drawn below.
+  final String vehicleType;
   final double seatSize;
   final bool showLegend;
 
@@ -47,7 +51,11 @@ class TripSeatCabin extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          TripSeatMap(seats: seats, seatSize: seatSize),
+          TripSeatMap(
+            seats: seats,
+            vehicleType: vehicleType,
+            seatSize: seatSize,
+          ),
           if (showLegend) ...[
             const SizedBox(height: 18),
             const TripSeatLegend(),

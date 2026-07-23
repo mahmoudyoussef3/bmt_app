@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentati
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_state.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/widgets/fleet_documents_table.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/widgets/fleet_documents_card_list.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -34,28 +35,13 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
     return BlocBuilder<FleetDocumentsCubit, FleetDocumentsState>(
       builder: (context, state) {
         if (state is FleetDocumentsLoading) {
-          return const Center(child: CircularProgressIndicator());
+          return const DashboardLoading(showHeader: false, scrollable: false);
         }
 
         if (state is FleetDocumentsError) {
-          return Center(
-            child: AppCard(
-              padding: const EdgeInsets.all(AppSpacing.large),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    state.message,
-                    style: const TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  FilledButton(
-                    onPressed: () => context.read<FleetDocumentsCubit>().load(),
-                    child: const Text('إعادة المحاولة'),
-                  ),
-                ],
-              ),
-            ),
+          return DashboardErrorState(
+            message: state.message,
+            onRetry: () => context.read<FleetDocumentsCubit>().load(),
           );
         }
 

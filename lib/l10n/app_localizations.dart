@@ -2342,12 +2342,6 @@ abstract class AppLocalizations {
   /// **'Create an account'**
   String get welcome_createAccount;
 
-  /// No description provided for @welcome_orContinueWith.
-  ///
-  /// In en, this message translates to:
-  /// **'or continue with'**
-  String get welcome_orContinueWith;
-
   /// No description provided for @welcome_continueAsGuest.
   ///
   /// In en, this message translates to:
@@ -2377,30 +2371,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage passes'**
   String get welcome_valuePasses;
-
-  /// No description provided for @welcome_comingSoonTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'{provider} sign-in is coming soon'**
-  String welcome_comingSoonTitle(String provider);
-
-  /// No description provided for @welcome_comingSoonBody.
-  ///
-  /// In en, this message translates to:
-  /// **'We\'re still putting the finishing touches on it. For now, continue with your email to book trips and track buses right away.'**
-  String get welcome_comingSoonBody;
-
-  /// No description provided for @welcome_maybeLater.
-  ///
-  /// In en, this message translates to:
-  /// **'Maybe later'**
-  String get welcome_maybeLater;
-
-  /// No description provided for @welcome_providerPhone.
-  ///
-  /// In en, this message translates to:
-  /// **'Phone'**
-  String get welcome_providerPhone;
 
   /// No description provided for @auth_termsAndConditions.
   ///
@@ -3157,6 +3127,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Trip updates, booking confirmations and reminders will appear here when they arrive.'**
   String get notifications_emptyBody;
+
+  /// No description provided for @notifications_categoryEmptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing in this category'**
+  String get notifications_categoryEmptyTitle;
+
+  /// No description provided for @notifications_categoryEmptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick another category to see the rest of your notifications.'**
+  String get notifications_categoryEmptyBody;
 
   /// No description provided for @notifications_newBadge.
   ///
@@ -4082,6 +4064,12 @@ abstract class AppLocalizations {
   /// **'Ticket {number}'**
   String support_ticketNumberTitle(String number);
 
+  /// No description provided for @support_ticketDetailsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket details'**
+  String get support_ticketDetailsTitle;
+
   /// No description provided for @support_failedToLoad.
   ///
   /// In en, this message translates to:
@@ -4225,6 +4213,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cabin layout'**
   String get seatSelection_cabinLayout;
+
+  /// No description provided for @seatSelection_cabinDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Door'**
+  String get seatSelection_cabinDoor;
+
+  /// No description provided for @seatSelection_cabinRear.
+  ///
+  /// In en, this message translates to:
+  /// **'REAR'**
+  String get seatSelection_cabinRear;
 
   /// No description provided for @seatSelection_driverCabinNote.
   ///
@@ -7567,6 +7567,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No offices are open for booking right now.'**
   String get offices_directoryEmpty;
+
+  /// No description provided for @offices_searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by company or city'**
+  String get offices_searchHint;
+
+  /// No description provided for @offices_noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No office matches \"{query}\"'**
+  String offices_noSearchResults(String query);
+
+  /// No description provided for @offices_clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get offices_clearSearch;
 
   /// No description provided for @offices_routesHeader.
   ///

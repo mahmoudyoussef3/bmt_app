@@ -5,6 +5,8 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_danger_button.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 
 /// Trip Details' sticky bottom action bar — exactly one primary action set
 /// per trip status, never a stray duplicate action (a previous version
@@ -68,7 +70,7 @@ class TripActionsBar extends StatelessWidget {
                   icon: const Icon(Icons.my_location_rounded, size: 20),
                   onPressed: () => Navigator.pushNamed(
                     context,
-                    '/tracking',
+                    TrackingRoutes.tracking,
                     arguments: {'bookingId': trip.id},
                   ),
                 ),
@@ -97,7 +99,7 @@ class TripActionsBar extends StatelessWidget {
                       child: ClientButton.secondary(
                         label: context.l10n.tracking_bookAgain,
                         onPressed: () =>
-                            Navigator.pushNamed(context, '/booking/search'),
+                            Navigator.pushNamed(context, BookingRoutes.search),
                       ),
                     ),
                   ],

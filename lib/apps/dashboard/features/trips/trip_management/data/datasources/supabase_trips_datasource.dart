@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bmt_app/core/vehicles/vehicles.dart';
 import '../../../../../core/session/dashboard_session.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
@@ -117,7 +118,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       // 3. Build seats array from vehicle seat_configuration or default layout
       final vehicleResponse = await _client
           .from('vehicles')
-          .select('seat_configuration')
+          .select('vehicle_type, seat_configuration')
           .eq('id', input.vehicleId)
           .single();
 
@@ -139,20 +140,39 @@ class SupabaseTripsDatasource implements TripsDatasource {
       }
 
       if (seats.isEmpty) {
-        const colCount = 3;
-        var curRow = 1;
-        var seatNum = 1;
-        while (seatNum <= input.capacity) {
-          for (var col = 1; col <= colCount; col++) {
-            if (seatNum > input.capacity) break;
+        // The vehicle has no stored configuration. Fall back to its type's
+        // cabin so a Coaster never gets a Hiace-shaped seat map, and only drop
+        // to a plain grid for types with no blueprint at all.
+        final type = VehicleTypeParser.fromDatabase(
+          vehicleResponse['vehicle_type'] as String?,
+        );
+        final blueprint = VehicleSeatLayouts.blueprintFor(type);
+
+        if (blueprint != null && blueprint.capacity == input.capacity) {
+          for (final seat in blueprint.seatDefinitions()) {
+            if (seat.isDriver) continue;
             seats.add({
-              'seat_label': '$seatNum',
-              'seat_row': curRow,
-              'seat_column': col,
+              'seat_label': seat.label,
+              'seat_row': seat.row,
+              'seat_column': seat.column,
             });
-            seatNum++;
           }
-          curRow++;
+        } else {
+          const colCount = 3;
+          var curRow = 1;
+          var seatNum = 1;
+          while (seatNum <= input.capacity) {
+            for (var col = 1; col <= colCount; col++) {
+              if (seatNum > input.capacity) break;
+              seats.add({
+                'seat_label': '$seatNum',
+                'seat_row': curRow,
+                'seat_column': col,
+              });
+              seatNum++;
+            }
+            curRow++;
+          }
         }
       }
 

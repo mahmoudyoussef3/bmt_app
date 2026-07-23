@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+
 /// An inline, dismissible error surface for auth forms.
 ///
 /// Replaces disruptive error dialogs with a calmer, in-context banner that
@@ -13,59 +17,57 @@ class AuthErrorBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final text = message;
 
     return AnimatedSize(
-      duration: const Duration(milliseconds: 220),
-      curve: Curves.easeOutCubic,
+      duration: ClientMotion.base,
+      curve: ClientMotion.curve,
       alignment: Alignment.topCenter,
       child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 220),
+        duration: ClientMotion.base,
         child: text == null
             ? const SizedBox(width: double.infinity)
             : Padding(
                 key: const ValueKey('auth-error'),
-                padding: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.only(bottom: ClientSpacing.md),
                 child: Container(
-                  padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
+                  padding: const EdgeInsetsDirectional.fromSTEB(14, 12, 6, 12),
                   decoration: BoxDecoration(
-                    color: scheme.errorContainer.withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(16),
+                    color: ClientColors.journeyRed.withAlpha(26),
+                    borderRadius: BorderRadius.circular(ClientRadius.md),
                     border: Border.all(
-                      color: scheme.error.withValues(alpha: 0.4),
+                      color: ClientColors.journeyRed.withAlpha(70),
                     ),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(
+                      const Icon(
                         Icons.error_outline_rounded,
-                        color: scheme.error,
-                        size: 22,
+                        color: ClientColors.journeyRed,
+                        size: 20,
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: ClientSpacing.sm),
                       Expanded(
                         child: Text(
                           text,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: scheme.onErrorContainer,
-                                fontWeight: FontWeight.w600,
-                                height: 1.4,
-                              ),
+                          style: ClientTypography.bodySmall(context).copyWith(
+                            color: ClientColors.textPrimaryFor(context),
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       if (onDismiss != null)
-                        InkResponse(
-                          onTap: onDismiss,
-                          radius: 20,
-                          child: Icon(
+                        IconButton(
+                          onPressed: onDismiss,
+                          visualDensity: VisualDensity.compact,
+                          tooltip: MaterialLocalizations.of(
+                            context,
+                          ).closeButtonTooltip,
+                          icon: Icon(
                             Icons.close_rounded,
-                            size: 20,
-                            color: scheme.onErrorContainer.withValues(
-                              alpha: 0.7,
-                            ),
+                            size: 18,
+                            color: ClientColors.textSecondaryFor(context),
                           ),
                         ),
                     ],

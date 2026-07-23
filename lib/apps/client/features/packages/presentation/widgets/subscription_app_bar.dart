@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
-import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 import '../cubit/packages_cubit.dart';
 import '../cubit/packages_state.dart';
@@ -14,7 +14,7 @@ class SubscriptionAppBar extends StatelessWidget
   final SubscriptionStep step;
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => const Size.fromHeight(ClientAppBar.toolbarHeight);
 
   /// Back walks the flow one pane at a time, and only leaves the screen once
   /// the rider is already on the listing.
@@ -30,18 +30,9 @@ class SubscriptionAppBar extends StatelessWidget
 
   @override
   Widget build(BuildContext context) {
-    return AppBar(
-      elevation: 0,
-      title: Text(
-        _title(context),
-        style: Theme.of(
-          context,
-        ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-      ),
-      leading: IconButton(
-        onPressed: () => _onBack(context),
-        icon: const DirectionalIcon(Icons.arrow_back_rounded),
-      ),
+    return ClientAppBar(
+      title: _title(context),
+      onBack: () => _onBack(context),
       actions: [
         IconButton(
           tooltip: context.l10n.packages_refreshTooltip,

@@ -16,6 +16,8 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
+import 'package:bmt_app/core/widgets/debounced_search_field.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 enum _VehiclesViewState { list, details }
 
@@ -295,7 +297,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
                   vertical: 16,
                 ),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
                 ),
               ),
             ),
@@ -527,7 +529,7 @@ class _VehicleFilterBar extends StatelessWidget {
           tooltip: 'تصفية المركبات حسب ${filter.label}',
           onSelected: (_) => onSelected(filter),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
           ),
         );
       }).toList(),
@@ -609,21 +611,9 @@ class _VehicleSearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return SearchBar(
+    return DebouncedSearchField(
       hintText: 'البحث برقم المركبة أو رقم اللوحة أو الموديل...',
-      elevation: WidgetStateProperty.all(0),
-      padding: WidgetStateProperty.all(
-        const EdgeInsets.symmetric(horizontal: AppSpacing.large),
-      ),
-      backgroundColor: WidgetStateProperty.all(
-        scheme.surfaceContainerHighest.withAlpha(90),
-      ),
-      shape: WidgetStateProperty.all(
-        RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      ),
       onChanged: onChanged,
-      leading: Icon(Icons.search_rounded, color: scheme.onSurfaceVariant),
     );
   }
 }
@@ -741,7 +731,7 @@ class _VehicleSummaryTile extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(50),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         border: Border.all(color: scheme.outlineVariant.withAlpha(70)),
       ),
       child: Row(

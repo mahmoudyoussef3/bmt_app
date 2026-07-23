@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_in
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Single comprehensive driver create/edit form with inline per-field
 /// validation and an embedded documents section (no multi-step wizard).
@@ -198,7 +199,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
           constraints: const BoxConstraints(maxWidth: 800),
           decoration: BoxDecoration(
             color: scheme.surface,
-            borderRadius: BorderRadius.circular(24),
+            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
             border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
             boxShadow: [
               BoxShadow(

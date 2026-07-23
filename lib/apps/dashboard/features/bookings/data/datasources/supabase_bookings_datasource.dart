@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../domain/entities/reassignment_target.dart';
 import '../models/operation_booking_model.dart';
 import 'bookings_datasource.dart';
 
@@ -99,6 +100,49 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
       updated.add(await rejectBooking(id, reason));
     }
     return updated;
+  }
+
+  @override
+  Future<List<ReassignmentTarget>> fetchReassignmentTargets() async {
+    try {
+      final rows = await _client
+          .from('operation_trips')
+          .select('id, trip_date, departure_time, operation_routes(name)')
+          .inFilter('status', const ['scheduled', 'open_for_booking'])
+          .gte('trip_date', DateTime.now().toIso8601String().split('T').first)
+          .order('trip_date')
+          .order('departure_time')
+          .limit(100);
+
+      return (rows as List).map((row) {
+        final map = row as Map<String, dynamic>;
+        final route = map['operation_routes'] as Map<String, dynamic>?;
+        return ReassignmentTarget(
+          tripId: map['id'] as String,
+          routeName: (route?['name'] as String?) ?? 'مسار غير معروف',
+          tripDate: (map['trip_date'] as String?) ?? '',
+          departureTime: (map['departure_time'] as String?) ?? '',
+        );
+      }).toList();
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<OperationBookingModel> reassignBooking(
+    String bookingId,
+    String newTripId,
+  ) async {
+    try {
+      await _client.rpc(
+        'office_reassign_booking',
+        params: {'p_booking_id': bookingId, 'p_new_trip_id': newTripId},
+      );
+      return _refetch(bookingId);
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   @override

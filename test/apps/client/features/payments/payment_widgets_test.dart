@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_method_picker.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_pay_bar.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_promo_field.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 const _wallet = PaymentMethodData(
   type: PaymentMethodType.walletBalance,
@@ -21,6 +22,9 @@ const _card = PaymentMethodData(
 );
 
 Widget _host(Widget child) => MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
   home: Scaffold(
     body: Center(child: SizedBox(width: 320, child: child)),
   ),
@@ -98,7 +102,7 @@ void main() {
         ),
       );
 
-      expect(find.text('WELCOME10 applied — you save 25 EGP'), findsOneWidget);
+      expect(find.text('WELCOME10 applied — you save EGP 25'), findsOneWidget);
     });
   });
 
@@ -116,9 +120,9 @@ void main() {
         ),
       );
 
-      expect(find.text('Balance 60 EGP'), findsOneWidget);
+      expect(find.text('Balance EGP 60'), findsOneWidget);
       expect(
-        find.textContaining('Short by 40 EGP'),
+        find.textContaining('Short by EGP 40'),
         findsOneWidget,
         reason: 'an unusable wallet must say why, not just fail on tap',
       );
@@ -159,7 +163,7 @@ void main() {
       );
 
       expect(find.text('Choose a payment method to continue.'), findsOneWidget);
-      expect(find.text('100 EGP'), findsOneWidget);
+      expect(find.text('EGP 100'), findsOneWidget);
     });
 
     testWidgets('strikes through the pre-discount total', (tester) async {
@@ -174,8 +178,8 @@ void main() {
         ),
       );
 
-      expect(find.text('75 EGP'), findsOneWidget);
-      expect(find.text('100 EGP'), findsOneWidget);
+      expect(find.text('EGP 75'), findsOneWidget);
+      expect(find.text('EGP 100'), findsOneWidget);
     });
   });
 }

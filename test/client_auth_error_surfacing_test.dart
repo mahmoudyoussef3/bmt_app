@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_out_useca
 import 'package:bmt_app/apps/client/features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_state.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/remember_me_coordinator.dart';
 
 class _FakeRememberMeRepository implements RememberMeRepository {
   @override
@@ -67,73 +68,82 @@ ClientAuthCubit buildCubit(ClientAuthDatasource ds) {
     signInWithEmail: SignInWithEmailUseCase(repo),
     signUpWithEmail: SignUpWithEmailUseCase(repo),
     signOut: SignOutUseCase(repo),
-    saveRememberedCredentials: SaveRememberedCredentialsUseCase(rememberMeRepo),
-    getRememberedCredentials: GetRememberedCredentialsUseCase(rememberMeRepo),
-    clearRememberedCredentials: ClearRememberedCredentialsUseCase(
-      rememberMeRepo,
+    rememberMe: RememberMeCoordinator(
+      save: SaveRememberedCredentialsUseCase(rememberMeRepo),
+      get: GetRememberedCredentialsUseCase(rememberMeRepo),
+      clear: ClearRememberedCredentialsUseCase(rememberMeRepo),
     ),
   );
 }
 
 void main() {
   group('auth error surfacing (regression: masked messages)', () {
-    test('duplicate-phone message reaches the user verbatim, not masked',
-        () async {
-      const message =
-          'This phone number is already registered.\n'
-          'Please sign in instead, or use a different number.';
-      final cubit = buildCubit(
-        _FakeDatasource(onSignUp: () => Exception(message)),
-      );
+    test(
+      'duplicate-phone message reaches the user verbatim, not masked',
+      () async {
+        const message =
+            'This phone number is already registered.\n'
+            'Please sign in instead, or use a different number.';
+        final cubit = buildCubit(
+          _FakeDatasource(onSignUp: () => Exception(message)),
+        );
 
-      await cubit.signUp(
-        fullName: 'Jane',
-        phone: '+201000000000',
-        email: 'jane@example.com',
-        password: 'secret123',
-      );
+        await cubit.signUp(
+          fullName: 'Jane',
+          phone: '+201000000000',
+          email: 'jane@example.com',
+          password: 'secret123',
+        );
 
-      expect(cubit.state.signUpStatus, AuthSubmissionStatus.failure);
-      // The actionable reason must survive — never collapsed into a generic
-      // "Unable to create account" / "Sign up failed: ..." wrapper.
-      expect(cubit.state.signUpError, message);
-      expect(cubit.state.signUpError, isNot(contains('Sign up failed')));
-    });
+        expect(cubit.state.signUpStatus, AuthSubmissionStatus.failure);
+        // The actionable reason must survive — never collapsed into a generic
+        // "Unable to create account" / "Sign up failed: ..." wrapper.
+        expect(cubit.state.signUpError, message);
+        expect(cubit.state.signUpError, isNot(contains('Sign up failed')));
+      },
+    );
 
-    test('sign-in failure surfaces the real reason, not a blanket message',
-        () async {
-      final cubit = buildCubit(
-        _FakeDatasource(onSignIn: () => Exception('Invalid login credentials')),
-      );
+    test(
+      'sign-in failure surfaces the real reason, not a blanket message',
+      () async {
+        final cubit = buildCubit(
+          _FakeDatasource(
+            onSignIn: () => Exception('Invalid login credentials'),
+          ),
+        );
 
-      await cubit.signIn(
-        email: 'jane@example.com',
-        password: 'wrong',
-        rememberMe: false,
-      );
+        await cubit.signIn(
+          email: 'jane@example.com',
+          password: 'wrong',
+          rememberMe: false,
+        );
 
-      expect(cubit.state.signInStatus, AuthSubmissionStatus.failure);
-      expect(cubit.state.signInError, 'Invalid login credentials');
-      expect(cubit.state.signInError, isNot(contains('Sign in failed')));
-    });
+        expect(cubit.state.signInStatus, AuthSubmissionStatus.failure);
+        expect(cubit.state.signInError, 'Invalid login credentials');
+        expect(cubit.state.signInError, isNot(contains('Sign in failed')));
+      },
+    );
 
-    test('validation FormatException is preserved through the layers',
-        () async {
-      final cubit = buildCubit(
-        _FakeDatasource(
-          onSignUp: () => const FormatException('Please complete all fields.'),
-        ),
-      );
+    test(
+      'validation FormatException is preserved through the layers',
+      () async {
+        final cubit = buildCubit(
+          _FakeDatasource(
+            onSignUp: () =>
+                const FormatException('Please complete all fields.'),
+          ),
+        );
 
-      await cubit.signUp(
-        fullName: 'J',
-        phone: '',
-        email: 'bad',
-        password: '123',
-      );
+        await cubit.signUp(
+          fullName: 'J',
+          phone: '',
+          email: 'bad',
+          password: '123',
+        );
 
-      expect(cubit.state.signUpStatus, AuthSubmissionStatus.failure);
-      expect(cubit.state.signUpError, 'Please complete all fields.');
-    });
+        expect(cubit.state.signUpStatus, AuthSubmissionStatus.failure);
+        expect(cubit.state.signUpError, 'Please complete all fields.');
+      },
+    );
   });
 }

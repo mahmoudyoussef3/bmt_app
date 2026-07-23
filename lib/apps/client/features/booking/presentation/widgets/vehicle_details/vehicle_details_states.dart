@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Loading placeholder for the vehicle details screen.
@@ -11,7 +12,7 @@ class VehicleLoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _StaticVehicleAppBar(title: context.l10n.booking_vehicleDetails),
+      appBar: ClientAppBar(title: context.l10n.booking_vehicleDetails),
       body: const Center(
         child: CircularProgressIndicator(color: ClientColors.primary),
       ),
@@ -28,7 +29,7 @@ class VehicleErrorView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _StaticVehicleAppBar(title: context.l10n.booking_vehicleDetails),
+      appBar: ClientAppBar(title: context.l10n.booking_vehicleDetails),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
@@ -79,7 +80,7 @@ class VehicleEmptyView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _StaticVehicleAppBar(title: context.l10n.booking_vehicleDetails),
+      appBar: ClientAppBar(title: context.l10n.booking_vehicleDetails),
       body: Center(
         child: Text(
           context.l10n.booking_vehicleNotFound,
@@ -92,15 +93,3 @@ class VehicleEmptyView extends StatelessWidget {
   }
 }
 
-class _StaticVehicleAppBar extends StatelessWidget
-    implements PreferredSizeWidget {
-  const _StaticVehicleAppBar({required this.title});
-
-  final String title;
-
-  @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
-
-  @override
-  Widget build(BuildContext context) => AppBar(title: Text(title));
-}

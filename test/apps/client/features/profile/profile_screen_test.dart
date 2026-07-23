@@ -21,6 +21,7 @@ import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_
 import 'package:bmt_app/apps/client/features/profile/presentation/screens/profile_screen.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/remember_me_coordinator.dart';
 
 class _StubProfileRepository implements ProfileRepository {
   _StubProfileRepository(this.profile);
@@ -107,14 +108,10 @@ Widget _app({
             signInWithEmail: SignInWithEmailUseCase(authRepository),
             signUpWithEmail: SignUpWithEmailUseCase(authRepository),
             signOut: SignOutUseCase(authRepository),
-            saveRememberedCredentials: SaveRememberedCredentialsUseCase(
-              rememberMeRepository,
-            ),
-            getRememberedCredentials: GetRememberedCredentialsUseCase(
-              rememberMeRepository,
-            ),
-            clearRememberedCredentials: ClearRememberedCredentialsUseCase(
-              rememberMeRepository,
+            rememberMe: RememberMeCoordinator(
+              save: SaveRememberedCredentialsUseCase(rememberMeRepository),
+              get: GetRememberedCredentialsUseCase(rememberMeRepository),
+              clear: ClearRememberedCredentialsUseCase(rememberMeRepository),
             ),
           );
         },

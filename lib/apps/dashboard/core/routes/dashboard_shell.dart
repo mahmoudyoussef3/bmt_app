@@ -12,7 +12,6 @@ import '../../features/captain_requests/presentation/cubit/captain_requests_cubi
 import '../../features/captain_requests/presentation/screens/captain_requests_screen.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
 import '../../features/dashboard_home/presentation/screens/dashboard_home_screen.dart';
-import '../../features/dashboard_operations/presentation/cubit/dashboard_workspace_cubit.dart';
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import '../../features/fleet/overview/presentation/screens/fleet_overview_screen.dart';
 import '../../features/fleet/shared/domain/entities/fleet_common.dart';
@@ -34,7 +33,6 @@ import '../../features/referrals/presentation/cubit/referral_cubit.dart';
 import '../../features/referrals/presentation/screens/referral_management_screen.dart';
 import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
 import '../../features/payment_verification/presentation/screens/payment_verification_screen.dart';
-import '../../features/permissions/presentation/screens/permissions_screen.dart';
 import '../../features/reports/presentation/cubit/reports_cubit.dart';
 import '../../features/reports/presentation/screens/reports_screen.dart';
 import '../../features/reviews/presentation/cubit/reviews_cubit.dart';
@@ -219,7 +217,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navSystem,
     ),
     _DashboardNavItem(
-      label: 'الصلاحيات',
+      label: 'المستخدمون والصلاحيات',
       route: DashboardRoutes.permissions,
       icon: Icons.admin_panel_settings_outlined,
       selectedIcon: Icons.admin_panel_settings_rounded,
@@ -397,7 +395,7 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<RoutesCubit>()..load(),
         child: const RoutesScreen(),
       ),
-      DashboardRoutes.users => _workspace('users', const UsersScreen()),
+      DashboardRoutes.users => const UsersScreen(),
       DashboardRoutes.subscriptions => BlocProvider(
         create: (_) => dashboardDi<SubscriptionsCubit>()..load(),
         child: const SubscriptionsScreen(),
@@ -451,23 +449,12 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<PlatformAdminCubit>()..load(),
         child: const PlatformOfficesScreen(),
       ),
-      DashboardRoutes.settings => _workspace(
-        'settings',
-        const SettingsScreen(),
-      ),
-      DashboardRoutes.permissions => _workspace(
-        'permissions',
-        const PermissionsScreen(),
-      ),
+      DashboardRoutes.settings => const SettingsScreen(),
+      // Access control *is* user administration: one screen listing every
+      // dashboard account with its role, rather than a separate matrix page.
+      DashboardRoutes.permissions => const UsersScreen(),
       _ => const DashboardHomeScreen(),
     };
-  }
-
-  Widget _workspace(String workspaceId, Widget child) {
-    return BlocProvider(
-      create: (_) => dashboardDi<DashboardWorkspaceCubit>()..load(workspaceId),
-      child: child,
-    );
   }
 }
 

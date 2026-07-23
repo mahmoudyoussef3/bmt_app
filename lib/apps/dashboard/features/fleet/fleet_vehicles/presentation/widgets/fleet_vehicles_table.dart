@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widget
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/cubit/fleet_vehicles_cubit.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class FleetVehiclesTable extends StatelessWidget {
   final List<FleetVehicle> vehicles;
@@ -176,7 +177,7 @@ class _VehicleDocChip extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest.withAlpha(95),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         border: Border.all(color: scheme.outline.withAlpha(65)),
       ),
       child: Text(

@@ -2,7 +2,7 @@ import 'package:bmt_app/apps/client/features/support/presentation/routes/support
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -53,19 +53,7 @@ class CreateSupportTicketScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: scheme.surface,
-      appBar: AppBar(
-        title: Text(
-          context.l10n.support_newTicketTitle,
-          style: ClientTypography.headingSmall(
-            context,
-          ).copyWith(color: scheme.onSurface, fontWeight: FontWeight.w800),
-        ),
-        backgroundColor: scheme.surface,
-        scrolledUnderElevation: 0,
-        elevation: 0,
-        iconTheme: IconThemeData(color: scheme.onSurface),
-        centerTitle: true,
-      ),
+      appBar: ClientAppBar(title: context.l10n.support_newTicketTitle),
       body: BlocConsumer<SupportCubit, SupportState>(
         listener: _onStateChanged,
         builder: (context, state) {

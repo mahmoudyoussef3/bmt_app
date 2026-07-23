@@ -1,53 +1,50 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/core/theme/colors.dart';
-import 'package:bmt_app/core/theme/spacing.dart';
+
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 
 import '../cubit/tickets_state.dart';
-import 'tickets_shared_widgets.dart';
 
+/// Support desk headline numbers.
+///
+/// Uses the shared KPI grid rather than a fixed four-column [Row]: the old
+/// layout squeezed all four tiles onto one line at any width, clipping their
+/// labels on narrow screens.
 class SummaryStats extends StatelessWidget {
   final TicketsLoaded state;
+
   const SummaryStats({super.key, required this.state});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return DashboardKpiGrid(
       children: [
-        Expanded(
-          child: StatCard(
-            title: 'تذاكر جديدة',
-            value: state.newCount,
-            color: AppStatusColors.onInfoContainer,
-            icon: Icons.mark_email_unread_outlined,
-          ),
+        DashboardKpiCard(
+          label: 'تذاكر جديدة',
+          value: '${state.newCount}',
+          icon: Icons.mark_email_unread_outlined,
+          color: DashboardChartPalette.active,
         ),
-        const SizedBox(width: AppSpacing.small),
-        Expanded(
-          child: StatCard(
-            title: 'قيد المراجعة',
-            value: state.underReviewCount,
-            color: AppStatusColors.onWarningContainer,
-            icon: Icons.pending_actions_outlined,
-          ),
+        DashboardKpiCard(
+          label: 'قيد المراجعة',
+          value: '${state.underReviewCount}',
+          icon: Icons.pending_actions_outlined,
+          color: DashboardChartPalette.warning,
         ),
-        const SizedBox(width: AppSpacing.small),
-        Expanded(
-          child: StatCard(
-            title: 'تم الحل',
-            value: state.resolvedCount,
-            color: AppStatusColors.onSuccessContainer,
-            icon: Icons.check_circle_outline_rounded,
-          ),
+        DashboardKpiCard(
+          label: 'تم الحل',
+          value: '${state.resolvedCount}',
+          icon: Icons.check_circle_outline_rounded,
+          color: DashboardChartPalette.positive,
         ),
-        const SizedBox(width: AppSpacing.small),
-        Expanded(
-          child: StatCard(
-            title: 'متأخرة (>24 ساعة)',
-            value: state.delayedCount,
-            color: AppStatusColors.onErrorContainer,
-            icon: Icons.running_with_errors_outlined,
-            isAlert: state.delayedCount > 0,
-          ),
+        DashboardKpiCard(
+          label: 'متأخرة',
+          detail: 'أكثر من ٢٤ ساعة بلا حل',
+          value: '${state.delayedCount}',
+          icon: Icons.running_with_errors_outlined,
+          color: state.delayedCount > 0
+              ? DashboardChartPalette.negative
+              : DashboardChartPalette.neutral,
         ),
       ],
     );

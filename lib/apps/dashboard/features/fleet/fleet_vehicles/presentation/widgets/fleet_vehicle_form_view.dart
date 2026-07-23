@@ -9,8 +9,12 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widget
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_upload_helpers.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/vehicle_seat_configuration.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/widgets/fleet_seat_layout_visualizer.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 
 class FleetVehicleFormView extends StatefulWidget {
   final FleetVehicle? vehicle;
@@ -57,7 +61,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
   late final TextEditingController color;
   late final TextEditingController notes;
 
-  String vehicleType = 'Coaster';
+  VehicleType vehicleType = VehicleType.coaster;
   String seatLayoutType = 'standard';
   String? selectedDriverId;
 
@@ -78,6 +82,8 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     model = TextEditingController(text: v?.model ?? '');
     year = TextEditingController(text: v == null ? '' : '${v.manufactureYear}');
     seats = TextEditingController(text: v == null ? '' : '${v.capacity}');
+    if (v != null) vehicleType = VehicleTypeParser.fromDatabase(v.vehicleType);
+    _applyTypeCapacity();
     brand = TextEditingController(text: v?.brand ?? '');
     color = TextEditingController(text: v?.color ?? '');
     notes = TextEditingController(text: v?.notes ?? '');
@@ -92,13 +98,47 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     }
 
     if (v != null) {
-      vehicleType = v.vehicleType.isEmpty ? 'Coaster' : v.vehicleType;
       seatLayoutType = 'standard';
     }
 
     selectedDriverId = v?.currentDriverId.isNotEmpty == true
         ? v!.currentDriverId
         : null;
+  }
+
+  /// A type with a predefined cabin (Hiace, Coaster) owns its capacity, so the
+  /// seats field mirrors the blueprint instead of accepting a number that would
+  /// disagree with the seat map the Client App draws.
+  void _applyTypeCapacity() {
+    final fixed = VehicleSeatConfigurator.fixedCapacityFor(vehicleType);
+    if (fixed != null) seats.text = '$fixed';
+  }
+
+  void _onVehicleTypeChanged(VehicleType? value) {
+    if (value == null || value == vehicleType) return;
+    setState(() {
+      vehicleType = value;
+      // Switching type replaces the whole seat configuration — the preview
+      // below re-renders from the new type's blueprint, so what the operator
+      // sees before saving is exactly what gets persisted.
+      _applyTypeCapacity();
+    });
+  }
+
+  /// The configuration that will be saved for the current form state, used both
+  /// for the live preview and by [_onSave] — one function, so the preview can
+  /// never show a layout different from the one persisted.
+  SeatConfiguration _previewSeatConfiguration() {
+    final entered = int.tryParse(seats.text.trim()) ?? 0;
+    if (entered <= 0) return SeatConfiguration.empty();
+    return VehicleSeatConfigurator.resolve(
+      type: vehicleType,
+      capacity: VehicleSeatConfigurator.capacityFor(vehicleType, entered),
+      existing: widget.vehicle?.seatConfiguration,
+      existingType: widget.vehicle == null
+          ? null
+          : VehicleTypeParser.fromDatabase(widget.vehicle!.vehicleType),
+    );
   }
 
   List<FleetDriver> _getAvailableDrivers() {
@@ -153,7 +193,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         constraints: const BoxConstraints(maxWidth: 1000),
         decoration: BoxDecoration(
           color: scheme.surface,
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
           border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
           boxShadow: [
             BoxShadow(
@@ -273,6 +313,13 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
             },
           ),
           const SizedBox(height: AppSpacing.large),
+          // Live preview of what will actually be saved: change the vehicle
+          // type above and the cabin below becomes that type's cabin.
+          FleetSeatLayoutVisualizer(
+            seatConfig: _previewSeatConfiguration(),
+            vehicleType: vehicleType,
+          ),
+          const SizedBox(height: AppSpacing.large),
           FleetDocumentsInlineSection(
             isDriver: false,
             existingDocuments: _vehicleDocuments(),
@@ -285,7 +332,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
               padding: const EdgeInsets.all(AppSpacing.medium),
               decoration: BoxDecoration(
                 color: scheme.error.withAlpha(18),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(AppTokens.radius),
                 border: Border.all(color: scheme.error.withAlpha(55)),
               ),
               child: Row(
@@ -324,6 +371,9 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
 }
 
   Widget _buildMainFields({required int columns}) {
+    final hasFixedCapacity =
+        VehicleSeatConfigurator.fixedCapacityFor(vehicleType) != null;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -376,6 +426,10 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
             keyboardType: TextInputType.number,
             inputFormatters: FleetInputFormatters.capacity,
             validator: FleetValidators.validateCapacity,
+            readOnly: hasFixedCapacity,
+            helper: hasFixedCapacity
+                ? 'محددة تلقائياً من نوع المركبة (${VehicleSeatConfigurator.typeLabels[vehicleType]}).'
+                : null,
           ),
           _textFormField(
             controller: color,
@@ -385,27 +439,19 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
             validator: (v) =>
                 (v == null || v.trim().isEmpty) ? 'لون الهيكل مطلوب' : null,
           ),
-          DropdownButtonFormField<String>(
+          DropdownButtonFormField<VehicleType>(
             initialValue: vehicleType,
             decoration: const InputDecoration(
               labelText: 'نوع المركبة',
               prefixIcon: Icon(Icons.category_outlined),
               border: OutlineInputBorder(),
+              helperText: 'يحدد النوع سعة المركبة وتخطيط مقاعدها تلقائياً.',
             ),
-            items: const [
-              DropdownMenuItem(
-                value: 'Coaster',
-                child: Text('Coaster - ميني باص'),
-              ),
-              DropdownMenuItem(
-                value: 'Sprinter',
-                child: Text('Sprinter - سبرنتر'),
-              ),
-              DropdownMenuItem(value: 'Hiace', child: Text('Hiace - هايس')),
-              DropdownMenuItem(value: 'H1', child: Text('H1 - فان')),
-              DropdownMenuItem(value: 'Other', child: Text('نوع آخر')),
+            items: [
+              for (final entry in VehicleSeatConfigurator.typeLabels.entries)
+                DropdownMenuItem(value: entry.key, child: Text(entry.value)),
             ],
-            onChanged: (v) => setState(() => vehicleType = v ?? 'Coaster'),
+            onChanged: _onVehicleTypeChanged,
           ),
           DropdownButtonFormField<String>(
             initialValue: seatLayoutType,
@@ -476,15 +522,21 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     TextInputType? keyboardType,
     List<TextInputFormatter>? inputFormatters,
     String? Function(String?)? validator,
+    bool readOnly = false,
+    String? helper,
   }) {
     return TextFormField(
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
+        helperText: helper,
+        helperMaxLines: 2,
         prefixIcon: Icon(icon),
         border: const OutlineInputBorder(),
+        filled: readOnly,
       ),
+      readOnly: readOnly,
       maxLines: maxLines,
       keyboardType: keyboardType,
       inputFormatters: inputFormatters,
@@ -555,7 +607,10 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     setState(() => _saving = true);
 
     try {
-      final seatsValue = int.parse(seats.text.trim());
+      final seatsValue = VehicleSeatConfigurator.capacityFor(
+        vehicleType,
+        int.parse(seats.text.trim()),
+      );
       final yearValue = int.parse(year.text.trim());
       final existing = widget.vehicle;
       final List<String> finalUrls = [..._existingImageUrls];
@@ -576,15 +631,23 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         finalUrls.add(url);
       }
 
-      final seatConfig = existing != null && existing.capacity == seatsValue
-          ? existing.seatConfiguration
-          : SeatConfiguration.generateDefault(seatsValue);
+      // The seat configuration always follows the selected type, so a vehicle
+      // switched from Hiace to Coaster is saved with Coaster seats only —
+      // never a merge of the two.
+      final seatConfig = VehicleSeatConfigurator.resolve(
+        type: vehicleType,
+        capacity: seatsValue,
+        existing: existing?.seatConfiguration,
+        existingType: existing == null
+            ? null
+            : VehicleTypeParser.fromDatabase(existing.vehicleType),
+      );
 
       final finalVehicle = FleetVehicle(
         id: existing?.id ?? '',
         vehicleCode: code.text.trim(),
         plateNumber: plate.text.trim(),
-        vehicleType: vehicleType,
+        vehicleType: vehicleType.dbValue,
         brand: brand.text.trim(),
         model: model.text.trim(),
         manufactureYear: yearValue,
@@ -685,7 +748,7 @@ class _VehicleImagePickerCard extends StatelessWidget {
                 width: double.infinity,
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHighest.withAlpha(80),
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
                   border: Border.all(
                     color: scheme.outline.withAlpha(80),
                     style: BorderStyle.solid,
@@ -757,7 +820,7 @@ class _VehicleImagePickerCard extends StatelessWidget {
                     height: 90,
                     decoration: BoxDecoration(
                       color: scheme.surfaceContainerHighest.withAlpha(50),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
                       border: Border.all(
                         color: scheme.outline.withAlpha(90),
                         style: BorderStyle.solid,
@@ -798,14 +861,14 @@ class _ImageThumbnail extends StatelessWidget {
           width: 90,
           height: 90,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppTokens.radius),
             border: Border.all(
               color: isFirst ? scheme.primary : scheme.outline.withAlpha(60),
               width: isFirst ? 2 : 1,
             ),
           ),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
             child: child,
           ),
         ),
@@ -818,7 +881,7 @@ class _ImageThumbnail extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 2),
               decoration: BoxDecoration(
                 color: scheme.primary.withAlpha(200),
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
               ),
               alignment: Alignment.center,
               child: const Text(

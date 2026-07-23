@@ -19,11 +19,8 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    context.read<ReportsCubit>().load();
-  }
+  // No load() here: the shell creates the cubit with `..load()` already applied.
+  // Calling it again from initState fired a second full fetch on every visit.
 
   @override
   Widget build(BuildContext context) {

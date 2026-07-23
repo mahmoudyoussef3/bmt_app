@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
-import '../widgets/auth_brand_logo.dart';
-import '../widgets/premium_auth_scaffold.dart';
+import '../widgets/auth_hero.dart';
+import '../widgets/auth_scaffold.dart';
 import '../widgets/sign_up_form.dart';
 
 class SignUpScreen extends StatelessWidget {
@@ -12,11 +13,19 @@ class SignUpScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    return PremiumAuthScaffold(
-      logo: const AuthBrandLogo(),
+    return AuthScaffold(
       title: l10n.auth_createAccountTitle,
-      subtitle: l10n.auth_signUpHeroSubtitle,
-      child: const SignUpForm(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          AuthHero(
+            title: l10n.auth_welcomeTitle,
+            subtitle: l10n.auth_signUpSubtitle,
+          ),
+          const SizedBox(height: ClientSpacing.lg),
+          const SignUpForm(),
+        ],
+      ),
     );
   }
 }

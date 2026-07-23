@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
-import '../widgets/auth_brand_logo.dart';
-import '../widgets/premium_auth_scaffold.dart';
+import '../widgets/auth_hero.dart';
+import '../widgets/auth_scaffold.dart';
 import '../widgets/sign_in_bloc_listener.dart';
 import '../widgets/sign_in_form.dart';
 
@@ -14,11 +15,19 @@ class SignInScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return SignInBlocListener(
-      child: PremiumAuthScaffold(
-        logo: const AuthBrandLogo(),
-        title: l10n.auth_welcomeBack,
-        subtitle: l10n.auth_signInHeroSubtitle,
-        child: const SignInForm(),
+      child: AuthScaffold(
+        title: l10n.auth_signIn,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AuthHero(
+              title: l10n.auth_welcomeBack,
+              subtitle: l10n.auth_signInSubtitle,
+            ),
+            const SizedBox(height: ClientSpacing.lg),
+            const SignInForm(),
+          ],
+        ),
       ),
     );
   }

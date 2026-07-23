@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/client/features/payments/presentation/widgets/check
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_pay_bar.dart';
 
 import 'payment_fakes.dart';
+import 'package:bmt_app/l10n/app_localizations.dart';
 
 Future<void> _pumpCheckout(
   WidgetTester tester, {
@@ -23,6 +24,9 @@ Future<void> _pumpCheckout(
 
   await tester.pumpWidget(
     MaterialApp(
+      locale: const Locale('en'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
       theme: ThemeData(brightness: brightness),
       home: BlocProvider(
         create: (_) => cubitFor(repository ?? FakePaymentRepository()),
@@ -69,7 +73,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 100 fare + 10 service fee, shown on the fare card and the pay bar.
-    expect(find.text('110 EGP'), findsNWidgets(2));
+    expect(find.text('EGP 110'), findsNWidgets(2));
     expect(find.text('Pay now'), findsOneWidget);
     expect(_payEnabled(tester), isTrue);
   });
@@ -77,7 +81,9 @@ void main() {
   testWidgets('a transfer method continues to the receipt step instead', (
     tester,
   ) async {
-    await _pumpCheckout(tester);
+    // The method tiles sit below the fold of a phone-sized checkout, and the
+    // body is a lazy list — give it a surface tall enough to build them.
+    await _pumpCheckout(tester, size: const Size(390, 1600));
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('InstaPay'));
@@ -92,7 +98,9 @@ void main() {
   testWidgets('an underfunded wallet blocks payment and says why', (
     tester,
   ) async {
-    await _pumpCheckout(tester);
+    // The method tiles sit below the fold of a phone-sized checkout, and the
+    // body is a lazy list — give it a surface tall enough to build them.
+    await _pumpCheckout(tester, size: const Size(390, 1600));
     await tester.pumpAndSettle();
 
     await tester.ensureVisible(find.text('Wallet balance'));
@@ -101,7 +109,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Balance is 40, fare is 110.
-    expect(find.textContaining('70 EGP short'), findsOneWidget);
+    expect(find.textContaining('EGP 70 short'), findsOneWidget);
     expect(
       _payEnabled(tester),
       isFalse,
@@ -161,9 +169,9 @@ void main() {
     await tester.tap(find.text('Apply'));
     await tester.pumpAndSettle();
 
-    expect(find.text('WELCOME10 applied — you save 30 EGP'), findsOneWidget);
-    expect(find.text('80 EGP'), findsNWidgets(2)); // fare card + pay bar
-    expect(find.text('110 EGP'), findsOneWidget); // struck through on the bar
+    expect(find.text('WELCOME10 applied — you save EGP 30'), findsOneWidget);
+    expect(find.text('EGP 80'), findsNWidgets(2)); // fare card + pay bar
+    expect(find.text('EGP 110'), findsOneWidget); // struck through on the bar
   });
 
   testWidgets('lays out on a small phone without overflowing', (tester) async {
