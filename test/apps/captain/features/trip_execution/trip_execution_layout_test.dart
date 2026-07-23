@@ -30,38 +30,85 @@ void main() {
     'large': Size(430, 932),
   };
 
+  // A captain running the system font large is the case the fixed-height
+  // docked bar is most likely to break on, so every size is swept at the
+  // default scale and at an enlarged one.
+  const scales = <double>[1.0, 1.3, 1.6];
+
   for (final size in sizes.entries) {
-    for (final status in TripExecutionStatus.values) {
-      testWidgets(
-        'canopy and docked bar hold at ${size.key} — ${status.name}',
-        (tester) async {
-          tester.view.physicalSize = size.value;
-          tester.view.devicePixelRatio = 1.0;
-          addTearDown(tester.view.reset);
+    for (final scale in scales) {
+      for (final status in TripExecutionStatus.values) {
+        testWidgets(
+          'canopy and docked bar hold at ${size.key} @ $scale — ${status.name}',
+          (tester) async {
+            tester.view.physicalSize = size.value;
+            tester.view.devicePixelRatio = 1.0;
+            addTearDown(tester.view.reset);
 
-          final trip = _trip();
+            final trip = _trip();
+            final snapshot = _snapshot(status);
+            final stage = status.stageAt(
+              departureTime: trip.departureTime,
+              now: DateTime.now(),
+            );
+
+            await tester.pumpWidget(
+              _host(
+                scale: scale,
+                body: CustomScrollView(
+                  slivers: [
+                    TripExecutionCanopy(
+                      trip: trip,
+                      snapshot: snapshot,
+                      stage: stage,
+                    ),
+                    SliverToBoxAdapter(
+                      child: TripExecutionTools(tripId: trip.id, stage: stage),
+                    ),
+                  ],
+                ),
+                bottomBar: TripExecutionActionBar(
+                  stage: stage,
+                  state: TripExecutionIdle(snapshot),
+                  tripId: trip.id,
+                  departureTime: trip.departureTime,
+                ),
+              ),
+            );
+            await tester.pumpAndSettle();
+
+            expect(tester.takeException(), isNull);
+            // The route is the screen's subject and must always be legible.
+            expect(find.text('محطة مصر - سيدي جابر'), findsOneWidget);
+          },
+        );
+      }
+    }
+  }
+
+  for (final scale in scales) {
+    testWidgets(
+      'the docked bar keeps one height across every stage @ textScale $scale, '
+      'so the page above never reflows on a transition',
+      (tester) async {
+        tester.view.physicalSize = const Size(390, 844);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.reset);
+
+        final trip = _trip();
+        final heights = <TripExecutionStatus, double>{};
+
+        for (final status in TripExecutionStatus.values) {
           final snapshot = _snapshot(status);
-          final stage = status.stageAt(
-            departureTime: trip.departureTime,
-            now: DateTime.now(),
-          );
-
           await tester.pumpWidget(
             _host(
-              body: CustomScrollView(
-                slivers: [
-                  TripExecutionCanopy(
-                    trip: trip,
-                    snapshot: snapshot,
-                    stage: stage,
-                  ),
-                  SliverToBoxAdapter(
-                    child: TripExecutionTools(tripId: trip.id, stage: stage),
-                  ),
-                ],
-              ),
+              scale: scale,
+              body: const SizedBox.shrink(),
               bottomBar: TripExecutionActionBar(
-                stage: stage,
+                stage: status.stageAt(
+                  departureTime: trip.departureTime,
+                  now: DateTime.now(),
+                ),
                 state: TripExecutionIdle(snapshot),
                 tripId: trip.id,
                 departureTime: trip.departureTime,
@@ -69,52 +116,46 @@ void main() {
             ),
           );
           await tester.pumpAndSettle();
-
           expect(tester.takeException(), isNull);
-          // The route is the screen's subject and must always be legible.
-          expect(find.text('محطة مصر - سيدي جابر'), findsOneWidget);
-        },
-      );
-    }
-  }
+          heights[status] = tester
+              .getSize(find.byType(TripExecutionActionBar))
+              .height;
+        }
 
-  testWidgets('the docked bar keeps one height across every stage, so the '
-      'page above never reflows on a transition', (tester) async {
-    tester.view.physicalSize = const Size(390, 844);
-    tester.view.devicePixelRatio = 1.0;
-    addTearDown(tester.view.reset);
-
-    final trip = _trip();
-    final heights = <TripExecutionStatus, double>{};
-
-    for (final status in TripExecutionStatus.values) {
-      final snapshot = _snapshot(status);
-      await tester.pumpWidget(
-        _host(
-          body: const SizedBox.shrink(),
-          bottomBar: TripExecutionActionBar(
-            stage: status.stageAt(
+        // Committing an action swaps the bar for a spinner. If that disagrees
+        // with the resting height, the page jumps at the moment of the tap —
+        // the one moment the captain is looking at their thumb.
+        await tester.pumpWidget(
+          _host(
+            scale: scale,
+            body: const SizedBox.shrink(),
+            bottomBar: TripExecutionActionBar(
+              stage: CaptainTripStage.boarding,
+              state: TripExecutionLoading(
+                _snapshot(TripExecutionStatus.boarding),
+              ),
+              tripId: trip.id,
               departureTime: trip.departureTime,
-              now: DateTime.now(),
             ),
-            state: TripExecutionIdle(snapshot),
-            tripId: trip.id,
-            departureTime: trip.departureTime,
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
-      heights[status] = tester
-          .getSize(find.byType(TripExecutionActionBar))
-          .height;
-    }
+        );
+        // Not `pumpAndSettle`: the spinner animates forever and would never
+        // settle.
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        final busyHeight = tester
+            .getSize(find.byType(TripExecutionActionBar))
+            .height;
 
-    expect(
-      heights.values.toSet(),
-      hasLength(1),
-      reason: 'action bar heights differ per stage: $heights',
+        expect(
+          {...heights.values, busyHeight},
+          hasLength(1),
+          reason:
+              'action bar heights differ per stage: $heights, busy: $busyHeight',
+        );
+      },
     );
-  });
+  }
 
   testWidgets('an emergency call is reachable without scrolling while the '
       'trip is underway, and absent before it starts', (tester) async {
@@ -149,12 +190,19 @@ void main() {
   });
 }
 
-Widget _host({required Widget body, required Widget bottomBar}) {
+Widget _host({
+  required Widget body,
+  required Widget bottomBar,
+  double scale = 1.0,
+}) {
   return MaterialApp(
     theme: CaptainTheme.light(),
-    home: Directionality(
-      textDirection: TextDirection.rtl,
-      child: Scaffold(body: body, bottomNavigationBar: bottomBar),
+    home: MediaQuery(
+      data: MediaQueryData(textScaler: TextScaler.linear(scale)),
+      child: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(body: body, bottomNavigationBar: bottomBar),
+      ),
     ),
   );
 }

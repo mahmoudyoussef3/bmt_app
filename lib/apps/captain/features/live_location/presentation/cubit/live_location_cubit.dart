@@ -7,10 +7,12 @@ import 'live_location_state.dart';
 
 /// How often an active trip reports its position automatically.
 ///
-/// One minute is the resolution the client's tracking map is built to consume
-/// (it merges realtime inserts with a short poll fallback), and it is cheap
-/// enough to run for a whole trip without draining the captain's phone.
-const Duration kAutoLocationInterval = Duration(minutes: 1);
+/// Thirty seconds is the platform's tracking cadence (`SYSTEM_FLOW.md`): the
+/// client's map merges realtime inserts with a short poll fallback, so a denser
+/// producer cadence only ever sharpens the vehicle's movement, never degrades
+/// it. It stays cheap enough to run foreground for a whole trip: one high-
+/// accuracy fix every 30 s while the captain has the execution screen open.
+const Duration kAutoLocationInterval = Duration(seconds: 30);
 
 class LiveLocationCubit extends Cubit<LiveLocationState> {
   LiveLocationCubit({required SendLocationUpdateUseCase sendLocation})
@@ -21,8 +23,9 @@ class LiveLocationCubit extends Cubit<LiveLocationState> {
   Timer? _autoTimer;
 
   /// Guards against a slow fix overlapping the next tick — GPS acquisition
-  /// has a 20 s time limit, so a minute timer can still catch a send in
-  /// flight on a bad signal.
+  /// has a 20 s time limit, which can run right up against the 30 s interval
+  /// on a bad signal, so a send may still be in flight when the next tick
+  /// fires. When that happens the tick is skipped rather than queued.
   bool _sending = false;
 
   bool get isAutoSharing => _autoTimer != null;
@@ -32,7 +35,7 @@ class LiveLocationCubit extends Cubit<LiveLocationState> {
 
   /// Starts reporting position every [kAutoLocationInterval] until
   /// [stopAutoSharing], beginning with an immediate fix so the trip doesn't
-  /// go a full minute unlocated after departure.
+  /// go a full interval unlocated after departure.
   ///
   /// Foreground only: this runs while the trip execution screen is open. The
   /// app claims no background location, and starting a timer here does not

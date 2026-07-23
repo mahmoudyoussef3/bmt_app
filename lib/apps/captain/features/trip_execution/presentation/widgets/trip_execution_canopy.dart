@@ -69,7 +69,11 @@ class TripExecutionCanopy extends StatelessWidget {
                     children: [
                       const _BackButton(),
                       const Spacer(),
-                      _StageChip(stage: stage),
+                      // Flexible, not bare: at an enlarged system font the
+                      // stage label grows past the width the back button
+                      // leaves it, and a fixed chip overflows the canopy.
+                      // Shrinking the chip keeps the row intact.
+                      Flexible(child: _StageChip(stage: stage)),
                     ],
                   ),
                   const SizedBox(height: CaptainDesignTokens.s16),
@@ -152,11 +156,17 @@ class _StageChip extends StatelessWidget {
             color: Colors.white,
           ),
           const SizedBox(width: CaptainDesignTokens.s4),
-          Text(
-            CaptainTripStageLabels.eyebrow(stage),
-            style: CaptainTypography.labelMedium(
-              context,
-            ).copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+          // The chip shrinks before the row breaks; the stage name then
+          // truncates rather than pushing the back button off the canopy.
+          Flexible(
+            child: Text(
+              CaptainTripStageLabels.eyebrow(stage),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: CaptainTypography.labelMedium(
+                context,
+              ).copyWith(color: Colors.white, fontWeight: FontWeight.w800),
+            ),
           ),
         ],
       ),

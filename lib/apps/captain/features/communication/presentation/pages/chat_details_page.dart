@@ -147,6 +147,14 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                       ),
                     ),
                   ),
+                  // Voice and image buttons used to sit here. Neither recorded
+                  // or attached anything — they posted the literal strings
+                  // "Voice note" and "Image shared" into the thread, so the
+                  // operator received a message announcing an attachment that
+                  // did not exist, and the captain believed they had sent one.
+                  // Removed until there is real media upload behind them;
+                  // `CaptainMessageType.voice/image` stay in the entity so
+                  // existing rows still render.
                   IconButton(
                     tooltip: 'إرسال',
                     onPressed: () {
@@ -159,20 +167,6 @@ class _ChatDetailsPageState extends State<ChatDetailsPage> {
                       _controller.clear();
                     },
                     icon: const Icon(Icons.send_rounded),
-                  ),
-                  IconButton(
-                    tooltip: 'مقطع صوتي',
-                    onPressed: () => context
-                        .read<CaptainCommunicationCubit>()
-                        .send('Voice note', CaptainMessageType.voice),
-                    icon: const Icon(Icons.mic_rounded),
-                  ),
-                  IconButton(
-                    tooltip: 'صورة',
-                    onPressed: () => context
-                        .read<CaptainCommunicationCubit>()
-                        .send('Image shared', CaptainMessageType.image),
-                    icon: const Icon(Icons.image_rounded),
                   ),
                 ],
               ),
@@ -192,9 +186,7 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final mine =
-        message.senderName.contains('Captain') ||
-        message.senderName.contains('السائق');
+    final mine = message.isMine;
     return Align(
       alignment: mine
           ? AlignmentDirectional.centerEnd

@@ -85,9 +85,17 @@ class CaptainAuthCubit extends Cubit<CaptainAuthState> {
     }
   }
 
+  /// Signing out must always land the captain back at idle. The local identity
+  /// is cleared by the datasource either way, so a network failure in Supabase's
+  /// sign-out is not something to strand the captain on a half-signed-out screen
+  /// over — reporting it would offer them no action but to try again.
   Future<void> signOut() async {
-    await _signOut();
-    if (!isClosed) emit(const CaptainAuthIdle());
+    try {
+      await _signOut();
+    } catch (_) {
+    } finally {
+      if (!isClosed) emit(const CaptainAuthIdle());
+    }
   }
 
   /// Persisting (or clearing) the remembered phone is a device-storage

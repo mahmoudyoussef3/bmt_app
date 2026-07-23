@@ -26,6 +26,7 @@ class ChatsPage extends StatelessWidget {
               ),
               title: const Text('إرسال رسالة لجميع الركاب'),
               subtitle: const Text('تنبيه جماعي مرتبط بهذه الرحلة'),
+              // Mirrored to point left by the app's RTL — see `CaptainListRow`.
               trailing: const Icon(Icons.chevron_right_rounded),
             ),
           ),

@@ -71,6 +71,34 @@ void main() {
 
     expect(await cubit.loadRememberedPhone(), isNull);
   });
+
+  test('signing out lands the captain back at idle', () async {
+    await cubit.signIn(phone: '01285989594', rememberMe: false);
+
+    await cubit.signOut();
+
+    expect(repository.signOutCalled, isTrue);
+    expect(cubit.state, isA<CaptainAuthIdle>());
+  });
+
+  test('a failed sign-out still lands the captain back at idle', () async {
+    await cubit.signIn(phone: '01285989594', rememberMe: false);
+    repository.signOutError = Exception('network down');
+
+    // Must not throw: the local identity is cleared either way, so stranding
+    // the captain on a half-signed-out screen would leave them no action.
+    await cubit.signOut();
+
+    expect(cubit.state, isA<CaptainAuthIdle>());
+  });
+
+  test('signing out keeps the remembered phone for the next login', () async {
+    await cubit.signIn(phone: '01285989594', rememberMe: true);
+
+    await cubit.signOut();
+
+    expect(await cubit.loadRememberedPhone(), '01285989594');
+  });
 }
 
 class _FakeCaptainRememberMeRepository implements CaptainRememberMeRepository {
@@ -89,6 +117,8 @@ class _FakeCaptainRememberMeRepository implements CaptainRememberMeRepository {
 class _FakeCaptainAuthRepository implements CaptainAuthRepository {
   String? phone;
   Object? signInError;
+  Object? signOutError;
+  bool signOutCalled = false;
 
   @override
   Future<void> signInWithPhone(String phone) async {
@@ -97,5 +127,8 @@ class _FakeCaptainAuthRepository implements CaptainAuthRepository {
   }
 
   @override
-  Future<void> signOut() async {}
+  Future<void> signOut() async {
+    signOutCalled = true;
+    if (signOutError case final error?) throw error;
+  }
 }

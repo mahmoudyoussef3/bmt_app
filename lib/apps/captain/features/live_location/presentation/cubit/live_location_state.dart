@@ -1,7 +1,7 @@
 sealed class LiveLocationState {
   const LiveLocationState();
 
-  /// Whether the per-minute automatic reporting is running. Carried on every
+  /// Whether the periodic automatic reporting is running. Carried on every
   /// state so the UI's toggle never flickers off while a manual send resolves.
   bool get isAutoSharing;
 }

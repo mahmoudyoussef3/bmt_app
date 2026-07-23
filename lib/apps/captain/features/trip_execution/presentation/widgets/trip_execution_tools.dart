@@ -57,8 +57,10 @@ class TripExecutionTools extends StatelessWidget {
             onTap: () => context.openLocationUpdate(tripId),
           ),
           _Tool(
-            label: 'تحديث الحالة',
-            detail: 'إبلاغ العمليات بما يجري',
+            // "تحديث الحالة" read as a lifecycle control sitting next to the
+            // real one. It posts a note to operations — the label now says so.
+            label: 'إبلاغ العمليات',
+            detail: 'رسالة بموقفك الحالي',
             icon: Icons.sync_rounded,
             onTap: () => context.openStatusUpdate(tripId),
           ),

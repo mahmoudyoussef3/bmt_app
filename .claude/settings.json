@@ -37,7 +37,14 @@
       "Bash(python3 tool/generate_splash_assets.py)",
       "Bash(xcrun simctl *)",
       "Bash(open -a Simulator)",
-      "Bash(pkill -f \"flutter_tools.snapshot run\")"
+      "Bash(pkill -f \"flutter_tools.snapshot run\")",
+      "Bash(echo \"ANALYZE EXIT: $?\")",
+      "Bash(echo \"CAPTAIN TESTS EXIT: $?\")",
+      "Bash(timeout 90 supabase db query --linked \"select prosrc like '%status_not_allowed_for_captain%' as allowlist_applied from pg_proc where proname='captain_update_trip_status';\")",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(python3 -c \"import sys,json; d=sys.stdin.read\\(\\); i=d.index\\('{'\\); print\\(json.loads\\(d[i:d.rindex\\('}'\\)+1]\\)['rows'][0]['def']\\)\")",
+      "Bash(grep -n \"matchTextDirection\" -A12 /Users/mahmoud/Downloads/flutter/packages/flutter/lib/src/widgets/icon.dart | grep -A12 \"if \\(icon.matchTextDirection\\\\|icon!.matchTextDirection\" | head -20)",
+      "Read(//Users/mahmoud/Downloads/flutter/packages/flutter/lib/src/widgets/**)"
     ],
     "additionalDirectories": [
       "/Users/mahmoud/bmt_app/lib/apps/dashboard/features/office_profile/presentation/test/apps/dashboard/features/office_profile",

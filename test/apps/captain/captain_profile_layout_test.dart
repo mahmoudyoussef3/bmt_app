@@ -69,7 +69,7 @@ DriverProfile _profile({
   );
 }
 
-Widget _host(Widget child) {
+Widget _host(Widget child, {double scale = 1.0}) {
   return BlocProvider<CaptainThemeCubit>(
     create: (_) => CaptainThemeCubit(_StubThemeRepository()),
     child: MaterialApp(
@@ -79,6 +79,12 @@ Widget _host(Widget child) {
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('ar'),
       theme: CaptainTheme.light(),
+      builder: (context, child) => MediaQuery(
+        data: MediaQuery.of(
+          context,
+        ).copyWith(textScaler: TextScaler.linear(scale)),
+        child: child!,
+      ),
       home: child,
     ),
   );
@@ -202,6 +208,31 @@ void main() {
     );
     expect(tester.takeException(), isNull);
   });
+
+  /// A captain running the system font large is a real configuration, and the
+  /// profile is the densest screen in the app — an avatar, name and rating pill
+  /// on one toolbar row, then metric tiles and identity rows. It is the most
+  /// likely place for an enlarged font to break a layout.
+  for (final scale in [1.3, 1.6]) {
+    testWidgets('profile holds at small @ textScale $scale', (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          BlocProvider<DriverProfileCubit>(
+            create: (_) => _StubProfileCubit(DriverProfileLoaded(_profile())),
+            child: const DriverProfilePage(),
+          ),
+          scale: scale,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+  }
 
   testWidgets('profile header survives a long name and no rating', (
     tester,

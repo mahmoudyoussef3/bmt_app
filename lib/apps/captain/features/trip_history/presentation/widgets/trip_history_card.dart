@@ -105,8 +105,9 @@ class _CardHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: CaptainDesignTokens.s8),
+          // Mirrored to point left by the app's RTL — see `CaptainListRow`.
           Icon(
-            Icons.chevron_left_rounded,
+            Icons.chevron_right_rounded,
             size: 20,
             color: TripHistoryPalette.neutral(context),
           ),

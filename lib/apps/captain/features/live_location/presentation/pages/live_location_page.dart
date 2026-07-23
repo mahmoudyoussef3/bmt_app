@@ -60,7 +60,7 @@ class LocationUpdatePage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          'أثناء سير الرحلة يُرسل موقعك تلقائياً كل دقيقة من شاشة تنفيذ '
+                          'أثناء سير الرحلة يُرسل موقعك تلقائياً كل 30 ثانية من شاشة تنفيذ '
                           'الرحلة. استخدم هذا الزر لإرسال موقع فوري في أي وقت. '
                           'لا يعمل التتبع في الخلفية.',
                           textAlign: TextAlign.center,

@@ -63,11 +63,13 @@ class SupabaseChatDatasource implements ChatDatasource {
 
   CaptainMessageModel _rowToMessage(Map<String, dynamic> row) {
     final senderType = row['sender_type'] as String? ?? 'driver';
+    final mine = senderType == 'driver';
     return CaptainMessageModel(
       id: row['id'] as String,
-      senderName: senderType == 'driver' ? 'أنت' : 'العمليات',
+      senderName: mine ? 'أنت' : 'العمليات',
       text: row['body'] as String? ?? '',
       type: _typeFromDb(row['message_type'] as String? ?? 'text'),
+      isMine: mine,
     );
   }
 

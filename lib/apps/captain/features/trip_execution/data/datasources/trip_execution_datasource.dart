@@ -216,7 +216,8 @@ class TripExecutionDataSource {
         throw Exception('الرحلة غير موجودة');
       }
       if (e.message.contains('not_your_trip') ||
-          e.message.contains('not_a_captain')) {
+          e.message.contains('not_a_captain') ||
+          e.message.contains('status_not_allowed_for_captain')) {
         throw Exception('غير مصرح لك بتعديل هذه الرحلة');
       }
       rethrow;

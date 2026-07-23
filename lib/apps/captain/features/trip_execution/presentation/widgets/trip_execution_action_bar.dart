@@ -78,15 +78,16 @@ class TripExecutionActionBar extends StatelessWidget {
 }
 
 /// A transition is in flight. Sized to the bar's resting height so committing
-/// an action doesn't make the page jump under the captain's thumb.
+/// an action doesn't make the page jump under the captain's thumb — including
+/// at an enlarged system font, where that height is taller than 56.
 class _Busy extends StatelessWidget {
   const _Busy();
 
   @override
   Widget build(BuildContext context) {
-    return const SizedBox(
-      height: 56,
-      child: Center(child: CircularProgressIndicator()),
+    return SizedBox(
+      height: dockedActionHeight(context),
+      child: const Center(child: CircularProgressIndicator()),
     );
   }
 }

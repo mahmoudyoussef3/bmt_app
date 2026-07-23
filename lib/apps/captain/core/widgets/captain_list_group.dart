@@ -166,8 +166,12 @@ class CaptainListRow extends StatelessWidget {
           ?trailing,
           if (showChevron) ...[
             const SizedBox(width: CaptainDesignTokens.s4),
+            // Authored for LTR on purpose: Material's chevrons carry
+            // `matchTextDirection`, so `Icon` flips this to point left under
+            // the app's RTL. Naming the left one here would mirror it twice
+            // and land the drill-in arrow pointing back out of the page.
             Icon(
-              Icons.chevron_left_rounded,
+              Icons.chevron_right_rounded,
               size: 20,
               color: CaptainColors.textSecondaryFor(context),
             ),

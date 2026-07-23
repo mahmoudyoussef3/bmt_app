@@ -27,12 +27,18 @@ class _StubAuthCubit extends Cubit<CaptainAuthState>
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-Widget _host(Widget child) {
+Widget _host(Widget child, {double scale = 1.0}) {
   return MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     locale: const Locale('ar'),
     theme: CaptainTheme.light(),
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(scale)),
+      child: child!,
+    ),
     home: child,
   );
 }
@@ -43,6 +49,29 @@ const _sizes = <String, Size>{
 };
 
 void main() {
+  /// Login is the first screen a captain ever sees, and the one most likely to
+  /// be opened on a device already set to a large system font.
+  for (final scale in [1.3, 1.6]) {
+    testWidgets('login holds at small @ textScale $scale', (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          BlocProvider<CaptainAuthCubit>(
+            create: (_) => _StubAuthCubit(const CaptainAuthIdle()),
+            child: CaptainLoginScreen(onRequestAccess: () {}),
+          ),
+          scale: scale,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final entry in _sizes.entries) {
     testWidgets('login renders without overflow on ${entry.key}', (
       tester,

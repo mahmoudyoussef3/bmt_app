@@ -59,8 +59,15 @@ class CaptainAuthDatasource {
   }
 
   Future<void> signOut() async {
-    await _supabase.auth.signOut();
-    _session.clear();
+    try {
+      await _supabase.auth.signOut();
+    } finally {
+      // The cached identity must not outlive the sign-out attempt. Supabase's
+      // sign-out makes a network call, and letting a failed one skip this left
+      // the device holding a captain identity the app still treated as current
+      // — the next screen would resolve trips for the captain who just left.
+      _session.clear();
+    }
   }
 
   bool _isInvalidCredentials(AuthException e) =>

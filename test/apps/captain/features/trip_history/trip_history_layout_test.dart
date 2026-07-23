@@ -81,7 +81,7 @@ TripHistoryLoaded _loaded({
   );
 }
 
-Widget _host(Widget child) {
+Widget _host(Widget child, {double scale = 1.0}) {
   return MaterialApp(
     // Mirrors CaptainApp: the delegates are what load the app's `ar` date
     // symbols that CaptainFormats depends on, and the locale is what puts the
@@ -90,6 +90,12 @@ Widget _host(Widget child) {
     supportedLocales: AppLocalizations.supportedLocales,
     locale: const Locale('ar'),
     theme: CaptainTheme.light(),
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(scale)),
+      child: child!,
+    ),
     home: child,
   );
 }
@@ -101,19 +107,39 @@ const _sizes = <String, Size>{
   'large': Size(430, 932),
 };
 
-Future<void> _pump(WidgetTester tester, TripHistoryState state) async {
+Future<void> _pump(
+  WidgetTester tester,
+  TripHistoryState state, {
+  double scale = 1.0,
+}) async {
   await tester.pumpWidget(
     _host(
       BlocProvider<TripHistoryCubit>(
         create: (_) => _StubTripHistoryCubit(state),
         child: const TripHistoryPage(),
       ),
+      scale: scale,
     ),
   );
   await tester.pumpAndSettle();
 }
 
 void main() {
+  /// The history rows pack a route, a date, a time strip and a boarding bar
+  /// into one card, so an enlarged system font is the case most likely to
+  /// break them — and the smallest phone is where it breaks first.
+  for (final scale in [1.3, 1.6]) {
+    testWidgets('history holds at small @ textScale $scale', (tester) async {
+      tester.view.physicalSize = const Size(320, 568);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await _pump(tester, _loaded(), scale: scale);
+
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final entry in _sizes.entries) {
     testWidgets('history renders without overflow on ${entry.key}', (
       tester,

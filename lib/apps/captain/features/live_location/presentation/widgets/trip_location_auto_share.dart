@@ -13,7 +13,7 @@ import '../cubit/live_location_state.dart';
 /// Reports the vehicle's position for a running trip, automatically and on
 /// demand.
 ///
-/// Both paths are live at once, deliberately: the minute timer is what keeps
+/// Both paths are live at once, deliberately: the 30-second timer is what keeps
 /// the client's tracking map moving without the captain touching anything,
 /// and the button is what a captain reaches for when a passenger on the phone
 /// asks "where are you now?" and a stale fix isn't good enough.
@@ -52,7 +52,18 @@ class _AutoShareController extends StatefulWidget {
   State<_AutoShareController> createState() => _AutoShareControllerState();
 }
 
-class _AutoShareControllerState extends State<_AutoShareController> {
+class _AutoShareControllerState extends State<_AutoShareController>
+    with AutomaticKeepAliveClientMixin {
+  /// The card is one child of the trip-execution page's `SliverList`, and a
+  /// sliver list disposes children scrolled past its cache extent. Without
+  /// this, scrolling down to read the route or the manifest tore down the
+  /// provider, `close()` cancelled the timer, and the trip stopped reporting
+  /// — silently, with the card still claiming "كل 30 ثانية" when the captain
+  /// scrolled back up and it rebuilt. Only worth holding while a trip is
+  /// actually under way.
+  @override
+  bool get wantKeepAlive => widget.enabled;
+
   @override
   void initState() {
     super.initState();
@@ -65,6 +76,9 @@ class _AutoShareControllerState extends State<_AutoShareController> {
     if (oldWidget.enabled != widget.enabled ||
         oldWidget.tripId != widget.tripId) {
       _sync();
+      // `enabled` drives whether this element is worth holding across a
+      // scroll, so the keep-alive has to be re-evaluated with it.
+      updateKeepAlive();
     }
   }
 
@@ -84,6 +98,8 @@ class _AutoShareControllerState extends State<_AutoShareController> {
 
   @override
   Widget build(BuildContext context) {
+    super.build(context); // AutomaticKeepAliveClientMixin
+
     // Occupies no space when there is nothing to report — the card and its
     // trailing gap appear and disappear together.
     if (!widget.enabled) return const SizedBox.shrink();
@@ -140,7 +156,7 @@ class _AutoShareCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       state.isAutoSharing
-                          ? 'مشاركة الموقع تلقائياً كل دقيقة'
+                          ? 'مشاركة الموقع تلقائياً كل 30 ثانية'
                           : 'المشاركة التلقائية متوقفة',
                       style: CaptainTypography.titleSmall(
                         context,

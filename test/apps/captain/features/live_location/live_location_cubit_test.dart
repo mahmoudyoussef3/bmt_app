@@ -18,25 +18,29 @@ void main() {
     );
   });
 
-  test('automatic sharing reports immediately, then once a minute', () {
+  test('reports immediately, then once per interval (30s cadence)', () {
     fakeAsync((async) {
+      // The platform tracking cadence is 30 seconds (SYSTEM_FLOW.md). Asserted
+      // against the constant so the test tracks the contract, not a literal.
+      expect(kAutoLocationInterval, const Duration(seconds: 30));
+
       cubit.startAutoSharing('trip-1');
       async.flushMicrotasks();
 
       // Immediate: a trip that just departed should not sit unlocated for a
-      // full minute before its first fix.
+      // full interval before its first fix.
       expect(repository.sendCount, 1);
 
-      async.elapse(const Duration(minutes: 1));
+      async.elapse(kAutoLocationInterval);
       async.flushMicrotasks();
       expect(repository.sendCount, 2);
 
-      async.elapse(const Duration(minutes: 3));
+      async.elapse(kAutoLocationInterval * 3);
       async.flushMicrotasks();
       expect(repository.sendCount, 5);
 
       cubit.stopAutoSharing();
-      async.elapse(const Duration(minutes: 5));
+      async.elapse(kAutoLocationInterval * 10);
       async.flushMicrotasks();
       expect(
         repository.sendCount,
@@ -52,7 +56,7 @@ void main() {
       cubit.startAutoSharing('trip-1');
       async.flushMicrotasks();
 
-      async.elapse(const Duration(minutes: 2));
+      async.elapse(kAutoLocationInterval * 2);
       async.flushMicrotasks();
 
       // One immediate + two ticks.
@@ -72,7 +76,7 @@ void main() {
         expect(firstFix, isNotNull);
 
         repository.failNextSend = true;
-        async.elapse(const Duration(minutes: 1));
+        async.elapse(kAutoLocationInterval);
         async.flushMicrotasks();
 
         final afterFailure = cubit.state as LiveLocationReady;
@@ -85,7 +89,7 @@ void main() {
         expect(afterFailure.isAutoSharing, isTrue);
 
         // The next tick recovers on its own — no captain intervention.
-        async.elapse(const Duration(minutes: 1));
+        async.elapse(kAutoLocationInterval);
         async.flushMicrotasks();
 
         final recovered = cubit.state as LiveLocationReady;

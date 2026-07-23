@@ -13,6 +13,21 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 import '../../domain/entities/trip_execution_state.dart';
 import '../cubit/trip_execution_cubit.dart';
 
+/// The height every docked-bar variant renders at.
+///
+/// The bar alternates between a live button, a two-line waiting panel and a
+/// terminal label, and they must agree on height or the page above reflows
+/// under the captain's thumb on every stage transition. A flat 56 held that
+/// line only at the default font: the waiting panel's two lines of text grow
+/// with the system font scale, so at an enlarged setting it stood ~23px taller
+/// than the button it alternates with and the reflow came back.
+///
+/// Scaling the height with the text instead keeps all three in agreement *and*
+/// respects the captain's font choice rather than shrinking text back down.
+/// Clamped so a very large accessibility setting cannot eat the screen.
+double dockedActionHeight(BuildContext context) =>
+    MediaQuery.textScalerOf(context).scale(56).clamp(56.0, 96.0);
+
 /// The one thing the trip's current stage says to do next.
 ///
 /// The stage — not the raw status — decides, because two different gates have
@@ -121,8 +136,9 @@ class TripExecutionPrimaryAction extends StatelessWidget {
 /// A gate the captain cannot open, stated plainly. Deliberately not a greyed
 /// button: there is nothing to press, and the reason is the useful part.
 ///
-/// Sized to the same 56 as the live button so the docked bar keeps one height
-/// across every stage and the page above it never reflows on a transition.
+/// Sized to the same [dockedActionHeight] as the live button so the docked bar
+/// keeps one height across every stage and the page above it never reflows on
+/// a transition.
 class _WaitingPanel extends StatelessWidget {
   const _WaitingPanel({
     required this.title,
@@ -138,7 +154,7 @@ class _WaitingPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 56),
+      height: dockedActionHeight(context),
       padding: const EdgeInsets.symmetric(
         horizontal: CaptainDesignTokens.s16,
         vertical: CaptainDesignTokens.s8,
@@ -198,14 +214,18 @@ class _TerminalLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 56,
+      height: dockedActionHeight(context),
       alignment: Alignment.center,
+      padding: const EdgeInsets.symmetric(
+        horizontal: CaptainDesignTokens.s16,
+      ),
       decoration: BoxDecoration(
         color: CaptainColors.offline.withValues(alpha: 0.10),
         borderRadius: CaptainDesignTokens.br16,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
             CaptainTripStagePalette.icon(stage),
@@ -213,11 +233,15 @@ class _TerminalLabel extends StatelessWidget {
             color: CaptainColors.textSecondaryFor(context),
           ),
           const SizedBox(width: CaptainDesignTokens.s8),
-          Text(
-            CaptainTripStageLabels.action(stage),
-            style: CaptainTypography.titleSmall(context).copyWith(
-              fontWeight: FontWeight.w800,
-              color: CaptainColors.textSecondaryFor(context),
+          Flexible(
+            child: Text(
+              CaptainTripStageLabels.action(stage),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: CaptainTypography.titleSmall(context).copyWith(
+                fontWeight: FontWeight.w800,
+                color: CaptainColors.textSecondaryFor(context),
+              ),
             ),
           ),
         ],
@@ -249,7 +273,7 @@ class _ActionButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      height: 56,
+      height: dockedActionHeight(context),
       child: Material(
         color: color,
         borderRadius: CaptainDesignTokens.br16,

@@ -6,12 +6,14 @@ class CaptainMessageModel {
     required this.senderName,
     required this.text,
     required this.type,
+    required this.isMine,
   });
 
   final String id;
   final String senderName;
   final String text;
   final CaptainMessageType type;
+  final bool isMine;
 
   CaptainMessage toEntity() {
     return CaptainMessage(
@@ -19,6 +21,7 @@ class CaptainMessageModel {
       senderName: senderName,
       text: text,
       type: type,
+      isMine: isMine,
     );
   }
 }

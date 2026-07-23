@@ -64,12 +64,18 @@ const _stops = [
   TripHistoryStop(name: 'موقف المنشية', order: 3, scheduledTime: '10:30'),
 ];
 
-Widget _host(Widget child) {
+Widget _host(Widget child, {double scale = 1.0}) {
   return MaterialApp(
     localizationsDelegates: AppLocalizations.localizationsDelegates,
     supportedLocales: AppLocalizations.supportedLocales,
     locale: const Locale('ar'),
     theme: CaptainTheme.light(),
+    builder: (context, child) => MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(scale)),
+      child: child!,
+    ),
     home: child,
   );
 }
@@ -79,6 +85,7 @@ Future<void> _pump(
   required _FakeTripHistoryRepository repository,
   TripHistoryItem? trip,
   Size size = const Size(390, 844),
+  double scale = 1.0,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
@@ -89,7 +96,9 @@ Future<void> _pump(
   );
   addTearDown(captainGetIt.reset);
 
-  await tester.pumpWidget(_host(TripHistoryDetailPage(trip: trip ?? _trip())));
+  await tester.pumpWidget(
+    _host(TripHistoryDetailPage(trip: trip ?? _trip()), scale: scale),
+  );
   await tester.pumpAndSettle();
 }
 
@@ -101,6 +110,21 @@ const _sizes = <String, Size>{
 };
 
 void main() {
+  /// The route timeline stacks a marker, a stop name and a time on each row —
+  /// an enlarged system font is what pushes those past the row width.
+  for (final scale in [1.3, 1.6]) {
+    testWidgets('detail holds at small @ textScale $scale', (tester) async {
+      await _pump(
+        tester,
+        repository: _FakeTripHistoryRepository(stops: _stops),
+        size: const Size(320, 568),
+        scale: scale,
+      );
+
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   for (final entry in _sizes.entries) {
     testWidgets('detail renders without overflow on ${entry.key}', (
       tester,

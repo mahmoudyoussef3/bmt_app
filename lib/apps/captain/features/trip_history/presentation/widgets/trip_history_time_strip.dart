@@ -33,19 +33,27 @@ class TripHistoryTimeStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // The ends are Flexible rather than fixed: at an enlarged system font
+    // "المغادرة" and "الوصول" grow until the two of them alone exceed the card,
+    // and an unconstrained pair overflows the row no matter how far the link
+    // between them shrinks.
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _Endpoint(
-          label: 'المغادرة',
-          time: CaptainFormats.clock(departure),
-          alignment: CrossAxisAlignment.start,
+        Flexible(
+          child: _Endpoint(
+            label: 'المغادرة',
+            time: CaptainFormats.clock(departure),
+            alignment: CrossAxisAlignment.start,
+          ),
         ),
         Expanded(child: _Link(duration: duration)),
-        _Endpoint(
-          label: 'الوصول',
-          time: CaptainFormats.clock(arrival),
-          alignment: CrossAxisAlignment.end,
+        Flexible(
+          child: _Endpoint(
+            label: 'الوصول',
+            time: CaptainFormats.clock(arrival),
+            alignment: CrossAxisAlignment.end,
+          ),
         ),
       ],
     );
@@ -71,13 +79,19 @@ class _Endpoint extends StatelessWidget {
       children: [
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: CaptainTypography.labelSmall(
             context,
           ).copyWith(color: TripHistoryPalette.neutral(context)),
         ),
         const SizedBox(height: 2),
+        // The clock is the value the captain came for — it stays on one line
+        // and never wraps, whatever the label above it does.
         Text(
           time,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: CaptainTypography.titleSmall(
             context,
           ).copyWith(fontWeight: FontWeight.w900),
