@@ -31,18 +31,26 @@ class TicketDetailsStatusBand extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: statusColor.withAlpha(25),
-              shape: BoxShape.circle,
+          if (ticket.status == TicketStatus.submitted ||
+              ticket.status == TicketStatus.underReview ||
+              ticket.status == TicketStatus.contacted)
+            _PulseIcon(
+              statusColor: statusColor,
+              icon: SupportStatusVisuals.iconFor(ticket.status),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: statusColor.withAlpha(25),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                SupportStatusVisuals.iconFor(ticket.status),
+                color: statusColor,
+                size: 24,
+              ),
             ),
-            child: Icon(
-              SupportStatusVisuals.iconFor(ticket.status),
-              color: statusColor,
-              size: 24,
-            ),
-          ),
           const SizedBox(width: 16),
           Expanded(
             child: Column(
@@ -68,6 +76,62 @@ class TicketDetailsStatusBand extends StatelessWidget {
           if (agentName != null) TicketAssignedAgentBadge(agentName: agentName),
         ],
       ),
+    );
+  }
+}
+
+class _PulseIcon extends StatefulWidget {
+  const _PulseIcon({required this.statusColor, required this.icon});
+  final Color statusColor;
+  final IconData icon;
+
+  @override
+  State<_PulseIcon> createState() => _PulseIconState();
+}
+
+class _PulseIconState extends State<_PulseIcon> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _animation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _animation.value,
+          child: Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: widget.statusColor.withAlpha(25),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              widget.icon,
+              color: widget.statusColor,
+              size: 24,
+            ),
+          ),
+        );
+      },
     );
   }
 }

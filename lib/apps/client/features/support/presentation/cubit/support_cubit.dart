@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/related_booking_option.dart';
+import '../../domain/entities/support_office_option.dart';
 import '../../domain/usecases/get_my_support_tickets_usecase.dart';
 import '../../domain/usecases/create_support_ticket_usecase.dart';
 import '../../domain/usecases/get_related_booking_options_usecase.dart';
+import '../../domain/usecases/get_support_office_options_usecase.dart';
 import '../../domain/usecases/get_ticket_details_usecase.dart';
 import '../../domain/repositories/support_repository.dart';
 import 'support_state.dart';
@@ -12,6 +14,7 @@ class SupportCubit extends Cubit<SupportState> {
   final GetMySupportTicketsUseCase _getMySupportTickets;
   final CreateSupportTicketUseCase _createSupportTicket;
   final GetRelatedBookingOptionsUseCase _getRelatedBookingOptions;
+  final GetSupportOfficeOptionsUseCase _getOfficeOptions;
   final GetTicketDetailsUseCase _getTicketDetails;
   final SupportRepository _supportRepository; // To get attachments
 
@@ -19,16 +22,19 @@ class SupportCubit extends Cubit<SupportState> {
     required GetMySupportTicketsUseCase getMySupportTickets,
     required CreateSupportTicketUseCase createSupportTicket,
     required GetRelatedBookingOptionsUseCase getRelatedBookingOptions,
+    required GetSupportOfficeOptionsUseCase getOfficeOptions,
     required GetTicketDetailsUseCase getTicketDetails,
     required SupportRepository supportRepository,
   }) : _getMySupportTickets = getMySupportTickets,
        _createSupportTicket = createSupportTicket,
        _getRelatedBookingOptions = getRelatedBookingOptions,
+       _getOfficeOptions = getOfficeOptions,
        _getTicketDetails = getTicketDetails,
        _supportRepository = supportRepository,
        super(SupportInitial());
 
   List<RelatedBookingOption> _relatedBookingOptions = const [];
+  List<SupportOfficeOption> _officeOptions = const [];
 
   /// Read by the create form; loaded via [loadRelatedBookingOptions]. Kept on
   /// the cubit rather than in a state so transient submit/error states can't
@@ -36,10 +42,15 @@ class SupportCubit extends Cubit<SupportState> {
   List<RelatedBookingOption> get relatedBookingOptions =>
       _relatedBookingOptions;
 
+  /// The offices a client can direct a complaint to. Loaded via
+  /// [loadOfficeOptions]; kept on the cubit for the same reason as the
+  /// bookings above.
+  List<SupportOfficeOption> get officeOptions => _officeOptions;
+
   /// Loads the client's recent bookings for the optional "related booking"
   /// picker. A linked ticket is routed to the operating office server-side;
-  /// an unlinked one goes to platform support — so this failing must never
-  /// block filing: on error the picker simply stays hidden.
+  /// an unlinked one goes to the office the client picks — so this failing must
+  /// never block filing: on error the picker simply stays hidden.
   Future<void> loadRelatedBookingOptions() async {
     if (_relatedBookingOptions.isNotEmpty) return;
     try {
@@ -49,6 +60,19 @@ class SupportCubit extends Cubit<SupportState> {
       }
     } catch (_) {
       // Optional nicety — the ticket form works without it.
+    }
+  }
+
+  /// Loads the offices the client can direct a complaint to. Unlike the
+  /// booking picker this one is required to file, so the form should surface a
+  /// retry when the list stays empty.
+  Future<void> loadOfficeOptions() async {
+    if (_officeOptions.isNotEmpty) return;
+    try {
+      _officeOptions = await _getOfficeOptions();
+      if (!isClosed) emit(const SupportOfficesLoaded());
+    } catch (_) {
+      // Leaves the picker empty; the form blocks submit until an office loads.
     }
   }
 
@@ -85,6 +109,7 @@ class SupportCubit extends Cubit<SupportState> {
     required String category,
     required String title,
     required String description,
+    String? officeId,
     String? relatedBookingId,
     String? relatedTripId,
     File? attachment,
@@ -95,6 +120,7 @@ class SupportCubit extends Cubit<SupportState> {
         category: category,
         title: title,
         description: description,
+        officeId: officeId,
         relatedBookingId: relatedBookingId,
         relatedTripId: relatedTripId,
       );

@@ -8,7 +8,11 @@ class PackagePlan {
     required this.durationDays,
     required this.rideCount,
     required this.price,
+    this.officeId = '',
     this.officeName = '',
+    this.officeLogoUrl,
+    this.officeRating = 0,
+    this.officeRatingsCount = 0,
   });
 
   final String id;
@@ -20,8 +24,25 @@ class PackagePlan {
   final double price;
 
   /// The office selling this package. Packages are per-office (offices compete
-  /// on price), so a mixed catalogue must say whose offer each card is.
+  /// on price), so a mixed catalogue must say whose offer each card is, and let
+  /// a rider open the seller's marketplace profile from the package itself.
+  final String officeId;
   final String officeName;
+  final String? officeLogoUrl;
+
+  /// The seller's explicit passenger rating, straight off `public_offices` — the
+  /// same figure the office directory shows, never inferred from another score.
+  final double officeRating;
+  final int officeRatingsCount;
+
+  /// Whether this package carries enough office identity to render the provider
+  /// badge and route to the office profile. A package whose office is unlisted
+  /// arrives office-less and is filtered out before it reaches the catalogue.
+  bool get hasOffice => officeId.isNotEmpty && officeName.isNotEmpty;
+
+  /// True once the seller has at least one passenger rating; guards showing a
+  /// misleading 0.0 for a brand-new office.
+  bool get hasOfficeRating => officeRatingsCount > 0 && officeRating > 0;
 
   /// The name to show riders: English when the Dashboard has set one, and the
   /// Arabic name otherwise — never a blank plan on a checkout screen.

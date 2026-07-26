@@ -17,31 +17,79 @@ class PackagesCubit extends Cubit<PackagesState> {
   final GetPackagesUseCase _getPackages;
   final FilterPackagesUseCase _filterPackages;
 
-  Future<void> load() async {
+  /// Loads the marketplace catalogue. [initialOfficeId] pre-selects the office
+  /// lens — an office profile opens the marketplace already narrowed to itself.
+  Future<void> load({String? initialOfficeId}) async {
     emit(const PackagesLoading());
     try {
       final packages = await _getPackages();
-      emit(PackagesLoaded(packages: packages, visiblePackages: packages));
+      final officeId = (initialOfficeId != null && initialOfficeId.isNotEmpty)
+          ? initialOfficeId
+          : null;
+      emit(
+        PackagesLoaded(
+          packages: packages,
+          officeFilter: officeId,
+          visiblePackages: _applyFilters(
+            packages,
+            filter: PackageFilter.all,
+            officeId: officeId,
+          ),
+        ),
+      );
     } catch (error) {
       emit(PackagesError(error.toString()));
     }
   }
 
+  /// Narrows the catalogue by trip duration, keeping any office filter in place.
   void selectFilter(PackageFilter filter) {
     final current = state;
     if (current is! PackagesLoaded) return;
     emit(
       current.copyWith(
         filter: filter,
-        visiblePackages: _filterPackages(
-          packages: current.packages,
+        visiblePackages: _applyFilters(
+          current.packages,
           filter: filter,
+          officeId: current.officeFilter,
         ),
       ),
     );
   }
 
-  /// Opens the detail pane for [package].
+  /// Narrows the catalogue to one selling office, or clears the office lens when
+  /// [officeId] is `null` ("all offices"). Duration stays as the rider left it.
+  void selectOffice(String? officeId) {
+    final current = state;
+    if (current is! PackagesLoaded) return;
+    // copyWith cannot set a nullable field back to null, so a clear rebuilds the
+    // state explicitly.
+    emit(
+      PackagesLoaded(
+        packages: current.packages,
+        visiblePackages: _applyFilters(
+          current.packages,
+          filter: current.filter,
+          officeId: officeId,
+        ),
+        filter: current.filter,
+        officeFilter: officeId,
+        selectedPackage: current.selectedPackage,
+        step: current.step,
+      ),
+    );
+  }
+
+  List<PackagePlan> _applyFilters(
+    List<PackagePlan> packages, {
+    required PackageFilter filter,
+    String? officeId,
+  }) => _filterPackages(packages: packages, filter: filter, officeId: officeId);
+
+  /// Opens the detail pane for [package]. Reachable from the marketplace with or
+  /// without a trip in hand — details are pure discovery; only the final
+  /// subscribe step needs a trip, which the detail CTA handles.
   void openDetails(PackagePlan package) {
     final current = state;
     if (current is! PackagesLoaded) return;

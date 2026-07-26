@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 
 import '../../../domain/entities/package_plan.dart';
 import '../../cubit/packages_cubit.dart';
@@ -21,13 +20,10 @@ class PackageCard extends StatelessWidget {
   final PackagePlan package;
   final SubscriptionArguments arguments;
 
-  /// Without a trip in hand there is nothing to price the package against, so
-  /// the rider is sent to pick a route before seeing plan details.
+  /// Details are pure discovery — what the package is, who sells it, what it
+  /// costs — so a rider can open them with or without a trip in hand. The
+  /// subscribe CTA inside the details pane is where a trip becomes required.
   void _onTap(BuildContext context) {
-    if (!arguments.hasBookingContext) {
-      Navigator.of(context).pushNamed(BookingRoutes.popularRoutes);
-      return;
-    }
     context.read<PackagesCubit>().openDetails(package);
   }
 

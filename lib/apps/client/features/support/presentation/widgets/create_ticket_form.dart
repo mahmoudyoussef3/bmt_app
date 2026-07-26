@@ -6,12 +6,14 @@ import 'package:file_picker/file_picker.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/related_booking_option.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_category.dart';
+import 'package:bmt_app/apps/client/features/support/domain/entities/support_office_option.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import 'support_attachment_picker.dart';
 import 'support_category_dropdown.dart';
 import 'support_field_label.dart';
+import 'support_office_dropdown.dart';
 import 'support_related_booking_dropdown.dart';
 import 'support_text_field.dart';
 
@@ -32,13 +34,24 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
   final _descController = TextEditingController();
 
   String _category = defaultSupportCategory;
+  SupportOfficeOption? _office;
   RelatedBookingOption? _relatedBooking;
   File? _attachment;
 
   @override
   void initState() {
     super.initState();
-    context.read<SupportCubit>().loadRelatedBookingOptions();
+    final cubit = context.read<SupportCubit>();
+    cubit.loadRelatedBookingOptions();
+    cubit.loadOfficeOptions();
+  }
+
+  /// The office the complaint is filed against. When there is only one office
+  /// to pick, it is selected implicitly so the client isn't asked a question
+  /// with a single answer; otherwise they must choose.
+  SupportOfficeOption? _effectiveOffice(List<SupportOfficeOption> options) {
+    if (_office != null) return _office;
+    return options.length == 1 ? options.first : null;
   }
 
   @override
@@ -62,10 +75,14 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
   void _submit() {
     if (!_formKey.currentState!.validate()) return;
 
-    context.read<SupportCubit>().createTicket(
+    final cubit = context.read<SupportCubit>();
+    final office = _effectiveOffice(cubit.officeOptions);
+
+    cubit.createTicket(
       category: _category,
       title: _titleController.text.trim(),
       description: _descController.text.trim(),
+      officeId: office?.id,
       relatedBookingId: _relatedBooking?.bookingId,
       relatedTripId: _relatedBooking?.tripId,
       attachment: _attachment,
@@ -74,7 +91,9 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
 
   @override
   Widget build(BuildContext context) {
-    final bookingOptions = context.read<SupportCubit>().relatedBookingOptions;
+    final cubit = context.read<SupportCubit>();
+    final bookingOptions = cubit.relatedBookingOptions;
+    final officeOptions = cubit.officeOptions;
 
     return Form(
       key: _formKey,
@@ -88,6 +107,16 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
           SupportCategoryDropdown(
             value: _category,
             onChanged: (value) => setState(() => _category = value),
+          ),
+          const SizedBox(height: 24),
+          SupportFieldLabel(
+            label: context.l10n.support_officeLabel,
+            hint: context.l10n.support_officeHint,
+          ),
+          SupportOfficeDropdown(
+            options: officeOptions,
+            value: _effectiveOffice(officeOptions),
+            onChanged: (office) => setState(() => _office = office),
           ),
           const SizedBox(height: 24),
           // Hidden entirely when the client has no bookings: an empty picker

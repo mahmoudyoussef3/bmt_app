@@ -9,14 +9,25 @@ class SupabasePackagesDatasource implements PackagesDatasource {
   final SupabaseClient _supabase;
 
   @override
-  Future<List<PackagePlanModel>> getPackages() async {
+  Future<List<PackagePlanModel>> getPackages({String? officeId}) async {
     // Packages are per-office offers competing in one catalogue, so each row
-    // carries its seller's public name.
-    final rows = await _supabase
+    // carries its seller's public identity — name, logo and rating — embedded
+    // from the anon-safe `public_offices` view. That view already excludes
+    // paused/unlisted offices, so a package whose seller is not for sale comes
+    // back with a null `office`; the repository drops those.
+    var query = _supabase
         .from('transport_packages')
-        .select('*, office:public_offices(name)')
-        .eq('active', true)
-        .order('display_order', ascending: true);
+        .select(
+          '*, office:public_offices(id, name, logo_url, rating, ratings_count)',
+        )
+        .eq('active', true);
+
+    // The office profile reuses this to list one seller's packages.
+    if (officeId != null && officeId.isNotEmpty) {
+      query = query.eq('office_id', officeId);
+    }
+
+    final rows = await query.order('display_order', ascending: true);
 
     return rows
         .map((row) => PackagePlanModel.fromJson(row))

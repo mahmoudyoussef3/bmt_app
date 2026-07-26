@@ -23,8 +23,13 @@ class PackagesFilterTabs extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       color: Theme.of(context).colorScheme.surface,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      // Wrap, not a fixed Row: on a small phone the widest Arabic label ("ربع
+      // سنوية") would push the four tabs past the edge, so they flow onto a
+      // second line instead of overflowing.
+      child: Wrap(
+        alignment: WrapAlignment.spaceEvenly,
+        spacing: 4,
+        runSpacing: 4,
         children: [
           for (final filter in PackageFilter.values)
             PackagesFilterTab(

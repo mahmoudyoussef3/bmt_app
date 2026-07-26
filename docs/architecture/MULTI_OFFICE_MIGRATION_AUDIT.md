@@ -472,6 +472,15 @@ platform-level (`office_id IS NULL`) and is invisible to every office. If instea
 belong to an office, these become `NOT NULL` and the Client app needs an office picker on the support
 form. **Confirm before the Client app work lands.**
 
+> **RESOLVED (2026-07-26).** With no platform-support console reading `office_id IS NULL` tickets,
+> client complaints reached no one. Decision: every complaint must reach an office, and the client
+> **picks the office** on the create-ticket form (migration
+> `20260726120000_support_ticket_client_office_selection.sql` reworks `sync_support_ticket_office()`
+> to honour a client-supplied `office_id` when it is a real, pickable office in `public_offices`; a
+> linked booking/trip still overrides it). `office_id` stays nullable — the fallback remains
+> platform-level for a caller who supplies no valid office. `refund_requests` was left unchanged
+> (refunds grow from an already-attributed booking/ticket).
+
 ---
 
 # Part 2 — Production-readiness verification (2026-07-21)

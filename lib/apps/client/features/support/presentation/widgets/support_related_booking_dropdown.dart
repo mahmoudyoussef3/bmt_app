@@ -4,10 +4,10 @@ import 'package:bmt_app/apps/client/features/support/domain/entities/related_boo
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'support_input_decoration.dart';
 
-/// "Which booking is this about?" — optional. Linking a booking is what routes
-/// the ticket to the office that operated the trip; left empty, the ticket
-/// stays with EWT platform support. The office itself is never selectable —
-/// the backend derives it from the chosen booking.
+/// "Which booking is this about?" — optional. Linking a booking pins the ticket
+/// to the office that operated the trip, overriding the office picked above;
+/// left empty, the ticket goes to that chosen office. The office here is never
+/// selectable — the backend derives it from the booking.
 class SupportRelatedBookingDropdown extends StatelessWidget {
   const SupportRelatedBookingDropdown({
     super.key,

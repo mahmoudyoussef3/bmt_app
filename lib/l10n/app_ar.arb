@@ -203,6 +203,32 @@
   "packages_termsText3": "3. الباقة تمنحك حتى {count} حجز للمسار المختار.",
   "packages_subscriptionCost": "تكلفة الاشتراك",
   "packages_route": "المسار",
+  "packages_marketplaceSubtitle": "اكتشف الباقات المتاحة من مكاتب النقل",
+  "packages_allOffices": "كل المكاتب",
+  "packages_filterByOffice": "اختر المكتب",
+  "packages_officeSearchHint": "ابحث باسم المكتب",
+  "packages_noOfficeMatch": "لا يوجد مكتب يطابق \"{query}\"",
+  "@packages_noOfficeMatch": {
+    "placeholders": { "query": { "type": "String" } }
+  },
+  "packages_fromOffice": "باقات {office}",
+  "@packages_fromOffice": {
+    "placeholders": { "office": { "type": "String" } }
+  },
+  "packages_showAllOffices": "عرض الكل",
+  "packages_officePackagesCount": "{count, plural, =1{باقة واحدة} =2{باقتان} few{{count} باقات} other{{count} باقة}}",
+  "@packages_officePackagesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "packages_emptyMarketplaceTitle": "لا توجد باقات متاحة حالياً",
+  "packages_emptyMarketplaceBody": "لم يطرح أي مكتب باقات للحجز بعد. استكشف الرحلات المتاحة الآن.",
+  "packages_exploreTrips": "استكشف الرحلات المتاحة",
+  "packages_emptyOfficeTitle": "لا توجد باقات متاحة من هذا المكتب حالياً",
+  "packages_emptyOfficeBody": "جرّب مكتباً آخر أو تصفّح كل الباقات المتاحة في السوق.",
+  "packages_viewAllOffices": "عرض جميع المكاتب",
+  "packages_providedBy": "مقدّم الخدمة",
+  "packages_viewOffice": "عرض المكتب",
+  "packages_chooseTripToSubscribe": "اختر رحلة للاشتراك",
   "error_timeout": "انتهى وقت الاتصال، يرجى المحاولة مرة أخرى.",
   "error_cancelled": "تم إلغاء الطلب.",
   "error_noInternet": "لا يوجد اتصال بالإنترنت.",
@@ -714,6 +740,10 @@
   "support_createTicket": "إنشاء تذكرة",
   "support_topicLabel": "ما هو موضوع المشكلة؟",
   "support_topicHint": "اختر الموضوع الأقرب لمشكلتك.",
+  "support_officeLabel": "أي مكتب يخص هذا البلاغ؟",
+  "support_officeHint": "اختر المكتب الذي يخصه بلاغك ليصل إلى فريقه.",
+  "support_officePlaceholder": "اختر مكتبًا",
+  "support_officeRequired": "من فضلك اختر مكتبًا",
   "support_subjectLabel": "الموضوع",
   "support_subjectHint": "ملخص قصير للمشكلة.",
   "support_subjectPlaceholder": "مثال: تم خصم المبلغ مرتين لحجز واحد",

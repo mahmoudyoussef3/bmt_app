@@ -2,18 +2,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/client/features/support/domain/entities/support_office_option.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/create_support_ticket_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_my_support_tickets_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_related_booking_options_usecase.dart';
+import 'package:bmt_app/apps/client/features/support/domain/usecases/get_support_office_options_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_ticket_details_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
+import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/widgets/create_ticket_form.dart';
 
 import 'support_test_doubles.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 Future<FakeSupportRepository> _pumpForm(WidgetTester tester) async {
-  final repository = FakeSupportRepository();
+  // A single office is auto-selected, so the required office picker never blocks
+  // these tests from exercising the rest of the form.
+  final repository = FakeSupportRepository(
+    officeOptions: const [SupportOfficeOption(id: 'office-1', name: 'Cairo')],
+  );
 
   // The form is a lazy ListView — on the default 800x600 test surface the
   // submit button below the fold would never be built.
@@ -31,13 +38,22 @@ Future<FakeSupportRepository> _pumpForm(WidgetTester tester) async {
           getMySupportTickets: GetMySupportTicketsUseCase(repository),
           createSupportTicket: CreateSupportTicketUseCase(repository),
           getRelatedBookingOptions: GetRelatedBookingOptionsUseCase(repository),
+          getOfficeOptions: GetSupportOfficeOptionsUseCase(repository),
           getTicketDetails: GetTicketDetailsUseCase(repository),
           supportRepository: repository,
         ),
-        child: const Scaffold(body: CreateTicketForm(isSubmitting: false)),
+        // Mirrors the real screen's BlocConsumer: the form is rebuilt when the
+        // cubit reports its picker options finished loading.
+        child: Scaffold(
+          body: BlocBuilder<SupportCubit, SupportState>(
+            builder: (context, state) =>
+                CreateTicketForm(isSubmitting: state is SupportActionLoading),
+          ),
+        ),
       ),
     ),
   );
+  await tester.pumpAndSettle();
 
   return repository;
 }

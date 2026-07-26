@@ -609,6 +609,75 @@ class AppLocalizationsAr extends AppLocalizations {
   String get packages_route => 'المسار';
 
   @override
+  String get packages_marketplaceSubtitle =>
+      'اكتشف الباقات المتاحة من مكاتب النقل';
+
+  @override
+  String get packages_allOffices => 'كل المكاتب';
+
+  @override
+  String get packages_filterByOffice => 'اختر المكتب';
+
+  @override
+  String get packages_officeSearchHint => 'ابحث باسم المكتب';
+
+  @override
+  String packages_noOfficeMatch(String query) {
+    return 'لا يوجد مكتب يطابق \"$query\"';
+  }
+
+  @override
+  String packages_fromOffice(String office) {
+    return 'باقات $office';
+  }
+
+  @override
+  String get packages_showAllOffices => 'عرض الكل';
+
+  @override
+  String packages_officePackagesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count باقة',
+      few: '$count باقات',
+      two: 'باقتان',
+      one: 'باقة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get packages_emptyMarketplaceTitle => 'لا توجد باقات متاحة حالياً';
+
+  @override
+  String get packages_emptyMarketplaceBody =>
+      'لم يطرح أي مكتب باقات للحجز بعد. استكشف الرحلات المتاحة الآن.';
+
+  @override
+  String get packages_exploreTrips => 'استكشف الرحلات المتاحة';
+
+  @override
+  String get packages_emptyOfficeTitle =>
+      'لا توجد باقات متاحة من هذا المكتب حالياً';
+
+  @override
+  String get packages_emptyOfficeBody =>
+      'جرّب مكتباً آخر أو تصفّح كل الباقات المتاحة في السوق.';
+
+  @override
+  String get packages_viewAllOffices => 'عرض جميع المكاتب';
+
+  @override
+  String get packages_providedBy => 'مقدّم الخدمة';
+
+  @override
+  String get packages_viewOffice => 'عرض المكتب';
+
+  @override
+  String get packages_chooseTripToSubscribe => 'اختر رحلة للاشتراك';
+
+  @override
   String get error_timeout => 'انتهى وقت الاتصال، يرجى المحاولة مرة أخرى.';
 
   @override
@@ -2111,6 +2180,19 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get support_topicHint => 'اختر الموضوع الأقرب لمشكلتك.';
+
+  @override
+  String get support_officeLabel => 'أي مكتب يخص هذا البلاغ؟';
+
+  @override
+  String get support_officeHint =>
+      'اختر المكتب الذي يخصه بلاغك ليصل إلى فريقه.';
+
+  @override
+  String get support_officePlaceholder => 'اختر مكتبًا';
+
+  @override
+  String get support_officeRequired => 'من فضلك اختر مكتبًا';
 
   @override
   String get support_subjectLabel => 'الموضوع';

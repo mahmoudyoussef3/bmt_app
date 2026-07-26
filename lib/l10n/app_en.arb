@@ -280,6 +280,32 @@
   },
   "packages_subscriptionCost": "Subscription Cost",
   "packages_route": "Route",
+  "packages_marketplaceSubtitle": "Discover packages from transport offices",
+  "packages_allOffices": "All offices",
+  "packages_filterByOffice": "Choose office",
+  "packages_officeSearchHint": "Search by office name",
+  "packages_noOfficeMatch": "No office matches \"{query}\"",
+  "@packages_noOfficeMatch": {
+    "placeholders": { "query": { "type": "String" } }
+  },
+  "packages_fromOffice": "{office} packages",
+  "@packages_fromOffice": {
+    "placeholders": { "office": { "type": "String" } }
+  },
+  "packages_showAllOffices": "Show all",
+  "packages_officePackagesCount": "{count, plural, =1{1 package} other{{count} packages}}",
+  "@packages_officePackagesCount": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "packages_emptyMarketplaceTitle": "No packages available yet",
+  "packages_emptyMarketplaceBody": "No office has listed packages for booking yet. Explore the available trips instead.",
+  "packages_exploreTrips": "Explore available trips",
+  "packages_emptyOfficeTitle": "No packages from this office yet",
+  "packages_emptyOfficeBody": "Try another office, or browse every package in the marketplace.",
+  "packages_viewAllOffices": "View all offices",
+  "packages_providedBy": "Provided by",
+  "packages_viewOffice": "View office",
+  "packages_chooseTripToSubscribe": "Choose a trip to subscribe",
   "error_timeout": "Connection timed out. Please try again.",
   "error_cancelled": "Request was cancelled.",
   "error_noInternet": "No internet connection.",
@@ -964,6 +990,10 @@
   "support_createTicket": "Create a ticket",
   "support_topicLabel": "What is this about?",
   "support_topicHint": "Pick the topic closest to your issue.",
+  "support_officeLabel": "Which office is this about?",
+  "support_officeHint": "Pick the office your complaint concerns so it reaches their team.",
+  "support_officePlaceholder": "Select an office",
+  "support_officeRequired": "Please choose an office",
   "support_subjectLabel": "Subject",
   "support_subjectHint": "A short summary of the problem.",
   "support_subjectPlaceholder": "e.g. Charged twice for one booking",

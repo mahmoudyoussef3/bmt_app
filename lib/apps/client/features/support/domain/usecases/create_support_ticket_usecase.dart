@@ -10,6 +10,7 @@ class CreateSupportTicketUseCase {
     required String category,
     required String title,
     required String description,
+    String? officeId,
     String? relatedBookingId,
     String? relatedTripId,
   }) {
@@ -17,6 +18,7 @@ class CreateSupportTicketUseCase {
       category: category,
       title: title,
       description: description,
+      officeId: officeId,
       relatedBookingId: relatedBookingId,
       relatedTripId: relatedTripId,
     );

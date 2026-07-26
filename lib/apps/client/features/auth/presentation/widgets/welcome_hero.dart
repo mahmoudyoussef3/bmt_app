@@ -19,6 +19,7 @@ class WelcomeHero extends StatelessWidget {
         Container(
           width: 76,
           height: 76,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             gradient: ClientColors.primaryGradientFor(context),
             borderRadius: BorderRadius.circular(24),
@@ -30,10 +31,11 @@ class WelcomeHero extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.directions_bus_rounded,
+          child: Image.asset(
+            'assets/branding/brand_glyph.png',
             color: Colors.white,
-            size: 40,
+            height: 40,
+            width: 40,
           ),
         ),
         const SizedBox(height: ClientSpacing.lg),

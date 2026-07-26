@@ -22,6 +22,7 @@ class AuthHero extends StatelessWidget {
         Container(
           width: 60,
           height: 60,
+          alignment: Alignment.center,
           decoration: BoxDecoration(
             gradient: ClientColors.primaryGradientFor(context),
             borderRadius: BorderRadius.circular(ClientRadius.lg),
@@ -33,10 +34,11 @@ class AuthHero extends StatelessWidget {
               ),
             ],
           ),
-          child: const Icon(
-            Icons.directions_bus_rounded,
+          child: Image.asset(
+            'assets/branding/brand_glyph.png',
             color: ClientColors.textInverse,
-            size: 30,
+            height: 32,
+            width: 32,
           ),
         ),
         const SizedBox(height: ClientSpacing.md),

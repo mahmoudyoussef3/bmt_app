@@ -6,11 +6,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_attachment.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/related_booking_option.dart';
+import 'package:bmt_app/apps/client/features/support/domain/entities/support_office_option.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
 import 'package:bmt_app/apps/client/features/support/domain/repositories/support_repository.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/create_support_ticket_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_my_support_tickets_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_related_booking_options_usecase.dart';
+import 'package:bmt_app/apps/client/features/support/domain/usecases/get_support_office_options_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_ticket_details_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/screens/support_ticket_details_screen.dart';
@@ -41,10 +43,14 @@ class _StaticRepository implements SupportRepository {
       const [];
 
   @override
+  Future<List<SupportOfficeOption>> getOfficeOptions() async => const [];
+
+  @override
   Future<SupportTicket> createTicket({
     required String category,
     required String title,
     required String description,
+    String? officeId,
     String? relatedBookingId,
     String? relatedTripId,
   }) => throw UnimplementedError();
@@ -84,6 +90,7 @@ Future<SupportCubit> _pumpDetails(
     getMySupportTickets: GetMySupportTicketsUseCase(repo),
     createSupportTicket: CreateSupportTicketUseCase(repo),
     getRelatedBookingOptions: GetRelatedBookingOptionsUseCase(repo),
+    getOfficeOptions: GetSupportOfficeOptionsUseCase(repo),
     getTicketDetails: GetTicketDetailsUseCase(repo),
     supportRepository: repo,
   );

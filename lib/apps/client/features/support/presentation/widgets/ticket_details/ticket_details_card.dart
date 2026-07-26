@@ -21,12 +21,13 @@ class TicketDetailsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.outlineVariant.withAlpha(30)),
+        border: Border.all(color: scheme.outlineVariant.withAlpha(40), width: 1.5),
         boxShadow: [
           BoxShadow(
-            color: scheme.shadow.withAlpha(10),
-            blurRadius: 24,
-            offset: const Offset(0, 8),
+            color: scheme.shadow.withAlpha(8),
+            blurRadius: 32,
+            spreadRadius: -4,
+            offset: const Offset(0, 12),
           ),
         ],
       ),

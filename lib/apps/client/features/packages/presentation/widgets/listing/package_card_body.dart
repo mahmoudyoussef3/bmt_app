@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../../domain/entities/package_plan.dart';
+import '../package_office_badge.dart';
 import '../package_stat_column.dart';
 import 'package_card_price_row.dart';
 
@@ -24,48 +25,34 @@ class PackageCardBody extends StatelessWidget {
             context,
           ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
         ),
-        if (package.officeName.isNotEmpty) ...[
-          const SizedBox(height: 4),
-          Row(
-            children: [
-              Icon(
-                Icons.storefront_rounded,
-                size: 13,
-                color: Theme.of(context).colorScheme.onSurface.withAlpha(150),
-              ),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  package.officeName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withAlpha(150),
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
+        if (package.hasOffice) ...[
+          const SizedBox(height: 8),
+          PackageOfficeBadge(package: package),
         ],
         const SizedBox(height: 12),
+        // Each stat takes an equal share so long Arabic labels wrap within their
+        // column on a small phone instead of overflowing the row.
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            PackageStatColumn(
-              label: l10n.packages_duration,
-              value: l10n.packages_daysCount(package.durationDays),
+            Expanded(
+              child: PackageStatColumn(
+                label: l10n.packages_duration,
+                value: l10n.packages_daysCount(package.durationDays),
+              ),
             ),
-            PackageStatColumn(
-              label: l10n.packages_totalTrips,
-              value: l10n.packages_ridesCount(package.rideCount),
+            Expanded(
+              child: PackageStatColumn(
+                label: l10n.packages_totalTrips,
+                value: l10n.packages_ridesCount(package.rideCount),
+              ),
             ),
-            PackageStatColumn(
-              label: l10n.packages_perRide,
-              value: l10n.packages_egpAmount(package.pricePerRide.toString()),
-              valueColor: Theme.of(context).colorScheme.secondary,
+            Expanded(
+              child: PackageStatColumn(
+                label: l10n.packages_perRide,
+                value: l10n.packages_egpAmount(package.pricePerRide.toString()),
+                valueColor: Theme.of(context).colorScheme.secondary,
+              ),
             ),
           ],
         ),

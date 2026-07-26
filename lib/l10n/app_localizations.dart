@@ -1220,6 +1220,108 @@ abstract class AppLocalizations {
   /// **'Route'**
   String get packages_route;
 
+  /// No description provided for @packages_marketplaceSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover packages from transport offices'**
+  String get packages_marketplaceSubtitle;
+
+  /// No description provided for @packages_allOffices.
+  ///
+  /// In en, this message translates to:
+  /// **'All offices'**
+  String get packages_allOffices;
+
+  /// No description provided for @packages_filterByOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose office'**
+  String get packages_filterByOffice;
+
+  /// No description provided for @packages_officeSearchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by office name'**
+  String get packages_officeSearchHint;
+
+  /// No description provided for @packages_noOfficeMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'No office matches \"{query}\"'**
+  String packages_noOfficeMatch(String query);
+
+  /// No description provided for @packages_fromOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'{office} packages'**
+  String packages_fromOffice(String office);
+
+  /// No description provided for @packages_showAllOffices.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all'**
+  String get packages_showAllOffices;
+
+  /// No description provided for @packages_officePackagesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 package} other{{count} packages}}'**
+  String packages_officePackagesCount(int count);
+
+  /// No description provided for @packages_emptyMarketplaceTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No packages available yet'**
+  String get packages_emptyMarketplaceTitle;
+
+  /// No description provided for @packages_emptyMarketplaceBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No office has listed packages for booking yet. Explore the available trips instead.'**
+  String get packages_emptyMarketplaceBody;
+
+  /// No description provided for @packages_exploreTrips.
+  ///
+  /// In en, this message translates to:
+  /// **'Explore available trips'**
+  String get packages_exploreTrips;
+
+  /// No description provided for @packages_emptyOfficeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No packages from this office yet'**
+  String get packages_emptyOfficeTitle;
+
+  /// No description provided for @packages_emptyOfficeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Try another office, or browse every package in the marketplace.'**
+  String get packages_emptyOfficeBody;
+
+  /// No description provided for @packages_viewAllOffices.
+  ///
+  /// In en, this message translates to:
+  /// **'View all offices'**
+  String get packages_viewAllOffices;
+
+  /// No description provided for @packages_providedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Provided by'**
+  String get packages_providedBy;
+
+  /// No description provided for @packages_viewOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'View office'**
+  String get packages_viewOffice;
+
+  /// No description provided for @packages_chooseTripToSubscribe.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a trip to subscribe'**
+  String get packages_chooseTripToSubscribe;
+
   /// No description provided for @error_timeout.
   ///
   /// In en, this message translates to:
@@ -3955,6 +4057,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pick the topic closest to your issue.'**
   String get support_topicHint;
+
+  /// No description provided for @support_officeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Which office is this about?'**
+  String get support_officeLabel;
+
+  /// No description provided for @support_officeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the office your complaint concerns so it reaches their team.'**
+  String get support_officeHint;
+
+  /// No description provided for @support_officePlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Select an office'**
+  String get support_officePlaceholder;
+
+  /// No description provided for @support_officeRequired.
+  ///
+  /// In en, this message translates to:
+  /// **'Please choose an office'**
+  String get support_officeRequired;
 
   /// No description provided for @support_subjectLabel.
   ///

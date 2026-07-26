@@ -84,10 +84,13 @@ abstract final class ClientCubitScopes {
     child: child,
   );
 
-  static Widget packages(Widget child) => BlocProvider<PackagesCubit>(
-    create: (_) => clientGetIt<PackagesCubit>()..load(),
-    child: child,
-  );
+  static Widget packages(Widget child, {String? initialOfficeId}) =>
+      BlocProvider<PackagesCubit>(
+        create: (_) =>
+            clientGetIt<PackagesCubit>()
+              ..load(initialOfficeId: initialOfficeId),
+        child: child,
+      );
 
   static Widget mySubscription(Widget child) =>
       BlocProvider<MySubscriptionCubit>(

@@ -33,6 +33,13 @@ class SupportRelatedBookingsLoaded extends SupportState {
   const SupportRelatedBookingsLoaded();
 }
 
+/// Signals that the office-picker options finished loading. Like
+/// [SupportRelatedBookingsLoaded], the list lives on the cubit; this only
+/// nudges the create form to rebuild once the offices are available.
+class SupportOfficesLoaded extends SupportState {
+  const SupportOfficesLoaded();
+}
+
 class SupportError extends SupportState {
   final String message;
 

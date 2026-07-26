@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:bmt_app/apps/client/features/support/domain/entities/related_booking_option.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_attachment.dart';
+import 'package:bmt_app/apps/client/features/support/domain/entities/support_office_option.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_ticket.dart';
 import 'package:bmt_app/apps/client/features/support/domain/repositories/support_repository.dart';
 
@@ -30,6 +31,7 @@ class FakeSupportRepository implements SupportRepository {
   FakeSupportRepository({
     List<SupportTicket>? tickets,
     this.relatedBookingOptions = const [],
+    this.officeOptions = const [],
     this.throwOnLoad,
   }) : tickets = tickets ?? [];
 
@@ -37,6 +39,9 @@ class FakeSupportRepository implements SupportRepository {
 
   /// Bookings offered to the create form's optional "related booking" picker.
   final List<RelatedBookingOption> relatedBookingOptions;
+
+  /// Offices offered to the create form's required office picker.
+  final List<SupportOfficeOption> officeOptions;
 
   /// When set, [getMyTickets] throws it instead of returning [tickets].
   final Object? throwOnLoad;
@@ -59,6 +64,7 @@ class FakeSupportRepository implements SupportRepository {
     required String category,
     required String title,
     required String description,
+    String? officeId,
     String? relatedBookingId,
     String? relatedTripId,
   }) async {
@@ -66,6 +72,7 @@ class FakeSupportRepository implements SupportRepository {
       'category': category,
       'title': title,
       'description': description,
+      'officeId': officeId,
       'relatedBookingId': relatedBookingId,
       'relatedTripId': relatedTripId,
     };
@@ -87,6 +94,11 @@ class FakeSupportRepository implements SupportRepository {
   @override
   Future<List<RelatedBookingOption>> getRelatedBookingOptions() async {
     return relatedBookingOptions;
+  }
+
+  @override
+  Future<List<SupportOfficeOption>> getOfficeOptions() async {
+    return officeOptions;
   }
 
   @override

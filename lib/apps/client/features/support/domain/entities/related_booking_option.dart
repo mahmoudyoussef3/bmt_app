@@ -1,10 +1,10 @@
 /// A booking the client may attach to a support ticket.
 ///
 /// Linking matters beyond context for the agent: the backend derives the
-/// ticket's owning office from the linked booking/trip, and only a linked
-/// ticket reaches that office's dashboard — an unlinked one stays with EWT
-/// platform support. The client never chooses an office directly; they choose
-/// the booking, and the server resolves the rest.
+/// ticket's owning office from the linked booking/trip, which overrides the
+/// office the client picked on the form. When no booking is linked the ticket
+/// goes to the office the client chose directly; either way it always reaches
+/// an office's dashboard.
 class RelatedBookingOption {
   const RelatedBookingOption({
     required this.bookingId,

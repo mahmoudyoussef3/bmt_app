@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/features/support/domain/entities/related_boo
 import 'package:bmt_app/apps/client/features/support/domain/usecases/create_support_ticket_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_my_support_tickets_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_related_booking_options_usecase.dart';
+import 'package:bmt_app/apps/client/features/support/domain/usecases/get_support_office_options_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/domain/usecases/get_ticket_details_usecase.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_state.dart';
@@ -14,6 +15,7 @@ SupportCubit _cubit(FakeSupportRepository repository) => SupportCubit(
   getMySupportTickets: GetMySupportTicketsUseCase(repository),
   createSupportTicket: CreateSupportTicketUseCase(repository),
   getRelatedBookingOptions: GetRelatedBookingOptionsUseCase(repository),
+  getOfficeOptions: GetSupportOfficeOptionsUseCase(repository),
   getTicketDetails: GetTicketDetailsUseCase(repository),
   supportRepository: repository,
 );
@@ -73,6 +75,7 @@ void main() {
         'category': 'Lost Item',
         'title': 'Left my bag on the bus',
         'description': 'A black backpack, left on seat 12 this morning.',
+        'officeId': null,
         'relatedBookingId': null,
         'relatedTripId': null,
       });

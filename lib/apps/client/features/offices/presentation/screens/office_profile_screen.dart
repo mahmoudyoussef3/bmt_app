@@ -6,12 +6,14 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../domain/entities/office_summary.dart';
 import '../../domain/entities/office_trip.dart';
 import '../cubit/office_profile_cubit.dart';
 import '../cubit/office_profile_state.dart';
+import '../widgets/office_package_tile.dart';
 import '../widgets/office_profile_header.dart';
 import '../widgets/office_route_tile.dart';
 import '../widgets/office_trip_tile.dart';
@@ -32,6 +34,16 @@ class OfficeProfileScreen extends StatelessWidget {
       context,
       BookingRoutes.routeSelection,
       arguments: BookingSearchQuery(routeId: routeId),
+    );
+  }
+
+  /// Opens the packages marketplace already filtered to this office, so the
+  /// rider lands on exactly this seller's plans and can compare and subscribe.
+  void _openPackages(BuildContext context) {
+    Navigator.pushNamed(
+      context,
+      PackagesRoutes.subscription,
+      arguments: <String, dynamic>{'initialOfficeId': office.id},
     );
   }
 
@@ -76,44 +88,68 @@ class OfficeProfileScreen extends StatelessWidget {
                 onRetry: () =>
                     context.read<OfficeProfileCubit>().load(office.id),
               ),
-              OfficeProfileLoaded(:final routes, :final trips) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _Section(
-                    title: l10n.offices_departuresHeader,
-                    child: trips.isEmpty
-                        ? _EmptyNote(message: l10n.offices_noDepartures)
-                        : Column(
-                            children: [
-                              for (final trip in trips) ...[
-                                OfficeTripTile(
-                                  trip: trip,
-                                  onTap: () => _openTrip(context, trip),
-                                ),
-                                const SizedBox(height: ClientSpacing.sm),
+              OfficeProfileLoaded(
+                :final routes,
+                :final trips,
+                :final packages,
+              ) =>
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _Section(
+                      title: l10n.offices_departuresHeader,
+                      child: trips.isEmpty
+                          ? _EmptyNote(message: l10n.offices_noDepartures)
+                          : Column(
+                              children: [
+                                for (final trip in trips) ...[
+                                  OfficeTripTile(
+                                    trip: trip,
+                                    onTap: () => _openTrip(context, trip),
+                                  ),
+                                  const SizedBox(height: ClientSpacing.sm),
+                                ],
                               ],
-                            ],
-                          ),
-                  ),
-                  const SizedBox(height: ClientSpacing.md),
-                  _Section(
-                    title: l10n.offices_routesHeader,
-                    child: routes.isEmpty
-                        ? _EmptyNote(message: l10n.offices_noRoutes)
-                        : Column(
-                            children: [
-                              for (final route in routes) ...[
-                                OfficeRouteTile(
-                                  route: route,
-                                  onTap: () => _openRoute(context, route.id),
-                                ),
-                                const SizedBox(height: ClientSpacing.sm),
+                            ),
+                    ),
+                    const SizedBox(height: ClientSpacing.md),
+                    _Section(
+                      title: l10n.offices_routesHeader,
+                      child: routes.isEmpty
+                          ? _EmptyNote(message: l10n.offices_noRoutes)
+                          : Column(
+                              children: [
+                                for (final route in routes) ...[
+                                  OfficeRouteTile(
+                                    route: route,
+                                    onTap: () => _openRoute(context, route.id),
+                                  ),
+                                  const SizedBox(height: ClientSpacing.sm),
+                                ],
                               ],
+                            ),
+                    ),
+                    // Packages are supplementary, so the section only appears
+                    // when this office actually sells any — no empty note.
+                    if (packages.isNotEmpty) ...[
+                      const SizedBox(height: ClientSpacing.md),
+                      _Section(
+                        title: l10n.packages_commutePackages,
+                        child: Column(
+                          children: [
+                            for (final package in packages) ...[
+                              OfficePackageTile(
+                                package: package,
+                                onTap: () => _openPackages(context),
+                              ),
+                              const SizedBox(height: ClientSpacing.sm),
                             ],
-                          ),
-                  ),
-                ],
-              ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
             },
           ),
         ],

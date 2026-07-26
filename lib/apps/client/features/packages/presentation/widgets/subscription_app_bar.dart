@@ -28,10 +28,18 @@ class SubscriptionAppBar extends StatelessWidget
     SubscriptionStep.details => context.l10n.packages_packageDetails,
   };
 
+  /// The listing is a marketplace, so it names what the rider is browsing; the
+  /// detail pane is about one plan and needs no subtitle.
+  String? _subtitle(BuildContext context) => switch (step) {
+    SubscriptionStep.listing => context.l10n.packages_marketplaceSubtitle,
+    SubscriptionStep.details => null,
+  };
+
   @override
   Widget build(BuildContext context) {
     return ClientAppBar(
       title: _title(context),
+      subtitle: _subtitle(context),
       onBack: () => _onBack(context),
       actions: [
         IconButton(

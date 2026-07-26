@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:uuid/uuid.dart';
 import '../models/related_booking_option_model.dart';
+import '../models/support_office_option_model.dart';
 import '../models/support_ticket_model.dart';
 import '../models/support_attachment_model.dart';
 
@@ -35,12 +36,17 @@ class SupabaseSupportDatasource {
     required String category,
     required String title,
     required String description,
+    String? officeId,
     String? relatedBookingId,
     String? relatedTripId,
   }) async {
     final ticketNumber =
         '#TK-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
 
+    // `office_id` is the office the ticket should reach. The server has the last
+    // word: a linked booking/trip overrides it with that trip's office, and an
+    // office that isn't a real, pickable one is discarded — so this is a routing
+    // hint the backend validates, never a trusted grant.
     final insertData = {
       'client_id': _currentUserId,
       'ticket_number': ticketNumber,
@@ -49,6 +55,7 @@ class SupabaseSupportDatasource {
       'description': description,
       'priority': _defaultPriority,
       'status': 'submitted',
+      'office_id': officeId,
       'related_booking_id': relatedBookingId,
       'related_trip_id': relatedTripId,
     };
@@ -77,6 +84,21 @@ class SupabaseSupportDatasource {
 
     return response
         .map((e) => RelatedBookingOptionModel.fromJson(e))
+        .toList();
+  }
+
+  /// The offices a client can direct a complaint to, for the create-ticket
+  /// form's office picker. `public_offices` is the same sanitised marketplace
+  /// surface the client already browses — it lists only active, listed offices,
+  /// which is exactly the set the server accepts as a routing target.
+  Future<List<SupportOfficeOptionModel>> getOfficeOptions() async {
+    final response = await _supabase
+        .from('public_offices')
+        .select('id, name')
+        .order('name', ascending: true);
+
+    return response
+        .map((e) => SupportOfficeOptionModel.fromJson(e))
         .toList();
   }
 

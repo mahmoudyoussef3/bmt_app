@@ -13,8 +13,21 @@ class PackagesRepositoryImpl implements PackagesRepository {
   @override
   Future<List<PackagePlan>> getPackages() async {
     final models = await _datasource.getPackages();
-    return models.toEntities();
+    return _marketplaceReady(models.toEntities());
   }
+
+  @override
+  Future<List<PackagePlan>> getOfficePackages(String officeId) async {
+    final models = await _datasource.getPackages(officeId: officeId);
+    return _marketplaceReady(models.toEntities());
+  }
+
+  /// Drops any package whose seller did not resolve through `public_offices`.
+  /// The server filter (embedding a listed-office view) is the fast path; this
+  /// predicate is the guarantee — a rider never sees a package they cannot
+  /// attribute to an office, mirroring how the trip surfaces re-check status.
+  List<PackagePlan> _marketplaceReady(List<PackagePlan> packages) =>
+      packages.where((package) => package.hasOffice).toList(growable: false);
 
   @override
   Future<MySubscription?> getMySubscription() async {

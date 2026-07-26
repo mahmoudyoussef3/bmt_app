@@ -101,6 +101,7 @@ import '../../features/packages/data/repositories/packages_repository_impl.dart'
 import '../../features/packages/domain/repositories/packages_repository.dart';
 import '../../features/packages/domain/usecases/filter_packages_usecase.dart';
 import '../../features/packages/domain/usecases/get_my_subscription_usecase.dart';
+import '../../features/packages/domain/usecases/get_office_packages_usecase.dart';
 import '../../features/packages/domain/usecases/get_packages_usecase.dart';
 import '../../features/packages/presentation/cubit/my_subscription_cubit.dart';
 import '../../features/packages/presentation/cubit/packages_cubit.dart';
@@ -155,6 +156,7 @@ import '../../features/support/domain/repositories/support_repository.dart';
 import '../../features/support/domain/usecases/create_support_ticket_usecase.dart';
 import '../../features/support/domain/usecases/get_my_support_tickets_usecase.dart';
 import '../../features/support/domain/usecases/get_related_booking_options_usecase.dart';
+import '../../features/support/domain/usecases/get_support_office_options_usecase.dart';
 import '../../features/support/domain/usecases/get_ticket_details_usecase.dart';
 
 import '../../features/support/presentation/cubit/support_cubit.dart';
@@ -813,6 +815,14 @@ void _registerPackagesDependencies() {
     );
   }
 
+  // Consumed by the offices feature's profile to list one seller's packages,
+  // so the whole packages data path stays behind a single repository.
+  if (!clientGetIt.isRegistered<GetOfficePackagesUseCase>()) {
+    clientGetIt.registerLazySingleton<GetOfficePackagesUseCase>(
+      () => GetOfficePackagesUseCase(clientGetIt<PackagesRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<MySubscriptionCubit>()) {
     clientGetIt.registerFactory<MySubscriptionCubit>(
       () => MySubscriptionCubit(clientGetIt<GetMySubscriptionUseCase>()),
@@ -899,6 +909,12 @@ void _registerSupportDependencies() {
     );
   }
 
+  if (!clientGetIt.isRegistered<GetSupportOfficeOptionsUseCase>()) {
+    clientGetIt.registerLazySingleton<GetSupportOfficeOptionsUseCase>(
+      () => GetSupportOfficeOptionsUseCase(clientGetIt<SupportRepository>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<SupportCubit>()) {
     clientGetIt.registerFactory<SupportCubit>(
       () => SupportCubit(
@@ -906,6 +922,7 @@ void _registerSupportDependencies() {
         createSupportTicket: clientGetIt<CreateSupportTicketUseCase>(),
         getRelatedBookingOptions:
             clientGetIt<GetRelatedBookingOptionsUseCase>(),
+        getOfficeOptions: clientGetIt<GetSupportOfficeOptionsUseCase>(),
         getTicketDetails: clientGetIt<GetTicketDetailsUseCase>(),
         supportRepository: clientGetIt<SupportRepository>(),
       ),
@@ -1053,6 +1070,7 @@ void _registerOfficesDependencies() {
       () => OfficeProfileCubit(
         clientGetIt<GetOfficeRoutesUseCase>(),
         clientGetIt<GetOfficeTripsUseCase>(),
+        clientGetIt<GetOfficePackagesUseCase>(),
       ),
     );
   }

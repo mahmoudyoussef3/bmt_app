@@ -25,6 +25,10 @@ class _StaticPackagesRepository implements PackagesRepository {
 
   @override
   Future<List<PackagePlan>> getPackages() => throw UnimplementedError();
+
+  @override
+  Future<List<PackagePlan>> getOfficePackages(String officeId) =>
+      throw UnimplementedError();
 }
 
 Future<MySubscriptionCubit> _pump(
@@ -49,39 +53,40 @@ Future<MySubscriptionCubit> _pump(
 }
 
 void main() {
-  testWidgets('renders the rider\'s own subscription usage, not the catalogue', (
-    tester,
-  ) async {
-    final cubit = await _pump(
-      tester,
-      _StaticPackagesRepository(
-        subscription: MySubscription(
-          id: 'sub-1',
-          packageName: 'Monthly Commute',
-          routeName: 'Maadi - Downtown',
-          status: 'active',
-          tripsTotal: 30,
-          tripsUsed: 12,
-          startDate: DateTime(2026, 7, 1),
-          endDate: DateTime(2026, 7, 31),
+  testWidgets(
+    'renders the rider\'s own subscription usage, not the catalogue',
+    (tester) async {
+      final cubit = await _pump(
+        tester,
+        _StaticPackagesRepository(
+          subscription: MySubscription(
+            id: 'sub-1',
+            packageName: 'Monthly Commute',
+            routeName: 'Maadi - Downtown',
+            status: 'active',
+            tripsTotal: 30,
+            tripsUsed: 12,
+            startDate: DateTime(2026, 7, 1),
+            endDate: DateTime(2026, 7, 31),
+          ),
         ),
-      ),
-    );
+      );
 
-    expect(tester.takeException(), isNull);
-    expect(find.text('Monthly Commute'), findsOneWidget);
-    expect(find.text('Maadi - Downtown'), findsOneWidget);
-    expect(find.text('Active'), findsOneWidget);
-    expect(find.text('12 of 30 trips used'), findsOneWidget);
-    expect(find.text('18 trips remaining'), findsOneWidget);
-    expect(find.text('1/7/2026'), findsOneWidget);
-    expect(find.text('31/7/2026'), findsOneWidget);
-    // The bug this screen fixes: tapping the active-package card must never
-    // land on the plan catalogue.
-    expect(find.text('Commute Packages'), findsNothing);
+      expect(tester.takeException(), isNull);
+      expect(find.text('Monthly Commute'), findsOneWidget);
+      expect(find.text('Maadi - Downtown'), findsOneWidget);
+      expect(find.text('Active'), findsOneWidget);
+      expect(find.text('12 of 30 trips used'), findsOneWidget);
+      expect(find.text('18 trips remaining'), findsOneWidget);
+      expect(find.text('1/7/2026'), findsOneWidget);
+      expect(find.text('31/7/2026'), findsOneWidget);
+      // The bug this screen fixes: tapping the active-package card must never
+      // land on the plan catalogue.
+      expect(find.text('Commute Packages'), findsNothing);
 
-    await cubit.close();
-  });
+      await cubit.close();
+    },
+  );
 
   testWidgets('unlimited-trip packages skip the used/remaining copy', (
     tester,

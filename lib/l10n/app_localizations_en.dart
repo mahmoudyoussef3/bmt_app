@@ -613,6 +613,72 @@ class AppLocalizationsEn extends AppLocalizations {
   String get packages_route => 'Route';
 
   @override
+  String get packages_marketplaceSubtitle =>
+      'Discover packages from transport offices';
+
+  @override
+  String get packages_allOffices => 'All offices';
+
+  @override
+  String get packages_filterByOffice => 'Choose office';
+
+  @override
+  String get packages_officeSearchHint => 'Search by office name';
+
+  @override
+  String packages_noOfficeMatch(String query) {
+    return 'No office matches \"$query\"';
+  }
+
+  @override
+  String packages_fromOffice(String office) {
+    return '$office packages';
+  }
+
+  @override
+  String get packages_showAllOffices => 'Show all';
+
+  @override
+  String packages_officePackagesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count packages',
+      one: '1 package',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get packages_emptyMarketplaceTitle => 'No packages available yet';
+
+  @override
+  String get packages_emptyMarketplaceBody =>
+      'No office has listed packages for booking yet. Explore the available trips instead.';
+
+  @override
+  String get packages_exploreTrips => 'Explore available trips';
+
+  @override
+  String get packages_emptyOfficeTitle => 'No packages from this office yet';
+
+  @override
+  String get packages_emptyOfficeBody =>
+      'Try another office, or browse every package in the marketplace.';
+
+  @override
+  String get packages_viewAllOffices => 'View all offices';
+
+  @override
+  String get packages_providedBy => 'Provided by';
+
+  @override
+  String get packages_viewOffice => 'View office';
+
+  @override
+  String get packages_chooseTripToSubscribe => 'Choose a trip to subscribe';
+
+  @override
   String get error_timeout => 'Connection timed out. Please try again.';
 
   @override
@@ -2125,6 +2191,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get support_topicHint => 'Pick the topic closest to your issue.';
+
+  @override
+  String get support_officeLabel => 'Which office is this about?';
+
+  @override
+  String get support_officeHint =>
+      'Pick the office your complaint concerns so it reaches their team.';
+
+  @override
+  String get support_officePlaceholder => 'Select an office';
+
+  @override
+  String get support_officeRequired => 'Please choose an office';
 
   @override
   String get support_subjectLabel => 'Subject';

@@ -233,11 +233,13 @@ abstract final class ClientRouter {
         checkoutData: PaymentCheckoutData.fromArguments(_args(context)),
       ),
     ),
-    PackagesRoutes.subscription: (context) => ClientCubitScopes.packages(
-      SubscriptionScreen(
-        arguments: SubscriptionArguments.fromArguments(_args(context)),
-      ),
-    ),
+    PackagesRoutes.subscription: (context) {
+      final arguments = SubscriptionArguments.fromArguments(_args(context));
+      return ClientCubitScopes.packages(
+        SubscriptionScreen(arguments: arguments),
+        initialOfficeId: arguments.initialOfficeId,
+      );
+    },
     PackagesRoutes.mySubscription: (_) =>
         ClientCubitScopes.mySubscription(const MySubscriptionScreen()),
   };

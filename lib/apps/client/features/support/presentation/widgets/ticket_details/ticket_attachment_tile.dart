@@ -17,7 +17,6 @@ class TicketAttachmentTile extends StatelessWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
@@ -30,8 +29,17 @@ class TicketAttachmentTile extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        children: [
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () {
+            // Future implementation: open or download attachment
+          },
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
@@ -83,6 +91,9 @@ class TicketAttachmentTile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+      ),
+      ),
       ),
     );
   }
