@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_connectivity_banner.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
@@ -112,6 +114,14 @@ class _TripExecutionView extends StatelessWidget {
                   _InlineError(message: message),
                   const SizedBox(height: CaptainDesignTokens.s24),
                 ],
+                // The live map is the trip's primary operational surface once
+                // it is running: the captain's position, the route, and the
+                // pickup sequence. Offered from boarding onward; the map itself
+                // reads the device GPS locally and adds no database traffic.
+                if (stage.isLive) ...[
+                  _LiveMapCta(trip: trip),
+                  const SizedBox(height: CaptainDesignTokens.s24),
+                ],
                 // Kept mounted across the whole trip so the transition into
                 // and out of `inProgress` is an explicit start/stop rather
                 // than a widget disposal the timer happens to ride on.
@@ -170,6 +180,74 @@ class _TripExecutionView extends StatelessWidget {
     final index = snapshot.arrivedStationsCount;
     if (index >= trip.stops.length) return null;
     return trip.stops[index];
+  }
+}
+
+/// The entry point to the live trip map — the trip's primary operational
+/// surface while it is running. A hero card rather than a tools-list row: the
+/// map is where the captain reads their position and works the pickups.
+class _LiveMapCta extends StatelessWidget {
+  const _LiveMapCta({required this.trip});
+
+  final AssignedTrip trip;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: () => context.openTripMap(trip),
+      borderRadius: CaptainDesignTokens.br24,
+      child: Container(
+        padding: const EdgeInsets.all(CaptainDesignTokens.s20),
+        decoration: BoxDecoration(
+          gradient: CaptainColors.primaryGradient(context),
+          borderRadius: CaptainDesignTokens.br24,
+          boxShadow: CaptainDesignTokens.floatingShadow(context),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.18),
+                borderRadius: CaptainDesignTokens.br16,
+              ),
+              child: const Icon(
+                Icons.map_rounded,
+                color: Colors.white,
+                size: 26,
+              ),
+            ),
+            const SizedBox(width: CaptainDesignTokens.s16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'الخريطة المباشرة',
+                    style: CaptainTypography.titleMedium(context).copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'موقعك، المسار، ونقطة التجميع القادمة',
+                    style: CaptainTypography.bodySmall(context).copyWith(
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.white.withValues(alpha: 0.9),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 

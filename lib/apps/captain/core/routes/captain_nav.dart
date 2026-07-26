@@ -24,6 +24,9 @@ extension CaptainNav on BuildContext {
   Future<void> openTripExecution(AssignedTrip trip) =>
       _push<void>(CaptainRoutes.tripExecution, trip);
 
+  Future<void> openTripMap(AssignedTrip trip) =>
+      _push<void>(CaptainRoutes.tripMap, trip);
+
   Future<void> openPassengerManifest(String tripId) =>
       _push<void>(CaptainRoutes.passengerManifest, tripId);
 

@@ -100,6 +100,12 @@ import '../../features/trip_execution/domain/usecases/start_boarding_usecase.dar
 import '../../features/trip_execution/domain/usecases/watch_trip_execution_snapshot_usecase.dart';
 import '../../features/trip_execution/domain/usecases/start_trip_usecase.dart';
 import '../../features/trip_execution/presentation/cubit/trip_execution_cubit.dart';
+import '../../features/trip_map/data/datasources/captain_location_stream_datasource.dart';
+import '../../features/trip_map/data/repositories/captain_location_stream_repository_impl.dart';
+import '../../features/trip_map/domain/repositories/captain_location_stream_repository.dart';
+import '../../features/trip_map/domain/usecases/ensure_location_ready_usecase.dart';
+import '../../features/trip_map/domain/usecases/watch_captain_position_usecase.dart';
+import '../../features/trip_map/presentation/cubit/captain_trip_map_cubit.dart';
 import '../../features/trip_status_updates/data/datasources/trip_status_datasource.dart';
 import '../../features/trip_status_updates/data/repositories/trip_status_repository_impl.dart';
 import '../../features/trip_status_updates/domain/repositories/trip_status_repository.dart';
@@ -142,6 +148,7 @@ void registerCaptainDependencies() {
   _registerPassengerManifestDependencies();
   _registerLiveLocationDependencies();
   _registerTripExecutionDependencies();
+  _registerTripMapDependencies();
   _registerCommunicationDependencies();
   _registerIncidentsDependencies();
   _registerTripStatusUpdateDependencies();
@@ -442,6 +449,50 @@ void _registerTripExecutionDependencies() {
         startBoarding: captainGetIt<StartBoardingUseCase>(),
         startTrip: captainGetIt<StartTripUseCase>(),
         completeTrip: captainGetIt<CompleteTripUseCase>(),
+        watchTripSnapshot: captainGetIt<WatchTripExecutionSnapshotUseCase>(),
+        markStationArrived: captainGetIt<MarkStationArrivedUseCase>(),
+      ),
+    );
+  }
+}
+
+void _registerTripMapDependencies() {
+  if (!captainGetIt.isRegistered<CaptainLocationStreamDatasource>()) {
+    captainGetIt.registerLazySingleton<CaptainLocationStreamDatasource>(
+      () => const CaptainLocationStreamDatasource(),
+    );
+  }
+  if (!captainGetIt.isRegistered<CaptainLocationStreamRepository>()) {
+    captainGetIt.registerLazySingleton<CaptainLocationStreamRepository>(
+      () => CaptainLocationStreamRepositoryImpl(
+        captainGetIt<CaptainLocationStreamDatasource>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<EnsureLocationReadyUseCase>()) {
+    captainGetIt.registerLazySingleton<EnsureLocationReadyUseCase>(
+      () => EnsureLocationReadyUseCase(
+        captainGetIt<CaptainLocationStreamRepository>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<WatchCaptainPositionUseCase>()) {
+    captainGetIt.registerLazySingleton<WatchCaptainPositionUseCase>(
+      () => WatchCaptainPositionUseCase(
+        captainGetIt<CaptainLocationStreamRepository>(),
+      ),
+    );
+  }
+  // Composition-root cubit: pulls the manifest and trip-execution use cases
+  // already registered above rather than duplicating their data access.
+  if (!captainGetIt.isRegistered<CaptainTripMapCubit>()) {
+    captainGetIt.registerFactory<CaptainTripMapCubit>(
+      () => CaptainTripMapCubit(
+        ensureLocationReady: captainGetIt<EnsureLocationReadyUseCase>(),
+        watchCaptainPosition: captainGetIt<WatchCaptainPositionUseCase>(),
+        getTripPassengers: captainGetIt<GetTripPassengersUseCase>(),
+        watchTripPassengers: captainGetIt<WatchTripPassengersUseCase>(),
+        updatePassengerStatus: captainGetIt<UpdatePassengerStatusUseCase>(),
         watchTripSnapshot: captainGetIt<WatchTripExecutionSnapshotUseCase>(),
         markStationArrived: captainGetIt<MarkStationArrivedUseCase>(),
       ),

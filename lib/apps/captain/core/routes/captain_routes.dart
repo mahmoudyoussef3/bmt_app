@@ -16,6 +16,7 @@ class CaptainRoutes {
 
   // Trip-scoped routes. Every one of these needs at least a trip id.
   static const tripExecution = '/captain/trip';
+  static const tripMap = '/captain/trip/map';
   static const passengerManifest = '/captain/trip/passengers';
   static const locationUpdate = '/captain/trip/location';
   static const chats = '/captain/trip/chats';
