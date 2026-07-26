@@ -21,15 +21,7 @@ class TicketDetailsCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.outlineVariant.withAlpha(40), width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withAlpha(8),
-            blurRadius: 32,
-            spreadRadius: -4,
-            offset: const Offset(0, 12),
-          ),
-        ],
+        border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

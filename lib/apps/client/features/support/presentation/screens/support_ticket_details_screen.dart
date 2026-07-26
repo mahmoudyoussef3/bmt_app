@@ -22,7 +22,7 @@ class SupportTicketDetailsScreen extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return Scaffold(
-      backgroundColor: scheme.surfaceContainerHighest.withAlpha(50),
+      backgroundColor: scheme.surface,
       body: BlocConsumer<SupportCubit, SupportState>(
         listenWhen: (previous, current) => current is SupportError,
         listener: (context, state) =>

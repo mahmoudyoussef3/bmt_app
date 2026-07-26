@@ -61,12 +61,8 @@ import '../../features/referrals/data/repositories/referral_repository_impl.dart
 import '../../features/referrals/domain/repositories/referral_repository.dart';
 import '../../features/referrals/domain/usecases/referral_usecases.dart';
 import '../../features/referrals/presentation/cubit/referral_cubit.dart';
-import '../../features/dashboard_home/data/datasources/dashboard_home_datasource.dart';
-import '../../features/dashboard_home/data/datasources/supabase_dashboard_home_datasource.dart';
-import '../../features/dashboard_home/data/repositories/dashboard_home_repository_impl.dart';
-import '../../features/dashboard_home/domain/repositories/dashboard_home_repository.dart';
-import '../../features/dashboard_home/domain/usecases/get_dashboard_home_usecase.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
+import '../../features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
 
 // ── Fleet Sub-modules ────────────────────────────────────────────────
 import '../../features/fleet/fleet_drivers/data/repositories/fleet_drivers_repository_impl.dart';
@@ -220,27 +216,27 @@ void registerDashboardDependencies() {
     );
   }
 
-  if (!dashboardDi.isRegistered<DashboardHomeDatasource>()) {
-    dashboardDi.registerLazySingleton<DashboardHomeDatasource>(
-      () => SupabaseDashboardHomeDatasource(dashboardDi<SupabaseClient>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<DashboardHomeRepository>()) {
-    dashboardDi.registerLazySingleton<DashboardHomeRepository>(
-      () => DashboardHomeRepositoryImpl(dashboardDi<DashboardHomeDatasource>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetDashboardHomeUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetDashboardHomeUseCase(dashboardDi<DashboardHomeRepository>()),
-    );
-  }
-
+  // DashboardHomeCubit owns no data source of its own: it is a pure
+  // composition root over use cases every sibling feature already registers
+  // (below and via `registerTripsDependencies`, called later in this
+  // function). Registered as a factory, so resolution is deferred until the
+  // Home route actually mounts — by which point every dependency here is
+  // registered regardless of declaration order.
   if (!dashboardDi.isRegistered<DashboardHomeCubit>()) {
     dashboardDi.registerFactory(
-      () => DashboardHomeCubit(dashboardDi<GetDashboardHomeUseCase>()),
+      () => DashboardHomeCubit(
+        getTrips: dashboardDi<GetOperationTripsUseCase>(),
+        getBookings: dashboardDi<GetOperationBookingsUseCase>(),
+        getPaymentVerifications:
+            dashboardDi<GetBookingPaymentVerificationsUseCase>(),
+        getRevenueMetrics: dashboardDi<GetRevenueMetricsUseCase>(),
+        getFleetWorkspace: dashboardDi<GetFleetWorkspaceUseCase>(),
+        getCaptainRequests: dashboardDi<GetCaptainRequestsUseCase>(),
+        getReviews: dashboardDi<GetReviewsUseCase>(),
+        getOfficeProfile: dashboardDi<GetOfficeProfileUseCase>(),
+        getTickets: dashboardDi<GetTicketsUseCase>(),
+        getSubscriptions: dashboardDi<GetSubscriptionsUseCase>(),
+      ),
     );
   }
 

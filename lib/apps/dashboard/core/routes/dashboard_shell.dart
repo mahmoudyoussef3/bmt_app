@@ -362,9 +362,17 @@ class _DashboardShellState extends State<DashboardShell> {
 
   Widget _buildContent() {
     return switch (_route) {
-      DashboardRoutes.home => BlocProvider(
-        create: (_) => dashboardDi<DashboardHomeCubit>()..load(),
-        child: DashboardHomeScreen(onOpenModule: _openRoute),
+      DashboardRoutes.home => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => dashboardDi<DashboardHomeCubit>()..load()),
+          BlocProvider(
+            create: (_) => dashboardDi<OperationalAlertsCubit>()..startWatching(),
+          ),
+        ],
+        child: DashboardHomeScreen(
+          office: widget.office,
+          onOpenModule: _openRoute,
+        ),
       ),
       DashboardRoutes.bookings => BlocProvider(
         create: (_) => dashboardDi<BookingsCubit>()..load(),
@@ -453,7 +461,18 @@ class _DashboardShellState extends State<DashboardShell> {
       // Access control *is* user administration: one screen listing every
       // dashboard account with its role, rather than a separate matrix page.
       DashboardRoutes.permissions => const UsersScreen(),
-      _ => const DashboardHomeScreen(),
+      _ => MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => dashboardDi<DashboardHomeCubit>()..load()),
+          BlocProvider(
+            create: (_) => dashboardDi<OperationalAlertsCubit>()..startWatching(),
+          ),
+        ],
+        child: DashboardHomeScreen(
+          office: widget.office,
+          onOpenModule: _openRoute,
+        ),
+      ),
     };
   }
 }

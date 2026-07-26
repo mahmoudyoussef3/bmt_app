@@ -24,7 +24,6 @@ class TicketDetailsStatusBand extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(80),
         border: Border.symmetric(
           horizontal: BorderSide(color: scheme.outlineVariant.withAlpha(30)),
         ),

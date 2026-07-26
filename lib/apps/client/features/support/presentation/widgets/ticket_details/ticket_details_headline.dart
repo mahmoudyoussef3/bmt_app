@@ -25,9 +25,8 @@ class TicketDetailsHeadline extends StatelessWidget {
             ticket.title,
             style: ClientTypography.headingMedium(context).copyWith(
               color: scheme.onSurface,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-              height: 1.2,
+              fontWeight: FontWeight.w700,
+              height: 1.3,
             ),
           ),
           const SizedBox(height: 16),
