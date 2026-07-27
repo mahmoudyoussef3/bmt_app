@@ -17,7 +17,7 @@ import 'package:bmt_app/apps/captain/features/communication/presentation/cubit/c
 class _FakeRepository implements CommunicationRepository {
   _FakeRepository({this.opsMessages = const Stream.empty()});
 
-  final Stream<String> opsMessages;
+  final Stream<OpsBroadcast> opsMessages;
   final List<({String text, CaptainMessageType type})> sent = [];
   bool failNext = false;
 
@@ -62,7 +62,7 @@ class _FakeRepository implements CommunicationRepository {
   }
 
   @override
-  Stream<String> watchIncomingOpsMessages() => opsMessages;
+  Stream<OpsBroadcast> watchIncomingOpsMessages() => opsMessages;
 }
 
 void main() {
@@ -120,7 +120,7 @@ void main() {
         're-announced', () async {
       // Supabase replays the newest matching row on subscribe. Treating that
       // as new popped a stale broadcast at the captain on every app launch.
-      final controller = StreamController<String>();
+      final controller = StreamController<OpsBroadcast>();
       final cubit = CaptainNotificationCubit(
         _FakeRepository(opsMessages: controller.stream),
       );
@@ -128,7 +128,7 @@ void main() {
       cubit.stream.listen(seen.add);
 
       cubit.startListening();
-      controller.add('بلاغ قديم من الأمس');
+      controller.add(const OpsBroadcast(id: 'm1', body: 'بلاغ قديم من الأمس'));
       await Future<void>.delayed(Duration.zero);
 
       expect(seen, isEmpty);
@@ -137,7 +137,7 @@ void main() {
     });
 
     test('a broadcast that arrives after subscribe is announced once', () async {
-      final controller = StreamController<String>();
+      final controller = StreamController<OpsBroadcast>();
       final cubit = CaptainNotificationCubit(
         _FakeRepository(opsMessages: controller.stream),
       );
@@ -145,18 +145,61 @@ void main() {
       cubit.stream.listen(seen.add);
 
       cubit.startListening();
-      controller.add('بلاغ قديم');
+      controller.add(const OpsBroadcast(id: 'm1', body: 'بلاغ قديم'));
       await Future<void>.delayed(Duration.zero);
-      controller.add('تحويلة على الطريق الصحراوي');
+      controller.add(
+        const OpsBroadcast(id: 'm2', body: 'تحويلة على الطريق الصحراوي'),
+      );
       await Future<void>.delayed(Duration.zero);
-      // The same body arriving twice is one announcement, not two.
-      controller.add('تحويلة على الطريق الصحراوي');
+      // The same ROW re-emitted is one announcement, not two.
+      controller.add(
+        const OpsBroadcast(id: 'm2', body: 'تحويلة على الطريق الصحراوي'),
+      );
       await Future<void>.delayed(Duration.zero);
 
       expect(seen, hasLength(1));
       expect(
         (seen.single as CaptainNotificationReceived).message,
         'تحويلة على الطريق الصحراوي',
+      );
+      await controller.close();
+      await cubit.close();
+    });
+
+    test('operations repeating the same instruction reaches the captain '
+        'both times', () async {
+      // The banner used to suppress by body text. An operator who sends
+      // "قف عند المحطة القادمة" twice is not duplicating themselves — the
+      // second one almost always means the first was not acted on, and
+      // swallowing it is the worst possible reading of the situation.
+      final controller = StreamController<OpsBroadcast>();
+      final cubit = CaptainNotificationCubit(
+        _FakeRepository(opsMessages: controller.stream),
+      );
+      final seen = <CaptainNotificationState>[];
+      cubit.stream.listen(seen.add);
+
+      cubit.startListening();
+      controller.add(const OpsBroadcast(id: 'm0', body: 'تمهيد'));
+      await Future<void>.delayed(Duration.zero);
+
+      controller.add(
+        const OpsBroadcast(id: 'm1', body: 'قف عند المحطة القادمة'),
+      );
+      await Future<void>.delayed(Duration.zero);
+      controller.add(
+        const OpsBroadcast(id: 'm2', body: 'قف عند المحطة القادمة'),
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(seen, hasLength(2));
+      expect(
+        seen.every(
+          (s) =>
+              s is CaptainNotificationReceived &&
+              s.message == 'قف عند المحطة القادمة',
+        ),
+        isTrue,
       );
       await controller.close();
       await cubit.close();

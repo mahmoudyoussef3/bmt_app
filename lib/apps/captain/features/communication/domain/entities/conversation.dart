@@ -24,6 +24,21 @@ class CaptainMessage {
   final bool isMine;
 }
 
+/// One operations broadcast, carrying the row's identity alongside its text.
+///
+/// The identity is the point. The banner used to be fed a bare `String` and
+/// suppressed anything equal to the last one it showed — so operations sending
+/// the same instruction twice ("توقف عند المحطة القادمة", once now and once ten
+/// minutes later) produced exactly one banner, and the captain never learned
+/// about the second. Repetition is not duplication: an operator repeating
+/// themselves usually means the first one was not acted on.
+class OpsBroadcast {
+  const OpsBroadcast({required this.id, required this.body});
+
+  final String id;
+  final String body;
+}
+
 class CaptainConversation {
   const CaptainConversation({
     required this.id,

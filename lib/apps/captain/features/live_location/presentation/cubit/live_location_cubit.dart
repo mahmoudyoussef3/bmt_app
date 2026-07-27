@@ -2,17 +2,15 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/location_sharing_health.dart';
 import '../../domain/usecases/send_location_update_usecase.dart';
 import 'live_location_state.dart';
 
-/// How often an active trip reports its position automatically.
-///
-/// Thirty seconds is the platform's tracking cadence (`SYSTEM_FLOW.md`): the
-/// client's map merges realtime inserts with a short poll fallback, so a denser
-/// producer cadence only ever sharpens the vehicle's movement, never degrades
-/// it. It stays cheap enough to run foreground for a whole trip: one high-
-/// accuracy fix every 30 s while the captain has the execution screen open.
-const Duration kAutoLocationInterval = Duration(seconds: 30);
+/// The reporting cadence now lives in the domain beside the staleness rule it
+/// feeds ([LocationSharingStatus]), so the two cannot drift apart. Re-exported
+/// here because every existing call site imports it from this file.
+export '../../domain/entities/location_sharing_health.dart'
+    show kAutoLocationInterval;
 
 class LiveLocationCubit extends Cubit<LiveLocationState> {
   LiveLocationCubit({required SendLocationUpdateUseCase sendLocation})

@@ -13,5 +13,5 @@ abstract class CommunicationRepository {
     required CaptainMessageType type,
   });
 
-  Stream<String> watchIncomingOpsMessages();
+  Stream<OpsBroadcast> watchIncomingOpsMessages();
 }

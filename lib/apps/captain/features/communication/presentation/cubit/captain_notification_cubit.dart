@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/conversation.dart';
 import '../../domain/repositories/communication_repository.dart';
 
 sealed class CaptainNotificationState {
@@ -22,8 +23,14 @@ class CaptainNotificationCubit extends Cubit<CaptainNotificationState> {
     : super(const CaptainNotificationIdle());
 
   final CommunicationRepository _repository;
-  StreamSubscription<String>? _subscription;
-  String? _lastSeen;
+  StreamSubscription<OpsBroadcast>? _subscription;
+
+  /// The id of the last broadcast this captain was shown.
+  ///
+  /// Identity, not text. Comparing bodies meant an operator sending the same
+  /// instruction a second time — which usually means the first one was not
+  /// acted on — was silently swallowed as a duplicate.
+  String? _lastSeenId;
 
   /// The backing Supabase stream replays the newest matching row the moment it
   /// subscribes, before any live change arrives. Surfacing that first emission
@@ -36,16 +43,16 @@ class CaptainNotificationCubit extends Cubit<CaptainNotificationState> {
   void startListening() {
     _subscription?.cancel();
     _primed = false;
-    _subscription = _repository.watchIncomingOpsMessages().listen((body) {
-      if (body.isEmpty) return;
+    _subscription = _repository.watchIncomingOpsMessages().listen((broadcast) {
+      if (broadcast.body.isEmpty) return;
       if (!_primed) {
         _primed = true;
-        _lastSeen = body;
+        _lastSeenId = broadcast.id;
         return;
       }
-      if (body != _lastSeen) {
-        _lastSeen = body;
-        emit(CaptainNotificationReceived(body));
+      if (broadcast.id != _lastSeenId) {
+        _lastSeenId = broadcast.id;
+        emit(CaptainNotificationReceived(broadcast.body));
       }
     });
   }

@@ -6,7 +6,9 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 
+import '../../domain/entities/location_sharing_health.dart';
 import '../cubit/live_location_cubit.dart';
 import '../cubit/live_location_state.dart';
 
@@ -130,104 +132,148 @@ class _AutoShareCard extends StatelessWidget {
           _ => null,
         };
 
-        return Container(
-          padding: const EdgeInsets.all(CaptainDesignTokens.s20),
-          decoration: BoxDecoration(
-            color: CaptainColors.surfaceFor(context),
-            borderRadius: CaptainDesignTokens.br24,
-            border: Border.all(color: CaptainColors.dividerFor(context)),
-            boxShadow: CaptainDesignTokens.softShadow(context),
+        // Ticked rather than sampled once: a fix goes stale while the captain
+        // is looking at the card, and the headline has to notice.
+        return CaptainTicker(
+          builder: (context, now) => _card(
+            context,
+            status: LocationSharingStatus.evaluate(
+              isAutoSharing: state.isAutoSharing,
+              lastSentAt: lastSentAt,
+              now: now,
+            ),
+            lastSentAt: lastSentAt,
+            error: error,
+            isSending: isSending,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+        );
+      },
+    );
+  }
+
+  Widget _card(
+    BuildContext context, {
+    required LocationSharingStatus status,
+    required DateTime? lastSentAt,
+    required String? error,
+    required bool isSending,
+  }) {
+    final (icon, tone) = switch (status.health) {
+      LocationSharingHealth.live => (
+        Icons.share_location_rounded,
+        CaptainColors.success,
+      ),
+      LocationSharingHealth.acquiring => (
+        Icons.gps_not_fixed_rounded,
+        CaptainColors.warning,
+      ),
+      LocationSharingHealth.stale => (
+        Icons.location_disabled_rounded,
+        CaptainColors.error,
+      ),
+      LocationSharingHealth.off => (
+        Icons.location_disabled_rounded,
+        CaptainColors.textSecondaryFor(context),
+      ),
+    };
+
+    return Container(
+      padding: const EdgeInsets.all(CaptainDesignTokens.s20),
+      decoration: BoxDecoration(
+        color: CaptainColors.surfaceFor(context),
+        borderRadius: CaptainDesignTokens.br24,
+        border: Border.all(
+          // A stale card is bordered in its own tone: at a glance from the
+          // driving position the border is what carries, not the sentence.
+          color: status.health == LocationSharingHealth.stale
+              ? CaptainColors.error.withValues(alpha: 0.5)
+              : CaptainColors.dividerFor(context),
+        ),
+        boxShadow: CaptainDesignTokens.softShadow(context),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Row(
-                children: [
-                  Icon(
-                    state.isAutoSharing
-                        ? Icons.share_location_rounded
-                        : Icons.location_disabled_rounded,
-                    size: 20,
-                    color: state.isAutoSharing
-                        ? CaptainColors.success
-                        : CaptainColors.textSecondaryFor(context),
-                  ),
-                  const SizedBox(width: CaptainDesignTokens.s8),
-                  Expanded(
-                    child: Text(
-                      state.isAutoSharing
-                          ? 'مشاركة الموقع تلقائياً كل 30 ثانية'
-                          : 'المشاركة التلقائية متوقفة',
-                      style: CaptainTypography.titleSmall(
-                        context,
-                      ).copyWith(fontWeight: FontWeight.w900),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Text(
-                lastSentAt == null
-                    ? 'جارٍ تحديد موقعك...'
-                    : 'آخر إرسال ${CaptainFormats.clock(lastSentAt.toLocal())}',
-                style: CaptainTypography.bodySmall(
-                  context,
-                ).copyWith(color: CaptainColors.textSecondaryFor(context)),
-              ),
-              if (error != null) ...[
-                const SizedBox(height: CaptainDesignTokens.s8),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Icon(
-                      Icons.error_outline_rounded,
-                      size: 16,
-                      color: CaptainColors.error,
-                    ),
-                    const SizedBox(width: CaptainDesignTokens.s8),
-                    Expanded(
-                      child: Text(
-                        error,
-                        style: CaptainTypography.bodySmall(context).copyWith(
-                          color: CaptainColors.error,
-                          fontWeight: FontWeight.w600,
-                          height: 1.4,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: CaptainDesignTokens.s12),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: isSending
-                      ? null
-                      : () => context.read<LiveLocationCubit>().send(tripId),
-                  icon: isSending
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.my_location_rounded, size: 18),
-                  label: Text(
-                    isSending ? 'جارٍ تحديد الموقع...' : 'إرسال الموقع الآن',
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: CaptainDesignTokens.s12,
-                    ),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: CaptainDesignTokens.br16,
-                    ),
+              Icon(icon, size: 20, color: tone),
+              const SizedBox(width: CaptainDesignTokens.s8),
+              Expanded(
+                child: Text(
+                  status.headline,
+                  style: CaptainTypography.titleSmall(context).copyWith(
+                    fontWeight: FontWeight.w900,
+                    color: status.health == LocationSharingHealth.stale
+                        ? CaptainColors.error
+                        : null,
                   ),
                 ),
               ),
             ],
           ),
-        );
-      },
+          // The clock of the last successful send, kept as supporting detail
+          // under a headline that now states the health itself.
+          if (lastSentAt != null) ...[
+            const SizedBox(height: 4),
+            Text(
+              'آخر إرسال ${CaptainFormats.clock(lastSentAt.toLocal())}',
+              style: CaptainTypography.bodySmall(
+                context,
+              ).copyWith(color: CaptainColors.textSecondaryFor(context)),
+            ),
+          ],
+          if (error != null) ...[
+            const SizedBox(height: CaptainDesignTokens.s8),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.error_outline_rounded,
+                  size: 16,
+                  color: CaptainColors.error,
+                ),
+                const SizedBox(width: CaptainDesignTokens.s8),
+                Expanded(
+                  child: Text(
+                    error,
+                    style: CaptainTypography.bodySmall(context).copyWith(
+                      color: CaptainColors.error,
+                      fontWeight: FontWeight.w600,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: CaptainDesignTokens.s12),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: isSending
+                  ? null
+                  : () => context.read<LiveLocationCubit>().send(tripId),
+              icon: isSending
+                  ? const SizedBox.square(
+                      dimension: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.my_location_rounded, size: 18),
+              label: Text(
+                isSending ? 'جارٍ تحديد الموقع...' : 'إرسال الموقع الآن',
+              ),
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  vertical: CaptainDesignTokens.s12,
+                ),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: CaptainDesignTokens.br16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

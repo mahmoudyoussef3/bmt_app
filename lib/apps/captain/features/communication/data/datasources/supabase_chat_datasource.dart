@@ -73,19 +73,30 @@ class SupabaseChatDatasource implements ChatDatasource {
     );
   }
 
+  /// The newest operations message on any trip RLS lets this captain see —
+  /// which, by `captain_messages_captain_read`, means their own trips only.
+  ///
+  /// The row's id travels with the body so the banner can tell a *new* message
+  /// from a *repeated* one. Suppressing by text meant an operator who sent the
+  /// same instruction twice reached the captain once.
   @override
-  Stream<String> watchIncomingOpsMessages() {
+  Stream<OpsBroadcast> watchIncomingOpsMessages() {
     return _supabase
         .from('captain_messages')
         .stream(primaryKey: ['id'])
         .eq('sender_type', 'operations')
         .order('sent_at', ascending: false)
         .limit(1)
-        .map(
-          (rows) =>
-              rows.isNotEmpty ? (rows.first['body'] as String? ?? '') : '',
-        )
-        .where((body) => body.isNotEmpty);
+        .map((rows) {
+          if (rows.isEmpty) return null;
+          final row = rows.first;
+          final body = row['body'] as String? ?? '';
+          final id = row['id']?.toString() ?? '';
+          if (body.isEmpty || id.isEmpty) return null;
+          return OpsBroadcast(id: id, body: body);
+        })
+        .where((broadcast) => broadcast != null)
+        .cast<OpsBroadcast>();
   }
 
   CaptainMessageType _typeFromDb(String t) => switch (t) {

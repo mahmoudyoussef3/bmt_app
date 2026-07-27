@@ -34,6 +34,6 @@ class CommunicationRepositoryImpl implements CommunicationRepository {
   }
 
   @override
-  Stream<String> watchIncomingOpsMessages() =>
+  Stream<OpsBroadcast> watchIncomingOpsMessages() =>
       _dataSource.watchIncomingOpsMessages();
 }

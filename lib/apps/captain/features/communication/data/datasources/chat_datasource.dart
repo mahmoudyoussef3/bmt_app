@@ -14,5 +14,5 @@ abstract class ChatDatasource {
     required CaptainMessageType type,
   });
 
-  Stream<String> watchIncomingOpsMessages();
+  Stream<OpsBroadcast> watchIncomingOpsMessages();
 }

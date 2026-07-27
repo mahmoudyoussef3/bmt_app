@@ -36,7 +36,10 @@ class CaptainAppRouter {
     final args = settings.arguments;
 
     return switch (settings.name) {
-      CaptainRoutes.home => _page(settings, const CaptainAppShell()),
+      // The alias lands on the shell, whose first tab is the captain's trips —
+      // which is exactly what the notification that carries it is about.
+      CaptainRoutes.home ||
+      CaptainRoutes.assignmentAlias => _page(settings, const CaptainAppShell()),
 
       CaptainRoutes.requestAccess => _page(
         settings,
