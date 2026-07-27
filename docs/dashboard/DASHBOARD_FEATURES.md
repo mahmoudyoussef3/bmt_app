@@ -154,6 +154,36 @@ The operator's landing page and triage queue. Aggregates six live feeds into one
 Every card is a deep link — `onOpenModule` switches the shell route. This is the **only**
 route into Payment Verification (see §3 Known gaps).
 
+### 2.1b العمليات المباشرة — Live Operations Center
+`features/live_ops/` · permissions: `liveOps` (view) + `liveOpsIncidentAction` (act)
+
+The "what is happening on the road right now" board. Full design in
+`DASHBOARD_LIVE_OPS_CENTER.md`.
+
+| Section | Contents |
+|---|---|
+| Summary bar | On-road count · overdue departures · tracking at risk · open incidents (with an unclaimed count) |
+| Fleet map | Every active trip that has reported a position, coloured by tracking health; tap to focus |
+| Trips on the road | Route, crew, occupancy, tracking health, last-report age, departure delay. Overdue trips lead |
+| Incident queue | Captain reports, worst-first, claimable and closable in place |
+
+**Actors.** Owner: full. Support agent: **read-only** — they see the board (they need it while
+a passenger is on the phone) but cannot close a captain's report, because that writes a
+permanent audit trail. Platform admin: per-office, via the office context they are in.
+
+**Business rules.**
+- Tracking health is derived from fix age against the captain app's real 30s publish cadence:
+  ≤75s live · ≤4min stale · older offline · never-reported unknown.
+- A trip is *overdue* only while boarding, and only past a 10-minute grace. A trip already
+  running is *late* (reported), never overdue (alarmed).
+- Incidents move `pending → acknowledged → resolved/dismissed`. Nothing reopens. Closing
+  requires a note.
+- A trip with no position is never drawn at a guessed location; it stays in the list and is
+  counted in the map legend.
+
+**Edge cases.** No active trips → calm empty state, not an error. Dropped socket → last good
+snapshot retained. Two operators on one incident → the second is refused with an explanation.
+
 ### 2.2 الحجوزات — Bookings
 `features/bookings/` · permission: `bookings` · **owner + support agent**
 
@@ -423,6 +453,10 @@ permissions are managed elsewhere, and sign-out with confirmation.
 | Trips and Subscriptions lists are not virtualised | Rows are built eagerly inside a page-level `ListView`. Fine at current volumes; needs `CustomScrollView` + `SliverList.builder` as those lists grow. |
 | `buildWhen` is not used on the module `BlocBuilder`s | They switch on sealed states where it buys little, but the playbook asks for it. |
 | Two subscription schemas coexist | `transport_*` vs `packages`/`subscriptions` — see §2.9. |
+| Two vocabularies for one payment concept | `operation_bookings.payment_status` uses `underReview`; `booking_payments.status` uses `under_review`. Cross-app rename, not done. |
+| Bulk payment approval is not atomic | One RPC per booking, no surrounding transaction — a partial failure leaves half a batch approved. |
+| Incident history is written but not readable | Closed reports carry notes and actors; no screen reads them back. |
+| Denormalised trip columns are unmaintained | `operation_trips.revenue` and `booked_seats` are never updated — compute from approved bookings and `trip_seats` instead. |
 
 **Deliberate choices — do not "fix" these**
 
@@ -432,6 +466,12 @@ permissions are managed elsewhere, and sign-out with confirmation.
 - Reviews and Owner Overview are **owner-only** even though support agents handle
   complaints.
 - The debug role switcher changes UI visibility only; server-side scoping is unaffected.
+- **Incident closure is owner-only** even though support agents have the Live Ops module.
+  Seeing the situation and deciding it is handled are different authorities.
+- **`payment_review_status` is derived, not authored.** A trigger recomputes it from
+  `payment_status` on every write. Do not set it by hand; do not "fix" a writer that ignores it.
+- Booking contradictions are **detected, not prohibited**. `cancelled` + `approved` must stay
+  representable so a refund can be processed through it.
 
 ---
 

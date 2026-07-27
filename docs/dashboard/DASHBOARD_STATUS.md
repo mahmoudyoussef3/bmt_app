@@ -157,7 +157,73 @@ the substrate booking correctness sits on.
 
 ---
 
-## 8. How to verify this document
+## 8. Remaining program work — exact specification
+
+Phases 3–7 are **not started**. This section records what each one must cover, including the
+findings already gathered during the Phases 1–2 audit, so the next session starts from evidence
+rather than from scratch.
+
+### Phase 3 — Trip Operations
+*Already known:*
+- `operation_trips_status_check` allows `scheduled · open_for_booking · boarding · in_progress ·
+  completed · cancelled`. There is **no `draft`** state in the database, so the requested
+  `Draft → Scheduled → …` lifecycle needs either a migration or a decision that `scheduled` *is*
+  draft until opened for booking. Recommend the latter — a seventh state earns its keep only if
+  something behaves differently in it.
+- A transition guard already exists in `trips_repository_impl.dart:323-328` covering
+  `openForBooking → boarding → inProgress → completed`. It has never been audited for the
+  cancellation paths.
+- The captain app drives `boarding` and `in_progress` (`trip_execution_datasource.dart`), so any
+  dashboard-side rule must not contradict `trips_captain_update` RLS.
+- **The live database currently holds no `boarding` or `in_progress` trips at all** — statuses
+  present are `completed`, `cancelled`, `open_for_booking` across 9 trips. Phase 3 verification
+  will therefore need transactionally-seeded fixtures, as Phases 1–2 used.
+
+*Must cover:* cancellation and failure paths as first-class; capacity / occupancy / captain /
+vehicle consistency across every state; what happens to bookings when a trip is cancelled.
+
+### Phase 4 — Fleet
+*Already known:*
+- **B1 and B2 are open failing tests** in `fleet_vehicle_form_vehicle_type_test.dart` covering
+  Coaster-30 and Hiace-14 seat persistence. Start here: seat layout is the substrate booking
+  correctness sits on.
+- `trip_seats_state_check` allows `available · reserved · paid · subscription · blocked`.
+- `release_expired_seat_holds` exists as an RPC and **nothing schedules it** (recommendation
+  R14), so abandoned checkouts hold seats indefinitely.
+
+*Must cover:* double-booking prevention for both vehicles and captains across overlapping
+trips — this is the single most important fleet invariant and has not been verified to exist.
+
+### Phase 5 — Captains
+*Already known:*
+- Captain onboarding (`captain_requests`), approval, and office assignment exist and were
+  built in an earlier program.
+- `20260723090000_captain_status_transition_allowlist.sql` exists; per the project memory its
+  application status was previously uncertain — **verify it is applied before designing on top
+  of it**.
+- Incident data now accruing per captain (Phase 1) is the raw material for reliability metrics.
+
+### Phase 6 — Multi-office
+*Already verified (see §5):* Live Ops positions, incident reads/writes, the contradictions view,
+and the booking RPC grant surface.
+*Not yet verified:* every other module's datasource. The audit pattern that worked is: read the
+`office_id` filter in the datasource, confirm the matching RLS policy in `pg_policies`, then
+prove it with a transactional `set local request.jwt.claims` test as a real office user.
+*Known outstanding risk:* **S1**, `trip_live_locations` RLS.
+
+### Phase 7 — Analytics & Reports
+*Already known:*
+- **Do not read `operation_trips.revenue` or `booked_seats`** (debt D2/D3) — both are
+  denormalised and unmaintained. Revenue is the sum of approved bookings; occupancy comes from
+  `trip_seats`.
+- `booking_state_contradictions` gives a money-integrity KPI for free (recommendation R6).
+- Incident data (Phase 1) supports time-to-acknowledge, the best proxy for desk responsiveness.
+- Platform office analytics already exist (`20260722140000`) and should be extended, not
+  duplicated.
+
+---
+
+## 9. How to verify this document
 
 ```bash
 # Tests

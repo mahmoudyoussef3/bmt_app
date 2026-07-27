@@ -455,8 +455,9 @@ trips → open for booking → work the payment queue.
 |---|---|
 | **Trip** | `scheduled` → `openForBooking` → `boarding` → `inProgress` → `completed` · `cancelled` from any pre-completion state |
 | **Trip seat** | `available` · `reserved` · `paid` · `subscription` · `blocked` |
-| **Booking** | `draft` → `reserved` → `confirmed` → `boarded` → `completed` · `cancelled` |
-| **Payment** | `pending` → `submitted` → `underReview` → `approved` / `rejected` / `refunded` / `failed` |
+| **Booking** | `draft` → `reserved` → `confirmed` → `boarded` → `completed` · `cancelled` until travelled. Enforced by `BookingStatusRules.canTransitionTo` (§9.3) |
+| **Payment** | `pending` → `submitted` → `underReview` → `approved` / `rejected` · `rejected` → `submitted` (replace receipt) · `approved` → `refunded` only · `cancelled` terminal. Enforced by `PaymentStatusRules.canTransitionTo` (§9.3) |
+| **Incident report** | `pending` → `acknowledged` → `resolved` / `dismissed` · nothing reopens. Enforced by `IncidentStatus.canTransitionTo` + `driver_trip_reports_status_check` (§9.2) |
 | **Payment verification** | `pending` → `approved` / `rejected` / `reviewRequested` |
 | **Receipt review** | `pending` → `accepted` / `rejected` / `reuploadRequested` |
 | **Refund** | `pending` → `approved` / `rejected` |
@@ -471,6 +472,86 @@ trips → open for booking → work the payment queue.
 | **Ticket** | `submitted` → `underReview` → `contacted` → `resolved` → `closed` · `rejected` |
 | **Referral** | `pendingRegistration` → `registered` → `firstOrderCompleted` → `rewardGranted` |
 | **Office listing** | `draft` → `listed` ⇄ `unlisted` |
+
+---
+
+## 9. Control flows added by the Re-Ownership Program (2026-07-27)
+
+### 9.1 Live operations — the first ten seconds of a shift
+
+```mermaid
+flowchart TD
+    A[Operator opens مركز العمليات المباشر] --> B{Critical incident open?}
+    B -- yes --> C[Red SOS banner at the top]
+    B -- no --> D[Summary bar: on-road · overdue · tracking at risk · open reports]
+    C --> D
+    D --> E[Fleet map: every reporting vehicle, coloured by tracking health]
+    E --> F{Anything demanding action?}
+    F -- overdue departure --> G[Overdue trips lead the trip list with their delay]
+    F -- tracking lost --> H[stale / offline / unknown badge + last-report age]
+    F -- incident --> I[Incident queue, worst-first]
+    F -- no --> J[Watch; the board refreshes on realtime + a 15s poll]
+    G --> K[Call the captain / reassign / cancel]
+    H --> K
+    I --> L[استلام → the report is now owned]
+    L --> M[تم الحل / استبعاد + required note]
+```
+
+### 9.2 Incident lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending: Captain files from the road
+    pending --> acknowledged: استلام — one tap, no dialog
+    pending --> resolved: closed directly (duplicate)
+    pending --> dismissed: closed directly
+    acknowledged --> resolved: تم الحل + required note
+    acknowledged --> dismissed: استبعاد + required reason
+    resolved --> [*]
+    dismissed --> [*]
+    note right of acknowledged
+        Stays in the queue — it is still
+        open work. It only sinks below
+        untouched reports of equal severity.
+    end note
+```
+
+### 9.3 Booking control — what the desk does next
+
+```mermaid
+flowchart TD
+    A[Operator opens a booking] --> B{Booking state and payment state agree?}
+    B -- no --> C[[Red contradiction tile — resolve before anything else]]
+    C --> C1{Which contradiction?}
+    C1 -- paid but cancelled --> C2[Refund the passenger]
+    C1 -- confirmed without payment --> C3[Collect, or release the seat]
+    C1 -- travelled without payment --> C4[Collect or write off, with a note]
+    B -- yes --> D{Booking closed?}
+    D -- yes --> E[لا إجراء]
+    D -- no --> F{Payment awaiting review?}
+    F -- yes, receipt present --> G[مراجعة الدفع → approve / reject with reason]
+    F -- yes, no receipt --> H[طلب إيصال]
+    F -- no, pending or rejected --> I[بانتظار العميل — the desk is not blocked]
+    F -- no, approved --> J[جاهز للسفر]
+```
+
+### 9.4 Departure delay
+
+```mermaid
+stateDiagram-v2
+    [*] --> pending: boarding, departure ahead
+    pending --> due: scheduled time reached
+    due --> overdue: past the 10-minute boarding grace
+    pending --> departed: captain starts the trip
+    due --> departed
+    overdue --> departed
+    [*] --> unknown: schedule unparseable — no claim is made
+    note right of overdue
+        The only state that alarms.
+        A trip already on the road is
+        late (reported), not overdue.
+    end note
+```
 
 ---
 
